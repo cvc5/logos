@@ -909,7 +909,7 @@ NOTE
 ==> Note: the cached signature is not the one just compiled.
 
 ${CACHE_FILE#"${repo_root}/"} was left as it was, since ${cache_action#skipped:}.
-It is what CI compiles, and an install of Cpc and CpcMini is what records a
+It is what CI compiles, and a full install of Cpc or CpcMini is what records a
 signature there:
 
   install/install-cpc.sh ${SIGNATURE}

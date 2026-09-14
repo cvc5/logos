@@ -120,8 +120,10 @@ install/install-cpc.sh --cached          # regenerate from that version
 install/install-cpc.sh --cached --check  # ask whether it still matches
 ```
 
-The second is the `regeneration` CI group, which fails when generated code has
-drifted from the signature it came from.
+A plain run is of `Cpc` alone; `--all` adds `CpcMini`, the reduced package of
+the same calculus, which follows the same signature. The `regeneration` CI
+group is `--all --cached --check`, and fails when either package has drifted
+from the signature it came from.
 
 Regeneration rewrites the signature-wide modules of the package but preserves
 the existing per-rule proofs under `Proofs/Rules/`. A rule newly added to CPC

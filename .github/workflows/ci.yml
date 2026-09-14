@@ -74,8 +74,10 @@ jobs:
           fi
 
       # Compiles install/defs/Cpc.cached.eo, the copy of the signature this repository
-      # keeps, and fails if Cpc or CpcMini is not what comes out. Nothing from
-      # cvc5 is fetched: the copy is the whole signature, in one file.
+      # keeps, and fails if Cpc or CpcMini is not what comes out -- both, since
+      # both are checked in, which is what --all asks install-cpc.sh for.
+      # Nothing from cvc5 is fetched: the copy is the whole signature, in one
+      # file.
       - name: Check the generated packages against the cached signature
         run: bash scripts/run-ci.sh regeneration
 
