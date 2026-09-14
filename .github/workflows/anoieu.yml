@@ -1,0 +1,18 @@
+name: anoieu
+
+on: [push, pull_request]
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: the policy, at the commit this repository pins
+        env:
+          # The checker this repository is held to. Moved by a commit here, and
+          # only to a commit where anoieu's own CI is green.
+          ANOIEU_REV: 5a23b78
+        run: |
+          git clone --quiet https://github.com/ajreynol/anoieu /tmp/anoieu
+          git -C /tmp/anoieu checkout --quiet "$ANOIEU_REV"
+      - run: python3 /tmp/anoieu/tools/policy_check.py --root .
