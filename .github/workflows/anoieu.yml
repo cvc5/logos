@@ -11,7 +11,7 @@ jobs:
         env:
           # The checker this repository is held to. Moved by a commit here, and
           # only to a commit where anoieu's own CI is green.
-          ANOIEU_REV: 3b384c9
+          ANOIEU_REV: 7cdaab3
         run: |
           git clone --quiet https://github.com/ajreynol/anoieu /tmp/anoieu
           git -C /tmp/anoieu checkout --quiet "$ANOIEU_REV"
