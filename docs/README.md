@@ -11,6 +11,5 @@ document here assumes it has been read.
 | [`parser.md`](parser.md) | the CPC parser: its two layers, the commands and term syntax it accepts, and how it lexes literals. It is unverified, and outside the correctness theorem |
 | [`lean-native-proofs.md`](lean-native-proofs.md) | `logos-native` and the Lean-native proof format it reads: a secondary, experimental path that runs the same checks |
 | [`modularity.md`](modularity.md) | how far the core checker has been separated from the calculus it checks, what a second calculus would have to supply, and what is left to do |
-| [`discussion.md`](discussion.md) | the standing channel to the rest of the Eunoia ecosystem: questions, requests, proposals and notices that are not defect reports, in the format the shared repository policy sets out |
 
 [`old/`](old) keeps the superseded LaTeX source of the write-up.

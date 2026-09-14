@@ -285,14 +285,7 @@ thing the tool reads, and not a claim about how well it reads it.
 
 ## How this repository is maintained
 
-This repository is part of the **Eunoia ecosystem** and follows its shared
-repository policy, kept by [anoieu](https://github.com/ajreynol/anoieu) in
-[`docs/policy.md`](https://github.com/ajreynol/anoieu/blob/main/docs/policy.md).
-The check that decides whether this tree still matches that policy runs in CI,
-against the commit pinned in
-[`.github/workflows/anoieu.yml`](.github/workflows/anoieu.yml);
-[`docs/discussion.md`](docs/discussion.md) is the standing channel for anything
-addressed to Logos that is not a defect report.
+This repository is part of the **Eunoia ecosystem**.
 
 Parts of Logos are AI generated. This section says which, and why that is
 acceptable for each. Logos is under active development, and these policies are
