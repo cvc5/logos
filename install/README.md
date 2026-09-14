@@ -4,7 +4,7 @@
 written by hand. This directory is what does that:
 
 ```text
-install/install-cpc.sh       regenerate Cpc and CpcMini from a signature
+install/install-cpc.sh       regenerate Cpc, and with --all CpcMini too
 install/install-sig.sh       compile one signature into one package
 install/get-eo-compiler.sh   fetch and build the compiler
 install/defs/Cpc.eos         what the symbols of CPC mean, kept in git
@@ -16,8 +16,8 @@ install/deps/                the Ethos tree and the compiler, ignored by git
 
 ```bash
 install/get-eo-compiler.sh                          # once
-install/install-cpc.sh ~/cvc5/proofs/eo/cpc/Cpc.eo  # regenerate both packages
-scripts/build.sh Cpc CpcMini                        # check the result
+install/install-cpc.sh ~/cvc5/proofs/eo/cpc/Cpc.eo  # regenerate Cpc
+scripts/build.sh Cpc                                # check the result
 ```
 
 Passing the signature is the whole of a normal update. It can be any Eunoia
@@ -26,21 +26,39 @@ includes the rest of `proofs/eo` by relative path, so it has to sit in a
 complete copy of that subtree. The run records what it compiled in
 `install/defs/Cpc.cached.eo`.
 
+A plain run is of `Cpc` alone. `CpcMini` is the reduced package of the same
+calculus, and it follows the signature too, so a change that moves what `Cpc`
+compiles to has to move it as well. `--all` is both:
+
+```bash
+install/install-cpc.sh --all ~/cvc5/proofs/eo/cpc/Cpc.eo
+scripts/build.sh Cpc CpcMini
+```
+
 With no signature to hand, `--cached` compiles that recorded copy:
 
 ```bash
-install/install-cpc.sh --cached          # regenerate both from it
-install/install-cpc.sh --cached --check  # ask whether both still match it
+install/install-cpc.sh --cached                # regenerate Cpc from it
+install/install-cpc.sh --all --cached --check  # ask whether both still match
 ```
 
-The options most often added to either of those:
+The options most often added to any of those:
 
 ```text
---check              install nothing; exit 1 if either package is out of date
+--all                write CpcMini as well as Cpc
+--mini               write CpcMini instead of Cpc
+--check              install nothing; ask whether what would be written is
+                     already what the signature compiles to
 --ethos PATH         compile with an Ethos checkout you already have
 ```
 
 Both scripts take `--help` for the rest of their options.
+
+`install-cpc.sh` exits 0 when it did what it was asked and 1 when it did not,
+and nothing else. Under `--check` that is 0 when every package it looked at is
+up to date and 1 when one of them is not, whether because it differs or because
+the signature never compiled; which of those happened is in the output rather
+than in the status.
 
 Requirements: `cmake` >= 3.12, a C++17 compiler, the GMP development headers
 (`libgmp-dev` on Debian and Ubuntu, `gmp` on Homebrew), `python3`, `tar`, and
@@ -132,10 +150,10 @@ compiler.
 
 ## install-sig.sh
 
-`install-cpc.sh` is `install-sig.sh` run twice, once plain and once `--mini`.
-Reach for `install-sig.sh` directly for one package, a reduced calculus, or a
-package of your own; `install-cpc.sh` refuses `--mini` and `--package` rather
-than pass them on.
+`install-cpc.sh` is `install-sig.sh` run once per package it was asked for.
+Reach for `install-sig.sh` directly for a reduced calculus or a package of your
+own; `install-cpc.sh` refuses `--package` rather than pass it on, since which
+packages it writes is what `--all` and `--mini` say.
 
 `--rules` selects more than which rule files are installed: the compiler builds
 the whole package around only the rules given, so the signature-wide modules
@@ -158,7 +176,7 @@ The Ethos commit is not an option. It is hardcoded as `ETHOS_VERSION` in
 `scripts/bump-eoc-version.py` moves it to the current head of `ethosEoc3` and
 copies that same revision's `tools/eoc/semantics/development-cpc.eos` into the
 authoritative `install/defs/Cpc.eos`. It then runs `get-eo-compiler.sh` and
-`install/install-cpc.sh --cached`.
+`install/install-cpc.sh --all --cached`.
 
 The Eunoia signature that Logos is compiled against is pinned by copy:
 `install/defs/Cpc.cached.eo` is the one the packages were compiled from, and

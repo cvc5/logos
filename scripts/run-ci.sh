@@ -102,7 +102,7 @@ run_regeneration() {
   fi
 
   echo "Checking that Cpc and CpcMini are what install/defs/Cpc.cached.eo compiles to..."
-  if bash install/install-cpc.sh --cached --check; then
+  if bash install/install-cpc.sh --all --cached --check; then
     return 0
   fi
   cat >&2 <<MSG
@@ -114,12 +114,12 @@ recorded.
 
 Regenerate both packages from the cached signature with
 
-  install/install-cpc.sh --cached
+  install/install-cpc.sh --all --cached
 
 or, if the signature has moved on and the packages should follow it, compile
 that one instead, which records it as it goes:
 
-  install/install-cpc.sh <cvc5>/proofs/eo/cpc/Cpc.eo
+  install/install-cpc.sh --all <cvc5>/proofs/eo/cpc/Cpc.eo
 MSG
   exit 1
 }

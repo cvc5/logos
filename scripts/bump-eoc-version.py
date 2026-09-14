@@ -185,7 +185,7 @@ def main(argv: list[str]) -> int:
         run_step("Building the pinned EOC compiler", [str(GET_EO_COMPILER)])
         run_step(
             "Regenerating CPC from the cached signature",
-            [str(INSTALL_CPC), "--cached"],
+            [str(INSTALL_CPC), "--all", "--cached"],
         )
     except (BumpError, OSError) as error:
         print(f"error: {error}", file=sys.stderr)
