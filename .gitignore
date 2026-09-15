@@ -21,3 +21,6 @@ docs/*.synctex.gz
 # scratch output, and local notes written beside a document.
 scratch/
 *.local.md
+
+# macOS directory metadata, which is not part of anything this repository ships.
+.DS_Store
