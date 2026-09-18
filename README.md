@@ -285,69 +285,32 @@ thing the tool reads, and not a claim about how well it reads it.
 
 ## How this repository is maintained
 
-This repository is part of the **Eunoia ecosystem** and follows its shared
-repository policy, kept by [kanon](https://github.com/ajreynol/kanon) in
-[`docs/policy.md`](https://github.com/ajreynol/kanon/blob/main/docs/policy.md).
+This repository is part of the **Eunoia ecosystem** and follows its
+[shared repository policy](https://github.com/ajreynol/kanon/blob/main/docs/policy.md).
+It does not use that ecosystem's channels for AI-directed work: there is no
+discussion file and no agent-facing maintenance page here, and anything another
+project wants to say to Logos is carried by a person.
 
-**Logos is written and maintained by people.** It is not an AI-written
-repository, and the ecosystem's usual description of one — *written by AI
-agents, under light human supervision* — does not describe it. An assistant is
-used on a maintainer's instruction, within bounds this section names and nowhere
-else; it holds no decision, and no part of what Logos claims.
+**Logos is written and maintained by people.** Everything that decides what a
+`correct` verdict *means* — the SMT-LIB model semantics (`Cpc/SmtModel.lean`),
+the correctness specification (`Cpc/Spec.lean`), the soundness theorem and the
+checker it is about, and the Eunoia definition of the calculus — is written and
+understood in full by its human maintainers. No claim Logos makes rests on a
+definition no human maintainer has read.
 
-Two things follow, and they are the ones most often assumed the other way:
+**Two parts are AI generated, and nothing else is.** The per-rule proofs under
+`Cpc/Proofs/Rules/` are checked by Lean against statements the maintainers
+wrote, and `scripts/check-proof-hygiene.sh` rejects `sorry`, `admit` and
+`axiom`, so how a proof was found does not affect what it establishes. The
+parser (`Logos/Parser.lean`, `Cpc/Parser.lean`) carries no such guarantee and
+none is claimed: it sits outside the correctness theorem, which speaks about the
+assumptions the parser reports rather than about the text of the file, so
+checking that those are the intended ones remains the user's obligation. See
+[Correctness](#correctness).
 
-- **This repository keeps no `docs/discussion.md` and no `docs/maintenance.md`.**
-  Both are optional under the shared policy and neither is wanted here. There is
-  no wire into this tree: anything another tool wants to say to Logos is carried
-  by a person, in their own voice, and an answer goes back the same way. The one
-  standing exception is [`docs/modularity.md`](docs/modularity.md), where
-  measurements exchanged with eudaimonia are recorded and checked — that is a
-  document about this repository's own structure, not a channel.
-- **The front page and `docs/` are the documentation, for maintainers as much as
-  for users.** There is no separate page addressed to whoever is doing the work,
-  because the work is not delegated.
+The s-expression reader `Logos/Sexp.lean` is adapted from
+[lean-smt](https://github.com/ufmg-smite/lean-smt), used under Apache 2.0; its
+header keeps the upstream copyright notice and author list and records how the
+file was modified.
 
-The `anoieu / policy` check takes the **pinned** form rather than anoieu's
-versioned contract: [`.github/workflows/anoieu.yml`](.github/workflows/anoieu.yml)
-names a commit, so nothing this check decides moves until a person moves that
-pin, and that file says what moving it takes.
-
-The rest of this section says which parts are AI generated and why that is
-acceptable for each. Logos is under active development, and these policies are
-subject to change.
-
-**Human maintained.** Everything that determines what a `correct` verdict
-*means* is written and understood in full by the human maintainers:
-
-- the SMT-LIB model semantics (`Cpc/SmtModel.lean`) and the correctness
-  specification (`Cpc/Spec.lean`), written up in
-  [docs/smt-model-definitions.pdf](docs/smt-model-definitions.pdf);
-- the soundness theorem and the checker it is about (`Cpc/Proofs/Checker.lean`,
-  `Cpc/Api.lean`, `Cpc/ApiCorrect.lean`) and the side conditions of
-  `Cpc/Proofs/Assumptions.lean`;
-- the Eunoia definition of the calculus and the compiler `ethos-eoc` that turns
-  it into the `Cpc` package.
-
-No claim Logos makes rests on a definition no human maintainer has read.
-
-**Borrowed.** The s-expression reader `Logos/Sexp.lean` is adapted from
-[lean-smt](https://github.com/ufmg-smite/lean-smt), used under Apache 2.0. It
-keeps the upstream copyright header and author list and states how it was
-modified; copies of the lean-smt `LICENSE` and `AUTHORS` its header refers to
-are in `licenses/`.
-
-**AI generated.** The internal proof details — the per-rule proofs under
-`Cpc/Proofs/Rules/` — and the parser (`Logos/Parser.lean`, `Cpc/Parser.lean`).
-
-The proofs are checked by Lean against human-maintained statements, and
-`scripts/check-proof-hygiene.sh` rejects `sorry`, `admit` and `axiom`; how such
-a proof was found does not affect what it establishes.
-
-The parser carries no such guarantee, and none is claimed: Logos is not yet
-battle tested and the accuracy of its parser is not guaranteed. The correctness
-result already says so — see [Correctness](#correctness) — the reader and the
-parser are both outside the theorem, which speaks about the assumptions the
-parser reports, not about the text of the file. Confirming that those
-assumptions are the intended ones remains the user's obligation, AI generated or
-not.
+Logos is under active development, and these policies are subject to change.
