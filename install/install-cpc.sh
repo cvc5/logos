@@ -38,7 +38,8 @@ Options:
   --all                regenerate CpcMini as well as Cpc
   --mini               regenerate CpcMini instead of Cpc
   --check              install nothing; report whether the package this run
-                       would write is already what the signature compiles to
+                       would write and the cached signature it would record
+                       are already up to date
   --ethos PATH         an ethos source tree to compile with
   --semantics PATH     what the symbols of the signature mean
                        (default: install/defs/Cpc.eos)
