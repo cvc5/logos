@@ -88,7 +88,7 @@
 (declare-const => (-> Bool Bool Bool) :right-assoc)
 (declare-const xor (-> Bool Bool Bool) :left-assoc)
 (declare-parameterized-const = ((A Type :implicit)) (-> A A Bool) :chainable and)
-(program $get_lambda_type ((T Type) (x T) (xs @List :list) (B Type))
+(program $get_lambda_type ((x @List) (xs @List :list) (B Type))
   :signature (@List Type) Type
   (
     (($get_lambda_type (@list x xs) B) (-> (eo::typeof x) ($get_lambda_type xs B)))
@@ -2212,7 +2212,7 @@
   )
 )
 (program $beta_reduce
-  ((U Type) (T Type) (S Type) (u U) (f (-> T U)) (a T) (t S) (x T) (xs @List :list) (ss @List :list) (X Type))
+  ((U Type) (T Type) (S Type) (u U) (f (-> T U)) (a T) (t S) (x T) (xs @List :list) (ss @List :list))
   :signature ((eo::quote u) (eo::quote ss)) ($beta_reduce_type (eo::typeof u) ss)
   (
   (($beta_reduce (_ (lambda (@list x xs) t) a) @list.nil)
@@ -2246,7 +2246,7 @@
   )
 )
 (program $is_seq_const_rec ((T Type) (e T) (ss (Seq T) :list))
-  :signature ((Seq T)) Int
+  :signature ((Seq T)) Bool
   (
   (($is_seq_const_rec (seq.++ (seq.unit e) ss))   ($is_seq_const_rec ss))
   (($is_seq_const_rec (as seq.empty (Seq T)))     true)
@@ -2254,7 +2254,7 @@
   )
 )
 (program $is_seq_const ((T Type) (e T) (ss (Seq T)))
-  :signature ((Seq T)) Int
+  :signature ((Seq T)) Bool
   (
   (($is_seq_const (seq.unit e)) true)
   (($is_seq_const ss)           ($is_seq_const_rec ss))
