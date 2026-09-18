@@ -94,6 +94,9 @@ run_proof_modularity() {
 # pass "skip" to pass silently where the compiler has not been set up, which is
 # what running every group locally wants.
 run_regeneration() {
+  echo "Checking the synchronization scripts..."
+  python3 -B -m unittest discover -s test/install -v
+
   if [ ! -f install/deps/eoc-env.sh ]; then
     if [ "${1:-}" = "skip" ]; then
       echo "Skipping the regeneration check: install/deps/eoc-env.sh is not"

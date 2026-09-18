@@ -115,6 +115,14 @@ only thing that writes the copy, so it and the packages stay in step. Two runs
 record nothing and say so: `--rules`, which compiles a reduced calculus, and
 `--package`, which installs something these two are not.
 
+With an explicit signature, `--check` also compares the flattened source with
+the cached copy whenever an install would record it. A changed signature must
+be recorded even when it compiles to identical Lean; a source-comment-only
+change does not affect the flattened copy. Missing or differing caches fail
+the check, as does a failure to flatten the source. This applies to `CpcMini`
+with its default rules too, but not to explicit `--rules`, custom packages, or
+`--cached`. The check leaves both the package and the cached copy untouched.
+
 The header of the file names the path the signature had, not the checkout or
 the commit; the scripts print the commit they read, for the message of the
 commit that updates the copy.

@@ -77,9 +77,10 @@ Options:
                        option is taken as a rule name
                        (default: the whole signature)
   --check              do not install anything: compile, compare against the
-                       package, and exit 0 only if it is already up to date,
-                       1 if an install would change it. Every other option
-                       means the same under --check as without it
+                       package and the cached signature an install would
+                       record, and exit 0 only if both are up to date,
+                       1 if an install would change either. Every other
+                       option means the same under --check as without it
   --semantics PATH     what the symbols of the signature mean, as a
                        configuration the compiler compiles before it runs
                        (default: <install>/defs/Cpc.eos)
@@ -787,6 +788,28 @@ if [ "${CHECK}" = "1" ]; then
       updates=$((updates + 1))
     fi
   done < "${current}"
+
+  # A signature change need not change the generated Lean. Compare the copy
+  # an install would record as well, before reporting success. --mini's own
+  # rule selection still records the full signature; explicit --rules and
+  # custom packages do not. --cached already compiled the recorded copy.
+  if [ "${CACHED}" = "0" ] && [ "${RULES_ASKED_FOR}" = "0" ] &&
+     { [ "${PACKAGE}" = "Cpc" ] || [ "${PACKAGE}" = "CpcMini" ]; }; then
+    fresh_cache="${CHECK_DIR}/Cpc.cached.eo"
+    if ! flatten_signature "${SIGNATURE}" "${fresh_cache}"; then
+      echo "error: could not flatten ${SIGNATURE} to check ${CACHE_FILE#"${repo_root}/"}." >&2
+      exit 1
+    fi
+    if ! cmp -s "${fresh_cache}" "${CACHE_FILE}"; then
+      open_list
+      if [ -e "${CACHE_FILE}" ]; then
+        echo "  update  ${CACHE_FILE#"${repo_root}/"} (cached signature differs)"
+      else
+        echo "  add     ${CACHE_FILE#"${repo_root}/"} (cached signature missing)"
+      fi
+      updates=$((updates + 1))
+    fi
+  fi
 
   if [ "${updates}" -eq 0 ]; then
     if [ "${BRIEF}" = "0" ]; then
