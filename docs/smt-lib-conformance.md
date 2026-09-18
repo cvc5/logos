@@ -69,9 +69,10 @@ built on.
 
 ## `Real` is interpreted as the rationals
 
-`SmtValue.Rational` carries a Lean `Rat` (`Cpc/SmtEval.lean:28`), and it is the
-only numeric value at type `Real`. The reals of every model are therefore exactly
-ℚ, and quantification over `Real` ranges over ℚ.
+`SmtValue.Rational` (`Cpc/SmtModelDefs.lean:208`) carries a `native_Rat`, which
+is Lean's `Rat` (`Cpc/SmtEval.lean:28`), and it is the only numeric value at
+type `Real`. The reals of every model are therefore exactly ℚ, and
+quantification over `Real` ranges over ℚ.
 
 It bites in nonlinear arithmetic, where a solution may be irrational:
 

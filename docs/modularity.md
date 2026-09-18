@@ -21,7 +21,7 @@ a new calculus can take the file essentially as-is.
 
 | layer | files | Cpc | CpcMini | reusable? |
 | --- | --- | ---: | ---: | --- |
-| checker | `Proofs/{Checker,CheckerState,CheckerCore}.lean`, `Proofs/Invariants/Stability.lean`, `Proofs/RuleSupport/Contract.lean`, `Proofs/Assumptions.lean` | 4,460 | 4,045 | yes, except `Assumptions.lean` |
+| checker | `Proofs/{Checker,CheckerState,CheckerCore}.lean`, `Proofs/Invariants/Stability.lean`, `Proofs/RuleSupport/Contract.lean`, `Proofs/Assumptions.lean` | 4,411 | 3,996 | yes, except `Assumptions.lean` |
 | common | `Proofs/{Common,CommonBoolOps,TermCompat}.lean` | 1,422 | 836 | mostly |
 | translation | `Proofs/Translation*` | 33,463 | 5,167 | no — signature-specific |
 | type preservation | `Proofs/TypePreservation*` | 17,700 | 5,633 | no — signature-specific |
@@ -36,7 +36,7 @@ Everything else — `Logos.lean`, `LogosTerm.lean`, `SmtEval.lean`,
 see `install/install-sig.sh`.
 
 **Read that table before planning work.** The checker layer is 4.0K of
-CpcMini's ~17.4K hand-written lines (23%), and 4.5K of Cpc's ~730K (0.6%). The
+CpcMini's ~17.3K hand-written lines (23%), and 4.4K of Cpc's ~730K (0.6%). The
 checker layer is now in good shape; the cost of a new checker is dominated by
 the *semantics* layer. See TODO 5.
 
@@ -234,7 +234,7 @@ Needs an eoc template change, and a `Decidable` instance per rule so
 `Checker.lean`, `CheckerState.lean`, `RuleSupport/Contract.lean` and a generic
 `Assumptions.lean` should be *seeded* into a new package and then owned by it —
 the install-once, preserve-if-present treatment that `Proofs/Rules/*.lean`
-already gets in `install/install-sig.sh` (see the loop near line 652). Today
+already gets in `install/install-sig.sh` (see the loop near line 723). Today
 they are hand-maintained per package, and they drifted: before being unforked,
 Cpc's and CpcMini's `Checker.lean` differed by 376 lines purely because CpcMini
 did not need one invariant.
@@ -245,7 +245,7 @@ references, zero `CRule`, zero `UserOp`.
 ### 3. Split `CheckerCore.lean` per invariant
 
 It still holds four invariants, the bundle, and the rule bridge in one file
-(1,123 / 1,005 lines). Splitting into `Invariants/{Type,Translation,LocalTruth}.lean`
+(1,120 / 1,002 lines). Splitting into `Invariants/{Type,Translation,LocalTruth}.lean`
 plus a bundle module would let a consumer replace the *translation* invariant —
 relevant if your specification is not "translate to SMT-LIB and interpret".
 
@@ -261,7 +261,7 @@ idiom, is cheap. Low value until someone hits it.
 
 ### 5. Make the semantics layer cheaper — the biggest lever
 
-Cpc: semantics layer 93,530 lines against a 4,460-line checker layer. Whatever
+Cpc: semantics layer 93,530 lines against a 4,411-line checker layer. Whatever
 else is done to the checker has bounded returns; **this** is what a new consumer
 pays.
 
@@ -312,7 +312,7 @@ validate.
 
 ### 6. Move calculus-independent material into `Logos/`
 
-The `Logos` library is 1,135 lines (`Sexp.lean`, `Parser.lean`). Everything
+The `Logos` library is 1,152 lines (`Sexp.lean`, `Parser.lean`). Everything
 reusable lives in per-package files instead, because `Term`, `CState` and
 `CRule` are generated per package.
 
@@ -385,16 +385,20 @@ nothing.
 
 ### 9. Split `Closed/Support.lean`
 
-7,917 lines in one file, now reached only through `Invariants/Stability.lean`.
-It mixes generic closedness machinery with binder/variable-model stability. A
+7,917 lines in one file. The **checker layer** reaches it only through
+`Invariants/Stability.lean`, which is the point — the rule side reaches it
+directly, from `Closed/IsClosedRec.lean` and `RuleSupport/Support.lean`. It
+mixes generic closedness machinery with binder/variable-model stability. A
 calculus without binders pays nothing for it today, so this is low priority —
 but it is a monolith and the natural next `Invariants/` tenant.
 
 ### 10. Organize `RuleSupport/`
 
-352,795 lines in one flat directory. Rule-specific, so off the critical path for
-modularity, but it is the bulk of the repository and would benefit from
-theory-level structure.
+352,795 lines across 172 files. Four theory-level subdirectories already hold
+120,668 of them — `Cong/`, `Evaluate/`, `StrInReConsume/` and `Substitute/` —
+and the remaining 232,127 lines sit flat at the top level in 118 files. So the
+pattern exists and has not been carried through. Rule-specific, so off the
+critical path for modularity, but it is the bulk of the repository.
 
 ### 11. Guard the properties this work established — **done**
 
@@ -432,18 +436,24 @@ Logos packages should be one file modulo the calculus name. That is what would
 make the template *the* soundness proof rather than a copy of it, and it is the
 natural end state of TODO 2.
 
-Two things block it, both on the Eudaimonia side and both deliberate. Both
-still hold, re-checked 2026-08-30:
+One thing blocks it, on the Eudaimonia side and deliberate. Re-checked
+2026-09-18 at eudaimonia `f0b1a08`:
 
-- `templates/pkg/Proofs/Checker.lean.in` is 61 lines of description rather than
-  proof, and `CheckerCore.lean.in` 23, so there is nothing to compare against.
-- `get-eo-compiler.sh` still has `DEV_MODE=1`, building the head of the
-  `ethosEoc3` branch rather than a pinned commit, so a cross-repository check
-  would be comparing against a moving target. Their roadmap has leaving
-  development mode as its own item.
+- `templates/pkg/Proofs/Checker.lean.in` is 81 lines whose theorem is a
+  `sorry`, and `CheckerCore.lean.in` 163 lines that define every invariant as
+  `True` and the obligation as a proposition with no constructor. Both are
+  larger than they were and neither is proof, so there is still nothing to
+  compare against.
+
+**The second blocker is gone.** It was that `get-eo-compiler.sh` had
+`DEV_MODE=1` and built the head of `ethosEoc3`, so a cross-repository check
+would have compared against a moving target. Their generated checkers now pin
+`8dc85c4d` — the ethos 0.2.4 release on `main`, 2026-09-11 — with `DEV_MODE=0`,
+and following the tip is a per-run option rather than the default. What a
+cross-repository check would compare is now fixed on both sides.
 
 **What has changed is where to start.** `templates/pkg/Proofs/Assumptions.lean.in`
-is no longer a stub: it is 101 real lines, seeded from CpcMini's generic
+is no longer a stub: it is 122 real lines, seeded from CpcMini's generic
 version, with `Decidable` instances and both `ApiChecks.lean` bridge lemmas
 proven against it. So the first file to bring under a cross-repository identity
 check is `Assumptions.lean`, not `Checker.lean` — it is available now, and it
@@ -475,15 +485,16 @@ calls reusable hard-code a variable-model notion:
 - `Proofs/RuleSupport/Contract.lean:83`, `ContextualTruth`, the predicate
   `Proofs/Checker.lean` is stated against, carries a `true_in_var_model` field
   **in both packages**;
-- `Proofs/CheckerCore.lean:1036`, `CmdStepFacts`, carries the same field, also
+- `Proofs/CheckerCore.lean:1033`, `CmdStepFacts`, carries the same field, also
   in both;
 - `model_agrees_on_globals` (`Contract.lean:41`) exists to state them.
 
 So `CpcMini` — no binders, `checkerExtraInvariant := True` — still discharges a
 variable-model obligation on every push. Only `RulePremiseEvidence` is
-conditional, which is why `Contract.lean` still differs between the packages by
-46 lines, of which the field is the only real one; the rest is declaration
-order, docstrings and `set_option`.
+conditional, which is why `Contract.lean` still differs between the packages at
+all: 48 lines under the package-name-normalizing diff
+`scripts/check-proof-modularity.sh` uses, 34 of them only in Cpc. The field is
+the only real one; the rest is declaration order, docstrings and `set_option`.
 
 The fix is to give the slot a fifth and sixth name — an `extraContextualTruth`
 and an `extraPremiseEvidence`, `True` by default, defined where
@@ -509,8 +520,9 @@ it is the last file of the checker layer that is forked for no stated reason.
 
 ## Cross-reference: the Eudaimonia roadmap
 
-`~/eudiamonia/TODO.md` §4b measures the same tree independently and reaches
-compatible conclusions. Two of its findings are worth importing here.
+[eudaimonia](https://github.com/ajreynol/eudaimonia)'s `TODO.md`, *Modularizing
+Logos — what is actually reusable*, measures the same tree independently and
+reaches compatible conclusions. Two of its findings are worth importing here.
 
 **Syntactic independence is not semantic independence.** Compilation
 *configures the model*: `SmtModel.lean` is 743 lines in CpcMini and 2,186 in
@@ -553,7 +565,8 @@ trust. Two things arrived in return and are now acted on here:
 
 One correction to send back: `docs/logos-experience-report.md` records
 `Cpc/Proofs/Checker.lean` as 1,063 lines. It is 901, and has been since the
-modularization in `ea3c7002`.
+modularization in `ea3c7002`. It is still open; it is restated with the rest
+below.
 
 And one finding they will want, because it is the kind of thing only visible
 from inside a working development: **do not let a proof name a generated
@@ -563,6 +576,69 @@ say so — see
 [the hazard](#the-hazard-that-broke-it-before-generated-arm-numbers). Their
 `templates/pkg/Proofs/` files carry exactly the kind of prose that should carry
 it.
+
+### eudaimonia-D12, and why the answer here is a triage rather than a verdict (2026-09-18)
+
+They propose that `Proofs/Checker.lean` take the two rule-bridge theorems —
+`cmd_step_proven_facts_of_invariants` and
+`cmd_step_pop_proven_facts_of_invariants` — as parameters rather than as an
+import of `Proofs/RuleLemmas.lean`, which would make
+`correct___eo_is_refutation` conditional on the rule bridge. Their case is that
+`scripts/check-checker-soundness.sh` already runs the experiment, and the
+module structure should become what the script simulates.
+
+**Their measurement is right, re-derived here at `be479120` rather than taken
+on trust.** `Proofs/Checker.lean` is 901 lines and byte-identical across the
+two packages modulo the package name; it takes exactly those two names from
+`RuleLemmas` and nothing else; the call sites are lines 65, 148, 209 and 343;
+4 of its 25 declarations name them directly and 15 of 25 need them
+transitively. The 10 that do not are the `typeInvariant` and `shapeInvariant`
+family together with the two `localTruthInvariant_of_*` lemmas.
+
+**What the change costs past this file**, which the topic states and is worth
+having in one place here. `correct___eo_is_refutation` is named by `Cpc/Api.lean`,
+`Cpc/ApiChecks.lean`, `Cpc/ApiCorrect.lean`, `Cpc/Native.lean`,
+`Cpc/Native/Correct.lean` and `Cpc/Proofs/Assumptions.lean`. `ApiCorrect.lean`
+restates it about the text of a proof file, so the hypotheses thread outward to
+`correct___logos_check_proof` and `correct___logos_state_is_refutation` — the
+two statements the README's *Correctness* section makes to somebody running the
+executable.
+
+**One fact that changes the shape of the trade, and is not in the topic.**
+Parameterizing does not put the *unconditional* theorem into CI. Applying the
+two bridges still goes through `RuleLemmas.lean`, hence through all 591 rule
+proofs, hence through the two-hour build, wherever that application is written
+down. What moves is where the unproven boundary is drawn and what the top-level
+statement says — not how much of the tree a push verifies. The conditional half
+is already verified on every push, in 1.7 seconds, by the script the proposal
+cites. That cuts both ways and it is theirs to weigh: it weakens *a consumer
+would gain a soundness proof it can build* to *a consumer would gain a soundness
+proof it can build, conditional on obligations it still cannot discharge*, and
+it strengthens the argument that an import is the weaker way of saying what the
+theorem has always meant, since nothing about coverage is being given up.
+
+**Why there is no verdict here.** This is a change to what `correct` claims, and
+the README reserves the soundness theorem and the specification of what a
+`correct` verdict means to the human maintainers — explicitly not to an agent.
+So this section records what was measured and what the change would reach; the
+decision the topic asks for is a person's, and neither of the two artifacts its
+*Settles when* names can be produced without one.
+
+**Corrections queued for eudaimonia**, both line counts in their tree and
+neither urgent:
+
+- `docs/logos-experience-report.md` records `Proofs/Checker.lean` as 1,063
+  lines in its summary table. It is 901, which is what the same document says
+  in its own `Proofs/Checker.lean` section — so the table disagrees with the
+  body rather than with us. First raised 2026-08-30 and still open.
+- `docs/eoc-requests.md`, *Seed the checker layer as templates*, records
+  `CheckerCore.lean` at 1,123 lines. It is 1,120 in `Cpc` and 1,002 in
+  `CpcMini`, and has been since `43732cc5` removed five unused `imp` lemmas.
+  This document carried the same stale number and has been corrected. The
+  246-line divergence recorded beside it is not reproduced here: the
+  package-name-normalizing diff `scripts/check-proof-modularity.sh` uses gives
+  180 marked lines and a raw diff 188, so the measures differ rather than the
+  trees — worth settling which is meant before either side quotes it again.
 
 ## A note on mechanical file splitting
 

@@ -6,10 +6,18 @@ document here assumes it has been read.
 
 | document | what it holds |
 | --- | --- |
+| [`maintenance.md`](maintenance.md) | how a person maintains this repository, possibly by directing an agent: where to start, which commands there are, and which decisions are not an agent's |
 | [`smt-model-definitions.pdf`](smt-model-definitions.pdf) | the write-up: the SMT-LIB model semantics, the correctness specification and the checker. Built from [`smt-model-definitions.tex`](smt-model-definitions.tex) by `make -C docs`, and committed so it can be read without a LaTeX installation |
 | [`smt-lib-conformance.md`](smt-lib-conformance.md) | where the model semantics is narrower than SMT-LIB, where it extends beyond the standard, and what is refused outright |
 | [`parser.md`](parser.md) | the CPC parser: its two layers, the commands and term syntax it accepts, and how it lexes literals. It is unverified, and outside the correctness theorem |
 | [`lean-native-proofs.md`](lean-native-proofs.md) | `logos-native` and the Lean-native proof format it reads: a secondary, experimental path that runs the same checks |
-| [`modularity.md`](modularity.md) | how far the core checker has been separated from the calculus it checks, what a second calculus would have to supply, and what is left to do |
+| [`modularity.md`](modularity.md) | how far the core checker has been separated from the calculus it checks, what a second calculus would have to supply, and what is left to do. Also the channel with eudaimonia, and the TODO list this repository works from |
+| [`discussion.md`](discussion.md) | live correspondence with the other tools of the Eunoia ecosystem. Nothing in it is acted on unless a person says to, naming the topic |
 
-[`old/`](old) keeps the superseded LaTeX source of the write-up.
+[`../install/README.md`](../install/README.md) sits with the scripts it
+describes rather than here: it is how the `Cpc` and `CpcMini` packages are
+compiled from the Eunoia definition of CPC, what is generated and what is left
+alone.
+
+[`misc/`](misc) keeps what is retained for the record and required of nobody —
+currently the superseded LaTeX source of the write-up.

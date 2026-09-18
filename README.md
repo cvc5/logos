@@ -285,7 +285,17 @@ thing the tool reads, and not a claim about how well it reads it.
 
 ## How this repository is maintained
 
-This repository is part of the **Eunoia ecosystem**.
+This repository is part of the **Eunoia ecosystem** and follows its shared
+repository policy, kept by [kanon](https://github.com/ajreynol/kanon) in
+[`docs/policy.md`](https://github.com/ajreynol/kanon/blob/main/docs/policy.md).
+[`docs/maintenance.md`](docs/maintenance.md) is where a person maintaining this
+repository starts.
+
+The `anoieu / policy` check here takes the **pinned** form rather than anoieu's
+versioned contract: [`.github/workflows/anoieu.yml`](.github/workflows/anoieu.yml)
+names a commit, so nothing this check decides moves until a person moves that
+pin. What moving it takes is in
+[`docs/maintenance.md`](docs/maintenance.md#the-ecosystem-check).
 
 Parts of Logos are AI generated. This section says which, and why that is
 acceptable for each. Logos is under active development, and these policies are

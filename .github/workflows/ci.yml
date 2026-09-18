@@ -34,8 +34,9 @@ jobs:
         uses: actions/checkout@v6
 
       # Textual, so no Lean toolchain: that the two packages share one
-      # Checker.lean, that it names no rule and no operator, and that the
-      # checker layer depends on `and` alone. See docs/modularity.md.
+      # Checker.lean, that it names no rule and no operator, that the checker
+      # layer depends on `and` alone, and that no rule file imports another.
+      # See docs/modularity.md.
       - name: Check checker-layer modularity
         run: bash scripts/run-ci.sh proof-modularity
 
@@ -121,9 +122,12 @@ jobs:
 
   verify:
     if: ${{ always() }}
+    # Every job above belongs here. A job left out of `needs` is a check whose
+    # failure this gate cannot see, which is worse than not having written it.
     needs:
       - checks
       - proof_hygiene
+      - proof_modularity
       - regeneration
     runs-on: ubuntu-latest
     permissions: {}
@@ -132,6 +136,7 @@ jobs:
         env:
           CHECKS_RESULT: ${{ needs.checks.result }}
           PROOF_HYGIENE_RESULT: ${{ needs.proof_hygiene.result }}
+          PROOF_MODULARITY_RESULT: ${{ needs.proof_modularity.result }}
           REGENERATION_RESULT: ${{ needs.regeneration.result }}
         run: |
           if [ "${CHECKS_RESULT}" != "success" ]; then
@@ -140,6 +145,10 @@ jobs:
           fi
           if [ "${PROOF_HYGIENE_RESULT}" != "success" ]; then
             echo "Proof hygiene did not pass: ${PROOF_HYGIENE_RESULT}" >&2
+            exit 1
+          fi
+          if [ "${PROOF_MODULARITY_RESULT}" != "success" ]; then
+            echo "The proof-modularity check did not pass: ${PROOF_MODULARITY_RESULT}" >&2
             exit 1
           fi
           if [ "${REGENERATION_RESULT}" != "success" ]; then
