@@ -6,7 +6,7 @@
 # rather than documented.  Nothing here builds anything: it is a grep pass over
 # a dozen files and runs in well under a second.
 #
-# What is checked, and why it matters, is in docs/modularity.md.
+# Each check below says what it is for and what went wrong when it was absent.
 
 set -euo pipefail
 
@@ -50,8 +50,7 @@ core_files() {
 #   Proofs/TypePreservation/Predicates.lean   all.  They are here so that the set
 #   Proofs/Canonical/TypeDefaultBasic.lean    of files a second checker could
 #                                          inherit is measured rather than
-#                                          assumed -- see docs/modularity.md,
-#                                          TODO 5.
+#                                          assumed.
 SHARED_FILES=(
   "Proofs/Checker.lean"
   "Proofs/CheckerState.lean"
@@ -151,6 +150,6 @@ echo
 if [ "${fail}" = "0" ]; then
   echo "Checker modularity check passed."
 else
-  echo "Checker modularity check FAILED. See docs/modularity.md for what these invariants are for." >&2
+  echo "Checker modularity check FAILED. The comments in scripts/check-proof-modularity.sh say what each invariant is for." >&2
   exit 1
 fi

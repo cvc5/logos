@@ -23,9 +23,9 @@ quantifier-free linear fragments the two agree.
 ## What `correct` means, exactly
 
 Unsatisfiability in the specification is *false under every well-formed model*
-(`smt_satisfiability`, `Cpc/SmtModel.lean:2176`), where a model assigns each
-symbol a value of the right SMT type (`model_wf`, `Cpc/SmtModel.lean:2164`), and
-the values available at a type are the inhabitants of `SmtValue` at that type.
+(`smt_satisfiability` in `Cpc/SmtModel.lean`), where a model assigns each symbol
+a value of the right SMT type (`model_wf`, in the same file), and the values
+available at a type are the inhabitants of `SmtValue` at that type.
 
 That value inductive is where the narrowing happens. Read on the standard
 theories alone, every model of this semantics is an SMT-LIB model, and not every
@@ -69,9 +69,10 @@ built on.
 
 ## `Real` is interpreted as the rationals
 
-`SmtValue.Rational` carries a Lean `Rat` (`Cpc/SmtEval.lean:28`), and it is the
-only numeric value at type `Real`. The reals of every model are therefore exactly
-ℚ, and quantification over `Real` ranges over ℚ.
+`SmtValue.Rational` (`Cpc/SmtModelDefs.lean`) carries a `native_Rat`, which is
+Lean's `Rat` (`Cpc/SmtEval.lean`), and it is the only numeric value at type
+`Real`. The reals of every model are therefore exactly ℚ, and quantification
+over `Real` ranges over ℚ.
 
 It bites in nonlinear arithmetic, where a solution may be irrational:
 
@@ -89,9 +90,10 @@ has a rational solution.
 
 A value of an uninterpreted sort is `UValue i n` for a natural `n`
 (`Cpc/SmtModelDefs.lean`), and every such value has type `USort i`
-(`Cpc/SmtModel.lean:1644`), so each uninterpreted sort is interpreted as a
-countably infinite domain. SMT-LIB allows any nonempty cardinality, finite
-included. The write-up states the assumption; nothing enforces or checks it.
+(`__smtx_typeof` in `Cpc/SmtModel.lean`), so each uninterpreted sort is
+interpreted as a countably infinite domain. SMT-LIB allows any nonempty
+cardinality, finite included. The write-up states the assumption; nothing
+enforces or checks it.
 
 It bites on quantified cardinality constraints:
 
@@ -116,7 +118,7 @@ from**, so the reference for them is CPC's meaning, not the standard's, and the
 proofs of the rules that use them are what ties the two together.
 
 Two facts about them are worth knowing anyway. Every set value is finite
-(canonicity forces the map default to `false`, `Cpc/SmtModel.lean:1903`), which
+(canonicity forces the map default to `false`, in `Cpc/SmtModel.lean`), which
 the available set operators preserve; and out-of-bounds `seq.nth` is
 underspecified through a model-dependent function, `@oob_seq_nth`, in the same
 way SMT-LIB underspecifies partial standard operators.
@@ -124,9 +126,8 @@ way SMT-LIB underspecifies partial standard operators.
 ## A coverage limit, not a semantic one: parametric datatypes
 
 Parametric datatypes are refused, not mismodeled. Both the sort list and a `par`
-body are rejected during parsing (`Logos/Parser.lean:685`, `Logos/Parser.lean:776`)
-with `parametric datatype ... is not supported`, and the run exits 1 without a
-verdict. `SmtDatatypeDecl` carries no type parameter, so there is nothing for
+body are rejected during parsing, in `Logos/Parser.lean`, with `parametric
+datatype ... is not supported`, and the run exits 1 without a verdict. `SmtDatatypeDecl` carries no type parameter, so there is nothing for
 such a declaration to translate to.
 
 This costs coverage and nothing else: a proof over parametric datatypes is not
@@ -145,7 +146,7 @@ conditions fail and the run reports `incomplete` rather than `correct`.
   models disagreeing about `(div 1 0)` are all admitted, and nothing here fixes a
   value for it.
 - **The character alphabet** is SMT-LIB's, code points `0` to `196607`
-  (`native_char_valid`, `Cpc/SmtEval.lean:36`).
+  (`native_char_valid`, `Cpc/SmtEval.lean`).
 - **Uninterpreted functions** get the full function space, not the almost-constant
   restriction arrays carry.
 
