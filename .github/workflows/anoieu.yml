@@ -10,7 +10,15 @@ jobs:
       - name: the policy, at the commit this repository pins
         env:
           # The checker this repository is held to. Moved by a commit here, and
-          # only to a commit where anoieu's own CI is green.
+          # only to a commit where anoieu's own CI is green for that exact
+          # commit -- unknown is not green, and nothing here asks, so a bump is
+          # a person checking first.
+          #
+          # A bump is two edits, not one: anoieu moved the checker from
+          # tools/policy_check.py to scripts/policy_check.py on 2026-09-15, the
+          # day after this pin, so the path below moves with the revision.
+          # Changing only ANOIEU_REV fails with "No such file or directory"
+          # rather than with a policy result.
           ANOIEU_REV: 7cdaab3
         run: |
           git clone --quiet https://github.com/ajreynol/anoieu /tmp/anoieu

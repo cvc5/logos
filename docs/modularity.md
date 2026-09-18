@@ -618,11 +618,14 @@ it strengthens the argument that an import is the weaker way of saying what the
 theorem has always meant, since nothing about coverage is being given up.
 
 **Why there is no verdict here.** This is a change to what `correct` claims, and
-the README reserves the soundness theorem and the specification of what a
-`correct` verdict means to the human maintainers — explicitly not to an agent.
-So this section records what was measured and what the change would reach; the
-decision the topic asks for is a person's, and neither of the two artifacts its
-*Settles when* names can be produced without one.
+the soundness theorem is one of the parts of Logos its human maintainers write
+and understand in full — see the front page. So this section records what was
+measured and what the change would reach; the decision itself is theirs, and
+neither of the two artifacts the topic's *Settles when* names can be produced
+without them. That answer is not a delay and is not a decline: the topic offered
+two reasons a *no* might have, and it is neither of them, so the right thing to
+record on the eudaimonia side is *open*, not *declined*. Documenting the `sorry`
+as permanent would be writing down a decision nobody has made.
 
 **Corrections queued for eudaimonia**, both line counts in their tree and
 neither urgent:

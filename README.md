@@ -288,16 +288,32 @@ thing the tool reads, and not a claim about how well it reads it.
 This repository is part of the **Eunoia ecosystem** and follows its shared
 repository policy, kept by [kanon](https://github.com/ajreynol/kanon) in
 [`docs/policy.md`](https://github.com/ajreynol/kanon/blob/main/docs/policy.md).
-[`docs/maintenance.md`](docs/maintenance.md) is where a person maintaining this
-repository starts.
 
-The `anoieu / policy` check here takes the **pinned** form rather than anoieu's
+**Logos is written and maintained by people.** It is not an AI-written
+repository, and the ecosystem's usual description of one — *written by AI
+agents, under light human supervision* — does not describe it. An assistant is
+used on a maintainer's instruction, within bounds this section names and nowhere
+else; it holds no decision, and no part of what Logos claims.
+
+Two things follow, and they are the ones most often assumed the other way:
+
+- **This repository keeps no `docs/discussion.md` and no `docs/maintenance.md`.**
+  Both are optional under the shared policy and neither is wanted here. There is
+  no wire into this tree: anything another tool wants to say to Logos is carried
+  by a person, in their own voice, and an answer goes back the same way. The one
+  standing exception is [`docs/modularity.md`](docs/modularity.md), where
+  measurements exchanged with eudaimonia are recorded and checked — that is a
+  document about this repository's own structure, not a channel.
+- **The front page and `docs/` are the documentation, for maintainers as much as
+  for users.** There is no separate page addressed to whoever is doing the work,
+  because the work is not delegated.
+
+The `anoieu / policy` check takes the **pinned** form rather than anoieu's
 versioned contract: [`.github/workflows/anoieu.yml`](.github/workflows/anoieu.yml)
 names a commit, so nothing this check decides moves until a person moves that
-pin. What moving it takes is in
-[`docs/maintenance.md`](docs/maintenance.md#the-ecosystem-check).
+pin, and that file says what moving it takes.
 
-Parts of Logos are AI generated. This section says which, and why that is
+The rest of this section says which parts are AI generated and why that is
 acceptable for each. Logos is under active development, and these policies are
 subject to change.
 
