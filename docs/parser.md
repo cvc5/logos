@@ -26,9 +26,6 @@ covers every operator and proof rule; it runs in the `regressions` CI group.
 
 The parser supports the commands `declare-const`, `declare-fun`, `declare-sort`,
 `declare-datatypes`, `define`, `assume`, `assume-push`, `step` and `step-pop`.
-`Logos/Parser.lean` is the ground truth for that list, and its own error message
-for an unrecognised command carries a third copy of it; nothing compares the
-three, so a command added there has to be added here by hand.
 Every `assume` must stand before the first proof step, since a proof is read as an
 assumption set together with the steps that refute it; an `assume` after a `step`,
 `assume-push` or `step-pop` is refused, where Ethos accepts one anywhere.

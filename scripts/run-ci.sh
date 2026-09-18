@@ -79,7 +79,6 @@ run_proof_hygiene() {
 # Modularity invariants of the checker layer: that the two packages share one
 # Checker.lean, that it names no rule and no operator, and that the layer
 # depends on `and` alone. Textual, so it needs no toolchain and no build.
-# See docs/modularity.md.
 #
 # The rule layer's one structural invariant rides along here, for the same
 # reason: a rule file importing another rule file makes the two a unit, and

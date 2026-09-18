@@ -620,8 +620,7 @@ LEAN_DIR="${OUT_DIR}/lean"
 #
 # The list is one operator plus a conditional. It is short because the checker
 # layer was reduced to it -- `not`, `=` and `imp` were requirements once and
-# are not now. What each entry is for is in docs/modularity.md, "What a new
-# checker supplies".
+# are not now. Each entry below says what it is for.
 echo "==> Checking the signature contract"
 contract_errors=()
 
@@ -654,11 +653,11 @@ fi
 
 # 3. `:right-assoc-nil true` -- but only where the calculus needs it.
 #
-#    It is tempting to require the attribute outright, and docs/modularity.md
-#    did. It is not a core requirement: compiling with a plain binary `and`
-#    leaves `__eo_invoke_assume_list`, the refutation test and the SMT
-#    translation byte-identical. What changes is that the parser stops
-#    accepting n-ary `(and a b c)`, which is surface syntax.
+#    It is tempting to require the attribute outright. It is not a core
+#    requirement: compiling with a plain binary `and` leaves
+#    `__eo_invoke_assume_list`, the refutation test and the SMT translation
+#    byte-identical. What changes is that the parser stops accepting n-ary
+#    `(and a b c)`, which is surface syntax.
 #
 #    Where it does bite is `:list` premises. A rule that gathers its premises
 #    with `and` builds the list through `__eo_nil`, and the `and` arm of
@@ -687,7 +686,7 @@ if [ "${#contract_errors[@]}" -gt 0 ]; then
   echo >&2
   echo "  (declare-const and (-> Bool Bool Bool) :right-assoc-nil true)" >&2
   echo >&2
-  echo "Nothing has been installed. See docs/modularity.md." >&2
+  echo "Nothing has been installed." >&2
   exit 1
 fi
 if [ "${uses_and_premise_lists:-0}" = "1" ]; then

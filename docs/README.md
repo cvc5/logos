@@ -10,12 +10,11 @@ document here assumes it has been read.
 | [`smt-lib-conformance.md`](smt-lib-conformance.md) | where the model semantics is narrower than SMT-LIB, where it extends beyond the standard, and what is refused outright |
 | [`parser.md`](parser.md) | the CPC parser: its two layers, the commands and term syntax it accepts, and how it lexes literals. It is unverified, and outside the correctness theorem |
 | [`lean-native-proofs.md`](lean-native-proofs.md) | `logos-native` and the Lean-native proof format it reads: a secondary, experimental path that runs the same checks |
-| [`modularity.md`](modularity.md) | how far the core checker has been separated from the calculus it checks, what a second calculus would have to supply, and what is left to do. Also the channel with eudaimonia, and the TODO list this repository works from |
+| [`modularity.md`](modularity.md) | how far the core checker is separated from the calculus it checks, what a checker for another calculus would have to supply, and what is left to do |
 
 [`../install/README.md`](../install/README.md) sits with the scripts it
 describes rather than here: it is how the `Cpc` and `CpcMini` packages are
 compiled from the Eunoia definition of CPC, what is generated and what is left
 alone.
 
-[`misc/`](misc) keeps what is retained for the record and required of nobody —
-currently the superseded LaTeX source of the write-up.
+[`misc/`](misc) keeps the superseded LaTeX source of the write-up.
