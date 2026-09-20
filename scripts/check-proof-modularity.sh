@@ -44,7 +44,7 @@ core_files() {
 #                                          Proofs/Common.lean where CpcMini
 #                                          inlined the same proofs, and because
 #                                          CpcMini named generated equation-lemma
-#                                          arms by number (see check 5).
+#                                          arms by number (see check 6).
 #   Proofs/TypePreservation/Datatypes.lean semantics-layer proofs that turned out
 #   Proofs/TypePreservation/Nonvacuity.lean   not to vary with the signature at
 #   Proofs/TypePreservation/Predicates.lean   all.  They are here so that the set
@@ -106,7 +106,30 @@ for pkg in Cpc CpcMini; do
   [ "${n}" = "0" ] || bad "${f} mentions 'Invariant' ${n} time(s); invariants belong in CheckerCore.lean or Invariants/."
 done
 
-# 4. The checker layer depends on exactly one signature symbol.
+# 4. Every file the checker layer is declared to consist of is there.
+#
+# Checks 5 and 6 read `core_files`, and both read it through a shell pipeline
+# that discards what it cannot open: a file renamed or removed from the tree but
+# left in the list would narrow them silently, and the operator dependency of a
+# file nothing opened is `<none>`. Say which file is missing instead, since the
+# list is the only statement anywhere of what the layer is.
+echo "Checking that the declared checker layer is all present..."
+for pkg in Cpc CpcMini; do
+  missing=()
+  while IFS= read -r f; do
+    [ -f "${f}" ] || missing+=("${f}")
+  done < <(core_files "${pkg}")
+  if [ "${#missing[@]}" -ne 0 ]; then
+    bad "${pkg}: the checker layer names ${#missing[@]} file(s) that are not in the tree:"
+    printf '    %s\n' "${missing[@]}" >&2
+    bad "  Either restore them or update core_files() in this script; the checks"
+    bad "  below read that list and cannot see a file it names wrongly."
+  else
+    note "${pkg}: all $(core_files "${pkg}" | wc -l | tr -d ' ') files"
+  fi
+done
+
+# 5. The checker layer depends on exactly one signature symbol.
 #
 # `and` is irreducible: the checker folds the proof state into an and-chain and
 # soundness is stated about it.  `not`, `eq` and `imp` were removed and live in
@@ -114,8 +137,10 @@ done
 # appearing here is a new requirement on every consumer's signature.
 echo "Checking the checker layer's operator dependency..."
 for pkg in Cpc CpcMini; do
-  ops=$(cat $(core_files "${pkg}") 2>/dev/null \
-          | grep -o 'UserOp\.[a-zA-Z_0-9]*' | sort -u | sed 's/UserOp\.//' | tr '\n' ' ')
+  # `|| true` so that a file check 4 has already reported missing leaves this
+  # check reporting what it read rather than aborting the run before the summary.
+  ops=$(grep -ho 'UserOp\.[a-zA-Z_0-9]*' $(core_files "${pkg}") 2>/dev/null \
+          | sort -u | sed 's/UserOp\.//' | tr '\n' ' ' || true)
   ops="${ops% }"
   if [ "${ops}" = "and" ]; then
     note "${pkg}: and"
@@ -125,7 +150,7 @@ for pkg in Cpc CpcMini; do
   fi
 done
 
-# 5. The checker layer names no arm of a generated definition by number.
+# 6. The checker layer names no arm of a generated definition by number.
 #
 # `__smtx_typeof.eq_<n>` and `__smtx_model_eval.eq_<n>` are the arm numbering
 # the compiler happened to emit for one signature, and it moves when the
