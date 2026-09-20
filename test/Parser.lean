@@ -241,4 +241,24 @@ private def gTy : TestTerm := arrow (.usort 1) (arrow (.usort 1) (.usort 1))
      (assume @p0 x)"
   == some [.uconst 2 (.usort 1)]
 
+/-!
+### The shape of a proof file
+
+A proof is a bare sequence of commands.  cvc5 prints one inside the parentheses
+of the `get-proof` response it is answering; that wrapper is refused rather than
+unwrapped, as Ethos refuses it.
+-/
+
+-- Commands standing on their own are read.
+#guard assumptions "(declare-sort U 0) (declare-const a U) (assume @p0 a)"
+  == some [.uconst 1 (.usort 1)]
+
+-- The same commands wrapped in a pair of parentheses are not.
+#guard assumptions "((declare-sort U 0) (declare-const a U) (assume @p0 a))"
+  == none
+
+-- A file holding one command is that command, not a wrapper around one.
+#guard assumptions "(declare-sort U 0)" == some []
+#guard assumptions "((declare-sort U 0))" == none
+
 end Logos.Parser.Tests

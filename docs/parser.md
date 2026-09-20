@@ -24,6 +24,13 @@ covers every operator and proof rule; it runs in the `regressions` CI group.
 
 ## Commands
 
+A proof file is a bare sequence of commands.  `cvc5 --dump-proofs
+--proof-format=cpc` emits one as the response to `get-proof`: a leading `unsat`
+line, then the commands inside a further pair of parentheses.  Both have to be
+stripped.  That pair is not a Eunoia command, and Logos refuses a file carrying
+it exactly as Ethos does, recognizing the shape only to report which parentheses
+to remove.
+
 The parser supports the commands `declare-const`, `declare-fun`, `declare-sort`,
 `declare-datatypes`, `define`, `assume`, `assume-push`, `step` and `step-pop`.
 Every `assume` must stand before the first proof step, since a proof is read as an
