@@ -181,10 +181,13 @@ with `install/deps/`.
 
 The Ethos commit is not an option. It is hardcoded as `ETHOS_VERSION` in
 `get-eo-compiler.sh`. For internal development only,
-`scripts/bump-eoc-version.py` moves it to the current head of `ethosEoc3` and
+`scripts/bump-eoc-version.py` moves it to the current head of `cvc5/ethos`'s `main` and
 copies that same revision's `tools/eoc/semantics/development-cpc.eos` into the
 authoritative `install/defs/Cpc.eos`. It then runs `get-eo-compiler.sh` and
-`install/install-cpc.sh --all --cached`.
+`install/install-cpc.sh --all --cached`, regenerating both `Cpc` and `CpcMini`.
+The full commit hash is recorded, so later installations use that revision even
+after `main` advances. The helper does not fetch a new CPC signature or run the
+Lean proof checks.
 
 The Eunoia signature that Logos is compiled against is pinned by copy:
 `install/defs/Cpc.cached.eo` is the one the packages were compiled from, and

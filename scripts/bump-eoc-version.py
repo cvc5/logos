@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Internal-use-only helper for advancing Logos to the development EOC.
+"""Internal-use-only helper for advancing Logos to the latest EOC on Ethos main.
 
-The development compiler is temporarily taken from cvc5/ethos's ``ethosEoc3``
-branch. Advance the pinned commit to that branch's current head, synchronize
+Advance the pinned commit to the current head of cvc5/ethos's ``main``, synchronize
 Logos's CPC semantics with the development copy from the same commit, build the
-compiler, and regenerate CPC from the cached signature.
+compiler, and regenerate Cpc and CpcMini from the cached signature.
 """
 
 from __future__ import annotations
@@ -28,14 +27,11 @@ INSTALL_CPC = REPO_ROOT / "install" / "install-cpc.sh"
 
 ETHOS_REMOTE = "https://github.com/cvc5/ethos.git"
 ETHOS_RAW = "https://raw.githubusercontent.com/cvc5/ethos"
-ETHOS_BRANCH = "ethosEoc3"
+ETHOS_BRANCH = "main"
 ETHOS_CPC = "tools/eoc/semantics/development-cpc.eos"
 
 COMMIT_RE = re.compile(r"[0-9a-f]{40}")
 PIN_RE = re.compile(r'(?m)^ETHOS_VERSION="([0-9a-f]{40})"$')
-PIN_COMMENT_RE = re.compile(
-    r"(?m)^# [0-9a-f]{8} is the head of ethosEoc3, the temporary development branch\.$"
-)
 
 # The upstream file describes itself as an Ethos test fixture.  Once copied
 # here, it is the authoritative Logos configuration, so keep that one paragraph
@@ -50,16 +46,16 @@ LOGOS_OWNERSHIP = """\
 ; This is the semantics of CPC and this file is where it lives. The development
 ; copy under tools/eoc/semantics in the ethos tree is also a compiler fixture;
 ; scripts/bump-eoc-version.py synchronizes this file from that copy when the
-; pinned development compiler is advanced.
+; pinned compiler is advanced.
 """
 
 
 class BumpError(RuntimeError):
-    """An expected part of the development bump could not be completed."""
+    """An expected part of the compiler bump could not be completed."""
 
 
 def latest_commit() -> str:
-    """Return the commit currently at the development branch's remote ref."""
+    """Return the commit currently at Ethos main's remote ref."""
     command = [
         "git",
         "ls-remote",
@@ -107,17 +103,10 @@ def development_cpc(commit: str) -> str:
 
 
 def updated_pin(source: str, commit: str) -> str:
-    """Replace both the machine-readable pin and its nearby short hash."""
+    """Replace the machine-readable compiler pin."""
     if len(PIN_RE.findall(source)) != 1:
         raise BumpError(f"expected exactly one ETHOS_VERSION pin in {PIN_FILE}")
-    source = PIN_RE.sub(f'ETHOS_VERSION="{commit}"', source)
-
-    if len(PIN_COMMENT_RE.findall(source)) != 1:
-        raise BumpError(f"expected exactly one ethosEoc3 pin comment in {PIN_FILE}")
-    return PIN_COMMENT_RE.sub(
-        f"# {commit[:8]} is the head of ethosEoc3, the temporary development branch.",
-        source,
-    )
+    return PIN_RE.sub(f'ETHOS_VERSION="{commit}"', source)
 
 
 def replace_file(path: Path, source: str) -> bool:
@@ -157,9 +146,9 @@ def run_step(description: str, command: list[str]) -> None:
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Internal use only: pin EOC to the head of ethosEoc3 and copy its "
+            "Internal use only: pin EOC to the latest commit on Ethos main and copy its "
             "development CPC semantics into Logos, build the compiler, and "
-            "regenerate CPC from the cached signature."
+            "regenerate Cpc and CpcMini from the cached signature."
         )
     )
     return parser.parse_args(argv)
@@ -173,7 +162,7 @@ def main(argv: list[str]) -> int:
         pin_source = updated_pin(PIN_FILE.read_text(encoding="utf-8"), commit)
         pin_changed = replace_file(PIN_FILE, pin_source)
         cpc_changed = replace_file(CPC_FILE, cpc_source)
-        print(f"ethosEoc3: {commit}")
+        print(f"Ethos {ETHOS_BRANCH}: {commit}")
         print(
             f"{'updated' if pin_changed else 'unchanged'}: "
             f"{PIN_FILE.relative_to(REPO_ROOT)}"
