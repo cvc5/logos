@@ -961,14 +961,22 @@ where
                     include, reference, assume, assume-push, step or step-pop"
 
 /--
-Some producers wrap the whole proof in a single pair of parentheses; accept both
-that shape and a bare sequence of commands.
+A proof is a bare sequence of commands.  cvc5 prints one wrapped in the
+parentheses of the `get-proof` response it is answering, and that wrapper is not
+a Eunoia command: Ethos refuses such a file at its first token, and so does this
+parser.  The shape is recognized only to say so, since the catch-all of
+`parseCommand` would otherwise quote the whole proof back as the offending
+command.
 -/
-def unwrapProof : List Sexp → List Sexp
-  | [.expr ss] => if !ss.isEmpty && ss.all Sexp.isExpr then ss else [.expr ss]
-  | ss => ss
+private def isWrappedProof : List Sexp → Bool
+  | [.expr (.expr _ :: _)] => true
+  | _ => false
 
 def parseCommands (cfg : Config T R C CL) (ss : List Sexp) : ParserM T (List T × CL) := do
+  if isWrappedProof ss then
+    throw "Error: the proof is wrapped in a pair of parentheses, which is not a \
+           Eunoia command; cvc5 emits them around the proof as the response to \
+           `get-proof`, so strip them along with the leading `unsat` line"
   let mut assums := #[]
   let mut cmds := #[]
   for s in ss do
@@ -984,6 +992,6 @@ def parseCommands (cfg : Config T R C CL) (ss : List Sexp) : ParserM T (List T �
 /-- Parse a proof into its assumptions and its list of commands. -/
 def parseProof (cfg : Config T R C CL) (input : String) : Except String (List T × CL) := do
   let ss ← Sexp.Parser.manySexps!.run input
-  (parseCommands cfg (unwrapProof ss)).run' (State.ofOps cfg.ops)
+  (parseCommands cfg ss).run' (State.ofOps cfg.ops)
 
 end Logos.Parser

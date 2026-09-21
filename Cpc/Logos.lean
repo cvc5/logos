@@ -8267,6 +8267,52 @@ def __eo_nil : Term -> Term -> Term
   | _, _ => Term.Stuck
 
 
+def __eo_is_list_nil__at__at_TypedList_cons : Term -> Term
+  | (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) T) => (Term.Boolean true)
+  | _ => Term.Stuck
+
+
+def __eo_is_list_nil_plus : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (__eo_is_eq (__eo_to_q x1) (Term.Rational (native_mk_rational 0 1)))
+
+
+def __eo_is_list_nil_mult : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (__eo_is_eq (__eo_to_q x1) (Term.Rational (native_mk_rational 1 1)))
+
+
+def __eo_is_list_nil_bvand : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (__eo_is_eq (__eo_to_z (__eo_not x1)) (Term.Numeral 0))
+
+
+def __eo_is_list_nil_bvor : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (__eo_is_eq (__eo_to_z x1) (Term.Numeral 0))
+
+
+def __eo_is_list_nil_bvxor : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (__eo_is_eq (__eo_to_z x1) (Term.Numeral 0))
+
+
+def __eo_is_list_nil_bvadd : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (__eo_is_eq (__eo_to_z x1) (Term.Numeral 0))
+
+
+def __eo_is_list_nil_bvmul : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (__eo_is_eq (__eo_to_z x1) (Term.Numeral 1))
+
+
+def __eo_is_list_nil_str_concat : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | (Term.UOp1 UserOp1.seq_empty T) => (Term.Boolean true)
+  | x1 => (__eo_eq x1 (Term.String []))
+
+
 def __eo_is_list_nil : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | _ , Term.Stuck  => Term.Stuck
@@ -9092,52 +9138,6 @@ def __eo_is_closed_rec : Term -> Term -> Term
 def __eo_is_closed : Term -> Term
   | Term.Stuck  => Term.Stuck
   | t => (__eo_is_closed_rec t Term.__eo_List_nil)
-
-
-def __eo_is_list_nil__at__at_TypedList_cons : Term -> Term
-  | (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) T) => (Term.Boolean true)
-  | _ => Term.Stuck
-
-
-def __eo_is_list_nil_plus : Term -> Term
-  | Term.Stuck  => Term.Stuck
-  | x1 => (__eo_is_eq (__eo_to_q x1) (Term.Rational (native_mk_rational 0 1)))
-
-
-def __eo_is_list_nil_mult : Term -> Term
-  | Term.Stuck  => Term.Stuck
-  | x1 => (__eo_is_eq (__eo_to_q x1) (Term.Rational (native_mk_rational 1 1)))
-
-
-def __eo_is_list_nil_bvand : Term -> Term
-  | Term.Stuck  => Term.Stuck
-  | x1 => (__eo_is_eq (__eo_to_z (__eo_not x1)) (Term.Numeral 0))
-
-
-def __eo_is_list_nil_bvor : Term -> Term
-  | Term.Stuck  => Term.Stuck
-  | x1 => (__eo_is_eq (__eo_to_z x1) (Term.Numeral 0))
-
-
-def __eo_is_list_nil_bvxor : Term -> Term
-  | Term.Stuck  => Term.Stuck
-  | x1 => (__eo_is_eq (__eo_to_z x1) (Term.Numeral 0))
-
-
-def __eo_is_list_nil_bvadd : Term -> Term
-  | Term.Stuck  => Term.Stuck
-  | x1 => (__eo_is_eq (__eo_to_z x1) (Term.Numeral 0))
-
-
-def __eo_is_list_nil_bvmul : Term -> Term
-  | Term.Stuck  => Term.Stuck
-  | x1 => (__eo_is_eq (__eo_to_z x1) (Term.Numeral 1))
-
-
-def __eo_is_list_nil_str_concat : Term -> Term
-  | Term.Stuck  => Term.Stuck
-  | (Term.UOp1 UserOp1.seq_empty T) => (Term.Boolean true)
-  | x1 => (__eo_eq x1 (Term.String []))
 
 
 def __eo_prog_re_all_elim : Term := (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.UOp UserOp.re_all)) (Term.Apply (Term.UOp UserOp.re_mult) (Term.UOp UserOp.re_allchar)))

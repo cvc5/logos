@@ -54,7 +54,7 @@ def logos_checker_failure (assums : List Term) (cmds : CCmdList) : Option Checke
 private def proofCommandLabels (proof : String) : List String :=
   match Logos.Sexp.Parser.manySexps!.run proof with
   | .error _ => []
-  | .ok ss => (Logos.Parser.unwrapProof ss).filterMap label?
+  | .ok ss => ss.filterMap label?
 where
   label? : Logos.Sexp → Option String
     | .expr (.atom "assume-push" :: .atom name :: _) => some s!"assume-push {name}"
