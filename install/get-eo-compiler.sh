@@ -57,13 +57,13 @@ expand_tilde() {
 }
 
 # The pinned commit of cvc5/ethos used to build the Eunoia compiler.
-# 406b5499 is the head of ethosEoc3, the temporary development branch.
+# 364b67d8 is the head of ethosEoc3, the temporary development branch.
 #
 # TODO: this is a workaround. ethosEoc3 is a development branch, and the pin
 # belongs on a commit of ethos main; move it back once what this needs is
 # there. It is pinned to a commit of the branch rather than to the branch
 # itself, so that what the compiler emits still changes only on purpose.
-ETHOS_VERSION="406b5499f3c83f2a114113107be251f8e58b2d85"
+ETHOS_VERSION="364b67d84322f117dde213da6e854a42ac2399be"
 DEPS_DIR=""
 JOBS=""
 KEEP_TMP=0
