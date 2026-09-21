@@ -106,14 +106,17 @@ jobs:
           build: false
           test: false
           lint: false
+          # Each matrix group manages its own build cache below.
+          use-github-cache: false
 
-      # Reuse a cache per build configuration to avoid saving one per commit.
-      # Exact hits are not updated; Lake rebuilds changed targets after restore.
+      # Save each successful commit's build so the cache follows source changes.
+      # Restore the latest cache for this group and build configuration, then
+      # let Lake rebuild changed targets.
       - name: Restore Lake build cache
         uses: actions/cache@v5
         with:
           path: .lake/build
-          key: lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}
+          key: lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-${{ github.sha }}
           restore-keys: |
             lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-
 
