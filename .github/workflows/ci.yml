@@ -35,7 +35,8 @@ jobs:
 
       # Textual, so no Lean toolchain: that the two packages share one
       # Checker.lean, that it names no rule and no operator, that the checker
-      # layer depends on `and` alone, and that no rule file imports another.
+      # layer is all present and depends on `and` alone, and that no rule file
+      # imports another.
       - name: Check checker-layer modularity
         run: bash scripts/run-ci.sh proof-modularity
 
@@ -105,7 +106,12 @@ jobs:
           build: false
           test: false
           lint: false
+          # Each matrix group manages its own build cache below.
+          use-github-cache: false
 
+      # Save each successful commit's build so the cache follows source changes.
+      # Restore the latest cache for this group and build configuration, then
+      # let Lake rebuild changed targets.
       - name: Restore Lake build cache
         uses: actions/cache@v5
         with:
