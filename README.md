@@ -75,8 +75,8 @@ memory for speed. `--all-at-once` enables the previous maximum-parallelism mode
 and may exhaust memory.
 
 **Be warned that building the entire proof development takes over two hours**, and
-it is *not* part of CI: of `Cpc`'s proofs, CI compiles only a small
-representative set (the `cpc-proofs` group of `scripts/run-ci.sh`). The current
+it is *not* part of CI: CI compiles only a small representative set of proof
+targets (the `cpc-proofs` group of `scripts/run-ci.sh`). The current
 workarounds:
 
 - Build only what you are working on, one rule at a time:
@@ -88,15 +88,6 @@ workarounds:
 - `scripts/check-proof-hygiene.sh` (the `proof-hygiene` CI group) rejects
   `sorry`, `admit` and `axiom` textually without building anything, so an
   unproven rule cannot land silently even though CI does not build every proof.
-- **The soundness proof is covered without one.** `Cpc/Proofs/Checker.lean` and
-  `Cpc/ApiCorrect.lean` import `Cpc/Proofs/RuleLemmas.lean`, so nothing short of
-  the full build compiles them; `scripts/check-checker-soundness.sh` (the
-  `cpc-proofs` group) stubs the two theorems `RuleLemmas` contributes and
-  typechecks everything else in both files in about a second. It covers the
-  hand-edited steps and not the rule proofs behind the stubs. The `cpcmini` group
-  covers the other half, building `CpcMini.Proofs.Checker` — the same text, since
-  the two packages share it — with real rule proofs rather than stubs. See
-  [docs/modularity.md](docs/modularity.md) for why one does not subsume the other.
 
 A full build is still the only way to catch a rule whose proof broke, e.g.
 because its statement changed after regenerating the calculus, so it should be
@@ -296,13 +287,9 @@ thing the tool reads, and not a claim about how well it reads it.
 
 This repository is part of the **Eunoia ecosystem** and follows its
 [shared repository policy](https://github.com/ajreynol/kanon/blob/main/docs/policy.md).
-[`.github/workflows/anoieu.yml`](.github/workflows/anoieu.yml) selects policy
-contract 1, which is what fixes the automated checks that run here.
 It does not use that ecosystem's channels for AI-directed work: there is no
 discussion file and no agent-facing maintenance page here, and anything another
 project wants to say to Logos is carried by a person.
-
-**Human maintainers:** [the current list in policy.md](https://github.com/ajreynol/kanon/blob/main/docs/policy.md#human-maintainers).
 
 **Logos is written and maintained by people.** Everything that decides what a
 `correct` verdict *means* — the SMT-LIB model semantics (`Cpc/SmtModel.lean`),

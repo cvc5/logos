@@ -68,46 +68,6 @@ in signature, *and* in which invariants its rules need.
 `scripts/check-proof-modularity.sh` keeps it that way. Every property it checks
 had drifted at least once before it existed.
 
-### What the checker layer takes from the rule layer
-
-`Proofs/Checker.lean` imports `Proofs/RuleLemmas.lean`, which is generated and
-imports every rule module in the package. What it *uses* from it is two
-theorems — `cmd_step_proven_facts_of_invariants` and
-`cmd_step_pop_proven_facts_of_invariants`, the bridge from what a rule proof
-establishes to what the checker's invariants need. Nothing else in the
-hand-written layer names either, and `RuleLemmas` declares nothing else.
-
-That the dependency is those two rather than the import is what
-`scripts/check-checker-soundness.sh` shows, in the `cpc-proofs` CI group: it
-reads the two signatures out of `RuleLemmas.lean`, stubs them with `sorry`, and
-elaborates the rest of `Proofs/Checker.lean` — and of `ApiCorrect.lean` — against
-the already-built `Proofs/CheckerCore.lean`, in about a second. Reading the
-signatures instead of repeating them makes a change to the compiler's template
-show up as a failure to find them; a canary declaration that has to be rejected
-keeps a pass from being vacuous.
-
-**The two packages cover different halves of this, and both are needed.**
-`CpcMini.Proofs.Checker` is built outright by the `cpcmini` CI group, bridge
-theorems and all, so the shared text is elaborated against real rule proofs
-every run. What that does *not* establish is that the same text elaborates
-against `Cpc`'s generated definitions, whose operator set and invariant slot
-differ — which is exactly the
-[arm-numbering hazard](#the-hazard-that-broke-it-before-generated-arm-numbers)
-below. The
-soundness script is what covers that, and it is also the only thing in CI that
-elaborates `Cpc/ApiCorrect.lean` at all: `CpcMini` has no counterpart to it.
-
-**The coupling is a build order rather than a proof**, which is why it is worth
-naming separately from the sharing above. In a freshly generated package every
-rule is a `sorry` stub, so `Checker.lean` cannot be built there even though
-nothing in it is calculus-specific. The bridge is called in four places, and
-those reach most of the file's declarations transitively, `correct___eo_is_refutation`
-among them — so taking the two as hypotheses rather than as an import is not a
-local edit but a change to the statement of that theorem, which makes soundness
-conditional on the rule bridge. Whether that is the right way to say what the
-theorem has always meant is a decision about the theorem and is not settled
-here.
-
 ### The hazard that broke it before: generated arm numbers
 
 `CheckerState.lean` had re-forked, and the interesting half of that divergence

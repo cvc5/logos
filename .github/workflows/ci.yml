@@ -107,29 +107,15 @@ jobs:
           test: false
           lint: false
 
-      # Keyed on what decides the build -- the toolchain, the lakefile and the
-      # manifest -- and deliberately not on the commit. A key carrying the
-      # commit can never be hit by a later run, since no later run has that
-      # SHA, so every push wrote an entry that only a re-run of the same commit
-      # could use, and three groups of them are hundreds of megabytes a commit
-      # against GitHub's per-repository cache cap. Over the cap the eviction is
-      # least-recently-used, and what it takes out is the entry a restore would
-      # otherwise have found: a slow build rather than a red one, which is the
-      # kind of cost that never gets attributed to its cause.
-      #
-      # The trade is that an exact hit makes actions/cache skip the save, so an
-      # entry is the build as of the first run on that key and does not follow
-      # the tree; Lake re-checks its own traces on restore, so a build behind
-      # the tree still serves what has not changed, and moving the toolchain,
-      # the lakefile or the manifest starts a fresh one. The restore-keys line
-      # below is the fallback for exactly that case.
+      # Reuse a cache per build configuration to avoid saving one per commit.
+      # Exact hits are not updated; Lake rebuilds changed targets after restore.
       - name: Restore Lake build cache
         uses: actions/cache@v5
         with:
           path: .lake/build
           key: lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}
           restore-keys: |
-            lake-build-${{ runner.os }}-${{ matrix.group }}-
+            lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-
 
       - name: Run ${{ matrix.group }} checks
         run: bash scripts/run-ci.sh "${CI_GROUP}"
