@@ -123,9 +123,9 @@ the check, as does a failure to flatten the source. This applies to `CpcMini`
 with its default rules too, but not to explicit `--rules`, custom packages, or
 `--cached`. The check leaves both the package and the cached copy untouched.
 
-The header of the file names the path the signature had, not the checkout or
-the commit; the scripts print the commit they read, for the message of the
-commit that updates the copy.
+The file does not name the path or commit of the signature it was flattened
+from; the scripts print the commit they read, for the message of the commit
+that updates the copy.
 
 ## The semantics
 
