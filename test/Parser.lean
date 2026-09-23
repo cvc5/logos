@@ -80,7 +80,9 @@ private def testConfig : Config TestTerm String TestCmd (List TestCmd) where
   ops := [
     { name := "->", arity := .rightAssoc, build := fun | [] => some (.atom "->") | _ => none },
     { name := "indexed", indexArity := 1, arity := .exact 1,
-      build := fun | [i] => some (.app (.atom "indexed") i) | _ => none }
+      build := fun | [i] => some (.app (.atom "indexed") i) | _ => none },
+    { name := "all", arity := .exact 2,
+      build := fun | [] => some (.atom "all") | _ => none, binder := some gather }
   ]
   parseLiteral := fun _ => none
   isType := (· == .type)
@@ -93,6 +95,7 @@ private def testConfig : Config TestTerm String TestCmd (List TestCmd) where
   mkStep := fun rule args premises => (rule, args, premises)
   mkStepPop := fun rule args premises => ("pop:" ++ rule, args, premises)
   mkCmdList := id
+  mkVar := some fun name ty => .app (.atom ("var " ++ name)) ty
 
 /-- The assumptions of a parsed proof, or `none` if it does not parse. -/
 private def assumptions (input : String) : Option (List TestTerm) :=
@@ -240,6 +243,31 @@ private def gTy : TestTerm := arrow (.usort 1) (arrow (.usort 1) (.usort 1))
      (declare-const x U)
      (assume @p0 x)"
   == some [.uconst 2 (.usort 1)]
+
+/-!
+### Binders
+
+A binder applied to a sorted variable list gathers the variables it makes into
+its first argument, and binds them in the rest of the application only.
+-/
+
+private def var (name : String) : TestTerm := .app (.atom ("var " ++ name)) (.usort 1)
+
+-- A quoted symbol names the variable its bars enclose.
+#guard assumptions (binary ++ "(assume @p0 (all ((x U) (|y| U)) (g x |y|)))") ==
+  some [.app (.app (.atom "all") (.gathered [var "x", var "y"]))
+    (.app (.app (.uconst 1 gTy) (var "x")) (var "y"))]
+
+#guard assumptions (binary ++ "(assume @p0 (g (all ((a U)) a) a))") ==
+  some [.app (.app (.uconst 1 gTy) (.app (.app (.atom "all") (.gathered [var "a"])) (var "a")))
+    (.uconst 2 (.usort 1))]
+
+-- Without a variable list, the first argument is an ordinary term.
+#guard assumptions (binary ++ "(assume @p0 (all a b))") ==
+  some [.app (.app (.atom "all") (.uconst 2 (.usort 1))) (.uconst 3 (.usort 1))]
+
+-- A symbol the proof declares under the binder's name is not a binder.
+#guard assumptions (binary ++ "(declare-const all U) (assume @p0 (all ((x U)) x))") == none
 
 /-!
 ### Declared names are symbols

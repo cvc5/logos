@@ -97,6 +97,38 @@ private def datatypePrelude : String :=
 #guard (assumptions "(declare-datatypes ((D 0)) (((c (s Int)) (e)))) (assume @p0 (= e e))").isSome
 
 /-!
+## Binders
+
+`forall` and `exists` carry Eunoia's `:binder @list`: a sorted variable list
+denotes the `@list` of the variables `(@var name type)`, which are bound in the
+body.  A variable is the same term wherever its name and type are.
+-/
+
+private def quantPrelude : String := "(declare-const P (-> Int Int Bool))"
+
+#guard assumptions (quantPrelude ++ "(assume @p0 (forall ((x Int) (y Int)) (P x y)))") ==
+  assumptions (quantPrelude ++
+    "(assume @p0 (forall (@list (@var \"x\" Int) (@var \"y\" Int))
+       (P (@var \"x\" Int) (@var \"y\" Int))))")
+
+#guard assumptions (quantPrelude ++ "(assume @p0 (exists ((x Int)) (P x x)))") ==
+  assumptions (quantPrelude ++
+    "(assume @p0 (exists (@list (@var \"x\" Int)) (P (@var \"x\" Int) (@var \"x\" Int))))")
+
+#guard (assumptions (quantPrelude ++ "(assume @p0 (forall ((x Int)) (P x x)))")).isSome
+
+-- A variable shadows a symbol of the same name in the body, and only there.
+#guard assumptions (quantPrelude ++
+    "(declare-const x Int) (assume @p0 (and (forall ((x Int)) (P x x)) (P x x)))") ==
+  assumptions (quantPrelude ++
+    "(declare-const x Int)
+     (assume @p0 (and (forall (@list (@var \"x\" Int)) (P (@var \"x\" Int) (@var \"x\" Int)))
+                      (P x x)))")
+
+-- A variable is named by a symbol.
+#guard assumptions (quantPrelude ++ "(assume @p0 (forall ((7 Int)) (P 7 7)))") == none
+
+/-!
 ## Datatype block order
 
 The specification witnesses a datatype of a `declare-datatypes` block only

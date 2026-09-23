@@ -1130,13 +1130,15 @@ private def parserOps : List (Logos.Parser.OpDecl Term) := [
     arity := .exact 2
     build := fun
       | [] => some (Term.UOp UserOp.forall)
-      | _ => none },
+      | _ => none
+    binder := some (fun vs => Logos.Parser.rightAssocNil Term.Apply Term.__eo_List_cons (fun _ => Term.__eo_List_nil) vs) },
   { name := "exists"
     indexArity := 0
     arity := .exact 2
     build := fun
       | [] => some (Term.UOp UserOp.exists)
-      | _ => none },
+      | _ => none
+    binder := some (fun vs => Logos.Parser.rightAssocNil Term.Apply Term.__eo_List_cons (fun _ => Term.__eo_List_nil) vs) },
   { name := "@quantifiers_skolemize"
     indexArity := 2
     arity := .exact 0
@@ -2053,6 +2055,7 @@ def parserConfig : Logos.Parser.Config Term CRule CCmd CCmdList where
   datatypes := some
     { mkRef := fun name => Term.DatatypeTypeRef (native_string_lit name)
       mkDecls := parserDatatypeBindings }
+  mkVar := some fun name ty => Term.Var (Term.String (native_string_lit name)) ty
 
 /--
 The initial state of the parser: the operators of the signature, together with

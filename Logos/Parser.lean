@@ -71,6 +71,13 @@ structure OpDecl (T : Type) where
   indexArity : Nat := 0
   arity : Arity T
   build : List T → Option T
+  /--
+  For an operator with Eunoia's `:binder` attribute, the operator its argument
+  names, which builds the list of bound variables.  `(f ((x₁ T₁) … (xₙ Tₙ)) a …)`
+  then denotes `(f (mk [x₁, …, xₙ]) a …)`, where each `xᵢ` is the variable
+  `Config.mkVar` makes and is bound in the arguments that follow.
+  -/
+  binder : Option (List T → T) := none
 
 /-!
 ## Term-building helpers
@@ -356,6 +363,12 @@ structure Config (T R C CL : Type) where
   mkCmdList : List C → CL
   /-- Datatype support; `none` if the calculus has no datatypes. -/
   datatypes : Option (DatatypeOps T) := none
+  /--
+  The variable a binder binds, of the given name and type: Eunoia's
+  `(eo::var name type)`, which is the same term wherever the name and the type
+  are.  `none` if the calculus has no binders.
+  -/
+  mkVar : Option (String → T → T) := none
 
 /-!
 ## Parser state
@@ -531,6 +544,9 @@ partial def parseTermCore (cfg : Config T R C CL) : Sexp → ParserM T T
   | .expr (.atom "_" :: rest) =>
     parseUnderscoreExpr cfg rest []
   | .expr (f :: args) => do
+    if let (.atom name, .expr vars@(.expr _ :: _) :: rest) := (f, args) then
+      if let some mk ← binderOf name then
+        return ← parseBinderApp cfg name mk vars rest
     let args ← args.mapM (parseTerm cfg)
     match f with
     | .expr (.atom "_" :: rest) =>
@@ -549,6 +565,47 @@ partial def parseTermCore (cfg : Config T R C CL) : Sexp → ParserM T T
         -- would accept files Ethos refuses to parse.
         throw s!"Error: expected a symbol, an indexed symbol or a type \
                   ascription as the head of an application, got {f}"
+
+/--
+The list constructor of `name`, if `name` is a binder here: a signature operator
+declared with `:binder`, and not a symbol the proof binds or a macro, either of
+which would shadow it.
+-/
+partial def binderOf (name : String) : ParserM T (Option (List T → T)) := do
+  let s ← get
+  if !(s.terms.getD name []).isEmpty || s.macros.contains name then return none
+  return (s.ops.getD name []).findSome? (·.binder)
+
+/--
+Parse `(name ((x₁ T₁) … (xₙ Tₙ)) a …)` for a binder `name` whose list constructor
+is `mk`.  As in Ethos, the variables are bound in turn, so each shadows any
+earlier meaning of its name up to the end of the application, and the
+application is then read, outside that scope, with the list `mk [x₁, …, xₙ]` as
+its first argument.
+-/
+partial def parseBinderApp (cfg : Config T R C CL) (name : String) (mk : List T → T)
+    (vars rest : List Sexp) : ParserM T T := do
+  let some mkVar := cfg.mkVar
+    | throw s!"Error: this calculus has no variables for the binder {name}"
+  let saved := (← get).terms
+  let restore : ParserM T Unit := modify fun s => { s with terms := saved }
+  try
+    let vs ← vars.mapM fun
+      | .expr [v, ty] => do
+        let v ← parseSymbol v
+        -- A quoted symbol names the variable its bars enclose, as in Ethos.
+        let vName := if v.length ≥ 2 && v.startsWith "|" && v.endsWith "|" then
+          String.ofList (v.toList.drop 1).dropLast else v
+        let x := mkVar vName (← parseTerm cfg ty)
+        modify fun s => { s with terms := s.terms.insert v [x] }
+        return x
+      | s => throw s!"Error: expected a variable and its type, got {s}"
+    let args ← rest.mapM (parseTerm cfg)
+    restore
+    parseApp cfg name [] (mk vs :: args)
+  catch e =>
+    restore
+    throw e
 
 /--
 Parse an expression headed by `_`, applied to `args`.  Eunoia writes both an
