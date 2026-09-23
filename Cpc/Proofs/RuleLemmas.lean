@@ -428,14 +428,11 @@ import Cpc.Proofs.Rules.Str_substr_eq_empty_leq_len
 import Cpc.Proofs.Rules.Str_len_replace_inv
 import Cpc.Proofs.Rules.Str_len_replace_all_inv
 import Cpc.Proofs.Rules.Str_len_update_inv
-import Cpc.Proofs.Rules.Str_update_neg
 import Cpc.Proofs.Rules.Str_update_oob
-import Cpc.Proofs.Rules.Str_update_empty
 import Cpc.Proofs.Rules.Str_update_rev
 import Cpc.Proofs.Rules.Str_update_fit
 import Cpc.Proofs.Rules.Str_update_concat_fit0
 import Cpc.Proofs.Rules.Str_update_concat_fit
-import Cpc.Proofs.Rules.Str_update_concat_fit2
 import Cpc.Proofs.Rules.Str_update_in_first_concat
 import Cpc.Proofs.Rules.Str_len_substr_in_range
 import Cpc.Proofs.Rules.Str_concat_clash
@@ -589,7 +586,6 @@ import Cpc.Proofs.Rules.Seq_len_unit
 import Cpc.Proofs.Rules.Seq_nth_unit
 import Cpc.Proofs.Rules.Seq_nth_concat_unit
 import Cpc.Proofs.Rules.Seq_nth_concat_unit_gen
-import Cpc.Proofs.Rules.Seq_nth_concat_unit_gen2
 import Cpc.Proofs.Rules.Seq_rev_unit
 import Cpc.Proofs.Rules.Re_in_empty
 import Cpc.Proofs.Rules.Re_in_sigma
@@ -2741,20 +2737,10 @@ by
         intro N hN _hAgree
         exact cmd_step_str_len_update_inv_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
-  | str_update_neg =>
-      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
-        intro N hN _hAgree
-        exact cmd_step_str_update_neg_properties N hN s args premises
-          (by simpa using hCmdTrans) hPremisesBool hResultTy
   | str_update_oob =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_str_update_oob_properties N hN s args premises
-          (by simpa using hCmdTrans) hPremisesBool hResultTy
-  | str_update_empty =>
-      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
-        intro N hN _hAgree
-        exact cmd_step_str_update_empty_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | str_update_rev =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
@@ -2775,11 +2761,6 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_str_update_concat_fit_properties N hN s args premises
-          (by simpa using hCmdTrans) hPremisesBool hResultTy
-  | str_update_concat_fit2 =>
-      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
-        intro N hN _hAgree
-        exact cmd_step_str_update_concat_fit2_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | str_update_in_first_concat =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
@@ -3545,11 +3526,6 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_seq_nth_concat_unit_gen_properties N hN s args premises
-          (by simpa using hCmdTrans) hPremisesBool hResultTy
-  | seq_nth_concat_unit_gen2 =>
-      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
-        intro N hN _hAgree
-        exact cmd_step_seq_nth_concat_unit_gen2_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | seq_rev_unit =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
