@@ -113,22 +113,6 @@ def __eo_subst_params (a : DatatypeArgs) : Term -> Term
   | T => T
 
 
-def __eo_dtc_subst_params (a : DatatypeArgs) : DatatypeCons -> DatatypeCons
-  | DatatypeCons.unit => DatatypeCons.unit
-  | (DatatypeCons.cons T c) => (DatatypeCons.cons (__eo_subst_params a T) (__eo_dtc_subst_params a c))
-
-
-def __eo_dt_subst_params (a : DatatypeArgs) : Datatype -> Datatype
-  | Datatype.null => Datatype.null
-  | (Datatype.sum c d) => (Datatype.sum (__eo_dtc_subst_params a c) (__eo_dt_subst_params a d))
-
-
-def __eo_dd_subst_params (a : DatatypeArgs) : DatatypeDecl -> DatatypeDecl
-  | DatatypeDecl.nil => DatatypeDecl.nil
-  | (DatatypeDecl.cons s d dd) => (DatatypeDecl.cons s (__eo_dt_subst_params a d) (__eo_dd_subst_params a dd))
-  | (DatatypeDecl.params b dd) => (DatatypeDecl.params (__eo_args_subst_params a b) dd)
-
-
 def __eo_args_length : DatatypeArgs -> native_Nat
   | DatatypeArgs.nil => native_nat_zero
   | (DatatypeArgs.cons T a) => (native_nat_succ (__eo_args_length a))
