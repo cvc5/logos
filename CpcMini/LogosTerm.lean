@@ -56,6 +56,7 @@ inductive Term : Type where
   | Var : Term -> Term -> Term
   | DatatypeType : native_String -> DatatypeDecl -> Term
   | DatatypeTypeRef : native_String -> Term
+  | DtParam : native_Nat -> Term
   | DtcAppType : Term -> Term -> Term
   | DtCons : native_String -> DatatypeDecl -> native_Nat -> Term
   | DtSel : native_String -> DatatypeDecl -> native_Nat -> native_Nat -> Term
@@ -70,6 +71,13 @@ Eunoia datatype declarations.
 inductive DatatypeDecl : Type where
   | nil : DatatypeDecl
   | cons : native_String -> Datatype -> DatatypeDecl -> DatatypeDecl
+  | params : DatatypeArgs -> DatatypeDecl -> DatatypeDecl
+deriving Repr, DecidableEq, Inhabited, Ord
+
+/- Type arguments, kept separate from the template they instantiate. -/
+inductive DatatypeArgs : Type where
+  | nil : DatatypeArgs
+  | cons : Term -> DatatypeArgs -> DatatypeArgs
 deriving Repr, DecidableEq, Inhabited, Ord
 
 /-
@@ -88,6 +96,53 @@ inductive DatatypeCons : Type where
   | cons : Term -> DatatypeCons -> DatatypeCons
 deriving Repr, DecidableEq, Inhabited, Ord
 
+end
+
+/- A structural weight for translation. The product at params pays for copying
+each argument into every occurrence in the template. -/
+mutual
+def Term.paramSize : Term → Nat
+  | .UOp x0 => 1
+  | .__eo_List => 1
+  | .__eo_List_nil => 1
+  | .__eo_List_cons => 1
+  | .Bool => 1
+  | .Boolean x0 => 1
+  | .Numeral x0 => 1
+  | .Rational x0 => 1
+  | .String x0 => 1
+  | .Binary x0 x1 => 1
+  | .Type => 1
+  | .Stuck => 1
+  | .Apply x0 x1 => 1 + x0.paramSize + x1.paramSize
+  | .FunType => 1
+  | .Var x0 x1 => 1 + x0.paramSize + x1.paramSize
+  | .DatatypeType x0 x1 => 1 + x1.paramSize
+  | .DatatypeTypeRef x0 => 1
+  | .DtParam x0 => 1
+  | .DtcAppType x0 x1 => 1 + x0.paramSize + x1.paramSize
+  | .DtCons x0 x1 x2 => 1 + x1.paramSize
+  | .DtSel x0 x1 x2 x3 => 1 + x1.paramSize
+  | .USort x0 => 1
+  | .UConst x0 x1 => 1 + x1.paramSize
+
+
+def DatatypeArgs.paramSize : DatatypeArgs → Nat
+  | .nil => 1
+  | .cons t a => 1 + t.paramSize + a.paramSize
+
+def DatatypeDecl.paramSize : DatatypeDecl → Nat
+  | .nil => 1
+  | .cons _ d dd => 1 + d.paramSize + dd.paramSize
+  | .params a dd => 1 + (a.paramSize + 1) * (dd.paramSize + 1)
+
+def Datatype.paramSize : Datatype → Nat
+  | .null => 1
+  | .sum c d => 1 + c.paramSize + d.paramSize
+
+def DatatypeCons.paramSize : DatatypeCons → Nat
+  | .unit => 1
+  | .cons t c => 1 + t.paramSize + c.paramSize
 end
 
 -- Equality and ordering of Eunoia terms, which the checker asks for and the

@@ -164,6 +164,9 @@ def native_binary_extract : native_Int -> native_Int -> native_Int -> native_Int
 def native_int_to_nat (x : native_Int) : native_Nat :=
   (Int.toNat x)
 
+def native_nat_to_int (x : native_Nat) : native_Int :=
+  (Int.ofNat x)
+
 syntax "native_nat_zero" : term
 macro_rules
   | `(native_nat_zero) => `(Nat.zero)

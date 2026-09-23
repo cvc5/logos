@@ -9,8 +9,8 @@ module
 
 public import CpcMini.SmtModel
 import all CpcMini.SmtModel
-public import CpcMini.LogosTerm
-import all CpcMini.LogosTerm
+public import CpcMini.Logos
+import all CpcMini.Logos
 
 @[expose] public section
 
@@ -19,6 +19,7 @@ open Eo
 open Smtm
 
 set_option linter.unusedVariables false
+set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 10000000
 
 
@@ -26,6 +27,93 @@ set_option maxHeartbeats 10000000
 Definitions for eo_to_smt_type, eo_to_smt
 -/
 noncomputable section
+
+/-- Looking up a parameter never exceeds the weight of the arguments. -/
+private theorem eo_args_nth_size (a : DatatypeArgs) (k : Nat) :
+    (__eo_args_nth a k).paramSize ≤ a.paramSize := by
+  cases a with
+  | nil => simp [__eo_args_nth, Term.paramSize, DatatypeArgs.paramSize]
+  | cons t a =>
+      cases k <;> simp only [__eo_args_nth, DatatypeArgs.paramSize]
+      · omega
+      · rename_i k
+        have := eo_args_nth_size a k
+        omega
+
+mutual
+private theorem eo_subst_params_size (a : DatatypeArgs) (t : Term) :
+    (__eo_subst_params a t).paramSize ≤ (a.paramSize + 1) * t.paramSize := by
+  cases t
+  case DtParam k =>
+    have := eo_args_nth_size a k
+    simp only [__eo_subst_params, Term.paramSize, Nat.mul_add, Nat.add_mul]
+    omega
+  case Apply t u =>
+    have ht := eo_subst_params_size a t
+    have hu := eo_subst_params_size a u
+    simp only [__eo_subst_params, Term.paramSize, Nat.mul_add] at *
+    omega
+  case DatatypeType s dd =>
+    cases dd
+    case params b dd =>
+      have h := Nat.mul_le_mul_right (dd.paramSize + 1)
+        (Nat.add_le_add_right (eo_args_subst_params_size a b) 1)
+      simp only [__eo_subst_params, Term.paramSize, DatatypeDecl.paramSize]
+      simp only [Nat.add_mul, Nat.mul_add, Nat.mul_assoc] at *
+      omega
+    all_goals
+      simp only [__eo_subst_params, Term.paramSize, Nat.add_mul, Nat.one_mul]
+      omega
+  all_goals
+    simp only [__eo_subst_params, Term.paramSize, Nat.add_mul, Nat.one_mul]
+    omega
+
+private theorem eo_args_subst_params_size (a b : DatatypeArgs) :
+    (__eo_args_subst_params a b).paramSize ≤ (a.paramSize + 1) * b.paramSize := by
+  cases b with
+  | nil => simp [__eo_args_subst_params, DatatypeArgs.paramSize]
+  | cons t b =>
+      have ht := eo_subst_params_size a t
+      have hb := eo_args_subst_params_size a b
+      simp only [__eo_args_subst_params, DatatypeArgs.paramSize, Nat.mul_add, Nat.mul_one]
+      omega
+end
+
+private theorem eo_dtc_subst_params_size (a : DatatypeArgs) (c : DatatypeCons) :
+    (__eo_dtc_subst_params a c).paramSize ≤ (a.paramSize + 1) * c.paramSize := by
+  cases c with
+  | unit => simp [__eo_dtc_subst_params, DatatypeCons.paramSize]
+  | cons t c =>
+      have ih := eo_dtc_subst_params_size a c
+      have ht := eo_subst_params_size a t
+      simp only [__eo_dtc_subst_params, DatatypeCons.paramSize, Nat.mul_add, Nat.mul_one]
+      omega
+
+private theorem eo_dt_subst_params_size (a : DatatypeArgs) (d : Datatype) :
+    (__eo_dt_subst_params a d).paramSize ≤ (a.paramSize + 1) * d.paramSize := by
+  cases d with
+  | null => simp [__eo_dt_subst_params, Datatype.paramSize]
+  | sum c d =>
+      have ih := eo_dt_subst_params_size a d
+      have hc := eo_dtc_subst_params_size a c
+      simp only [__eo_dt_subst_params, Datatype.paramSize, Nat.mul_add, Nat.mul_one]
+      omega
+
+private theorem eo_dd_subst_params_size (a : DatatypeArgs) (dd : DatatypeDecl) :
+    (__eo_dd_subst_params a dd).paramSize ≤ (a.paramSize + 1) * dd.paramSize := by
+  cases dd with
+  | nil => simp [__eo_dd_subst_params, DatatypeDecl.paramSize]
+  | cons s d dd =>
+      have ih := eo_dd_subst_params_size a dd
+      have hd := eo_dt_subst_params_size a d
+      simp only [__eo_dd_subst_params, DatatypeDecl.paramSize, Nat.mul_add, Nat.mul_one]
+      omega
+  | params b dd =>
+      have h := Nat.mul_le_mul_right (dd.paramSize + 1)
+        (Nat.add_le_add_right (eo_args_subst_params_size a b) 1)
+      simp only [__eo_dd_subst_params, DatatypeDecl.paramSize]
+      simp only [Nat.add_mul, Nat.mul_add, Nat.mul_assoc] at *
+      omega
 
 def __eo_to_smt_reserved_datatype_name (s : native_String) : native_Bool :=
   (native_string_prefix_eq (native_string_lit "@") s)
@@ -37,19 +125,42 @@ mutual
 def __eo_to_smt_datatype_cons : DatatypeCons -> SmtDatatypeCons
   | DatatypeCons.unit => SmtDatatypeCons.unit
   | (DatatypeCons.cons U c) => (SmtDatatypeCons.cons (__eo_to_smt_type U) (__eo_to_smt_datatype_cons c))
+termination_by x1 => x1.paramSize
+decreasing_by
+  all_goals simp_wf
+  all_goals try apply Nat.lt_of_le_of_lt (eo_dd_subst_params_size _ _)
+  all_goals try simp_all only [Term.paramSize, DatatypeArgs.paramSize, DatatypeDecl.paramSize, Datatype.paramSize, DatatypeCons.paramSize]
+  all_goals try simp_all only [Nat.add_mul, Nat.mul_add, Nat.mul_assoc]
+  all_goals omega
 
 
 def __eo_to_smt_datatype : Datatype -> SmtDatatype
   | (Datatype.sum c d) => (SmtDatatype.sum (__eo_to_smt_datatype_cons c) (__eo_to_smt_datatype d))
   | Datatype.null => SmtDatatype.null
+termination_by x1 => x1.paramSize
+decreasing_by
+  all_goals simp_wf
+  all_goals try apply Nat.lt_of_le_of_lt (eo_dd_subst_params_size _ _)
+  all_goals try simp_all only [Term.paramSize, DatatypeArgs.paramSize, DatatypeDecl.paramSize, Datatype.paramSize, DatatypeCons.paramSize]
+  all_goals try simp_all only [Nat.add_mul, Nat.mul_add, Nat.mul_assoc]
+  all_goals omega
 
 
 def __eo_to_smt_datatype_decl : DatatypeDecl -> SmtDatatypeDecl
   | (DatatypeDecl.cons s d dd) => (SmtDatatypeDecl.cons s (__eo_to_smt_datatype d) (__eo_to_smt_datatype_decl dd))
+  | (DatatypeDecl.params a dd) => (__eo_to_smt_datatype_decl (__eo_dd_subst_params a dd))
   | DatatypeDecl.nil => SmtDatatypeDecl.nil
+termination_by x1 => x1.paramSize
+decreasing_by
+  all_goals simp_wf
+  all_goals try apply Nat.lt_of_le_of_lt (eo_dd_subst_params_size _ _)
+  all_goals try simp_all only [Term.paramSize, DatatypeArgs.paramSize, DatatypeDecl.paramSize, Datatype.paramSize, DatatypeCons.paramSize]
+  all_goals try simp_all only [Nat.add_mul, Nat.mul_add, Nat.mul_assoc]
+  all_goals omega
 
 
 def __eo_to_smt_type : Term -> SmtType
+  | (Term.DtParam i) => SmtType.None
   | Term.Bool => SmtType.Bool
   | (Term.DatatypeType s dd) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.Datatype s (__eo_to_smt_datatype_decl dd)))
   | (Term.DatatypeTypeRef s) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.TypeRef s))
@@ -70,6 +181,13 @@ def __eo_to_smt_type : Term -> SmtType
     let _v0 := (__eo_to_smt_type x1)
     (__smtx_typeof_guard _v0 (SmtType.Seq _v0))
   | T => SmtType.None
+termination_by x1 => x1.paramSize
+decreasing_by
+  all_goals simp_wf
+  all_goals try apply Nat.lt_of_le_of_lt (eo_dd_subst_params_size _ _)
+  all_goals try simp_all only [Term.paramSize, DatatypeArgs.paramSize, DatatypeDecl.paramSize, Datatype.paramSize, DatatypeCons.paramSize]
+  all_goals try simp_all only [Nat.add_mul, Nat.mul_add, Nat.mul_assoc]
+  all_goals omega
 
 
 def __eo_to_smt : Term -> SmtTerm
@@ -88,6 +206,13 @@ def __eo_to_smt : Term -> SmtTerm
   | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x1) x2) => (SmtTerm.eq (__eo_to_smt x1) (__eo_to_smt x2))
   | (Term.Apply f y) => (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y))
   | y => SmtTerm.None
+termination_by x1 => x1.paramSize
+decreasing_by
+  all_goals simp_wf
+  all_goals try apply Nat.lt_of_le_of_lt (eo_dd_subst_params_size _ _)
+  all_goals try simp_all only [Term.paramSize, DatatypeArgs.paramSize, DatatypeDecl.paramSize, Datatype.paramSize, DatatypeCons.paramSize]
+  all_goals try simp_all only [Nat.add_mul, Nat.mul_add, Nat.mul_assoc]
+  all_goals omega
 
 
 

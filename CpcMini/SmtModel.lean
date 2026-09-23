@@ -43,9 +43,6 @@ def native_zleq : native_Int -> native_Int -> native_Bool
 def native_int_to_nat (x : native_Int) : native_Nat :=
   (Int.toNat x)
 
-def native_nat_to_int (x : native_Nat) : native_Int :=
-  (Int.ofNat x)
-
 def native_nateq : native_Nat -> native_Nat -> native_Bool
   | x, y => decide (x = y)
 
