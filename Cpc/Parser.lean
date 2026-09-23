@@ -1131,14 +1131,14 @@ private def parserOps : List (Logos.Parser.OpDecl Term) := [
     build := fun
       | [] => some (Term.UOp UserOp.forall)
       | _ => none
-    binder := some (fun vs => Logos.Parser.rightAssocNil Term.Apply Term.__eo_List_cons (fun _ => Term.__eo_List_nil) vs) },
+    binder := some (fun vs => Logos.Parser.rightAssocNil Term.Apply Term.__eo_List_cons (fun _ => __eo_nil Term.__eo_List_cons Term.__eo_List) vs) },
   { name := "exists"
     indexArity := 0
     arity := .exact 2
     build := fun
       | [] => some (Term.UOp UserOp.exists)
       | _ => none
-    binder := some (fun vs => Logos.Parser.rightAssocNil Term.Apply Term.__eo_List_cons (fun _ => Term.__eo_List_nil) vs) },
+    binder := some (fun vs => Logos.Parser.rightAssocNil Term.Apply Term.__eo_List_cons (fun _ => __eo_nil Term.__eo_List_cons Term.__eo_List) vs) },
   { name := "@quantifiers_skolemize"
     indexArity := 2
     arity := .exact 0
