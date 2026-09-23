@@ -6431,27 +6431,11 @@ def __eo_prog_str_len_update_inv : Term -> Term -> Term -> Term
   | t1, n1, r1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_update) t1) n1) r1))) (Term.Apply (Term.UOp UserOp.str_len) t1))
 
 
-def __eo_prog_str_update_neg : Term -> Term -> Term -> Proof -> Term
-  | Term.Stuck , _ , _ , _  => Term.Stuck
-  | _ , Term.Stuck , _ , _  => Term.Stuck
-  | _ , _ , Term.Stuck , _  => Term.Stuck
-  | t1, n1, r1, (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.gt) (Term.Numeral 0)) __eo_lv_n1_2)) (Term.Boolean true))) => (__eo_requires (__eo_eq n1 __eo_lv_n1_2) (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_update) t1) n1) r1)) t1))
-  | _, _, _, _ => Term.Stuck
-
-
 def __eo_prog_str_update_oob : Term -> Term -> Term -> Proof -> Term
   | Term.Stuck , _ , _ , _  => Term.Stuck
   | _ , Term.Stuck , _ , _  => Term.Stuck
   | _ , _ , Term.Stuck , _  => Term.Stuck
-  | t1, n1, r1, (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.geq) __eo_lv_n1_2) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_t1_2))) (Term.Boolean true))) => (__eo_requires (__eo_and (__eo_eq n1 __eo_lv_n1_2) (__eo_eq t1 __eo_lv_t1_2)) (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_update) t1) n1) r1)) t1))
-  | _, _, _, _ => Term.Stuck
-
-
-def __eo_prog_str_update_empty : Term -> Term -> Term -> Proof -> Term
-  | Term.Stuck , _ , _ , _  => Term.Stuck
-  | _ , Term.Stuck , _ , _  => Term.Stuck
-  | _ , _ , Term.Stuck , _  => Term.Stuck
-  | t1, n1, r1, (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_t1_2)) (Term.Numeral 0))) => (__eo_requires (__eo_eq t1 __eo_lv_t1_2) (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_update) t1) n1) r1)) t1))
+  | t1, n1, r1, (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_substr) __eo_lv_t1_2) __eo_lv_n1_2) (Term.Numeral 1)))) (Term.Numeral 0))) => (__eo_requires (__eo_and (__eo_eq t1 __eo_lv_t1_2) (__eo_eq n1 __eo_lv_n1_2)) (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_update) t1) n1) r1)) t1))
   | _, _, _, _ => Term.Stuck
 
 
@@ -6480,31 +6464,17 @@ def __eo_prog_str_update_concat_fit0 : Term -> Term -> Term -> Term -> Proof -> 
   | _, _, _, _, _, _ => Term.Stuck
 
 
-def __eo_prog_str_update_concat_fit : Term -> Term -> Term -> Term -> Term -> Proof -> Proof -> Term
-  | Term.Stuck , _ , _ , _ , _ , _ , _  => Term.Stuck
-  | _ , Term.Stuck , _ , _ , _ , _ , _  => Term.Stuck
-  | _ , _ , Term.Stuck , _ , _ , _ , _  => Term.Stuck
-  | _ , _ , _ , Term.Stuck , _ , _ , _  => Term.Stuck
-  | _ , _ , _ , _ , Term.Stuck , _ , _  => Term.Stuck
-  | p1, r1, qs1, n1, x1, (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_p1_2)) __eo_lv_n1_2)), (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_r1_2)) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_x1_2))) =>
+def __eo_prog_str_update_concat_fit : Term -> Term -> Term -> Term -> Term -> Term -> Proof -> Proof -> Term
+  | Term.Stuck , _ , _ , _ , _ , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _ , _ , _ , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _ , _ , _ , _ , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck , _ , _ , _ , _  => Term.Stuck
+  | _ , _ , _ , _ , Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , _ , _ , _ , _ , Term.Stuck , _ , _  => Term.Stuck
+  | p1, ps1, r1, qs1, n1, x1, (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) __eo_lv_p1_2) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) __eo_lv_p1_3) __eo_lv_ps1_2)))) (Term.Apply (Term.Apply (Term.UOp UserOp.plus) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_p1_4)) (Term.Apply (Term.Apply (Term.UOp UserOp.plus) __eo_lv_n1_2) (Term.Numeral 0))))), (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_r1_2)) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_x1_2))) =>
     let _v0 := (Term.Apply (Term.UOp UserOp.str_concat) p1)
-    (__eo_requires (__eo_and (__eo_and (__eo_and (__eo_eq p1 __eo_lv_p1_2) (__eo_eq n1 __eo_lv_n1_2)) (__eo_eq r1 __eo_lv_r1_2)) (__eo_eq x1 __eo_lv_x1_2)) (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_update) (Term.Apply _v0 (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) r1) qs1))) n1) x1)) (Term.Apply _v0 (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) x1) qs1))))
-  | _, _, _, _, _, _, _ => Term.Stuck
-
-
-def __eo_prog_str_update_concat_fit2 : Term -> Term -> Term -> Term -> Term -> Term -> Term -> Proof -> Proof -> Term
-  | Term.Stuck , _ , _ , _ , _ , _ , _ , _ , _  => Term.Stuck
-  | _ , Term.Stuck , _ , _ , _ , _ , _ , _ , _  => Term.Stuck
-  | _ , _ , Term.Stuck , _ , _ , _ , _ , _ , _  => Term.Stuck
-  | _ , _ , _ , Term.Stuck , _ , _ , _ , _ , _  => Term.Stuck
-  | _ , _ , _ , _ , Term.Stuck , _ , _ , _ , _  => Term.Stuck
-  | _ , _ , _ , _ , _ , Term.Stuck , _ , _ , _  => Term.Stuck
-  | _ , _ , _ , _ , _ , _ , Term.Stuck , _ , _  => Term.Stuck
-  | p1, u1, ps1, r1, qs1, n1, x1, (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) __eo_lv_p1_2) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) __eo_lv_u1_2) __eo_lv_ps1_2)))) __eo_lv_n1_2)), (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_r1_2)) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_x1_2))) =>
-    let _v0 := (Term.Apply (Term.UOp UserOp.str_concat) u1)
-    let _v1 := (Term.Apply (Term.UOp UserOp.str_concat) p1)
-    (__eo_requires (__eo_and (__eo_and (__eo_and (__eo_and (__eo_and (__eo_eq p1 __eo_lv_p1_2) (__eo_eq u1 __eo_lv_u1_2)) (__eo_eq ps1 __eo_lv_ps1_2)) (__eo_eq n1 __eo_lv_n1_2)) (__eo_eq r1 __eo_lv_r1_2)) (__eo_eq x1 __eo_lv_x1_2)) (Term.Boolean true) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.eq) (__eo_mk_apply (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.str_update) (__eo_mk_apply _v1 (__eo_mk_apply _v0 (__eo_list_concat (Term.UOp UserOp.str_concat) ps1 (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) r1) qs1))))) n1) x1)) (__eo_mk_apply _v1 (__eo_mk_apply _v0 (__eo_list_concat (Term.UOp UserOp.str_concat) ps1 (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) x1) qs1))))))
-  | _, _, _, _, _, _, _, _, _ => Term.Stuck
+    (__eo_requires (__eo_and (__eo_and (__eo_and (__eo_and (__eo_and (__eo_and (__eo_eq p1 __eo_lv_p1_2) (__eo_eq p1 __eo_lv_p1_3)) (__eo_eq ps1 __eo_lv_ps1_2)) (__eo_eq p1 __eo_lv_p1_4)) (__eo_eq n1 __eo_lv_n1_2)) (__eo_eq r1 __eo_lv_r1_2)) (__eo_eq x1 __eo_lv_x1_2)) (Term.Boolean true) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.eq) (__eo_mk_apply (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.str_update) (__eo_mk_apply _v0 (__eo_list_concat (Term.UOp UserOp.str_concat) ps1 (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) r1) qs1)))) n1) x1)) (__eo_mk_apply _v0 (__eo_list_concat (Term.UOp UserOp.str_concat) ps1 (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) x1) qs1)))))
+  | _, _, _, _, _, _, _, _ => Term.Stuck
 
 
 def __eo_prog_str_update_in_first_concat : Term -> Term -> Term -> Term -> Term -> Term -> Proof -> Proof -> Proof -> Proof -> Term
@@ -7737,24 +7707,14 @@ def __eo_prog_seq_nth_concat_unit : Term -> Term -> Term
   | x1, ys1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.seq_nth) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) (Term.Apply (Term.UOp UserOp.seq_unit) x1)) ys1)) (Term.Numeral 0))) x1)
 
 
-def __eo_prog_seq_nth_concat_unit_gen : Term -> Term -> Term -> Term -> Proof -> Term
-  | Term.Stuck , _ , _ , _ , _  => Term.Stuck
-  | _ , Term.Stuck , _ , _ , _  => Term.Stuck
-  | _ , _ , Term.Stuck , _ , _  => Term.Stuck
-  | _ , _ , _ , Term.Stuck , _  => Term.Stuck
-  | t1, x1, ys1, n1, (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_t1_2)) __eo_lv_n1_2)) => (__eo_requires (__eo_and (__eo_eq t1 __eo_lv_t1_2) (__eo_eq n1 __eo_lv_n1_2)) (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.seq_nth) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) t1) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) (Term.Apply (Term.UOp UserOp.seq_unit) x1)) ys1))) n1)) x1))
-  | _, _, _, _, _ => Term.Stuck
-
-
-def __eo_prog_seq_nth_concat_unit_gen2 : Term -> Term -> Term -> Term -> Term -> Term -> Proof -> Term
-  | Term.Stuck , _ , _ , _ , _ , _ , _  => Term.Stuck
-  | _ , Term.Stuck , _ , _ , _ , _ , _  => Term.Stuck
-  | _ , _ , Term.Stuck , _ , _ , _ , _  => Term.Stuck
-  | _ , _ , _ , Term.Stuck , _ , _ , _  => Term.Stuck
-  | _ , _ , _ , _ , Term.Stuck , _ , _  => Term.Stuck
-  | _ , _ , _ , _ , _ , Term.Stuck , _  => Term.Stuck
-  | t1, u1, ts1, x1, ys1, n1, (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) __eo_lv_t1_2) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) __eo_lv_u1_2) __eo_lv_ts1_2)))) __eo_lv_n1_2)) => (__eo_requires (__eo_and (__eo_and (__eo_and (__eo_eq t1 __eo_lv_t1_2) (__eo_eq u1 __eo_lv_u1_2)) (__eo_eq ts1 __eo_lv_ts1_2)) (__eo_eq n1 __eo_lv_n1_2)) (Term.Boolean true) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.eq) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.seq_nth) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.str_concat) t1) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.str_concat) u1) (__eo_list_concat (Term.UOp UserOp.str_concat) ts1 (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) (Term.Apply (Term.UOp UserOp.seq_unit) x1)) ys1))))) n1)) x1))
-  | _, _, _, _, _, _, _ => Term.Stuck
+def __eo_prog_seq_nth_concat_unit_gen : Term -> Term -> Term -> Term -> Term -> Proof -> Term
+  | Term.Stuck , _ , _ , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _ , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , _ , _ , Term.Stuck , _  => Term.Stuck
+  | t1, ts1, x1, ys1, n1, (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) __eo_lv_t1_2) (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) __eo_lv_t1_3) __eo_lv_ts1_2)))) (Term.Apply (Term.Apply (Term.UOp UserOp.plus) (Term.Apply (Term.UOp UserOp.str_len) __eo_lv_t1_4)) (Term.Apply (Term.Apply (Term.UOp UserOp.plus) __eo_lv_n1_2) (Term.Numeral 0))))) => (__eo_requires (__eo_and (__eo_and (__eo_and (__eo_and (__eo_eq t1 __eo_lv_t1_2) (__eo_eq t1 __eo_lv_t1_3)) (__eo_eq ts1 __eo_lv_ts1_2)) (__eo_eq t1 __eo_lv_t1_4)) (__eo_eq n1 __eo_lv_n1_2)) (Term.Boolean true) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.eq) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.seq_nth) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.str_concat) t1) (__eo_list_concat (Term.UOp UserOp.str_concat) ts1 (Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) (Term.Apply (Term.UOp UserOp.seq_unit) x1)) ys1)))) n1)) x1))
+  | _, _, _, _, _, _ => Term.Stuck
 
 
 def __eo_prog_seq_rev_unit : Term -> Term
@@ -9780,14 +9740,11 @@ inductive CRule : Type where
   | str_len_replace_inv : CRule
   | str_len_replace_all_inv : CRule
   | str_len_update_inv : CRule
-  | str_update_neg : CRule
   | str_update_oob : CRule
-  | str_update_empty : CRule
   | str_update_rev : CRule
   | str_update_fit : CRule
   | str_update_concat_fit0 : CRule
   | str_update_concat_fit : CRule
-  | str_update_concat_fit2 : CRule
   | str_update_in_first_concat : CRule
   | str_len_substr_in_range : CRule
   | str_concat_clash : CRule
@@ -9941,7 +9898,6 @@ inductive CRule : Type where
   | seq_nth_unit : CRule
   | seq_nth_concat_unit : CRule
   | seq_nth_concat_unit_gen : CRule
-  | seq_nth_concat_unit_gen2 : CRule
   | seq_rev_unit : CRule
   | re_in_empty : CRule
   | re_in_sigma : CRule
@@ -10458,14 +10414,11 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.str_len_replace_inv, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_str_len_replace_inv a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.str_len_replace_all_inv, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_str_len_replace_all_inv a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.str_len_update_inv, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), CIndexList.nil => (__eo_prog_str_len_update_inv a1 a2 a3)
-  | CRule.str_update_neg, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_str_update_neg a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.str_update_oob, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_str_update_oob a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)))
-  | CRule.str_update_empty, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_str_update_empty a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.str_update_rev, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_str_update_rev a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.str_update_fit, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 (CIndexList.cons n2 CIndexList.nil)) => (__eo_prog_str_update_fit a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)) (Proof.pf (__eo_state_proven_nth S n2)))
   | CRule.str_update_concat_fit0, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 CArgList.nil)))), (CIndexList.cons n1 (CIndexList.cons n2 CIndexList.nil)) => (__eo_prog_str_update_concat_fit0 a1 a2 a3 a4 (Proof.pf (__eo_state_proven_nth S n1)) (Proof.pf (__eo_state_proven_nth S n2)))
-  | CRule.str_update_concat_fit, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 (CArgList.cons a5 CArgList.nil))))), (CIndexList.cons n1 (CIndexList.cons n2 CIndexList.nil)) => (__eo_prog_str_update_concat_fit a1 a2 a3 a4 a5 (Proof.pf (__eo_state_proven_nth S n1)) (Proof.pf (__eo_state_proven_nth S n2)))
-  | CRule.str_update_concat_fit2, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 (CArgList.cons a5 (CArgList.cons a6 (CArgList.cons a7 CArgList.nil))))))), (CIndexList.cons n1 (CIndexList.cons n2 CIndexList.nil)) => (__eo_prog_str_update_concat_fit2 a1 a2 a3 a4 a5 a6 a7 (Proof.pf (__eo_state_proven_nth S n1)) (Proof.pf (__eo_state_proven_nth S n2)))
+  | CRule.str_update_concat_fit, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 (CArgList.cons a5 (CArgList.cons a6 CArgList.nil)))))), (CIndexList.cons n1 (CIndexList.cons n2 CIndexList.nil)) => (__eo_prog_str_update_concat_fit a1 a2 a3 a4 a5 a6 (Proof.pf (__eo_state_proven_nth S n1)) (Proof.pf (__eo_state_proven_nth S n2)))
   | CRule.str_update_in_first_concat, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 (CArgList.cons a5 (CArgList.cons a6 CArgList.nil)))))), (CIndexList.cons n1 (CIndexList.cons n2 (CIndexList.cons n3 (CIndexList.cons n4 CIndexList.nil)))) => (__eo_prog_str_update_in_first_concat a1 a2 a3 a4 a5 a6 (Proof.pf (__eo_state_proven_nth S n1)) (Proof.pf (__eo_state_proven_nth S n2)) (Proof.pf (__eo_state_proven_nth S n3)) (Proof.pf (__eo_state_proven_nth S n4)))
   | CRule.str_len_substr_in_range, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 (CIndexList.cons n2 (CIndexList.cons n3 CIndexList.nil))) => (__eo_prog_str_len_substr_in_range a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)) (Proof.pf (__eo_state_proven_nth S n2)) (Proof.pf (__eo_state_proven_nth S n3)))
   | CRule.str_concat_clash, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 CArgList.nil)))), (CIndexList.cons n1 (CIndexList.cons n2 CIndexList.nil)) => (__eo_prog_str_concat_clash a1 a2 a3 a4 (Proof.pf (__eo_state_proven_nth S n1)) (Proof.pf (__eo_state_proven_nth S n2)))
@@ -10620,8 +10573,7 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.seq_len_unit, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_seq_len_unit a1)
   | CRule.seq_nth_unit, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_seq_nth_unit a1)
   | CRule.seq_nth_concat_unit, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_seq_nth_concat_unit a1 a2)
-  | CRule.seq_nth_concat_unit_gen, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 CArgList.nil)))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_seq_nth_concat_unit_gen a1 a2 a3 a4 (Proof.pf (__eo_state_proven_nth S n1)))
-  | CRule.seq_nth_concat_unit_gen2, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 (CArgList.cons a5 (CArgList.cons a6 CArgList.nil)))))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_seq_nth_concat_unit_gen2 a1 a2 a3 a4 a5 a6 (Proof.pf (__eo_state_proven_nth S n1)))
+  | CRule.seq_nth_concat_unit_gen, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 (CArgList.cons a5 CArgList.nil))))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_seq_nth_concat_unit_gen a1 a2 a3 a4 a5 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.seq_rev_unit, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_seq_rev_unit a1)
   | CRule.re_in_empty, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_re_in_empty a1)
   | CRule.re_in_sigma, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_re_in_sigma a1)
