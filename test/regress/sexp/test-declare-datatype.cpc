@@ -1,0 +1,6 @@
+; Exercises declare-datatype, SMT-LIB's form of a block declaring one datatype.
+(declare-datatype List ((cons (head Int) (tail List)) (nil)))
+(declare-const x List)
+(assume @p0 (not (= ((_ is cons) x) ((_ is cons) x))))
+(step @p1 :rule refl :args (((_ is cons) x)))
+(step @p2 :rule contra :premises (@p1 @p0))

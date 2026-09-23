@@ -242,6 +242,29 @@ private def gTy : TestTerm := arrow (.usort 1) (arrow (.usort 1) (.usort 1))
   == some [.uconst 2 (.usort 1)]
 
 /-!
+### Declared names are symbols
+
+A name a command or binder introduces is a symbol, as in Ethos.  A bound name is
+looked up before a literal is, so accepting a literal there would change what
+that literal means for the rest of the proof.
+-/
+
+#guard assumptions "(declare-sort U 0) (declare-const 5 U) (assume @p0 5)" == none
+#guard assumptions "(declare-sort U 0) (declare-const #b1 U) (assume @p0 #b1)" == none
+#guard assumptions (binary ++ "(declare-const :k U) (assume @p0 a)") == none
+#guard assumptions (binary ++ "(declare-const \"s\" U) (assume @p0 a)") == none
+#guard assumptions (binary ++ "(declare-sort 1/2 0) (assume @p0 a)") == none
+#guard assumptions (binary ++ "(declare-fun 1.5 (U) U) (assume @p0 a)") == none
+-- Each of those differs from an accepted proof only in the name it declares.
+#guard (assumptions (binary ++ "(declare-const k U) (declare-sort h 0) (assume @p0 a)")).isSome
+#guard assumptions (binary ++ "(define 7 () a) (assume @p0 7)") == none
+#guard assumptions (binary ++ "(define h ((7 U)) (g a a)) (assume @p0 (h a))") == none
+#guard assumptions (binary ++ "(assume @p0 (let ((7 a)) 7))") == none
+-- A quoted symbol is a symbol, whatever it quotes.
+#guard assumptions "(declare-sort U 0) (declare-const |5| U) (assume @p0 |5|)"
+  == some [.uconst 1 (.usort 1)]
+
+/-!
 ### The shape of a proof file
 
 A proof is a bare sequence of commands.  cvc5 prints one inside the parentheses

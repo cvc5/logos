@@ -401,6 +401,19 @@ abbrev ParserM (T : Type) := StateT (State T) (Except String)
 def State.ofOps (ops : List (OpDecl T)) : State T :=
   { ops := ops.foldl (fun m d => m.insert d.name (m.getD d.name [] ++ [d])) {} }
 
+/--
+Parse a name that a declaration, a datatype, a `define` or a binder introduces.
+As in Ethos it has to be a symbol: a literal, a keyword or a string literal is
+refused.  A bound name is looked up before a literal is (`parseTermCore`), so
+declaring `5` or `#b1` would otherwise silently change what that literal means.
+-/
+def parseSymbol : Sexp → ParserM T String
+  | .atom a =>
+    if (Literal.ofString a).isSome || a.startsWith ":" || a.startsWith "\"" then
+      throw s!"Error: expected a symbol, got {a}"
+    else return a
+  | s => throw s!"Error: expected a symbol, got {s}"
+
 /-- Record a proof step named `id` at the top of the proof stack. -/
 def registerStep (id : String) : ParserM T Unit :=
   modify fun s =>
@@ -627,7 +640,7 @@ Parse an SMT-LIB `let`.  Binding values are read in the surrounding scope
 partial def parseLet (cfg : Config T R C CL) (bindings : List Sexp)
     (body : Sexp) : ParserM T T := do
   let bindings : List (String × Sexp) ← bindings.mapM fun
-    | .expr [.atom name, value] => return (name, value)
+    | .expr [name, value] => return (← parseSymbol name, value)
     | binding => throw s!"Error: expected a let binding, got {binding}"
   let values ← bindings.mapM fun (name, value) => do
     return (name, ← parseTerm cfg value)
@@ -680,16 +693,18 @@ def parseName : Sexp → ParserM T String
 
 /-- Parse `(name arity)` from the sort list of a `declare-datatypes` block. -/
 def parseDatatypeName : Sexp → ParserM T String
-  | .expr [.atom name, .atom arity] =>
+  | .expr [name, .atom arity] => do
+    let name ← parseSymbol name
     if arity == "0" then return name
     else throw s!"Error: parametric datatype {name} (arity {arity}) is not supported"
   | s => throw s!"Error: expected a datatype name and arity, got {s}"
 
 /-- Parse one constructor, `(cname (sel type) …)`. -/
 def parseConsSpec (cfg : Config T R C CL) : Sexp → ParserM T (ConsSpec T)
-  | .expr (.atom name :: sels) => do
+  | .expr (name :: sels) => do
+    let name ← parseSymbol name
     let selectors ← sels.mapM fun
-      | .expr [.atom sel, ty] => do return (sel, ← parseTerm cfg ty)
+      | .expr [sel, ty] => do return (← parseSymbol sel, ← parseTerm cfg ty)
       | s => throw s!"Error: expected a selector and its type, got {s}"
     return { name, selectors }
   | s => throw s!"Error: expected a datatype constructor, got {s}"
@@ -832,7 +847,7 @@ of the arguments they stand for.
 -/
 def parseMacroParams : List Sexp → ParserM T (List String)
   | [] => return []
-  | .expr (.atom name :: _ :: _) :: rest => return name :: (← parseMacroParams rest)
+  | .expr (name :: _ :: _) :: rest => return (← parseSymbol name) :: (← parseMacroParams rest)
   | s :: _ => throw s!"Error: expected a parameter and its type, got {s}"
 
 /-- Parse the arity of a `declare-sort`. -/
@@ -905,28 +920,32 @@ where
     return (rule, args, premises)
   go : Sexp → ParserM T (Command T C)
     | .expr [.atom "declare-const", name, ty] => do
-      declareSymbol cfg (← parseName name) (← parseTerm cfg ty)
+      declareSymbol cfg (← parseSymbol name) (← parseTerm cfg ty)
       return .decl
     | .expr [.atom "declare-fun", name, .expr args, ty] => do
-      declareSymbol cfg (← parseName name) (← parseFunType cfg args ty)
+      declareSymbol cfg (← parseSymbol name) (← parseFunType cfg args ty)
       return .decl
     | .expr [.atom "declare-sort", name, arity] => do
       -- `(declare-sort S n)` declares a symbol of type `(-> Type … Type)`; for
       -- `n = 0` that is `Type` itself, i.e. an uninterpreted sort.
       let arity ← parseArity arity
-      declareSymbol cfg (← parseName name) (← parseSortType cfg arity)
+      declareSymbol cfg (← parseSymbol name) (← parseSortType cfg arity)
       return .decl
     | .expr [.atom "declare-datatypes", .expr sorts, .expr bodies] => do
       parseDatatypes cfg sorts bodies
       return .decl
+    | .expr [.atom "declare-datatype", name, body] => do
+      -- SMT-LIB's form for a single datatype, of arity `0` unless its body is `par`.
+      parseDatatypes cfg [.expr [name, .atom "0"]] [body]
+      return .decl
     | .expr [.atom "define", name, .expr [], body] => do
       -- A definition without parameters is read once, where it is given.
-      let name ← parseName name
+      let name ← parseSymbol name
       let body ← parseTerm cfg body
       modify fun s => { s with terms := s.terms.insert name (body :: s.terms.getD name []) }
       return .decl
     | .expr [.atom "define", name, .expr params, body] => do
-      let name ← parseName name
+      let name ← parseSymbol name
       let params ← parseMacroParams params
       modify fun s => { s with macros := s.macros.insert name { params, body } }
       return .decl
@@ -957,7 +976,7 @@ where
       registerStepPop name
       return .cmd (cfg.mkStepPop rule args premises)
     | s => throw s!"Error: unrecognized command {s}, expected one of declare-const, \
-                    declare-fun, declare-sort, declare-datatypes, define, \
+                    declare-fun, declare-sort, declare-datatype, declare-datatypes, define, \
                     include, reference, assume, assume-push, step or step-pop"
 
 /--

@@ -69,6 +69,33 @@ private def datatypePrelude : String :=
      (assume @p0 x)
      (assume @p1 x)"
 
+-- `declare-datatype` is SMT-LIB's form of a block declaring one datatype.
+#guard assumptions
+    "(declare-datatype L ((nl) (cns (hd Int) (tl L)))) (declare-const x L)
+     (assume @p0 (= (tl (cns 1 x)) nl))" ==
+  assumptions
+    "(declare-datatypes ((L 0)) (((nl) (cns (hd Int) (tl L))))) (declare-const x L)
+     (assume @p0 (= (tl (cns 1 x)) nl))"
+
+#guard (assumptions
+    "(declare-datatypes ((L 0)) (((nl) (cns (hd Int) (tl L))))) (declare-const x L)
+     (assume @p0 (= (tl (cns 1 x)) nl))").isSome
+
+-- Its parametric form is refused, as the plural's is.
+#guard assumptions
+    "(declare-datatype L (par (X) ((nl) (cns (hd X) (tl (L X)))))) (assume @p0 true)"
+  == none
+
+-- A constructor, selector or datatype is named by a symbol.  Read as a
+-- constructor, `#b1` would stop meaning the bit-vector literal.
+#guard assumptions "(declare-datatypes ((D 0)) (((c (s Int)) (#b1)))) (assume @p0 (= #b1 #b1))"
+  == none
+#guard assumptions "(declare-datatypes ((D 0)) (((c (#b1 Int)) (e)))) (assume @p0 true)"
+  == none
+#guard assumptions "(declare-datatypes ((#b1 0)) (((c) (e)))) (assume @p0 true)"
+  == none
+#guard (assumptions "(declare-datatypes ((D 0)) (((c (s Int)) (e)))) (assume @p0 (= e e))").isSome
+
 /-!
 ## Datatype block order
 

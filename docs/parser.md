@@ -32,7 +32,13 @@ it exactly as Ethos does, recognizing the shape only to report which parentheses
 to remove.
 
 The parser supports the commands `declare-const`, `declare-fun`, `declare-sort`,
-`declare-datatypes`, `define`, `assume`, `assume-push`, `step` and `step-pop`.
+`declare-datatype`, `declare-datatypes`, `define`, `assume`, `assume-push`, `step` and
+`step-pop`.  `declare-datatype` is SMT-LIB's form of a `declare-datatypes` block
+declaring one datatype, and is read as that block.
+A name that a declaration, a datatype, a `define`, a macro parameter or a `let` binding
+introduces is a symbol, as in Ethos: a literal (`5`, `#b1`, `1/2`, `"s"`) or a keyword
+is refused there, since binding one would change what that literal means for the rest
+of the proof.
 Every `assume` must stand before the first proof step, since a proof is read as an
 assumption set together with the steps that refute it; an `assume` after a `step`,
 `assume-push` or `step-pop` is refused, where Ethos accepts one anywhere.
