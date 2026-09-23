@@ -32,7 +32,13 @@ it exactly as Ethos does, recognizing the shape only to report which parentheses
 to remove.
 
 The parser supports the commands `declare-const`, `declare-fun`, `declare-sort`,
-`declare-datatypes`, `define`, `assume`, `assume-push`, `step` and `step-pop`.
+`declare-datatype`, `declare-datatypes`, `define`, `assume`, `assume-push`, `step` and
+`step-pop`.  `declare-datatype` is SMT-LIB's form of a `declare-datatypes` block
+declaring one datatype, and is read as that block.
+A name that a declaration, a datatype, a `define`, a macro parameter or a `let` binding
+introduces is a symbol, as in Ethos: a literal (`5`, `#b1`, `1/2`, `"s"`) or a keyword
+is refused there, since binding one would change what that literal means for the rest
+of the proof.
 Every `assume` must stand before the first proof step, since a proof is read as an
 assumption set together with the steps that refute it; an `assume` after a `step`,
 `assume-push` or `step-pop` is refused, where Ethos accepts one anywhere.
@@ -69,6 +75,14 @@ Parameterized operators also accept Eunoia's flat application syntax, which is w
 for example, `(extract 1 0 x)` is equivalent to `((_ extract 1 0) x)`.  SMT-LIB type
 ascriptions such as `(as set.empty (Set Int))` supply the ascribed sort as the operator index.
 Term-level `let` uses parallel bindings whose names are scoped to its body.
+An operator with Eunoia's `:binder` attribute (`forall` and `exists` in CPC) may be
+applied to a sorted variable list, as in `(forall ((x Int) (y Int)) F)`.  As in Ethos,
+that denotes `(forall (@list x y) F)`, where each variable is `(@var "x" Int)`, the same
+term wherever its name and type are, and is bound in the rest of the application; a
+first argument that is not a variable list is an ordinary term.  The configuration
+supplies the list constructor (`OpDecl.binder`) and the variables (`Config.mkVar`).
+`lambda` is a binder in CPC too, but Logos has no representation for it, so a term
+using it is not read.
 A name may be declared more than once, as SMT-LIB allows, and a proof's own symbol may
 carry the name of one of the signature's operators; every declaration of a name is kept,
 and a use of it means the reading the calculus gives a type to (`Config.wellTyped`, which
