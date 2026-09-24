@@ -45,6 +45,9 @@ def native_not : native_Bool -> native_Bool
 def native_and : native_Bool -> native_Bool -> native_Bool
   | x, y => x && y
 
+def native_or : native_Bool -> native_Bool -> native_Bool
+  | x, y => x || y
+
 def native_zeq : native_Int -> native_Int -> native_Bool
   | x, y => decide (x = y)
 
@@ -62,9 +65,6 @@ def native_mk_rational : native_Int -> native_Int -> native_Rat
 
 def native_streq : native_String -> native_String -> native_Bool
   | x, y => decide (x = y)
-
-def native_nat_to_int (x : native_Nat) : native_Int :=
-  (Int.ofNat x)
 
 syntax "native_nat_zero" : term
 macro_rules

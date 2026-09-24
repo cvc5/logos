@@ -56,7 +56,7 @@ inductive Term : Type where
   | Var : Term -> Term -> Term
   | DatatypeType : native_String -> DatatypeDecl -> Term
   | DatatypeTypeRef : native_String -> Term
-  | DtParam : native_Nat -> Term
+  | DtParam : native_String -> Term
   | DtcAppType : Term -> Term -> Term
   | DtCons : native_String -> DatatypeDecl -> native_Nat -> Term
   | DtSel : native_String -> DatatypeDecl -> native_Nat -> native_Nat -> Term
@@ -71,13 +71,7 @@ Eunoia datatype declarations.
 inductive DatatypeDecl : Type where
   | nil : DatatypeDecl
   | cons : native_String -> Datatype -> DatatypeDecl -> DatatypeDecl
-  | params : DatatypeArgs -> DatatypeDecl -> DatatypeDecl
-deriving Repr, DecidableEq, Inhabited, Ord
-
-/- Type arguments, kept separate from the template they instantiate. -/
-inductive DatatypeArgs : Type where
-  | nil : DatatypeArgs
-  | cons : Term -> DatatypeArgs -> DatatypeArgs
+  | param : native_String -> DatatypeDecl -> DatatypeDecl
 deriving Repr, DecidableEq, Inhabited, Ord
 
 /-

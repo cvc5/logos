@@ -32,6 +32,9 @@ def native_qleq : native_Rat -> native_Rat -> native_Bool
 def native_binary_uts : native_Int -> native_Int -> native_Int
   | w, n => (native_zplus (native_zmult 2 (native_mod_total n (native_int_pow2 (native_zplus w (native_zneg 1))))) (native_zneg n))
 
+def native_nat_to_int (x : native_Nat) : native_Int :=
+  (Int.ofNat x)
+
 def native_nateq : native_Nat -> native_Nat -> native_Bool
   | x, y => decide (x = y)
 
