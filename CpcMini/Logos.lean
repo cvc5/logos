@@ -91,66 +91,32 @@ def __eo_eq : Term -> Term -> Term
   | t, s => (Term.Boolean (native_teq s t))
 
 
-def __eo_subst_param (s : native_String) : Term -> Term -> Term
-  | Term.Stuck , _  => Term.Stuck
-  | _ , Term.Stuck  => Term.Stuck
-  | U, (Term.DtParam t) => (native_ite (native_streq s t) U (Term.DtParam t))
-  | U, (Term.Apply T V) => (Term.Apply (__eo_subst_param s U T) (__eo_subst_param s U V))
-  | U, (Term.DtcAppType T V) => (Term.DtcAppType (__eo_subst_param s U T) (__eo_subst_param s U V))
-  | U, T => T
-
-
-def __eo_dd_has_param (s : native_String) : DatatypeDecl -> native_Bool
-  | (DatatypeDecl.param t dd) => (native_or (native_streq s t) (__eo_dd_has_param s dd))
-  | dd => false
-
-
-def __eo_dtc_params_bound (scope : DatatypeDecl) : DatatypeCons -> native_Bool
+def __eo_dtc_is_mono : DatatypeCons -> native_Bool
+  | (DatatypeCons.cons T c) => (native_and (__eo_dt_is_mono T) (__eo_dtc_is_mono c))
   | DatatypeCons.unit => true
-  | (DatatypeCons.cons T c) => (native_and (__eo_params_bound scope T) (__eo_dtc_params_bound scope c))
 
 
-def __eo_params_bound (scope : DatatypeDecl) : Term -> native_Bool
-  | (Term.DtParam s) => (__eo_dd_has_param s scope)
-  | (Term.Apply T U) => (native_and (__eo_params_bound scope T) (__eo_params_bound scope U))
-  | (Term.DatatypeType s dd) => (__eo_dd_params_bound dd dd)
+def __eo_dtd_is_mono : Datatype -> native_Bool
+  | (Datatype.sum c d) => (native_and (__eo_dtc_is_mono c) (__eo_dtd_is_mono d))
+  | Datatype.null => true
+
+
+def __eo_dd_is_mono : DatatypeDecl -> native_Bool
+  | (DatatypeDecl.cons s d dd) => (native_and (__eo_dtd_is_mono d) (__eo_dd_is_mono dd))
+  | DatatypeDecl.nil => true
+
+
+def __eo_dt_is_mono : Term -> native_Bool
+  | (Term.DtParam s) => false
+  | (Term.DatatypeParamType s T) => false
+  | (Term.DatatypeType s dd) => (__eo_dd_is_mono dd)
+  | (Term.Apply T U) => (native_and (__eo_dt_is_mono T) (__eo_dt_is_mono U))
+  | (Term.DtcAppType T U) => (native_and (__eo_dt_is_mono T) (__eo_dt_is_mono U))
   | T => true
 
 
-def __eo_dt_params_bound (scope : DatatypeDecl) : Datatype -> native_Bool
-  | Datatype.null => true
-  | (Datatype.sum c d) => (native_and (__eo_dtc_params_bound scope c) (__eo_dt_params_bound scope d))
-
-
-def __eo_dd_params_bound (scope : DatatypeDecl) : DatatypeDecl -> native_Bool
-  | DatatypeDecl.nil => true
-  | (DatatypeDecl.param s dd) => (native_and (native_not (__eo_dd_has_param s dd)) (__eo_dd_params_bound scope dd))
-  | (DatatypeDecl.cons s d dd) => (native_and (__eo_dt_params_bound scope d) (__eo_dd_params_bound scope dd))
-
-
-def __eo_dt_generic_apply : Term -> DatatypeDecl -> Term
-  | Term.Stuck , _  => Term.Stuck
-  | T, (DatatypeDecl.param s dd) => (__eo_dt_generic_apply (Term.Apply T (Term.DtParam s)) dd)
-  | T, dd => T
-
-
-def __eo_dd_param_at : DatatypeDecl -> native_Nat -> Term
-  | (DatatypeDecl.param s dd), native_nat_zero => (Term.DtParam s)
-  | (DatatypeDecl.param s dd), (native_nat_succ k) => (__eo_dd_param_at dd k)
-  | dd, k => Term.Type
-
-
-def __eo_dt_param_at : Term -> native_Nat -> Term
-  | Term.Stuck , _  => Term.Stuck
-  | (Term.Apply T U), k => (__eo_dt_param_at T (native_nat_succ k))
-  | (Term.DatatypeType s dd), k => (__eo_dd_param_at dd k)
-  | (Term.DtCons s dd i), k => (__eo_dd_param_at dd k)
-  | (Term.DtSel s dd i j), k => (__eo_dd_param_at dd k)
-  | T, k => Term.Type
-
-
 def __eo_dtc_resolve : DatatypeCons -> DatatypeDecl -> DatatypeCons
-  | (DatatypeCons.cons (Term.DatatypeTypeRef s) c), dd => (DatatypeCons.cons (__eo_dt_generic_apply (Term.DatatypeType s dd) dd) (__eo_dtc_resolve c dd))
+  | (DatatypeCons.cons (Term.DatatypeTypeRef s) c), dd => (DatatypeCons.cons (Term.DatatypeType s dd) (__eo_dtc_resolve c dd))
   | (DatatypeCons.cons T c), dd => (DatatypeCons.cons T (__eo_dtc_resolve c dd))
   | DatatypeCons.unit, dd => DatatypeCons.unit
 
@@ -162,7 +128,6 @@ def __eo_dt_resolve : Datatype -> DatatypeDecl -> Datatype
 
 def __eo_dd_lookup (s : native_String) : DatatypeDecl -> Datatype
   | (DatatypeDecl.cons s2 d dd) => (native_ite (native_streq s s2) d (__eo_dd_lookup s dd))
-  | (DatatypeDecl.param p dd) => (__eo_dd_lookup s dd)
   | DatatypeDecl.nil => Datatype.null
 
 
@@ -268,19 +233,13 @@ def __eo_typeof_apply : Term -> Term -> Term
   | _, _ => Term.Stuck
 
 
-def __eo_typeof_dt_params : DatatypeDecl -> Term -> Term
-  | _ , Term.Stuck  => Term.Stuck
-  | (DatatypeDecl.param s dd), T => (Term.Apply (Term.Apply Term.FunType Term.Type) (__eo_typeof_dt_params dd T))
-  | dd, T => T
-
-
-def __eo_typeof_apply_param : Term -> Term -> Term -> Term -> Term
-  | Term.Stuck , _ , _ , _  => Term.Stuck
-  | _ , Term.Stuck , _ , _  => Term.Stuck
-  | _ , _ , Term.Stuck , _  => Term.Stuck
-  | _ , _ , _ , Term.Stuck  => Term.Stuck
-  | (Term.DtParam s), (Term.Apply (Term.Apply Term.FunType Term.Type) T), a, Term.Type => (__eo_subst_param s a T)
-  | p, T, a, U => (__eo_typeof_apply T U)
+def __eo_typeof_datatype_kind : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | (Term.DatatypeParamType s T) =>
+    let _v0 := (__eo_typeof_datatype_kind T)
+    (native_ite (native_not (native_teq _v0 Term.Stuck)) (Term.Apply (Term.Apply Term.FunType Term.Type) _v0) Term.Stuck)
+  | (Term.DatatypeType s dd) => Term.Type
+  | T => Term.Stuck
 
 
 def __eo_typeof_fun_type : Term -> Term -> Term
@@ -342,9 +301,10 @@ def __eo_typeof : Term -> Term
   | (Term.Binary w n) => (__eo_lit_type_Binary (Term.Binary w n))
   | (Term.Var (Term.String s) T) => T
   | (Term.DtParam s) => Term.Stuck
-  | (Term.DatatypeType s dd) => (native_ite (__eo_dd_params_bound dd dd) (__eo_typeof_dt_params dd Term.Type) Term.Stuck)
-  | (Term.DtCons s dd i) => (native_ite (__eo_dd_params_bound dd dd) (__eo_typeof_dt_params dd (__eo_typeof_dt_cons_rec (__eo_dt_generic_apply (Term.DatatypeType s dd) dd) (__eo_dd_resolve s dd) i)) Term.Stuck)
-  | (Term.DtSel s dd i j) => (native_ite (__eo_dd_params_bound dd dd) (__eo_typeof_dt_params dd (Term.Apply (Term.Apply Term.FunType (__eo_dt_generic_apply (Term.DatatypeType s dd) dd)) (__eo_typeof_dt_sel_return (__eo_dd_resolve s dd) i j))) Term.Stuck)
+  | (Term.DatatypeParamType s T) => (__eo_typeof_datatype_kind (Term.DatatypeParamType s T))
+  | (Term.DatatypeType s dd) => (native_ite (__eo_dd_is_mono dd) Term.Type Term.Stuck)
+  | (Term.DtCons s dd i) => (native_ite (__eo_dd_is_mono dd) (__eo_typeof_dt_cons_rec (Term.DatatypeType s dd) (__eo_dd_resolve s dd) i) Term.Stuck)
+  | (Term.DtSel s dd i j) => (native_ite (__eo_dd_is_mono dd) (Term.Apply (Term.Apply Term.FunType (Term.DatatypeType s dd)) (__eo_typeof_dt_sel_return (__eo_dd_resolve s dd) i j)) Term.Stuck)
   | (Term.USort i) => Term.Type
   | (Term.UConst i T) => T
   | Term.Type => Term.Type
@@ -362,7 +322,7 @@ def __eo_typeof : Term -> Term
   | (Term.Apply (Term.Apply (Term.UOp UserOp.and) __eo_x1) __eo_x2) => (__eo_typeof_and (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.imp) __eo_x1) __eo_x2) => (__eo_typeof_and (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_x1) __eo_x2) => (__eo_typeof_eq (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
-  | (Term.Apply __eo_f __eo_x) => (__eo_typeof_apply_param (__eo_dt_param_at __eo_f native_nat_zero) (__eo_typeof __eo_f) __eo_x (__eo_typeof __eo_x))
+  | (Term.Apply __eo_f __eo_x) => (__eo_typeof_apply (__eo_typeof __eo_f) (__eo_typeof __eo_x))
   | _ => Term.Stuck
 
 

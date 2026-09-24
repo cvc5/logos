@@ -81,10 +81,10 @@ private def datatypePrelude : String :=
     "(declare-datatypes ((L 0)) (((nl) (cns (hd Int) (tl L))))) (declare-const x L)
      (assume @p0 (= (tl (cns 1 x)) nl))").isSome
 
--- Its parametric form is refused, as the plural's is.
+-- Its parametric form is accepted, as the plural's is.
 #guard assumptions
     "(declare-datatype L (par (X) ((nl) (cns (hd X) (tl (L X)))))) (assume @p0 true)"
-  == none
+  == some [.Boolean true]
 
 -- A constructor, selector or datatype is named by a symbol.  Read as a
 -- constructor, `#b1` would stop meaning the bit-vector literal.

@@ -34,6 +34,9 @@ def native_string_prefix_eq : native_String -> native_String -> native_Bool
   | _ :: _, [] => false
   | c :: cs, d :: ds => decide (c = d) && native_string_prefix_eq cs ds
 
+def native_or : native_Bool -> native_Bool -> native_Bool
+  | x, y => x || y
+
 def native_zleq : native_Int -> native_Int -> native_Bool
   | x, y => decide (x <= y)
 

@@ -27,10 +27,19 @@ Definitions for eo_to_smt_type, eo_to_smt
 -/
 noncomputable section
 
+def __eo_to_smt_reserved_datatype_name (s : native_String) : native_Bool :=
+  (native_string_prefix_eq (native_string_lit "@") s)
+
+
+
+mutual
+
 def __eo_to_smt_dt_subst (s : native_String) : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | _ , Term.Stuck  => Term.Stuck
   | U, (Term.DtParam p) => (native_ite (native_streq s p) U (Term.DtParam p))
+  | U, (Term.DatatypeParamType p T) => (native_ite (native_streq s p) (Term.DatatypeParamType p T) (Term.DatatypeParamType p (__eo_to_smt_dt_subst s U T)))
+  | U, (Term.DatatypeType p dd) => (Term.DatatypeType p (__eo_to_smt_dd_subst s U dd))
   | U, (Term.Apply T V) => (Term.Apply (__eo_to_smt_dt_subst s U T) (__eo_to_smt_dt_subst s U V))
   | U, (Term.DtcAppType T V) => (Term.DtcAppType (__eo_to_smt_dt_subst s U T) (__eo_to_smt_dt_subst s U V))
   | U, T => T
@@ -47,7 +56,6 @@ def __eo_to_smt_dtd_subst (s : native_String) : Term -> Datatype -> Datatype
 
 
 def __eo_to_smt_dd_subst (s : native_String) : Term -> DatatypeDecl -> DatatypeDecl
-  | U, (DatatypeDecl.param p dd) => (native_ite (native_streq s p) (DatatypeDecl.param p dd) (DatatypeDecl.param p (__eo_to_smt_dd_subst s U dd)))
   | U, (DatatypeDecl.cons p d dd) => (DatatypeDecl.cons p (__eo_to_smt_dtd_subst s U d) (__eo_to_smt_dd_subst s U dd))
   | U, DatatypeDecl.nil => DatatypeDecl.nil
 
@@ -55,33 +63,9 @@ def __eo_to_smt_dd_subst (s : native_String) : Term -> DatatypeDecl -> DatatypeD
 def __eo_to_smt_dt_instantiate : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | _ , Term.Stuck  => Term.Stuck
-  | (Term.DatatypeType s (DatatypeDecl.param p dd)), U => (Term.DatatypeType s (__eo_to_smt_dd_subst p U dd))
-  | (Term.DtCons s (DatatypeDecl.param p dd) i), U => (Term.DtCons s (__eo_to_smt_dd_subst p U dd) i)
-  | (Term.DtSel s (DatatypeDecl.param p dd) i j), U => (Term.DtSel s (__eo_to_smt_dd_subst p U dd) i j)
+  | (Term.DatatypeParamType p T), U => (__eo_to_smt_dt_subst p U T)
   | T, U => Term.Type
 
-
-def __eo_to_smt_reserved_datatype_name (s : native_String) : native_Bool :=
-  (native_string_prefix_eq (native_string_lit "@") s)
-
-def __eo_to_smt_dt_cons_type (n : native_Nat) : SmtType -> SmtTerm
-  | (SmtType.Datatype s dd) => (SmtTerm.DtCons s dd n)
-  | T => SmtTerm.None
-
-
-def __eo_to_smt_dt_sel_type (n : native_Nat) (m : native_Nat) : SmtType -> SmtTerm
-  | (SmtType.Datatype s dd) => (SmtTerm.DtSel s dd n m)
-  | T => SmtTerm.None
-
-
-def __eo_to_smt_apply : SmtTerm -> SmtTerm -> SmtTerm -> SmtTerm
-  | SmtTerm.None, f, a => (SmtTerm.Apply f a)
-  | t, f, a => t
-
-
-
-
-mutual
 
 def __eo_to_smt_dtc_normalize (fuel : native_Nat) : DatatypeCons -> DatatypeCons
   | (DatatypeCons.cons T c) => (DatatypeCons.cons (__eo_to_smt_dt_normalize fuel T) (__eo_to_smt_dtc_normalize fuel c))
@@ -114,8 +98,6 @@ def __eo_to_smt_dt_normalize : native_Nat -> Term -> Term
     let _v3 := (__eo_to_smt_dt_instantiate _v2 _v1)
     (native_ite (native_teq _v3 Term.Type) (Term.Apply _v2 _v1) (native_ite (native_Teq (__eo_to_smt_type_mono _v1) SmtType.None) Term.Stuck (__eo_to_smt_dt_normalize fuel _v3)))
   | fuel, (Term.DatatypeType s dd) => (Term.DatatypeType s (__eo_to_smt_dd_normalize fuel dd))
-  | fuel, (Term.DtCons s dd i) => (Term.DtCons s (__eo_to_smt_dd_normalize fuel dd) i)
-  | fuel, (Term.DtSel s dd i j) => (Term.DtSel s (__eo_to_smt_dd_normalize fuel dd) i j)
   | fuel, (Term.DtcAppType T U) => (Term.DtcAppType (__eo_to_smt_dt_normalize fuel T) (__eo_to_smt_dt_normalize fuel U))
   | fuel, (Term.DtParam s) => Term.Stuck
   | fuel, T => T
@@ -144,7 +126,6 @@ def __eo_to_smt_datatype_decl : DatatypeDecl -> SmtDatatypeDecl
 
 def __eo_to_smt_type_mono : Term -> SmtType
   | Term.Bool => SmtType.Bool
-  | (Term.DatatypeType s (DatatypeDecl.param p dd)) => SmtType.None
   | (Term.DatatypeType s dd) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.Datatype s (__eo_to_smt_datatype_decl dd)))
   | (Term.DatatypeTypeRef s) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.TypeRef s))
   | (Term.DtcAppType T1 T2) =>
@@ -166,12 +147,6 @@ def __eo_to_smt_type_mono : Term -> SmtType
   | T => SmtType.None
 
 
-def __eo_to_smt_dt_operator : Term -> SmtTerm
-  | (Term.DtCons s dd n) => (__eo_to_smt_dt_cons_type n (__eo_to_smt_type_mono (Term.DatatypeType s dd)))
-  | (Term.DtSel s dd n m) => (__eo_to_smt_dt_sel_type n m (__eo_to_smt_type_mono (Term.DatatypeType s dd)))
-  | T => SmtTerm.None
-
-
 def __eo_to_smt : Term -> SmtTerm
   | (Term.Boolean b) => (SmtTerm.Boolean b)
   | (Term.Numeral n) => (SmtTerm.Numeral n)
@@ -179,20 +154,14 @@ def __eo_to_smt : Term -> SmtTerm
   | (Term.String s) => (SmtTerm.String s)
   | (Term.Binary w n) => (SmtTerm.Binary w n)
   | (Term.Var (Term.String s) T) => (SmtTerm.Var s (__eo_to_smt_type T))
-  | (Term.DtCons s dd i) =>
-    let _v0 := (Term.DtCons s dd i)
-    (__eo_to_smt_dt_operator (__eo_to_smt_dt_normalize (native_dt_budget _v0) _v0))
-  | (Term.DtSel s dd i j) =>
-    let _v0 := (Term.DtSel s dd i j)
-    (__eo_to_smt_dt_operator (__eo_to_smt_dt_normalize (native_dt_budget _v0) _v0))
+  | (Term.DtCons s dd i) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None (SmtTerm.DtCons s (__eo_to_smt_datatype_decl dd) i))
+  | (Term.DtSel s dd i j) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None (SmtTerm.DtSel s (__eo_to_smt_datatype_decl dd) i j))
   | (Term.UConst i T) => (SmtTerm.UConst (native_uconst_id i) (__eo_to_smt_type T))
   | (Term.Apply (Term.UOp UserOp.not) x1) => (SmtTerm.not (__eo_to_smt x1))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.and) x1) x2) => (SmtTerm.and (__eo_to_smt x1) (__eo_to_smt x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.imp) x1) x2) => (SmtTerm.imp (__eo_to_smt x1) (__eo_to_smt x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x1) x2) => (SmtTerm.eq (__eo_to_smt x1) (__eo_to_smt x2))
-  | (Term.Apply f y) =>
-    let _v0 := (Term.Apply f y)
-    (__eo_to_smt_apply (__eo_to_smt_dt_operator (__eo_to_smt_dt_normalize (native_dt_budget _v0) _v0)) (__eo_to_smt f) (__eo_to_smt y))
+  | (Term.Apply f y) => (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y))
   | y => SmtTerm.None
 
 

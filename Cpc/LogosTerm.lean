@@ -259,6 +259,7 @@ inductive Term : Type where
   | FunType : Term
   | Var : Term -> Term -> Term
   | DatatypeType : native_String -> DatatypeDecl -> Term
+  | DatatypeParamType : native_String -> Term -> Term
   | DatatypeTypeRef : native_String -> Term
   | DtParam : native_String -> Term
   | DtcAppType : Term -> Term -> Term
@@ -275,7 +276,6 @@ Eunoia datatype declarations.
 inductive DatatypeDecl : Type where
   | nil : DatatypeDecl
   | cons : native_String -> Datatype -> DatatypeDecl -> DatatypeDecl
-  | param : native_String -> DatatypeDecl -> DatatypeDecl
 deriving Repr, DecidableEq, Inhabited, Ord
 
 /-

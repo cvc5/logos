@@ -45,9 +45,6 @@ def native_not : native_Bool -> native_Bool
 def native_and : native_Bool -> native_Bool -> native_Bool
   | x, y => x && y
 
-def native_or : native_Bool -> native_Bool -> native_Bool
-  | x, y => x || y
-
 def native_zeq : native_Int -> native_Int -> native_Bool
   | x, y => decide (x = y)
 
