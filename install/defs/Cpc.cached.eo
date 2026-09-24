@@ -872,20 +872,32 @@
 
 ; ==== programs/Datatypes.eo ====
 ; (theories/Datatypes.eo is included above)
+(program $dt_get_generic_constructors ((D Type) (T Type) (T1 Type) (T2 Type :list) (U Type) (DC (-> Type Type)))
+  :signature (U) eo::List
+  (
+    (($dt_get_generic_constructors (Tuple T1 T2)) (_ eo::List::cons tuple eo::List::nil))
+    (($dt_get_generic_constructors UnitTuple)     (_ eo::List::cons tuple.unit eo::List::nil))
+    (($dt_get_generic_constructors (DC T))        ($dt_get_generic_constructors DC))
+    (($dt_get_generic_constructors D)             (eo::dt_constructors D))
+  )
+)
 (program $dt_get_constructors ((D Type) (T Type) (T1 Type) (T2 Type :list) (U Type) (DC (-> Type Type)))
   :signature (U) eo::List
   (
     (($dt_get_constructors (Tuple T1 T2)) (_ eo::List::cons tuple eo::List::nil))
     (($dt_get_constructors UnitTuple)     (_ eo::List::cons tuple.unit eo::List::nil))
-    (($dt_get_constructors (DC T))        ($dt_get_constructors DC))
+    (($dt_get_constructors (DC T))
+      (eo::define ((cs (eo::dt_constructors (DC T))))
+        (eo::ite (eo::is_ok cs) cs ($dt_get_constructors DC))))
     (($dt_get_constructors D)             (eo::dt_constructors D))
   )
 )
 (define $dt_inst_cons_of ((D Type) (T Type :implicit) (c T))
-  ($assoc_nil_nth
-    eo::List::cons
-    (eo::dt_constructors D)
-    (eo::list_find eo::List::cons ($dt_get_constructors D) c)))
+  (eo::define ((cs (eo::dt_constructors D)))
+    (eo::ite (eo::is_neg (eo::list_find eo::List::cons cs c))
+      ($assoc_nil_nth eo::List::cons cs
+        (eo::list_find eo::List::cons ($dt_get_generic_constructors D) c))
+      c)))
 (program $tuple_get_selectors_rec ((T1 Type) (T2 Type :list) (n Int))
   :signature (Type Int) eo::List
   (
@@ -898,7 +910,7 @@
   (
     (($dt_get_selectors (Tuple T1 T2) tuple)  ($tuple_get_selectors_rec (Tuple T1 T2) 0))
     (($dt_get_selectors UnitTuple tuple.unit) eo::List::nil)
-    (($dt_get_selectors D c)                  (eo::dt_selectors c))
+    (($dt_get_selectors D c)                  (eo::dt_selectors ($dt_inst_cons_of D c)))
   )
 )
 (program $dt_get_selectors_of_app ((T Type) (U Type) (f (-> U T)) (a U))
@@ -928,11 +940,20 @@
   (($tuple_arg_list tuple.unit)     @list.nil)
   )
 )
+(program $dt_value_args ((T Type) (t T) (ts @List :list))
+  :signature (@List) @List
+  (
+    (($dt_value_args (@list t ts))
+      (eo::ite (eo::is_eq (eo::typeof t) Type)
+        ($dt_value_args ts) (_ @list t ($dt_value_args ts))))
+    (($dt_value_args @list.nil) @list.nil)
+  )
+)
 (program $dt_arg_list ((T Type) (V Type) (W Type) (t T) (t1 V) (t2 W :list))
   :signature (T) eo::List
   (
   (($dt_arg_list (tuple t1 t2))  ($tuple_arg_list (tuple t1 t2)))
-  (($dt_arg_list t)              ($get_arg_list t))
+  (($dt_arg_list t)              ($dt_value_args ($get_arg_list t)))
   )
 )
 (define $dt_arg_nth ((T Type :implicit) (t T) (n Int))
@@ -4245,7 +4266,10 @@
   :signature (T T) Bool
   (
   (($mk_dt_cons_eq (tuple a as) (tuple b bs)) (_ and (= a b) ($mk_dt_cons_eq as bs)))
-  (($mk_dt_cons_eq (f a) (g b))               (eo::list_concat and ($mk_dt_cons_eq f g) (and (= a b))))
+  (($mk_dt_cons_eq (f a) (g b))
+    (eo::ite (eo::is_eq (eo::typeof a) Type)
+      (eo::requires a b ($mk_dt_cons_eq f g))
+      (eo::list_concat and ($mk_dt_cons_eq f g) (and (= a b)))))
   (($mk_dt_cons_eq c c)                       (eo::requires ($dt_is_cons c) true true))
   )
 )
