@@ -55,7 +55,9 @@ inductive Term : Type where
   | FunType : Term
   | Var : Term -> Term -> Term
   | DatatypeType : native_String -> DatatypeDecl -> Term
+  | DatatypeParamType : native_String -> Term -> Term
   | DatatypeTypeRef : native_String -> Term
+  | DtParam : native_String -> Term
   | DtcAppType : Term -> Term -> Term
   | DtCons : native_String -> DatatypeDecl -> native_Nat -> Term
   | DtSel : native_String -> DatatypeDecl -> native_Nat -> native_Nat -> Term
@@ -89,6 +91,10 @@ inductive DatatypeCons : Type where
 deriving Repr, DecidableEq, Inhabited, Ord
 
 end
+
+-- Ground arguments are normalized before substitution, so copying one adds
+-- no instantiation steps. The input's built-in size bounds each reduction path.
+noncomputable def native_dt_budget (t : Term) : Nat := sizeOf t
 
 -- Equality and ordering of Eunoia terms, which the checker asks for and the
 -- Term inductive above is what decides. They stand after the mutual block

@@ -127,8 +127,10 @@ way SMT-LIB underspecifies partial standard operators.
 
 Parametric datatypes are refused, not mismodeled. Both the sort list and a `par`
 body are rejected during parsing, in `Logos/Parser.lean`, with `parametric
-datatype ... is not supported`, and the run exits 1 without a verdict. `SmtDatatypeDecl` carries no type parameter, so there is nothing for
-such a declaration to translate to.
+datatype ... is not supported`, and the run exits 1 without a verdict. The generic parser can
+read them, but CPC does not yet give them a representation to be read into;
+[`parametric-datatypes.md`](parametric-datatypes.md) is the plan for doing so, which leaves the
+model semantics as it is.
 
 This costs coverage and nothing else: a proof over parametric datatypes is not
 checked, rather than checked against the wrong meaning.

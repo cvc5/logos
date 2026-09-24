@@ -296,17 +296,32 @@ structure ConsSpec (T : Type) where
   name : String
   selectors : List (String × T)
 
-/-- One datatype of a `declare-datatypes` block. -/
+/--
+One datatype of a `declare-datatypes` block.  `arity` is its number of type
+parameters, the same for every datatype of a block; its constructors' argument
+types write the parameters as `DatatypeOps.mkParam`.
+-/
 structure DatatypeSpec (T : Type) where
   name : String
+  arity : Nat := 0
   constructors : List (ConsSpec T)
 
-/-- How a calculus represents the contents of a `declare-datatypes` block. -/
+/--
+How a calculus represents the contents of a `declare-datatypes` block.
+
+A calculus with parametric datatypes sets `mkParam`, and then binds each name of
+a parametric block to a *generic* form, which `elaborate` and `ascribe` turn into
+the instance a use means.  They only propose: a calculus that checks types
+should give a generic form none, so that a use the parser could not elaborate is
+refused rather than read.  See `docs/parametric-datatypes.md`.
+-/
 structure DatatypeOps (T : Type) where
   /--
   A reference to a datatype of the block currently being declared.  Occurrences
   of the block's own datatypes in its constructors' argument types are parsed as
-  such references, since the block is not yet built when they are read.
+  such references, since the block is not yet built when they are read.  In a
+  parametric block, such an occurrence is written applied to exactly the
+  block's parameters, and it is that application that is read as the reference.
   -/
   mkRef : String → T
   /--
@@ -316,6 +331,25 @@ structure DatatypeOps (T : Type) where
   on, which need not be the one they were declared in.
   -/
   mkDecls : List (DatatypeSpec T) → Option (List (String × T))
+  /--
+  The `k`-th type parameter of the block being declared, as its constructors'
+  argument types write it.  `none` if the calculus has no parametric datatypes,
+  in which case a block of non-zero arity is refused.
+  -/
+  mkParam : Option (Nat → T) := none
+  /--
+  Elaborate an application the parser has just built, of a head to at least one
+  argument, each already elaborated: if its head is the generic form of a
+  parametric datatype's sort, constructor or selector (or an operator indexed by
+  one), return the application of the instance the arguments determine, and
+  otherwise the term unchanged.
+  -/
+  elaborate : T → T := id
+  /--
+  `(as c S)`: the instance of the generic form `c` that the sort `S` names, or
+  `none` if `c` is not one or `S` is not an instance of its datatype.
+  -/
+  ascribe : T → T → Option T := fun _ _ => none
 
 /-!
 ## Configuration
@@ -408,6 +442,11 @@ structure State (T : Type) where
   expanding : List String := []
   /-- The operators of the signature, indexed by name. -/
   ops : Std.HashMap String (List (OpDecl T)) := {}
+  /--
+  The parametric datatypes declared so far, by name, with their arity; used to
+  refuse a block that nests one of its own datatypes inside one of them.
+  -/
+  parametricSorts : Std.HashMap String Nat := {}
 
 abbrev ParserM (T : Type) := StateT (State T) (Except String)
 
@@ -500,6 +539,20 @@ def resolve (cfg : Config T R C CL) : List T → Option T
   | [t] => some t
   | ts => ts.find? cfg.wellTyped <|> ts.head?
 
+/--
+Apply `head` to `args` and hand the result to the calculus to elaborate
+(`DatatypeOps.elaborate`), which is how a use of a parametric datatype's generic
+constructor, selector or sort becomes the instance it means.  Every application
+the parser builds goes through here.
+-/
+def applyArgs (cfg : Config T R C CL) (head : T) (args : List T) : T :=
+  if args.isEmpty then head
+  else
+    let t := args.foldl cfg.apply head
+    match cfg.datatypes with
+    | some d => d.elaborate t
+    | none => t
+
 mutual
 
 /-- Parse a term, reporting the failing subterm on error. -/
@@ -536,9 +589,7 @@ partial def parseTermCore (cfg : Config T R C CL) : Sexp → ParserM T T
     throw s!"Error: unknown identifier {a}"
   | .expr [] => throw "Error: empty s-expression"
   | .expr [.atom "as", .atom name, ty] =>
-    -- CPC uses SMT-LIB's type-ascription syntax for indexed constants such as
-    -- `(as set.empty (Set Int))`; its sort is the operator's Eunoia index.
-    parseApp cfg name [ty] []
+    parseAs cfg name ty
   | .expr [.atom "let", .expr bindings, body] =>
     parseLet cfg bindings body
   | .expr (.atom "_" :: rest) =>
@@ -554,7 +605,7 @@ partial def parseTermCore (cfg : Config T R C CL) : Sexp → ParserM T T
     | .expr (.atom "as" :: _) =>
       -- A type ascription is a qualified identifier, so it may head an
       -- application.
-      return args.foldl cfg.apply (← parseTerm cfg f)
+      return applyArgs cfg (← parseTerm cfg f) args
     | _ =>
       match asOpHead f with
       | some (name, idxs) => parseApp cfg name idxs args
@@ -565,6 +616,22 @@ partial def parseTermCore (cfg : Config T R C CL) : Sexp → ParserM T T
         -- would accept files Ethos refuses to parse.
         throw s!"Error: expected a symbol, an indexed symbol or a type \
                   ascription as the head of an application, got {f}"
+
+/--
+Parse `(as name S)`.  A symbol the proof binds, such as a constructor of a
+parametric datatype, is given the instance the sort names
+(`DatatypeOps.ascribe`).  Otherwise this is SMT-LIB's ascription syntax for an
+indexed constant of CPC such as `(as set.empty (Set Int))`, whose sort is the
+operator's Eunoia index.
+-/
+partial def parseAs (cfg : Config T R C CL) (name : String) (ty : Sexp) : ParserM T T := do
+  let bound := (← get).terms.getD name []
+  if let some d := cfg.datatypes then
+    if !bound.isEmpty then
+      let sort ← parseTerm cfg ty
+      if let some t := resolve cfg (bound.filterMap (d.ascribe · sort)) then
+        return t
+  parseApp cfg name [ty] []
 
 /--
 The list constructor of `name`, if `name` is a binder here: a signature operator
@@ -620,7 +687,7 @@ partial def parseUnderscoreExpr (cfg : Config T R C CL) (rest : List Sexp)
   | f :: inner => do
     let head ← parseTerm cfg f
     let inner ← inner.mapM (parseTerm cfg)
-    return (inner ++ args).foldl cfg.apply head
+    return applyArgs cfg head (inner ++ args)
   | [] => throw "Error: expected an operator name or a term after _"
 
 /--
@@ -637,7 +704,7 @@ partial def parseUnderscoreApp (cfg : Config T R C CL) (name : String)
     parseApp cfg name idxs args
   else
     let head ← parseTerm cfg (.expr (.atom name :: idxs))
-    return args.foldl cfg.apply head
+    return applyArgs cfg head args
 
 /--
 Build the application of the operator (or declared symbol) `name`, indexed by
@@ -652,12 +719,12 @@ partial def parseApp (cfg : Config T R C CL) (name : String) (idxs : List Sexp)
       throw s!"Error: {name} takes {m.params.length} arguments but is applied to {args.length}"
     -- A macro whose body denotes a function may be applied to further arguments.
     let (args, extra) := args.splitAt m.params.length
-    return extra.foldl cfg.apply (← expandMacro cfg name m args)
+    return applyArgs cfg (← expandMacro cfg name m args) extra
   let decls := (← get).ops.getD name []
   let bound := (← get).terms.getD name []
   -- A symbol a proof declares takes no indices, so indexed syntax is an
   -- operator and nothing else.
-  let boundCands := if idxs.isEmpty then bound.map (fun t => args.foldl cfg.apply t) else []
+  let boundCands := if idxs.isEmpty then bound.map (applyArgs cfg · args) else []
   let opCand : Option T ←
     if decls.isEmpty then pure none else do
       let idxTerms ← idxs.mapM (parseTerm cfg)
@@ -680,7 +747,7 @@ partial def parseApp (cfg : Config T R C CL) (name : String) (idxs : List Sexp)
               {args.length} arguments"
   if !idxs.isEmpty then
     throw s!"Error: unknown indexed operator {name}"
-  return args.foldl cfg.apply (← parseTermCore cfg (.atom name))
+  return applyArgs cfg (← parseTermCore cfg (.atom name)) args
 
 /-- Build an already-resolved operator application. -/
 partial def buildOpApp (cfg : Config T R C CL) (name : String) (d : OpDecl T)
@@ -688,7 +755,12 @@ partial def buildOpApp (cfg : Config T R C CL) (name : String) (d : OpDecl T)
   let some head := d.build idxs | throw s!"Error: bad indices for operator {name}"
   let some t := mkOpApp cfg.apply d.arity head args
     | throw s!"Error: wrong number of arguments ({args.length}) for operator {name}"
-  return t
+  -- An operator indexed by a generic constructor or selector, such as a tester
+  -- `((_ is cons) l)`, takes its instance from the arguments.
+  if args.isEmpty then return t
+  match cfg.datatypes with
+  | some dt => return dt.elaborate t
+  | none => return t
 
 /--
 Parse an SMT-LIB `let`.  Binding values are read in the surrounding scope
@@ -749,12 +821,98 @@ def parseName : Sexp → ParserM T String
   | s => throw s!"Error: expected a name, got {s}"
 
 /-- Parse `(name arity)` from the sort list of a `declare-datatypes` block. -/
-def parseDatatypeName : Sexp → ParserM T String
+def parseDatatypeName : Sexp → ParserM T (String × Nat)
   | .expr [name, .atom arity] => do
     let name ← parseSymbol name
-    if arity == "0" then return name
-    else throw s!"Error: parametric datatype {name} (arity {arity}) is not supported"
+    let some arity := arity.toNat? | throw s!"Error: expected the arity of datatype {name}, got {arity}"
+    return (name, arity)
   | s => throw s!"Error: expected a datatype name and arity, got {s}"
+
+/--
+Split the body of a datatype of arity `arity` into its parameters and its
+constructors: `(par (X₁ … Xₙ) (c …))` for a parametric one, whose parameters must
+be distinct and as many as its arity says, and `(c …)` otherwise.
+-/
+def parseDatatypeBody (name : String) (arity : Nat) :
+    Sexp → ParserM T (List String × List Sexp)
+  | .expr [.atom "par", .expr params, .expr ctors] => do
+    let params ← params.mapM parseSymbol
+    if params.length != arity then
+      throw s!"Error: datatype {name} is declared with arity {arity} but has \
+                {params.length} parameters"
+    if params.eraseDups.length != params.length then
+      throw s!"Error: the parameters of datatype {name} are not distinct"
+    return (params, ctors)
+  | .expr (.atom "par" :: _) =>
+    throw s!"Error: expected (par (parameters) (constructors)) as the body of datatype {name}"
+  | .expr ctors => do
+    if arity != 0 then
+      throw s!"Error: datatype {name} is declared with arity {arity} but its body is not par"
+    return ([], ctors)
+  | body => throw s!"Error: expected a list of constructors, got {body}"
+
+/-- The arity of a datatype declared on its own by `declare-datatype`, read from its body. -/
+def declaredArity : Sexp → Nat
+  | .expr [.atom "par", .expr params, _] => params.length
+  | _ => 0
+
+/-- Whether an atom of `names` occurs anywhere in `s`. -/
+private partial def mentions (names : List String) : Sexp → Bool
+  | .atom a => names.contains a
+  | .expr xs => xs.any (mentions names)
+
+/--
+Rewrite one field type of a block of parametric datatypes `names`, whose
+parameters are `params`: a datatype of the block has to be written applied to
+exactly those parameters, in order, and that application becomes the bare name,
+which is read as the block's reference to it (`DatatypeOps.mkRef`).  Any other
+use of one is refused, since it would make the datatypes non-uniform: an
+instance of a datatype of the block would then need instances of the block other
+than the one being declared.
+-/
+private partial def uniformRefs (names params : List String) : Sexp → ParserM T Sexp
+  | .atom a =>
+    if names.contains a then
+      throw s!"Error: datatype {a} is used without the parameters {params} of its block"
+    else return .atom a
+  | .expr (.atom h :: args) => do
+    if names.contains h then
+      if args == params.map .atom then return .atom h
+      throw s!"Error: datatype {h} is applied to {args} inside its own block, where it \
+                has to be applied to its parameters {params}; non-uniform datatypes are \
+                not supported"
+    return .expr (.atom h :: (← args.mapM (uniformRefs names params)))
+  | .expr xs => return .expr (← xs.mapM (uniformRefs names params))
+
+/--
+Refuse a field type that nests a datatype of the block being declared, `names`,
+inside the arguments of a parametric datatype declared earlier, such as
+`(List Tree)` in the declaration of `Tree`.  An instance of that kind would have
+to be declared together with the block, which is not supported.
+-/
+private partial def checkNotNested (names : List String) (parametric : Std.HashMap String Nat) :
+    Sexp → ParserM T Unit
+  | .atom _ => return
+  | .expr (.atom h :: args) => do
+    if parametric.contains h && !names.contains h && args.any (mentions names) then
+      throw s!"Error: the parametric datatype {h} is applied to a datatype of the block \
+                being declared ({String.intercalate ", " names}); nested datatypes are \
+                not supported"
+    args.forM (checkNotNested names parametric)
+  | .expr xs => xs.forM (checkNotNested names parametric)
+
+/--
+Apply `f` to the type of each selector of each constructor in `ctors`, leaving
+anything that is not a well-formed constructor for `parseConsSpec` to refuse.
+-/
+private def mapFieldTypes (f : Sexp → ParserM T Sexp) (ctors : List Sexp) :
+    ParserM T (List Sexp) :=
+  ctors.mapM fun
+    | .expr (name :: sels) => do
+      return .expr (name :: (← sels.mapM fun
+        | .expr [sel, ty] => do return .expr [sel, ← f ty]
+        | s => return s))
+    | c => return c
 
 /-- Parse one constructor, `(cname (sel type) …)`. -/
 def parseConsSpec (cfg : Config T R C CL) : Sexp → ParserM T (ConsSpec T)
@@ -834,28 +992,52 @@ it introduces.
 def parseDatatypes (cfg : Config T R C CL) (sorts bodies : List Sexp) : ParserM T Unit := do
   let some dtOps := cfg.datatypes
     | throw "Error: this calculus does not support declare-datatypes"
-  let names ← sorts.mapM parseDatatypeName
+  let heads ← sorts.mapM parseDatatypeName
+  let names := heads.map (·.1)
   if names.length != bodies.length then
     throw s!"Error: {names.length} datatype names but {bodies.length} datatype bodies"
+  -- A parametric block is read as one template over one list of parameters,
+  -- so its datatypes share their arity; see docs/parametric-datatypes.md.
+  let arity := (heads.head?.map (·.2)).getD 0
+  if heads.any (·.2 != arity) then
+    throw s!"Error: the datatypes {String.intercalate ", " names} of one block have \
+              different arities, which is not supported"
+  if arity != 0 && dtOps.mkParam.isNone then
+    throw s!"Error: parametric datatype {String.intercalate ", " names} \
+              (arity {arity}) is not supported"
+  let parametric := (← get).parametricSorts
+  let bodies ← (names.zip bodies).mapM fun (name, body) => do
+    let (params, ctors) ← parseDatatypeBody name arity body
+    let ctors ← if arity == 0 then pure ctors else mapFieldTypes (uniformRefs names params) ctors
+    discard <| mapFieldTypes (fun ty => do checkNotNested names parametric ty; return ty) ctors
+    return (params, ctors)
   -- While the block is being read, occurrences of its own datatypes in the
-  -- constructors' argument types are parsed as references.
+  -- constructors' argument types are parsed as references, and its parameters
+  -- as the parameters they are.
   let saved := (← get).terms
   modify fun s =>
     { s with terms := names.foldl (fun m n => m.insert n [dtOps.mkRef n]) s.terms }
-  let specs ← (names.zip bodies).mapM fun (name, body) => do
-    let .expr ctors := body | throw s!"Error: expected a list of constructors, got {body}"
-    if let .atom "par" :: _ := ctors then
-      throw s!"Error: parametric datatype {name} is not supported"
+  let specs ← (names.zip bodies).mapM fun (name, params, ctors) => do
+    let blockTerms := (← get).terms
+    -- `params` is empty unless the calculus has parameters, as checked above.
+    if let some mkParam := dtOps.mkParam then
+      modify fun s =>
+        { s with terms := params.zipIdx.foldl (fun m (p, k) => m.insert p [mkParam k]) s.terms }
     let constructors ← ctors.mapM (parseConsSpec cfg)
-    return ({ name, constructors } : DatatypeSpec T)
+    modify fun s => { s with terms := blockTerms }
+    return ({ name, arity, constructors } : DatatypeSpec T)
   modify fun s => { s with terms := saved }
   -- The block is built in an order that witnesses its datatypes, which is not
   -- necessarily the one it was written in; see `productiveOrder`.
-  let order := productiveOrder (names.zip (bodies.map (bodyRefs names)))
+  let order := productiveOrder (names.zip (bodies.map fun (_, ctors) => bodyRefs names (.expr ctors)))
   let some bindings := dtOps.mkDecls (order.filterMap (specs[·]?))
     | throw s!"Error: could not build the declaration of {String.intercalate ", " names}"
   modify fun s =>
-    { s with terms := bindings.foldl (fun m (n, t) => m.insert n (t :: m.getD n [])) s.terms }
+    { s with
+      terms := bindings.foldl (fun m (n, t) => m.insert n (t :: m.getD n [])) s.terms,
+      parametricSorts :=
+        if arity == 0 then s.parametricSorts
+        else names.foldl (fun m n => m.insert n arity) s.parametricSorts }
 
 /-!
 ## Declarations
@@ -993,7 +1175,7 @@ where
       return .decl
     | .expr [.atom "declare-datatype", name, body] => do
       -- SMT-LIB's form for a single datatype, of arity `0` unless its body is `par`.
-      parseDatatypes cfg [.expr [name, .atom "0"]] [body]
+      parseDatatypes cfg [.expr [name, .atom (toString (declaredArity body))]] [body]
       return .decl
     | .expr [.atom "define", name, .expr [], body] => do
       -- A definition without parameters is read once, where it is given.
