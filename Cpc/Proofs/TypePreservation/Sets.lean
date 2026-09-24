@@ -120,10 +120,10 @@ theorem mss_op_internal_typed
       __smtx_typeof_map_value m1 = SmtType.Map A SmtType.Bool ->
         __smtx_typeof_map_value m2 = SmtType.Map A SmtType.Bool ->
         __smtx_typeof_map_value acc = SmtType.Map A SmtType.Bool ->
-        __smtx_typeof_map_value (__smtx_mss_op_internal isInter m1 m2 acc) =
+        __smtx_typeof_map_value (__smtx_set_op_rec isInter m1 m2 acc) =
           SmtType.Map A SmtType.Bool
   | SmtMap.default T efalse, m2, acc, A, hm1, hm2, hacc => by
-      simpa [__smtx_mss_op_internal] using hacc
+      simpa [__smtx_set_op_rec] using hacc
   | SmtMap.cons e etrue m1, m2, acc, A, hm1, hm2, hacc => by
       by_cases hEq :
           native_Teq (SmtType.Map (__smtx_typeof_value e) (__smtx_typeof_value etrue))
@@ -141,7 +141,7 @@ theorem mss_op_internal_typed
           simpa [__smtx_index_typeof_map] using congrArg __smtx_index_typeof_map hHead
         have hAccCons :
             __smtx_typeof_map_value
-                (__smtx_msm_update_aux (__smtx_msm_get_default acc) acc e
+                (__smtx_map_update_aux (__smtx_map_get_default acc) acc e
                   (SmtValue.Boolean true)) =
               SmtType.Map A SmtType.Bool := by
           exact map_canon_insert_typed (m := acc) (A := A) (B := SmtType.Bool)
@@ -149,19 +149,19 @@ theorem mss_op_internal_typed
         let acc' :=
           native_ite
               (native_iff
-                (native_veq (__smtx_msm_lookup m2 e) (SmtValue.Boolean true))
+                (native_veq (__smtx_map_lookup m2 e) (SmtValue.Boolean true))
                 isInter)
-            (__smtx_msm_update_aux (__smtx_msm_get_default acc) acc e
+            (__smtx_map_update_aux (__smtx_map_get_default acc) acc e
               (SmtValue.Boolean true)) acc
         have hacc' : __smtx_typeof_map_value acc' = SmtType.Map A SmtType.Bool := by
           dsimp [acc']
           by_cases hKeep :
               native_iff
-                (native_veq (__smtx_msm_lookup m2 e) (SmtValue.Boolean true))
+                (native_veq (__smtx_map_lookup m2 e) (SmtValue.Boolean true))
                 isInter
           · simpa [native_ite, hKeep] using hAccCons
           · simpa [native_ite, hKeep] using hacc
-        simpa [__smtx_mss_op_internal, hEq, acc'] using
+        simpa [__smtx_set_op_rec, hEq, acc'] using
           mss_op_internal_typed isInter (m1 := m1) (m2 := m2) (acc := acc')
             (A := A) hm1' hm2 hacc'
       · simp [__smtx_typeof_map_value, native_ite, hEq] at hm1
@@ -204,7 +204,7 @@ theorem typeof_value_model_eval_set_union
   rw [hm1, hm2]
   have hRes :
       __smtx_typeof_map_value
-          (__smtx_mss_op_internal false m1 (SmtMap.default A (SmtValue.Boolean false)) m2) =
+          (__smtx_set_op_rec false m1 (SmtMap.default A (SmtValue.Boolean false)) m2) =
         SmtType.Map A SmtType.Bool := by
     exact mss_op_internal_typed false
       (m1 := m1) (m2 := SmtMap.default A (SmtValue.Boolean false)) (acc := m2)
@@ -253,7 +253,7 @@ theorem typeof_value_model_eval_set_inter
   rw [hm1, hm2]
   have hRes :
       __smtx_typeof_map_value
-          (__smtx_mss_op_internal true m1 m2 (SmtMap.default A (SmtValue.Boolean false))) =
+          (__smtx_set_op_rec true m1 m2 (SmtMap.default A (SmtValue.Boolean false))) =
         SmtType.Map A SmtType.Bool := by
     exact mss_op_internal_typed true
       (m1 := m1) (m2 := m2) (acc := SmtMap.default A (SmtValue.Boolean false))
@@ -302,7 +302,7 @@ theorem typeof_value_model_eval_set_minus
   rw [hm1, hm2]
   have hRes :
       __smtx_typeof_map_value
-          (__smtx_mss_op_internal false m1 m2 (SmtMap.default A (SmtValue.Boolean false))) =
+          (__smtx_set_op_rec false m1 m2 (SmtMap.default A (SmtValue.Boolean false))) =
         SmtType.Map A SmtType.Bool := by
     exact mss_op_internal_typed false
       (m1 := m1) (m2 := m2) (acc := SmtMap.default A (SmtValue.Boolean false))

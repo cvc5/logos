@@ -165,7 +165,7 @@ private theorem native_unpack_string_singleton_of_seq_len_one (ss : SmtSeq)
   | cons v vs =>
       cases vs with
       | nil =>
-          exact ⟨native_ssm_char_of_value v, by simp [native_unpack_string, hUnpack]⟩
+          exact ⟨impl_native_ssm_char_of_value v, by simp [native_unpack_string, hUnpack]⟩
       | cons w ws =>
           have hLen' : (Int.ofNat (List.length (v :: w :: ws))) = 1 := by
             simpa [native_seq_len, hUnpack] using hLen
@@ -223,7 +223,7 @@ private theorem native_str_in_re_range_iff_code_bounds
           by_cases hLoC : lo ≤ c <;> by_cases hCHi : c ≤ hi <;>
             simp [native_re_range, RuleProofs.native_str_in_re, hValid,
               RuleProofs.nativeListInRe, native_re_deriv, native_re_nullable,
-              native_re_elem_valid, native_re_elem_le, native_str_to_code, hLo,
+              native_re_elem_valid, impl_native_re_elem_le, native_str_to_code, hLo,
               hHi, hc, hLoC, hCHi, native_and, native_zleq,
               SmtEval.native_zleq]
       | cons d ds =>
@@ -231,7 +231,7 @@ private theorem native_str_in_re_range_iff_code_bounds
             simp [native_re_range, RuleProofs.native_str_in_re, hValid,
               RuleProofs.nativeListInRe, RuleProofs.nativeListInRe_empty,
               native_re_deriv, native_re_nullable, native_re_elem_valid,
-              native_re_elem_le, native_str_to_code, hLo, hHi, hc, hBounds,
+              impl_native_re_elem_le, native_str_to_code, hLo, hHi, hc, hBounds,
               native_and, native_zleq_nat_neg_one_false lo,
               decide_natCast_le_neg_one_false lo, SmtEval.native_zleq]
           all_goals
@@ -365,7 +365,7 @@ private theorem seq_len_one_of_prem
   injection hLenValueEq
 
 private theorem facts
-    (M : SmtModel) (hM : model_total_typed M) (s c1 c2 : Term)
+    (M : SmtModel) (hM : model_wf M) (s c1 c2 : Term)
     (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hC1Ty : __smtx_typeof (__eo_to_smt c1) = SmtType.Seq SmtType.Char)
     (hC2Ty : __smtx_typeof (__eo_to_smt c2) = SmtType.Seq SmtType.Char)
@@ -430,12 +430,12 @@ private theorem facts
     simpa [hC2String, native_string_valid] using hC2Valid
   have hSc1Unpack :
       native_unpack_seq sc1 =
-        native_string_to_values (native_unpack_string sc1) :=
+        impl_native_string_to_values (native_unpack_string sc1) :=
     native_unpack_seq_eq_string_to_values_of_typeof_seq_char (by
       exact hSc1Ty)
   have hSc2Unpack :
       native_unpack_seq sc2 =
-        native_string_to_values (native_unpack_string sc2) :=
+        impl_native_string_to_values (native_unpack_string sc2) :=
     native_unpack_seq_eq_string_to_values_of_typeof_seq_char (by
       exact hSc2Ty)
   have hEvalEq :
@@ -468,7 +468,7 @@ private theorem facts
 end StrInReRangeElimProof
 
 public theorem cmd_step_str_in_re_range_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_in_re_range_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -223,7 +223,7 @@ private theorem native_str_to_int_neg_one_nonempty_not_all_digits
     (s : native_String)
     (hNe : s ≠ [])
     (hToInt : native_str_to_int s = (-1 : native_Int)) :
-    s.all native_char_is_digit ≠ true := by
+    s.all impl_native_char_is_digit ≠ true := by
   cases s with
   | nil => exact False.elim (hNe rfl)
   | cons c cs =>
@@ -232,28 +232,28 @@ private theorem native_str_to_int_neg_one_nonempty_not_all_digits
 
 private theorem all_digit_values_of_all_digits
     (xs : native_String)
-    (hDigits : xs.all native_char_is_digit = true) :
+    (hDigits : xs.all impl_native_char_is_digit = true) :
     (xs.map SmtValue.Char).all
-        (fun v => native_char_is_digit (native_ssm_char_of_value v)) =
+        (fun v => impl_native_char_is_digit (impl_native_ssm_char_of_value v)) =
       true := by
   rw [List.all_eq_true] at hDigits ⊢
   intro v hv
   rcases List.mem_map.mp hv with ⟨c, hc, rfl⟩
-  simpa [native_ssm_char_of_value] using hDigits c hc
+  simpa [impl_native_ssm_char_of_value] using hDigits c hc
 
 private theorem all_digits_unpack_string_of_value_digits
     (xs : List SmtValue)
     (hDigits :
-      xs.all (fun v => native_char_is_digit (native_ssm_char_of_value v)) =
+      xs.all (fun v => impl_native_char_is_digit (impl_native_ssm_char_of_value v)) =
         true) :
-    (xs.map native_ssm_char_of_value).all native_char_is_digit = true := by
+    (xs.map impl_native_ssm_char_of_value).all impl_native_char_is_digit = true := by
   induction xs with
   | nil => simp
   | cons x xs ih =>
       have hParts :
-          native_char_is_digit (native_ssm_char_of_value x) = true ∧
+          impl_native_char_is_digit (impl_native_ssm_char_of_value x) = true ∧
             xs.all
-              (fun v => native_char_is_digit (native_ssm_char_of_value v)) =
+              (fun v => impl_native_char_is_digit (impl_native_ssm_char_of_value v)) =
               true := by
         simpa [Bool.and_eq_true] using hDigits
       simp [hParts.1, ih hParts.2]
@@ -269,33 +269,33 @@ private theorem native_seq_contains_decomp_exists_local
 
 private theorem contained_string_all_digits
     (hay : native_String) (needle : SmtSeq)
-    (hHayDigits : hay.all native_char_is_digit = true)
+    (hHayDigits : hay.all impl_native_char_is_digit = true)
     (hContains :
       native_seq_contains (native_unpack_seq (native_pack_string hay))
         (native_unpack_seq needle) = true) :
-    (native_unpack_string needle).all native_char_is_digit = true := by
+    (native_unpack_string needle).all impl_native_char_is_digit = true := by
   rcases native_seq_contains_decomp_exists_local
       (native_unpack_seq (native_pack_string hay)) (native_unpack_seq needle)
       hContains with
     ⟨pre, post, hDecomp⟩
   have hHayVals :
       (native_unpack_seq (native_pack_string hay)).all
-          (fun v => native_char_is_digit (native_ssm_char_of_value v)) =
+          (fun v => impl_native_char_is_digit (impl_native_ssm_char_of_value v)) =
         true := by
     simpa [native_pack_string, Smtm.native_unpack_pack_seq] using
       all_digit_values_of_all_digits hay hHayDigits
   rw [hDecomp] at hHayVals
   have hNeedleVals :
       (native_unpack_seq needle).all
-          (fun v => native_char_is_digit (native_ssm_char_of_value v)) =
+          (fun v => impl_native_char_is_digit (impl_native_ssm_char_of_value v)) =
         true := by
     have hParts :
-        pre.all (fun v => native_char_is_digit (native_ssm_char_of_value v)) =
+        pre.all (fun v => impl_native_char_is_digit (impl_native_ssm_char_of_value v)) =
             true ∧
           (native_unpack_seq needle).all
-              (fun v => native_char_is_digit (native_ssm_char_of_value v)) =
+              (fun v => impl_native_char_is_digit (impl_native_ssm_char_of_value v)) =
             true ∧
-          post.all (fun v => native_char_is_digit (native_ssm_char_of_value v)) =
+          post.all (fun v => impl_native_char_is_digit (impl_native_ssm_char_of_value v)) =
             true := by
       simpa [List.all_append, Bool.and_eq_true, List.append_assoc] using
         hHayVals
@@ -305,7 +305,7 @@ private theorem contained_string_all_digits
       hNeedleVals
 
 private theorem premise_nonempty_seq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : Term)
     (hSTrans : RuleProofs.eo_has_smt_translation s)
     (hSTy : __eo_typeof s = Term.Apply Term.Seq Term.Char)
@@ -365,7 +365,7 @@ private theorem premise_to_int_neg_one
         native_veq] using hEval
 
 private theorem facts
-    (M : SmtModel) (hM : model_total_typed M) (n s : Term)
+    (M : SmtModel) (hM : model_wf M) (n s : Term)
     (hNTrans : RuleProofs.eo_has_smt_translation n)
     (hSTrans : RuleProofs.eo_has_smt_translation s)
     (hNTy : __eo_typeof n = Term.Int)
@@ -403,7 +403,7 @@ private theorem facts
       native_str_to_int (native_unpack_string ss) = (-1 : native_Int) :=
     premise_to_int_neg_one M s ss hSEval hPremToInt
   have hNotDigits :
-      (native_unpack_string ss).all native_char_is_digit ≠ true :=
+      (native_unpack_string ss).all impl_native_char_is_digit ≠ true :=
     native_str_to_int_neg_one_nonempty_not_all_digits
       (native_unpack_string ss) hStrNe hToInt
   have hFromEval :
@@ -422,7 +422,7 @@ private theorem facts
           (native_unpack_seq ss)
     · rfl
     · have hNeedleDigits :
-          (native_unpack_string ss).all native_char_is_digit = true :=
+          (native_unpack_string ss).all impl_native_char_is_digit = true :=
         contained_string_all_digits (native_str_from_int z) ss
           (StrInReFromIntDigRangeProof.native_str_from_int_all_digits z)
           hContains
@@ -448,7 +448,7 @@ private theorem facts
 end StrFromIntNoCtnNondigitProof
 
 public theorem cmd_step_str_from_int_no_ctn_nondigit_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_from_int_no_ctn_nondigit args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

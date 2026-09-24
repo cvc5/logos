@@ -38,7 +38,7 @@ theorem eo_interprets_false (M : SmtModel) :
 
 /-- Splits a Boolean EO term into the `true` and `false` cases. -/
 theorem eo_interprets_bool_cases
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
     RuleProofs.eo_has_bool_type t ->
     eo_interprets M t true ∨ eo_interprets M t false := by
   intro hTy
@@ -51,7 +51,7 @@ theorem eo_interprets_bool_cases
 
 /-- If `A ∨ B` is false, then `A` is false. -/
 theorem eo_interprets_or_false_left
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.or) A) B) false ->
     eo_interprets M A false := by
   intro hOrFalse
@@ -70,7 +70,7 @@ theorem eo_interprets_or_false_left
 
 /-- If `A ∨ B` is false, then `B` is false. -/
 theorem eo_interprets_or_false_right
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.or) A) B) false ->
     eo_interprets M B false := by
   intro hOrFalse
@@ -362,12 +362,12 @@ theorem eo_interprets_not_false_of_true (M : SmtModel) (t : Term) :
       refine smt_interprets.intro_false M (SmtTerm.not (__eo_to_smt t)) ?_ ?_
       · rw [typeof_not_eq]
         simp [hTy, native_Teq, native_ite]
-      · rw [__smtx_model_eval.eq_6, hEval]
+      · rw [__smtx_model_eval.eq_7, hEval]
         simp [__smtx_model_eval_not, SmtEval.native_not]
 
 /-- A false antecedent makes an implication true. -/
 theorem eo_interprets_imp_true_of_left_false
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     eo_interprets M A false ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.imp) A) B) true := by
@@ -381,13 +381,13 @@ theorem eo_interprets_imp_true_of_left_false
       refine smt_interprets.intro_true M (SmtTerm.imp (__eo_to_smt A) (__eo_to_smt B)) ?_ ?_
       · rw [typeof_imp_eq]
         simpa [hATy, hBBool, RuleProofs.eo_has_bool_type, native_Teq, native_ite]
-      · rw [__smtx_model_eval.eq_9, hAEval, hBEval]
+      · rw [__smtx_model_eval.eq_10, hAEval, hBEval]
         cases b <;> simp [__smtx_model_eval_imp, __smtx_model_eval_or,
           __smtx_model_eval_not, SmtEval.native_or, SmtEval.native_not]
 
 /-- A true consequent makes an implication true. -/
 theorem eo_interprets_imp_true_of_right_true
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     eo_interprets M B true ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.imp) A) B) true := by
@@ -401,7 +401,7 @@ theorem eo_interprets_imp_true_of_right_true
       refine smt_interprets.intro_true M (SmtTerm.imp (__eo_to_smt A) (__eo_to_smt B)) ?_ ?_
       · rw [typeof_imp_eq]
         simpa [hABool, hBTy, RuleProofs.eo_has_bool_type, native_Teq, native_ite]
-      · rw [__smtx_model_eval.eq_9, hAEval, hBEval]
+      · rw [__smtx_model_eval.eq_10, hAEval, hBEval]
         cases a <;> simp [__smtx_model_eval_imp, __smtx_model_eval_or,
           __smtx_model_eval_not, SmtEval.native_or, SmtEval.native_not]
 
@@ -501,7 +501,7 @@ theorem eo_interprets_xor_true_of_true_false (M : SmtModel) (A B : Term) :
           refine smt_interprets.intro_true M (SmtTerm.xor (__eo_to_smt A) (__eo_to_smt B)) ?_ ?_
           · rw [typeof_xor_eq]
             simp [hATy, hBTy, native_Teq, native_ite]
-          · rw [__smtx_model_eval.eq_10, hAEval, hBEval]
+          · rw [__smtx_model_eval.eq_11, hAEval, hBEval]
             simp [__smtx_model_eval_xor, __smtx_model_eval_not, __smtx_model_eval_eq,
               native_veq, SmtEval.native_not]
 
@@ -521,7 +521,7 @@ theorem eo_interprets_xor_true_of_false_true (M : SmtModel) (A B : Term) :
           refine smt_interprets.intro_true M (SmtTerm.xor (__eo_to_smt A) (__eo_to_smt B)) ?_ ?_
           · rw [typeof_xor_eq]
             simp [hATy, hBTy, native_Teq, native_ite]
-          · rw [__smtx_model_eval.eq_10, hAEval, hBEval]
+          · rw [__smtx_model_eval.eq_11, hAEval, hBEval]
             simp [__smtx_model_eval_xor, __smtx_model_eval_not, __smtx_model_eval_eq,
               native_veq, SmtEval.native_not]
 
@@ -541,7 +541,7 @@ theorem eo_interprets_xor_false_of_true_true (M : SmtModel) (A B : Term) :
           refine smt_interprets.intro_false M (SmtTerm.xor (__eo_to_smt A) (__eo_to_smt B)) ?_ ?_
           · rw [typeof_xor_eq]
             simp [hATy, hBTy, native_Teq, native_ite]
-          · rw [__smtx_model_eval.eq_10, hAEval, hBEval]
+          · rw [__smtx_model_eval.eq_11, hAEval, hBEval]
             simp [__smtx_model_eval_xor, __smtx_model_eval_not, __smtx_model_eval_eq,
               native_veq, SmtEval.native_not]
 
@@ -561,7 +561,7 @@ theorem eo_interprets_xor_false_of_false_false (M : SmtModel) (A B : Term) :
           refine smt_interprets.intro_false M (SmtTerm.xor (__eo_to_smt A) (__eo_to_smt B)) ?_ ?_
           · rw [typeof_xor_eq]
             simp [hATy, hBTy, native_Teq, native_ite]
-          · rw [__smtx_model_eval.eq_10, hAEval, hBEval]
+          · rw [__smtx_model_eval.eq_11, hAEval, hBEval]
             simp [__smtx_model_eval_xor, __smtx_model_eval_not, __smtx_model_eval_eq,
               native_veq, SmtEval.native_not]
 
@@ -667,7 +667,7 @@ theorem eo_interprets_ite_false_of_cond_false
 
 /-- A right-associated two-literal clause is true when its first literal is true. -/
 theorem clause2_left_true
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     eo_interprets M A true ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M
@@ -684,7 +684,7 @@ theorem clause2_left_true
 
 /-- A right-associated two-literal clause is true when its second literal is true. -/
 theorem clause2_right_true
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     eo_interprets M B true ->
     eo_interprets M
@@ -701,7 +701,7 @@ theorem clause2_right_true
 
 /-- A right-associated three-literal clause is true when its first literal is true. -/
 theorem clause3_left_true
-    (M : SmtModel) (hM : model_total_typed M) (A B C : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B C : Term) :
     eo_interprets M A true ->
     RuleProofs.eo_has_bool_type B ->
     RuleProofs.eo_has_bool_type C ->
@@ -727,7 +727,7 @@ theorem clause3_left_true
 
 /-- A right-associated three-literal clause is true when its second literal is true. -/
 theorem clause3_middle_true
-    (M : SmtModel) (hM : model_total_typed M) (A B C : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B C : Term) :
     RuleProofs.eo_has_bool_type A ->
     eo_interprets M B true ->
     RuleProofs.eo_has_bool_type C ->
@@ -747,7 +747,7 @@ theorem clause3_middle_true
 
 /-- A right-associated three-literal clause is true when its third literal is true. -/
 theorem clause3_right_true
-    (M : SmtModel) (hM : model_total_typed M) (A B C : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B C : Term) :
     RuleProofs.eo_has_bool_type A ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M C true ->
@@ -872,7 +872,7 @@ theorem andList_ne_stuck {c : Term} :
 
 /-- If a Boolean conjunction is false, one of its sides is false. -/
 theorem eo_interprets_and_false_cases
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) false ->
@@ -945,7 +945,7 @@ theorem lower_not_and_has_bool_type {c : Term} :
 
 /-- If a structural conjunction is false, its lowered negation is true. -/
 theorem lower_not_and_true_of_false
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     AndList c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c false ->
@@ -1232,7 +1232,7 @@ theorem orList_nth_has_bool_type {c i : Term} :
   exact orList_nth_rec_has_bool_type hList hCBool hNth
 
 private theorem orList_nth_rec_false_of_false
-    (M : SmtModel) (hM : model_total_typed M) {c i : Term} :
+    (M : SmtModel) (hM : model_wf M) {c i : Term} :
     OrList c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c false ->
@@ -1266,7 +1266,7 @@ private theorem orList_nth_rec_false_of_false
 
 /-- Selecting from a false EO `or`-list yields a false disjunct. -/
 theorem orList_nth_false_of_false
-    (M : SmtModel) (hM : model_total_typed M) {c i : Term} :
+    (M : SmtModel) (hM : model_wf M) {c i : Term} :
     OrList c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c false ->
@@ -1807,7 +1807,7 @@ theorem orList_concat_typeof_bool_right {c1 c2 : Term} :
 
 /-- A false left side makes an EO conjunction false. -/
 theorem eo_interprets_and_false_of_left_false
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     eo_interprets M A false ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) false := by
@@ -1825,12 +1825,12 @@ theorem eo_interprets_and_false_of_left_false
         have hBTy : __smtx_typeof (__eo_to_smt B) = SmtType.Bool := by
           simpa [RuleProofs.eo_has_bool_type] using hBBool
         simp [hATy, hBTy, native_Teq, native_ite]
-      · rw [__smtx_model_eval.eq_8, hAEval, hBEval]
+      · rw [__smtx_model_eval.eq_9, hAEval, hBEval]
         cases b <;> simp [__smtx_model_eval_and, SmtEval.native_and]
 
 /-- A false right side makes an EO conjunction false. -/
 theorem eo_interprets_and_false_of_right_false
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     eo_interprets M B false ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) false := by
@@ -1848,11 +1848,11 @@ theorem eo_interprets_and_false_of_right_false
         have hATy : __smtx_typeof (__eo_to_smt A) = SmtType.Bool := by
           simpa [RuleProofs.eo_has_bool_type] using hABool
         simp [hATy, hBTy, native_Teq, native_ite]
-      · rw [__smtx_model_eval.eq_8, hAEval, hBEval]
+      · rw [__smtx_model_eval.eq_9, hAEval, hBEval]
         cases a <;> simp [__smtx_model_eval_and, SmtEval.native_and]
 
 private theorem andList_concat_rec_false_of_right_false
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     AndList c1 ->
     RuleProofs.eo_has_bool_type c1 ->
     RuleProofs.eo_has_bool_type c2 ->
@@ -1883,7 +1883,7 @@ private theorem andList_concat_rec_false_of_right_false
 
 /-- If the right `and`-list is false, its concatenation is false. -/
 theorem andList_concat_false_of_right_false
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     AndList c1 ->
     AndList c2 ->
     RuleProofs.eo_has_bool_type c1 ->
@@ -1983,7 +1983,7 @@ theorem andList_singleton_elim_true_iff
             native_ite, native_teq]
 
 private theorem orList_concat_rec_true_of_right_true
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     OrList c1 ->
     RuleProofs.eo_has_bool_type c1 ->
     RuleProofs.eo_has_bool_type c2 ->
@@ -2014,7 +2014,7 @@ private theorem orList_concat_rec_true_of_right_true
 
 /-- If the right `or`-list is true, its concatenation is true. -/
 theorem orList_concat_true_of_right_true
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     OrList c1 ->
     OrList c2 ->
     RuleProofs.eo_has_bool_type c1 ->
@@ -2074,7 +2074,7 @@ theorem orList_singleton_elim_preserves_bool_type {c : Term} :
 
 /-- Singleton elimination preserves truth for structural EO `or`-lists. -/
 theorem orList_singleton_elim_true_iff
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     OrList c ->
     RuleProofs.eo_has_bool_type c ->
     (eo_interprets M (__eo_list_singleton_elim (Term.UOp UserOp.or) c) true ↔
@@ -2123,7 +2123,7 @@ theorem orList_singleton_elim_true_iff
                       · rw [typeof_or_eq]
                         rw [__smtx_typeof.eq_1]
                         simp [hTy, native_Teq, native_ite]
-                      · rw [__smtx_model_eval.eq_7, hEval, __smtx_model_eval.eq_1]
+                      · rw [__smtx_model_eval.eq_8, hEval, __smtx_model_eval.eq_1]
                         simp [__smtx_model_eval_or, SmtEval.native_or]
                 exact False.elim
                   ((RuleProofs.eo_interprets_true_not_false M _ hOrTrue) hOrFalse)

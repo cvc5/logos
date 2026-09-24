@@ -123,7 +123,7 @@ private theorem native_re_range_empty_of_second_len_ne_one
           simp [hUnpack, native_re_range, native_re_none]
 
 private theorem facts
-    (M : SmtModel) (hM : model_total_typed M) (s t : Term)
+    (M : SmtModel) (hM : model_wf M) (s t : Term)
     (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hTTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hPrem : eo_interprets M (mkNotLenOne t) true) :
@@ -225,7 +225,7 @@ private theorem facts
 end ReRangeNonSingleton2Proof
 
 public theorem cmd_step_re_range_non_singleton_2_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_range_non_singleton_2 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

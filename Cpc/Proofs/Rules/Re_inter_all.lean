@@ -124,7 +124,7 @@ private theorem smtx_typeof_sigma :
     __smtx_typeof (__eo_to_smt sigma) = SmtType.RegLan := by
   change __smtx_typeof (SmtTerm.re_mult SmtTerm.re_allchar) =
     SmtType.RegLan
-  rw [typeof_re_mult_eq, __smtx_typeof.eq_102]
+  rw [typeof_re_mult_eq, __smtx_typeof.eq_104]
   native_decide
 
 private theorem smtx_model_eval_sigma (M : SmtModel) :
@@ -162,7 +162,7 @@ private theorem smt_value_rel_inter_all
   simp
 
 private theorem type_and_facts
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys : Term)
     (hXsList :
       __eo_is_list (Term.UOp UserOp.re_inter) xs = Term.Boolean true)
@@ -245,7 +245,7 @@ private theorem type_and_facts
 end ReInterAllProof
 
 public theorem cmd_step_re_inter_all_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_inter_all args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

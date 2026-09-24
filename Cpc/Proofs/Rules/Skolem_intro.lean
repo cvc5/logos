@@ -51,7 +51,7 @@ theorem typed___eo_prog_skolem_intro_impl (x1 : Term) :
 
 /-- Derives the checker facts exposed by the EO program for `skolem_intro`. -/
 theorem facts___eo_prog_skolem_intro_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
   RuleProofs.eo_has_smt_translation x1 ->
   __eo_prog_skolem_intro (Term._at_purify x1) ≠ Term.Stuck ->
   eo_interprets M (__eo_prog_skolem_intro (Term._at_purify x1)) true := by
@@ -64,7 +64,7 @@ theorem facts___eo_prog_skolem_intro_impl
   · exact smtx_model_eval_eo_to_smt_purify_rel M x1
 
 public theorem cmd_step_skolem_intro_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.skolem_intro args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

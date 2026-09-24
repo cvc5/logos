@@ -280,7 +280,7 @@ private theorem smt_typeof_bvurem_self_eq_zero (x : Term) (n : native_Int) :
   rw [hLhsTy, hZeroTy]
 
 private theorem eval_bvurem_self_eq_zero
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (n : native_Int) :
+    (M : SmtModel) (hM : model_wf M) (x : Term) (n : native_Int) :
     RuleProofs.eo_has_smt_translation x ->
     native_zleq 0 n = true ->
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec (native_int_to_nat n) ->
@@ -301,7 +301,7 @@ private theorem eval_bvurem_self_eq_zero
       simpa [SmtEval.native_zleq] using hNonneg
     have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
       Int.toNat_of_nonneg hnNonneg
-    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   rw [hWidthEq] at hEvalX
   have hZeroEval := eval_bv_const M 0 n hNonneg
@@ -348,7 +348,7 @@ private theorem typed_bv_urem_self_body (x w : Term) :
       simp)
 
 private theorem facts_bv_urem_self_body
-    (M : SmtModel) (hM : model_total_typed M) (x w : Term) :
+    (M : SmtModel) (hM : model_wf M) (x w : Term) :
     RuleProofs.eo_has_smt_translation x ->
     w ≠ Term.Stuck ->
     __eo_typeof
@@ -378,7 +378,7 @@ private theorem facts_bv_urem_self_body
     exact RuleProofs.smt_value_rel_refl _
 
 private theorem trusted_bv_urem_self_canonical_properties
-    (M : SmtModel) (hM : model_total_typed M) (x w : Term) :
+    (M : SmtModel) (hM : model_wf M) (x w : Term) :
     cArgListTranslationOk (CArgList.cons x (CArgList.cons w CArgList.nil)) ->
     __eo_typeof
         (__eo_prog_bv_urem_self x w
@@ -416,7 +416,7 @@ private theorem trusted_bv_urem_self_canonical_properties
       (typed_bv_urem_self_body x w hXTrans hwNe hBodyTy)
 
 public theorem cmd_step_bv_urem_self_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_urem_self args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

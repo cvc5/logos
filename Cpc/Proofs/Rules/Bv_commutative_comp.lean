@@ -303,7 +303,7 @@ private theorem smtx_model_eval_bvcomp_comm (v1 v2 : SmtValue) :
       rw [hEq, hEqSymm]
 
 private theorem eval_bvcomp_comm
-    (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 y1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     RuleProofs.eo_has_smt_translation y1 ->
     __eo_typeof (__eo_prog_bv_commutative_comp x1 y1) = Term.Bool ->
@@ -331,7 +331,7 @@ private theorem eval_bvcomp_comm
     (__smtx_model_eval M (__eo_to_smt y1))
 
 private theorem facts___eo_prog_bv_commutative_comp_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 y1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     RuleProofs.eo_has_smt_translation y1 ->
     __eo_typeof (__eo_prog_bv_commutative_comp x1 y1) = Term.Bool ->
@@ -358,7 +358,7 @@ private theorem facts___eo_prog_bv_commutative_comp_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_commutative_comp_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_commutative_comp args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

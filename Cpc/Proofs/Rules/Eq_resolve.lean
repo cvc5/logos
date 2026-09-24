@@ -79,7 +79,7 @@ theorem typed___eo_prog_eq_resolve_impl (x1 x2 : Term) :
 
 /-- Derives the checker facts exposed by the EO program for `eq_resolve`. -/
 theorem facts___eo_prog_eq_resolve_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 x2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 x2 : Term) :
   eo_interprets M x1 true ->
   eo_interprets M x2 true ->
   __eo_prog_eq_resolve (Proof.pf x1) (Proof.pf x2) ≠ Term.Stuck ->
@@ -164,7 +164,7 @@ theorem facts___eo_prog_eq_resolve_impl
       simp [__eo_prog_eq_resolve] at hProg
 
 public theorem cmd_step_eq_resolve_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.eq_resolve args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

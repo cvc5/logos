@@ -282,11 +282,11 @@ theorem eo_to_smt_forall_eq_of_non_nil
 
 /-- A translated EO term evaluates to a canonical value of its SMT type. -/
 theorem eo_to_smt_eval_typed_canonical
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTrans : RuleProofs.eo_has_smt_translation t) :
     __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) ∧
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt t)) := by
+      value_canonical (__smtx_model_eval M (__eo_to_smt t)) := by
   have hNN : term_has_non_none_type (__eo_to_smt t) := by
     simpa [RuleProofs.eo_has_smt_translation, term_has_non_none_type] using hTrans
   exact ⟨smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt t) hNN,
@@ -300,7 +300,7 @@ inductive SubstActualsTyped (M : SmtModel) : Term -> Term -> Prop where
       __smtx_type_wf (__eo_to_smt_type T) = true ->
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __eo_to_smt_type T ->
-      __smtx_value_canonical_bool (__smtx_model_eval M (__eo_to_smt t)) = true ->
+      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt t)) = true ->
       SubstActualsTyped M env ts ->
       SubstActualsTyped M
         (Term.Apply (Term.Apply Term.__eo_List_cons
@@ -334,7 +334,7 @@ theorem SubstActualsHaveSmtTypes.env :
         exact ⟨(s, T) :: vars, EoVarEnv.cons hEnv⟩
 
 theorem SubstActualsHaveSmtTypes.to_typed
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ {xs ts : Term},
       SubstActualsHaveSmtTypes xs ts ->
         SubstActualsTyped M xs ts
@@ -347,7 +347,7 @@ theorem SubstActualsHaveSmtTypes.to_typed
           ⟨hEvalTy, hEvalCan⟩
         exact SubstActualsTyped.cons hWf
           (by simpa [hTy] using hEvalTy)
-          (by simpa [__smtx_value_canonical] using hEvalCan)
+          (by simpa [value_canonical] using hEvalCan)
           (SubstActualsHaveSmtTypes.to_typed M hM hTail)
 
 theorem SubstActualsHaveSmtTypes.env_wf :
@@ -983,17 +983,17 @@ theorem eo_typeof_bvnego_arg_bitvec_of_ne_stuck {A : Term}
 theorem smt_typeof_bvnot_eq (t : SmtTerm) :
     __smtx_typeof (SmtTerm.bvnot t) =
       __smtx_typeof_bv_op_1 (__smtx_typeof t) := by
-  rw [__smtx_typeof.eq_37]
+  rw [__smtx_typeof.eq_39]
 
 theorem smt_typeof_bvneg_eq (t : SmtTerm) :
     __smtx_typeof (SmtTerm.bvneg t) =
       __smtx_typeof_bv_op_1 (__smtx_typeof t) := by
-  rw [__smtx_typeof.eq_45]
+  rw [__smtx_typeof.eq_47]
 
 theorem smt_typeof_bvnego_eq (t : SmtTerm) :
     __smtx_typeof (SmtTerm.bvnego t) =
       __smtx_typeof_bv_op_1_ret (__smtx_typeof t) SmtType.Bool := by
-  rw [__smtx_typeof.eq_70]
+  rw [__smtx_typeof.eq_72]
 
 theorem smt_typeof_bvcomp_eq (t u : SmtTerm) :
     __smtx_typeof (SmtTerm.bvcomp t u) =
@@ -1005,10 +1005,10 @@ theorem smt_typeof_binary_nat_to_int_zero (w : native_Nat) :
     __smtx_typeof (SmtTerm.Binary (native_nat_to_int w) 0) =
       SmtType.BitVec w := by
   have hWidth : native_zleq 0 (native_nat_to_int w) = true := by
-    simp [SmtEval.native_zleq, SmtEval.native_nat_to_int]
+    simp [SmtEval.native_zleq, Smtm.native_nat_to_int]
   have hPowPos : 0 < native_int_pow2 (native_nat_to_int w) := by
     have hNonneg : 0 <= native_nat_to_int w := by
-      simp [SmtEval.native_nat_to_int]
+      simp [Smtm.native_nat_to_int]
     have hnot : ¬ native_nat_to_int w < 0 := Int.not_lt_of_ge hNonneg
     simp [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hnot]
     exact Int.pow_pos (by decide : (0 : Int) < 2)
@@ -1025,7 +1025,7 @@ theorem smt_typeof_binary_nat_to_int_zero (w : native_Nat) :
         SmtType.None := by
     unfold __smtx_typeof
     simp [SmtEval.native_and, hWidth, hMod, native_ite]
-  simpa [SmtEval.native_int_to_nat, SmtEval.native_nat_to_int] using
+  simpa [SmtEval.native_int_to_nat, Smtm.native_nat_to_int] using
     TranslationProofs.smtx_typeof_binary_of_non_none
       (native_nat_to_int w) 0 hNN
 

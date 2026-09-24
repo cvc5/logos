@@ -366,7 +366,7 @@ private theorem eval_bvcomp_eliminate
   simp [__smtx_model_eval_bvcomp]
 
 private theorem facts___eo_prog_bv_comp_eliminate_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 y1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     RuleProofs.eo_has_smt_translation y1 ->
     __eo_typeof (__eo_prog_bv_comp_eliminate x1 y1) = Term.Bool ->
@@ -397,7 +397,7 @@ private theorem facts___eo_prog_bv_comp_eliminate_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_comp_eliminate_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_comp_eliminate args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

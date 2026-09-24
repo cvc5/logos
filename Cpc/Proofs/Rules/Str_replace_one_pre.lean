@@ -135,7 +135,7 @@ private theorem prog_info
       rhsTailGenerated]
 
 private theorem seq_eval_of_type
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
     ∃ sx, __smtx_model_eval M (__eo_to_smt x) = SmtValue.Seq sx := by
   have hValTy :
@@ -162,7 +162,7 @@ private theorem replace_type
     native_ite, native_Teq]
 
 private theorem type_and_facts
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t pat repl pfx middle U : Term)
     (hPfxList : __eo_is_list op pfx = Term.Boolean true)
     (hMiddleList : __eo_is_list op middle = Term.Boolean true)
@@ -426,7 +426,7 @@ private theorem type_and_facts
 end StrReplaceOnePreProof
 
 public theorem cmd_step_str_replace_one_pre_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_replace_one_pre args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

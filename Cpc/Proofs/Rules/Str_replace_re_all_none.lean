@@ -52,12 +52,12 @@ private theorem smtx_typeof_of_eo_seq_char
 
 private theorem native_re_prefix_match_len_go_none :
     ∀ (xs : List SmtValue) (n : Nat),
-      native_re_prefix_match_len?.go native_re_none xs n = none
+      impl_native_re_prefix_match_len_go native_re_none xs n = none
   | [], n => by
-      rw [native_re_prefix_match_len?.go.eq_1]
+      rw [impl_native_re_prefix_match_len_go.eq_1]
       simp [native_re_none, native_re_nullable]
   | c :: cs, n => by
-      rw [native_re_prefix_match_len?.go.eq_2]
+      rw [impl_native_re_prefix_match_len_go.eq_2]
       simp [native_re_none, native_re_nullable, native_re_deriv]
       exact native_re_prefix_match_len_go_none cs (n + 1)
 
@@ -82,21 +82,21 @@ private theorem native_re_positive_prefix_match_len_none :
 
 private theorem native_re_replace_all_nonempty_list_aux_none :
     ∀ (fuel : Nat) (replacement xs : List SmtValue),
-      native_re_replace_all_nonempty_list_aux fuel native_re_none replacement xs = xs
+      impl_native_re_replace_all_nonempty_list_aux fuel native_re_none replacement xs = xs
   | 0, _replacement, xs => by
-      rw [native_re_replace_all_nonempty_list_aux.eq_def]
+      rw [impl_native_re_replace_all_nonempty_list_aux.eq_def]
   | fuel + 1, replacement, [] => by
-      rw [native_re_replace_all_nonempty_list_aux.eq_def]
+      rw [impl_native_re_replace_all_nonempty_list_aux.eq_def]
       simp [native_re_positive_prefix_match_len_none]
   | fuel + 1, replacement, c :: cs => by
-      rw [native_re_replace_all_nonempty_list_aux.eq_def]
+      rw [impl_native_re_replace_all_nonempty_list_aux.eq_def]
       simp [native_re_positive_prefix_match_len_none,
         native_re_replace_all_nonempty_list_aux_none fuel replacement cs]
 
 private theorem native_str_replace_re_all_none
     (s repl : List SmtValue) :
     native_str_replace_re_all s native_re_none repl = s := by
-  unfold native_str_replace_re_all native_re_replace_all_nonempty_list
+  unfold native_str_replace_re_all impl_native_re_replace_all_nonempty_list
   exact native_re_replace_all_nonempty_list_aux_none (s.length + 1) repl s
 
 private theorem native_pack_unpack_seq_local :
@@ -110,13 +110,13 @@ private theorem native_pack_unpack_seq_local :
 private theorem list_typed_char_pack_unpack :
     ∀ {xs : List SmtValue},
       list_typed SmtType.Char xs ->
-        xs.map (fun v => SmtValue.Char (native_ssm_char_of_value v)) = xs
+        xs.map (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) = xs
   | [], _ => rfl
   | v :: vs, hxs => by
       rcases hxs with ⟨hv, hvs⟩
       rcases char_value_canonical hv with ⟨c, hvc, _hc⟩
       rw [hvc]
-      simpa [native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
+      simpa [impl_native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
 
 private theorem native_pack_string_unpack_string_of_typeof_seq_char
     (ss : SmtSeq)
@@ -126,7 +126,7 @@ private theorem native_pack_string_unpack_string_of_typeof_seq_char
     typed_unpack_seq_of_typeof_seq_value hTy
   have hMap :
       (native_unpack_seq ss).map
-          (fun v => SmtValue.Char (native_ssm_char_of_value v)) =
+          (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) =
         native_unpack_seq ss :=
     list_typed_char_pack_unpack hTyped
   have hElem : __smtx_elem_typeof_seq_value ss = SmtType.Char :=
@@ -134,7 +134,7 @@ private theorem native_pack_string_unpack_string_of_typeof_seq_char
   unfold native_pack_string native_unpack_string
   simp only [List.map_map]
   change native_pack_seq SmtType.Char
-      ((native_unpack_seq ss).map (fun v => SmtValue.Char (native_ssm_char_of_value v))) =
+      ((native_unpack_seq ss).map (fun v => SmtValue.Char (impl_native_ssm_char_of_value v))) =
     ss
   rw [hMap]
   simpa [hElem] using native_pack_unpack_seq_local ss
@@ -200,7 +200,7 @@ private theorem typed___eo_prog_str_replace_re_all_none_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_str_replace_re_all_none_impl
-    (M : SmtModel) (hM : model_total_typed M) (t repl : Term)
+    (M : SmtModel) (hM : model_wf M) (t repl : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hReplTrans : RuleProofs.eo_has_smt_translation repl)
     (hTTy : __eo_typeof t = Term.Apply Term.Seq Term.Char)
@@ -278,7 +278,7 @@ private theorem facts___eo_prog_str_replace_re_all_none_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_replace_re_all_none_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_replace_re_all_none args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

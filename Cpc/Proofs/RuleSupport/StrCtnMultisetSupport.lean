@@ -441,7 +441,7 @@ theorem eo_list_concat_isTL (L R : Term)
     SetsEvalOpSupport.isTL_is_list R hR, SetsEvalOpSupport.req_tt]
   exact SetsEvalOpSupport.isTL_concat_rec L hL R hR
 
-theorem eval_seq_of_type (M : SmtModel) (hM : model_total_typed M)
+theorem eval_seq_of_type (M : SmtModel) (hM : model_wf M)
     (t : Term) (T : SmtType)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T) :
     ∃ S : SmtSeq, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Seq S := by
@@ -482,7 +482,7 @@ theorem eo_nil_typedList_eq (T : Term) (hT : T ≠ Term.Stuck) :
   cases T <;> simp [__eo_nil, __eo_nil__at__at_TypedList_cons] at hT ⊢
 
 theorem str_multiset_overapprox_sound
-    (M : SmtModel) (hM : model_total_typed M) (v : SmtValue) :
+    (M : SmtModel) (hM : model_wf M) (v : SmtValue) :
     ∀ (t : Term) (S : SmtSeq) (T : SmtType),
       __smtx_typeof (__eo_to_smt t) = SmtType.Seq T ->
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Seq S ->
@@ -684,7 +684,7 @@ def AtomTerm (a : Term) : Prop :=
   (∃ ch, a = Term.String [ch]) ∨
     (∃ e, a = Term.Apply (Term.UOp UserOp.seq_unit) e)
 
-def NoAtomOverlapElem (M : SmtModel) (hM : model_total_typed M)
+def NoAtomOverlapElem (M : SmtModel) (hM : model_wf M)
     (T : SmtType) (x : Term) : Prop :=
   ∀ a : Term, AtomTerm a ->
     __smtx_typeof (__eo_to_smt a) = SmtType.Seq T ->
@@ -693,7 +693,7 @@ def NoAtomOverlapElem (M : SmtModel) (hM : model_total_typed M)
       Term.Boolean true ->
     seqTermValueCount M (seqElemVal M a) x = 0
 
-def NoAtomOverlapList (M : SmtModel) (hM : model_total_typed M)
+def NoAtomOverlapList (M : SmtModel) (hM : model_wf M)
     (T : SmtType) : Term -> Prop
   | Term.Apply (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) x) xs =>
       NoAtomOverlapElem M hM T x ∧ NoAtomOverlapList M hM T xs
@@ -753,7 +753,7 @@ theorem term_ne_stuck_of_smt_seq_type (a : Term) (T : SmtType)
   simp at hTy
 
 theorem noAtomOverlapElem_atom
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (T : SmtType)
     (x : Term)
     (hxAtom : AtomTerm x)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
@@ -909,7 +909,7 @@ theorem seqUnit_opaque_distinct_false
     exact hSeqNot hSeq
 
 theorem noAtomOverlapElem_opaque
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (T : SmtType)
     (x : Term)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hStrFalse : __eo_is_str x = Term.Boolean false)
@@ -936,7 +936,7 @@ theorem noAtomOverlapElem_opaque
     · exact seqUnit_opaque_distinct_false e x hxAtom hEmptyFalse hNoConcat hDistinct
 
 theorem noAtomOverlapList_distinct_zero
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType) :
+    (M : SmtModel) (hM : model_wf M) (T : SmtType) :
     ∀ L : Term, SetsEvalOpSupport.IsTL L -> NoAtomOverlapList M hM T L ->
       ∀ a : Term, AtomTerm a ->
         __smtx_typeof (__eo_to_smt a) = SmtType.Seq T ->
@@ -965,7 +965,7 @@ theorem noAtomOverlapList_distinct_zero
       exact absurd hTL (by cases t <;> simp_all [SetsEvalOpSupport.IsTL])
 
 theorem noAtomOverlapList_concat_rec
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType) :
+    (M : SmtModel) (hM : model_wf M) (T : SmtType) :
     ∀ L R : Term, SetsEvalOpSupport.IsTL L -> SetsEvalOpSupport.IsTL R ->
       NoAtomOverlapList M hM T L -> NoAtomOverlapList M hM T R ->
       NoAtomOverlapList M hM T (__eo_list_concat_rec L R) := by
@@ -999,7 +999,7 @@ theorem noAtomOverlapList_concat_rec
       exact absurd hL (by cases t <;> simp_all [SetsEvalOpSupport.IsTL])
 
 theorem noAtomOverlapList_concat
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (T : SmtType)
     (L R : Term)
     (hL : SetsEvalOpSupport.IsTL L) (hR : SetsEvalOpSupport.IsTL R)
     (hNoL : NoAtomOverlapList M hM T L)
@@ -1016,7 +1016,7 @@ theorem noAtomOverlapList_concat
   exact noAtomOverlapList_concat_rec M hM T L R hL hR hNoL hNoR
 
 theorem str_multiset_overapprox_word_charChain_noAtom
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (T : SmtType)
     (w : native_String)
     (hAtomTy : ∀ a ∈ w.map (fun ch => Term.String [ch]),
       __smtx_typeof (__eo_to_smt a) = SmtType.Seq T) :
@@ -1077,7 +1077,7 @@ theorem str_multiset_overapprox_word_charChain_noAtom
       · exact hTailNo
 
 theorem str_multiset_overapprox_noAtom
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (t : Term) (T : SmtType),
       __smtx_typeof (__eo_to_smt t) = SmtType.Seq T ->
       SetsEvalOpSupport.IsTL (__str_multiset_overapprox t) ∧
@@ -1273,7 +1273,7 @@ theorem erase_rec_isTL :
       exact absurd hL (by cases t <;> simp_all [SetsEvalOpSupport.IsTL])
 
 theorem noAtomOverlapList_erase_rec
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType) :
+    (M : SmtModel) (hM : model_wf M) (T : SmtType) :
     ∀ L a : Term, SetsEvalOpSupport.IsTL L -> NoAtomOverlapList M hM T L ->
       a ≠ Term.Stuck ->
       NoAtomOverlapList M hM T (__eo_list_erase_rec L a) := by
@@ -1312,7 +1312,7 @@ theorem noAtomOverlapList_erase_rec
       exact absurd hL (by cases t <;> simp_all [SetsEvalOpSupport.IsTL])
 
 theorem noAtomOverlapList_erase
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (T : SmtType)
     (L a : Term)
     (hL : SetsEvalOpSupport.IsTL L)
     (hNoL : NoAtomOverlapList M hM T L)
@@ -1408,7 +1408,7 @@ theorem str_multiset_subset_strict_done_nil_eq
   cases xs <;> first | exact absurd rfl hxs | rfl
 
 theorem str_is_multiset_subset_strict_done_count_lt
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType) :
+    (M : SmtModel) (hM : model_wf M) (T : SmtType) :
     ∀ xs nr : Term,
       SetsEvalOpSupport.IsTL xs ->
       NoAtomOverlapList M hM T xs ->
@@ -1464,7 +1464,7 @@ theorem str_is_multiset_subset_strict_done_count_lt
       exact absurd hNrTL (by cases t <;> simp_all [SetsEvalOpSupport.IsTL])
 
 theorem str_is_multiset_subset_strict_atomChain_count_lt
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType) :
+    (M : SmtModel) (hM : model_wf M) (T : SmtType) :
     ∀ atoms : List Term, ∀ ex xs nr : Term,
       __str_is_empty ex = Term.Boolean true ->
       (∀ a ∈ atoms, AtomTerm a) ->
@@ -1962,7 +1962,7 @@ theorem scratch_concat_singleton_head_guard
     exact scratch_concat_seqUnit_char_distinct_false e (Term.String []) x hd
 
 theorem scratch_concat_singleton_noAtom_zero
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (T : SmtType)
     (xs e ss : Term)
     (hXsTL : SetsEvalOpSupport.IsTL xs)
     (hNoXs : NoAtomOverlapList M hM T xs)
@@ -2025,7 +2025,7 @@ theorem scratch_concat_singleton_noAtom_zero
       exact absurd hXsTL (by cases t <;> simp_all [SetsEvalOpSupport.IsTL])
 
 theorem scratch_singleton_done_witness
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (T : SmtType)
     (xs s : Term)
     (hXsTL : SetsEvalOpSupport.IsTL xs)
     (hNoXs : NoAtomOverlapList M hM T xs)
@@ -2109,7 +2109,7 @@ theorem scratch_singleton_done_witness
     decide
 
 theorem scratch_done_count_lt
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType) :
+    (M : SmtModel) (hM : model_wf M) (T : SmtType) :
     ∀ xs nr : Term,
       SetsEvalOpSupport.IsTL xs ->
       NoAtomOverlapList M hM T xs ->
@@ -2184,7 +2184,7 @@ theorem scratch_strict_nonconcat_eq
   · rfl
 
 theorem scratch_strict_count_lt
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtType) :
+    (M : SmtModel) (hM : model_wf M) (T : SmtType) :
     ∀ flat xs nr : Term,
       __smtx_typeof (__eo_to_smt flat) = SmtType.Seq T ->
       SetsEvalOpSupport.IsTL xs ->
@@ -2363,7 +2363,7 @@ theorem scratch_strict_first_ne
   simp [__str_is_multiset_subset_strict] at h
 
 theorem scratch_view_finish
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (needle : Term) (S : SmtSeq) (T : SmtType) (xs nrTy : Term)
     (hNeedleTy : __smtx_typeof (__eo_to_smt needle) = SmtType.Seq T)
     (hNeedleEval : __smtx_model_eval M (__eo_to_smt needle) = SmtValue.Seq S)
@@ -3013,7 +3013,7 @@ theorem scratch_flatSeqValueCount_list_concat (M : SmtModel) (v : SmtValue) :
       simp [hNilCount]
 
 theorem scratch_flatSeqValueCount_str_flatten_le_eval
-    (M : SmtModel) (hM : model_total_typed M) (v : SmtValue) :
+    (M : SmtModel) (hM : model_wf M) (v : SmtValue) :
     ∀ (t : Term) (S : SmtSeq) (T : SmtType),
       __smtx_typeof (__eo_to_smt t) = SmtType.Seq T ->
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Seq S ->
@@ -3115,7 +3115,7 @@ theorem scratch_flatSeqValueCount_str_flatten_le_eval
         exact Nat.le_refl _
 
 theorem scratch_str_is_multiset_subset_strict_flat_count_lt
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (needle : Term) (S : SmtSeq) (T : SmtType) (xs nrTy : Term)
     (hNeedleTy : __smtx_typeof (__eo_to_smt needle) = SmtType.Seq T)
     (hNeedleEval : __smtx_model_eval M (__eo_to_smt needle) = SmtValue.Seq S)
@@ -3194,7 +3194,7 @@ theorem scratch_str_is_multiset_subset_strict_flat_count_lt
 
 
 theorem str_is_multiset_subset_strict_flat_count_lt
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (needle : Term) (S : SmtSeq) (T : SmtType) (xs nrTy : Term)
     (hNeedleTy : __smtx_typeof (__eo_to_smt needle) = SmtType.Seq T)
     (hNeedleEval : __smtx_model_eval M (__eo_to_smt needle) = SmtValue.Seq S)
@@ -3211,7 +3211,7 @@ theorem str_is_multiset_subset_strict_flat_count_lt
     hNeedleTy hNeedleEval hXsTL hNoXs hStrict
 
 theorem str_ctn_multiset_subset_contains_false
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (hay needle : Term) (T : SmtType)
     (hHayTy : __smtx_typeof (__eo_to_smt hay) = SmtType.Seq T)
     (hNeedleTy : __smtx_typeof (__eo_to_smt needle) = SmtType.Seq T)

@@ -127,7 +127,7 @@ private theorem eo_interprets_ite_eq_else_true
           RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt E))
 
 public theorem cmd_step_ite_eq_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.ite_eq args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

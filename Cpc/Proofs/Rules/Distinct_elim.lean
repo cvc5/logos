@@ -40,7 +40,7 @@ private theorem smt_eval_not_eq_bool
       __smtx_model_eval M
         (SmtTerm.not (SmtTerm.eq s t)) =
         SmtValue.Boolean b := by
-  rw [__smtx_model_eval.eq_6, smtx_eval_eq_term_eq]
+  rw [__smtx_model_eval.eq_7, smtx_eval_eq_term_eq]
   rcases smt_eval_eq_bool (__smtx_model_eval M s) (__smtx_model_eval M t) with
     ⟨b, hEq⟩
   rw [hEq]
@@ -158,7 +158,7 @@ private theorem distinct_pairs_eval_bool
                     ⟨_hHeadTail, _hHeadNN, hTailNN, _hConsEq⟩
                   rcases distinct_pairs_eval_bool M s a hTailNN with
                     ⟨bt, hTail⟩
-                  rw [__eo_to_smt_distinct_pairs, __smtx_model_eval.eq_8]
+                  rw [__eo_to_smt_distinct_pairs, __smtx_model_eval.eq_9]
                   rcases smt_eval_not_eq_bool M s (__eo_to_smt x) with
                     ⟨bh, hHead⟩
                   rw [hHead, hTail]
@@ -219,7 +219,7 @@ private theorem distinct_eval_bool
                   rcases distinct_pairs_eval_bool M (__eo_to_smt x) a hTailNN with
                     ⟨bp, hPairs⟩
                   rcases distinct_eval_bool M a hTailNN with ⟨bt, hTail⟩
-                  rw [__eo_to_smt_distinct, __smtx_model_eval.eq_8, hPairs, hTail]
+                  rw [__eo_to_smt_distinct, __smtx_model_eval.eq_9, hPairs, hTail]
                   exact ⟨native_and bp bt, by simp [__smtx_model_eval_and]⟩
               | _ =>
                   simp [__eo_to_smt_typed_list_elem_type] at hNN
@@ -275,7 +275,7 @@ private theorem mk_distinct_elim_rec_eval
           cases op with
           | _at__at_TypedList_nil =>
               simp [__mk_distinct_elim_rec, __eo_to_smt_distinct_pairs,
-                __smtx_model_eval.eq_8, __smtx_model_eval.eq_1,
+                __smtx_model_eval.eq_9, __smtx_model_eval.eq_1,
                 hB, __smtx_model_eval_and]
               cases bb <;> simp [SmtEval.native_and]
           | _ =>
@@ -299,7 +299,7 @@ private theorem mk_distinct_elim_rec_eval
                           (__eo_to_smt (__mk_distinct_elim_rec x a b)) =
                           SmtValue.Boolean br := by
                     refine ⟨native_and bp bb, ?_⟩
-                    rw [hIH, __smtx_model_eval.eq_8, hPairs, hB]
+                    rw [hIH, __smtx_model_eval.eq_9, hPairs, hB]
                     simp [__smtx_model_eval_and]
                   have hRecNe :
                       __mk_distinct_elim_rec x a b ≠ Term.Stuck :=
@@ -307,7 +307,7 @@ private theorem mk_distinct_elim_rec_eval
                       (__mk_distinct_elim_rec x a b) hRecBool
                   simp [__mk_distinct_elim_rec, __eo_mk_apply
                     ]
-                  rw [__eo_to_smt_distinct_pairs, __smtx_model_eval.eq_8]
+                  rw [__eo_to_smt_distinct_pairs, __smtx_model_eval.eq_9]
                   change
                     __smtx_model_eval M
                         (SmtTerm.and
@@ -321,8 +321,8 @@ private theorem mk_distinct_elim_rec_eval
                               (SmtTerm.eq (__eo_to_smt x) (__eo_to_smt y)))
                             (__eo_to_smt_distinct_pairs (__eo_to_smt x) a)))
                         (__smtx_model_eval M (__eo_to_smt b))
-                  rw [__smtx_model_eval.eq_8, hIH, __smtx_model_eval.eq_8,
-                    __smtx_model_eval.eq_8, hHead, hPairs, hB]
+                  rw [__smtx_model_eval.eq_9, hIH, __smtx_model_eval.eq_9,
+                    __smtx_model_eval.eq_9, hHead, hPairs, hB]
                   exact smt_eval_and_assoc_bool
               | _ =>
                   simp [__eo_to_smt_typed_list_elem_type] at hNN
@@ -396,7 +396,7 @@ private theorem mk_distinct_elim_eval
                         (Term.Apply (Term.UOp UserOp.distinct) a))
                       hXNe a hTailNN hB
                   rw [__mk_distinct_elim, __eo_to_smt_distinct, hRec]
-                  rw [__smtx_model_eval.eq_8, __smtx_model_eval.eq_8,
+                  rw [__smtx_model_eval.eq_9, __smtx_model_eval.eq_9,
                     hTailEval]
               | _ =>
                   simp [__eo_to_smt_typed_list_elem_type] at hNN
@@ -465,7 +465,7 @@ private theorem singleton_elim_and_eval_eq
                         __smtx_model_eval M
                           (SmtTerm.and (__eo_to_smt x) (SmtTerm.Boolean true)) =
                           SmtValue.Boolean bc at hBool
-                    rw [__smtx_model_eval.eq_8, __smtx_model_eval.eq_1] at hBool
+                    rw [__smtx_model_eval.eq_9, __smtx_model_eval.eq_1] at hBool
                     have hRight :=
                       smt_eval_and_true_right_eq_of_boolean hBool
                     simp [__eo_list_singleton_elim, hList,
@@ -476,7 +476,7 @@ private theorem singleton_elim_and_eval_eq
                       __smtx_model_eval M (__eo_to_smt x) =
                         __smtx_model_eval M
                           (SmtTerm.and (__eo_to_smt x) (SmtTerm.Boolean true))
-                    rw [__smtx_model_eval.eq_8, __smtx_model_eval.eq_1]
+                    rw [__smtx_model_eval.eq_9, __smtx_model_eval.eq_1]
                     exact hRight
                   · rw [__eo_list_singleton_elim, hList,
                       __eo_list_singleton_elim_2]
@@ -610,7 +610,7 @@ private theorem distinct_elim_shape_of_typeof_bool
       exact False.elim (hProg rfl)
 
 private theorem distinct_elim_sound
-    (M : SmtModel) (hM : model_total_typed M) (b1 b2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (b1 b2 : Term) :
   RuleProofs.eo_has_bool_type
     (Term.Apply (Term.Apply (Term.UOp UserOp.eq) b1) b2) ->
   __eo_list_singleton_elim (Term.UOp UserOp.and)
@@ -693,7 +693,7 @@ private theorem distinct_elim_sound
         simp [__mk_distinct_elim, list_singleton_elim_stuck])
 
 private theorem facts___eo_prog_distinct_elim_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
   RuleProofs.eo_has_smt_translation a1 ->
   __eo_typeof (__eo_prog_distinct_elim a1) = Term.Bool ->
   eo_interprets M (__eo_prog_distinct_elim a1) true := by
@@ -720,7 +720,7 @@ private theorem facts___eo_prog_distinct_elim_impl
   exact distinct_elim_sound M hM b1 b2 hFormulaBool hGuard hGuardNe
 
 public theorem cmd_step_distinct_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.distinct_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

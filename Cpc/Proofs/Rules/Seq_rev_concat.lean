@@ -501,7 +501,7 @@ private theorem list_concat_rec_nil (y1 z : Term) (hz : z ≠ Term.Stuck)
     (cases z <;> first | exact absurd rfl hz | rfl)
 
 /-- A sequence-typed term evaluates to a canonical `Seq` value with the right element type. -/
-private theorem seq_eval_canonical (M : SmtModel) (hM : model_total_typed M)
+private theorem seq_eval_canonical (M : SmtModel) (hM : model_wf M)
     (a : Term) (T : SmtType)
     (haTy : __smtx_typeof (__eo_to_smt a) = SmtType.Seq T) :
     ∃ s, __smtx_model_eval M (__eo_to_smt a) = SmtValue.Seq s ∧
@@ -531,7 +531,7 @@ private theorem smt_value_rel_str_rev_term (M : SmtModel) (a b : Term)
   exact smt_value_rel_model_eval_str_rev_of_rel _ _ h
 
 /-- `rev(a ++ (b ++ c)) = rev(c) ++ rev(a ++ b)` at the value level. -/
-private theorem eval_rev_concat3 (M : SmtModel) (hM : model_total_typed M)
+private theorem eval_rev_concat3 (M : SmtModel) (hM : model_wf M)
     (a b c : Term) (T : SmtType)
     (haTy : __smtx_typeof (__eo_to_smt a) = SmtType.Seq T)
     (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.Seq T)
@@ -576,7 +576,7 @@ private theorem eval_rev_concat3 (M : SmtModel) (hM : model_total_typed M)
   rw [hL, hR, ← List.append_assoc, List.reverse_append]
 
 /-- `rev(a ++ c) = rev(c) ++ rev(a)` at the value level. -/
-private theorem eval_rev_concat2 (M : SmtModel) (hM : model_total_typed M)
+private theorem eval_rev_concat2 (M : SmtModel) (hM : model_wf M)
     (a c : Term) (T : SmtType)
     (haTy : __smtx_typeof (__eo_to_smt a) = SmtType.Seq T)
     (hcTy : __smtx_typeof (__eo_to_smt c) = SmtType.Seq T) :
@@ -710,7 +710,7 @@ private theorem typed_impl
 
 /-- Interpretation correctness of the reduced program. -/
 private theorem facts_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x1 y1 z1 T : Term)
     (hX1Trans : RuleProofs.eo_has_smt_translation x1)
     (hY1Trans : RuleProofs.eo_has_smt_translation y1)
@@ -949,7 +949,7 @@ private theorem facts_impl
 /-! ## Wrapper -/
 
 public theorem cmd_step_seq_rev_concat_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.seq_rev_concat args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

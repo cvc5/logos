@@ -192,7 +192,7 @@ private theorem typed___eo_prog_bv_shl_by_const_0_impl (x1 sz1 : Term) :
       simp)
 
 private theorem eval_bvshl_const_zero_self
-    (M : SmtModel) (hM : model_total_typed M) (x1 sz1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 sz1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_bv_shl_by_const_0 x1 sz1) = Term.Bool ->
     __smtx_model_eval M
@@ -260,7 +260,7 @@ private theorem eval_bvshl_const_zero_self
     SmtEval.native_mod_total, hPowZero, hPayloadMod, hPayloadModInt]
 
 private theorem facts___eo_prog_bv_shl_by_const_0_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 sz1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 sz1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_bv_shl_by_const_0 x1 sz1) = Term.Bool ->
     eo_interprets M (__eo_prog_bv_shl_by_const_0 x1 sz1) true := by
@@ -286,7 +286,7 @@ private theorem facts___eo_prog_bv_shl_by_const_0_impl
       (__smtx_model_eval M (__eo_to_smt x1))
 
 public theorem cmd_step_bv_shl_by_const_0_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_shl_by_const_0 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

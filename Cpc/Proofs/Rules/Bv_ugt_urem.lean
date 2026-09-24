@@ -498,7 +498,7 @@ private theorem eval_smt_boolean (M : SmtModel) (b : Bool) :
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem eval_ugt_urem_sides_eq
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) (n : native_Int) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) (n : native_Int) :
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation x ->
     native_zleq 0 n = true ->
@@ -523,7 +523,7 @@ private theorem eval_ugt_urem_sides_eq
       simpa [SmtEval.native_zleq] using hNonneg
     have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
       Int.toNat_of_nonneg hnNonneg
-    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   have hEvalTyY :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt y)) =
@@ -639,7 +639,7 @@ private theorem typed_bv_ugt_urem_body (y x w : Term) :
       cases h)
 
 private theorem facts_bv_ugt_urem_body
-    (M : SmtModel) (hM : model_total_typed M) (y x w : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x w : Term) :
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation x ->
     w ≠ Term.Stuck ->
@@ -698,7 +698,7 @@ private theorem facts_bv_ugt_urem_body
     exact RuleProofs.smt_value_rel_refl _
 
 private theorem trusted_bv_ugt_urem_canonical_properties
-    (M : SmtModel) (hM : model_total_typed M) (y x w : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x w : Term) :
     cArgListTranslationOk
       (CArgList.cons y (CArgList.cons x (CArgList.cons w CArgList.nil))) ->
     __eo_typeof
@@ -749,7 +749,7 @@ private theorem trusted_bv_ugt_urem_canonical_properties
       (typed_bv_ugt_urem_body y x w hYTrans hXTrans hwNe hBodyTy)
 
 public theorem cmd_step_bv_ugt_urem_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_ugt_urem args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

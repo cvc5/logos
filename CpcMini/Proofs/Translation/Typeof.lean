@@ -117,7 +117,7 @@ private theorem eo_to_smt_type_eq_datatype_iff
     __eo_to_smt_type T = SmtType.Datatype s d ↔
       ∃ d0,
         T = Term.DatatypeType s d0 ∧
-        native_reserved_datatype_name s = false ∧
+        __eo_to_smt_reserved_datatype_name s = false ∧
         __eo_to_smt_datatype_decl d0 = d :=
   TranslationProofs.eo_to_smt_type_eq_datatype_iff
 
@@ -125,7 +125,7 @@ private theorem eo_to_smt_type_eq_datatype_iff
 private theorem eo_to_smt_type_eq_typeref_iff
     {T : Term} {s : native_String} :
     __eo_to_smt_type T = SmtType.TypeRef s ↔
-      T = Term.DatatypeTypeRef s ∧ native_reserved_datatype_name s = false :=
+      T = Term.DatatypeTypeRef s ∧ __eo_to_smt_reserved_datatype_name s = false :=
   TranslationProofs.eo_to_smt_type_eq_typeref_iff
 
 /-- Characterizes translated EO types equal to an SMT bit-vector type. -/
@@ -681,7 +681,7 @@ private theorem eo_to_smt_type_typeof_dt_cons_rec_of_valid
 /-- Computes translated EO typing for datatype constructors on valid datatypes. -/
 private theorem eo_to_smt_type_typeof_dt_cons_of_valid
     (s : native_String) (d : Datatype) (i : native_Nat)
-    (hReserved : native_reserved_datatype_name s = false)
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false)
     (hValid : TranslationProofs.eo_datatype_valid_rec [s] d)
     (hNN : __smtx_typeof (SmtTerm.DtCons s (__eo_to_smt_datatype d) i) ≠ SmtType.None) :
     __eo_to_smt_type (__eo_typeof (Term.DtCons s d i)) =
@@ -1045,12 +1045,6 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid :
         TranslationProofs.eo_type_valid_rec [] (__eo_typeof t)
   | Term.UOp op, hNN => by
       simp [__eo_to_smt.eq_def, __smtx_typeof] at hNN
-  | Term.UOp1 op x, hNN => by
-      cases op <;> simp [__eo_to_smt.eq_def, __smtx_typeof] at hNN
-  | Term.UOp2 op x y, hNN => by
-      cases op <;> simp [__eo_to_smt.eq_def, __smtx_typeof] at hNN
-  | Term.UOp3 op x y z, hNN => by
-      cases op <;> simp [__eo_to_smt.eq_def, __smtx_typeof] at hNN
   | Term.__eo_List, hNN => by
       simp [__eo_to_smt.eq_def, __smtx_typeof] at hNN
   | Term.__eo_List_nil, hNN => by
@@ -1126,12 +1120,12 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid :
   | Term.DtcAppType T U, hNN => by
       simp [__eo_to_smt.eq_def, __smtx_typeof] at hNN
   | Term.DtCons s d i, hNN => by
-      have hReserved : native_reserved_datatype_name s = false := by
-        by_cases hReservedTrue : native_reserved_datatype_name s = true
+      have hReserved : __eo_to_smt_reserved_datatype_name s = false := by
+        by_cases hReservedTrue : __eo_to_smt_reserved_datatype_name s = true
         · exfalso
           apply hNN
           simp [__eo_to_smt.eq_def, __smtx_typeof, hReservedTrue]
-        · cases hName : native_reserved_datatype_name s <;> simp [hName] at hReservedTrue ⊢
+        · cases hName : __eo_to_smt_reserved_datatype_name s <;> simp [hName] at hReservedTrue ⊢
       let DD := __eo_to_smt_datatype_decl d
       let D := SmtType.Datatype s DD
       let body := __smtx_dt_resolve (__smtx_dd_lookup s DD) DD
@@ -1170,10 +1164,10 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid :
         TranslationProofs.eo_to_smt_datatype_decl_resolve] using hRec.1.symm
   | Term.DtSel s d i j, hNN => by
       have hNone : __smtx_typeof (__eo_to_smt (Term.DtSel s d i j)) = SmtType.None := by
-        by_cases hReserved : native_reserved_datatype_name s = true
+        by_cases hReserved : __eo_to_smt_reserved_datatype_name s = true
         · simp [__eo_to_smt.eq_def, __smtx_typeof, hReserved]
-        · have hReservedFalse : native_reserved_datatype_name s = false := by
-            cases hName : native_reserved_datatype_name s <;> simp [hName] at hReserved ⊢
+        · have hReservedFalse : __eo_to_smt_reserved_datatype_name s = false := by
+            cases hName : __eo_to_smt_reserved_datatype_name s <;> simp [hName] at hReserved ⊢
           simp [__eo_to_smt.eq_def, hReservedFalse,
             TranslationProofs.smtx_typeof_dt_sel_head_none]
       exact (hNN hNone).elim
@@ -1395,8 +1389,8 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid :
               · by_cases hDtSel : ∃ s d i j, f = Term.DtSel s d i j
                 · rcases hDtSel with ⟨s, d, i, j, rfl⟩
                   let R := __smtx_ret_typeof_sel s (__eo_to_smt_datatype_decl d) i j
-                  have hReserved : native_reserved_datatype_name s = false := by
-                    by_cases hReservedTrue : native_reserved_datatype_name s = true
+                  have hReserved : __eo_to_smt_reserved_datatype_name s = false := by
+                    by_cases hReservedTrue : __eo_to_smt_reserved_datatype_name s = true
                     · exfalso
                       apply hNN
                       change
@@ -1405,7 +1399,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid :
                           SmtType.None
                       rw [TranslationProofs.eo_to_smt_term_dt_sel]
                       simp [__smtx_typeof, __smtx_typeof_apply, hReservedTrue]
-                    · cases hName : native_reserved_datatype_name s <;>
+                    · cases hName : __eo_to_smt_reserved_datatype_name s <;>
                         simp [hName] at hReservedTrue ⊢
                   have hTranslate :
                       __eo_to_smt (Term.Apply (Term.DtSel s d i j) x) =

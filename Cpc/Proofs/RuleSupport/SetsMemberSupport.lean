@@ -139,7 +139,7 @@ theorem map_cons_tail_canonical
 theorem map_cons_head_key_canonical
     {k v : SmtValue} {m : SmtMap}
     (hCan : __smtx_map_canonical (SmtMap.cons k v m) = true) :
-    __smtx_value_canonical k := by
+    value_canonical k := by
   have hParts := hCan
   simp [__smtx_map_canonical, SmtEval.native_and] at hParts
   exact hParts.1.1.1.1
@@ -157,19 +157,19 @@ theorem set_map_cons_entry_true
     (hTy : __smtx_typeof_map_value (SmtMap.cons k v m) =
       SmtType.Map A SmtType.Bool)
     (hCan : __smtx_map_canonical (SmtMap.cons k v m) = true)
-    (hDef : __smtx_msm_get_default (SmtMap.cons k v m) = SmtValue.Boolean false) :
+    (hDef : __smtx_map_get_default (SmtMap.cons k v m) = SmtValue.Boolean false) :
     v = SmtValue.Boolean true := by
   have hvTy : __smtx_typeof_value v = SmtType.Bool :=
     map_cons_head_value_type hTy
   rcases bool_value_canonical hvTy with ⟨b, rfl⟩
   cases b
   · have hNeDefault : native_veq (SmtValue.Boolean false)
-        (__smtx_msm_get_default m) = false := by
+        (__smtx_map_get_default m) = false := by
       have hParts := hCan
       simp [__smtx_map_canonical, SmtEval.native_and, SmtEval.native_not] at hParts
       exact hParts.2
-    have hTailDef : __smtx_msm_get_default m = SmtValue.Boolean false := by
-      simpa [__smtx_msm_get_default] using hDef
+    have hTailDef : __smtx_map_get_default m = SmtValue.Boolean false := by
+      simpa [__smtx_map_get_default] using hDef
     simp [hTailDef, native_veq] at hNeDefault
   · rfl
 
@@ -181,21 +181,21 @@ theorem mss_op_lookup_acc
       __smtx_typeof_map_value acc = SmtType.Map A SmtType.Bool ->
       __smtx_map_canonical m1 = true ->
       __smtx_map_canonical acc = true ->
-      __smtx_msm_get_default m1 = SmtValue.Boolean false ->
-      __smtx_msm_lookup (__smtx_mss_op_internal isInter m1 m2 acc) i =
+      __smtx_map_get_default m1 = SmtValue.Boolean false ->
+      __smtx_map_lookup (__smtx_set_op_rec isInter m1 m2 acc) i =
         native_ite
           (native_and
-            (native_veq (__smtx_msm_lookup m1 i) (SmtValue.Boolean true))
+            (native_veq (__smtx_map_lookup m1 i) (SmtValue.Boolean true))
             (native_iff
-              (native_veq (__smtx_msm_lookup m2 i) (SmtValue.Boolean true))
+              (native_veq (__smtx_map_lookup m2 i) (SmtValue.Boolean true))
               isInter))
           (SmtValue.Boolean true)
-          (__smtx_msm_lookup acc i)
+          (__smtx_map_lookup acc i)
   | SmtMap.default T efalse, m2, acc, A, i, hm1Ty, hm2Ty, haccTy, hm1Can,
       haccCan, hm1Def => by
       have hefalse : efalse = SmtValue.Boolean false := by
-        simpa [__smtx_msm_get_default] using hm1Def
-      simp [__smtx_mss_op_internal, __smtx_msm_lookup, hefalse, native_veq,
+        simpa [__smtx_map_get_default] using hm1Def
+      simp [__smtx_set_op_rec, __smtx_map_lookup, hefalse, native_veq,
         SmtEval.native_and, native_ite, native_iff]
   | SmtMap.cons e etrue m1, m2, acc, A, i, hm1Ty, hm2Ty, haccTy, hm1Can,
       haccCan, hm1Def => by
@@ -205,22 +205,22 @@ theorem mss_op_lookup_acc
         map_cons_head_key_type hm1Ty
       have hmTailCan : __smtx_map_canonical m1 = true :=
         map_cons_tail_canonical hm1Can
-      have heCan : __smtx_value_canonical e :=
+      have heCan : value_canonical e :=
         map_cons_head_key_canonical hm1Can
       have hOrdTail : __smtx_map_entries_ordered_after e m1 = true :=
         map_cons_tail_ordered hm1Can
-      have hmTailDef : __smtx_msm_get_default m1 = SmtValue.Boolean false := by
-        simpa [__smtx_msm_get_default] using hm1Def
+      have hmTailDef : __smtx_map_get_default m1 = SmtValue.Boolean false := by
+        simpa [__smtx_map_get_default] using hm1Def
       have hetrue : etrue = SmtValue.Boolean true :=
         set_map_cons_entry_true hm1Ty hm1Can hm1Def
       subst etrue
       by_cases hCond :
-          native_veq (__smtx_msm_lookup m2 e) (SmtValue.Boolean true) = isInter
+          native_veq (__smtx_map_lookup m2 e) (SmtValue.Boolean true) = isInter
       · let acc' :=
-          __smtx_msm_update_aux (__smtx_msm_get_default acc) acc e
+          __smtx_map_update_aux (__smtx_map_get_default acc) acc e
             (SmtValue.Boolean true)
         have hCondDec :
-            decide (__smtx_msm_lookup m2 e = SmtValue.Boolean true) = isInter := by
+            decide (__smtx_map_lookup m2 e = SmtValue.Boolean true) = isInter := by
           simpa [native_veq] using hCond
         have hacc'Ty : __smtx_typeof_map_value acc' = SmtType.Map A SmtType.Bool := by
           dsimp [acc']
@@ -233,47 +233,47 @@ theorem mss_op_lookup_acc
           hmTailDef
         cases hei : native_veq e i
         · have hAccLookup :
-              __smtx_msm_lookup acc' i = __smtx_msm_lookup acc i := by
+              __smtx_map_lookup acc' i = __smtx_map_lookup acc i := by
             dsimp [acc']
             exact map_lookup_update_aux_other haccCan hei
-          simpa [__smtx_mss_op_internal, hCond, hCondDec, __smtx_msm_lookup,
+          simpa [__smtx_set_op_rec, hCond, hCondDec, __smtx_map_lookup,
             native_ite, native_iff, hei, hAccLookup] using hRec
         · have heiEq : e = i := eq_of_native_veq_true hei
           subst i
           have hTailLookup :
-              __smtx_msm_lookup m1 e = SmtValue.Boolean false := by
+              __smtx_map_lookup m1 e = SmtValue.Boolean false := by
             calc
-              __smtx_msm_lookup m1 e = __smtx_msm_get_default m1 :=
+              __smtx_map_lookup m1 e = __smtx_map_get_default m1 :=
                 map_lookup_eq_default_of_entries_ordered_after hmTailCan hOrdTail
               _ = SmtValue.Boolean false := hmTailDef
           have hAccLookup :
-              __smtx_msm_lookup acc' e = SmtValue.Boolean true := by
+              __smtx_map_lookup acc' e = SmtValue.Boolean true := by
             dsimp [acc']
             exact map_lookup_update_aux_same haccCan
-          simpa [__smtx_mss_op_internal, hCond, hCondDec, __smtx_msm_lookup,
+          simpa [__smtx_set_op_rec, hCond, hCondDec, __smtx_map_lookup,
             native_ite, native_iff, native_veq, hTailLookup, hAccLookup,
             SmtEval.native_and] using hRec
       · have hRec := mss_op_lookup_acc isInter (m1 := m1) (m2 := m2) (acc := acc)
           (A := A) (i := i) hmTailTy hm2Ty haccTy hmTailCan haccCan hmTailDef
         have hCondDec :
-            ¬ decide (__smtx_msm_lookup m2 e = SmtValue.Boolean true) = isInter := by
+            ¬ decide (__smtx_map_lookup m2 e = SmtValue.Boolean true) = isInter := by
           intro h
           exact hCond (by simpa [native_veq] using h)
         cases hei : native_veq e i
         · -- the two sides differ only in a stale `Decidable` instance, which
           -- `simpa`'s closing step no longer accepts but `exact` still does.
-          simp only [__smtx_mss_op_internal, hCond, __smtx_msm_lookup,
+          simp only [__smtx_set_op_rec, hCond, __smtx_map_lookup,
             native_ite, native_iff, hei] at hRec ⊢
           exact hRec
         · have heiEq : e = i := eq_of_native_veq_true hei
           subst i
           have hTailLookup :
-              __smtx_msm_lookup m1 e = SmtValue.Boolean false := by
+              __smtx_map_lookup m1 e = SmtValue.Boolean false := by
             calc
-              __smtx_msm_lookup m1 e = __smtx_msm_get_default m1 :=
+              __smtx_map_lookup m1 e = __smtx_map_get_default m1 :=
                 map_lookup_eq_default_of_entries_ordered_after hmTailCan hOrdTail
               _ = SmtValue.Boolean false := hmTailDef
-          simpa [__smtx_mss_op_internal, hCond, hCondDec, __smtx_msm_lookup,
+          simpa [__smtx_set_op_rec, hCond, hCondDec, __smtx_map_lookup,
             native_ite, native_iff, native_veq, hTailLookup,
             SmtEval.native_and] using hRec
 
@@ -282,30 +282,30 @@ theorem mss_op_lookup_acc
 theorem set_map_lookup_bool :
     ∀ {m : SmtMap} {A : SmtType} {i : SmtValue},
       __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool ->
-        __smtx_typeof_value (__smtx_msm_lookup m i) = SmtType.Bool
+        __smtx_typeof_value (__smtx_map_lookup m i) = SmtType.Bool
   | SmtMap.default T e, A, i, hTy => by
       have heTy : __smtx_typeof_value e = SmtType.Bool := by
         have h : SmtType.Map T (__smtx_typeof_value e) =
             SmtType.Map A SmtType.Bool := by
           simpa [__smtx_typeof_map_value] using hTy
         exact (SmtType.Map.injEq _ _ _ _ ▸ h).2
-      simpa [__smtx_msm_lookup] using heTy
+      simpa [__smtx_map_lookup] using heTy
   | SmtMap.cons k v m, A, i, hTy => by
       have hmTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool :=
         map_cons_tail_type hTy
       have hvTy : __smtx_typeof_value v = SmtType.Bool :=
         map_cons_head_value_type hTy
       cases hki : native_veq k i
-      · simpa [__smtx_msm_lookup, native_ite, hki] using
+      · simpa [__smtx_map_lookup, native_ite, hki] using
           set_map_lookup_bool (m := m) (A := A) (i := i) hmTy
-      · simpa [__smtx_msm_lookup, native_ite, hki] using hvTy
+      · simpa [__smtx_map_lookup, native_ite, hki] using hvTy
 
 /-- The default leaf of a canonical bool-valued map of type `Map A Bool`
     is `SmtMap.default A (Boolean false)`. -/
 theorem set_map_default_leaf_eq :
     ∀ {m : SmtMap} {A : SmtType},
       __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool ->
-        __smtx_msm_get_default m = SmtValue.Boolean false ->
+        __smtx_map_get_default m = SmtValue.Boolean false ->
           smt_map_default_leaf m = SmtMap.default A (SmtValue.Boolean false)
   | SmtMap.default T e, A, hTy, hDef => by
       have hTA : T = A := by
@@ -315,13 +315,13 @@ theorem set_map_default_leaf_eq :
         exact (SmtType.Map.injEq _ _ _ _ ▸ h).1
       subst hTA
       have heDef : e = SmtValue.Boolean false := by
-        simpa [__smtx_msm_get_default] using hDef
+        simpa [__smtx_map_get_default] using hDef
       simp [smt_map_default_leaf, heDef]
   | SmtMap.cons k v m, A, hTy, hDef => by
       have hmTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool :=
         map_cons_tail_type hTy
-      have hmDef : __smtx_msm_get_default m = SmtValue.Boolean false := by
-        simpa [__smtx_msm_get_default] using hDef
+      have hmDef : __smtx_map_get_default m = SmtValue.Boolean false := by
+        simpa [__smtx_map_get_default] using hDef
       simpa [smt_map_default_leaf] using set_map_default_leaf_eq hmTy hmDef
 
 /--
@@ -333,16 +333,16 @@ theorem set_inter_lookup
     (hMxTy : __smtx_typeof_map_value mx = SmtType.Map A SmtType.Bool)
     (hMyTy : __smtx_typeof_map_value my = SmtType.Map A SmtType.Bool)
     (hMxCan : __smtx_map_canonical mx = true)
-    (hMxDef : __smtx_msm_get_default mx = SmtValue.Boolean false) :
-    __smtx_msm_lookup
-        (__smtx_mss_op_internal true mx my
+    (hMxDef : __smtx_map_get_default mx = SmtValue.Boolean false) :
+    __smtx_map_lookup
+        (__smtx_set_op_rec true mx my
           (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx))
             (SmtValue.Boolean false)))
         i =
       native_ite
         (native_and
-          (native_veq (__smtx_msm_lookup mx i) (SmtValue.Boolean true))
-          (native_veq (__smtx_msm_lookup my i) (SmtValue.Boolean true)))
+          (native_veq (__smtx_map_lookup mx i) (SmtValue.Boolean true))
+          (native_veq (__smtx_map_lookup my i) (SmtValue.Boolean true)))
         (SmtValue.Boolean true)
         (SmtValue.Boolean false) := by
   have hIdx : __smtx_index_typeof_map (__smtx_typeof_map_value mx) = A := by
@@ -359,7 +359,7 @@ theorem set_inter_lookup
     (acc := SmtMap.default A (SmtValue.Boolean false)) (A := A) (i := i)
     hMxTy hMyTy hEmptyTy hMxCan hEmptyCan hMxDef
   rw [hAcc]
-  simp [__smtx_msm_lookup, native_iff, native_ite, SmtEval.native_and]
+  simp [__smtx_map_lookup, native_iff, native_ite, SmtEval.native_and]
 
 /--
 Pointwise lookup of the union of two canonical bool maps:
@@ -371,18 +371,18 @@ theorem set_union_lookup
     (hMyTy : __smtx_typeof_map_value my = SmtType.Map A SmtType.Bool)
     (hMxCan : __smtx_map_canonical mx = true)
     (hMyCan : __smtx_map_canonical my = true)
-    (hMxDef : __smtx_msm_get_default mx = SmtValue.Boolean false)
-    (hMyLookupTy : __smtx_typeof_value (__smtx_msm_lookup my i) = SmtType.Bool) :
-    __smtx_msm_lookup
-        (__smtx_mss_op_internal false mx
+    (hMxDef : __smtx_map_get_default mx = SmtValue.Boolean false)
+    (hMyLookupTy : __smtx_typeof_value (__smtx_map_lookup my i) = SmtType.Bool) :
+    __smtx_map_lookup
+        (__smtx_set_op_rec false mx
           (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx))
             (SmtValue.Boolean false))
           my)
         i =
       native_ite
-        (native_veq (__smtx_msm_lookup mx i) (SmtValue.Boolean true))
+        (native_veq (__smtx_map_lookup mx i) (SmtValue.Boolean true))
         (SmtValue.Boolean true)
-        (__smtx_msm_lookup my i) := by
+        (__smtx_map_lookup my i) := by
   have hIdx : __smtx_index_typeof_map (__smtx_typeof_map_value mx) = A := by
     rw [hMxTy]; rfl
   rw [hIdx]
@@ -395,7 +395,7 @@ theorem set_union_lookup
     hMxTy hEmptyTy hMyTy hMxCan hMyCan hMxDef
   rw [hAcc]
   -- (default A false)[i] = false, so (false ↔ false) = true
-  simp [__smtx_msm_lookup, native_iff, native_ite, SmtEval.native_and, native_veq]
+  simp [__smtx_map_lookup, native_iff, native_ite, SmtEval.native_and, native_veq]
 
 /--
 The core set-theoretic equivalence underlying `sets_subset_elim`:
@@ -411,17 +411,17 @@ theorem set_subset_inter_eq_union_veq
     (hMyTy : __smtx_typeof_map_value my = SmtType.Map A SmtType.Bool)
     (hMxCan : __smtx_map_canonical mx = true)
     (hMyCan : __smtx_map_canonical my = true)
-    (hMxDef : __smtx_msm_get_default mx = SmtValue.Boolean false)
-    (hMyDef : __smtx_msm_get_default my = SmtValue.Boolean false) :
+    (hMxDef : __smtx_map_get_default mx = SmtValue.Boolean false)
+    (hMyDef : __smtx_map_get_default my = SmtValue.Boolean false) :
     native_veq (__smtx_set_inter (SmtValue.Set mx) (SmtValue.Set my))
         (SmtValue.Set mx) =
       native_veq (__smtx_set_union (SmtValue.Set mx) (SmtValue.Set my))
         (SmtValue.Set my) := by
   -- name the two operation maps
-  let interMap : SmtMap := __smtx_mss_op_internal true mx my (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx)) (SmtValue.Boolean false))
-  let unionMap : SmtMap := __smtx_mss_op_internal false mx (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx)) (SmtValue.Boolean false)) my
-  have hInterDef : interMap = __smtx_mss_op_internal true mx my (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx)) (SmtValue.Boolean false)) := rfl
-  have hUnionDef : unionMap = __smtx_mss_op_internal false mx (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx)) (SmtValue.Boolean false)) my := rfl
+  let interMap : SmtMap := __smtx_set_op_rec true mx my (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx)) (SmtValue.Boolean false))
+  let unionMap : SmtMap := __smtx_set_op_rec false mx (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx)) (SmtValue.Boolean false)) my
+  have hInterDef : interMap = __smtx_set_op_rec true mx my (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx)) (SmtValue.Boolean false)) := rfl
+  have hUnionDef : unionMap = __smtx_set_op_rec false mx (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx)) (SmtValue.Boolean false)) my := rfl
   have hInterEq :
       __smtx_set_inter (SmtValue.Set mx) (SmtValue.Set my) = SmtValue.Set interMap := by
     rw [hInterDef]; simp [__smtx_set_inter]
@@ -445,7 +445,7 @@ theorem set_subset_inter_eq_union_veq
     exact Smtm.mss_op_internal_canonical true hMxCan (by
       rw [hIdx]; exact Smtm.set_empty_map_canonical A)
   have hInterGetDef :
-      __smtx_msm_get_default interMap = SmtValue.Boolean false := by
+      __smtx_map_get_default interMap = SmtValue.Boolean false := by
     rw [hInterDef]
     rw [Smtm.mss_op_internal_get_default true]
     rw [hIdx]; rfl
@@ -457,7 +457,7 @@ theorem set_subset_inter_eq_union_veq
     rw [hUnionDef]
     exact Smtm.mss_op_internal_canonical false hMxCan hMyCan
   have hUnionGetDef :
-      __smtx_msm_get_default unionMap = SmtValue.Boolean false := by
+      __smtx_map_get_default unionMap = SmtValue.Boolean false := by
     rw [hUnionDef]
     rw [Smtm.mss_op_internal_get_default false]
     exact hMyDef
@@ -476,30 +476,30 @@ theorem set_subset_inter_eq_union_veq
     set_map_default_leaf_eq hMyTy hMyDef
   -- pointwise lookup characterizations
   have hInterLookup :
-      ∀ i, __smtx_msm_lookup interMap i =
+      ∀ i, __smtx_map_lookup interMap i =
         native_ite
           (native_and
-            (native_veq (__smtx_msm_lookup mx i) (SmtValue.Boolean true))
-            (native_veq (__smtx_msm_lookup my i) (SmtValue.Boolean true)))
+            (native_veq (__smtx_map_lookup mx i) (SmtValue.Boolean true))
+            (native_veq (__smtx_map_lookup my i) (SmtValue.Boolean true)))
           (SmtValue.Boolean true)
           (SmtValue.Boolean false) := by
     intro i
     rw [hInterDef]
     exact set_inter_lookup hMxTy hMyTy hMxCan hMxDef
   have hUnionLookup :
-      ∀ i, __smtx_typeof_value (__smtx_msm_lookup my i) = SmtType.Bool ->
-        __smtx_msm_lookup unionMap i =
+      ∀ i, __smtx_typeof_value (__smtx_map_lookup my i) = SmtType.Bool ->
+        __smtx_map_lookup unionMap i =
           native_ite
-            (native_veq (__smtx_msm_lookup mx i) (SmtValue.Boolean true))
+            (native_veq (__smtx_map_lookup mx i) (SmtValue.Boolean true))
             (SmtValue.Boolean true)
-            (__smtx_msm_lookup my i) := by
+            (__smtx_map_lookup my i) := by
     intro i hMyLookupTy
     rw [hUnionDef]
     exact set_union_lookup hMxTy hMyTy hMxCan hMyCan hMxDef hMyLookupTy
   -- lookups of mx, my at any point are Bool values
-  have hMxLookupTy : ∀ i, __smtx_typeof_value (__smtx_msm_lookup mx i) = SmtType.Bool :=
+  have hMxLookupTy : ∀ i, __smtx_typeof_value (__smtx_map_lookup mx i) = SmtType.Bool :=
     fun i => set_map_lookup_bool hMxTy
-  have hMyLookupTy : ∀ i, __smtx_typeof_value (__smtx_msm_lookup my i) = SmtType.Bool :=
+  have hMyLookupTy : ∀ i, __smtx_typeof_value (__smtx_map_lookup my i) = SmtType.Bool :=
     fun i => set_map_lookup_bool hMyTy
   -- reduce native_veq on Sets to structural map equality
   rw [show
@@ -517,10 +517,10 @@ theorem set_subset_inter_eq_union_veq
     constructor
     · intro hIM
       -- from interMap = mx we get mx[i] = true → my[i] = true
-      have hSub : ∀ i, __smtx_msm_lookup mx i = SmtValue.Boolean true ->
-          __smtx_msm_lookup my i = SmtValue.Boolean true := by
+      have hSub : ∀ i, __smtx_map_lookup mx i = SmtValue.Boolean true ->
+          __smtx_map_lookup my i = SmtValue.Boolean true := by
         intro i hMxi
-        have hLook := congrArg (fun m => __smtx_msm_lookup m i) hIM
+        have hLook := congrArg (fun m => __smtx_map_lookup m i) hIM
         rw [hInterLookup i] at hLook
         rw [hMxi] at hLook
         -- hLook : ite (and true (my[i]=true)) true false = true
@@ -541,10 +541,10 @@ theorem set_subset_inter_eq_union_veq
         rw [hbx, hMyi]; simp [native_ite, native_veq]
     · intro hUM
       -- from unionMap = my we get mx[i] = true → my[i] = true
-      have hSub : ∀ i, __smtx_msm_lookup mx i = SmtValue.Boolean true ->
-          __smtx_msm_lookup my i = SmtValue.Boolean true := by
+      have hSub : ∀ i, __smtx_map_lookup mx i = SmtValue.Boolean true ->
+          __smtx_map_lookup my i = SmtValue.Boolean true := by
         intro i hMxi
-        have hLook := congrArg (fun m => __smtx_msm_lookup m i) hUM
+        have hLook := congrArg (fun m => __smtx_map_lookup m i) hUM
         rw [hUnionLookup i (hMyLookupTy i)] at hLook
         rw [hMxi] at hLook
         -- hLook : ite (veq true true) true my[i] = my[i], i.e. true = my[i]

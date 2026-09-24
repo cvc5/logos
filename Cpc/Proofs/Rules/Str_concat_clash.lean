@@ -40,7 +40,7 @@ private theorem prog_str_concat_clash_info
       concatClashConclusion, mkEq, mkConcat]
 
 public theorem cmd_step_str_concat_clash_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_concat_clash args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

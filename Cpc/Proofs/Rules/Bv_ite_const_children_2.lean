@@ -187,7 +187,7 @@ private theorem typed___eo_prog_bv_ite_const_children_2_impl (c1 : Term) :
       exact hC1Trans)
 
 private theorem eval_bvite_const_children_2
-    (M : SmtModel) (hM : model_total_typed M) (c1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (c1 : Term) :
     RuleProofs.eo_has_smt_translation c1 ->
     __eo_typeof (__eo_prog_bv_ite_const_children_2 c1) = Term.Bool ->
     __smtx_model_eval M
@@ -233,7 +233,7 @@ private theorem eval_bvite_const_children_2
     simp [__smtx_model_eval_eq, __smtx_model_eval_ite, native_veq, hNatOne]
 
 private theorem facts___eo_prog_bv_ite_const_children_2_impl
-    (M : SmtModel) (hM : model_total_typed M) (c1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (c1 : Term) :
     RuleProofs.eo_has_smt_translation c1 ->
     __eo_typeof (__eo_prog_bv_ite_const_children_2 c1) = Term.Bool ->
     eo_interprets M (__eo_prog_bv_ite_const_children_2 c1) true := by
@@ -256,7 +256,7 @@ private theorem facts___eo_prog_bv_ite_const_children_2_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_ite_const_children_2_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_ite_const_children_2 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

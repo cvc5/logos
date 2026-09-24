@@ -97,44 +97,44 @@ theorem dt_cons_chain_result_of_dt_cons_value_type
 /-- Lemma about datatype-constructor application chains. -/
 theorem typeof_value_dt_cons_head_type_chain_result :
     ∀ v : SmtValue, ∀ T U : SmtType,
-      (∃ s d i, __vsm_apply_head v = SmtValue.DtCons s d i) ->
+      (∃ s d i, __smtx_apply_head_value v = SmtValue.DtCons s d i) ->
       __smtx_typeof_value v = SmtType.DtcAppType T U -> dt_cons_chain_result U
   | SmtValue.NotValue, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Boolean _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Rational _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary _ _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Map _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Fun _ _ _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Set _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Seq _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Char _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.UValue _ _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.RegLan _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.DtCons s d i, T, U, hHead, h => by
       have hShape := typeof_dt_cons_value_rec_chain_result s d (__smtx_dt_resolve (__smtx_dd_lookup s d) d) i
       have hInner :
@@ -146,8 +146,8 @@ theorem typeof_value_dt_cons_head_type_chain_result :
       simpa [dt_cons_chain_result] using hShape
   | SmtValue.Apply f v, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      have hHeadF : __vsm_apply_head f = SmtValue.DtCons s d i := by
-        simpa [__vsm_apply_head] using hHead
+      have hHeadF : __smtx_apply_head_value f = SmtValue.DtCons s d i := by
+        simpa [__smtx_apply_head_value] using hHead
       cases hf : __smtx_typeof_value f <;>
         simp [__smtx_typeof_value, __smtx_typeof_apply_value, hf] at h
       case DtcAppType A B =>
@@ -161,50 +161,50 @@ theorem typeof_value_dt_cons_head_type_chain_result :
 /-- Values whose application head is a datatype constructor always have constructor-chain result types. -/
 theorem typeof_value_dt_cons_head_chain_result :
     ∀ v : SmtValue, ∀ T : SmtType,
-      (∃ s d i, __vsm_apply_head v = SmtValue.DtCons s d i) ->
+      (∃ s d i, __smtx_apply_head_value v = SmtValue.DtCons s d i) ->
       __smtx_typeof_value v = T -> dt_cons_chain_result T
   | SmtValue.NotValue, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Boolean _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Rational _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary _ _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Map _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Fun _ _ _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Set _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Seq _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Char _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.UValue _ _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.RegLan _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.DtCons s d i, T, hHead, h => by
       simpa using dt_cons_chain_result_of_dt_cons_value_type h
   | SmtValue.Apply f v, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
-      have hHeadF : __vsm_apply_head f = SmtValue.DtCons s d i := by
-        simpa [__vsm_apply_head] using hHead
+      have hHeadF : __smtx_apply_head_value f = SmtValue.DtCons s d i := by
+        simpa [__smtx_apply_head_value] using hHead
       change __smtx_typeof_apply_value (__smtx_typeof_value f) (__smtx_typeof_value v) = T at h
       cases hf : __smtx_typeof_value f
       case None =>
@@ -288,7 +288,7 @@ theorem typeof_value_dt_cons_head_chain_result :
 /-- Raw applications without datatype-constructor heads have type `none`. -/
 theorem typeof_value_apply_of_head_ne_dt_cons :
     ∀ v i : SmtValue,
-      (∀ s d n, __vsm_apply_head v ≠ SmtValue.DtCons s d n) ->
+      (∀ s d n, __smtx_apply_head_value v ≠ SmtValue.DtCons s d n) ->
       __smtx_typeof_value (SmtValue.Apply v i) = SmtType.None
   | SmtValue.NotValue, i, hDt => by
       simp [__smtx_typeof_value, __smtx_typeof_apply_value]
@@ -348,9 +348,9 @@ theorem typeof_value_apply_of_head_ne_dt_cons :
   | SmtValue.DtCons s d n, i, hDt => by
       exact False.elim (hDt s d n rfl)
   | SmtValue.Apply f a, i, hDt => by
-      have hDtF : ∀ s d n, __vsm_apply_head f ≠ SmtValue.DtCons s d n := by
+      have hDtF : ∀ s d n, __smtx_apply_head_value f ≠ SmtValue.DtCons s d n := by
         intro s d n hm
-        exact hDt s d n (by simpa [__vsm_apply_head] using hm)
+        exact hDt s d n (by simpa [__smtx_apply_head_value] using hm)
       have hNone :
           __smtx_typeof_value (SmtValue.Apply f a) = SmtType.None :=
         typeof_value_apply_of_head_ne_dt_cons f a hDtF
@@ -372,13 +372,13 @@ theorem apply_value_non_chain_result_impossible
   have hUNone : U ≠ SmtType.None := by
     intro hEq
     exact hU (by simp [dt_cons_chain_result, hEq])
-  by_cases hDt : ∃ s d n, __vsm_apply_head f = SmtValue.DtCons s d n
+  by_cases hDt : ∃ s d n, __smtx_apply_head_value f = SmtValue.DtCons s d n
   · rcases hDt with ⟨s, d, n, hHead⟩
     have hChain :
         dt_cons_chain_result U :=
       typeof_value_dt_cons_head_chain_result
         (SmtValue.Apply f x) U
-        ⟨s, d, n, by simpa [__vsm_apply_head] using hHead⟩ h
+        ⟨s, d, n, by simpa [__smtx_apply_head_value] using hHead⟩ h
     exact False.elim (hU hChain)
   · have hNone :
         __smtx_typeof_value (SmtValue.Apply f x) = SmtType.None :=
@@ -647,13 +647,13 @@ theorem bitvec_value_canonical
           simp [__smtx_typeof_value, native_ite, SmtEval.native_and, hWidth, hMod] at h
       have hw' : w' = native_nat_to_int w := by
         have hNonneg : 0 <= w' := by
-          simpa [native_zleq, SmtEval.native_zleq] using hWidth
+          simpa [native_zleq, Smtm.native_zleq] using hWidth
         have hNat : native_int_to_nat w' = w := by
           cases h
           rfl
         have hInt : (Int.ofNat (Int.toNat w') : Int) = w' :=
           Int.toNat_of_nonneg hNonneg
-        simp [native_int_to_nat, SmtEval.native_int_to_nat] at hNat
+        simp [native_int_to_nat, Smtm.native_int_to_nat] at hNat
         simp [hNat] at hInt
         exact hInt.symm
       subst hw'
@@ -730,7 +730,7 @@ theorem bitvec_payload_range_of_canonical
     (hMod : native_zeq n (native_mod_total n (native_int_pow2 w)) = true) :
     0 <= n ∧ n < native_int_pow2 w := by
   have hw : 0 <= w := by
-    simpa [SmtEval.native_zleq] using hWidth
+    simpa [Smtm.native_zleq] using hWidth
   have hPowPos : 0 < native_int_pow2 w := by
     have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
     simp [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hnot]
@@ -761,25 +761,27 @@ theorem native_int_pow2_le_of_le_nonneg
     Int.ofNat_le.mpr hpowNat
   simpa [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hnotA, hnotB] using hpowInt
 
-/-- A payload canonical for width `w` remains canonical after zero-extension by `i`. -/
+/-- A payload canonical for width `w` remains canonical after zero-extension by `i`.
+The extended width is written `i + w` rather than `native_zplus i w`: the sum is
+of the Eunoia layer, which this file, standing over the model alone, does not
+reach. The two are the same addition. -/
 theorem bitvec_payload_canonical_zero_extend
     {i w n : native_Int}
     (hi0 : native_zleq 0 i = true)
     (hw0 : native_zleq 0 w = true)
     (hMod : native_zeq n (native_mod_total n (native_int_pow2 w)) = true) :
-    native_zeq n (native_mod_total n (native_int_pow2 (native_zplus i w))) = true := by
+    native_zeq n (native_mod_total n (native_int_pow2 (i + w))) = true := by
   have hi : 0 <= i := by
-    simpa [SmtEval.native_zleq] using hi0
+    simpa [Smtm.native_zleq] using hi0
   have hw : 0 <= w := by
-    simpa [SmtEval.native_zleq] using hw0
+    simpa [Smtm.native_zleq] using hw0
   have hRange := bitvec_payload_range_of_canonical hw0 hMod
-  have hleWidth : w <= native_zplus i w := by
-    simpa [SmtEval.native_zplus] using (Int.le_add_of_nonneg_left (a := w) hi)
-  have hpowLe : native_int_pow2 w <= native_int_pow2 (native_zplus i w) :=
+  have hleWidth : w <= i + w := Int.le_add_of_nonneg_left hi
+  have hpowLe : native_int_pow2 w <= native_int_pow2 (i + w) :=
     native_int_pow2_le_of_le_nonneg hw hleWidth
-  have hltNew : n < native_int_pow2 (native_zplus i w) :=
+  have hltNew : n < native_int_pow2 (i + w) :=
     Int.lt_of_lt_of_le hRange.2 hpowLe
-  have hEqNew : native_mod_total n (native_int_pow2 (native_zplus i w)) = n := by
+  have hEqNew : native_mod_total n (native_int_pow2 (i + w)) = n := by
     simpa [SmtEval.native_mod_total] using Int.emod_eq_of_lt hRange.1 hltNew
   simp [SmtEval.native_zeq, hEqNew]
 
@@ -1186,10 +1188,10 @@ theorem map_lookup_typed :
     ∀ {m : SmtMap} {A B : SmtType} {i : SmtValue},
       __smtx_typeof_map_value m = SmtType.Map A B ->
         __smtx_typeof_value i = A ->
-        __smtx_typeof_value (__smtx_msm_lookup m i) = B
+        __smtx_typeof_value (__smtx_map_lookup m i) = B
   | SmtMap.default T e, A, B, i, hMap, hi => by
       cases hMap
-      simp [__smtx_msm_lookup]
+      simp [__smtx_map_lookup]
   | SmtMap.cons j e m, A, B, i, hMap, hi => by
       by_cases hEq :
           native_Teq (SmtType.Map (__smtx_typeof_value j) (__smtx_typeof_value e))
@@ -1208,11 +1210,11 @@ theorem map_lookup_typed :
         have he : __smtx_typeof_value e = B := by
           cases hHead
           rfl
-        have hRec : __smtx_typeof_value (__smtx_msm_lookup m i) = B :=
+        have hRec : __smtx_typeof_value (__smtx_map_lookup m i) = B :=
           map_lookup_typed hm hi
         by_cases hVeq : native_veq j i
-        · simpa [__smtx_msm_lookup, native_ite, hVeq] using he
-        · simpa [__smtx_msm_lookup, native_ite, hVeq] using hRec
+        · simpa [__smtx_map_lookup, native_ite, hVeq] using he
+        · simpa [__smtx_map_lookup, native_ite, hVeq] using hRec
       · simp [__smtx_typeof_map_value, native_ite, hEq] at hMap
 
 /-- Shows that evaluating `eq_value` terms produces values of the expected type. -/

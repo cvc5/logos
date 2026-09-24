@@ -87,7 +87,7 @@ private theorem eo_has_bool_type_bvult_self
   rcases smt_bitvec_type_of_eo_bitvec_type x1 w hX1Trans hX1Type with ⟨n, hSmtTy⟩
   unfold RuleProofs.eo_has_bool_type
   change __smtx_typeof (SmtTerm.bvult (__eo_to_smt x1) (__eo_to_smt x1)) = SmtType.Bool
-  rw [__smtx_typeof.eq_54]
+  rw [__smtx_typeof.eq_56]
   simp [__smtx_typeof_bv_op_2_ret, hSmtTy, native_nateq, native_ite]
 
 private theorem typed___eo_prog_bv_ult_self_impl (x1 : Term) :
@@ -109,7 +109,7 @@ private theorem typed___eo_prog_bv_ult_self_impl (x1 : Term) :
       decide)
 
 private theorem eval_bvult_self_false
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_bv_ult_self x1) = Term.Bool ->
     __smtx_model_eval M (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvult) x1) x1)) =
@@ -126,11 +126,11 @@ private theorem eval_bvult_self_false
   rcases bitvec_value_canonical hEvalTy with ⟨k, hEvalX1⟩
   change __smtx_model_eval M (SmtTerm.bvult (__eo_to_smt x1) (__eo_to_smt x1)) =
     SmtValue.Boolean false
-  rw [__smtx_model_eval.eq_54, hEvalX1]
+  rw [__smtx_model_eval.eq_56, hEvalX1]
   simp [__smtx_model_eval_bvult, __smtx_model_eval_bvugt, native_zlt]
 
 private theorem facts___eo_prog_bv_ult_self_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_bv_ult_self x1) = Term.Bool ->
     eo_interprets M (__eo_prog_bv_ult_self x1) true := by
@@ -155,7 +155,7 @@ private theorem facts___eo_prog_bv_ult_self_impl
     exact RuleProofs.smt_value_rel_refl (SmtValue.Boolean false)
 
 public theorem cmd_step_bv_ult_self_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_ult_self args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

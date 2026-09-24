@@ -29,7 +29,7 @@ private theorem smtx_model_eval_eq_false_of_ne_not_reglan_pair
   all_goals exact hNe
 
 private theorem smt_model_eval_type_of_non_none
-    (M : SmtModel) (hM : model_total_typed M) (x : SmtTerm)
+    (M : SmtModel) (hM : model_wf M) (x : SmtTerm)
     (hNN : __smtx_typeof x ≠ SmtType.None) :
     __smtx_typeof_value (__smtx_model_eval M x) = __smtx_typeof x := by
   exact Smtm.smt_model_eval_preserves_type_of_non_none M hM x
@@ -38,7 +38,7 @@ private theorem smt_model_eval_type_of_non_none
       exact hNN)
 
 private theorem eval_types_of_eq_has_bool_type
-    (M : SmtModel) (hM : model_total_typed M) (s t : Term) :
+    (M : SmtModel) (hM : model_wf M) (s t : Term) :
     RuleProofs.eo_has_bool_type (Term.Apply (Term.Apply Term.eq s) t) ->
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt s)) =
         __smtx_typeof (__eo_to_smt s) ∧
@@ -60,7 +60,7 @@ private theorem eval_types_of_eq_has_bool_type
       hTyEq, hSNN⟩
 
 private theorem generic_apply_fun_eval_proper
-    (M : SmtModel) (hM : model_total_typed M) (f a : Term) :
+    (M : SmtModel) (hM : model_wf M) (f a : Term) :
     __is_cons_app (Term.Apply f a) = Term.Boolean true ->
     (∀ x, f ≠ Term.Apply (Term.UOp UserOp.tuple) x) ->
     RuleProofs.eo_has_smt_translation (Term.Apply f a) ->
@@ -75,7 +75,7 @@ private theorem generic_apply_fun_eval_proper
   exact SmtValueProperSubterm.app_fun_self
 
 private theorem generic_apply_arg_eval_proper
-    (M : SmtModel) (hM : model_total_typed M) (f a : Term) :
+    (M : SmtModel) (hM : model_wf M) (f a : Term) :
     __is_cons_app (Term.Apply f a) = Term.Boolean true ->
     (∀ x, f ≠ Term.Apply (Term.UOp UserOp.tuple) x) ->
     RuleProofs.eo_has_smt_translation (Term.Apply f a) ->
@@ -182,7 +182,7 @@ private theorem tuple_apply_tail_has_smt_translation
   simp
 
 private theorem dt_cycle_path_eval_proper_or_tuple_tail
-    (M : SmtModel) (hM : model_total_typed M) {s t : Term}
+    (M : SmtModel) (hM : model_wf M) {s t : Term}
     (hPath : DtCyclePath s t) :
     __is_cons_app t = Term.Boolean true ->
     RuleProofs.eo_has_smt_translation s ->
@@ -307,7 +307,7 @@ private theorem dt_cycle_path_eval_proper_or_tuple_tail
   exact hMain (sizeOf t) rfl hPath
 
 private theorem dt_cycle_tuple_tail_path_eval_size_lt
-    (M : SmtModel) (hM : model_total_typed M) {s t : Term} :
+    (M : SmtModel) (hM : model_wf M) {s t : Term} :
     DtCycleTupleTailPath s t ->
     __is_cons_app t = Term.Boolean true ->
     RuleProofs.eo_has_smt_translation s ->
@@ -423,7 +423,7 @@ private theorem dt_cycle_tuple_tail_path_eval_size_lt
   exact hMain (sizeOf t) rfl
 
 private theorem dt_cycle_tuple_tail_path_eval_ne_reglan
-    (M : SmtModel) (hM : model_total_typed M) {s t : Term} :
+    (M : SmtModel) (hM : model_wf M) {s t : Term} :
     DtCycleTupleTailPath s t ->
     __is_cons_app t = Term.Boolean true ->
     RuleProofs.eo_has_smt_translation t ->
@@ -466,7 +466,7 @@ private theorem dt_cycle_tuple_tail_path_eval_ne_reglan
         simp
 
 private theorem dt_cycle_tuple_tail_path_eval_false
-    (M : SmtModel) (hM : model_total_typed M) {s t : Term} :
+    (M : SmtModel) (hM : model_wf M) {s t : Term} :
     DtCycleTupleTailPath s t ->
     __is_cons_app t = Term.Boolean true ->
     RuleProofs.eo_has_bool_type (Term.Apply (Term.Apply Term.eq s) t) ->
@@ -824,7 +824,7 @@ private theorem prog_dt_cycle_shape_of_not_stuck
       eo_requires_eq_result_of_ne_stuck guard (Term.Boolean true) body hReq
 
 private theorem dt_cycle_inner_eval_false
-    (M : SmtModel) (hM : model_total_typed M) (s t : Term) :
+    (M : SmtModel) (hM : model_wf M) (s t : Term) :
     RuleProofs.eo_has_bool_type (Term.Apply (Term.Apply Term.eq s) t) ->
     __dt_find_cycle t s (__is_cons_app t) (Term.Boolean false) =
       Term.Boolean true ->
@@ -849,7 +849,7 @@ private theorem dt_cycle_inner_eval_false
   · exact dt_cycle_tuple_tail_path_eval_false M hM hTail hCons hBool hTTrans
 
 public theorem cmd_step_dt_cycle_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.dt_cycle args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

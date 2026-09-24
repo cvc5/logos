@@ -1,4 +1,4 @@
-import Cpc.Logos
+import Cpc.Native
 import Lean
 
 private def reportMessages (msgLog : Lean.MessageLog) (opts : Lean.Options)
@@ -30,7 +30,7 @@ def evalLogoExpr (path : String) : Lean.Meta.MetaM Nat := do
   try
     let stx ← Lean.Parser.testParseFile (← Lean.getEnv) path
     let .node _ _ #[_, .node _ _ args] := stx
-      | throwError "Expected a proof of the following form:\nimport Cpc.Logos\n\n#eval! <proof>\n\ngot:\n{stx}"
+      | throwError "Expected a proof of the following form:\nimport Cpc.Native\n\n#eval! <proof>\n\ngot:\n{stx}"
     Lean.liftCommandElabM do
       for arg in args do
         Lean.Elab.Command.elabCommand arg
@@ -46,7 +46,7 @@ unsafe def main (args : List String) : IO UInt32 := do
       return 1
   Lean.initSearchPath (← Lean.findSysroot)
   Lean.enableInitializersExecution
-  let env ← Lean.importModules #[`Cpc.Logos] {} 0 (loadExts := true)
+  let env ← Lean.importModules #[`Cpc.Native] {} 0 (loadExts := true)
   let coreContext := { fileName := path, fileMap := default }
   let coreState := { env }
   let (res, _, _) ← Lean.Meta.MetaM.toIO (evalLogoExpr path) coreContext coreState

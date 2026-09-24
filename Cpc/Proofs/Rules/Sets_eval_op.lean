@@ -34,7 +34,7 @@ private theorem prog_sets_eval_op_shape {a b : Term}
 set-model values of `a` and `b` coincide. All three set operators (`set.union`,
 `set.inter`, `set.minus`) are fully established. -/
 private theorem facts_sets_eval_op
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hTransA : RuleProofs.eo_has_smt_translation a)
     (hTransB : RuleProofs.eo_has_smt_translation b)
     (hEqBool : RuleProofs.eo_has_bool_type
@@ -66,7 +66,7 @@ private theorem facts_sets_eval_op
   | _ => exact (hEvalNe rfl).elim
 
 public theorem cmd_step_sets_eval_op_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_eval_op args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

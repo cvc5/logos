@@ -2,6 +2,10 @@ module
 
 public import Cpc.Proofs.Common
 import all Cpc.Proofs.Common
+public import Cpc.Proofs.CommonBoolOps
+import all Cpc.Proofs.CommonBoolOps
+public import Cpc.Proofs.RuleSupport.Contract
+import all Cpc.Proofs.RuleSupport.Contract
 public import Cpc.Proofs.Assumptions
 import all Cpc.Proofs.Assumptions
 public import Cpc.Proofs.Closed.Support
@@ -742,8 +746,8 @@ theorem smtx_eval_qdiv_total_term_eq
 theorem smtx_eval_qdiv_term_eq
     (M : SmtModel) (x y : SmtTerm) :
     __smtx_model_eval M (SmtTerm.qdiv x y) =
-      (let yr := __smtx_model_eval_to_real_coerce (__smtx_model_eval M y)
-       let xr := __smtx_model_eval_to_real_coerce (__smtx_model_eval M x)
+      (let yr := __smtx_to_real_coerce (__smtx_model_eval M y)
+       let xr := __smtx_to_real_coerce (__smtx_model_eval M x)
        __smtx_model_eval_ite
         (__smtx_model_eval_eq yr
           (SmtValue.Rational (native_mk_rational 0 1)))
@@ -758,7 +762,7 @@ theorem smtx_eval_qdiv_term_eq
 theorem smtx_eval_choice_term_eq
     (M : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm) :
     __smtx_model_eval M (SmtTerm.choice s T body) =
-      native_eval_tchoice M s T body := by
+      native_eval_choice M s T body := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 /-- Stable rewrite for evaluating SMT let-bindings. -/
@@ -890,82 +894,6 @@ def premiseAndFormulaList : List Term -> Term
   | [] => Term.Boolean true
   | p :: ps => Term.Apply (Term.Apply (Term.UOp UserOp.and) p) (premiseAndFormulaList ps)
 
-/-- Collects the proven terms referenced by a premise index list in a checker state. -/
-def premiseTermList (s : CState) : CIndexList -> List Term
-  | CIndexList.nil => []
-  | CIndexList.cons n premises =>
-      __eo_state_proven_nth s n :: premiseTermList s premises
-
-/-- Predicate asserting that every term in a list is interpreted as `true` by a model. -/
-def AllInterpretedTrue (M : SmtModel) (ts : List Term) : Prop :=
-  ∀ t ∈ ts, eo_interprets M t true
-
-/--
-Contextual truth for a derived formula.
-
-The first field is the ordinary checker fact in the current model. The second
-field is the freshness/parametricity fact needed by binder-sensitive rules:
-the derived formula remains true in any model that only changes variables,
-provided the same assumptions and local pushes hold there.
--/
-structure ContextualTruth
-    (M : SmtModel) (assumes pushes P : Term) : Prop where
-  true_here :
-    eo_interprets M assumes true ->
-    eo_interprets M pushes true ->
-    eo_interprets M P true
-  true_in_var_model :
-    ∀ N, model_total_typed N ->
-      model_agrees_on_globals M N ->
-      eo_interprets N assumes true ->
-      eo_interprets N pushes true ->
-      eo_interprets N P true
-
-/--
-The premise evidence supplied to a rule.
-
-Most rules only use `true_here`. Binder-sensitive congruence uses
-`true_in_var_model`: the checker constructs that field only when the ambient
-assumptions and pushes are known to remain true across variable-model changes.
--/
-structure RulePremiseEvidence
-    (M : SmtModel) (premises : List Term) : Prop where
-  true_here :
-    AllInterpretedTrue M premises
-  true_in_var_model :
-    ∀ N, model_total_typed N ->
-      model_agrees_on_globals M N ->
-      AllInterpretedTrue N premises
-
-instance RulePremiseEvidence.instCoeFun
-    {M : SmtModel} {premises : List Term} :
-    CoeFun (RulePremiseEvidence M premises)
-      (fun _ => ∀ t, t ∈ premises -> eo_interprets M t true) where
-  coe h := h.true_here
-
-/-- Predicate asserting that every term in a list has an SMT translation. -/
-def AllHaveSmtTranslation (ts : List Term) : Prop :=
-  ∀ t ∈ ts, RuleProofs.eo_has_smt_translation t
-
-/-- Predicate asserting that every term in a list has translated SMT Boolean type. -/
-def AllHaveBoolType (ts : List Term) : Prop :=
-  ∀ t ∈ ts, RuleProofs.eo_has_bool_type t
-
-/-- Predicate asserting that every term in a list has EO type `Bool`. -/
-def AllTypeofBool (ts : List Term) : Prop :=
-  ∀ t ∈ ts, __eo_typeof t = Term.Bool
-
-/-- A term with EO type `Bool` cannot be `Stuck`. -/
-theorem term_ne_stuck_of_typeof_bool
-    {t : Term}
-    (hTy : __eo_typeof t = Term.Bool) :
-    t ≠ Term.Stuck := by
-  intro hStuck
-  rw [hStuck] at hTy
-  have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-    native_decide
-  exact hStuckTy hTy
-
 /-- Derives `premiseAndFormulaList_true` from `all_true`. -/
 theorem premiseAndFormulaList_true_of_all_true
     (M : SmtModel) :
@@ -1056,27 +984,3 @@ by
         __eo_requires, native_ite, native_teq, native_not, ih,
         premiseAndFormulaList_is_and_list, SmtEval.native_not]
 
-/--
-Standard correctness and translation template for rules that add a proven fact.
-
-Most rules only use `RulePremiseEvidence.true_here`. Binder-sensitive rules use
-`RulePremiseEvidence.true_in_var_model` to reason under the fresh variable
-models introduced by quantified binders.
--/
-structure StepRuleProperties
-    (M : SmtModel) (premises : List Term) (P : Term) : Prop where
-  facts_of_true :
-    RulePremiseEvidence M premises ->
-    eo_interprets M P true
-  has_smt_translation :
-    RuleProofs.eo_has_smt_translation P
-
-/-- Predicate packaging the correctness and translation obligations for rules that also pop assumptions. -/
-def StepPopRuleProperties
-    (x1 : Term) (premises : List Term) (P : Term) : Prop :=
-  ∃ x2,
-    x2 ∈ premises ∧
-    (forall (M : SmtModel), model_total_typed M ->
-      ((eo_interprets M x1 true) -> eo_interprets M x2 true) ->
-      eo_interprets M P true) ∧
-    RuleProofs.eo_has_smt_translation P

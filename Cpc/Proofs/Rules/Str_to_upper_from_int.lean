@@ -81,10 +81,10 @@ private theorem smtx_eval_str_from_int_term_eq
 
 private theorem map_native_ssm_char_of_value_char :
     ∀ s : native_String,
-      List.map (native_ssm_char_of_value ∘ SmtValue.Char) s = s
+      List.map (impl_native_ssm_char_of_value ∘ SmtValue.Char) s = s
   | [] => rfl
   | c :: cs => by
-      simp [Function.comp_def, native_ssm_char_of_value]
+      simp [Function.comp_def, impl_native_ssm_char_of_value]
 
 private theorem native_unpack_string_pack_string (s : native_String) :
     native_unpack_string (native_pack_string s) = s := by
@@ -93,9 +93,9 @@ private theorem native_unpack_string_pack_string (s : native_String) :
 
 private theorem native_char_to_upper_digitChar_of_lt_10
     {d : Nat} (hd : d < 10) :
-    native_char_to_upper (Char.toNat (Nat.digitChar d)) =
+    impl_native_char_to_upper (Char.toNat (Nat.digitChar d)) =
       Char.toNat (Nat.digitChar d) := by
-  unfold native_char_to_upper Nat.digitChar
+  unfold impl_native_char_to_upper Nat.digitChar
   by_cases h0 : d = 0
   · simp [h0]
   · by_cases h1 : d = 1
@@ -119,8 +119,8 @@ private theorem native_char_to_upper_digitChar_of_lt_10
 
 private theorem map_native_char_to_upper_toDigitsCore :
     ∀ fuel n ds,
-      List.map native_char_to_upper (ds.map Char.toNat) = ds.map Char.toNat ->
-        List.map native_char_to_upper
+      List.map impl_native_char_to_upper (ds.map Char.toNat) = ds.map Char.toNat ->
+        List.map impl_native_char_to_upper
             ((Nat.toDigitsCore 10 fuel n ds).map Char.toNat) =
           (Nat.toDigitsCore 10 fuel n ds).map Char.toNat
   | 0, _n, ds, hds => by
@@ -128,7 +128,7 @@ private theorem map_native_char_to_upper_toDigitsCore :
   | fuel + 1, n, ds, hds => by
       rw [Nat.toDigitsCore.eq_2]
       have hDigit :
-          native_char_to_upper (Char.toNat (Nat.digitChar (n % 10))) =
+          impl_native_char_to_upper (Char.toNat (Nat.digitChar (n % 10))) =
             Char.toNat (Nat.digitChar (n % 10)) :=
         native_char_to_upper_digitChar_of_lt_10
           (Nat.mod_lt n (by decide : 0 < 10))
@@ -203,7 +203,7 @@ private theorem typed___eo_prog_str_to_upper_from_int_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_str_to_upper_from_int_impl
-    (M : SmtModel) (hM : model_total_typed M) (n1 : Term)
+    (M : SmtModel) (hM : model_wf M) (n1 : Term)
     (hNTrans : RuleProofs.eo_has_smt_translation n1)
     (hNTy : __eo_typeof n1 = Term.UOp UserOp.Int) :
     eo_interprets M (__eo_prog_str_to_upper_from_int n1) true := by
@@ -250,7 +250,7 @@ private theorem facts___eo_prog_str_to_upper_from_int_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_to_upper_from_int_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_to_upper_from_int args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

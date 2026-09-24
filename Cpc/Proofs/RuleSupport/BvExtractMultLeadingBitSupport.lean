@@ -432,7 +432,7 @@ private theorem extractLead_smt_typeof_bvmul
   change __smtx_typeof (SmtTerm.bvmul (__eo_to_smt p) (__eo_to_smt q)) = _
   rw [__smtx_typeof.eq_def] <;> simp only
   simp [__smtx_typeof_bv_op_2, hp, hq, native_ite,
-    native_nateq, SmtEval.native_nateq]
+    native_nateq, Smtm.native_nateq]
 
 private theorem extractLead_smt_typeof_bitvec_payload (v : BitVec W) :
     __smtx_typeof
@@ -440,7 +440,7 @@ private theorem extractLead_smt_typeof_bitvec_payload (v : BitVec W) :
       SmtType.BitVec W := by
   have hW0 : native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hMod :
       native_mod_total (v.toNat : Int)
           (native_int_pow2 (native_nat_to_int W)) = (v.toNat : Int) := by
@@ -461,7 +461,7 @@ private theorem extractLead_smt_typeof_bitvec_payload (v : BitVec W) :
   rw [__smtx_typeof.eq_def] <;> simp only
   rw [hAnd]
   simp [native_ite, native_int_to_nat, native_nat_to_int,
-    SmtEval.native_int_to_nat, SmtEval.native_nat_to_int]
+    SmtEval.native_int_to_nat, Smtm.native_nat_to_int]
 
 private theorem bvExtractMultLeading_context
     (high low xi xin x yi yin y w : Term) :
@@ -821,7 +821,7 @@ theorem typed_bvExtractMultLeadingRaw
     (hExtractSmtTy.trans hZeroSmtTy.symm) (by rw [hExtractSmtTy]; simp)
 
 private theorem extractLead_eval_int_term
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
     __smtx_typeof (__eo_to_smt t) = SmtType.Int ->
     ∃ k : native_Int,
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Numeral k := by
@@ -899,7 +899,7 @@ private theorem bvExtractMultLeadingZerosInt_eq_nat
     have hPow :
         native_int_pow2 ((native_int_to_nat n : Nat) : Int) =
           (2 ^ native_int_to_nat n : Nat) := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using
         native_int_pow2_nat (native_int_to_nat n)
     rw [hPow] at hiRangeInt
     exact_mod_cast hiRangeInt
@@ -907,13 +907,13 @@ private theorem bvExtractMultLeadingZerosInt_eq_nat
   by_cases hi : i = 0
   · subst i
     simpa [native_int_to_nat, native_nat_to_int,
-      SmtEval.native_int_to_nat, SmtEval.native_nat_to_int] using hnRound.symm
+      SmtEval.native_int_to_nat, Smtm.native_nat_to_int] using hnRound.symm
   · have hiNat : native_int_to_nat i ≠ 0 := by
       intro h
       have : i = 0 := by
         calc
           i = native_nat_to_int (native_int_to_nat i) := hiRound.symm
-          _ = 0 := by simp [h, native_nat_to_int, SmtEval.native_nat_to_int]
+          _ = 0 := by simp [h, native_nat_to_int, Smtm.native_nat_to_int]
       exact hi this
     rw [if_neg hi, if_neg hiNat]
     have hLogLt :
@@ -926,7 +926,7 @@ private theorem bvExtractMultLeadingZerosInt_eq_nat
     have hCast := Int.natCast_sub hLogLe
     rw [← hnRound]
     have hsimpa := hCast.symm
-    try simp [native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
+    try simp [native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
     exact hsimpa
 
 private theorem extractLead_low_of_premise
@@ -1075,9 +1075,9 @@ private theorem extractLead_low_nat
   change 2 * FW - (ZX + ZY) ≤ native_int_to_nat L
   have hFWCast : ((FW : Nat) : Int) = XIN + XW := by
     have hXINCast : ((native_int_to_nat XIN : Nat) : Int) = XIN := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXINRound
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXINRound
     have hXWCast : ((native_int_to_nat XW : Nat) : Int) = XW := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXWRound
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXWRound
     calc
       (FW : Int) =
           ((native_int_to_nat XIN + native_int_to_nat XW : Nat) : Int) := by
@@ -1175,7 +1175,7 @@ private theorem extractLead_concat_nat_values
   rw [Nat.mod_eq_of_lt hBound]
 
 private theorem eval_bv_extract_mult_leading_raw
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (high low xi xin x yi yin y w : Term) :
     RuleProofs.eo_has_smt_translation high ->
     RuleProofs.eo_has_smt_translation low ->
@@ -1270,19 +1270,19 @@ private theorem eval_bv_extract_mult_leading_raw
   have hFWRound : native_nat_to_int FW = native_zplus XIN XW := by
     calc
       native_nat_to_int FW = native_nat_to_int NX + native_nat_to_int WX := by
-        simp [hFWX, native_nat_to_int, SmtEval.native_nat_to_int]
+        simp [hFWX, native_nat_to_int, Smtm.native_nat_to_int]
       _ = XIN + XW := by rw [hXINRound, hXWRound]
       _ = native_zplus XIN XW := rfl
   have hIRangeNat : IN < 2 ^ NX := by
     have h : I < native_int_pow2 XIN := by
       simpa [SmtEval.native_zlt] using hIRange
     have hICast : ((IN : Nat) : Int) = I := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hIRound
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hIRound
     have hNXCast : ((NX : Nat) : Int) = XIN := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXINRound
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXINRound
     rw [← hICast, ← hNXCast] at h
     have hPow : native_int_pow2 (NX : Int) = (2 ^ NX : Nat) := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using
         native_int_pow2_nat NX
     rw [hPow] at h
     exact_mod_cast h
@@ -1290,12 +1290,12 @@ private theorem eval_bv_extract_mult_leading_raw
     have h : J < native_int_pow2 YIN := by
       simpa [SmtEval.native_zlt] using hJRange
     have hJCast : ((JN : Nat) : Int) = J := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hJRound
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hJRound
     have hNYCast : ((NY : Nat) : Int) = YIN := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hYINRound
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hYINRound
     rw [← hJCast, ← hNYCast] at h
     have hPow : native_int_pow2 (NY : Int) = (2 ^ NY : Nat) := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using
         native_int_pow2_nat NY
     rw [hPow] at h
     exact_mod_cast h
@@ -1353,14 +1353,14 @@ private theorem eval_bv_extract_mult_leading_raw
     rw [smtx_eval_concat_term_eq, hXPrefixEval,
       smtx_eval_concat_term_eq, hXEval, smtx_eval_binary_term_eq]
     rw [show XIN = (NX : Int) by simpa [native_nat_to_int,
-      SmtEval.native_nat_to_int] using hXINRound.symm]
+      Smtm.native_nat_to_int] using hXINRound.symm]
     rw [show I = (IN : Int) by simpa [native_nat_to_int,
-      SmtEval.native_nat_to_int] using hIRound.symm]
+      Smtm.native_nat_to_int] using hIRound.symm]
     rw [concat_zero_right_value WX XV hXVBound]
     have hConcat := extractLead_concat_nat_values hIRangeNat hXVBound
     rw [hXbToNat]
     simpa [hXINRound, hXWRound, hIRound, hFWX, XP,
-      native_nat_to_int, SmtEval.native_nat_to_int] using hConcat
+      native_nat_to_int, Smtm.native_nat_to_int] using hConcat
   have hYFullEval :
       __smtx_model_eval M
           (__eo_to_smt
@@ -1375,14 +1375,14 @@ private theorem eval_bv_extract_mult_leading_raw
     rw [smtx_eval_concat_term_eq, hYPrefixEval,
       smtx_eval_concat_term_eq, hYEval, smtx_eval_binary_term_eq]
     rw [show YIN = (NY : Int) by simpa [native_nat_to_int,
-      SmtEval.native_nat_to_int] using hYINRound.symm]
+      Smtm.native_nat_to_int] using hYINRound.symm]
     rw [show J = (JN : Int) by simpa [native_nat_to_int,
-      SmtEval.native_nat_to_int] using hJRound.symm]
+      Smtm.native_nat_to_int] using hJRound.symm]
     rw [concat_zero_right_value WY YV hYVBound]
     have hConcat := extractLead_concat_nat_values hJRangeNat hYVBound
     rw [hYbToNat]
     simpa [hYINRound, hYWRound, hJRound, hFWY, YP,
-      native_nat_to_int, SmtEval.native_nat_to_int] using hConcat
+      native_nat_to_int, Smtm.native_nat_to_int] using hConcat
   have hNilEval :
       __smtx_model_eval M
           (__eo_to_smt
@@ -1391,7 +1391,7 @@ private theorem eval_bv_extract_mult_leading_raw
                 (bvExtractMultLeadingOperand xi (Term.Numeral XIN) x)))) =
         SmtValue.Binary (FW : Int) ((1#FW).toNat : Int) := by
     rw [hNilEq]
-    simpa [FW, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [FW, native_nat_to_int, Smtm.native_nat_to_int] using
       eval_binary M
         (native_nat_to_int
           (native_int_to_nat (native_zplus XIN XW)))
@@ -1467,12 +1467,12 @@ private theorem eval_bv_extract_mult_leading_raw
     have hVal := extract_val_bitvec_start_len FW LN RN
       ((xb * yb).toNat : Int) H L (Int.natCast_nonneg _)
       (by exact_mod_cast (xb * yb).isLt)
-      (by simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+      (by simpa [native_nat_to_int, Smtm.native_nat_to_int] using
         hLRound.symm)
       (by
         have : H + 1 + -L = RW := by
           simpa [SmtEval.native_zplus, SmtEval.native_zneg] using hRW.symm
-        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+        simpa [native_nat_to_int, Smtm.native_nat_to_int] using
           this.trans hRWRound.symm)
     rw [hVal, bitvec_ofInt_natCast_toNat, hProductZero]
     simp
@@ -1486,7 +1486,7 @@ private theorem eval_bv_extract_mult_leading_raw
       (SmtTerm.int_to_bv (SmtTerm.Numeral RW) (SmtTerm.Numeral 0)) = _
     rw [smtx_eval_int_to_bv_numerals]
     simp [← hRWRound, native_nat_to_int,
-      SmtEval.native_nat_to_int, SmtEval.native_mod_total]
+      Smtm.native_nat_to_int, SmtEval.native_mod_total]
   rw [hRawEq]
   change __smtx_model_eval M
       (SmtTerm.eq
@@ -1502,7 +1502,7 @@ private theorem eval_bv_extract_mult_leading_raw
   simp [__smtx_model_eval_eq, native_veq]
 
 theorem facts_bv_extract_mult_leading_raw
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (high low xi xin x yi yin y w : Term) :
     RuleProofs.eo_has_smt_translation high ->
     RuleProofs.eo_has_smt_translation low ->

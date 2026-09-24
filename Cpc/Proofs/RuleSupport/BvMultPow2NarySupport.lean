@@ -665,7 +665,7 @@ private theorem bvmul_args_of_smt_type
         exact hsimpa
       rw [smtx_typeof_bvmul_term_eq_nary] at hTy'
       simpa [__smtx_typeof_bv_op_2, hXTy, hYTy, native_ite,
-        native_nateq, SmtEval.native_nateq] using hTy'
+        native_nateq, Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst actual
@@ -1127,7 +1127,7 @@ private theorem emod_mul_right_congr_local
   exact emod_mul_left_congr_local b a m
 
 private theorem eval_mul_assoc
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt y) = SmtType.BitVec w ->
@@ -1189,7 +1189,7 @@ private theorem eval_mul_assoc
   rw [hPayload]
 
 private theorem eval_mul_comm
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt y) = SmtType.BitVec w ->
@@ -1210,7 +1210,7 @@ private theorem eval_mul_comm
   simp [__smtx_model_eval_bvmul, native_zmult, Int.mul_comm]
 
 private theorem eval_mul_rotate
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x c y : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt c) = SmtType.BitVec w ->
@@ -1268,7 +1268,7 @@ private theorem nil_payload_eq_one
     exact hNilTrue.symm
 
 private theorem eval_mul_right_one
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x nil : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt nil) = SmtType.BitVec w ->
@@ -1296,7 +1296,7 @@ private theorem eval_mul_right_one
   simp [__smtx_model_eval_bvmul, native_zmult, hMod]
 
 private theorem eval_mul_left_one
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (nil x : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt nil) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
@@ -1308,7 +1308,7 @@ private theorem eval_mul_left_one
   exact eval_mul_right_one M hM x nil w hXTy hNilTy hNil
 
 private theorem list_concat_rec_eval_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a z : Term) (w : Nat) :
     __eo_is_list op a = Term.Boolean true ->
     __eo_is_list op z = Term.Boolean true ->
@@ -1360,7 +1360,7 @@ private theorem list_concat_rec_eval_eq
       exact (eval_mul_left_one M hM nil z w hATy hZTy hNilTrue).symm
 
 private theorem list_singleton_elim_eval_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (c : Term) (w : Nat) :
     __eo_is_list op c = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt c) = SmtType.BitVec w ->
@@ -1397,7 +1397,7 @@ private theorem list_singleton_elim_eval_eq
   | _ => simpa [__eo_list_singleton_elim_2]
 
 private theorem eval_lhs_eq_simple_lhs
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys z n : Term) (W : native_Int) :
     native_zleq 0 W = true ->
     ListTypeOrNil xs (native_int_to_nat W) ->
@@ -1611,7 +1611,7 @@ theorem typed_term
     (by rw [hLhsTy]; intro h; cases h)
 
 theorem facts_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys z size n exponent u : Term) :
     RuleProofs.eo_has_smt_translation xs ->
     RuleProofs.eo_has_smt_translation ys ->
@@ -1746,7 +1746,7 @@ theorem typed_pos_term
     (by rw [hLhsTy]; intro h; cases h)
 
 theorem facts_pos_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys z size n exponent u : Term) :
     RuleProofs.eo_has_smt_translation xs ->
     RuleProofs.eo_has_smt_translation ys ->
@@ -1832,7 +1832,7 @@ theorem typed_program
     hSizeTrans hNTrans hExponentTrans hLists.1 hLists.2 hTermTy
 
 theorem facts_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys z size n exponent u P1 P2 P3 : Term) :
     RuleProofs.eo_has_smt_translation xs ->
     RuleProofs.eo_has_smt_translation ys ->
@@ -2163,7 +2163,7 @@ theorem typed_pos_program
     hSizeTrans hNTrans hExponentTrans hLists.1 hLists.2 hTermTy
 
 theorem facts_pos_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys z size n exponent u P1 P2 P3 : Term) :
     RuleProofs.eo_has_smt_translation xs ->
     RuleProofs.eo_has_smt_translation ys ->

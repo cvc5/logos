@@ -19,14 +19,14 @@ def nativeListInRe : List native_Char -> SmtRegLan -> native_Bool
   | c :: cs, r => nativeListInRe cs (native_re_deriv (SmtValue.Char c) r)
 
 @[simp] theorem native_re_str_valid_string (str : native_String) :
-    Smtm.native_re_str_valid (native_string_to_values str) =
+    Smtm.native_re_str_valid (impl_native_string_to_values str) =
       native_string_valid str := by
   induction str with
   | nil => rfl
   | cons c cs ih =>
       change
         (native_char_valid c &&
-          Smtm.native_re_str_valid (native_string_to_values cs)) =
+          Smtm.native_re_str_valid (impl_native_string_to_values cs)) =
         (native_char_valid c && native_string_valid cs)
       rw [ih]
 
@@ -38,19 +38,19 @@ theorem nativeListInRe_eq_model_fold
     (str : native_String) (r : SmtRegLan) :
     nativeListInRe str r =
       native_re_nullable
-        ((native_string_to_values str).foldl
+        ((impl_native_string_to_values str).foldl
           (fun acc c => Smtm.native_re_deriv c acc) r) := by
   induction str generalizing r with
   | nil => rfl
   | cons c cs ih =>
-      simp only [nativeListInRe, native_string_to_values, List.map_cons,
+      simp only [nativeListInRe, impl_native_string_to_values, List.map_cons,
         List.foldl_cons]
       exact ih (Smtm.native_re_deriv (SmtValue.Char c) r)
 
 theorem native_str_in_re_eq_model
     (str : native_String) (r : SmtRegLan) :
     native_str_in_re str r =
-      Smtm.native_str_in_re (native_string_to_values str) r := by
+      Smtm.native_str_in_re (impl_native_string_to_values str) r := by
   cases hValid : native_string_valid str <;>
     simp [native_str_in_re, Smtm.native_str_in_re,
       native_re_str_valid_string, hValid, nativeListInRe_eq_model_fold]
@@ -553,14 +553,14 @@ theorem nativeListInRe_re_range_true_length
 
 theorem nativeListInRe_re_of_string_true_length :
     (pat xs : List native_Char) ->
-      nativeListInRe xs (native_re_of_list (native_string_to_values pat)) = true ->
+      nativeListInRe xs (impl_native_re_of_list (impl_native_string_to_values pat)) = true ->
       xs.length = pat.length
   | [], xs, h => by
       cases xs with
       | nil => rfl
       | cons c cs =>
           have hFalse : nativeListInRe (c :: cs)
-              (native_re_of_list (native_string_to_values [])) = false := by
+              (impl_native_re_of_list (impl_native_string_to_values [])) = false := by
             change nativeListInRe cs SmtRegLan.empty = false
             exact nativeListInRe_empty cs
           rw [hFalse] at h
@@ -568,11 +568,11 @@ theorem nativeListInRe_re_of_string_true_length :
   | c :: pat, xs, h => by
       rcases (nativeListInRe_mk_concat_true_iff_exists_append xs
           (SmtRegLan.char (SmtValue.Char c))
-          (native_re_of_list (native_string_to_values pat))).1
+          (impl_native_re_of_list (impl_native_string_to_values pat))).1
           (by
             change nativeListInRe xs
               (native_re_mk_concat (SmtRegLan.char (SmtValue.Char c))
-                (native_re_of_list (native_string_to_values pat))) = true at h
+                (impl_native_re_of_list (impl_native_string_to_values pat))) = true at h
             exact h) with
         ⟨left, right, hAppend, hLeft, hRight⟩
       have hLeftLen : left.length = 1 :=
@@ -585,7 +585,7 @@ theorem nativeListInRe_re_of_string_true_length :
 theorem nativeListInRe_str_to_re_string_true_length
     (pat xs : List native_Char)
     (h : nativeListInRe xs
-      (native_str_to_re (native_string_to_values pat)) = true) :
+      (native_str_to_re (impl_native_string_to_values pat)) = true) :
     xs.length = pat.length := by
   simpa [native_str_to_re] using
     nativeListInRe_re_of_string_true_length pat xs h

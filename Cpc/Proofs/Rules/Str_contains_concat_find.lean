@@ -103,7 +103,7 @@ private theorem prog_str_contains_concat_find_info
         raw_contains_concat_find_conclusion_eq whole Needle hRawNe
 
 private theorem eval_contains_of_interprets_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y : Term) (T : SmtType)
     (hXTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hYTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
@@ -139,7 +139,7 @@ private theorem eval_contains_of_interprets_true
       rw [str_contains_eval_eq M x y sx sy hXEval hYEval, hNative]
 
 public theorem cmd_step_str_contains_concat_find_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_contains_concat_find args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -472,7 +472,7 @@ private theorem wrap_bool_eval {M : SmtModel} {c : Term} {b : Bool}
   rw [hout.eval]
   cases b <;> rfl
 
-theorem BitListSyntax.eval {M : SmtModel} (hM : model_total_typed M)
+theorem BitListSyntax.eval {M : SmtModel} (hM : model_wf M)
     {t : Term} (hs : BitListSyntax t)
     (hnn : term_has_non_none_type (__eo_to_smt t)) :
     ∃ bs : List Bool, BitListEval M t bs := by
@@ -2384,7 +2384,7 @@ theorem bvslt_bitvec_values {W : Nat} (x y : BitVec W) :
   have hW0 : native_zleq 0 (W : Int) = true := by
     simp [SmtEval.native_zleq]
   have hWCast : (W : Int) = native_nat_to_int W := by
-    simp [native_nat_to_int, SmtEval.native_nat_to_int]
+    simp [native_nat_to_int, Smtm.native_nat_to_int]
   have hXCanon : native_zeq (x.toNat : Int)
       (native_mod_total (x.toNat : Int)
         (native_int_pow2 (W : Int))) = true := by
@@ -2775,7 +2775,7 @@ private theorem eval_at_bit
   rw [← hpcast]
   norm_cast
 
-theorem eval_step_bvnot (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvnot (M : SmtModel) (hM : model_wf M)
     (a : Term)
     (hExpanded :
       __bv_bitblast_apply_unary (Term.UOp UserOp.not) a ≠ Term.Stuck)
@@ -2807,7 +2807,7 @@ theorem eval_step_bvnot (M : SmtModel) (hM : model_total_typed M)
         (__smtx_model_eval M (__eo_to_smt a))
   exact (eval_bitnot ha).symm
 
-theorem eval_step_bvand (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvand (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __bv_bitblast_apply_binary (Term.UOp UserOp.and) a b ≠ Term.Stuck)
@@ -2849,7 +2849,7 @@ theorem eval_step_bvand (M : SmtModel) (hM : model_total_typed M)
         (__smtx_model_eval M (__eo_to_smt b))
   exact ha.eval_bvand hb hlen
 
-theorem eval_step_bvor (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvor (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __bv_bitblast_apply_binary (Term.UOp UserOp.or) a b ≠ Term.Stuck)
@@ -2891,7 +2891,7 @@ theorem eval_step_bvor (M : SmtModel) (hM : model_total_typed M)
         (__smtx_model_eval M (__eo_to_smt b))
   exact ha.eval_bvor hb hlen
 
-theorem eval_step_bvxor (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvxor (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __bv_bitblast_apply_binary (Term.UOp UserOp.xor) a b ≠ Term.Stuck)
@@ -2933,7 +2933,7 @@ theorem eval_step_bvxor (M : SmtModel) (hM : model_total_typed M)
         (__smtx_model_eval M (__eo_to_smt b))
   exact ha.eval_bvxor hb hlen
 
-theorem eval_step_bvxnor (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvxnor (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __bv_bitblast_apply_binary (Term.UOp UserOp.eq) a b ≠ Term.Stuck)
@@ -2975,7 +2975,7 @@ theorem eval_step_bvxnor (M : SmtModel) (hM : model_total_typed M)
         (__smtx_model_eval M (__eo_to_smt b))
   exact ha.eval_bvxnor hb hlen
 
-theorem eval_ripple_bvadd (M : SmtModel) (hM : model_total_typed M)
+theorem eval_ripple_bvadd (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __pair_second
@@ -3025,7 +3025,7 @@ theorem eval_ripple_bvadd (M : SmtModel) (hM : model_total_typed M)
         (__smtx_model_eval M (__eo_to_smt b))
   exact (eval_addBits ha hb hlen).symm
 
-theorem eval_step_bvult (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvult (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __bv_bitblast_ult a b (Term.Boolean false) ≠ Term.Stuck)
@@ -3102,7 +3102,7 @@ theorem eval_step_bvult (M : SmtModel) (hM : model_total_typed M)
           simp [__smtx_model_eval_bvult, __smtx_model_eval_bvugt,
             native_zlt]
 
-theorem eval_step_bvule (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvule (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __bv_bitblast_ult a b (Term.Boolean true) ≠ Term.Stuck)
@@ -3199,7 +3199,7 @@ theorem eval_step_bvule (M : SmtModel) (hM : model_total_typed M)
                 exact_mod_cast h.symm
               simp [hlt, hnle, htail, hneI]
 
-theorem eval_step_eq (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_eq (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __eo_list_singleton_elim (Term.UOp UserOp.and)
@@ -3255,7 +3255,7 @@ theorem eval_step_eq (M : SmtModel) (hM : model_total_typed M)
     rw [hbits]
     simp [__smtx_model_eval_eq, native_veq, hlen, hvalI]
 
-theorem eval_step_bvsub (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvsub (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __pair_second
@@ -3340,7 +3340,7 @@ theorem eval_step_bvsub (M : SmtModel) (hM : model_total_typed M)
     _ = ((bitsValue xs : Int) + -(bitsValue ys : Int)) %
           (2 ^ xs.length : Int) := by rfl
 
-theorem eval_step_bvneg (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvneg (M : SmtModel) (hM : model_wf M)
     (a : Term)
     (hExpanded :
       __pair_second
@@ -3447,7 +3447,7 @@ theorem eval_step_bvneg (M : SmtModel) (hM : model_total_typed M)
             rw [Int.add_emod]
             simp
 
-theorem eval_step_bvite (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvite (M : SmtModel) (hM : model_wf M)
     (c a b : Term)
     (hExpanded : __bv_mk_bitblast_step_ite c a b ≠ Term.Stuck)
     (hnn :
@@ -3537,7 +3537,7 @@ theorem eval_step_bvite (M : SmtModel) (hM : model_total_typed M)
             rw [zipWith_left_of_length xs ys hlen]
             rfl
 
-theorem eval_step_bvcomp (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvcomp (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __eo_mk_apply
@@ -3607,7 +3607,7 @@ theorem eval_step_bvcomp (M : SmtModel) (hM : model_total_typed M)
   cases cb <;> rfl
 
 private theorem eval_step_bvslt_or_le_aux
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term) (orEqual : Bool) (w : Nat)
     (hExpanded :
       __bv_bitblast_slt_impl
@@ -3771,7 +3771,7 @@ private theorem eval_step_bvslt_or_le_aux
       (by simpa using htailLen)).symm
 
 theorem eval_step_bvslt_or_le
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term) (orEqual : Bool)
     (hExpanded :
       __bv_bitblast_slt_impl
@@ -3821,7 +3821,7 @@ theorem eval_step_bvslt_or_le
     exact eval_step_bvslt_or_le_aux
       M hM a b true w hExpanded haTy hbTy
 
-theorem eval_step_bvslt (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvslt (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __bv_bitblast_slt_impl
@@ -3843,7 +3843,7 @@ theorem eval_step_bvslt (M : SmtModel) (hM : model_total_typed M)
           (Term.Apply (Term.Apply (Term.UOp UserOp.bvslt) a) b)) :=
   eval_step_bvslt_or_le M hM a b false hExpanded hnn
 
-theorem eval_step_bvsle (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvsle (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __bv_bitblast_slt_impl
@@ -3865,7 +3865,7 @@ theorem eval_step_bvsle (M : SmtModel) (hM : model_total_typed M)
           (Term.Apply (Term.Apply (Term.UOp UserOp.bvsle) a) b)) :=
   eval_step_bvslt_or_le M hM a b true hExpanded hnn
 
-theorem eval_step_bvultbv (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvultbv (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __eo_mk_apply
@@ -3931,7 +3931,7 @@ theorem eval_step_bvultbv (M : SmtModel) (hM : model_total_typed M)
   rw [hpred]
   cases cb <;> rfl
 
-theorem eval_step_bvsltbv (M : SmtModel) (hM : model_total_typed M)
+theorem eval_step_bvsltbv (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hExpanded :
       __eo_mk_apply
@@ -4050,7 +4050,7 @@ private theorem smt_typeof_bitsValue (xs : List Bool) :
         true := by
     have hWCast :
         (xs.length : Int) = native_nat_to_int xs.length := by
-      simp [native_nat_to_int, SmtEval.native_nat_to_int]
+      simp [native_nat_to_int, Smtm.native_nat_to_int]
     rw [hWCast]
     rw [BvBitblast.native_int_pow2_native_nat xs.length]
     have hMod :
@@ -4070,7 +4070,7 @@ private theorem smt_typeof_bitsValue (xs : List Bool) :
     native_int_to_nat]
 
 private theorem bitListEval_length_eq_smt_type
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t : Term) (xs : List Bool) (W : Nat)
     (h : BvBitblast.BitListEval M t xs)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.BitVec W) :
@@ -4087,7 +4087,7 @@ private theorem bitListEval_length_eq_smt_type
   injection hpres
 
 private theorem band_assoc_values
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term) (W : Nat) (xs ys : List Bool)
     (hx : BvBitblast.BitListEval M x xs)
     (hy : BvBitblast.BitListEval M y ys)
@@ -4126,7 +4126,7 @@ private theorem band_assoc_values
   exact hsimpa
 
 private theorem testBitsBand
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rest acc : Term) (W : Nat) (xs : List Bool)
     (hacc : BvBitblast.BitListEval M acc xs)
     (hxW : xs.length = W)
@@ -4306,7 +4306,7 @@ private theorem testBitsBand
 termination_by sizeOf rest
 
 theorem eval_step_bvand_fold
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rest acc : Term)
     (hne :
       __bv_mk_bitblast_step_bitwise
@@ -4486,7 +4486,7 @@ theorem eval_step_bvand_fold
       (by simpa [hrestEq] using hmarker) hargs.1 hargs.2).symm
 
 private theorem bor_assoc_values
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term) (W : Nat) (xs ys : List Bool)
     (hx : BvBitblast.BitListEval M x xs)
     (hy : BvBitblast.BitListEval M y ys)
@@ -4525,7 +4525,7 @@ private theorem bor_assoc_values
   exact hsimpa
 
 private theorem testBitsOr
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rest acc : Term) (W : Nat) (xs : List Bool)
     (hacc : BvBitblast.BitListEval M acc xs)
     (hxW : xs.length = W)
@@ -4705,7 +4705,7 @@ private theorem testBitsOr
 termination_by sizeOf rest
 
 theorem eval_step_bvor_fold
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rest acc : Term)
     (hne :
       __bv_mk_bitblast_step_bitwise
@@ -4885,7 +4885,7 @@ theorem eval_step_bvor_fold
       (by simpa [hrestEq] using hmarker) hargs.1 hargs.2).symm
 
 private theorem bxor_assoc_values
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term) (W : Nat) (xs ys : List Bool)
     (hx : BvBitblast.BitListEval M x xs)
     (hy : BvBitblast.BitListEval M y ys)
@@ -4924,7 +4924,7 @@ private theorem bxor_assoc_values
   exact hsimpa
 
 private theorem testBitsXor
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rest acc : Term) (W : Nat) (xs : List Bool)
     (hacc : BvBitblast.BitListEval M acc xs)
     (hxW : xs.length = W)
@@ -5104,7 +5104,7 @@ private theorem testBitsXor
 termination_by sizeOf rest
 
 theorem eval_step_bvxor_fold
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rest acc : Term)
     (hne :
       __bv_mk_bitblast_step_bitwise
@@ -5306,7 +5306,7 @@ private theorem add_smt_typeof_bitsValue (xs : List Bool) :
             (native_int_pow2 (xs.length : Int))) = true := by
     have hWCast :
         (xs.length : Int) = native_nat_to_int xs.length := by
-      simp [native_nat_to_int, SmtEval.native_nat_to_int]
+      simp [native_nat_to_int, Smtm.native_nat_to_int]
     rw [hWCast, BvBitblast.native_int_pow2_native_nat xs.length]
     have hMod :
         (BvBitblast.bitsValue xs : Int) % (2 ^ xs.length : Nat) =
@@ -5325,7 +5325,7 @@ private theorem add_smt_typeof_bitsValue (xs : List Bool) :
     native_int_to_nat]
 
 private theorem add_assoc_values
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term) (W : Nat) (xs ys : List Bool)
     (hx : BvBitblast.BitListEval M x xs)
     (hy : BvBitblast.BitListEval M y ys)
@@ -5363,7 +5363,7 @@ private theorem add_assoc_values
   exact hsimpa
 
 private theorem testBitsAdd
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rest acc : Term) (W : Nat) (xs : List Bool)
     (hacc : BvBitblast.BitListEval M acc xs)
     (hxW : xs.length = W)
@@ -5482,7 +5482,7 @@ private theorem testBitsAdd
 termination_by sizeOf rest
 
 theorem eval_step_bvadd_fold
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rest acc : Term)
     (hne : __bv_mk_bitblast_step_add rest acc ≠ Term.Stuck)
     (hnn : term_has_non_none_type
@@ -5647,7 +5647,7 @@ private theorem bitCons_type_info
     rw [typeof_concat_eq, htailTy, hbitTy] at hConcatTy
     simp [__smtx_typeof_concat,
       SmtEval.native_zplus, native_nat_to_int,
-      SmtEval.native_nat_to_int, native_int_to_nat,
+      Smtm.native_nat_to_int, native_int_to_nat,
       SmtEval.native_int_to_nat] at hConcatTy
     have hsimpa := hConcatTy.symm
     try simp at hsimpa ⊢
@@ -5655,7 +5655,7 @@ private theorem bitCons_type_info
   exact ⟨wt, by simpa [hwb] using hW, htailTy, hbTy⟩
 
 private theorem eval_bool_of_type
-    (M : SmtModel) (hM : model_total_typed M) (b : Term)
+    (M : SmtModel) (hM : model_wf M) (b : Term)
     (hTy : __smtx_typeof (__eo_to_smt b) = SmtType.Bool) :
     ∃ v : Bool,
       __smtx_model_eval M (__eo_to_smt b) = SmtValue.Boolean v := by
@@ -5694,7 +5694,7 @@ private theorem concat_bool_bitvec_value
     (by exact_mod_cast (x.concat b).isLt)]
 
 private theorem eval_bitvec_of_type
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (W : Nat)
+    (M : SmtModel) (hM : model_wf M) (t : Term) (W : Nat)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.BitVec W) :
     ∃ x : BitVec W,
       __smtx_model_eval M (__eo_to_smt t) =
@@ -5704,19 +5704,19 @@ private theorem eval_bitvec_of_type
   have hWidth0 :
       native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hrange := bitvec_payload_range_of_canonical hWidth0 hcan
   have hp0 : (0 : Int) ≤ p := hrange.1
   have hp1 : p < (2 : Int) ^ W := by
     simpa [natpow2_eq, native_nat_to_int,
-      SmtEval.native_nat_to_int] using hrange.2
+      Smtm.native_nat_to_int] using hrange.2
   let x := BitVec.ofInt W p
   have hx : (x.toNat : Int) = p := by
     rw [show x.toNat = p.toNat by
       exact ofInt_toNat_canonical W p hp0 hp1]
     exact Int.toNat_of_nonneg hp0
   exact ⟨x, by simpa [hx, native_nat_to_int,
-    SmtEval.native_nat_to_int] using hp⟩
+    Smtm.native_nat_to_int] using hp⟩
 
 private theorem eval_bit_ite
     (M : SmtModel) (b : Term) (v : Bool)
@@ -5781,7 +5781,7 @@ private theorem extractLsb'_concat_succ
   simp
 
 private theorem prefix_eval_typed
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a : Term) (n W : Nat)
     (hTy : __smtx_typeof (__eo_to_smt a) = SmtType.BitVec W)
     (hfit : n ≤ W)
@@ -5869,7 +5869,7 @@ private theorem prefix_eval_typed
             v (x.extractLsb' 0 n) hv hprefix
 
 private theorem subsequence_eval_typed
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a : Term) (l d W : Nat)
     (hTy : __smtx_typeof (__eo_to_smt a) = SmtType.BitVec W)
     (hfit : l + (d + 1) ≤ W)
@@ -5983,7 +5983,7 @@ private theorem subsequence_eval_typed
           exact hout
 
 private theorem eval_step_extract
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (u l a : Term)
     (hne : __bv_bitblast_subsequence l u a ≠ Term.Stuck)
     (hnn : term_has_non_none_type
@@ -6015,7 +6015,7 @@ private theorem eval_step_extract
   have hui0 : (0 : Int) ≤ ui := Int.le_trans hli hliui
   have huiW' : ui < (W : Int) := by
     have hsimpa := huiW
-    try simp [SmtEval.native_zlt, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
+    try simp [SmtEval.native_zlt, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
     exact of_decide_eq_true hsimpa
   let L : Nat := li.toNat
   let U : Nat := ui.toNat
@@ -6109,7 +6109,7 @@ private theorem bitCons_type
   rw [typeof_concat_eq, htail, hite]
   simp [__smtx_typeof_concat,
     SmtEval.native_zplus, native_nat_to_int,
-    SmtEval.native_nat_to_int, native_int_to_nat,
+    Smtm.native_nat_to_int, native_int_to_nat,
     SmtEval.native_int_to_nat]
 
 private theorem bitblast_concat_type
@@ -6189,7 +6189,7 @@ private theorem toNat_append_concat
   simpa [BitVec.concat, BitVec.toNat_cast] using h
 
 private theorem bitblast_concat_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term) (wa wb : Nat)
     (haTy : __smtx_typeof (__eo_to_smt a) = SmtType.BitVec wa)
     (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec wb)
@@ -6248,7 +6248,7 @@ private theorem bitblast_concat_eval
       (concat_bitvec_value_general x (0#0)).symm
 
 private theorem mk_step_concat_type_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t : Term) (W : Nat)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.BitVec W)
     (hne : __bv_mk_bitblast_step_concat t ≠ Term.Stuck) :
@@ -6280,7 +6280,7 @@ private theorem mk_step_concat_type_eval
         SmtType.BitVec (w1 + w2)
       rw [typeof_concat_eq, h1Ty, h2Ty]
       simp only [__smtx_typeof_concat, SmtEval.native_zplus,
-        native_nat_to_int, SmtEval.native_nat_to_int,
+        native_nat_to_int, Smtm.native_nat_to_int,
         native_int_to_nat, SmtEval.native_int_to_nat]
       congr 1
     have hW : W = w1 + w2 := by
@@ -6314,7 +6314,7 @@ private theorem mk_step_concat_type_eval
           apply smtx_eval_concat_term_eq
 
 private theorem eval_step_concat
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a1 a2 : Term)
     (hne :
       __bv_bitblast_concat (__bv_mk_bitblast_step_concat a2) a1 ≠
@@ -6680,7 +6680,7 @@ private theorem zipWith_replicate_and
       simp [List.replicate_succ, ih]
 
 private theorem shift_add_multiplier_eval_bits
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (ac a2 : Term) (W : Nat) {acBits ys : List Bool}
     (hExpanded : __bv_shift_add_multiplier a2 ac ≠ Term.Stuck)
     (hac : BitListEval M ac acBits)
@@ -6849,7 +6849,7 @@ private theorem shift_add_multiplier_eval_bits
     ac_rfl
 
 private theorem eval_shift_add_multiplier
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (ac a2 : Term) (W : Nat)
     (hExpanded : __bv_shift_add_multiplier a2 ac ≠ Term.Stuck)
     (hacTy : __smtx_typeof (__eo_to_smt ac) = SmtType.BitVec W)
@@ -6960,7 +6960,7 @@ private theorem bvmul_args_of_bitvec_type
             (__smtx_typeof (__eo_to_smt y)) by
         rw [__smtx_typeof.eq_def] <;> simp only] at hTy'
       simpa [__smtx_typeof_bv_op_2, hxTy, hyTy, native_ite,
-        native_nateq, SmtEval.native_nateq] using hTy'
+        native_nateq, Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst W'
@@ -7015,7 +7015,7 @@ private theorem shift_add_multiplier_left_syntax
           (__bv_bitwidth (__eo_typeof a2))) a2) hrecNe)
 
 private theorem bvmul_assoc_typed
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term) (W : Nat)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.BitVec W)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.BitVec W)
@@ -7077,7 +7077,7 @@ private theorem bvmul_assoc_typed
       (emodRight _ _ _).symm
 
 private theorem bvmul_assoc_values
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term) (W : Nat) (xs ys : List Bool)
     (hx : BitListEval M x xs)
     (hy : BitListEval M y ys)
@@ -7172,7 +7172,7 @@ private theorem to_z_one_payload
     exact hone
 
 private theorem eval_bvmul_right_to_z_one
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x one : Term) (W : Nat)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.BitVec W)
     (honeTy : __smtx_typeof (__eo_to_smt one) = SmtType.BitVec W)
@@ -8250,7 +8250,7 @@ private theorem le_pow_barrelWidth (W : Nat) (hW : 0 < W) :
       (((Nat.log2_eq_iff (by omega)).mp rfl).2)
 
 private theorem testBitsMul
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rest acc : Term) (W : Nat) (xs : List Bool)
     (hacc : BitListEval M acc xs)
     (hxW : xs.length = W)
@@ -8363,7 +8363,7 @@ private theorem testBitsMul
 termination_by sizeOf rest
 
 private theorem eval_step_bvmul_fold
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rest acc : Term)
     (hne : __bv_mk_bitblast_step_mul rest acc ≠ Term.Stuck)
     (hnn : term_has_non_none_type
@@ -9751,7 +9751,7 @@ private theorem div_mod_impl_eval {M : SmtModel}
                   hcandSubVal] using huniq
 
 private theorem eval_step_bvurem
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a divisor : Term)
     (hExpanded :
       let width := __bv_bitwidth (__eo_typeof a)
@@ -9924,7 +9924,7 @@ private theorem eval_step_bvurem
     simp [hbits, hyzero, hrsLen, hremVal, hxsW]
 
 private theorem eval_step_bvudiv
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a divisor : Term)
     (hExpanded :
       let width := __bv_bitwidth (__eo_typeof a)
@@ -10372,7 +10372,7 @@ private theorem eo_ite_boolean_false (x y : Term) :
   simp [__eo_ite, native_teq, native_ite]
 
 private theorem eval_step_default_var
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a : Term)
     (hbin : __eo_is_bin a = Term.Boolean false)
     (hne :
@@ -10605,7 +10605,7 @@ private theorem eval_step_default_const
   exact Int.toNat_of_nonneg hp0
 
 private theorem eval_step_default
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a : Term)
     (hne :
       (let width := __bv_bitwidth (__eo_typeof a)
@@ -10754,7 +10754,7 @@ private theorem shiftConstBits_eval
   exact hsimpa
 
 private theorem eval_step_bvshl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a amount : Term)
     (hne :
       shlBlast a amount (__bv_bitwidth (__eo_typeof a)) ≠
@@ -11192,7 +11192,7 @@ private theorem bvashr_binary_branch
       __smtx_model_eval_ite]
 
 private theorem eval_step_bvlshr
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a amount : Term)
     (hne :
       shrBlast a amount (__bv_bitwidth (__eo_typeof a))
@@ -11486,7 +11486,7 @@ private theorem eval_step_bvlshr
       bitsValue_replicate_false, hdiv]
 
 private theorem eval_step_bvashr
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a amount : Term)
     (hne :
       shrBlast a amount (__bv_bitwidth (__eo_typeof a))
@@ -11930,7 +11930,7 @@ private theorem eval_step_bvashr
         rw [hinner, houter, hselected, List.length_replicate]
 
 private theorem eval_step_sign_extend
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (n a : Term)
     (hne :
       __bv_bitblast_concat a
@@ -12052,7 +12052,7 @@ private theorem eval_step_sign_extend
       exact bitsValue_sign_extend ss.reverse s K
 
 theorem eval_bv_mk_bitblast_step
-    (M : SmtModel) (hM : model_total_typed M) (lhs : Term)
+    (M : SmtModel) (hM : model_wf M) (lhs : Term)
     (hne : __bv_mk_bitblast_step lhs ≠ Term.Stuck)
     (hnn : term_has_non_none_type (__eo_to_smt lhs)) :
     __smtx_model_eval M (__eo_to_smt (__bv_mk_bitblast_step lhs)) =

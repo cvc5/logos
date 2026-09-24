@@ -90,7 +90,7 @@ private theorem prog_mk_form (t1 t2 t3 s1 : Term)
     t1 t2 t3 s1 h1 h2 h3 hs
 
 private theorem seq_eval_of_type
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
     ∃ sx, __smtx_model_eval M (__eo_to_smt x) = SmtValue.Seq sx := by
   have hValTy :
@@ -148,7 +148,7 @@ private theorem right_source_eq_pattern_of_not_cons
     native_teq, __eo_requires, native_not, SmtEval.native_not]
 
 private theorem type_and_facts
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t1 t2 t3 s1 U : Term)
     (hT1List : __eo_is_list op t1 = Term.Boolean true)
     (hT3List : __eo_is_list op t3 = Term.Boolean true)
@@ -405,7 +405,7 @@ private theorem type_and_facts
 end StrIndexofContainsConcatPreProof
 
 public theorem cmd_step_str_indexof_contains_concat_pre_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_indexof_contains_concat_pre args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

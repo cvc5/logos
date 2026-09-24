@@ -18,7 +18,7 @@ namespace TranslationProofs
 @[simp] theorem eo_to_smt_term_dt_cons
     (s : native_String) (d : DatatypeDecl) (i : native_Nat) :
     __eo_to_smt (Term.DtCons s d i) =
-      native_ite (native_reserved_datatype_name s) SmtTerm.None
+      native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
         (SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i) := by
   rfl
 
@@ -26,7 +26,7 @@ namespace TranslationProofs
 @[simp] theorem eo_to_smt_term_dt_sel
     (s : native_String) (d : DatatypeDecl) (i j : native_Nat) :
     __eo_to_smt (Term.DtSel s d i j) =
-      native_ite (native_reserved_datatype_name s) SmtTerm.None
+      native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
         (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j) := by
   rfl
 
@@ -41,7 +41,7 @@ namespace TranslationProofs
 /-- Simplifies EO-to-SMT type translation for `datatype`. -/
 @[simp] theorem eo_to_smt_type_datatype (s : native_String) (d : DatatypeDecl) :
     __eo_to_smt_type (Term.DatatypeType s d) =
-      native_ite (native_reserved_datatype_name s) SmtType.None
+      native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None
         (SmtType.Datatype s (__eo_to_smt_datatype_decl d)) := by
   rfl
 

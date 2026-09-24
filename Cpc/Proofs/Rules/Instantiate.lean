@@ -22,7 +22,7 @@ obligation) mirrors `BooleanElimSupport.cmd_step_and_elim_properties`; the
 soundness obligation delegates to `InstantiateRule.instantiate_sound`.
 -/
 public theorem cmd_step_instantiate_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.instantiate args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

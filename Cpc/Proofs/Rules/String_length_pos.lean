@@ -235,7 +235,7 @@ private theorem prog_string_length_pos_has_bool_type
   exact slpFormula_has_bool_type x T hxTy
 
 private theorem slpFormula_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
     eo_interprets M (slpFormula x) true := by
@@ -360,7 +360,7 @@ private theorem slpFormula_true
       exact RuleProofs.eo_interprets_or_right_intro M hM _ _ hLeftBool hRightTrue
 
 private theorem prog_string_length_pos_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term)
     (hXTrans : RuleProofs.eo_has_smt_translation x)
     (hResultTy : __eo_typeof (__eo_prog_string_length_pos x) = Term.Bool) :
@@ -374,7 +374,7 @@ private theorem prog_string_length_pos_true
   exact slpFormula_true M hM x T hxTy
 
 public theorem cmd_step_string_length_pos_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.string_length_pos args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

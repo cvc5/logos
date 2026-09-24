@@ -46,7 +46,7 @@ theorem smt_seq_rel_pack_prefix_of_eq_length (T : SmtType) :
       exact ⟨hRel.1, (RuleProofs.smt_seq_rel_iff_eq _ _).1 hTailRel⟩
 
 theorem smt_value_rel_str_concat_heads_of_eq_length
-    (M : SmtModel) (hM : model_total_typed M) (x xs y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x xs y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hxsTy : __smtx_typeof (__eo_to_smt xs) = SmtType.Seq T)
@@ -121,7 +121,7 @@ theorem smt_value_rel_str_concat_heads_of_eq_length
         (smt_seq_rel_pack_unpack T sy hsyElem)))
 
 theorem smt_value_rel_str_concat_head_of_eq_length
-    (M : SmtModel) (hM : model_total_typed M) (x y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
@@ -445,7 +445,7 @@ theorem eo_has_bool_type_concat_clash2
     (by rw [hInnerBool]; decide)
 
 theorem concat_clash_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M) (x xs y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x xs y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hxsTy : __smtx_typeof (__eo_to_smt xs) = SmtType.Seq T)
@@ -472,7 +472,7 @@ theorem concat_clash_model_eval_eq_false
   exact smtx_model_eval_eq_false_of_not_rel _ _ hNotRel
 
 theorem concat_clash2_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M) (x y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
@@ -498,7 +498,7 @@ theorem concat_clash2_model_eval_eq_false
   exact smtx_model_eval_eq_false_of_not_rel _ _ hNotRel
 
 theorem eo_interprets_concat_clash
-    (M : SmtModel) (hM : model_total_typed M) (x xs y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x xs y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hxsTy : __smtx_typeof (__eo_to_smt xs) = SmtType.Seq T)
@@ -529,7 +529,7 @@ theorem eo_interprets_concat_clash
     exact RuleProofs.smt_value_rel_refl (SmtValue.Boolean false)
 
 theorem eo_interprets_concat_clash2
-    (M : SmtModel) (hM : model_total_typed M) (x y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
@@ -831,7 +831,7 @@ theorem concat_clash2_rev_tail_eo_type_not_stuck
   exact (RuleProofs.eo_typeof_eq_bool_operands_not_stuck _ _ hInner).2
 
 theorem smt_value_rel_concat_clash_rev_tail
-    (M : SmtModel) (hM : model_total_typed M) (head tail : Term)
+    (M : SmtModel) (hM : model_wf M) (head tail : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hTailTy : __smtx_typeof (__eo_to_smt tail) = SmtType.Seq T)
@@ -924,7 +924,7 @@ theorem smt_seq_rel_pack_suffix_of_eq_length (T : SmtType) :
         ((RuleProofs.smt_seq_rel_iff_eq _ _).2 hRel.2)
 
 theorem smt_value_rel_str_concat_tails_of_eq_length
-    (M : SmtModel) (hM : model_total_typed M) (xs x ys y : Term)
+    (M : SmtModel) (hM : model_wf M) (xs x ys y : Term)
     (T : SmtType)
     (hxsTy : __smtx_typeof (__eo_to_smt xs) = SmtType.Seq T)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
@@ -1001,7 +1001,7 @@ theorem smt_value_rel_str_concat_tails_of_eq_length
         (smt_seq_rel_pack_unpack T sy hsyElem)))
 
 theorem smt_value_rel_str_concat_tail_of_eq_length
-    (M : SmtModel) (hM : model_total_typed M) (x ys y : Term)
+    (M : SmtModel) (hM : model_wf M) (x ys y : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hysTy : __smtx_typeof (__eo_to_smt ys) = SmtType.Seq T)
@@ -1114,7 +1114,7 @@ theorem eo_has_bool_type_concat_clash2_rev
     (by rw [hInnerBool]; decide)
 
 theorem concat_clash_rev_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M) (x xs y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x xs y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hxsTy : __smtx_typeof (__eo_to_smt xs) = SmtType.Seq T)
@@ -1162,7 +1162,7 @@ theorem concat_clash_rev_model_eval_eq_false
   exact smtx_model_eval_eq_false_of_not_rel _ _ hNotRel
 
 theorem concat_clash2_rev_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M) (x y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
@@ -1199,7 +1199,7 @@ theorem concat_clash2_rev_model_eval_eq_false
   exact smtx_model_eval_eq_false_of_not_rel _ _ hNotRel
 
 theorem eo_interprets_concat_clash_rev
-    (M : SmtModel) (hM : model_total_typed M) (x xs y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x xs y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hxsTy : __smtx_typeof (__eo_to_smt xs) = SmtType.Seq T)
@@ -1242,7 +1242,7 @@ theorem eo_interprets_concat_clash_rev
     exact RuleProofs.smt_value_rel_refl (SmtValue.Boolean false)
 
 theorem eo_interprets_concat_clash2_rev
-    (M : SmtModel) (hM : model_total_typed M) (x y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)

@@ -30,7 +30,7 @@ public theorem smtx_model_eval_bvsgt_binary_eq_uts_public
     hw0 hCanon1 hCanon2
 
 public theorem cmd_step_evaluate_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.evaluate args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

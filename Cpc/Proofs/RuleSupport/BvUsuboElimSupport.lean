@@ -151,7 +151,7 @@ theorem eval_zero_extend_one_direct
   change SmtValue.Binary
       (native_zplus 1 (native_nat_to_int w)) (A : Int) = _
   congr 1
-  simp [SmtEval.native_zplus, SmtEval.native_nat_to_int, Int.add_comm]
+  simp [SmtEval.native_zplus, Smtm.native_nat_to_int, Int.add_comm]
 
 def usuboExt (x : Term) : Term :=
   Term.Apply (Term.UOp1 UserOp1.zero_extend (Term.Numeral 1)) x
@@ -179,7 +179,7 @@ theorem smt_typeof_usubo_ext (x : Term) (w : Nat)
   rw [__smtx_typeof.eq_def]
   simp only
   simp [__smtx_typeof_zero_extend, hTy, SmtEval.native_zleq,
-    SmtEval.native_zplus, SmtEval.native_nat_to_int,
+    SmtEval.native_zplus, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat, native_ite, Int.add_comm]
 
 theorem smt_typeof_usubo_diff (x y : Term) (w : Nat)
@@ -193,7 +193,7 @@ theorem smt_typeof_usubo_diff (x y : Term) (w : Nat)
   rw [__smtx_typeof.eq_def]
   simp only
   rw [smt_typeof_usubo_ext x w hx, smt_typeof_usubo_ext y w hy]
-  simp [__smtx_typeof_bv_op_2, SmtEval.native_nateq,
+  simp [__smtx_typeof_bv_op_2, Smtm.native_nateq,
     SmtEval.native_ite]
 
 theorem typeof_bvult_args_of_ne_stuck {A B : Term}
@@ -315,7 +315,7 @@ theorem typed_usubo_term (x y n : Term) :
     rw [__smtx_typeof.eq_def]
     simp only
     simp [__smtx_typeof_bv_op_2_ret, hXSmtTyW, hYSmtTyW,
-      SmtEval.native_nateq, native_ite]
+      Smtm.native_nateq, native_ite]
   have hDiffSmtTy :
       __smtx_typeof (__eo_to_smt (usuboDiff x y)) =
         SmtType.BitVec (W + 1) :=
@@ -492,7 +492,7 @@ theorem eval_usubo_lhs
     __smtx_model_eval_bvugt, SmtEval.native_zlt]
 
 theorem facts_usubo_term
-    (M : SmtModel) (hM : model_total_typed M) (x y n : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y n : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     eo_interprets M (usuboPrem x n) true ->
@@ -597,7 +597,7 @@ theorem typed_usubo_program (x y n : Term) :
   exact typed_usubo_term x y n hXTrans hYTrans hTermTy
 
 theorem facts_usubo_program
-    (M : SmtModel) (hM : model_total_typed M) (x y n : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y n : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation n ->

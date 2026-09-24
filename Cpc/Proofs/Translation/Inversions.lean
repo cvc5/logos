@@ -13,6 +13,23 @@ open Smtm
 set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
 
+namespace Smtm
+
+/-- The datatype names a translation has already entered, which the recursive
+well-formedness predicates below carry along. This stood beside the model
+until native trimming dropped it: nothing the checker runs reaches it, so it
+lives here, where it is used. -/
+abbrev RefList := List native_String
+
+@[expose] def native_reflist_nil : RefList := []
+
+@[expose] def native_reflist_insert (xs : RefList) (s : native_String) := (s :: xs)
+
+@[expose] def native_reflist_contains (xs : RefList) (s : native_String) :=
+  decide (s ∈ xs)
+
+end Smtm
+
 namespace TranslationProofs
 
 attribute [local simp] native_ite
@@ -21,159 +38,159 @@ attribute [local simp] native_and
 
 @[simp] private theorem guarded_datatype_type_ne_bool
     (s : native_String) (d : SmtDatatypeDecl) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.Bool := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_bool
     (s : native_String) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.Bool := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_int
     (s : native_String) (d : SmtDatatypeDecl) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.Int := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_int
     (s : native_String) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.Int := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_real
     (s : native_String) (d : SmtDatatypeDecl) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.Real := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_real
     (s : native_String) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.Real := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_reglan
     (s : native_String) (d : SmtDatatypeDecl) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.RegLan := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_reglan
     (s : native_String) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.RegLan := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_char
     (s : native_String) (d : SmtDatatypeDecl) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.Char := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_char
     (s : native_String) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.Char := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_bitvec
     (s : native_String) (d : SmtDatatypeDecl) (w : native_Nat) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.BitVec w := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_bitvec
     (s : native_String) (w : native_Nat) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.BitVec w := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_seq
     (s : native_String) (d : SmtDatatypeDecl) (A : SmtType) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.Seq A := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_seq
     (s : native_String) (A : SmtType) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.Seq A := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_set
     (s : native_String) (d : SmtDatatypeDecl) (A : SmtType) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.Set A := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_set
     (s : native_String) (A : SmtType) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.Set A := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_map
     (s : native_String) (d : SmtDatatypeDecl) (A B : SmtType) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.Map A B := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_map
     (s : native_String) (A B : SmtType) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.Map A B := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_fun
     (s : native_String) (d : SmtDatatypeDecl) (A B : SmtType) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.FunType A B := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_fun
     (s : native_String) (A B : SmtType) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.FunType A B := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_dtc_app
     (s : native_String) (d : SmtDatatypeDecl) (A B : SmtType) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.DtcAppType A B := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_dtc_app
     (s : native_String) (A B : SmtType) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.DtcAppType A B := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_typeref
     (s r : native_String) (d : SmtDatatypeDecl) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.TypeRef r := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_datatype
     (s r : native_String) (d : SmtDatatypeDecl) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.Datatype r d := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_datatype_type_ne_usort
     (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.Datatype s d) ≠
       SmtType.USort i := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem guarded_typeref_type_ne_usort
     (s : native_String) (i : native_Nat) :
-    (if native_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
+    (if __eo_to_smt_reserved_datatype_name s = true then SmtType.None else SmtType.TypeRef s) ≠
       SmtType.USort i := by
-  by_cases h : native_reserved_datatype_name s = true <;> simp [h]
+  by_cases h : __eo_to_smt_reserved_datatype_name s = true <;> simp [h]
 
 @[simp] private theorem smt_fun_choice_if_ne_none
     (T U : SmtType) :
@@ -1176,7 +1193,7 @@ theorem eo_to_smt_type_eq_bitvec
                     have hnNonneg : 0 <= n := by
                       simpa [native_zleq, SmtEval.native_zleq] using hn
                     simp [native_nat_to_int, native_int_to_nat,
-                      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+                      Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
                       Int.toNat_of_nonneg hnNonneg]
                   · simp [native_ite, hn] at h
               | _ =>
@@ -1803,7 +1820,7 @@ lets tuple-body facts be read directly off `noResRefTy (tr tuple)`. -/
 mutual
 def noResRefTy : SmtType → Bool
   | SmtType.Datatype _ d => noResRefDt d
-  | SmtType.TypeRef s => native_not (native_reserved_datatype_name s)
+  | SmtType.TypeRef s => native_not (__eo_to_smt_reserved_datatype_name s)
   | SmtType.Seq a => noResRefTy a
   | SmtType.Set a => noResRefTy a
   | SmtType.Map a b => native_and (noResRefTy a) (noResRefTy b)
@@ -1820,7 +1837,7 @@ end
 
 /- Substituting a reserved name is a no-op on any `noResRef` structure. -/
 mutual
-theorem subst_noResRef_ty (r : native_String) (hRes : native_reserved_datatype_name r = true) :
+theorem subst_noResRef_ty (r : native_String) (hRes : __eo_to_smt_reserved_datatype_name r = true) :
     (T : SmtType) → (X : SmtDatatype) → noResRefTy T = true → __smtx_type_substitute r X T = T
   | SmtType.Datatype s d, X, h => by
       simp only [noResRefTy] at h
@@ -1850,7 +1867,7 @@ theorem subst_noResRef_ty (r : native_String) (hRes : native_reserved_datatype_n
   | SmtType.Char, X, h => by simp [__smtx_type_substitute]
   | SmtType.USort n, X, h => by simp [__smtx_type_substitute]
 
-theorem subst_noResRef_dt (r : native_String) (hRes : native_reserved_datatype_name r = true) :
+theorem subst_noResRef_dt (r : native_String) (hRes : __eo_to_smt_reserved_datatype_name r = true) :
     (W : SmtDatatype) → (X : SmtDatatype) → noResRefDt W = true → __smtx_dt_substitute r X W = W
   | SmtDatatype.null, X, h => by simp [__smtx_dt_substitute]
   | SmtDatatype.sum c d, X, h => by
@@ -1858,7 +1875,7 @@ theorem subst_noResRef_dt (r : native_String) (hRes : native_reserved_datatype_n
       simp only [__smtx_dt_substitute]
       rw [subst_noResRef_dtc r hRes c X h.1, subst_noResRef_dt r hRes d X h.2]
 
-theorem subst_noResRef_dtc (r : native_String) (hRes : native_reserved_datatype_name r = true) :
+theorem subst_noResRef_dtc (r : native_String) (hRes : __eo_to_smt_reserved_datatype_name r = true) :
     (c : SmtDatatypeCons) → (X : SmtDatatype) → noResRefDtc c = true → __smtx_dtc_substitute r X c = c
   | SmtDatatypeCons.unit, X, h => by simp [__smtx_dtc_substitute]
   | SmtDatatypeCons.cons T c, X, h => by
@@ -1903,17 +1920,17 @@ theorem noResRef_translate_ty : (T : Term) → noResRefTy (__eo_to_smt_type T) =
   | Term.Bool => by simp [__eo_to_smt_type, noResRefTy]
   | Term.USort i => by simp [__eo_to_smt_type, noResRefTy]
   | Term.DatatypeType s d => by
-      by_cases hs : native_reserved_datatype_name s = true
+      by_cases hs : __eo_to_smt_reserved_datatype_name s = true
       · simp [__eo_to_smt_type, native_ite, hs, noResRefTy]
-      · have hsF : native_reserved_datatype_name s = false := by
-          cases h : native_reserved_datatype_name s <;> simp [h] at hs ⊢
+      · have hsF : __eo_to_smt_reserved_datatype_name s = false := by
+          cases h : __eo_to_smt_reserved_datatype_name s <;> simp [h] at hs ⊢
         simp only [__eo_to_smt_type, native_ite, hsF, Bool.false_eq_true, if_false, noResRefTy]
         exact noResRef_translate_dt d
   | Term.DatatypeTypeRef s => by
-      by_cases hs : native_reserved_datatype_name s = true
+      by_cases hs : __eo_to_smt_reserved_datatype_name s = true
       · simp [__eo_to_smt_type, native_ite, hs, noResRefTy]
-      · have hsF : native_reserved_datatype_name s = false := by
-          cases h : native_reserved_datatype_name s <;> simp [h] at hs ⊢
+      · have hsF : __eo_to_smt_reserved_datatype_name s = false := by
+          cases h : __eo_to_smt_reserved_datatype_name s <;> simp [h] at hs ⊢
         simp [__eo_to_smt_type, native_ite, noResRefTy, native_not, hsF]
   | Term.DtcAppType T U => by
       simp only [__eo_to_smt_type]
@@ -2037,12 +2054,12 @@ theorem noResRef_translate_dtc : (c : DatatypeCons) → noResRefDtc (__eo_to_smt
 end
 
 /- Substituting a reserved name is a no-op on translated content. -/
-theorem subst_reserved_noop_ty (r : native_String) (hRes : native_reserved_datatype_name r = true)
+theorem subst_reserved_noop_ty (r : native_String) (hRes : __eo_to_smt_reserved_datatype_name r = true)
     (T : Term) (X : SmtDatatype) :
     __smtx_type_substitute r X (__eo_to_smt_type T) = __eo_to_smt_type T :=
   subst_noResRef_ty r hRes (__eo_to_smt_type T) X (noResRef_translate_ty T)
 
-theorem subst_reserved_noop_dt (r : native_String) (hRes : native_reserved_datatype_name r = true)
+theorem subst_reserved_noop_dt (r : native_String) (hRes : __eo_to_smt_reserved_datatype_name r = true)
     (d : Datatype) (X : SmtDatatype) :
     __smtx_dt_substitute r X (__eo_to_smt_datatype d) = __eo_to_smt_datatype d :=
   subst_noResRef_dt r hRes (__eo_to_smt_datatype d) X (noResRef_translate_dt d)
@@ -2060,7 +2077,7 @@ theorem tuple_diag_wf_components (y x : Term)
     (hNN : __eo_to_smt_type_tuple (__eo_to_smt_type y) (__eo_to_smt_type x) ≠ SmtType.None) :
     __smtx_type_wf_rec (__eo_to_smt_type y) (__eo_to_smt_type y) = true ∧
     __smtx_type_wf_rec (__eo_to_smt_type x) (__eo_to_smt_type x) = true := by
-  have hResTuple : native_reserved_datatype_name (native_string_lit "@Tuple") = true := by
+  have hResTuple : __eo_to_smt_reserved_datatype_name (native_string_lit "@Tuple") = true := by
     native_decide
   cases hxShape : __eo_to_smt_type x with
   | Datatype sx bx =>

@@ -209,7 +209,7 @@ private theorem eo_interprets_false (M : SmtModel) :
   · rw [__smtx_model_eval.eq_1]
 
 private theorem eo_interprets_or_right_of_left_false
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     eo_interprets M A false ->
     eo_interprets M (Term.Apply (Term.Apply Term.or A) B) true ->
     eo_interprets M B true := by
@@ -226,14 +226,14 @@ private theorem eo_interprets_or_right_of_left_false
             RuleProofs.eo_has_bool_type_or_right A B
               (by simpa [RuleProofs.eo_has_bool_type, RuleProofs.eo_to_smt_or_eq] using hTyOr)
           refine smt_interprets.intro_true M (__eo_to_smt B) hBBool ?_
-          rw [__smtx_model_eval.eq_7] at hEvalOr
+          rw [__smtx_model_eval.eq_8] at hEvalOr
           rcases RuleProofs.eo_eval_is_boolean_of_has_bool_type M hM B hBBool with ⟨b, hEvalB⟩
           rw [hEvalA, hEvalB, __smtx_model_eval_or, SmtEval.native_or] at hEvalOr
           cases b <;> simp at hEvalOr
           exact hEvalB
 
 private theorem eo_interprets_or_left_of_right_false
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     eo_interprets M B false ->
     eo_interprets M (Term.Apply (Term.Apply Term.or A) B) true ->
     eo_interprets M A true := by
@@ -250,7 +250,7 @@ private theorem eo_interprets_or_left_of_right_false
             RuleProofs.eo_has_bool_type_or_left A B
               (by simpa [RuleProofs.eo_has_bool_type, RuleProofs.eo_to_smt_or_eq] using hTyOr)
           refine smt_interprets.intro_true M (__eo_to_smt A) hABool ?_
-          rw [__smtx_model_eval.eq_7] at hEvalOr
+          rw [__smtx_model_eval.eq_8] at hEvalOr
           rcases RuleProofs.eo_eval_is_boolean_of_has_bool_type M hM A hABool with ⟨a, hEvalA⟩
           rw [hEvalA, hEvalB, __smtx_model_eval_or, SmtEval.native_or] at hEvalOr
           cases a <;> simp at hEvalOr
@@ -269,7 +269,7 @@ private theorem eo_interprets_not_false_of_true (M : SmtModel) (t : Term) :
       refine smt_interprets.intro_false M (SmtTerm.not (__eo_to_smt t)) ?_ ?_
       · simpa [RuleProofs.eo_has_bool_type, eo_to_smt_not_eq]
           using RuleProofs.eo_has_bool_type_not_of_bool_arg t hTy
-      · rw [__smtx_model_eval.eq_6]
+      · rw [__smtx_model_eval.eq_7]
         rw [hEval]
         simp [__smtx_model_eval_not, SmtEval.native_not]
 
@@ -318,7 +318,7 @@ private theorem to_clause_has_bool_type {c : Term} :
           _ (Term.Boolean false) hCBool RuleProofs.eo_has_bool_type_false
 
 private theorem to_clause_interprets_true
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     eo_interprets M c true ->
     eo_interprets M (__to_clause c) true := by
   intro hCTrue
@@ -382,7 +382,7 @@ private theorem list_erase_nonstuck_input_orClause {c e : Term} :
   exact orClause_of_is_list_true hList
 
 private theorem eo_interprets_bool_cases
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
     RuleProofs.eo_has_bool_type t ->
     eo_interprets M t true ∨ eo_interprets M t false := by
   intro hTy
@@ -433,7 +433,7 @@ private theorem erase_preserves_bool_type {c e : Term} :
   exact erase_rec_preserves_bool_type hClause hCBool hE
 
 private theorem erase_rec_true_of_good_lit
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c true ->
@@ -484,7 +484,7 @@ private theorem erase_rec_true_of_good_lit
             x (__eo_list_erase_rec xs e) hXBool hTailTrue
 
 private theorem erase_true_of_good_lit
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c true ->
@@ -595,7 +595,7 @@ private theorem concat_preserves_bool_type {c1 c2 : Term} :
   exact concat_rec_preserves_bool_type hC1 hC1Bool hC2Bool
 
 private theorem concat_rec_true_of_left_true
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     OrClause c1 ->
     RuleProofs.eo_has_bool_type c1 ->
     RuleProofs.eo_has_bool_type c2 ->
@@ -649,7 +649,7 @@ private theorem concat_rec_true_of_left_true
           x (__eo_list_concat_rec xs c2) hXBool hTailTrue
 
 private theorem concat_rec_true_of_right_true
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     OrClause c1 ->
     RuleProofs.eo_has_bool_type c1 ->
     RuleProofs.eo_has_bool_type c2 ->
@@ -691,7 +691,7 @@ private theorem concat_rec_true_of_right_true
         x (__eo_list_concat_rec xs c2) hXBool hTailTrue
 
 private theorem concat_true_of_left_true
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     OrClause c1 ->
     OrClause c2 ->
     RuleProofs.eo_has_bool_type c1 ->
@@ -708,7 +708,7 @@ private theorem concat_true_of_left_true
   exact concat_rec_true_of_left_true M hM hC1 hC1Bool hC2Bool hC1True
 
 private theorem concat_true_of_right_true
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     OrClause c1 ->
     OrClause c2 ->
     RuleProofs.eo_has_bool_type c1 ->
@@ -909,7 +909,7 @@ private theorem diff_rec_preserves_bool_type {c d : Term} :
         exact hTail
 
 private theorem diff_rec_true_of_good
-    (M : SmtModel) (hM : model_total_typed M) {c d : Term} :
+    (M : SmtModel) (hM : model_wf M) {c d : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c true ->
@@ -1000,7 +1000,7 @@ private theorem diff_preserves_bool_type {c d : Term} :
   exact diff_rec_preserves_bool_type hC hCBool hD
 
 private theorem diff_true_of_good
-    (M : SmtModel) (hM : model_total_typed M) {c d : Term} :
+    (M : SmtModel) (hM : model_wf M) {c d : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c true ->
@@ -1031,7 +1031,7 @@ private theorem list_diff_nonstuck_input_orClause {a b : Term} :
   exact orClause_of_is_list_true hList
 
 private theorem concat_false_implies_right_false
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     OrClause c1 ->
     OrClause c2 ->
     RuleProofs.eo_has_bool_type c1 ->
@@ -1111,7 +1111,7 @@ private theorem list_concat_nonstuck_right_orClause {a b : Term} :
   exact orClause_of_is_list_true hList
 
 private theorem chain_m_resolve_rec_step_true_false_implies_prev_false_of_safe_bool
-    (M : SmtModel) (hM : model_total_typed M) {Cr rl Cc Cr' L : Term} :
+    (M : SmtModel) (hM : model_wf M) {Cr rl Cc Cr' L : Term} :
     OrClause Cr ->
     RuleProofs.eo_has_bool_type Cr ->
     SafeOrClause rl ->
@@ -1180,7 +1180,7 @@ private theorem chain_m_resolve_rec_step_true_false_implies_prev_false_of_safe_b
     exact concat_false_implies_right_false M hM hDiffClause hCr hDiffBool hCrBool hConcatFalse
 
 private theorem chain_m_resolve_rec_step_false_false_implies_prev_false_of_safe_bool
-    (M : SmtModel) (hM : model_total_typed M) {Cr rl Cc Cr' L : Term} :
+    (M : SmtModel) (hM : model_wf M) {Cr rl Cc Cr' L : Term} :
     OrClause Cr ->
     RuleProofs.eo_has_bool_type Cr ->
     SafeOrClause rl ->
@@ -1244,7 +1244,7 @@ private theorem chain_m_resolve_rec_step_false_false_implies_prev_false_of_safe_
     exact concat_false_implies_right_false M hM hDiffClause hCr hDiffBool hCrBool hConcatFalse
 
 private theorem chain_m_resolve_rec_step_true_false_implies_good_of_bool
-    (M : SmtModel) (hM : model_total_typed M) {Cr rl Cc Cr' L : Term} :
+    (M : SmtModel) (hM : model_wf M) {Cr rl Cc Cr' L : Term} :
     OrClause Cr ->
     eo_interprets M Cr false ->
     GoodOrClause M rl ->
@@ -1331,7 +1331,7 @@ private theorem chain_m_resolve_rec_step_true_false_implies_good_of_bool
   · exact GoodOrClause.cons L rl hLNe (Or.inl hLBool) hRlGood
 
 private theorem chain_m_resolve_rec_step_false_false_implies_good_of_bool
-    (M : SmtModel) (hM : model_total_typed M) {Cr rl Cc Cr' L : Term} :
+    (M : SmtModel) (hM : model_wf M) {Cr rl Cc Cr' L : Term} :
     OrClause Cr ->
     eo_interprets M Cr false ->
     GoodOrClause M rl ->
@@ -1848,7 +1848,7 @@ private theorem chain_m_resolve_rec_and_cons_cons_local (C Cs pol pols L lits : 
   rfl
 
 private theorem chain_m_resolve_rec_pair_false_implies_good
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ premises pols lits Cr rl,
       AllHaveBoolType premises ->
       AllInterpretedTrue M premises ->
@@ -2059,7 +2059,7 @@ private theorem from_clause_preserves_bool_type {c : Term} :
         exact hCBool
 
 private theorem from_clause_true
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c true ->
@@ -2149,7 +2149,7 @@ private theorem chain_m_resolve_final_pair_of_nonstuck
       cases C1 <;> simp [__chain_m_resolve_final, hR] at hFinal
 
 private theorem chain_m_resolve_final_properties_of_nonstuck
-    (M : SmtModel) (hM : model_total_typed M) {C1 C2 L rl : Term} :
+    (M : SmtModel) (hM : model_wf M) {C1 C2 L rl : Term} :
     RuleProofs.eo_has_bool_type C1 ->
     eo_interprets M C1 true ->
     OrClause C2 ->
@@ -2281,7 +2281,7 @@ private theorem chain_m_resolve_final_properties_of_nonstuck
     · simpa [hFinalEq] using hFinalTrue
 
 private theorem chain_m_resolve_properties_of_nonstuck
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ premises pols lits,
       AllHaveBoolType premises ->
       AllInterpretedTrue M premises ->
@@ -2601,7 +2601,7 @@ private theorem chain_m_resolve_final_structural_of_nonstuck
     exact ⟨by simpa [hFinalEq] using hFinalClause, by simpa [hFinalEq] using hFinalBool⟩
 
 private theorem chain_m_resolve_structural_of_nonstuck
-    {M : SmtModel} (hM : model_total_typed M) :
+    {M : SmtModel} (hM : model_wf M) :
     ∀ premises pols lits,
       AllHaveBoolType premises ->
       EoListAllHaveSmtTranslation pols ->
@@ -2752,7 +2752,7 @@ private theorem get_elements_or_eq {x xs : Term} :
   simp [__eo_get_elements_rec, __eo_mk_apply]
 
 private theorem erase_rec_true_implies_original_true
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -2789,7 +2789,7 @@ private theorem erase_rec_true_implies_original_true
           exact RuleProofs.eo_interprets_or_right_intro M hM x xs hXBool hXsTrue
 
 private theorem erase_true_implies_original_true
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -2804,7 +2804,7 @@ private theorem erase_true_implies_original_true
   exact erase_rec_true_implies_original_true M hM hClause hCBool hE hEraseTrue
 
 private theorem erase_rec_changed_and_lit_true_implies_clause_true
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -2844,7 +2844,7 @@ private theorem erase_rec_changed_and_lit_true_implies_clause_true
           exact RuleProofs.eo_interprets_or_right_intro M hM x xs hXBool hXsTrue
 
 private theorem erase_changed_and_lit_true_implies_clause_true
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -3010,7 +3010,7 @@ private theorem erase_all_rec_preserves_bool_type {c e : Term} :
           hXBool hTail
 
 private theorem erase_all_rec_true_of_lit_false
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -3114,7 +3114,7 @@ private theorem setof_rec_structural {c : Term} :
           (__eo_list_erase_all_rec (__eo_list_setof_rec xs) x) hXBool hEraseBool⟩
 
 private theorem setof_rec_true
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c true ->
@@ -3179,7 +3179,7 @@ private theorem setof_preserves_bool_type {c : Term} :
   exact (setof_rec_structural hClause hCBool).2
 
 private theorem setof_true
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     OrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c true ->
@@ -3192,7 +3192,7 @@ private theorem setof_true
   exact setof_rec_true M hM hClause hCBool hCTrue
 
 private theorem orClause_true_of_minclude_true
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ {c d : Term},
       OrClause c ->
       RuleProofs.eo_has_bool_type c ->
@@ -3282,7 +3282,7 @@ private theorem orClause_true_of_minclude_true
         exact erase_true_implies_original_true M hM hC hCBool hX hEraseTrue
 
 theorem cmd_step_chain_m_resolution_properties_aux
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.chain_m_resolution args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -3449,7 +3449,7 @@ theorem cmd_step_chain_m_resolution_properties_aux
                   exact False.elim (hProg rfl)
 
 theorem cmd_step_chain_resolution_properties_aux
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.chain_resolution args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -3578,7 +3578,7 @@ private theorem resolution_component_bool_type {lit clause : Term} :
     exact erase_preserves_bool_type hClauseOr hClauseBool hLitNe
 
 private theorem resolution_component_true
-    (M : SmtModel) (hM : model_total_typed M) {lit clause : Term} :
+    (M : SmtModel) (hM : model_wf M) {lit clause : Term} :
     RuleProofs.eo_has_bool_type clause ->
     eo_interprets M clause true ->
     (¬ RuleProofs.eo_has_bool_type lit ∨ eo_interprets M lit false) ->
@@ -3671,7 +3671,7 @@ private theorem prog_resolution_pol_not_bool_stuck
         ]
 
 private theorem prog_resolution_true_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (L C1 C2 : Term) :
     RuleProofs.eo_has_bool_type C1 ->
     RuleProofs.eo_has_bool_type C2 ->
@@ -3757,7 +3757,7 @@ private theorem prog_resolution_true_properties
         simpa [Cl1, Cl2, Comp1, Comp2] using hFinalBool)
 
 private theorem prog_resolution_false_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (L C1 C2 : Term) :
     RuleProofs.eo_has_bool_type C1 ->
     RuleProofs.eo_has_bool_type C2 ->
@@ -3843,7 +3843,7 @@ private theorem prog_resolution_false_properties
         simpa [Cl1, Cl2, Comp1, Comp2] using hFinalBool)
 
 theorem cmd_step_resolution_properties_aux
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.resolution args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -3916,7 +3916,7 @@ by
               exact False.elim (hProg rfl)
 
 theorem cmd_step_factoring_properties_aux
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.factoring args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -3977,7 +3977,7 @@ theorem cmd_step_factoring_properties_aux
       exact False.elim (hProg rfl)
 
 theorem cmd_step_reordering_properties_aux
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.reordering args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

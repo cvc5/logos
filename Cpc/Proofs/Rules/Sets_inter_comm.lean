@@ -87,17 +87,17 @@ private theorem set_inter_comm_rel
     (hMyCan : __smtx_map_canonical my = true)
     (hMxTy : __smtx_typeof_map_value mx = SmtType.Map A SmtType.Bool)
     (hMyTy : __smtx_typeof_map_value my = SmtType.Map A SmtType.Bool)
-    (hMxDef : __smtx_msm_get_default mx = SmtValue.Boolean false)
-    (hMyDef : __smtx_msm_get_default my = SmtValue.Boolean false) :
+    (hMxDef : __smtx_map_get_default mx = SmtValue.Boolean false)
+    (hMyDef : __smtx_map_get_default my = SmtValue.Boolean false) :
     RuleProofs.smt_value_rel
       (__smtx_set_inter (SmtValue.Set mx) (SmtValue.Set my))
       (__smtx_set_inter (SmtValue.Set my) (SmtValue.Set mx)) := by
   let left :=
-    __smtx_mss_op_internal true mx my
+    __smtx_set_op_rec true mx my
       (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx))
         (SmtValue.Boolean false))
   let right :=
-    __smtx_mss_op_internal true my mx
+    __smtx_set_op_rec true my mx
       (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value my))
         (SmtValue.Boolean false))
   have hEmptyMxTy :
@@ -141,12 +141,12 @@ private theorem set_inter_comm_rel
     dsimp [right]
     exact Smtm.mss_op_internal_typed true hMyTy hMxTy hEmptyMyTy
   have hLeftDef :
-      __smtx_msm_get_default left = SmtValue.Boolean false := by
+      __smtx_map_get_default left = SmtValue.Boolean false := by
     dsimp [left]
     rw [Smtm.mss_op_internal_get_default true, hMxTy]
     rfl
   have hRightDef :
-      __smtx_msm_get_default right = SmtValue.Boolean false := by
+      __smtx_map_get_default right = SmtValue.Boolean false := by
     dsimp [right]
     rw [Smtm.mss_op_internal_get_default true, hMyTy]
     rfl
@@ -154,7 +154,7 @@ private theorem set_inter_comm_rel
     rw [set_default_leaf hLeftCan hLeftTy hLeftDef,
       set_default_leaf hRightCan hRightTy hRightDef]
   have hLookup :
-      ∀ v : SmtValue, __smtx_msm_lookup left v = __smtx_msm_lookup right v := by
+      ∀ v : SmtValue, __smtx_map_lookup left v = __smtx_map_lookup right v := by
     intro v
     dsimp [left, right]
     rw [set_inter_lookup (mx := mx) (my := my) (A := A) (i := v)
@@ -162,10 +162,10 @@ private theorem set_inter_comm_rel
     rw [set_inter_lookup (mx := my) (my := mx) (A := A) (i := v)
       hMyTy hMxTy hMyCan hMyDef]
     have hMxLookupTy :
-        __smtx_typeof_value (__smtx_msm_lookup mx v) = SmtType.Bool :=
+        __smtx_typeof_value (__smtx_map_lookup mx v) = SmtType.Bool :=
       set_map_lookup_bool (m := mx) (A := A) (i := v) hMxTy
     have hMyLookupTy :
-        __smtx_typeof_value (__smtx_msm_lookup my v) = SmtType.Bool :=
+        __smtx_typeof_value (__smtx_map_lookup my v) = SmtType.Bool :=
       set_map_lookup_bool (m := my) (A := A) (i := v) hMyTy
     rcases bool_value_canonical hMxLookupTy with ⟨bx, hbx⟩
     rcases bool_value_canonical hMyLookupTy with ⟨byy, hbyy⟩
@@ -176,7 +176,7 @@ private theorem set_inter_comm_rel
       hLeaf hLookup
 
 private theorem facts___eo_prog_sets_inter_comm_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y : Term)
     (hxTrans : RuleProofs.eo_has_smt_translation x)
     (hyTrans : RuleProofs.eo_has_smt_translation y)
@@ -215,7 +215,7 @@ private theorem facts___eo_prog_sets_inter_comm_impl
           hMxCan hMyCan hMxTy hMyTy hMxDef hMyDef)
 
 public theorem cmd_step_sets_inter_comm_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_inter_comm args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

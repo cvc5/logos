@@ -12,7 +12,7 @@ set_option maxHeartbeats 10000000
 set_option maxRecDepth 2000
 
 public theorem cmd_step_alpha_equiv_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.alpha_equiv args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

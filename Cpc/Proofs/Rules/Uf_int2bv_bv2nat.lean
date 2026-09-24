@@ -238,7 +238,7 @@ private theorem typed___eo_prog_uf_int2bv_bv2nat_impl
     (by rw [hLhsTy]; decide)
 
 private theorem eval_ubv_int_to_bv_matches_mod_pow2
-    (M : SmtModel) (hM : model_total_typed M) (n : native_Int) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (n : native_Int) (t : Term) :
     RuleProofs.eo_has_smt_translation t ->
     __eo_typeof t = Term.UOp UserOp.Int ->
     __smtx_model_eval M
@@ -266,7 +266,7 @@ private theorem eval_ubv_int_to_bv_matches_mod_pow2
     __smtx_model_eval_mod_total, __smtx_model_eval_int_pow2]
 
 private theorem facts___eo_prog_uf_int2bv_bv2nat_impl
-    (M : SmtModel) (hM : model_total_typed M) (w t : Term) :
+    (M : SmtModel) (hM : model_wf M) (w t : Term) :
     RuleProofs.eo_has_smt_translation t ->
     __eo_typeof (__eo_prog_uf_int2bv_bv2nat w t) = Term.Bool ->
     eo_interprets M (__eo_prog_uf_int2bv_bv2nat w t) true := by
@@ -292,7 +292,7 @@ private theorem facts___eo_prog_uf_int2bv_bv2nat_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_uf_int2bv_bv2nat_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.uf_int2bv_bv2nat args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

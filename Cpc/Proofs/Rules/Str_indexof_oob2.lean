@@ -170,7 +170,7 @@ private theorem typed___eo_prog_str_indexof_oob2_impl
   simpa [indexofOob2Conclusion, lhs, rhs] using hBoolEq
 
 private theorem facts___eo_prog_str_indexof_oob2_impl
-    (M : SmtModel) (hM : model_total_typed M) (t s n P : Term)
+    (M : SmtModel) (hM : model_wf M) (t s n P : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hSTrans : RuleProofs.eo_has_smt_translation s)
     (hNTrans : RuleProofs.eo_has_smt_translation n)
@@ -251,7 +251,7 @@ private theorem facts___eo_prog_str_indexof_oob2_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_indexof_oob2_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_indexof_oob2 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

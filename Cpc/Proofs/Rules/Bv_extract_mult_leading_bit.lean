@@ -383,7 +383,7 @@ private theorem bvExtractMultLeadingMatchGuard_eqs
 
 set_option maxHeartbeats 100000000 in
 private theorem facts_bvExtractMultLeadingProgram
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (result high low xi xin x yi yin y w P1 P2 P3 P4 P5 P6 P7 : Term) :
     RuleProofs.eo_has_smt_translation high ->
     RuleProofs.eo_has_smt_translation low ->
@@ -546,7 +546,7 @@ public section
 
 set_option maxHeartbeats 100000000 in
 private theorem cmd_step_bv_extract_mult_leading_bit_properties_aux
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_extract_mult_leading_bit args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -638,7 +638,7 @@ private theorem cmd_step_bv_extract_mult_leading_bit_properties_aux
         hResultProgramTy
 
 theorem cmd_step_bv_extract_mult_leading_bit_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_extract_mult_leading_bit args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

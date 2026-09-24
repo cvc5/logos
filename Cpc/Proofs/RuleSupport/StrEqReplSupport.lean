@@ -176,18 +176,18 @@ theorem native_seq_indexof_rec_nil
 
 theorem native_re_find_idx_aux_re_of_list_length :
     ∀ (pat xs : List SmtValue) (i idx len : Nat),
-      native_re_find_idx_aux (native_re_of_list pat) xs i =
+      impl_native_re_find_idx_aux (impl_native_re_of_list pat) xs i =
           some (idx, len) →
         len = pat.length
   | pat, [], i, idx, len, hFind => by
-      rw [native_re_find_idx_aux.eq_def,
+      rw [impl_native_re_find_idx_aux.eq_def,
         native_re_prefix_match_re_of_list] at hFind
       by_cases hPrefix : native_seq_prefix_eq pat [] = true
       · simp [hPrefix] at hFind
         omega
       · simp [hPrefix] at hFind
   | pat, x :: xs, i, idx, len, hFind => by
-      rw [native_re_find_idx_aux.eq_def,
+      rw [impl_native_re_find_idx_aux.eq_def,
         native_re_prefix_match_re_of_list] at hFind
       by_cases hPrefix : native_seq_prefix_eq pat (x :: xs) = true
       · simp [hPrefix] at hFind

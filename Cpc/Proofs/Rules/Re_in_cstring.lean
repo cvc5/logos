@@ -59,13 +59,13 @@ private theorem eo_typeof_str_to_re_eq_seq_char_of_ne_stuck (T : Term)
 private theorem list_typed_char_pack_unpack :
     ∀ {xs : List SmtValue},
       list_typed SmtType.Char xs ->
-        xs.map (fun v => SmtValue.Char (native_ssm_char_of_value v)) = xs
+        xs.map (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) = xs
   | [], _ => rfl
   | v :: vs, hxs => by
       rcases hxs with ⟨hv, hvs⟩
       rcases char_value_canonical hv with ⟨c, hvc, _hc⟩
       rw [hvc]
-      simpa [native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
+      simpa [impl_native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
 
 private theorem native_pack_string_unpack_string_of_typeof_seq_char
     (ss : SmtSeq)
@@ -75,7 +75,7 @@ private theorem native_pack_string_unpack_string_of_typeof_seq_char
     typed_unpack_seq_of_typeof_seq_value hTy
   have hMap :
       (native_unpack_seq ss).map
-          (fun v => SmtValue.Char (native_ssm_char_of_value v)) =
+          (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) =
         native_unpack_seq ss :=
     list_typed_char_pack_unpack hTyped
   have hElem : __smtx_elem_typeof_seq_value ss = SmtType.Char :=
@@ -84,7 +84,7 @@ private theorem native_pack_string_unpack_string_of_typeof_seq_char
   simp only [List.map_map]
   change native_pack_seq SmtType.Char
       ((native_unpack_seq ss).map
-        (fun v => SmtValue.Char (native_ssm_char_of_value v))) =
+        (fun v => SmtValue.Char (impl_native_ssm_char_of_value v))) =
     ss
   rw [hMap]
   simpa [hElem] using native_pack_unpack_seq ss
@@ -97,23 +97,23 @@ private theorem nativeListInRe_char_self
 private theorem nativeListInRe_re_of_list_self :
     ∀ pat : native_String,
       native_string_valid pat = true ->
-        RuleProofs.nativeListInRe pat (native_re_of_list pat) = true
+        RuleProofs.nativeListInRe pat (impl_native_re_of_list pat) = true
   | [], _ => by
-      simp [native_re_of_list, RuleProofs.nativeListInRe, native_re_nullable]
+      simp [impl_native_re_of_list, RuleProofs.nativeListInRe, native_re_nullable]
   | c :: cs, hValid => by
       rcases RuleProofs.native_string_valid_cons_parts hValid with ⟨hc, hcs⟩
       have hHead : RuleProofs.nativeListInRe [c] (SmtRegLan.char c) = true :=
         nativeListInRe_char_self c hc
-      have hTail : RuleProofs.nativeListInRe cs (native_re_of_list cs) = true :=
+      have hTail : RuleProofs.nativeListInRe cs (impl_native_re_of_list cs) = true :=
         nativeListInRe_re_of_list_self cs hcs
       have hConcat :
           RuleProofs.nativeListInRe (c :: cs)
               (native_re_mk_concat (SmtRegLan.char c)
-                (native_re_of_list cs)) = true :=
+                (impl_native_re_of_list cs)) = true :=
         (RuleProofs.nativeListInRe_mk_concat_true_iff_exists_append
-          (c :: cs) (SmtRegLan.char c) (native_re_of_list cs)).2
+          (c :: cs) (SmtRegLan.char c) (impl_native_re_of_list cs)).2
           ⟨[c], cs, rfl, hHead, hTail⟩
-      simpa [native_re_of_list] using hConcat
+      simpa [impl_native_re_of_list] using hConcat
 
 private theorem native_str_in_re_str_to_re_self
     (pat : native_String)
@@ -268,7 +268,7 @@ private theorem typed___eo_prog_re_in_cstring_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_re_in_cstring_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 a2 : Term)
+    (M : SmtModel) (hM : model_wf M) (a1 a2 : Term)
     (hA1Trans : RuleProofs.eo_has_smt_translation a1)
     (hA2Trans : RuleProofs.eo_has_smt_translation a2)
     (hA1Ty : __eo_typeof a1 = Term.Apply Term.Seq Term.Char)
@@ -385,7 +385,7 @@ private theorem facts___eo_prog_re_in_cstring_impl
 end ReInCStringProof
 
 public theorem cmd_step_re_in_cstring_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_in_cstring args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

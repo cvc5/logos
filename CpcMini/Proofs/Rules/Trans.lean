@@ -386,7 +386,7 @@ by
 
 /-- Proves correctness of the EO program for `trans_impl`. -/
 theorem correct___eo_prog_trans_impl
-    (M : SmtModel) (_hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (_hM : model_wf M) (x1 : Term) :
   (eo_interprets M x1 true) ->
   RuleProofs.eo_has_bool_type (__eo_prog_trans (Proof.pf x1)) ->
   (eo_interprets M (__eo_prog_trans (Proof.pf x1)) true) :=
@@ -431,7 +431,7 @@ by
 
 /-- Derives the checker facts exposed by the EO program for `trans_impl`. -/
 theorem facts___eo_prog_trans_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
   eo_interprets M x1 true ->
   __eo_prog_trans (Proof.pf x1) ≠ Term.Stuck ->
   eo_interprets M (__eo_prog_trans (Proof.pf x1)) true :=
@@ -445,7 +445,7 @@ by
 
 /-- Packages the properties required for the `trans` checker step. -/
 public theorem cmd_step_trans_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.trans args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

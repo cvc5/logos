@@ -471,9 +471,9 @@ private theorem assoc_nil_nth_dt_constructors_find_self
 private theorem smt_value_eq_head_of_no_apply_args
     (v : SmtValue) :
     vsm_num_apply_args v = 0 ->
-    v = __vsm_apply_head v := by
+    v = __smtx_apply_head_value v := by
   intro h
-  cases v <;> simp [vsm_num_apply_args, __vsm_apply_head] at h ⊢
+  cases v <;> simp [vsm_num_apply_args, __smtx_apply_head_value] at h ⊢
 
 private theorem tester_ctor_translation_of_non_none
     (c t : Term) :
@@ -609,13 +609,13 @@ private theorem mkDtSmtAppSpineRev_append_singleton
 private theorem vsm_apply_head_mkDtSmtValueSpineRev_dtcons
     (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
     ∀ xs : List SmtValue,
-      __vsm_apply_head
+      __smtx_apply_head_value
           (mkDtSmtValueSpineRev (SmtValue.DtCons s d i) xs) =
         SmtValue.DtCons s d i
   | [] => by
-      simp [mkDtSmtValueSpineRev, __vsm_apply_head]
+      simp [mkDtSmtValueSpineRev, __smtx_apply_head_value]
   | x :: xs => by
-      simp [mkDtSmtValueSpineRev, __vsm_apply_head,
+      simp [mkDtSmtValueSpineRev, __smtx_apply_head_value,
         vsm_apply_head_mkDtSmtValueSpineRev_dtcons s d i xs]
 
 private theorem vsm_num_apply_args_mkDtSmtValueSpineRev_dtcons
@@ -644,34 +644,34 @@ private theorem mkDtSmtValueSpineRev_append_singleton
 private theorem vsm_apply_arg_nth_mkDtSmtValueSpineRev_head_arg
     (head a : SmtValue) :
     ∀ ys : List SmtValue,
-      __vsm_apply_arg_nth
+      __smtx_apply_arg_nth_value
           (mkDtSmtValueSpineRev (SmtValue.Apply head a) ys)
           0 (ys.length + 1) = a
   | [] => by
-      simp [mkDtSmtValueSpineRev, __vsm_apply_arg_nth, native_nateq,
+      simp [mkDtSmtValueSpineRev, __smtx_apply_arg_nth_value, native_nateq,
         native_ite]
   | y :: ys => by
-      simp [mkDtSmtValueSpineRev, __vsm_apply_arg_nth, native_nateq,
+      simp [mkDtSmtValueSpineRev, __smtx_apply_arg_nth_value, native_nateq,
         native_ite,
         vsm_apply_arg_nth_mkDtSmtValueSpineRev_head_arg head a ys]
 
 private theorem vsm_apply_arg_nth_mkDtSmtValueSpineRev_succ
     (head a : SmtValue) :
     ∀ (ys : List SmtValue) (j : Nat),
-      __vsm_apply_arg_nth
+      __smtx_apply_arg_nth_value
           (mkDtSmtValueSpineRev (SmtValue.Apply head a) ys)
           (Nat.succ j) (ys.length + 1) =
-        __vsm_apply_arg_nth
+        __smtx_apply_arg_nth_value
           (mkDtSmtValueSpineRev head ys) j ys.length
   | [], j => by
-      simp [mkDtSmtValueSpineRev, __vsm_apply_arg_nth, native_nateq,
+      simp [mkDtSmtValueSpineRev, __smtx_apply_arg_nth_value, native_nateq,
         native_ite]
   | y :: ys, j => by
       by_cases hj : j = ys.length
       · subst j
-        simp [mkDtSmtValueSpineRev, __vsm_apply_arg_nth, native_nateq,
+        simp [mkDtSmtValueSpineRev, __smtx_apply_arg_nth_value, native_nateq,
           native_ite]
-      · simp [mkDtSmtValueSpineRev, __vsm_apply_arg_nth, native_nateq,
+      · simp [mkDtSmtValueSpineRev, __smtx_apply_arg_nth_value, native_nateq,
           native_ite, hj,
           vsm_apply_arg_nth_mkDtSmtValueSpineRev_succ head a ys j]
 
@@ -684,7 +684,7 @@ private theorem vsm_apply_arg_nth_mkDtSmtValueSpineRev_reverse_smt_get?
     (M : SmtModel) (head : SmtValue) :
     ∀ (xs : List SmtTerm) (j : Nat) (ti : SmtTerm),
       listGetOptionSmt xs j = some ti ->
-      __vsm_apply_arg_nth
+      __smtx_apply_arg_nth_value
           (mkDtSmtValueSpineRev head
             (xs.reverse.map (fun x => __smtx_model_eval M x)))
           j xs.length =
@@ -708,7 +708,7 @@ private theorem vsm_apply_arg_nth_mkDtSmtValueSpineRev_reverse_smt_get?
       rw [List.map_reverse] at hRec
       let ys := (List.map (fun x => __smtx_model_eval M x) xs).reverse
       have hRecLen :
-          __vsm_apply_arg_nth (mkDtSmtValueSpineRev head ys) j ys.length =
+          __smtx_apply_arg_nth_value (mkDtSmtValueSpineRev head ys) j ys.length =
             __smtx_model_eval M ti := by
         simpa [ys, List.length_reverse] using hRec
       rw [List.reverse_cons, List.map_append]
@@ -841,7 +841,7 @@ private theorem smtx_model_eval_mkDtSmtAppSpineRev_dtcons
         M s d i (xs.map (__smtx_model_eval M)) (__smtx_model_eval M x) hx
 
 private theorem smt_model_eval_not_notvalue_of_non_none
-    (M : SmtModel) (hM : model_total_typed M) (x : SmtTerm)
+    (M : SmtModel) (hM : model_wf M) (x : SmtTerm)
     (hNN : __smtx_typeof x ≠ SmtType.None) :
     __smtx_model_eval M x ≠ SmtValue.NotValue := by
   have hPres :=
@@ -858,11 +858,11 @@ private theorem smtx_model_eval_eq_is_boolean (v1 v2 : SmtValue) :
 private theorem vsm_apply_ext_aux :
     ∀ (n : Nat) (v w : SmtValue),
       vsm_num_apply_args v = n ->
-      __vsm_apply_head v = __vsm_apply_head w ->
+      __smtx_apply_head_value v = __smtx_apply_head_value w ->
       vsm_num_apply_args v = vsm_num_apply_args w ->
       (∀ j, j < vsm_num_apply_args v ->
-        __vsm_apply_arg_nth v j (vsm_num_apply_args v) =
-          __vsm_apply_arg_nth w j (vsm_num_apply_args w)) ->
+        __smtx_apply_arg_nth_value v j (vsm_num_apply_args v) =
+          __smtx_apply_arg_nth_value w j (vsm_num_apply_args w)) ->
       v = w := by
   intro n
   induction n with
@@ -871,7 +871,7 @@ private theorem vsm_apply_ext_aux :
       cases v <;> simp [vsm_num_apply_args] at hv
       all_goals
         cases w <;> simp [vsm_num_apply_args] at hCount
-        simp [__vsm_apply_head] at hHead ⊢
+        simp [__smtx_apply_head_value] at hHead ⊢
         all_goals try exact hHead
   | succ n ih =>
       intro v w hv hHead hCount hArgs
@@ -881,16 +881,16 @@ private theorem vsm_apply_ext_aux :
         case Apply g b =>
           have hCountFG : vsm_num_apply_args f = vsm_num_apply_args g := hCount
           have hLast :
-              __vsm_apply_arg_nth (SmtValue.Apply f a) (vsm_num_apply_args f)
+              __smtx_apply_arg_nth_value (SmtValue.Apply f a) (vsm_num_apply_args f)
                   (vsm_num_apply_args (SmtValue.Apply f a)) =
-                __vsm_apply_arg_nth (SmtValue.Apply g b) (vsm_num_apply_args f)
+                __smtx_apply_arg_nth_value (SmtValue.Apply g b) (vsm_num_apply_args f)
                   (vsm_num_apply_args (SmtValue.Apply g b)) :=
             hArgs (vsm_num_apply_args f) (by simp [vsm_num_apply_args])
           have hab : a = b := by
-            simpa [__vsm_apply_arg_nth, vsm_num_apply_args, hCountFG, SmtEval.native_nateq, native_ite] using hLast
+            simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, hCountFG, Smtm.native_nateq, native_ite] using hLast
           have hfg : f = g := by
             apply ih f g hv
-            · simpa [__vsm_apply_head] using hHead
+            · simpa [__smtx_apply_head_value] using hHead
             · exact hCountFG
             · intro j hj
               have hjTop : j < vsm_num_apply_args (SmtValue.Apply f a) := by
@@ -902,19 +902,19 @@ private theorem vsm_apply_ext_aux :
                 intro hEq
                 apply hNeF
                 rw [hCountFG, hEq]
-              simpa [__vsm_apply_arg_nth, vsm_num_apply_args, hCountFG,
-                SmtEval.native_nateq, native_ite, hNeF, hNeG] using hArg
+              simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, hCountFG,
+                Smtm.native_nateq, native_ite, hNeF, hNeG] using hArg
           subst hfg
           subst hab
           rfl
 
 private theorem vsm_apply_ext
     (v w : SmtValue)
-    (hHead : __vsm_apply_head v = __vsm_apply_head w)
+    (hHead : __smtx_apply_head_value v = __smtx_apply_head_value w)
     (hCount : vsm_num_apply_args v = vsm_num_apply_args w)
     (hArgs : ∀ j, j < vsm_num_apply_args v ->
-      __vsm_apply_arg_nth v j (vsm_num_apply_args v) =
-        __vsm_apply_arg_nth w j (vsm_num_apply_args w)) :
+      __smtx_apply_arg_nth_value v j (vsm_num_apply_args v) =
+        __smtx_apply_arg_nth_value w j (vsm_num_apply_args w)) :
     v = w :=
   vsm_apply_ext_aux (vsm_num_apply_args v) v w rfl hHead hCount hArgs
 
@@ -963,13 +963,13 @@ private theorem dtSelectorApps_get_of_lt
 
 private theorem eo_to_smt_apply_dt_sel_unreserved
     (s : native_String) (d : DatatypeDecl) (i j : native_Nat) (x : Term)
-    (hReserved : native_reserved_datatype_name s = false) :
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false) :
     __eo_to_smt (Term.Apply (Term.DtSel s d i j) x) =
       SmtTerm.Apply (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j)
         (__eo_to_smt x) := by
   change
     SmtTerm.Apply
-        (native_ite (native_reserved_datatype_name s) SmtTerm.None
+        (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
           (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
         (__eo_to_smt x) =
       SmtTerm.Apply (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j)
@@ -980,7 +980,7 @@ private theorem eo_to_smt_apply_dt_sel_unreserved
 private theorem eo_to_smt_mk_dt_inst_rec_selectors
     (s : native_String) (root : DatatypeDecl) (n : native_Nat)
     (x acc : Term)
-    (hReserved : native_reserved_datatype_name s = false)
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false)
     (hx : x ≠ Term.Stuck)
     (hAcc : DtConsSpineRoot acc s root n) :
     ∀ (d : Datatype) (ci ai : native_Nat),
@@ -1079,9 +1079,9 @@ private theorem eo_to_smt_mk_dt_inst_rec_selectors
           (by simpa [__eo_datatype_cons_selectors_rec] using hNN)
 
 private theorem dt_inst_bare_dtcons_interprets
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term) (s : native_String) (d : DatatypeDecl) (i : Nat)
-    (hReserved : native_reserved_datatype_name s = false)
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false)
     (hXTy :
       __smtx_typeof (__eo_to_smt x) =
         SmtType.Datatype s (__eo_to_smt_datatype_decl d))
@@ -1119,10 +1119,10 @@ private theorem dt_inst_bare_dtcons_interprets
         SmtTerm.eq
           (SmtTerm.Apply
             (__eo_to_smt_tester
-              (native_ite (native_reserved_datatype_name s) SmtTerm.None
+              (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
                 (SmtTerm.DtCons s D i))) X)
           (SmtTerm.eq X
-            (native_ite (native_reserved_datatype_name s) SmtTerm.None
+            (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
               (SmtTerm.DtCons s D i))) =
           SmtTerm.eq (SmtTerm.Apply (SmtTerm.DtTester s D i) X)
             (SmtTerm.eq X (SmtTerm.DtCons s D i))
@@ -1139,7 +1139,7 @@ private theorem dt_inst_bare_dtcons_interprets
     rw [hTranslate]
     simp [__smtx_model_eval, __smtx_model_eval_dt_tester]
     by_cases hHead :
-        __vsm_apply_head (__smtx_model_eval M X) =
+        __smtx_apply_head_value (__smtx_model_eval M X) =
           SmtValue.DtCons s D i
     · have hCount :
           vsm_num_apply_args (__smtx_model_eval M X) = 0 := by
@@ -1152,23 +1152,23 @@ private theorem dt_inst_bare_dtcons_interprets
           __smtx_model_eval M X = SmtValue.DtCons s D i := by
         calc
           __smtx_model_eval M X =
-              __vsm_apply_head (__smtx_model_eval M X) :=
+              __smtx_apply_head_value (__smtx_model_eval M X) :=
             smt_value_eq_head_of_no_apply_args _ hCount
           _ = SmtValue.DtCons s D i := hHead
       simp [hVal, native_veq, __smtx_model_eval_eq]
-      simp [__vsm_apply_head]
+      simp [__smtx_apply_head_value]
     · have hNe :
           __smtx_model_eval M X ≠ SmtValue.DtCons s D i := by
         intro hVal
         apply hHead
         rw [hVal]
-        simp [__vsm_apply_head]
+        simp [__smtx_apply_head_value]
       simp [hHead, hNe, native_veq, __smtx_model_eval_eq]
 
 private theorem dt_inst_dtcons_interprets
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x t : Term) (s : native_String) (d : DatatypeDecl) (i : Nat)
-    (hReserved : native_reserved_datatype_name s = false)
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false)
     (hXTy :
       __smtx_typeof (__eo_to_smt x) =
         SmtType.Datatype s (__eo_to_smt_datatype_decl d))
@@ -1206,7 +1206,7 @@ private theorem dt_inst_dtcons_interprets
       change
         SmtTerm.Apply
             (__eo_to_smt_tester
-              (native_ite (native_reserved_datatype_name s) SmtTerm.None
+              (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
                 (SmtTerm.DtCons s D i))) X =
           SmtTerm.Apply (SmtTerm.DtTester s D i) X
       rw [hReserved]
@@ -1302,7 +1302,7 @@ private theorem dt_inst_dtcons_interprets
       rw [hRecTrans]
       change
         mkDtSmtAppSpineRev
-            (native_ite (native_reserved_datatype_name s) SmtTerm.None
+            (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
               (SmtTerm.DtCons s D i))
             args.reverse =
           mkDtSmtAppSpineRev (SmtTerm.DtCons s D i) args.reverse
@@ -1328,7 +1328,7 @@ private theorem dt_inst_dtcons_interprets
       exact smtx_model_eval_mkDtSmtAppSpineRev_dtcons M s D i
         args.reverse hArgsEvalNN
     have hEvalTHead :
-        __vsm_apply_head (__smtx_model_eval M T) =
+        __smtx_apply_head_value (__smtx_model_eval M T) =
           SmtValue.DtCons s D i := by
       rw [hEvalTSpine]
       simp [vsm_apply_head_mkDtSmtValueSpineRev_dtcons]
@@ -1369,7 +1369,7 @@ private theorem dt_inst_dtcons_interprets
         SmtTerm.eq
           (SmtTerm.Apply
             (__eo_to_smt_tester
-              (native_ite (native_reserved_datatype_name s) SmtTerm.None
+              (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
                 (SmtTerm.DtCons s D i))) X)
           (SmtTerm.eq X T) =
           SmtTerm.eq (SmtTerm.Apply (SmtTerm.DtTester s D i) X)
@@ -1379,7 +1379,7 @@ private theorem dt_inst_dtcons_interprets
     rw [hTranslate]
     simp [__smtx_model_eval, __smtx_model_eval_dt_tester]
     by_cases hHead :
-        __vsm_apply_head (__smtx_model_eval M X) =
+        __smtx_apply_head_value (__smtx_model_eval M X) =
           SmtValue.DtCons s D i
     · have hCountX :
           vsm_num_apply_args (__smtx_model_eval M X) =
@@ -1402,7 +1402,7 @@ private theorem dt_inst_dtcons_interprets
             dtSelectorApps_get_of_lt
               s d i X (__eo_dd_resolve s d) i 0 j hjArgs
           have hArgT :
-                __vsm_apply_arg_nth (__smtx_model_eval M T) j
+                __smtx_apply_arg_nth_value (__smtx_model_eval M T) j
                   (vsm_num_apply_args (__smtx_model_eval M T)) =
                 __smtx_model_eval M
                   (SmtTerm.Apply (SmtTerm.DtSel s D i j) X) := by
@@ -1422,7 +1422,7 @@ private theorem dt_inst_dtcons_interprets
           have hSelEval :
               __smtx_model_eval M
                   (SmtTerm.Apply (SmtTerm.DtSel s D i j) X) =
-                __vsm_apply_arg_nth (__smtx_model_eval M X) j
+                __smtx_apply_arg_nth_value (__smtx_model_eval M X) j
                   (__smtx_dt_num_sels (__smtx_dd_lookup s D) i) := by
             simp [__smtx_model_eval, __smtx_model_eval_dt_sel, hHead,
               native_veq, native_ite]
@@ -1462,7 +1462,7 @@ private theorem dt_inst_dtcons_interprets
       exact RuleProofs.smtx_model_eval_eq_refl (SmtValue.Boolean false)
 
 private theorem dt_inst_tuple_unit_interprets
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term)
     (hXTy :
       __smtx_typeof (__eo_to_smt x) =
@@ -1526,7 +1526,7 @@ private theorem dt_inst_tuple_unit_interprets
     rw [hTranslate]
     simp [__smtx_model_eval, __smtx_model_eval_dt_tester]
     by_cases hHead :
-        __vsm_apply_head (__smtx_model_eval M X) =
+        __smtx_apply_head_value (__smtx_model_eval M X) =
           SmtValue.DtCons (native_string_lit "@Tuple") D native_nat_zero
     · have hCount :
           vsm_num_apply_args (__smtx_model_eval M X) = 0 := by
@@ -1541,23 +1541,23 @@ private theorem dt_inst_tuple_unit_interprets
             SmtValue.DtCons (native_string_lit "@Tuple") D native_nat_zero := by
         calc
           __smtx_model_eval M X =
-              __vsm_apply_head (__smtx_model_eval M X) :=
+              __smtx_apply_head_value (__smtx_model_eval M X) :=
             smt_value_eq_head_of_no_apply_args _ hCount
           _ = SmtValue.DtCons (native_string_lit "@Tuple") D native_nat_zero :=
             hHead
       simp [hVal, native_veq, __smtx_model_eval_eq]
-      simp [__vsm_apply_head]
+      simp [__smtx_apply_head_value]
     · have hNe :
           __smtx_model_eval M X ≠
             SmtValue.DtCons (native_string_lit "@Tuple") D native_nat_zero := by
         intro hVal
         apply hHead
         rw [hVal]
-        simp [__vsm_apply_head]
+        simp [__smtx_apply_head_value]
       simp [hHead, hNe, native_veq, __smtx_model_eval_eq]
 
 private theorem facts___eo_prog_dt_inst_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
     RuleProofs.eo_has_smt_translation a1 ->
     __eo_typeof (__eo_prog_dt_inst a1) = Term.Bool ->
     eo_interprets M (__eo_prog_dt_inst a1) true := by
@@ -1772,7 +1772,7 @@ private theorem facts___eo_prog_dt_inst_impl
       (by simpa [lhs, rhs, hMkUnit] using hFormulaBool)
 
 public theorem cmd_step_dt_inst_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.dt_inst args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

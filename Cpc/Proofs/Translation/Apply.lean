@@ -152,7 +152,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_bv_binop
       __smtx_typeof (__eo_to_smt (Term.Apply (Term.Apply eoOp y) x)) = SmtType.BitVec w := by
     rw [hTranslate]
     rw [hTy, hy, hx]
-    simp [__smtx_typeof_bv_op_2, native_ite, native_nateq, SmtEval.native_nateq]
+    simp [__smtx_typeof_bv_op_2, native_ite, native_nateq, Smtm.native_nateq]
   exact hSmt.trans (hEo w hy hx).symm
 
 /-- Simplifies EO-to-SMT translation for `typeof_matches_translation_apply_bv_binop_ret`. -/
@@ -186,7 +186,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_bv_binop_ret
       __smtx_typeof (__eo_to_smt (Term.Apply (Term.Apply eoOp y) x)) = ret := by
     rw [hTranslate]
     rw [hTy, hy, hx]
-    simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq, SmtEval.native_nateq]
+    simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq, Smtm.native_nateq]
   exact hSmt.trans (hEo w hy hx).symm
 
 /-- Simplifies comparison operators translated through an `ite` returning `(_ BitVec 1)`. -/
@@ -228,7 +228,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_bv_cmp_to_bv1
   have hCmpTy :
       __smtx_typeof (smtCmp (__eo_to_smt y) (__eo_to_smt x)) = SmtType.Bool := by
     rw [hTy, hy, hx]
-    simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq, SmtEval.native_nateq]
+    simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq, Smtm.native_nateq]
   have hSmt :
       __smtx_typeof (__eo_to_smt (Term.Apply (Term.Apply eoOp y) x)) =
         SmtType.BitVec 1 := by
@@ -1554,7 +1554,7 @@ private theorem typeof_uneg_eq
     (t : SmtTerm) :
     __smtx_typeof (SmtTerm.uneg t) =
       __smtx_typeof_arith_overload_op_1 (__smtx_typeof t) := by
-  rw [__smtx_typeof.eq_23]
+  rw [__smtx_typeof.eq_25]
 
 /-- Computes the type of applying a regular-language constant as a head. -/
 private theorem typeof_apply_reglan_head_eq_none
@@ -2640,116 +2640,116 @@ private theorem smtx_value_dt_context_substitute_apply_head
     (root : native_String) (oldRoot newRoot : SmtDatatype) :
     (v : SmtValue) -> {s : native_String} -> {d : SmtDatatype} ->
       {i : native_Nat} ->
-      __vsm_apply_head v = SmtValue.DtCons s d i ->
-      __vsm_apply_head
+      __smtx_apply_head_value v = SmtValue.DtCons s d i ->
+      __smtx_apply_head_value
           (smtx_value_dt_context_substitute_apply
             sub base root oldRoot newRoot v) =
         SmtValue.DtCons s
           (smtx_dt_context_substitute_value_body_apply
             sub base root oldRoot newRoot s d) i
   | SmtValue.Apply f a, s, d, i, hHead => by
-      simpa [smtx_value_dt_context_substitute_apply, __vsm_apply_head] using
+      simpa [smtx_value_dt_context_substitute_apply, __smtx_apply_head_value] using
         smtx_value_dt_context_substitute_apply_head
           sub base root oldRoot newRoot f hHead
   | SmtValue.DtCons sh dh ih, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
       rcases hHead with ⟨rfl, hEq⟩
       rcases hEq with ⟨rfl, rfl⟩
       by_cases h :
           native_streq sh root = true ∧ dh = oldRoot <;>
         simp [smtx_value_dt_context_substitute_apply,
-          smtx_dt_context_substitute_value_body_apply, h, __vsm_apply_head]
+          smtx_dt_context_substitute_value_body_apply, h, __smtx_apply_head_value]
   | SmtValue.NotValue, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Boolean b, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral n, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Rational q, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary w n, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Map m, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Fun _ _ _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Set m, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Seq ss, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Char c, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.UValue k e, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.RegLan r, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
 
 private theorem smtx_value_dt_context_substitute_apply_head_of_root
     (sub : native_String) (base : SmtDatatype)
     (root : native_String) (oldRoot newRoot : SmtDatatype) :
     (v : SmtValue) -> {i : native_Nat} ->
-      __vsm_apply_head v = SmtValue.DtCons root oldRoot i ->
-      __vsm_apply_head
+      __smtx_apply_head_value v = SmtValue.DtCons root oldRoot i ->
+      __smtx_apply_head_value
           (smtx_value_dt_context_substitute_apply sub base root oldRoot newRoot v) =
         SmtValue.DtCons root newRoot i
   | SmtValue.DtCons s d i', i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
       rcases hHead with ⟨rfl, hRest⟩
       rcases hRest with ⟨rfl, rfl⟩
-      simp [smtx_value_dt_context_substitute_apply, __vsm_apply_head,
+      simp [smtx_value_dt_context_substitute_apply, __smtx_apply_head_value,
         native_streq]
   | SmtValue.Apply f a, i, hHead => by
-      have hHeadF : __vsm_apply_head f = SmtValue.DtCons root oldRoot i := by
-        simpa [__vsm_apply_head] using hHead
+      have hHeadF : __smtx_apply_head_value f = SmtValue.DtCons root oldRoot i := by
+        simpa [__smtx_apply_head_value] using hHead
       have hRec :=
         smtx_value_dt_context_substitute_apply_head_of_root
           sub base root oldRoot newRoot f hHeadF
-      simpa [smtx_value_dt_context_substitute_apply, __vsm_apply_head] using hRec
+      simpa [smtx_value_dt_context_substitute_apply, __smtx_apply_head_value] using hRec
   | SmtValue.NotValue, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Boolean _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Rational _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary _ _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Map _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Fun _ _ _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Set _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Seq _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Char _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.UValue _ _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.RegLan _, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
 
 private theorem smtx_value_dt_context_substitute_apply_arg_nth
     (sub : native_String) (base : SmtDatatype)
     (root : native_String) (oldRoot newRoot : SmtDatatype) :
     (v : SmtValue) -> (j : native_Nat) ->
-      __vsm_apply_arg_nth
+      __smtx_apply_arg_nth_value
           (smtx_value_dt_context_substitute_apply sub base root oldRoot newRoot v) j
           (vsm_num_apply_args
             (smtx_value_dt_context_substitute_apply sub base root oldRoot newRoot v)) =
         smtx_value_dt_context_substitute_apply sub base root oldRoot newRoot
-          (__vsm_apply_arg_nth v j (vsm_num_apply_args v))
+          (__smtx_apply_arg_nth_value v j (vsm_num_apply_args v))
   | SmtValue.Apply f a, j => by
       by_cases hEq : native_nateq j (vsm_num_apply_args f) = true
-      · simp [smtx_value_dt_context_substitute_apply, __vsm_apply_arg_nth,
+      · simp [smtx_value_dt_context_substitute_apply, __smtx_apply_arg_nth_value,
           vsm_num_apply_args,
           smtx_value_dt_context_substitute_apply_num_args sub base root oldRoot newRoot f,
           native_ite, hEq]
       · have hArg :=
           smtx_value_dt_context_substitute_apply_arg_nth
             sub base root oldRoot newRoot f j
-        simp [smtx_value_dt_context_substitute_apply, __vsm_apply_arg_nth,
+        simp [smtx_value_dt_context_substitute_apply, __smtx_apply_arg_nth_value,
           vsm_num_apply_args,
           smtx_value_dt_context_substitute_apply_num_args sub base root oldRoot newRoot f,
           native_ite, hEq]
@@ -2770,7 +2770,7 @@ private theorem smtx_value_dt_context_substitute_apply_arg_nth
   | SmtValue.DtCons sh dh ih, _ => by
       by_cases h :
           native_streq sh root = true ∧ dh = oldRoot <;>
-        simp [smtx_value_dt_context_substitute_apply, h, __vsm_apply_arg_nth]
+        simp [smtx_value_dt_context_substitute_apply, h, __smtx_apply_arg_nth_value]
 
 private theorem smtx_dtc_context_substitute_num_sels_apply
     (sub : native_String) (base : SmtDatatype)
@@ -3620,7 +3620,7 @@ private def smtx_value_dt_substitute_apply
       SmtValue.DtCons s
         (native_ite (native_streq sub s) d (__smtx_dt_substitute sub base d)) i
   | SmtValue.Apply f a =>
-      match __vsm_apply_head f with
+      match __smtx_apply_head_value f with
       | SmtValue.DtCons s _ _ =>
           native_ite (native_streq sub s) (SmtValue.Apply f a)
             (SmtValue.Apply (smtx_value_dt_substitute_apply sub base f)
@@ -3636,7 +3636,7 @@ private theorem smtx_value_dt_substitute_apply_num_args
       vsm_num_apply_args (smtx_value_dt_substitute_apply sub base v) =
         vsm_num_apply_args v
   | SmtValue.Apply f a => by
-      cases hHead : __vsm_apply_head f
+      cases hHead : __smtx_apply_head_value f
       case DtCons s d i =>
         cases hEq : native_streq sub s <;>
           simp [smtx_value_dt_substitute_apply, hHead, native_ite, hEq,
@@ -3661,85 +3661,85 @@ private theorem smtx_value_dt_substitute_apply_num_args
 private theorem smtx_value_dt_substitute_apply_head_of_dt_cons
     (sub : native_String) (base : SmtDatatype) :
     (v : SmtValue) -> {s : native_String} -> {d : SmtDatatype} -> {i : native_Nat} ->
-      __vsm_apply_head v = SmtValue.DtCons s d i ->
-      __vsm_apply_head (smtx_value_dt_substitute_apply sub base v) =
+      __smtx_apply_head_value v = SmtValue.DtCons s d i ->
+      __smtx_apply_head_value (smtx_value_dt_substitute_apply sub base v) =
         SmtValue.DtCons s
           (native_ite (native_streq sub s) d (__smtx_dt_substitute sub base d)) i
   | SmtValue.DtCons s' d' i', s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
       rcases hHead with ⟨rfl, hRest⟩
       rcases hRest with ⟨rfl, rfl⟩
-      simp [smtx_value_dt_substitute_apply, __vsm_apply_head]
+      simp [smtx_value_dt_substitute_apply, __smtx_apply_head_value]
   | SmtValue.Apply f a, s, d, i, hHead => by
-      have hHeadF : __vsm_apply_head f = SmtValue.DtCons s d i := by
-        simpa [__vsm_apply_head] using hHead
+      have hHeadF : __smtx_apply_head_value f = SmtValue.DtCons s d i := by
+        simpa [__smtx_apply_head_value] using hHead
       have hRec :=
         smtx_value_dt_substitute_apply_head_of_dt_cons sub base f hHeadF
       cases hEq : native_streq sub s <;>
-        simp [smtx_value_dt_substitute_apply, __vsm_apply_head, hHeadF,
+        simp [smtx_value_dt_substitute_apply, __smtx_apply_head_value, hHeadF,
           native_ite, hEq, hRec]
   | SmtValue.NotValue, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Boolean _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Rational _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary _ _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Map _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Fun _ _ _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Set _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Seq _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Char _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.UValue _ _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.RegLan _, s, d, i, hHead => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
 
 private theorem smtx_value_dt_substitute_apply_arg_nth
     (sub : native_String) (base : SmtDatatype) :
     (v : SmtValue) -> (j : native_Nat) ->
       (∀ {s : native_String} {d : SmtDatatype} {i : native_Nat},
-        __vsm_apply_head v = SmtValue.DtCons s d i -> s ≠ sub) ->
-      __vsm_apply_arg_nth (smtx_value_dt_substitute_apply sub base v) j
+        __smtx_apply_head_value v = SmtValue.DtCons s d i -> s ≠ sub) ->
+      __smtx_apply_arg_nth_value (smtx_value_dt_substitute_apply sub base v) j
           (vsm_num_apply_args (smtx_value_dt_substitute_apply sub base v)) =
         smtx_value_dt_substitute_apply sub base
-          (__vsm_apply_arg_nth v j (vsm_num_apply_args v))
+          (__smtx_apply_arg_nth_value v j (vsm_num_apply_args v))
   | SmtValue.Apply f a, j, hNoShadow => by
       have hNoShadowF :
           ∀ {s : native_String} {d : SmtDatatype} {i : native_Nat},
-            __vsm_apply_head f = SmtValue.DtCons s d i -> s ≠ sub := by
+            __smtx_apply_head_value f = SmtValue.DtCons s d i -> s ≠ sub := by
         intro s d i hHead
-        exact hNoShadow (by simpa [__vsm_apply_head] using hHead)
-      cases hHead : __vsm_apply_head f
+        exact hNoShadow (by simpa [__smtx_apply_head_value] using hHead)
+      cases hHead : __smtx_apply_head_value f
       case DtCons s d i =>
         have hNe : s ≠ sub := hNoShadowF hHead
         have hStreq : native_streq sub s = false := by
           cases hEq : native_streq sub s <;> simp [native_streq] at hEq ⊢
           exact False.elim (hNe hEq.symm)
         by_cases hEq : native_nateq j (vsm_num_apply_args f) = true
-        · simp [smtx_value_dt_substitute_apply, hHead, __vsm_apply_arg_nth,
+        · simp [smtx_value_dt_substitute_apply, hHead, __smtx_apply_arg_nth_value,
             vsm_num_apply_args, native_ite, hStreq,
             smtx_value_dt_substitute_apply_num_args sub base f, hEq]
         · have hArg := smtx_value_dt_substitute_apply_arg_nth sub base f j hNoShadowF
-          simp [smtx_value_dt_substitute_apply, hHead, __vsm_apply_arg_nth,
+          simp [smtx_value_dt_substitute_apply, hHead, __smtx_apply_arg_nth_value,
             vsm_num_apply_args, native_ite, hStreq,
             smtx_value_dt_substitute_apply_num_args sub base f, hEq]
           simpa [smtx_value_dt_substitute_apply_num_args sub base f] using hArg
       all_goals
         by_cases hEq : native_nateq j (vsm_num_apply_args f) = true
-        · simp [smtx_value_dt_substitute_apply, hHead, __vsm_apply_arg_nth,
+        · simp [smtx_value_dt_substitute_apply, hHead, __smtx_apply_arg_nth_value,
             vsm_num_apply_args, native_ite,
             smtx_value_dt_substitute_apply_num_args sub base f, hEq]
         · have hArg := smtx_value_dt_substitute_apply_arg_nth sub base f j hNoShadowF
-          simp [smtx_value_dt_substitute_apply, hHead, __vsm_apply_arg_nth,
+          simp [smtx_value_dt_substitute_apply, hHead, __smtx_apply_arg_nth_value,
             vsm_num_apply_args, native_ite,
             smtx_value_dt_substitute_apply_num_args sub base f, hEq]
           simpa [smtx_value_dt_substitute_apply_num_args sub base f] using hArg
@@ -3760,7 +3760,7 @@ private theorem smtx_value_dt_substitute_apply_arg_nth
 private theorem smtx_value_dtc_app_type_head_exists_apply :
     (v : SmtValue) -> {A B : SmtType} ->
       __smtx_typeof_value v = SmtType.DtcAppType A B ->
-      ∃ s d i, __vsm_apply_head v = SmtValue.DtCons s d i
+      ∃ s d i, __smtx_apply_head_value v = SmtValue.DtCons s d i
   | SmtValue.NotValue, A, B, h => by
       simp [__smtx_typeof_value] at h
   | SmtValue.Boolean _, A, B, h => by
@@ -3815,7 +3815,7 @@ private theorem smtx_value_dtc_app_type_head_exists_apply :
       case DtcAppType C D =>
         rcases smtx_value_dtc_app_type_head_exists_apply f hf with
           ⟨s, d, i, hHead⟩
-        exact ⟨s, d, i, by simpa [__vsm_apply_head] using hHead⟩
+        exact ⟨s, d, i, by simpa [__smtx_apply_head_value] using hHead⟩
 
 private def smtx_type_fun_like_domains_no_reglan : SmtType -> Prop
   | SmtType.Seq A => smtx_type_fun_like_domains_no_reglan A
@@ -5648,7 +5648,7 @@ private theorem apply_eo_to_smt_type_bitvec_nat
         (Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral (native_nat_to_int w))) =
       SmtType.BitVec w := by
   simp [__eo_to_smt_type, native_ite, native_zleq, SmtEval.native_zleq,
-    native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+    native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat]
 
 private theorem apply_eo_to_smt_type_bitvec_int_of_nonneg
@@ -8946,7 +8946,7 @@ private theorem smtx_ret_typeof_tuple_sel_rec_eq_eo_list_nth_rec_nat :
         subst d
         cases j <;>
           simp [__smtx_ret_typeof_sel_rec, __eo_list_nth_rec,
-            __eo_to_smt_type, native_nat_to_int, SmtEval.native_nat_to_int]
+            __eo_to_smt_type, native_nat_to_int, Smtm.native_nat_to_int]
       · rcases hCons with ⟨y, x0, c, hEq, hTail, hD⟩
         subst T
         have hdBody :
@@ -8958,7 +8958,7 @@ private theorem smtx_ret_typeof_tuple_sel_rec_eq_eo_list_nth_rec_nat :
         cases j with
         | zero =>
             simp [__smtx_ret_typeof_sel_rec, __eo_list_nth_rec,
-              native_nat_to_int, SmtEval.native_nat_to_int]
+              native_nat_to_int, Smtm.native_nat_to_int]
         | succ j =>
             have hStep :
                 native_zplus (native_nat_to_int (native_nat_succ j)) (-1 : native_Int) =
@@ -8966,12 +8966,12 @@ private theorem smtx_ret_typeof_tuple_sel_rec_eq_eo_list_nth_rec_nat :
               have hInt : ((j : Int) + 1) + (-1 : Int) = j := by
                 omega
               simpa [native_zplus, SmtEval.native_zplus, native_nat_to_int,
-                SmtEval.native_nat_to_int] using hInt
+                Smtm.native_nat_to_int] using hInt
             have hNe :
                 native_nat_to_int (native_nat_succ j) ≠ (0 : native_Int) := by
               have hInt : ((j : Int) + 1) ≠ 0 := by
                 omega
-              simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hInt
+              simpa [native_nat_to_int, Smtm.native_nat_to_int] using hInt
             have hIH :=
               smtx_ret_typeof_tuple_sel_rec_eq_eo_list_nth_rec_nat
                 (T := x0) (d := SmtDatatype.sum c SmtDatatype.null) j hTail
@@ -9105,7 +9105,7 @@ private theorem smtx_type_substitute_top_apply_tuple_of_eo_list_nth_rec_nat :
         subst T
         cases j <;>
           simp [__eo_list_nth_rec, smtx_type_substitute_top_apply,
-            __eo_to_smt_type, native_nat_to_int, SmtEval.native_nat_to_int
+            __eo_to_smt_type, native_nat_to_int, Smtm.native_nat_to_int
             ]
       · rcases hCons with ⟨y, x0, c, hEq, hTail, hD⟩
         subst T
@@ -9136,12 +9136,12 @@ private theorem smtx_type_substitute_top_apply_tuple_of_eo_list_nth_rec_nat :
               have hInt : ((j : Int) + 1) + (-1 : Int) = j := by
                 omega
               simpa [native_zplus, SmtEval.native_zplus, native_nat_to_int,
-                SmtEval.native_nat_to_int] using hInt
+                Smtm.native_nat_to_int] using hInt
             have hNe :
                 native_nat_to_int (native_nat_succ j) ≠ (0 : native_Int) := by
               have hInt : ((j : Int) + 1) ≠ 0 := by
                 omega
-              simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hInt
+              simpa [native_nat_to_int, Smtm.native_nat_to_int] using hInt
             have hIH :=
               smtx_type_substitute_top_apply_tuple_of_eo_list_nth_rec_nat
                 (T := x0) (d := SmtDatatype.sum c SmtDatatype.null) (base := base)
@@ -9215,7 +9215,7 @@ theorem eo_type_valid_rec_tuple_list_nth_rec_nat :
             noNoneDt, native_and, hp.2]
         cases j with
         | zero =>
-            simpa [__eo_list_nth_rec, native_nat_to_int, SmtEval.native_nat_to_int] using hy
+            simpa [__eo_list_nth_rec, native_nat_to_int, Smtm.native_nat_to_int] using hy
         | succ j =>
             have hjTail : j < __smtx_dt_num_sels (SmtDatatype.sum c SmtDatatype.null)
                 native_nat_zero := by
@@ -9226,12 +9226,12 @@ theorem eo_type_valid_rec_tuple_list_nth_rec_nat :
               have hInt : ((j : Int) + 1) + (-1 : Int) = j := by
                 omega
               simpa [native_zplus, SmtEval.native_zplus, native_nat_to_int,
-                SmtEval.native_nat_to_int] using hInt
+                Smtm.native_nat_to_int] using hInt
             have hNe :
                 native_nat_to_int (native_nat_succ j) ≠ (0 : native_Int) := by
               have hInt : ((j : Int) + 1) ≠ 0 := by
                 omega
-              simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hInt
+              simpa [native_nat_to_int, Smtm.native_nat_to_int] using hInt
             have hNth :
                 __eo_list_nth_rec
                     (Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) y) x0)
@@ -9815,7 +9815,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_tuple_select
               have hNatInt :
                   native_nat_to_int (native_int_to_nat n) = n := by
                 simp [native_nat_to_int, native_int_to_nat,
-                  SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+                  Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
                   Int.toNat_of_nonneg hnNonneg]
               simpa [hNatInt] using
                 smtx_ret_typeof_tuple_sel_eq_eo_list_nth_rec_nat
@@ -11145,7 +11145,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_uop_application_head_
       (fun w1 w2 hy hx => by
         have hSum : (0 : Int) ≤ (w1 : Int) + (w2 : Int) := by omega
         simpa [__eo_to_smt_type, __eo_mk_apply, __eo_add, native_ite, native_zleq,
-          SmtEval.native_zleq, SmtEval.native_zplus, SmtEval.native_nat_to_int,
+          SmtEval.native_zleq, SmtEval.native_zplus, Smtm.native_nat_to_int,
           hSum] using
           eo_to_smt_type_typeof_apply_apply_concat_of_bitvec_types x y
             (Term.Numeral (native_nat_to_int w1))
@@ -11621,14 +11621,6 @@ private theorem eo_to_smt_typeof_matches_translation_apply_uop_application_head_
   case «exists» =>
     exact eo_to_smt_typeof_matches_translation_apply_exists_from_ih
       x y ihX hNonNone
-  case str_indexof_re_split =>
-    exfalso
-    apply hNonNone
-    change
-      __smtx_typeof
-          (SmtTerm.Apply (SmtTerm.Apply SmtTerm.None (__eo_to_smt y)) (__eo_to_smt x)) =
-        SmtType.None
-    exact typeof_apply_apply_none_head_eq (__eo_to_smt y) (__eo_to_smt x)
   case _at__at_Pair =>
     exact eo_to_smt_typeof_matches_translation_apply_apply_none_head
       UserOp._at__at_Pair y x (by rfl) hNonNone
@@ -11865,7 +11857,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_apply_apply_bvite_fro
   have hzEo :
       __eo_typeof z = Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1) := by
     have hzEo' := eo_typeof_eq_bitvec_of_smt_bitvec_from_ih z ihZ 1 hZ
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hzEo'
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hzEo'
   have hYTrans : __eo_to_smt_type (__eo_typeof y) = T := by
     rw [← (ihY hYNN).1, hY]
   have hXTrans : __eo_to_smt_type (__eo_typeof x) = T := by
@@ -12832,64 +12824,6 @@ private theorem eo_to_smt_typeof_matches_translation_apply_apply_apply_str_index
       (eo_typeof_eq_int_of_smt_int_from_ih x ihX hArgs.2.2)
   exact hSmt.trans hEo.symm
 
-/-- `str_indexof_re_split`, using local IHs to recover EO argument types. -/
-private theorem eo_to_smt_typeof_matches_translation_apply_apply_apply_str_indexof_re_split_from_ih
-    (x y z : Term)
-    (ihZ :
-      __smtx_typeof (__eo_to_smt z) ≠ SmtType.None ->
-      __smtx_typeof (__eo_to_smt z) = __eo_to_smt_type (__eo_typeof z))
-    (ihY :
-      __smtx_typeof (__eo_to_smt y) ≠ SmtType.None ->
-      __smtx_typeof (__eo_to_smt y) = __eo_to_smt_type (__eo_typeof y))
-    (ihX :
-      __smtx_typeof (__eo_to_smt x) ≠ SmtType.None ->
-      __smtx_typeof (__eo_to_smt x) = __eo_to_smt_type (__eo_typeof x))
-    (hNonNone :
-      __smtx_typeof
-          (__eo_to_smt
-            (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_indexof_re_split) z) y) x)) ≠
-        SmtType.None) :
-    __smtx_typeof
-        (__eo_to_smt
-          (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_indexof_re_split) z) y) x)) =
-      __eo_to_smt_type
-        (__eo_typeof
-          (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_indexof_re_split) z) y) x)) := by
-  have hTranslate :
-      __eo_to_smt
-          (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_indexof_re_split) z) y) x) =
-        SmtTerm.str_indexof_re_split (__eo_to_smt z) (__eo_to_smt y) (__eo_to_smt x) := by
-    rfl
-  have hApplyNN :
-      term_has_non_none_type
-        (SmtTerm.str_indexof_re_split (__eo_to_smt z) (__eo_to_smt y) (__eo_to_smt x)) := by
-    unfold term_has_non_none_type
-    rw [← hTranslate]
-    exact hNonNone
-  have hArgs := str_indexof_re_split_args_of_non_none hApplyNN
-  have hSmt :
-      __smtx_typeof
-          (__eo_to_smt
-            (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_indexof_re_split) z) y) x)) =
-        SmtType.Int := by
-    rw [hTranslate,
-      typeof_str_indexof_re_split_eq (__eo_to_smt z) (__eo_to_smt y) (__eo_to_smt x)]
-    simp [native_ite, native_Teq, hArgs.1, hArgs.2.1, hArgs.2.2]
-  have hEo :
-      __eo_to_smt_type
-          (__eo_typeof
-            (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.str_indexof_re_split) z) y) x)) =
-        SmtType.Int := by
-    change
-      __eo_to_smt_type
-          (__eo_typeof_str_indexof_re_split (__eo_typeof z) (__eo_typeof y) (__eo_typeof x)) =
-        SmtType.Int
-    rw [eo_typeof_eq_seq_char_of_smt_seq_char_from_ih z ihZ hArgs.1,
-      eo_typeof_eq_reglan_of_smt_reglan_from_ih y ihY hArgs.2.1,
-      eo_typeof_eq_reglan_of_smt_reglan_from_ih x ihX hArgs.2.2]
-    rfl
-  exact hSmt.trans hEo.symm
-
 /-- Ternary `store`, using local IHs to recover the EO array shape. -/
 private theorem eo_to_smt_typeof_matches_translation_apply_apply_apply_store_from_ih
     (x y z : Term)
@@ -13537,11 +13471,11 @@ theorem eo_to_smt_updater_rec_update_arg_non_none_of_non_none
             have hne : j ≠ k := by
               intro h
               subst j
-              simp [native_nateq, SmtEval.native_nateq] at hEq
+              simp [native_nateq, Smtm.native_nateq] at hEq
             exact Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hjSucc) hne
           have hjkInt : (j : Int) < (k : Int) := Int.ofNat_lt.mpr hjk
           simpa [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-            SmtEval.native_nat_to_int] using hjkInt
+            Smtm.native_nat_to_int] using hjkInt
         have hRecNN :
             __smtx_typeof
                 (__eo_to_smt_updater_rec (SmtTerm.DtSel s d i j) k t u acc) ≠
@@ -13696,7 +13630,7 @@ theorem eo_to_smt_updater_rec_update_arg_type_of_non_none
           (SmtTerm.DtCons s d i) (by intro s0 d0 i0 h; cases h)
       by_cases hEq : native_nateq j k = true
       · have hjk : j = k := by
-          simpa [native_nateq, SmtEval.native_nateq] using hEq
+          simpa [native_nateq, Smtm.native_nateq] using hEq
         have hGeneric : generic_apply_type recTerm argTerm :=
           generic_apply_type_of_non_special_head recTerm argTerm hRecSel hRecTester
         have hApplyNN :
@@ -13765,11 +13699,11 @@ theorem eo_to_smt_updater_rec_update_arg_type_of_non_none
             have hne : j ≠ k := by
               intro h
               subst j
-              simp [native_nateq, SmtEval.native_nateq] at hEq
+              simp [native_nateq, Smtm.native_nateq] at hEq
             exact Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hjSucc) hne
           have hjkInt : (j : Int) < (k : Int) := Int.ofNat_lt.mpr hjk
           simpa [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-            SmtEval.native_nat_to_int] using hjkInt
+            Smtm.native_nat_to_int] using hjkInt
         have hRecNN : __smtx_typeof recTerm ≠ SmtType.None := by
           exact smtx_apply_head_non_none_of_non_none recTerm argTerm hRecSel hRecTester hTermNN
         exact ih hIdxK hRecNN
@@ -14087,7 +14021,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_apply_apply_tuple_upd
         have hNatInt :
             native_nat_to_int (native_int_to_nat n) = n := by
           simp [native_nat_to_int, native_int_to_nat,
-            SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+            Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
             Int.toNat_of_nonneg hnNonneg]
         have hRetNth :
             __smtx_ret_typeof_sel (native_string_lit "@Tuple") tupleDD native_nat_zero (native_int_to_nat n) =
@@ -14283,9 +14217,6 @@ private theorem eo_to_smt_typeof_matches_translation_apply_binary_application_he
         hNonNone
     case str_indexof_re =>
       exact eo_to_smt_typeof_matches_translation_apply_apply_apply_str_indexof_re_from_ih
-        x y z ihZ ihY ihX hNonNone
-    case str_indexof_re_split =>
-      exact eo_to_smt_typeof_matches_translation_apply_apply_apply_str_indexof_re_split_from_ih
         x y z ihZ ihY ihX hNonNone
     case store =>
       exact eo_to_smt_typeof_matches_translation_apply_apply_apply_store_from_ih
@@ -16100,7 +16031,7 @@ theorem eo_to_smt_typeof_matches_translation_apply
         eo_to_smt_type_eq_bitvec hxSmt
       have hSmt : __smtx_typeof (__eo_to_smt (Term.Apply (Term.UOp UserOp._at_bvsize) x)) = SmtType.Int := by
         have hWNonneg : native_zleq 0 (native_nat_to_int w) = true := by
-          simp [native_zleq, SmtEval.native_zleq, native_nat_to_int, SmtEval.native_nat_to_int]
+          simp [native_zleq, SmtEval.native_zleq, native_nat_to_int, Smtm.native_nat_to_int]
         rw [hTranslate, hArg]
         simp [__eo_to_smt_bv_size, __smtx_typeof, native_ite, hWNonneg]
       exact hSmt.trans (eo_to_smt_type_typeof_apply_at_bvsize_of_bitvec x w hxEo).symm
@@ -16221,7 +16152,7 @@ theorem eo_to_smt_typeof_matches_translation_apply
         rw [hTranslate]
         rw [typeof_bvcomp_eq]
         rw [hArgX, hArgY']
-        simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq, SmtEval.native_nateq]
+        simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq, Smtm.native_nateq]
       exact hSmt.trans (eo_to_smt_type_typeof_apply_bvredand_of_bitvec x w hxEo).symm
     case bvredor =>
       have hTranslate :
@@ -16291,7 +16222,7 @@ theorem eo_to_smt_typeof_matches_translation_apply
             SmtType.BitVec 1 := by
         rw [typeof_bvcomp_eq]
         rw [hArgX, hArgY']
-        simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq, SmtEval.native_nateq]
+        simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq, Smtm.native_nateq]
       have hSmt :
           __smtx_typeof (__eo_to_smt (Term.Apply (Term.UOp UserOp.bvredor) x)) = SmtType.BitVec 1 := by
         rw [hTranslate, typeof_bvnot_eq]

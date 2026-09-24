@@ -17,7 +17,7 @@ namespace CongSupport
 attribute [local simp] native_streq native_and native_ite
 
 theorem congTrueSpine_var_apply_apply_apply_apply_apply_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T x₁ x₂ x₃ x₄ x₅ x₆ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq
@@ -104,7 +104,7 @@ theorem congTrueSpine_var_apply_apply_apply_apply_apply_apply_eq_true
         hLeftNN).2
 
 theorem congTrueSpine_uconst_apply_apply_apply_apply_apply_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (i : native_Nat) (T x₁ x₂ x₃ x₄ x₅ x₆ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq
@@ -253,7 +253,7 @@ theorem congTrueSpine_bvsize_eq_true
     exact RuleProofs.smt_value_rel_refl _
 
 theorem congTrueSpine_or_eq_true
-    (M : SmtModel) (hM : model_total_typed M) (x₁ x₂ rhs : Term) :
+    (M : SmtModel) (hM : model_wf M) (x₁ x₂ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Apply (Term.UOp UserOp.or) x₁) x₂) rhs) ->
     CongTrueSpine M
@@ -264,7 +264,7 @@ theorem congTrueSpine_or_eq_true
     __smtx_model_eval_or
     (by intro a b; rfl)
     smt_typeof_or_args_bool_of_non_none
-    (by intro a b; rw [__smtx_model_eval.eq_7])
+    (by intro a b; rw [__smtx_model_eval.eq_8])
     x₁ x₂ rhs
 
 theorem congTypeSpine_or_eq_has_bool_type
@@ -285,7 +285,7 @@ theorem congTypeSpine_or_eq_has_bool_type
     x₁ x₂ rhs
 
 theorem congTrueSpine_imp_eq_true
-    (M : SmtModel) (hM : model_total_typed M) (x₁ x₂ rhs : Term) :
+    (M : SmtModel) (hM : model_wf M) (x₁ x₂ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Apply (Term.UOp UserOp.imp) x₁) x₂) rhs) ->
     CongTrueSpine M
@@ -296,7 +296,7 @@ theorem congTrueSpine_imp_eq_true
     __smtx_model_eval_imp
     (by intro a b; rfl)
     smt_typeof_imp_args_bool_of_non_none
-    (by intro a b; rw [__smtx_model_eval.eq_9])
+    (by intro a b; rw [__smtx_model_eval.eq_10])
     x₁ x₂ rhs
 
 theorem congTypeSpine_imp_eq_has_bool_type
@@ -317,7 +317,7 @@ theorem congTypeSpine_imp_eq_has_bool_type
     x₁ x₂ rhs
 
 theorem congTrueSpine_xor_eq_true
-    (M : SmtModel) (hM : model_total_typed M) (x₁ x₂ rhs : Term) :
+    (M : SmtModel) (hM : model_wf M) (x₁ x₂ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Apply (Term.UOp UserOp.xor) x₁) x₂) rhs) ->
     CongTrueSpine M
@@ -328,7 +328,7 @@ theorem congTrueSpine_xor_eq_true
     __smtx_model_eval_xor
     (by intro a b; rfl)
     smt_typeof_xor_args_bool_of_non_none
-    (by intro a b; rw [__smtx_model_eval.eq_10])
+    (by intro a b; rw [__smtx_model_eval.eq_11])
     x₁ x₂ rhs
 
 theorem congTypeSpine_xor_eq_has_bool_type
@@ -526,8 +526,8 @@ noncomputable abbrev smtEvalQdiv
     (M : SmtModel) (x₁ x₂ : SmtValue) : SmtValue :=
   let _v0 := x₂
   let _v1 := x₁
-  let _v0r := __smtx_model_eval_to_real_coerce _v0
-  let _v1r := __smtx_model_eval_to_real_coerce _v1
+  let _v0r := __smtx_to_real_coerce _v0
+  let _v1r := __smtx_to_real_coerce _v1
   __smtx_model_eval_ite
     (__smtx_model_eval_eq _v0r
       (SmtValue.Rational (native_mk_rational 0 1)))
@@ -1054,7 +1054,7 @@ private theorem eo_to_smt_updater_rec_update_arg_non_reg_of_non_none
         -- the hypothesis; strip the `decide` explicitly instead.
         have h := hIdx
         simp [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-          SmtEval.native_nat_to_int] at h
+          Smtm.native_nat_to_int] at h
         exact of_decide_eq_true h
       have hjNonneg : (0 : Int) ≤ j := Int.natCast_nonneg j
       omega
@@ -1087,17 +1087,17 @@ private theorem eo_to_smt_updater_rec_update_arg_non_reg_of_non_none
               have hjSuccInt : (j : Int) < (Nat.succ k : Int) := by
                 have h := hIdx
                 simp [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-                  SmtEval.native_nat_to_int] at h
+                  Smtm.native_nat_to_int] at h
                 exact of_decide_eq_true h
               exact Int.ofNat_lt.mp hjSuccInt
             have hne : j ≠ k := by
               intro h
               subst j
-              simp [native_nateq, SmtEval.native_nateq] at hEq
+              simp [native_nateq, Smtm.native_nateq] at hEq
             exact Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hjSucc) hne
           have hjkInt : (j : Int) < (k : Int) := Int.ofNat_lt.mpr hjk
           simpa [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-            SmtEval.native_nat_to_int] using hjkInt
+            Smtm.native_nat_to_int] using hjkInt
         have hGeneric : generic_apply_type recTerm argTerm :=
           generic_apply_type_of_non_datatype_head hRecSel hRecTester
         have hApplyNN :
@@ -1282,7 +1282,7 @@ theorem eo_to_smt_updater_eval_congr
   all_goals simp [__eo_to_smt_updater]
 
 theorem congTrueSpine_non_reg_indexed_binary_uop1_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (eoOp : UserOp1) (idx : Term)
     (smtOp : SmtTerm -> SmtTerm -> SmtTerm)
     (hToSmt :
@@ -1431,7 +1431,7 @@ theorem tuple_update_args_non_reg_of_non_none
     simp [__eo_to_smt_tuple_update]
 
 theorem congTrueSpine_tuple_update_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (idx x₁ x₂ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq
@@ -2048,7 +2048,7 @@ theorem eo_to_smt_tuple_prepend_eval_congr
       simp [__eo_to_smt_tuple_prepend_of_type]
 
 theorem congTrueSpine_tuple_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x₁ x₂ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Apply (Term.UOp UserOp.tuple) x₁) x₂)

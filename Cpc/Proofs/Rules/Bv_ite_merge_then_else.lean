@@ -270,7 +270,7 @@ private theorem eval_bvone (M : SmtModel) :
   simpa [bvOne, bv1] using eval_binary M 1 1
 
 private theorem eval_bv1_of_smt_type_bitvec_one
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
     RuleProofs.eo_has_smt_translation t ->
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec 1 ->
     ∃ b, __smtx_model_eval M (__eo_to_smt t) = bv1 b := by
@@ -342,7 +342,7 @@ private theorem eval_eq_bv1_one
   exact eval_eq_bv1_one_term M x b hx
 
 private theorem eval_bvite_merge_then_else
-    (M : SmtModel) (hM : model_total_typed M) (c1 c2 t1 e1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (c1 c2 t1 e1 : Term) :
     RuleProofs.eo_has_smt_translation c1 ->
     RuleProofs.eo_has_smt_translation c2 ->
     RuleProofs.eo_has_smt_translation t1 ->
@@ -392,7 +392,7 @@ private theorem eval_bvite_merge_then_else
   cases b1 <;> cases b2 <;> rfl
 
 private theorem facts___eo_prog_bv_ite_merge_then_else_impl
-    (M : SmtModel) (hM : model_total_typed M) (c1 c2 t1 e1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (c1 c2 t1 e1 : Term) :
     RuleProofs.eo_has_smt_translation c1 ->
     RuleProofs.eo_has_smt_translation c2 ->
     RuleProofs.eo_has_smt_translation t1 ->
@@ -425,7 +425,7 @@ private theorem facts___eo_prog_bv_ite_merge_then_else_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_ite_merge_then_else_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_ite_merge_then_else args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

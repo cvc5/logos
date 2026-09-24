@@ -235,7 +235,7 @@ private theorem eo_to_smt_rhs (C t s r : Term) :
         (SmtTerm.leq (__eo_to_smt s) (__eo_to_smt r)) := rfl
 
 private theorem eval_leq_ite_lift_rel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (C t s r : Term)
     (hCTrans : RuleProofs.eo_has_smt_translation C)
     (hCTy : __eo_typeof C = Term.Bool) :
@@ -261,7 +261,7 @@ private theorem eval_leq_ite_lift_rel
     exact RuleProofs.smtx_model_eval_eq_refl _
 
 private theorem facts_arith_leq_ite_lift
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (C t s r : Term)
     (hCTrans : RuleProofs.eo_has_smt_translation C)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
@@ -296,7 +296,7 @@ private theorem facts_arith_leq_ite_lift
 end ArithLeqIteLift
 
 public theorem cmd_step_arith_leq_ite_lift_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_leq_ite_lift args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

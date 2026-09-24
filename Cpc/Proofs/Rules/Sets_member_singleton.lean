@@ -192,7 +192,7 @@ private theorem typed___eo_prog_sets_member_singleton_impl
       rw [hMemberTy]; simp)
 
 private theorem facts___eo_prog_sets_member_singleton_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 a2 : Term)
+    (M : SmtModel) (hM : model_wf M) (a1 a2 : Term)
     (ha1Trans : RuleProofs.eo_has_smt_translation a1)
     (hWf : __smtx_type_wf_component (__smtx_typeof (__eo_to_smt a2)) = true)
     (hTy : __eo_typeof (__eo_prog_sets_member_singleton a1 a2) = Term.Bool) :
@@ -231,7 +231,7 @@ private theorem facts___eo_prog_sets_member_singleton_impl
           __smtx_model_eval_eq v1 v2 := by
     intro v1 v2 hv2NR
     rw [__smtx_model_eval_set_member, __smtx_model_eval_set_singleton,
-      __smtx_map_select, __smtx_msm_lookup, __smtx_msm_lookup]
+      __smtx_map_select, __smtx_map_lookup, __smtx_map_lookup]
     have hEqSide :
         __smtx_model_eval_eq v1 v2 = SmtValue.Boolean (native_veq v1 v2) := by
       cases v2 with
@@ -268,7 +268,7 @@ private theorem facts___eo_prog_sets_member_singleton_impl
       (__smtx_model_eval M (__eo_to_smt (SetsBasicRewritesSupport.mkEq a1 a2)))
 
 public theorem cmd_step_sets_member_singleton_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_member_singleton args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -48,14 +48,14 @@ private theorem smtx_eval_mod_term_eq
              (SmtType.FunType SmtType.Int SmtType.Int))
            xv)
          (__smtx_model_eval_mod_total xv yv)) := by
-  rw [__smtx_model_eval.eq_25]
+  rw [__smtx_model_eval.eq_27]
 
 private theorem smtx_eval_mod_total_term_eq
     (M : SmtModel) (x y : SmtTerm) :
     __smtx_model_eval M (SmtTerm.mod_total x y) =
       __smtx_model_eval_mod_total
         (__smtx_model_eval M x) (__smtx_model_eval M y) := by
-  rw [__smtx_model_eval.eq_30]
+  rw [__smtx_model_eval.eq_32]
 
 private theorem smtx_typeof_of_eo_int
     (a : Term)
@@ -151,7 +151,7 @@ private theorem typed___eo_prog_arith_int_mod_total_impl
     (by rw [hModTy, hModTotalTy]) hModTrans
 
 private theorem facts___eo_prog_arith_int_mod_total_impl
-    (M : SmtModel) (hM : model_total_typed M) (t s P : Term) :
+    (M : SmtModel) (hM : model_wf M) (t s P : Term) :
     RuleProofs.eo_has_smt_translation t ->
     RuleProofs.eo_has_smt_translation s ->
     __eo_prog_arith_int_mod_total t s (Proof.pf P) =
@@ -228,7 +228,7 @@ private theorem facts___eo_prog_arith_int_mod_total_impl
         (SmtValue.Numeral (native_mod_total ti si))
 
 public theorem cmd_step_arith_int_mod_total_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_int_mod_total args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

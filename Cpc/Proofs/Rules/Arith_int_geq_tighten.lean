@@ -285,7 +285,7 @@ private theorem typed___eo_prog_arith_int_geq_tighten_impl
     (by rw [hLhsTy, hRhsTy]) hLhsTrans
 
 private theorem facts___eo_prog_arith_int_geq_tighten_impl
-    (M : SmtModel) (hM : model_total_typed M) (t c cc P1 P2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t c cc P1 P2 : Term) :
     RuleProofs.eo_has_smt_translation t ->
     RuleProofs.eo_has_smt_translation c ->
     RuleProofs.eo_has_smt_translation cc ->
@@ -397,7 +397,7 @@ end ArithIntGeqTighten
 open ArithIntGeqTighten
 
 public theorem cmd_step_arith_int_geq_tighten_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_int_geq_tighten args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

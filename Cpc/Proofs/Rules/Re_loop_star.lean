@@ -222,7 +222,7 @@ theorem zleq_of_geq_premise (M : SmtModel) (x y : Term) (a b : Int)
 
 /-- Extensional soundness of the rule conclusion. -/
 theorem re_loop_star_canonical_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a1 a2 a3 : Term)
     (hBool : RuleProofs.eo_has_bool_type (mkConcl a1 a2 a3))
     (hP1 : eo_interprets M (mkGeqEq a2 a1) true)
@@ -378,7 +378,7 @@ on each bound, so `__eo_typeof_re_loop` enforces `__eo_gt · (-1)` on both `l` a
 `a1 = Numeral lo`, `a2 = Numeral hi` with `lo, hi ≥ 0` and a `RegLan` body.
 -/
 public theorem cmd_step_re_loop_star_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_loop_star args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -19,7 +19,7 @@ inductive CheckerFailure where
 
 /-- Run assumptions until the first one makes the checker state stuck. -/
 private def runAssumptions (assums : List Term) : Except (Nat × Term) CState :=
-  go 0 logos_init_state assums
+  go 0 logos_checker_init_state assums
 where
   go (i : Nat) (state : CState) : List Term → Except (Nat × Term) CState
     | [] => .ok state
@@ -36,7 +36,7 @@ where
   go (i : Nat) (state : CState) : CCmdList → Except (Nat × CCmd) CState
     | .nil => .ok state
     | .cons cmd cmds =>
-      let state := logos_invoke_cmd state cmd
+      let state := __eo_invoke_cmd state cmd
       match state with
       | .Stuck => .error (i, cmd)
       | state => go (i + 1) state cmds
@@ -48,13 +48,13 @@ def logos_checker_failure (assums : List Term) (cmds : CCmdList) : Option Checke
   | .ok state =>
     match runCommands state cmds with
     | .error (i, cmd) => some (.command i cmd)
-    | .ok state => if logos_state_is_refutation state then none else some .finalCheck
+    | .ok state => if __eo_state_is_refutation state then none else some .finalCheck
 
 /-- The source labels of the commands represented in `CCmdList`, in the same order. -/
 private def proofCommandLabels (proof : String) : List String :=
   match Logos.Sexp.Parser.manySexps!.run proof with
   | .error _ => []
-  | .ok ss => (Logos.Parser.unwrapProof ss).filterMap label?
+  | .ok ss => ss.filterMap label?
 where
   label? : Logos.Sexp → Option String
     | .expr (.atom "assume-push" :: .atom name :: _) => some s!"assume-push {name}"

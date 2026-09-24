@@ -249,7 +249,7 @@ private theorem qforall_bool_of_exists_type_bool
     (__eo_to_smt_exists x (SmtTerm.not (__eo_to_smt F))) hExists
 
 private theorem smtx_model_eval_exists_not_and_true_iff
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (xs : Term) (A B : SmtTerm),
     __smtx_typeof (__eo_to_smt_exists xs (SmtTerm.not A)) = SmtType.Bool ->
     __smtx_typeof (__eo_to_smt_exists xs (SmtTerm.not B)) = SmtType.Bool ->
@@ -306,7 +306,7 @@ private theorem smtx_model_eval_exists_not_and_true_iff
                       let P : Prop :=
                         ∃ v : SmtValue,
                           __smtx_typeof_value v = __eo_to_smt_type T ∧
-                            __smtx_value_canonical_bool v = true ∧
+                            __smtx_value_canonical v = true ∧
                             __smtx_model_eval
                                 (native_model_push M s (__eo_to_smt_type T) v)
                                 (__eo_to_smt_exists a
@@ -315,7 +315,7 @@ private theorem smtx_model_eval_exists_not_and_true_iff
                       let Q : Prop :=
                         ∃ v : SmtValue,
                           __smtx_typeof_value v = __eo_to_smt_type T ∧
-                            __smtx_value_canonical_bool v = true ∧
+                            __smtx_value_canonical v = true ∧
                             __smtx_model_eval
                                 (native_model_push M s (__eo_to_smt_type T) v)
                                 (__eo_to_smt_exists a (SmtTerm.not A)) =
@@ -323,7 +323,7 @@ private theorem smtx_model_eval_exists_not_and_true_iff
                       let R : Prop :=
                         ∃ v : SmtValue,
                           __smtx_typeof_value v = __eo_to_smt_type T ∧
-                            __smtx_value_canonical_bool v = true ∧
+                            __smtx_value_canonical v = true ∧
                             __smtx_model_eval
                                 (native_model_push M s (__eo_to_smt_type T) v)
                                 (__eo_to_smt_exists a (SmtTerm.not B)) =
@@ -333,7 +333,7 @@ private theorem smtx_model_eval_exists_not_and_true_iff
                         · intro hSat
                           rcases hSat with ⟨v, hv, hCan, hEval⟩
                           have hPush :
-                              model_total_typed
+                              model_wf
                                 (native_model_push M s (__eo_to_smt_type T) v) :=
                             model_total_typed_push hM s (__eo_to_smt_type T) v hWF
                               hv (by
@@ -351,7 +351,7 @@ private theorem smtx_model_eval_exists_not_and_true_iff
                           · rcases hLeft with ⟨v, hv, hCan, hEval⟩
                             refine ⟨v, hv, hCan, ?_⟩
                             have hPush :
-                                model_total_typed
+                                model_wf
                                   (native_model_push M s (__eo_to_smt_type T) v) :=
                               model_total_typed_push hM s (__eo_to_smt_type T) v hWF
                                 hv (by
@@ -365,7 +365,7 @@ private theorem smtx_model_eval_exists_not_and_true_iff
                           · rcases hRight with ⟨v, hv, hCan, hEval⟩
                             refine ⟨v, hv, hCan, ?_⟩
                             have hPush :
-                                model_total_typed
+                                model_wf
                                   (native_model_push M s (__eo_to_smt_type T) v) :=
                               model_total_typed_push hM s (__eo_to_smt_type T) v hWF
                                 hv (by
@@ -494,7 +494,7 @@ private theorem smtx_model_eval_exists_not_and_true_iff
         (by simpa [__eo_to_smt_exists] using hA))
 
 private theorem smtx_model_eval_forall_and
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs : Term) (A B : SmtTerm) :
     __smtx_typeof (__eo_to_smt_exists xs (SmtTerm.not A)) = SmtType.Bool ->
     __smtx_typeof (__eo_to_smt_exists xs (SmtTerm.not B)) = SmtType.Bool ->
@@ -572,7 +572,7 @@ private theorem smtx_model_eval_exists_not_true_true_iff
                       let P : Prop :=
                         ∃ v : SmtValue,
                           __smtx_typeof_value v = __eo_to_smt_type T ∧
-                            __smtx_value_canonical_bool v = true ∧
+                            __smtx_value_canonical v = true ∧
                             __smtx_model_eval
                                 (native_model_push M s (__eo_to_smt_type T) v)
                                 (__eo_to_smt_exists a
@@ -607,7 +607,7 @@ private theorem smtx_model_eval_exists_not_true_true_iff
     simp [__eo_to_smt_exists, __smtx_model_eval]
 
 private theorem smtx_model_eval_exists_not_true_false
-    (M : SmtModel) (hM : model_total_typed M) (xs : Term) :
+    (M : SmtModel) (hM : model_wf M) (xs : Term) :
     __smtx_typeof
         (__eo_to_smt_exists xs (SmtTerm.not (SmtTerm.Boolean true))) =
       SmtType.Bool ->
@@ -624,7 +624,7 @@ private theorem smtx_model_eval_exists_not_true_false
       ((smtx_model_eval_exists_not_true_true_iff M xs).1 hb)
 
 private theorem smtx_model_eval_qforall_true
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) :
+    (M : SmtModel) (hM : model_wf M) (x : Term) :
     RuleProofs.eo_has_bool_type (qforall x (Term.Boolean true)) ->
     __smtx_model_eval M (__eo_to_smt (qforall x (Term.Boolean true))) =
       SmtValue.Boolean true := by
@@ -733,7 +733,7 @@ private theorem mk_quant_miniscope_and_invalid_type_none
             smtx_typeof_eo_to_smt_stuck_none] at hx ⊢
 
 private theorem smtx_model_eval_quant_miniscope_and_invalid
-    (M : SmtModel) (hM : model_total_typed M) (x F : Term) :
+    (M : SmtModel) (hM : model_wf M) (x F : Term) :
     F ≠ Term.Boolean true ->
     (∀ f fs : Term, F ≠ qand f fs) ->
     RuleProofs.eo_has_bool_type
@@ -749,7 +749,7 @@ private theorem smtx_model_eval_quant_miniscope_and_invalid
       (mk_quant_miniscope_and_invalid_type_none x F hTrue hAnd))
 
 private theorem smtx_model_eval_quant_miniscope_and_mk
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) :
+    (M : SmtModel) (hM : model_wf M) (x : Term) :
     ∀ (F : Term),
     RuleProofs.eo_has_bool_type
       (qeq (qforall x F) (__mk_quant_miniscope_and x F)) ->
@@ -1222,7 +1222,7 @@ private theorem quant_miniscope_and_shape_of_not_stuck
       simp [__eo_prog_quant_miniscope_and] at hProg
 
 public theorem cmd_step_quant_miniscope_and_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.quant_miniscope_and args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

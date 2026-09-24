@@ -330,8 +330,8 @@ private theorem intToBvBit_eval
           (SmtTerm.mod_total (__eo_to_smt n) (SmtTerm.Numeral p))
           (SmtTerm.Numeral half))
         (SmtTerm.Binary 1 1) (SmtTerm.Binary 1 0) by rfl]
-  rw [smtx_eval_ite_term_eq, __smtx_model_eval.eq_18,
-    __smtx_model_eval.eq_30, __smtx_model_eval.eq_2,
+  rw [smtx_eval_ite_term_eq, __smtx_model_eval.eq_20,
+    __smtx_model_eval.eq_32, __smtx_model_eval.eq_2,
     __smtx_model_eval.eq_2, __smtx_model_eval.eq_5,
     __smtx_model_eval.eq_5]
   rw [hnEval]
@@ -371,7 +371,7 @@ private theorem intToBvAbconv_eval
                 (native_int_pow2 (native_nat_to_int (k + 1)))
                 (native_int_pow2 (native_nat_to_int k))))
             (__eo_to_smt (intToBvAbconv n k)) by rfl]
-      rw [__smtx_model_eval.eq_34]
+      rw [__smtx_model_eval.eq_36]
       rw [intToBvBit_eval M n z
         (native_int_pow2 (native_nat_to_int (k + 1)))
         (native_int_pow2 (native_nat_to_int k)) hnEval, ih]
@@ -512,7 +512,7 @@ private theorem intToBvExpanded_eval
           simp [__eo_list_singleton_elim, hList, __eo_requires,
             __eo_list_singleton_elim_2, hTailNotNil, __eo_ite, native_ite,
             native_teq, native_not, SmtEval.native_not] at hBit ⊢
-          rw [__smtx_model_eval.eq_34]
+          rw [__smtx_model_eval.eq_36]
           rw [hBit, intToBvAbconv_eval M n z hn hnEval (k + 1)]
           simp [__smtx_model_eval_concat, native_binary_concat]
           have hWidth :
@@ -550,7 +550,7 @@ private theorem intToBvElim_shape_of_ne_stuck (A : Term) :
     exact False.elim (h hStuck)
 
 private theorem intToBvExpanded_eval_rel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (w n : Term) (i : native_Int)
     (hw : __eo_to_smt w = SmtTerm.Numeral i)
     (hnTy : __smtx_typeof (__eo_to_smt n) = SmtType.Int)
@@ -644,7 +644,7 @@ private theorem intToBvExpanded_eval_rel
   exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_int_to_bv_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.int_to_bv_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

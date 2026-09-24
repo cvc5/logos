@@ -191,7 +191,7 @@ private theorem typed___eo_prog_eq_ite_lift_impl (C1 t1 s1 r1 : Term) :
     (by rw [hLeftBool]; decide)
 
 private theorem facts___eo_prog_eq_ite_lift_impl
-    (M : SmtModel) (hM : model_total_typed M) (C1 t1 s1 r1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (C1 t1 s1 r1 : Term) :
   RuleProofs.eo_has_smt_translation C1 ->
   RuleProofs.eo_has_smt_translation t1 ->
   RuleProofs.eo_has_smt_translation s1 ->
@@ -248,7 +248,7 @@ private theorem facts___eo_prog_eq_ite_lift_impl
             (__smtx_model_eval M (__eo_to_smt r1)))
 
 public theorem cmd_step_eq_ite_lift_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.eq_ite_lift args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -94,7 +94,7 @@ private theorem prog_str_concat_clash_rev_info
       raw_rev_eq_conclusion_eq left right hRawNe
 
 public theorem cmd_step_str_concat_clash_rev_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_concat_clash_rev args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

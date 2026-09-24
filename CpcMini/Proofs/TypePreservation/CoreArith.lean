@@ -18,14 +18,14 @@ theorem typeof_ite_eq
     (c t1 t2 : SmtTerm) :
     __smtx_typeof (SmtTerm.ite c t1 t2) =
       __smtx_typeof_ite (__smtx_typeof c) (__smtx_typeof t1) (__smtx_typeof t2) := by
-  rw [__smtx_typeof.eq_10]
+  rw [__smtx_typeof.eq_11]
 
 /-- Rewrites the typing equation for `eq`. -/
 theorem typeof_eq_eq
     (t1 t2 : SmtTerm) :
     __smtx_typeof (SmtTerm.eq t1 t2) =
       __smtx_typeof_eq (__smtx_typeof t1) (__smtx_typeof t2) := by
-  rw [__smtx_typeof.eq_11]
+  rw [__smtx_typeof.eq_10]
 
 /-- Rewrites the typing equation for `not`. -/
 theorem typeof_not_eq (t : SmtTerm) :

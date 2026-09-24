@@ -58,7 +58,7 @@ private theorem bvxor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_42]) hNN with
+        rw [__smtx_typeof.eq_44]) hNN with
     ⟨w', hyTy, hxTy⟩
   have hWidth : w' = w := by
     have hResult : SmtType.BitVec w' = SmtType.BitVec w := by
@@ -67,9 +67,9 @@ private theorem bvxor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
             __smtx_typeof_bv_op_2
               (__smtx_typeof (__eo_to_smt y))
               (__smtx_typeof (__eo_to_smt x)) by
-          rw [__smtx_typeof.eq_42]] at hTy'
+          rw [__smtx_typeof.eq_44]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-        SmtEval.native_nateq] using hTy'
+        Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -108,10 +108,10 @@ private theorem native_binary_xor_mod_eq_toNat
       ((BitVec.ofInt w n1 ^^^ BitVec.ofInt w n2).toNat : Int) := by
   cases w with
   | zero =>
-      simp [native_binary_xor, native_pixor, native_mod_total,
+      simp [native_binary_xor, impl_native_pixor, native_mod_total,
         native_int_pow2_nat]
   | succ w =>
-      simp [native_binary_xor, native_pixor, native_mod_total,
+      simp [native_binary_xor, impl_native_pixor, native_mod_total,
         native_nat_to_int, native_ite, native_zeq]
       exact bitvec_toInt_emod_pow (Nat.succ w)
         (BitVec.ofInt (Nat.succ w) n1 ^^^ BitVec.ofInt (Nat.succ w) n2)
@@ -199,7 +199,7 @@ private def EvalCanonical (M : SmtModel) (w : Nat) (t : Term) : Prop :=
         true
 
 private theorem evalCanonical_of_smt_type
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (w : Nat) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w ->
     EvalCanonical M w t := by
   intro hTy
@@ -256,7 +256,7 @@ private theorem listCanonical_eval
           simpa [ListCanonical] using h
 
 private theorem listCanonical_of_smt_type
-    (M : SmtModel) (hM : model_total_typed M) (w : Nat) :
+    (M : SmtModel) (hM : model_wf M) (w : Nat) :
     (t : Term) ->
     __eo_is_list (Term.UOp UserOp.bvxor) t = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w ->
@@ -458,7 +458,7 @@ theorem listConcatRecSmtType
           (SmtTerm.bvxor (__eo_to_smt x)
             (__eo_to_smt (__eo_list_concat_rec xs z))) =
         SmtType.BitVec w
-      rw [__smtx_typeof.eq_42]
+      rw [__smtx_typeof.eq_44]
       simp [__smtx_typeof_bv_op_2, hArgs.1, hTailTy,
         native_nateq, native_ite]
   | case4 nil z hNil hZNe hNot =>
@@ -612,7 +612,7 @@ private theorem list_concat_rec_eval_eq_of_canonical
 /-- Concatenating two well-typed n-ary XOR lists has the same model value as
     applying binary XOR to their aggregate values. -/
 theorem listConcatRecEvalEq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a z : Term) (w : Nat) :
     __eo_is_list (Term.UOp UserOp.bvxor) a = Term.Boolean true ->
     __eo_is_list (Term.UOp UserOp.bvxor) z = Term.Boolean true ->
@@ -630,7 +630,7 @@ theorem listConcatRecEvalEq
 /-- Eliminating the singleton wrapper of a well-typed n-ary XOR list preserves
     its model value. -/
 theorem listSingletonElimEvalEq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (c : Term) (w : Nat) :
     __eo_is_list (Term.UOp UserOp.bvxor) c = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt c) = SmtType.BitVec w ->
@@ -703,11 +703,11 @@ theorem binarySmtType
   intro hX hY
   change __smtx_typeof
       (SmtTerm.bvxor (__eo_to_smt x) (__eo_to_smt y)) = _
-  rw [__smtx_typeof.eq_42]
+  rw [__smtx_typeof.eq_44]
   simp [__smtx_typeof_bv_op_2, hX, hY, native_nateq, native_ite]
 
 theorem evalAssoc
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt y) = SmtType.BitVec w ->
@@ -730,7 +730,7 @@ theorem evalAssoc
   exact eval_xor_assoc M x y z w nx ny nz hXE hYE hZE
 
 theorem evalComm
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt y) = SmtType.BitVec w ->
@@ -750,11 +750,11 @@ theorem evalComm
       (__smtx_model_eval M (__eo_to_smt y))
       (__smtx_model_eval M (__eo_to_smt x))
   rw [hXE, hYE]
-  simp [__smtx_model_eval_bvxor, native_binary_xor, native_pixor,
+  simp [__smtx_model_eval_bvxor, native_binary_xor, impl_native_pixor,
     BitVec.xor_comm]
 
 theorem evalRightNil
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x nil : Term) (w : Nat) :
     __eo_is_list_nil (Term.UOp UserOp.bvxor) nil = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->

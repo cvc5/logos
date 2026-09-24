@@ -230,7 +230,7 @@ private theorem binary_literal_range_of_bitvec_type
   exact Smtm.bitvec_payload_range_of_canonical hWF.1 hWF.2
 
 private theorem model_eval_bitvec_payload
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (w : native_Nat)
+    (M : SmtModel) (hM : model_wf M) (t : Term) (w : native_Nat)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w) :
     ∃ n : native_Int,
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Binary (native_nat_to_int w) n ∧
@@ -273,15 +273,15 @@ private theorem bvmul_args_of_bitvec_type (y x : Term) (w : native_Nat) :
       (show __smtx_typeof (SmtTerm.bvmul (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_47]) hNN with ⟨w', hy, hx⟩
+        rw [__smtx_typeof.eq_49]) hNN with ⟨w', hy, hx⟩
   have hWidth : w' = w := by
     have hResult : SmtType.BitVec w' = SmtType.BitVec w := by
       rw [show __smtx_typeof (SmtTerm.bvmul (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_47]] at hTy'
+        rw [__smtx_typeof.eq_49]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-        SmtEval.native_nateq] using hTy'
+        Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -308,15 +308,15 @@ private theorem bvsub_args_of_bitvec_type (y x : Term) (w : native_Nat) :
       (show __smtx_typeof (SmtTerm.bvsub (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_50]) hNN with ⟨w', hy, hx⟩
+        rw [__smtx_typeof.eq_52]) hNN with ⟨w', hy, hx⟩
   have hWidth : w' = w := by
     have hResult : SmtType.BitVec w' = SmtType.BitVec w := by
       rw [show __smtx_typeof (SmtTerm.bvsub (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_50]] at hTy'
+        rw [__smtx_typeof.eq_52]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-        SmtEval.native_nateq] using hTy'
+        Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -340,13 +340,13 @@ private theorem bvmul_info_of_non_none (y x : Term) :
       (show __smtx_typeof (SmtTerm.bvmul (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_47]) hNN with ⟨w, hy, hx⟩
+        rw [__smtx_typeof.eq_49]) hNN with ⟨w, hy, hx⟩
   have hResSmt :
       __smtx_typeof (SmtTerm.bvmul (__eo_to_smt y) (__eo_to_smt x)) =
         SmtType.BitVec w := by
-    rw [__smtx_typeof.eq_47]
+    rw [__smtx_typeof.eq_49]
     simp [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-      SmtEval.native_nateq]
+      Smtm.native_nateq]
   have hRes :
       __smtx_typeof (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) y) x)) =
         SmtType.BitVec w := by
@@ -592,7 +592,7 @@ theorem typed___eo_prog_bv_poly_norm_eq_impl
   exact RuleProofs.eo_typeof_bool_implies_has_bool_type a1 hA1Trans hA1Ty
 
 private theorem facts___eo_prog_bv_poly_norm_eq_impl_shape
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xb1 xb2 yb1 yb2 cx xb1p xb2p one cy yb1p yb2p one2 : Term) :
   RuleProofs.eo_has_smt_translation
     (Term.Apply (Term.Apply (Term.UOp UserOp.eq)
@@ -782,7 +782,7 @@ private theorem facts___eo_prog_bv_poly_norm_eq_impl_shape
             (native_int_pow2 (native_nat_to_int w))) := by
     rw [show __eo_to_smt diffX =
       SmtTerm.bvsub (__eo_to_smt xb1) (__eo_to_smt xb2) by rfl]
-    rw [__smtx_model_eval.eq_50, hXb1Eval, hXb2Eval]
+    rw [__smtx_model_eval.eq_52, hXb1Eval, hXb2Eval]
     rfl
   have hDiffYCalc :
       __smtx_model_eval M (__eo_to_smt diffY) =
@@ -793,7 +793,7 @@ private theorem facts___eo_prog_bv_poly_norm_eq_impl_shape
             (native_int_pow2 (native_nat_to_int w))) := by
     rw [show __eo_to_smt diffY =
       SmtTerm.bvsub (__eo_to_smt yb1) (__eo_to_smt yb2) by rfl]
-    rw [__smtx_model_eval.eq_50, hYb1Eval, hYb2Eval]
+    rw [__smtx_model_eval.eq_52, hYb1Eval, hYb2Eval]
     rfl
   have hDxPayload :
       ndx =
@@ -829,7 +829,7 @@ private theorem facts___eo_prog_bv_poly_norm_eq_impl_shape
               (native_int_pow2 (native_nat_to_int w))) := by
       rw [show __eo_to_smt innerX =
         SmtTerm.bvmul (__eo_to_smt diffX) (__eo_to_smt one) by rfl]
-      rw [__smtx_model_eval.eq_47, hDiffXEval, hOneEval]
+      rw [__smtx_model_eval.eq_49, hDiffXEval, hOneEval]
       rfl
     have hOneMul :
         native_mod_total (native_zmult ndx 1) (native_int_pow2 (native_nat_to_int w)) =
@@ -847,7 +847,7 @@ private theorem facts___eo_prog_bv_poly_norm_eq_impl_shape
               (native_int_pow2 (native_nat_to_int w))) := by
       rw [show __eo_to_smt innerY =
         SmtTerm.bvmul (__eo_to_smt diffY) (__eo_to_smt one) by rfl]
-      rw [__smtx_model_eval.eq_47, hDiffYEval, hOneEval]
+      rw [__smtx_model_eval.eq_49, hDiffYEval, hOneEval]
       rfl
     have hOneMul :
         native_mod_total (native_zmult ndy 1) (native_int_pow2 (native_nat_to_int w)) =
@@ -862,7 +862,7 @@ private theorem facts___eo_prog_bv_poly_norm_eq_impl_shape
             (native_int_pow2 (native_nat_to_int w))) := by
     rw [show __eo_to_smt lhs =
       SmtTerm.bvmul (__eo_to_smt cx) (__eo_to_smt innerX) by rfl]
-    rw [__smtx_model_eval.eq_47, hCxEval, hInnerXEval]
+    rw [__smtx_model_eval.eq_49, hCxEval, hInnerXEval]
     rfl
   have hRhsEval :
       __smtx_model_eval M (__eo_to_smt rhs) =
@@ -871,7 +871,7 @@ private theorem facts___eo_prog_bv_poly_norm_eq_impl_shape
             (native_int_pow2 (native_nat_to_int w))) := by
     rw [show __eo_to_smt rhs =
       SmtTerm.bvmul (__eo_to_smt cy) (__eo_to_smt innerY) by rfl]
-    rw [__smtx_model_eval.eq_47, hCyEval, hInnerYEval]
+    rw [__smtx_model_eval.eq_49, hCyEval, hInnerYEval]
     rfl
   have hPremRel := RuleProofs.eo_interprets_eq_rel M lhs rhs (by simpa [lhs, rhs] using hPremTrue)
   rw [hLhsEval, hRhsEval] at hPremRel
@@ -971,7 +971,7 @@ private theorem facts___eo_prog_bv_poly_norm_eq_impl_shape
   exact RuleProofs.eo_interprets_eq_of_rel M eqX eqY hOutBool hRel
 
 private theorem facts___eo_prog_bv_poly_norm_eq_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 prem : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 prem : Term) :
   RuleProofs.eo_has_smt_translation a1 ->
   RuleProofs.eo_has_bool_type prem ->
   eo_interprets M prem true ->
@@ -1096,7 +1096,7 @@ private theorem facts___eo_prog_bv_poly_norm_eq_impl
   | _ => exact False.elim (hProg (by rfl))
 
 public theorem cmd_step_bv_poly_norm_eq_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_poly_norm_eq args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

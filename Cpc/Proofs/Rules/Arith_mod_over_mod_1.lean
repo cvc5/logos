@@ -141,7 +141,7 @@ private theorem typed___eo_prog_arith_mod_over_mod_1_impl
     (by rw [hLhsTy, hRhsTy]) hLhsTrans
 
 private theorem facts___eo_prog_arith_mod_over_mod_1_impl
-    (M : SmtModel) (hM : model_total_typed M) (c r P : Term) :
+    (M : SmtModel) (hM : model_wf M) (c r P : Term) :
     RuleProofs.eo_has_smt_translation c ->
     RuleProofs.eo_has_smt_translation r ->
     __eo_prog_arith_mod_over_mod_1 c r (Proof.pf P) =
@@ -203,7 +203,7 @@ private theorem facts___eo_prog_arith_mod_over_mod_1_impl
         (SmtValue.Numeral (native_mod_total ri ci))
 
 public theorem cmd_step_arith_mod_over_mod_1_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_mod_over_mod_1 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

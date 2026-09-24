@@ -68,7 +68,7 @@ private theorem smtx_typeof_re_concat_of_reglan (r s : Term)
   simp [hr, hs, native_ite, native_Teq]
 
 private theorem type_and_facts
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs r ys : Term)
     (hXsList : __eo_is_list (Term.UOp UserOp.re_concat) xs = Term.Boolean true)
     (hYsList : __eo_is_list (Term.UOp UserOp.re_concat) ys = Term.Boolean true)
@@ -186,7 +186,7 @@ private theorem type_and_facts
 end ReConcatStarSwapProof
 
 public theorem cmd_step_re_concat_star_swap_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_concat_star_swap args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

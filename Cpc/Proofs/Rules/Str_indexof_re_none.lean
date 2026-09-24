@@ -56,12 +56,12 @@ private theorem smtx_typeof_of_eo_int
 
 private theorem native_re_prefix_match_len_go_none :
     ∀ (xs : List SmtValue) (n : Nat),
-      native_re_prefix_match_len?.go native_re_none xs n = none
+      impl_native_re_prefix_match_len_go native_re_none xs n = none
   | [], n => by
-      rw [native_re_prefix_match_len?.go.eq_1]
+      rw [impl_native_re_prefix_match_len_go.eq_1]
       simp [native_re_none, native_re_nullable]
   | c :: cs, n => by
-      rw [native_re_prefix_match_len?.go.eq_2]
+      rw [impl_native_re_prefix_match_len_go.eq_2]
       simp [native_re_none, native_re_nullable, native_re_deriv]
       exact native_re_prefix_match_len_go_none cs (n + 1)
 
@@ -72,12 +72,12 @@ private theorem native_re_prefix_match_len_none (xs : List SmtValue) :
 
 private theorem native_re_find_idx_aux_none :
     ∀ (xs : List SmtValue) (idx : Nat),
-      native_re_find_idx_aux native_re_none xs idx = none
+      impl_native_re_find_idx_aux native_re_none xs idx = none
   | [], idx => by
-      rw [native_re_find_idx_aux.eq_def]
+      rw [impl_native_re_find_idx_aux.eq_def]
       simp [native_re_prefix_match_len_none]
   | _ :: cs, idx => by
-      rw [native_re_find_idx_aux.eq_def]
+      rw [impl_native_re_find_idx_aux.eq_def]
       simp [native_re_prefix_match_len_none,
         native_re_find_idx_aux_none cs (idx + 1)]
 
@@ -158,7 +158,7 @@ private theorem typed___eo_prog_str_indexof_re_none_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_str_indexof_re_none_impl
-    (M : SmtModel) (hM : model_total_typed M) (t n : Term)
+    (M : SmtModel) (hM : model_wf M) (t n : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hNTrans : RuleProofs.eo_has_smt_translation n)
     (hTTy : __eo_typeof t = Term.Apply Term.Seq Term.Char)
@@ -237,7 +237,7 @@ private theorem facts___eo_prog_str_indexof_re_none_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_indexof_re_none_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_indexof_re_none args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -103,10 +103,10 @@ private theorem eo_or_true {a b : Term} :
 
 private theorem map_native_ssm_char_char :
     ∀ s : native_String,
-      List.map (native_ssm_char_of_value ∘ SmtValue.Char) s = s
+      List.map (impl_native_ssm_char_of_value ∘ SmtValue.Char) s = s
   | [] => rfl
   | _ :: cs => by
-      simp [Function.comp_def, native_ssm_char_of_value]
+      simp [Function.comp_def, impl_native_ssm_char_of_value]
 
 private theorem are_distinct_int_true {a b : Term} :
     __are_distinct_terms_type a b (Term.UOp UserOp.Int) = Term.Boolean true ->
@@ -247,7 +247,7 @@ private theorem smtx_model_eval_eq_false_of_ne_not_reglan
   all_goals exact hNe
 
 private theorem smtx_model_eval_eq_false_of_type_ne
-    (M : SmtModel) (hM : model_total_typed M) (x y : SmtTerm) :
+    (M : SmtModel) (hM : model_wf M) (x y : SmtTerm) :
     __smtx_typeof x ≠ SmtType.None ->
     __smtx_typeof y ≠ SmtType.None ->
     __smtx_typeof x ≠ __smtx_typeof y ->
@@ -286,15 +286,15 @@ private theorem set_value_model_eval_eq_false_of_lookup_witness
     (∃ m₁ m₂ w,
       v₁ = SmtValue.Set m₁ ∧
       v₂ = SmtValue.Set m₂ ∧
-      __smtx_msm_lookup m₁ w = SmtValue.Boolean true ∧
-      __smtx_msm_lookup m₂ w = SmtValue.Boolean false) ->
+      __smtx_map_lookup m₁ w = SmtValue.Boolean true ∧
+      __smtx_map_lookup m₂ w = SmtValue.Boolean false) ->
     __smtx_model_eval_eq v₁ v₂ = SmtValue.Boolean false := by
   rintro ⟨m₁, m₂, w, rfl, rfl, hLookup₁, hLookup₂⟩
   apply smtx_model_eval_eq_false_of_ne_not_reglan
   · intro hEq
     injection hEq with hMapEq
     have hLookupEq :
-        __smtx_msm_lookup m₁ w = __smtx_msm_lookup m₂ w := by
+        __smtx_map_lookup m₁ w = __smtx_map_lookup m₂ w := by
       rw [hMapEq]
     rw [hLookup₁, hLookup₂] at hLookupEq
     cases hLookupEq
@@ -313,8 +313,8 @@ private theorem set_singleton_set_singleton_lookup_witness_of_head
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.UOp UserOp.set_singleton) e₂)) =
         SmtValue.Set m₂ ∧
-      __smtx_msm_lookup m₁ w = SmtValue.Boolean true ∧
-      __smtx_msm_lookup m₂ w = SmtValue.Boolean false := by
+      __smtx_map_lookup m₁ w = SmtValue.Boolean true ∧
+      __smtx_map_lookup m₂ w = SmtValue.Boolean false := by
   intro hHeadEqFalse
   let v₁ := __smtx_model_eval M (__eo_to_smt e₁)
   let v₂ := __smtx_model_eval M (__eo_to_smt e₂)
@@ -340,8 +340,8 @@ private theorem set_singleton_set_singleton_lookup_witness_of_head
           (SmtMap.default (__smtx_typeof_value v₂) (SmtValue.Boolean false)))
     rw [smtx_eval_set_singleton_term_eq]
     rfl
-  · simp [__smtx_msm_lookup, native_veq, native_ite]
-  · simp [__smtx_msm_lookup, hVeq, native_ite]
+  · simp [__smtx_map_lookup, native_veq, native_ite]
+  · simp [__smtx_map_lookup, hVeq, native_ite]
 
 private theorem set_singleton_set_empty_lookup_witness
     (M : SmtModel) (e U : Term) :
@@ -356,8 +356,8 @@ private theorem set_singleton_set_empty_lookup_witness
             (Term.UOp1 UserOp1.set_empty
               (Term.Apply (Term.UOp UserOp.Set) U))) =
         SmtValue.Set m₂ ∧
-      __smtx_msm_lookup m₁ w = SmtValue.Boolean true ∧
-      __smtx_msm_lookup m₂ w = SmtValue.Boolean false := by
+      __smtx_map_lookup m₁ w = SmtValue.Boolean true ∧
+      __smtx_map_lookup m₂ w = SmtValue.Boolean false := by
   intro hEmptyTrans
   have hSetTy :
       ∃ T, __eo_to_smt_type (Term.Apply (Term.UOp UserOp.Set) U) =
@@ -394,8 +394,8 @@ private theorem set_singleton_set_empty_lookup_witness
     change __smtx_model_eval M (SmtTerm.set_empty T) =
       SmtValue.Set (SmtMap.default T (SmtValue.Boolean false))
     rw [smtx_eval_set_empty_term_eq]
-  · simp [__smtx_msm_lookup, native_veq, native_ite]
-  · simp [__smtx_msm_lookup]
+  · simp [__smtx_map_lookup, native_veq, native_ite]
+  · simp [__smtx_map_lookup]
 
 private theorem set_union_lookup_true_of_left_true
     {m₁ m₂ : SmtMap} {A : SmtType} {w : SmtValue}
@@ -403,10 +403,10 @@ private theorem set_union_lookup_true_of_left_true
     (hm₂Ty : __smtx_typeof_map_value m₂ = SmtType.Map A SmtType.Bool)
     (hm₁Can : __smtx_map_canonical m₁ = true)
     (hm₂Can : __smtx_map_canonical m₂ = true)
-    (hm₁Def : __smtx_msm_get_default m₁ = SmtValue.Boolean false)
-    (hLeft : __smtx_msm_lookup m₁ w = SmtValue.Boolean true) :
-    __smtx_msm_lookup
-        (__smtx_mss_op_internal false m₁
+    (hm₁Def : __smtx_map_get_default m₁ = SmtValue.Boolean false)
+    (hLeft : __smtx_map_lookup m₁ w = SmtValue.Boolean true) :
+    __smtx_map_lookup
+        (__smtx_set_op_rec false m₁
           (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value m₁))
             (SmtValue.Boolean false))
           m₂) w =
@@ -420,8 +420,8 @@ private theorem set_union_lookup_true_of_left_true
     simp [__smtx_typeof_map_value, __smtx_index_typeof_map, hm₁Ty,
       __smtx_typeof_value]
   have hEmptyLookup :
-      __smtx_msm_lookup empty w = SmtValue.Boolean false := by
-    simp [empty, __smtx_msm_lookup]
+      __smtx_map_lookup empty w = SmtValue.Boolean false := by
+    simp [empty, __smtx_map_lookup]
   have hUnion :=
     mss_op_lookup_acc false (m1 := m₁) (m2 := empty) (acc := m₂)
       (A := A) (i := w) hm₁Ty hEmptyTy hm₂Ty hm₁Can hm₂Can hm₁Def
@@ -434,11 +434,11 @@ private theorem set_union_lookup_false_of_both_false
     (hm₂Ty : __smtx_typeof_map_value m₂ = SmtType.Map A SmtType.Bool)
     (hm₁Can : __smtx_map_canonical m₁ = true)
     (hm₂Can : __smtx_map_canonical m₂ = true)
-    (hm₁Def : __smtx_msm_get_default m₁ = SmtValue.Boolean false)
-    (hLeft : __smtx_msm_lookup m₁ w = SmtValue.Boolean false)
-    (hRight : __smtx_msm_lookup m₂ w = SmtValue.Boolean false) :
-    __smtx_msm_lookup
-        (__smtx_mss_op_internal false m₁
+    (hm₁Def : __smtx_map_get_default m₁ = SmtValue.Boolean false)
+    (hLeft : __smtx_map_lookup m₁ w = SmtValue.Boolean false)
+    (hRight : __smtx_map_lookup m₂ w = SmtValue.Boolean false) :
+    __smtx_map_lookup
+        (__smtx_set_op_rec false m₁
           (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value m₁))
             (SmtValue.Boolean false))
           m₂) w =
@@ -452,8 +452,8 @@ private theorem set_union_lookup_false_of_both_false
     simp [__smtx_typeof_map_value, __smtx_index_typeof_map, hm₁Ty,
       __smtx_typeof_value]
   have hEmptyLookup :
-      __smtx_msm_lookup empty w = SmtValue.Boolean false := by
-    simp [empty, __smtx_msm_lookup]
+      __smtx_map_lookup empty w = SmtValue.Boolean false := by
+    simp [empty, __smtx_map_lookup]
   have hUnion :=
     mss_op_lookup_acc false (m1 := m₁) (m2 := empty) (acc := m₂)
       (A := A) (i := w) hm₁Ty hEmptyTy hm₂Ty hm₁Can hm₂Can hm₁Def
@@ -466,10 +466,10 @@ private theorem set_union_lookup_true_of_right_true
     (hm₂Ty : __smtx_typeof_map_value m₂ = SmtType.Map A SmtType.Bool)
     (hm₁Can : __smtx_map_canonical m₁ = true)
     (hm₂Can : __smtx_map_canonical m₂ = true)
-    (hm₁Def : __smtx_msm_get_default m₁ = SmtValue.Boolean false)
-    (hRight : __smtx_msm_lookup m₂ w = SmtValue.Boolean true) :
-    __smtx_msm_lookup
-        (__smtx_mss_op_internal false m₁
+    (hm₁Def : __smtx_map_get_default m₁ = SmtValue.Boolean false)
+    (hRight : __smtx_map_lookup m₂ w = SmtValue.Boolean true) :
+    __smtx_map_lookup
+        (__smtx_set_op_rec false m₁
           (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value m₁))
             (SmtValue.Boolean false))
           m₂) w =
@@ -489,7 +489,7 @@ private theorem set_union_lookup_true_of_right_true
 
 private theorem set_singleton_lookup_true_key_eq
     {v w : SmtValue} {T : SmtType} :
-    __smtx_msm_lookup
+    __smtx_map_lookup
         (SmtMap.cons v (SmtValue.Boolean true)
           (SmtMap.default T (SmtValue.Boolean false))) w =
       SmtValue.Boolean true ->
@@ -501,16 +501,16 @@ private theorem set_singleton_lookup_true_key_eq
       cases h : native_veq v w
       · rfl
       · exact False.elim (hVeq h)
-    simp [__smtx_msm_lookup, hVeqFalse, native_ite] at hLookup
+    simp [__smtx_map_lookup, hVeqFalse, native_ite] at hLookup
 
 private theorem set_singleton_lookup_false_of_other_singleton
     {v₁ v₂ w : SmtValue} {T₁ T₂ : SmtType} :
-    __smtx_msm_lookup
+    __smtx_map_lookup
         (SmtMap.cons v₁ (SmtValue.Boolean true)
           (SmtMap.default T₁ (SmtValue.Boolean false))) w =
       SmtValue.Boolean true ->
     native_veq v₂ v₁ = false ->
-    __smtx_msm_lookup
+    __smtx_map_lookup
         (SmtMap.cons v₂ (SmtValue.Boolean true)
           (SmtMap.default T₂ (SmtValue.Boolean false))) w =
       SmtValue.Boolean false := by
@@ -518,17 +518,17 @@ private theorem set_singleton_lookup_false_of_other_singleton
   have hw : w = v₁ :=
     set_singleton_lookup_true_key_eq (T := T₁) hLookup
   subst w
-  simp [__smtx_msm_lookup, hNe, native_ite]
+  simp [__smtx_map_lookup, hNe, native_ite]
 
 private theorem set_eval_map_info
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (A : SmtType) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) (A : SmtType) :
     RuleProofs.eo_has_smt_translation t ->
     __smtx_typeof (__eo_to_smt t) = SmtType.Set A ->
     ∃ m,
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Set m ∧
       __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool ∧
       __smtx_map_canonical m = true ∧
-      __smtx_msm_get_default m = SmtValue.Boolean false := by
+      __smtx_map_get_default m = SmtValue.Boolean false := by
   intro hTrans hTy
   have hEvalTy :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
@@ -545,24 +545,24 @@ private theorem set_eval_map_info
       __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool :=
     set_map_value_typed (by simpa [hEval] using hEvalTy)
   have hCanEval :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt t)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt t)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t hTrans
-  have hCanSet : __smtx_value_canonical (SmtValue.Set m) := by
+  have hCanSet : value_canonical (SmtValue.Set m) := by
     simpa [hEval] using hCanEval
   have hMapCan : __smtx_map_canonical m = true := by
     have hParts := hCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
-  have hDef : __smtx_msm_get_default m = SmtValue.Boolean false := by
+  have hDef : __smtx_map_get_default m = SmtValue.Boolean false := by
     have hParts := hCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact eq_of_native_veq_true hParts.2
   exact ⟨m, hEval, hMapTy, hMapCan, hDef⟩
 
 private theorem set_union_eval_maps
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation
       (Term.Apply (Term.Apply (Term.UOp UserOp.set_union) x) y) ->
     ∃ A mx my,
@@ -572,13 +572,13 @@ private theorem set_union_eval_maps
       __smtx_typeof_map_value my = SmtType.Map A SmtType.Bool ∧
       __smtx_map_canonical mx = true ∧
       __smtx_map_canonical my = true ∧
-      __smtx_msm_get_default mx = SmtValue.Boolean false ∧
-      __smtx_msm_get_default my = SmtValue.Boolean false ∧
+      __smtx_map_get_default mx = SmtValue.Boolean false ∧
+      __smtx_map_get_default my = SmtValue.Boolean false ∧
       __smtx_model_eval M
           (__eo_to_smt
             (Term.Apply (Term.Apply (Term.UOp UserOp.set_union) x) y)) =
         SmtValue.Set
-          (__smtx_mss_op_internal false mx
+          (__smtx_set_op_rec false mx
             (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx))
               (SmtValue.Boolean false))
             my) := by
@@ -607,7 +607,7 @@ private theorem set_union_eval_maps
   change __smtx_model_eval M
       (SmtTerm.set_union (__eo_to_smt x) (__eo_to_smt y)) =
     SmtValue.Set
-      (__smtx_mss_op_internal false mx
+      (__smtx_set_op_rec false mx
         (SmtMap.default (__smtx_index_typeof_map (__smtx_typeof_map_value mx))
           (SmtValue.Boolean false))
         my)
@@ -653,7 +653,7 @@ private theorem native_pack_seq_ne_empty_of_length_pos_any
   omega
 
 private theorem seq_is_non_empty_model_eval
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
     RuleProofs.eo_has_smt_translation t ->
     __seq_is_non_empty t = Term.Boolean true ->
     ∃ T xs,
@@ -740,7 +740,7 @@ private theorem eval_seq_unit_pack (M : SmtModel) (e : Term) :
   simp [__smtx_model_eval, native_pack_seq]
 
 private theorem eval_concat_seq_unit_pack
-    (M : SmtModel) (hM : model_total_typed M) (e tail : Term) :
+    (M : SmtModel) (hM : model_wf M) (e tail : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e) tail) ->
     ∃ ss,
@@ -767,7 +767,7 @@ private theorem eval_concat_seq_unit_pack
     native_unpack_seq, __smtx_elem_typeof_seq_value]
 
 private theorem eval_concat_seq_unit_pack_with_tail
-    (M : SmtModel) (hM : model_total_typed M) (e tail : Term) :
+    (M : SmtModel) (hM : model_wf M) (e tail : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e) tail) ->
     ∃ ss,
@@ -846,7 +846,7 @@ private theorem eval_seq_empty_seq
       __eo_to_smt_seq_empty, __smtx_model_eval]
 
 private theorem seq_is_non_empty_ne_seq_empty_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M) (t U : Term) :
+    (M : SmtModel) (hM : model_wf M) (t U : Term) :
     RuleProofs.eo_has_smt_translation t ->
     RuleProofs.eo_has_smt_translation
       (Term.seq_empty (Term.Apply (Term.UOp UserOp.Seq) U)) ->
@@ -870,7 +870,7 @@ private theorem seq_is_non_empty_ne_seq_empty_model_eval_eq_false
     cases hR1
 
 private theorem seq_empty_ne_seq_is_non_empty_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M) (U t : Term) :
+    (M : SmtModel) (hM : model_wf M) (U t : Term) :
     RuleProofs.eo_has_smt_translation
       (Term.seq_empty (Term.Apply (Term.UOp UserOp.Seq) U)) ->
     RuleProofs.eo_has_smt_translation t ->
@@ -940,7 +940,7 @@ private theorem seq_distinct_terms_left_empty_non_empty
       all_goals exact hDistinct
 
 private theorem seq_distinct_terms_right_empty_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M) (t U T : Term) :
+    (M : SmtModel) (hM : model_wf M) (t U T : Term) :
     RuleProofs.eo_has_smt_translation t ->
     RuleProofs.eo_has_smt_translation
       (Term.seq_empty (Term.Apply (Term.UOp UserOp.Seq) U)) ->
@@ -957,7 +957,7 @@ private theorem seq_distinct_terms_right_empty_model_eval_eq_false
     (seq_distinct_terms_right_empty_non_empty hDistinct)
 
 private theorem seq_distinct_terms_left_empty_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M) (U t T : Term) :
+    (M : SmtModel) (hM : model_wf M) (U t T : Term) :
     RuleProofs.eo_has_smt_translation
       (Term.seq_empty (Term.Apply (Term.UOp UserOp.Seq) U)) ->
     RuleProofs.eo_has_smt_translation t ->
@@ -1074,7 +1074,7 @@ private theorem seq_unit_seq_unit_model_eval_eq_false_of_head
     cases hReg₁
 
 private theorem concat_seq_unit_concat_seq_unit_model_eval_eq_false_of_head
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e₁ tail₁ e₂ tail₂ : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e₁) tail₁) ->
@@ -1114,7 +1114,7 @@ private theorem concat_seq_unit_concat_seq_unit_model_eval_eq_false_of_head
     cases hReg₁
 
 private theorem concat_seq_unit_seq_unit_model_eval_eq_false_of_head
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e₁ tail e₂ : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e₁) tail) ->
@@ -1149,7 +1149,7 @@ private theorem concat_seq_unit_seq_unit_model_eval_eq_false_of_head
     cases hReg₁
 
 private theorem seq_unit_concat_seq_unit_model_eval_eq_false_of_head
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e₁ e₂ tail : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e₂) tail) ->
@@ -1274,7 +1274,7 @@ private theorem set_is_not_subset_union_left_true_branch
   all_goals exact hNotSubset
 
 private theorem set_is_not_subset_lookup_witness
-    (M : SmtModel) (hM : model_total_typed M) (a b U : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b U : Term) :
     RuleProofs.eo_has_smt_translation a ->
     RuleProofs.eo_has_smt_translation b ->
     (∀ e₁ e₂,
@@ -1290,8 +1290,8 @@ private theorem set_is_not_subset_lookup_witness
     ∃ m₁ m₂ w,
       __smtx_model_eval M (__eo_to_smt a) = SmtValue.Set m₁ ∧
       __smtx_model_eval M (__eo_to_smt b) = SmtValue.Set m₂ ∧
-      __smtx_msm_lookup m₁ w = SmtValue.Boolean true ∧
-      __smtx_msm_lookup m₂ w = SmtValue.Boolean false := by
+      __smtx_map_lookup m₁ w = SmtValue.Boolean true ∧
+      __smtx_map_lookup m₂ w = SmtValue.Boolean false := by
   intro haTrans hbTrans hHeadSound hNotSubset
   by_cases hSingletonEmpty :
       ∃ e V,
@@ -1450,7 +1450,7 @@ private theorem set_is_not_subset_lookup_witness
               (RuleProofs.native_veq_false_of_model_eval_eq_false
                 (v1 := v₁) (v2 := v₂) hHeadEqFalseEval)
           have hHeadLookupFalse :
-              __smtx_msm_lookup
+              __smtx_map_lookup
                   (SmtMap.cons v₂ (SmtValue.Boolean true)
                     (SmtMap.default (__smtx_typeof_value v₂)
                       (SmtValue.Boolean false))) w =
@@ -1459,8 +1459,8 @@ private theorem set_is_not_subset_lookup_witness
               (T₁ := __smtx_typeof_value v₁)
               (T₂ := __smtx_typeof_value v₂) hLookupSing hVeq
           have hUnionLookupFalse :
-              __smtx_msm_lookup
-                  (__smtx_mss_op_internal false
+              __smtx_map_lookup
+                  (__smtx_set_op_rec false
                     (SmtMap.cons v₂ (SmtValue.Boolean true)
                       (SmtMap.default (__smtx_typeof_value v₂)
                         (SmtValue.Boolean false)))
@@ -1477,7 +1477,7 @@ private theorem set_is_not_subset_lookup_witness
               hHead₂Can hSsCan hHead₂Def hHeadLookupFalse hLookupSs
           exact ⟨SmtMap.cons v₁ (SmtValue.Boolean true)
               (SmtMap.default (__smtx_typeof_value v₁) (SmtValue.Boolean false)),
-            __smtx_mss_op_internal false
+            __smtx_set_op_rec false
               (SmtMap.cons v₂ (SmtValue.Boolean true)
                 (SmtMap.default (__smtx_typeof_value v₂) (SmtValue.Boolean false)))
               (SmtMap.default
@@ -1533,8 +1533,8 @@ private theorem set_is_not_subset_lookup_witness
               exact h.symm
             subst mHead₁
             have hUnionLookupTrue :
-                __smtx_msm_lookup
-                    (__smtx_mss_op_internal false mHeadRec
+                __smtx_map_lookup
+                    (__smtx_set_op_rec false mHeadRec
                       (SmtMap.default
                         (__smtx_index_typeof_map (__smtx_typeof_map_value mHeadRec))
                         (SmtValue.Boolean false))
@@ -1542,7 +1542,7 @@ private theorem set_is_not_subset_lookup_witness
                   SmtValue.Boolean true :=
               set_union_lookup_true_of_left_true hHead₁Ty hTsTy
                 hHead₁Can hTsCan hHead₁Def hLookupHead
-            exact ⟨__smtx_mss_op_internal false mHeadRec
+            exact ⟨__smtx_set_op_rec false mHeadRec
                 (SmtMap.default
                   (__smtx_index_typeof_map (__smtx_typeof_map_value mHeadRec))
                   (SmtValue.Boolean false))
@@ -1568,8 +1568,8 @@ private theorem set_is_not_subset_lookup_witness
               exact h.symm
             subst mTs
             have hUnionLookupTrue :
-                __smtx_msm_lookup
-                    (__smtx_mss_op_internal false mHead₁
+                __smtx_map_lookup
+                    (__smtx_set_op_rec false mHead₁
                       (SmtMap.default
                         (__smtx_index_typeof_map (__smtx_typeof_map_value mHead₁))
                         (SmtValue.Boolean false))
@@ -1577,7 +1577,7 @@ private theorem set_is_not_subset_lookup_witness
                   SmtValue.Boolean true :=
               set_union_lookup_true_of_right_true hHead₁Ty hTsTy
                 hHead₁Can hTsCan hHead₁Def hLookupTs
-            exact ⟨__smtx_mss_op_internal false mHead₁
+            exact ⟨__smtx_set_op_rec false mHead₁
                 (SmtMap.default
                   (__smtx_index_typeof_map (__smtx_typeof_map_value mHead₁))
                   (SmtValue.Boolean false))
@@ -1594,7 +1594,7 @@ decreasing_by
   all_goals omega
 
 private theorem set_is_not_subset_model_eval_eq_false_of_head_sound
-    (M : SmtModel) (hM : model_total_typed M) (a b U : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b U : Term) :
     RuleProofs.eo_has_smt_translation a ->
     RuleProofs.eo_has_smt_translation b ->
     (∀ e₁ e₂,
@@ -1615,7 +1615,7 @@ private theorem set_is_not_subset_model_eval_eq_false_of_head_sound
       haTrans hbTrans hHeadSound hNotSubset)
 
 private theorem set_is_not_subset_model_eval_eq_false_of_head_sound_symm
-    (M : SmtModel) (hM : model_total_typed M) (a b U : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b U : Term) :
     RuleProofs.eo_has_smt_translation a ->
     RuleProofs.eo_has_smt_translation b ->
     (∀ e₁ e₂,
@@ -1653,7 +1653,7 @@ private theorem str_concat_arg_translations_of_translation (x y : Term) :
     exact seq_ne_none T hNone
 
 private theorem concat_seq_unit_seq_unit_model_eval_eq_false_of_tail
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e₁ tail e₂ : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e₁) tail) ->
@@ -1703,7 +1703,7 @@ private theorem concat_seq_unit_seq_unit_model_eval_eq_false_of_tail
     cases hReg₁
 
 private theorem seq_unit_concat_seq_unit_model_eval_eq_false_of_tail
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e₁ e₂ tail : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e₂) tail) ->
@@ -1753,7 +1753,7 @@ private theorem seq_unit_concat_seq_unit_model_eval_eq_false_of_tail
     cases hReg₁
 
 private theorem concat_seq_unit_concat_seq_unit_model_eval_eq_false_of_tail
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e₁ tail₁ e₂ tail₂ : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e₁) tail₁) ->
@@ -1847,7 +1847,7 @@ private theorem seq_distinct_seq_unit_seq_unit_model_eval_eq_false
     (hHeadSound hHeadEqFalse hHeadDistinct)
 
 private theorem seq_distinct_concat_unit_concat_unit_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e₁ tail₁ e₂ tail₂ U : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e₁) tail₁) ->
@@ -1908,7 +1908,7 @@ private theorem seq_distinct_concat_unit_concat_unit_model_eval_eq_false
       (hTailSound hTailDistinct)
 
 private theorem seq_distinct_concat_unit_seq_unit_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e₁ tail e₂ U : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e₁) tail) ->
@@ -1959,7 +1959,7 @@ private theorem seq_distinct_concat_unit_seq_unit_model_eval_eq_false
       M hM e₁ tail e₂ hLeftTrans hTailNonEmpty
 
 private theorem seq_distinct_seq_unit_concat_unit_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e₁ e₂ tail U : Term) :
     RuleProofs.eo_has_smt_translation
       (mkConcat (Term.Apply (Term.UOp UserOp.seq_unit) e₂) tail) ->
@@ -2037,7 +2037,7 @@ private theorem seq_distinct_terms_not_true_of_not_shapes {a b U : Term} :
     | exact hUnitUnit ⟨_, _, rfl, rfl⟩
 
 private theorem seq_distinct_terms_model_eval_eq_false_of_head_sound
-    (M : SmtModel) (hM : model_total_typed M) (a b U : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b U : Term) :
     RuleProofs.eo_has_smt_translation a ->
     RuleProofs.eo_has_smt_translation b ->
     (∀ e₁ e₂,
@@ -2280,21 +2280,21 @@ private theorem tuple_ctor_head_no_smt_translation :
   exact h TranslationProofs.smtx_typeof_none
 
 private theorem native_reserved_datatype_name_tuple :
-    native_reserved_datatype_name (native_string_lit "@Tuple") = true := by
+    __eo_to_smt_reserved_datatype_name (native_string_lit "@Tuple") = true := by
   native_decide
 
 private theorem dtcons_reserved_false_of_translation
     {s : native_String} {d : DatatypeDecl} {i : native_Nat} :
     RuleProofs.eo_has_smt_translation (Term.DtCons s d i) ->
-    native_reserved_datatype_name s = false := by
+    __eo_to_smt_reserved_datatype_name s = false := by
   intro hTrans
   unfold RuleProofs.eo_has_smt_translation at hTrans
   change
     __smtx_typeof
-        (native_ite (native_reserved_datatype_name s) SmtTerm.None
+        (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
           (SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i)) ≠
       SmtType.None at hTrans
-  cases hReserved : native_reserved_datatype_name s
+  cases hReserved : __eo_to_smt_reserved_datatype_name s
   · simp
   · exfalso
     rw [hReserved] at hTrans
@@ -2306,11 +2306,11 @@ private theorem dtcons_model_eval_of_translation
     __smtx_model_eval M (__eo_to_smt (Term.DtCons s d i)) =
       SmtValue.DtCons s (__eo_to_smt_datatype_decl d) i := by
   intro hTrans
-  have hReserved : native_reserved_datatype_name s = false :=
+  have hReserved : __eo_to_smt_reserved_datatype_name s = false :=
     dtcons_reserved_false_of_translation hTrans
   change
     __smtx_model_eval M
-        (native_ite (native_reserved_datatype_name s) SmtTerm.None
+        (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
           (SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i)) =
       SmtValue.DtCons s (__eo_to_smt_datatype_decl d) i
   rw [hReserved]
@@ -2322,12 +2322,12 @@ private theorem dtcons_smt_datatype_wf_of_translation
     __smtx_type_wf
         (SmtType.Datatype s (__eo_to_smt_datatype_decl d)) = true := by
   intro hTrans
-  have hReserved : native_reserved_datatype_name s = false :=
+  have hReserved : __eo_to_smt_reserved_datatype_name s = false :=
     dtcons_reserved_false_of_translation hTrans
   unfold RuleProofs.eo_has_smt_translation at hTrans
   change
     __smtx_typeof
-        (native_ite (native_reserved_datatype_name s) SmtTerm.None
+        (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
           (SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i)) ≠
       SmtType.None at hTrans
   rw [hReserved] at hTrans
@@ -2368,7 +2368,7 @@ private theorem tuple_unit_dtcons_model_eval_eq_false
         (__smtx_model_eval M (__eo_to_smt (Term.DtCons s d i))) =
       SmtValue.Boolean false := by
   intro hTrans
-  have hReserved : native_reserved_datatype_name s = false :=
+  have hReserved : __eo_to_smt_reserved_datatype_name s = false :=
     dtcons_reserved_false_of_translation hTrans
   have hNameNe : s ≠ native_string_lit "@Tuple" := by
     intro hs
@@ -2395,7 +2395,7 @@ private theorem dtcons_tuple_unit_model_eval_eq_false
       SmtValue.Boolean false := by
   intro hTrans
   rw [dtcons_model_eval_of_translation M hTrans, tuple_unit_model_eval M]
-  have hReserved : native_reserved_datatype_name s = false :=
+  have hReserved : __eo_to_smt_reserved_datatype_name s = false :=
     dtcons_reserved_false_of_translation hTrans
   have hNameNe : s ≠ native_string_lit "@Tuple" := by
     intro hs
@@ -2437,7 +2437,7 @@ private theorem dtcons_dtcons_model_eval_eq_false
           __smtx_type_wf
               (SmtType.Datatype s₁ (__eo_to_smt_datatype_decl d₁)) = true :=
         dtcons_smt_datatype_wf_of_translation h₁Trans
-      have hReserved : native_reserved_datatype_name s₁ = false :=
+      have hReserved : __eo_to_smt_reserved_datatype_name s₁ = false :=
         dtcons_reserved_false_of_translation h₁Trans
       have hTypeEq :
           Term.DatatypeType s₁ d₁ = Term.DatatypeType s₁ d₂ :=
@@ -2542,7 +2542,7 @@ private theorem tuple_apply_components_have_translation
     simp
 
 private theorem dt_distinct_terms_model_eval_eq_false_of_head_sound
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b : Term) :
     RuleProofs.eo_has_smt_translation a ->
     RuleProofs.eo_has_smt_translation b ->
     (∀ e₁ e₂,
@@ -2716,7 +2716,7 @@ private theorem dt_distinct_terms_model_eval_eq_false_of_head_sound
       M hM (__eo_to_smt a) (__eo_to_smt b) haTrans hbTrans hTyEq
 
 private theorem are_distinct_terms_type_model_eval_eq_false_of_type
-    (M : SmtModel) (hM : model_total_typed M) (T a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (T a b : Term) :
     RuleProofs.eo_has_smt_translation a ->
     RuleProofs.eo_has_smt_translation b ->
     __eo_eq a b = Term.Boolean false ->
@@ -2861,7 +2861,7 @@ decreasing_by
   all_goals try assumption
   all_goals omega
 theorem are_distinct_terms_type_model_eval_eq_false
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b : Term) :
     RuleProofs.eo_has_smt_translation a ->
     RuleProofs.eo_has_smt_translation b ->
     __eo_eq a b = Term.Boolean false ->
@@ -2873,7 +2873,7 @@ theorem are_distinct_terms_type_model_eval_eq_false
     M hM (__eo_typeof a) a b haTrans hbTrans hEqFalse hDistinct
 
 theorem are_distinct_terms_type_model_eval_eq_false_of_any_type
-    (M : SmtModel) (hM : model_total_typed M) (T a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (T a b : Term) :
     RuleProofs.eo_has_smt_translation a ->
     RuleProofs.eo_has_smt_translation b ->
     __eo_eq a b = Term.Boolean false ->

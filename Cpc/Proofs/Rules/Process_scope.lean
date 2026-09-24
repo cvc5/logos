@@ -83,7 +83,7 @@ private theorem eo_interprets_false (M : SmtModel) :
     (by rw [__smtx_model_eval.eq_1])
 
 private theorem eo_interprets_imp_true_of_left_false
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     eo_interprets M A false ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.imp) A) B) true := by
@@ -96,12 +96,12 @@ private theorem eo_interprets_imp_true_of_left_false
       refine smt_interprets.intro_true M (SmtTerm.imp (__eo_to_smt A) (__eo_to_smt B)) ?_ ?_
       · rw [typeof_imp_eq]
         simpa [hATy, hBBool, RuleProofs.eo_has_bool_type, native_Teq, native_ite]
-      · rw [__smtx_model_eval.eq_9, hAEval, hBEval]
+      · rw [__smtx_model_eval.eq_10, hAEval, hBEval]
         cases b <;> simp [__smtx_model_eval_imp, __smtx_model_eval_or,
           __smtx_model_eval_not, SmtEval.native_or, SmtEval.native_not]
 
 private theorem eo_interprets_imp_true_of_right_true
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     eo_interprets M B true ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.imp) A) B) true := by
@@ -114,7 +114,7 @@ private theorem eo_interprets_imp_true_of_right_true
       refine smt_interprets.intro_true M (SmtTerm.imp (__eo_to_smt A) (__eo_to_smt B)) ?_ ?_
       · rw [typeof_imp_eq]
         simpa [hABool, hBTy, RuleProofs.eo_has_bool_type, native_Teq, native_ite]
-      · rw [__smtx_model_eval.eq_9, hAEval, hBEval]
+      · rw [__smtx_model_eval.eq_10, hAEval, hBEval]
         cases a <;> simp [__smtx_model_eval_imp, __smtx_model_eval_or,
           __smtx_model_eval_not, SmtEval.native_or, SmtEval.native_not]
 
@@ -473,7 +473,7 @@ private theorem run_process_scope_bool
     exact eo_has_bool_type_imp_of_bool_args A C hABool hCBool
 
 private theorem run_process_scope_sound
-    (M : SmtModel) (hM : model_total_typed M) (F C : Term) :
+    (M : SmtModel) (hM : model_wf M) (F C : Term) :
     eo_interprets M F true ->
     RuleProofs.eo_has_bool_type F ->
     RuleProofs.eo_has_smt_translation C ->
@@ -540,7 +540,7 @@ private theorem run_process_scope_sound
         exact eo_interprets_imp_true_of_right_true M hM A C hABool hCTrue
 
 public theorem cmd_step_process_scope_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.process_scope args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

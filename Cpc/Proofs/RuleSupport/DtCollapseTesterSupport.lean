@@ -514,7 +514,7 @@ private theorem ctorSpineRoot_tupleUnit_typeof_unit
 private theorem eo_to_smt_dtCons_eq
     (s : native_String) (d : DatatypeDecl) (i : native_Nat) :
     __eo_to_smt (Term.DtCons s d i) =
-      native_ite (native_reserved_datatype_name s) SmtTerm.None
+      native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
         (SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i) := by
   rfl
 
@@ -549,7 +549,7 @@ private theorem dtConsSpineRoot_to_smt_ne_dt_sel
   | root s d i =>
       intro s' d' i' j
       rw [eo_to_smt_dtCons_eq]
-      by_cases hRes : native_reserved_datatype_name s <;>
+      by_cases hRes : __eo_to_smt_reserved_datatype_name s <;>
         simp [native_ite, hRes]
   | app x hSp ih =>
       intro s' d' i' j hEq
@@ -564,7 +564,7 @@ private theorem dtConsSpineRoot_to_smt_ne_dt_tester
   | root s d i =>
       intro s' d' i'
       rw [eo_to_smt_dtCons_eq]
-      by_cases hRes : native_reserved_datatype_name s <;>
+      by_cases hRes : __eo_to_smt_reserved_datatype_name s <;>
         simp [native_ite, hRes]
   | app x hSp ih =>
       intro s' d' i' hEq
@@ -583,15 +583,15 @@ private theorem smtx_model_eval_apply_eq_apply_of_not_dt_ops
 
 private theorem smtx_model_eval_apply_of_dt_chain
     (M : SmtModel) (v x : SmtValue)
-    (hHead : ∃ s d i, __vsm_apply_head v = SmtValue.DtCons s d i)
+    (hHead : ∃ s d i, __smtx_apply_head_value v = SmtValue.DtCons s d i)
     (hx : x ≠ SmtValue.NotValue) :
     __smtx_model_eval_apply M v x = SmtValue.Apply v x := by
   cases x <;> simp [__smtx_model_eval_apply] at hx ⊢
   all_goals
-    cases v <;> simp [__vsm_apply_head] at hHead ⊢
+    cases v <;> simp [__smtx_apply_head_value] at hHead ⊢
 
 private theorem smt_model_eval_not_notvalue_of_non_none
-    (M : SmtModel) (hM : model_total_typed M) (x : SmtTerm)
+    (M : SmtModel) (hM : model_wf M) (x : SmtTerm)
     (hNN : __smtx_typeof x ≠ SmtType.None) :
     __smtx_model_eval M x ≠ SmtValue.NotValue := by
   have hPres :=
@@ -602,21 +602,21 @@ private theorem smt_model_eval_not_notvalue_of_non_none
   simp [__smtx_typeof_value]
 
 private theorem dtConsSpineRoot_eval_head
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}
     (hSp : DtConsSpineRoot t s d i)
     (hNN : __smtx_typeof (__eo_to_smt t) ≠ SmtType.None) :
-    __vsm_apply_head (__smtx_model_eval M (__eo_to_smt t)) =
+    __smtx_apply_head_value (__smtx_model_eval M (__eo_to_smt t)) =
       SmtValue.DtCons s (__eo_to_smt_datatype_decl d) i := by
   induction hSp with
   | root s d i =>
       rw [eo_to_smt_dtCons_eq] at hNN
-      by_cases hRes : native_reserved_datatype_name s
+      by_cases hRes : __eo_to_smt_reserved_datatype_name s
       · exfalso
         apply hNN
         simp [native_ite, hRes]
       · rw [eo_to_smt_dtCons_eq]
-        simp [native_ite, hRes, __smtx_model_eval, __vsm_apply_head]
+        simp [native_ite, hRes, __smtx_model_eval, __smtx_apply_head_value]
   | app x hSp ih =>
       rename_i t0 s0 d0 i0
       have hTo := dtConsSpineRoot_apply_generic hSp x
@@ -650,17 +650,17 @@ private theorem dtConsSpineRoot_eval_head
       rw [smtx_model_eval_apply_of_dt_chain M
         _ _
         ⟨s0, __eo_to_smt_datatype_decl d0, i0, hEvalHead⟩ hxNot]
-      simp [__vsm_apply_head, hEvalHead]
+      simp [__smtx_apply_head_value, hEvalHead]
 
 private theorem dtConsSpineRoot_unreserved_of_non_none
     {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}
     (hSp : DtConsSpineRoot t s d i)
     (hNN : __smtx_typeof (__eo_to_smt t) ≠ SmtType.None) :
-    native_reserved_datatype_name s = false := by
+    __eo_to_smt_reserved_datatype_name s = false := by
   induction hSp with
   | root s d i =>
       rw [eo_to_smt_dtCons_eq] at hNN
-      cases hRes : native_reserved_datatype_name s
+      cases hRes : __eo_to_smt_reserved_datatype_name s
       · rfl
       · exfalso
         apply hNN
@@ -1448,7 +1448,7 @@ private theorem dt_eq_cons_tupleUnit_false_ctor_root :
           native_teq, native_not, native_and, SmtEval.native_not] at h
 
 theorem dt_tester_eval_false_of_dt_eq_cons_dtcons_false
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (cs : native_String) (d0 : DatatypeDecl) (ci : native_Nat) (t : Term) :
     TranslationProofs.__eo_reserved_datatype_name cs = false ->
     term_has_non_none_type
@@ -1472,7 +1472,7 @@ theorem dt_tester_eval_false_of_dt_eq_cons_dtcons_false
   rcases dt_eq_cons_dtcons_false_ctor_root cs d0 ci t hGuardValue with
     ⟨root, hRoot, hRootNe⟩
   have hHeadNe :
-      __vsm_apply_head (__smtx_model_eval M (__eo_to_smt t)) ≠
+      __smtx_apply_head_value (__smtx_model_eval M (__eo_to_smt t)) ≠
         SmtValue.DtCons cs (__eo_to_smt_datatype_decl d0) ci := by
     intro hEqHead
     rcases ctorSpineRoot_root_cases hRoot with hTuple | hRest
@@ -1497,7 +1497,7 @@ theorem dt_tester_eval_false_of_dt_eq_cons_dtcons_false
             DtConsSpineRoot t s' d' i' :=
           dtConsSpineRoot_of_ctor_dtCons hRoot
         have hHeadRoot :
-            __vsm_apply_head
+            __smtx_apply_head_value
                 (__smtx_model_eval M (__eo_to_smt t)) =
               SmtValue.DtCons s' (__eo_to_smt_datatype_decl d') i' :=
           dtConsSpineRoot_eval_head M hM hSpDt hTNN
@@ -1527,7 +1527,7 @@ theorem dt_tester_eval_false_of_dt_eq_cons_dtcons_false
     native_veq]
 
 private theorem dt_collapse_tester_sound
-    (M : SmtModel) (hM : model_total_typed M) (c t b : Term) :
+    (M : SmtModel) (hM : model_wf M) (c t b : Term) :
   RuleProofs.eo_has_bool_type
     (Term.Apply (Term.Apply (Term.UOp UserOp.eq)
       (Term.Apply (Term.UOp1 UserOp1.is c) t)) b) ->
@@ -1590,7 +1590,7 @@ private theorem dt_collapse_tester_sound
               rw [hTType]
               simp
             have hHead :
-                __vsm_apply_head (__smtx_model_eval M (__eo_to_smt t)) =
+                __smtx_apply_head_value (__smtx_model_eval M (__eo_to_smt t)) =
                   SmtValue.DtCons cs (__eo_to_smt_datatype_decl d0) ci :=
               dtConsSpineRoot_eval_head M hM hSp hTNN
             have hLeftEval :
@@ -1642,7 +1642,7 @@ private theorem dt_collapse_tester_sound
             rcases dt_eq_cons_dtcons_false_ctor_root cs d0 ci t hGuardValue with
               ⟨root, hRoot, hRootNe⟩
             have hHeadNe :
-                __vsm_apply_head (__smtx_model_eval M (__eo_to_smt t)) ≠
+                __smtx_apply_head_value (__smtx_model_eval M (__eo_to_smt t)) ≠
                   SmtValue.DtCons cs (__eo_to_smt_datatype_decl d0) ci := by
               intro hEqHead
               rcases ctorSpineRoot_root_cases hRoot with hTuple | hRest
@@ -1667,7 +1667,7 @@ private theorem dt_collapse_tester_sound
                       DtConsSpineRoot t s' d' i' :=
                     dtConsSpineRoot_of_ctor_dtCons hRoot
                   have hHeadRoot :
-                      __vsm_apply_head
+                      __smtx_apply_head_value
                           (__smtx_model_eval M (__eo_to_smt t)) =
                         SmtValue.DtCons s' (__eo_to_smt_datatype_decl d') i' :=
                     dtConsSpineRoot_eval_head M hM hSpDt hTNN
@@ -1789,7 +1789,7 @@ private theorem dt_collapse_tester_sound
                 Smtm.smt_model_eval_preserves_type_of_non_none
                   M hM (__eo_to_smt t) hTNN
             have hHead :
-                __vsm_apply_head
+                __smtx_apply_head_value
                     (__smtx_model_eval M (__eo_to_smt t)) =
                   SmtValue.DtCons (native_string_lit "@Tuple")
                     (__eo_to_smt_tuple_decl
@@ -1881,15 +1881,15 @@ private theorem dt_collapse_tester_sound
                     DtConsSpineRoot t s' d' i' :=
                   dtConsSpineRoot_of_ctor_dtCons hRoot
                 have hUnreserved :
-                    native_reserved_datatype_name s' = false :=
+                    __eo_to_smt_reserved_datatype_name s' = false :=
                   dtConsSpineRoot_unreserved_of_non_none hSpDt hTNN
                 have hHeadRoot :
-                    __vsm_apply_head
+                    __smtx_apply_head_value
                         (__smtx_model_eval M (__eo_to_smt t)) =
                       SmtValue.DtCons s' (__eo_to_smt_datatype_decl d') i' :=
                   dtConsSpineRoot_eval_head M hM hSpDt hTNN
                 have hHeadUnit :
-                    __vsm_apply_head
+                    __smtx_apply_head_value
                         (__smtx_model_eval M (__eo_to_smt t)) =
                       SmtValue.DtCons (native_string_lit "@Tuple")
                         (__eo_to_smt_tuple_decl
@@ -1900,7 +1900,7 @@ private theorem dt_collapse_tester_sound
                 injection hHeadUnit with hs _hD _hi
                 cases hs
                 have hTupleReserved :
-                    native_reserved_datatype_name (native_string_lit "@Tuple") =
+                    __eo_to_smt_reserved_datatype_name (native_string_lit "@Tuple") =
                       true := by
                   native_decide
                 rw [hTupleReserved] at hUnreserved
@@ -1927,7 +1927,7 @@ private theorem dt_collapse_tester_sound
           exact hBTrans hStuckTy
 
 theorem facts___eo_prog_dt_collapse_tester_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
   RuleProofs.eo_has_smt_translation a1 ->
   __eo_typeof (__eo_prog_dt_collapse_tester a1) = Term.Bool ->
   eo_interprets M (__eo_prog_dt_collapse_tester a1) true := by

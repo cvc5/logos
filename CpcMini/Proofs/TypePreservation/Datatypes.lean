@@ -452,41 +452,41 @@ theorem typeof_apply_value_non_none_cases
 /-- Derives `dt_cons_chain_type` from `non_none`. -/
 theorem dt_cons_chain_type_of_non_none :
     ∀ {v : SmtValue} {s : native_String} {d : SmtDatatypeDecl} {i : native_Nat},
-      __vsm_apply_head v = SmtValue.DtCons s d i ->
+      __smtx_apply_head_value v = SmtValue.DtCons s d i ->
       __smtx_typeof_value v ≠ SmtType.None ->
       __smtx_typeof_value v =
         dt_cons_applied_type_rec s d (__smtx_dt_resolve (__smtx_dd_lookup s d) d) i (vsm_num_apply_args v)
   | SmtValue.NotValue, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Boolean b, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral n, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Rational q, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary w n, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Map m, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Fun _ _ _, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Seq ss, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Char c, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.UValue k e, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.RegLan r, s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.DtCons s' d' i', s, d, i, hHead, hNN => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
       rcases hHead with ⟨rfl, hEq⟩
       rcases hEq with ⟨rfl, rfl⟩
       cases hWf : __smtx_type_wf (SmtType.Datatype s' d') <;>
         simp [__smtx_typeof_value, dt_cons_applied_type_rec, vsm_num_apply_args] at hNN ⊢
   | SmtValue.Apply f a, s, d, i, hHead, hNN => by
-      have hHeadF : __vsm_apply_head f = SmtValue.DtCons s d i := by
-        simpa [__vsm_apply_head] using hHead
+      have hHeadF : __smtx_apply_head_value f = SmtValue.DtCons s d i := by
+        simpa [__smtx_apply_head_value] using hHead
       have hFunNN : __smtx_typeof_value f ≠ SmtType.None := by
         intro hNone
         apply hNN
@@ -538,7 +538,7 @@ theorem vsm_num_apply_args_eq_dt_num_sels_of_datatype
     {s : native_String}
     {d : SmtDatatypeDecl}
     {i : native_Nat}
-    (hHead : __vsm_apply_head v = SmtValue.DtCons s d i)
+    (hHead : __smtx_apply_head_value v = SmtValue.DtCons s d i)
     (hTy : __smtx_typeof_value v = SmtType.Datatype s d) :
     vsm_num_apply_args v = __smtx_dt_num_sels (__smtx_dt_resolve (__smtx_dd_lookup s d) d) i := by
   have hChain := dt_cons_chain_type_of_non_none hHead (by simp [hTy])
@@ -624,10 +624,10 @@ theorem no_value_of_empty_datatype
         intro hNone
         rw [hNone] at hv
         simp at hv
-      by_cases hDt : ∃ s0 d0 i, __vsm_apply_head f = SmtValue.DtCons s0 d0 i
+      by_cases hDt : ∃ s0 d0 i, __smtx_apply_head_value f = SmtValue.DtCons s0 d0 i
       · rcases hDt with ⟨s0, d0, i, hHead⟩
-        have hHeadApply : __vsm_apply_head (SmtValue.Apply f x) = SmtValue.DtCons s0 d0 i := by
-          simpa [__vsm_apply_head] using hHead
+        have hHeadApply : __smtx_apply_head_value (SmtValue.Apply f x) = SmtValue.DtCons s0 d0 i := by
+          simpa [__smtx_apply_head_value] using hHead
         have hRes :
             dt_cons_applied_type_rec s0 d0 (__smtx_dt_resolve (__smtx_dd_lookup s0 d0) d0) i
                 (vsm_num_apply_args (SmtValue.Apply f x)) =
@@ -737,38 +737,38 @@ theorem not_type_inhabited_empty_datatype
 /-- Derives `apply_arg_nth_type` from `non_none`. -/
 theorem apply_arg_nth_type_of_non_none :
     ∀ {v : SmtValue} {s : native_String} {d : SmtDatatypeDecl} {i j : native_Nat},
-      __vsm_apply_head v = SmtValue.DtCons s d i ->
+      __smtx_apply_head_value v = SmtValue.DtCons s d i ->
       __smtx_typeof_value v ≠ SmtType.None ->
       j < vsm_num_apply_args v ->
-      __smtx_typeof_value (__vsm_apply_arg_nth v j (vsm_num_apply_args v)) =
+      __smtx_typeof_value (__smtx_apply_arg_nth_value v j (vsm_num_apply_args v)) =
         __smtx_ret_typeof_sel_rec (__smtx_dt_resolve (__smtx_dd_lookup s d) d) i j
   | SmtValue.NotValue, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Boolean b, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral n, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Rational q, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary w n, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Map m, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Fun _ _ _, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Seq ss, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.Char c, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.UValue k e, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.RegLan r, s, d, i, j, hHead, hNN, hj => by
-      simp [__vsm_apply_head] at hHead
+      simp [__smtx_apply_head_value] at hHead
   | SmtValue.DtCons s' d' i', s, d, i, j, hHead, hNN, hj => by
       simp [vsm_num_apply_args] at hj
   | SmtValue.Apply f a, s, d, i, j, hHead, hNN, hj => by
-      have hHeadF : __vsm_apply_head f = SmtValue.DtCons s d i := by
-        simpa [__vsm_apply_head] using hHead
+      have hHeadF : __smtx_apply_head_value f = SmtValue.DtCons s d i := by
+        simpa [__smtx_apply_head_value] using hHead
       have hFunNN : __smtx_typeof_value f ≠ SmtType.None := by
         intro hNone
         apply hNN
@@ -832,9 +832,9 @@ theorem apply_arg_nth_type_of_non_none :
               exact hEq'.symm
             · simp [__smtx_typeof_apply_value, __smtx_typeof_guard, native_ite, hRNone, hEq] at hTyEq
               exact (hSuccNN hTyEq.symm).elim
-        have hcond : SmtEval.native_nateq (vsm_num_apply_args f) (vsm_num_apply_args f) = true := by
-          simp [SmtEval.native_nateq]
-        simpa [__vsm_apply_arg_nth, vsm_num_apply_args, native_ite, hcond] using hArgTy
+        have hcond : Smtm.native_nateq (vsm_num_apply_args f) (vsm_num_apply_args f) = true := by
+          simp [Smtm.native_nateq]
+        simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, native_ite, hcond] using hArgTy
       · have hjSucc : j < Nat.succ (vsm_num_apply_args f) := by
           simpa [vsm_num_apply_args] using hj
         have hj' : j < vsm_num_apply_args f := by
@@ -844,9 +844,9 @@ theorem apply_arg_nth_type_of_non_none :
               exact False.elim (hLast hEq)
           | inr hLt =>
               exact hLt
-        have hcond : SmtEval.native_nateq j (vsm_num_apply_args f) = false := by
-          simp [SmtEval.native_nateq, hLast]
-        simpa [__vsm_apply_arg_nth, vsm_num_apply_args, native_ite, hcond] using
+        have hcond : Smtm.native_nateq j (vsm_num_apply_args f) = false := by
+          simp [Smtm.native_nateq, hLast]
+        simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, native_ite, hcond] using
           apply_arg_nth_type_of_non_none hHeadF hFunNN hj'
 
 /-- Derives `dt_sel_arg_datatype` from `non_none`. -/
@@ -939,7 +939,7 @@ theorem dt_sel_wrong_fun_type_wf_of_map_wf
 /-- Shows that evaluating `dt_sel_wrong` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_dt_sel_wrong
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (s : native_String)
     (d : SmtDatatypeDecl)
     (i j : native_Nat)
@@ -1021,7 +1021,7 @@ theorem typeof_value_model_eval_dt_sel_wrong
 /-- Shows that evaluating `dt_sel` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_dt_sel
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (s : native_String)
     (d : SmtDatatypeDecl)
     (i j : native_Nat)
@@ -1052,8 +1052,8 @@ theorem typeof_value_model_eval_dt_sel
     rw [hpresx, hx]
   unfold __smtx_model_eval_dt_sel
   by_cases hHead :
-      native_veq (__vsm_apply_head v) (SmtValue.DtCons s d i)
-  · have hHeadEq : __vsm_apply_head v = SmtValue.DtCons s d i := by
+      native_veq (__smtx_apply_head_value v) (SmtValue.DtCons s d i)
+  · have hHeadEq : __smtx_apply_head_value v = SmtValue.DtCons s d i := by
       simpa [native_veq] using hHead
     have hCountSub :
         vsm_num_apply_args v =
@@ -1072,12 +1072,12 @@ theorem typeof_value_model_eval_dt_sel
     have hj : j < vsm_num_apply_args v := by
       simpa [hCountSub] using hltSel
     have hArgTy :
-        __smtx_typeof_value (__vsm_apply_arg_nth v j (vsm_num_apply_args v)) =
+        __smtx_typeof_value (__smtx_apply_arg_nth_value v j (vsm_num_apply_args v)) =
           __smtx_ret_typeof_sel_rec (__smtx_dt_resolve (__smtx_dd_lookup s d) d) i j :=
       apply_arg_nth_type_of_non_none hHeadEq (by simp [hv]) hj
     have hArgTy' :
         __smtx_typeof_value
-            (__vsm_apply_arg_nth v j (__smtx_dt_num_sels (__smtx_dd_lookup s d) i)) =
+            (__smtx_apply_arg_nth_value v j (__smtx_dt_num_sels (__smtx_dd_lookup s d) i)) =
           __smtx_ret_typeof_sel s d i j := by
       simpa [__smtx_ret_typeof_sel, hCount] using hArgTy
     simpa [v, native_ite, hHead] using hArgTy'
@@ -1180,7 +1180,7 @@ theorem typeof_apply_non_none_cases
 /-- Shows that evaluating `apply_fun` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_apply_fun
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     {fid : native_String}
     {i : SmtValue}
     {A B : SmtType}
@@ -1204,7 +1204,7 @@ theorem typeof_value_model_eval_apply_fun
 
 theorem typeof_value_model_eval_apply_fun_value
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     {f i : SmtValue}
     {A B : SmtType}
     (hA : A ≠ SmtType.None)
@@ -1299,7 +1299,7 @@ theorem typeof_value_model_eval_apply_dt
 /-- Shows that evaluating `apply_generic` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_apply_generic
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (f x : SmtTerm)
     (hFunWF :
       ∀ {A B : SmtType},

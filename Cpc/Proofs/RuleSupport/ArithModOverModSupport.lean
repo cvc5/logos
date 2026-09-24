@@ -263,7 +263,7 @@ theorem MulListEval.is_list
         native_ite, native_teq, native_not, SmtEval.native_not]
 
 theorem AddListEval.of_type_and_list
-    (M : SmtModel) (hM : model_total_typed M) {xs : Term} :
+    (M : SmtModel) (hM : model_wf M) {xs : Term} :
     __eo_is_list plusOp xs = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt xs) = SmtType.Int ->
     ∃ n, AddListEval M xs n := by
@@ -315,7 +315,7 @@ theorem AddListEval.of_type_and_list
         native_and] at hList hTy
 
 theorem MulListEval.of_type_and_list
-    (M : SmtModel) (hM : model_total_typed M) {xs : Term} :
+    (M : SmtModel) (hM : model_wf M) {xs : Term} :
     __eo_is_list multOp xs = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt xs) = SmtType.Int ->
     ∃ n, MulListEval M xs n := by

@@ -164,7 +164,7 @@ private theorem typed___eo_prog_ite_neg_branch_impl
     (CnfSupport.eo_has_bool_type_eq_of_bool_args c1 x1 hC1Bool hX1Bool)
 
 private theorem facts___eo_prog_ite_neg_branch_impl
-    (M : SmtModel) (hM : model_total_typed M) (c1 x1 y1 p1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (c1 x1 y1 p1 : Term) :
   RuleProofs.eo_has_smt_translation c1 ->
   RuleProofs.eo_has_smt_translation x1 ->
   RuleProofs.eo_has_smt_translation y1 ->
@@ -244,7 +244,7 @@ private theorem facts___eo_prog_ite_neg_branch_impl
         SmtEval.native_not] at hPremRel ⊢
 
 public theorem cmd_step_ite_neg_branch_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.ite_neg_branch args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

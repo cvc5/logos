@@ -135,7 +135,7 @@ private theorem re_loop_elim_prog_eq_arg_of_ne_stuck
   exact hOuter.trans hInner
 
 private theorem re_loop_elim_canonical_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (l u r rhs : Term) :
     RuleProofs.eo_has_smt_translation (mkReLoopEq l u r rhs) ->
     __eo_typeof
@@ -256,7 +256,7 @@ private theorem re_loop_elim_canonical_true
       simpa [orig] using hFact
 
 public theorem cmd_step_re_loop_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_loop_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

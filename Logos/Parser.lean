@@ -71,6 +71,13 @@ structure OpDecl (T : Type) where
   indexArity : Nat := 0
   arity : Arity T
   build : List T → Option T
+  /--
+  For an operator with Eunoia's `:binder` attribute, the operator its argument
+  names, which builds the list of bound variables.  `(f ((x₁ T₁) … (xₙ Tₙ)) a …)`
+  then denotes `(f (mk [x₁, …, xₙ]) a …)`, where each `xᵢ` is the variable
+  `Config.mkVar` makes and is bound in the arguments that follow.
+  -/
+  binder : Option (List T → T) := none
 
 /-!
 ## Term-building helpers
@@ -304,7 +311,9 @@ structure DatatypeOps (T : Type) where
   mkRef : String → T
   /--
   The bindings (one per sort, constructor and selector) introduced by a block.
-  The datatypes and their constructors are in declaration order.
+  The constructors of a datatype, and the selectors of a constructor, are in
+  declaration order; the datatypes are in the order `productiveOrder` settled
+  on, which need not be the one they were declared in.
   -/
   mkDecls : List (DatatypeSpec T) → Option (List (String × T))
 
@@ -325,6 +334,10 @@ structure Config (T R C CL : Type) where
   parseLiteral : Literal → Option T
   /-- Whether a term is the sort of sorts, i.e. whether `declare-const` declares a sort. -/
   isType : T → Bool
+  /--
+  The sort of sorts, from which the type of a `declare-sort` is built.  It is not syntax: `Type` is an ordinary symbol name.
+  -/
+  mkType : T
   /--
   Whether the calculus can make sense of a term -- for a typed calculus, whether
   it has a type.  This is only used to choose between the several things a name
@@ -350,6 +363,12 @@ structure Config (T R C CL : Type) where
   mkCmdList : List C → CL
   /-- Datatype support; `none` if the calculus has no datatypes. -/
   datatypes : Option (DatatypeOps T) := none
+  /--
+  The variable a binder binds, of the given name and type: Eunoia's
+  `(eo::var name type)`, which is the same term wherever the name and the type
+  are.  `none` if the calculus has no binders.
+  -/
+  mkVar : Option (String → T → T) := none
 
 /-!
 ## Parser state
@@ -395,6 +414,19 @@ abbrev ParserM (T : Type) := StateT (State T) (Except String)
 def State.ofOps (ops : List (OpDecl T)) : State T :=
   { ops := ops.foldl (fun m d => m.insert d.name (m.getD d.name [] ++ [d])) {} }
 
+/--
+Parse a name that a declaration, a datatype, a `define` or a binder introduces.
+As in Ethos it has to be a symbol: a literal, a keyword or a string literal is
+refused.  A bound name is looked up before a literal is (`parseTermCore`), so
+declaring `5` or `#b1` would otherwise silently change what that literal means.
+-/
+def parseSymbol : Sexp → ParserM T String
+  | .atom a =>
+    if (Literal.ofString a).isSome || a.startsWith ":" || a.startsWith "\"" then
+      throw s!"Error: expected a symbol, got {a}"
+    else return a
+  | s => throw s!"Error: expected a symbol, got {s}"
+
 /-- Record a proof step named `id` at the top of the proof stack. -/
 def registerStep (id : String) : ParserM T Unit :=
   modify fun s =>
@@ -421,11 +453,6 @@ def registerStepPop (id : String) : ParserM T Unit := do
 /-!
 ## Terms
 -/
-
-/-- Split the tail of `(_ f i₁ … i_k)` into the operator name and its indices. -/
-def splitIndexed : List Sexp → ParserM T (String × List Sexp)
-  | .atom name :: idxs => return (name, idxs)
-  | ss => throw s!"Error: expected an indexed operator name, got {Sexp.expr ss}"
 
 /-- Recognize `f` or `(_ f i₁ … i_k)` as the head of an application. -/
 def asOpHead : Sexp → Option (String × List Sexp)
@@ -492,9 +519,10 @@ partial def parseTermCore (cfg : Config T R C CL) : Sexp → ParserM T T
     let opCand : Option T := do
       let d ← decls.find? isNullary <|> decls.head?
       d.build []
-    if opCand.isNone && !decls.isEmpty then
+    let bound := (← get).terms.getD a []
+    if opCand.isNone && !decls.isEmpty && bound.isEmpty then
       throw s!"Error: could not build operator {a}"
-    if let some t := resolve cfg (opCand.toList ++ (← get).terms.getD a []) then
+    if let some t := resolve cfg (bound ++ opCand.toList) then
       return t
     if let some t := (Literal.ofString a).bind cfg.parseLiteral then
       return t
@@ -513,19 +541,87 @@ partial def parseTermCore (cfg : Config T R C CL) : Sexp → ParserM T T
     parseApp cfg name [ty] []
   | .expr [.atom "let", .expr bindings, body] =>
     parseLet cfg bindings body
-  | .expr (.atom "_" :: rest) => do
-    let (name, idxs) ← splitIndexed rest
-    parseUnderscoreApp cfg name idxs []
+  | .expr (.atom "_" :: rest) =>
+    parseUnderscoreExpr cfg rest []
   | .expr (f :: args) => do
+    if let (.atom name, .expr vars@(.expr _ :: _) :: rest) := (f, args) then
+      if let some mk ← binderOf name then
+        return ← parseBinderApp cfg name mk vars rest
     let args ← args.mapM (parseTerm cfg)
     match f with
-    | .expr (.atom "_" :: rest) => do
-      let (name, idxs) ← splitIndexed rest
-      parseUnderscoreApp cfg name idxs args
+    | .expr (.atom "_" :: rest) =>
+      parseUnderscoreExpr cfg rest args
+    | .expr (.atom "as" :: _) =>
+      -- A type ascription is a qualified identifier, so it may head an
+      -- application.
+      return args.foldl cfg.apply (← parseTerm cfg f)
     | _ =>
       match asOpHead f with
       | some (name, idxs) => parseApp cfg name idxs args
-      | none => return args.foldl cfg.apply (← parseTerm cfg f)
+      | none =>
+        -- Eunoia marks a curried application with `_`, so the head of an
+        -- application is a name, an indexed symbol or a type ascription and
+        -- nothing else.  Reading a parenthesized head as a curried application
+        -- would accept files Ethos refuses to parse.
+        throw s!"Error: expected a symbol, an indexed symbol or a type \
+                  ascription as the head of an application, got {f}"
+
+/--
+The list constructor of `name`, if `name` is a binder here: a signature operator
+declared with `:binder`, and not a symbol the proof binds or a macro, either of
+which would shadow it.
+-/
+partial def binderOf (name : String) : ParserM T (Option (List T → T)) := do
+  let s ← get
+  if !(s.terms.getD name []).isEmpty || s.macros.contains name then return none
+  return (s.ops.getD name []).findSome? (·.binder)
+
+/--
+Parse `(name ((x₁ T₁) … (xₙ Tₙ)) a …)` for a binder `name` whose list constructor
+is `mk`.  As in Ethos, the variables are bound in turn, so each shadows any
+earlier meaning of its name up to the end of the application, and the
+application is then read, outside that scope, with the list `mk [x₁, …, xₙ]` as
+its first argument.
+-/
+partial def parseBinderApp (cfg : Config T R C CL) (name : String) (mk : List T → T)
+    (vars rest : List Sexp) : ParserM T T := do
+  let some mkVar := cfg.mkVar
+    | throw s!"Error: this calculus has no variables for the binder {name}"
+  let saved := (← get).terms
+  let restore : ParserM T Unit := modify fun s => { s with terms := saved }
+  try
+    let vs ← vars.mapM fun
+      | .expr [v, ty] => do
+        let v ← parseSymbol v
+        -- A quoted symbol names the variable its bars enclose, as in Ethos.
+        let vName := if v.length ≥ 2 && v.startsWith "|" && v.endsWith "|" then
+          String.ofList (v.toList.drop 1).dropLast else v
+        let x := mkVar vName (← parseTerm cfg ty)
+        modify fun s => { s with terms := s.terms.insert v [x] }
+        return x
+      | s => throw s!"Error: expected a variable and its type, got {s}"
+    let args ← rest.mapM (parseTerm cfg)
+    restore
+    parseApp cfg name [] (mk vs :: args)
+  catch e =>
+    restore
+    throw e
+
+/--
+Parse an expression headed by `_`, applied to `args`.  Eunoia writes both an
+indexed operator and a curried application with `_`, and only a name can be
+indexed: `(_ f a₁ … aₙ)` whose head is itself an expression is an application,
+as cvc5 prints partially applied functions.
+-/
+partial def parseUnderscoreExpr (cfg : Config T R C CL) (rest : List Sexp)
+    (args : List T) : ParserM T T := do
+  match rest with
+  | .atom name :: idxs => parseUnderscoreApp cfg name idxs args
+  | f :: inner => do
+    let head ← parseTerm cfg f
+    let inner ← inner.mapM (parseTerm cfg)
+    return (inner ++ args).foldl cfg.apply head
+  | [] => throw "Error: expected an operator name or a term after _"
 
 /--
 Parse an expression headed by `_`.  If the name has an operator declaration
@@ -574,7 +670,10 @@ partial def parseApp (cfg : Config T R C CL) (name : String) (idxs : List Sexp)
         let (flatIdxs, flatArgs) := args.splitAt d.indexArity
         pure (some (← buildOpApp cfg name d flatIdxs flatArgs))
       else pure none
-  if let some t := resolve cfg (opCand.toList ++ boundCands) then
+  -- A symbol the proof declares shadows the signature operator of the same name,
+  -- so its reading is tried first; the operator is still used when the proof's
+  -- declaration gives no well-typed reading of this application.
+  if let some t := resolve cfg (boundCands ++ opCand.toList) then
     return t
   if !decls.isEmpty then
     throw s!"Error: no declaration of {name} takes {idxs.length} indices and \
@@ -598,7 +697,7 @@ Parse an SMT-LIB `let`.  Binding values are read in the surrounding scope
 partial def parseLet (cfg : Config T R C CL) (bindings : List Sexp)
     (body : Sexp) : ParserM T T := do
   let bindings : List (String × Sexp) ← bindings.mapM fun
-    | .expr [.atom name, value] => return (name, value)
+    | .expr [name, value] => return (← parseSymbol name, value)
     | binding => throw s!"Error: expected a let binding, got {binding}"
   let values ← bindings.mapM fun (name, value) => do
     return (name, ← parseTerm cfg value)
@@ -651,19 +750,82 @@ def parseName : Sexp → ParserM T String
 
 /-- Parse `(name arity)` from the sort list of a `declare-datatypes` block. -/
 def parseDatatypeName : Sexp → ParserM T String
-  | .expr [.atom name, .atom arity] =>
+  | .expr [name, .atom arity] => do
+    let name ← parseSymbol name
     if arity == "0" then return name
     else throw s!"Error: parametric datatype {name} (arity {arity}) is not supported"
   | s => throw s!"Error: expected a datatype name and arity, got {s}"
 
 /-- Parse one constructor, `(cname (sel type) …)`. -/
 def parseConsSpec (cfg : Config T R C CL) : Sexp → ParserM T (ConsSpec T)
-  | .expr (.atom name :: sels) => do
+  | .expr (name :: sels) => do
+    let name ← parseSymbol name
     let selectors ← sels.mapM fun
-      | .expr [.atom sel, ty] => do return (sel, ← parseTerm cfg ty)
+      | .expr [sel, ty] => do return (← parseSymbol sel, ← parseTerm cfg ty)
       | s => throw s!"Error: expected a selector and its type, got {s}"
     return { name, selectors }
   | s => throw s!"Error: expected a datatype constructor, got {s}"
+
+/--
+The datatypes of the block that one constructor's fields reference.  A field
+references one of them exactly when its type is written as the bare name of a
+datatype of the block: those become the block's type references, and they are
+the only fields the specification follows to witness a datatype.
+-/
+private def consRefs (names : List String) : Sexp → List String
+  | .expr (_ :: sels) =>
+    sels.filterMap fun
+      | .expr [_, .atom ty] => if names.contains ty then some ty else none
+      | _ => none
+  | _ => []
+
+/-- `consRefs` of each constructor of one datatype body. -/
+private def bodyRefs (names : List String) : Sexp → List (List String)
+  | .expr ctors => ctors.map (consRefs names)
+  | _ => []
+
+/--
+Whether a datatype whose constructors reference `ctors` can be given a value
+using only the datatypes in `placed`: one of its constructors has to reference
+nothing outside them.
+-/
+private def witnessableBy (placed : List String) (ctors : List (List String)) : Bool :=
+  ctors.any fun refs => refs.all placed.contains
+
+/--
+The order a `declare-datatypes` block has to be given in, as a permutation of
+the positions of `dts`, which pairs each datatype's name with the references of
+each of its constructors.
+
+The specification witnesses a datatype only through references to entries
+declared *later* in its block (`smt_type_default`, see
+`docs/smt-model-definitions.pdf`), so a block that declares a datatype before
+the ones witnessing it has no inhabited datatype at all, and then every type it
+declares is ill-formed -- including the ones that are witnessed, since
+well-formedness of a datatype asks it of the whole block.  Nothing else about a
+block depends on the order it is written in, so the parser puts it in one that
+works.
+
+Datatypes are ranked by the round in which they become witnessable: those with
+a constructor referencing nothing else in the block are rank 1, those witnessed
+by rank-1 datatypes are rank 2, and so on.  Listing them by *decreasing* rank is
+productive, because a datatype's witnessing constructor references strictly
+lower ranks only, which then come after it.  Ranks are found by saturation, one
+round per pass, which needs no more passes than there are datatypes.  Equal
+ranks keep the order they were written in, so a block that is already in a
+productive order is left exactly as it was.  Datatypes that never become
+witnessable have no finite value; they are left at the front, being rejected
+whatever the order.
+-/
+private def productiveOrder (dts : List (String × List (List String))) : List Nat :=
+  go dts.length [] dts.zipIdx []
+where
+  go : Nat → List String → List ((String × List (List String)) × Nat) → List Nat → List Nat
+    | 0, _, remaining, order => remaining.map (·.2) ++ order
+    | fuel + 1, placed, remaining, order =>
+      let (ready, rest) := remaining.partition fun d => witnessableBy placed d.1.2
+      if ready.isEmpty then remaining.map (·.2) ++ order
+      else go fuel (placed ++ ready.map (·.1.1)) rest (ready.map (·.2) ++ order)
 
 /--
 Parse a `declare-datatypes` block and bind the sorts, constructors and selectors
@@ -687,7 +849,10 @@ def parseDatatypes (cfg : Config T R C CL) (sorts bodies : List Sexp) : ParserM 
     let constructors ← ctors.mapM (parseConsSpec cfg)
     return ({ name, constructors } : DatatypeSpec T)
   modify fun s => { s with terms := saved }
-  let some bindings := dtOps.mkDecls specs
+  -- The block is built in an order that witnesses its datatypes, which is not
+  -- necessarily the one it was written in; see `productiveOrder`.
+  let order := productiveOrder (names.zip (bodies.map (bodyRefs names)))
+  let some bindings := dtOps.mkDecls (order.filterMap (specs[·]?))
     | throw s!"Error: could not build the declaration of {String.intercalate ", " names}"
   modify fun s =>
     { s with terms := bindings.foldl (fun m (n, t) => m.insert n (t :: m.getD n [])) s.terms }
@@ -712,8 +877,7 @@ def declareSymbol (cfg : Config T R C CL) (name : String) (ty : T) : ParserM T U
           (cfg.mkUConst (s.ufCount + 1) ty :: s.terms.getD name []) }
 
 /--
-The type `(-> t₁ … tₙ res)` of a symbol declared by `declare-fun`, `declare-sort`
-or `declare-type`.  It is built from the signature's own `->` operator, so a
+The type `(-> t₁ … tₙ res)` of a symbol declared by `declare-fun`.  It is built from the signature's own `->` operator, so a
 calculus without function types simply rejects these commands with more than
 zero arguments.
 -/
@@ -723,13 +887,24 @@ def parseFunType (cfg : Config T R C CL) (args : List Sexp) (res : Sexp) : Parse
   | args => parseTerm cfg (.expr (.atom "->" :: (args ++ [res])))
 
 /--
+The type `(-> Type … Type)` of a sort of arity `n`, declared by `declare-sort`,
+built from the sort of sorts itself (`Config.mkType`).
+-/
+def parseSortType (cfg : Config T R C CL) (n : Nat) : ParserM T T :=
+  match n with
+  | 0 => return cfg.mkType
+  | n + 1 => do
+    let arrow ← parseTerm cfg (.atom "->")
+    return (rightAssoc cfg.apply arrow (List.replicate (n + 2) cfg.mkType)).getD cfg.mkType
+
+/--
 Parse the parameter list of a `define`.  Only the parameter names are recorded:
 the body is read where the macro is used, so its parameters are given the types
 of the arguments they stand for.
 -/
 def parseMacroParams : List Sexp → ParserM T (List String)
   | [] => return []
-  | .expr (.atom name :: _ :: _) :: rest => return name :: (← parseMacroParams rest)
+  | .expr (name :: _ :: _) :: rest => return (← parseSymbol name) :: (← parseMacroParams rest)
   | s :: _ => throw s!"Error: expected a parameter and its type, got {s}"
 
 /-- Parse the arity of a `declare-sort`. -/
@@ -802,33 +977,32 @@ where
     return (rule, args, premises)
   go : Sexp → ParserM T (Command T C)
     | .expr [.atom "declare-const", name, ty] => do
-      declareSymbol cfg (← parseName name) (← parseTerm cfg ty)
+      declareSymbol cfg (← parseSymbol name) (← parseTerm cfg ty)
       return .decl
     | .expr [.atom "declare-fun", name, .expr args, ty] => do
-      declareSymbol cfg (← parseName name) (← parseFunType cfg args ty)
+      declareSymbol cfg (← parseSymbol name) (← parseFunType cfg args ty)
       return .decl
     | .expr [.atom "declare-sort", name, arity] => do
       -- `(declare-sort S n)` declares a symbol of type `(-> Type … Type)`; for
       -- `n = 0` that is `Type` itself, i.e. an uninterpreted sort.
       let arity ← parseArity arity
-      let ty ← parseFunType cfg (List.replicate arity (.atom "Type")) (.atom "Type")
-      declareSymbol cfg (← parseName name) ty
-      return .decl
-    | .expr [.atom "declare-type", name, .expr args] => do
-      -- The Eunoia spelling of `declare-sort`, whose arguments are given by type.
-      declareSymbol cfg (← parseName name) (← parseFunType cfg args (.atom "Type"))
+      declareSymbol cfg (← parseSymbol name) (← parseSortType cfg arity)
       return .decl
     | .expr [.atom "declare-datatypes", .expr sorts, .expr bodies] => do
       parseDatatypes cfg sorts bodies
       return .decl
+    | .expr [.atom "declare-datatype", name, body] => do
+      -- SMT-LIB's form for a single datatype, of arity `0` unless its body is `par`.
+      parseDatatypes cfg [.expr [name, .atom "0"]] [body]
+      return .decl
     | .expr [.atom "define", name, .expr [], body] => do
       -- A definition without parameters is read once, where it is given.
-      let name ← parseName name
+      let name ← parseSymbol name
       let body ← parseTerm cfg body
       modify fun s => { s with terms := s.terms.insert name (body :: s.terms.getD name []) }
       return .decl
     | .expr [.atom "define", name, .expr params, body] => do
-      let name ← parseName name
+      let name ← parseSymbol name
       let params ← parseMacroParams params
       modify fun s => { s with macros := s.macros.insert name { params, body } }
       return .decl
@@ -859,18 +1033,26 @@ where
       registerStepPop name
       return .cmd (cfg.mkStepPop rule args premises)
     | s => throw s!"Error: unrecognized command {s}, expected one of declare-const, \
-                    declare-fun, declare-sort, declare-type, declare-datatypes, define, \
+                    declare-fun, declare-sort, declare-datatype, declare-datatypes, define, \
                     include, reference, assume, assume-push, step or step-pop"
 
 /--
-Some producers wrap the whole proof in a single pair of parentheses; accept both
-that shape and a bare sequence of commands.
+A proof is a bare sequence of commands.  cvc5 prints one wrapped in the
+parentheses of the `get-proof` response it is answering, and that wrapper is not
+a Eunoia command: Ethos refuses such a file at its first token, and so does this
+parser.  The shape is recognized only to say so, since the catch-all of
+`parseCommand` would otherwise quote the whole proof back as the offending
+command.
 -/
-def unwrapProof : List Sexp → List Sexp
-  | [.expr ss] => if !ss.isEmpty && ss.all Sexp.isExpr then ss else [.expr ss]
-  | ss => ss
+private def isWrappedProof : List Sexp → Bool
+  | [.expr (.expr _ :: _)] => true
+  | _ => false
 
 def parseCommands (cfg : Config T R C CL) (ss : List Sexp) : ParserM T (List T × CL) := do
+  if isWrappedProof ss then
+    throw "Error: the proof is wrapped in a pair of parentheses, which is not a \
+           Eunoia command; cvc5 emits them around the proof as the response to \
+           `get-proof`, so strip them along with the leading `unsat` line"
   let mut assums := #[]
   let mut cmds := #[]
   for s in ss do
@@ -886,6 +1068,6 @@ def parseCommands (cfg : Config T R C CL) (ss : List Sexp) : ParserM T (List T �
 /-- Parse a proof into its assumptions and its list of commands. -/
 def parseProof (cfg : Config T R C CL) (input : String) : Except String (List T × CL) := do
   let ss ← Sexp.Parser.manySexps!.run input
-  (parseCommands cfg (unwrapProof ss)).run' (State.ofOps cfg.ops)
+  (parseCommands cfg ss).run' (State.ofOps cfg.ops)
 
 end Logos.Parser

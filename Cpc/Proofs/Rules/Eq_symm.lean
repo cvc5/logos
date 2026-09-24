@@ -138,7 +138,7 @@ private theorem typed___eo_prog_eq_symm_impl (t1 s1 : Term) :
       decide)
 
 private theorem facts___eo_prog_eq_symm_impl
-    (M : SmtModel) (hM : model_total_typed M) (t1 s1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t1 s1 : Term) :
   RuleProofs.eo_has_smt_translation t1 ->
   RuleProofs.eo_has_smt_translation s1 ->
   __eo_typeof (__eo_prog_eq_symm t1 s1) = Term.Bool ->
@@ -166,7 +166,7 @@ private theorem facts___eo_prog_eq_symm_impl
       (__smtx_model_eval M (__eo_to_smt s1))
 
 public theorem cmd_step_eq_symm_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.eq_symm args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

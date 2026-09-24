@@ -427,7 +427,7 @@ private theorem concat_lprop_to_split_ne_stuck_true
   exact hSplitNe
 
 private theorem concat_lprop_false_context
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc sc : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
     (hLenGtBool : RuleProofs.eo_has_bool_type (mkGt (mkStrLen tc) (mkStrLen sc)))
@@ -453,7 +453,7 @@ private theorem concat_lprop_false_context
     hSplitProg hST
 
 private theorem concat_lprop_true_context
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc sc : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
     (hLenGtBool : RuleProofs.eo_has_bool_type (mkGt (mkStrLen tc) (mkStrLen sc)))
@@ -746,7 +746,7 @@ private theorem concatLPropFormula_true_eq_plain
     eo_ite_true]
 
 private theorem facts_concat_lprop_false_formula
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tc sc tTail sTail : Term) (T : SmtType)
     (htcTy : __smtx_typeof (__eo_to_smt tc) = SmtType.Seq T)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -867,7 +867,7 @@ private theorem facts_concat_lprop_false_formula
       hEqTrue hTailTrue
 
 private theorem facts_concat_lprop_true_formula
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tc sc tPrefix sPrefix : Term) (T : SmtType)
     (htcTy : __smtx_typeof (__eo_to_smt tc) = SmtType.Seq T)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -1073,7 +1073,7 @@ private theorem eo_prog_concat_lprop_premise_shapes_of_ne_stuck
       cases rev <;> simp [__eo_prog_concat_lprop] at hProg
 
 private theorem step_concat_lprop_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rev t s tc sc : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
     (hLenGtBool : RuleProofs.eo_has_bool_type (mkGt (mkStrLen tc) (mkStrLen sc)))
@@ -1144,7 +1144,7 @@ private theorem step_concat_lprop_core
         (concatLPropFalseFormula_has_bool_type tc sc T htcTy hscTy)
 
 private theorem cmd_step_concat_lprop_properties_aux
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.concat_lprop args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -1245,7 +1245,7 @@ by
           exact False.elim (hProg rfl)
 
 public theorem cmd_step_concat_lprop_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.concat_lprop args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

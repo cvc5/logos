@@ -138,7 +138,7 @@ private theorem native_unpack_string_singleton_of_seq_len_one (ss : SmtSeq)
   | cons v vs =>
       cases vs with
       | nil =>
-          exact ⟨native_ssm_char_of_value v, by simp [native_unpack_string, hUnpack]⟩
+          exact ⟨impl_native_ssm_char_of_value v, by simp [native_unpack_string, hUnpack]⟩
       | cons w ws =>
           have hLen' : (Int.ofNat (List.length (v :: w :: ws))) = 1 := by
             simpa [native_seq_len, hUnpack] using hLen
@@ -167,8 +167,8 @@ private theorem native_str_in_re_range_empty_of_hi_lt_lo
     native_str_in_re str (native_re_range [lo] [hi]) = false := by
   cases str with
   | nil =>
-      simp [native_re_range, native_str_in_re, native_string_to_values,
-            native_re_str_valid, native_re_elem_valid, native_re_elem_le, hValid, native_re_nullable]
+      simp [native_re_range, native_str_in_re, impl_native_string_to_values,
+            native_re_str_valid, native_re_elem_valid, impl_native_re_elem_le, hValid, native_re_nullable]
   | cons c rest =>
       rcases native_string_valid_cons_parts hValid with ⟨hc, hRestValid⟩
       have hBounds : ¬ (lo ≤ c ∧ c ≤ hi) := by
@@ -177,12 +177,12 @@ private theorem native_str_in_re_range_empty_of_hi_lt_lo
         exact (Nat.not_lt_of_ge hLoLeHi) hHiLtLo
       cases rest with
       | nil =>
-          simp [native_re_range, native_str_in_re, native_string_to_values,
-            native_re_str_valid, native_re_elem_valid, native_re_elem_le, hValid, native_re_deriv,
+          simp [native_re_range, native_str_in_re, impl_native_string_to_values,
+            native_re_str_valid, native_re_elem_valid, impl_native_re_elem_le, hValid, native_re_deriv,
             native_re_nullable, hLo, hHi, hc, hBounds]
       | cons d ds =>
-          simp [native_re_range, native_str_in_re, native_string_to_values,
-            native_re_str_valid, native_re_elem_valid, native_re_elem_le, hValid, native_re_deriv,
+          simp [native_re_range, native_str_in_re, impl_native_string_to_values,
+            native_re_str_valid, native_re_elem_valid, impl_native_re_elem_le, hValid, native_re_deriv,
             native_re_nullable, hLo, hHi, hc, hBounds,
             RuleProofs.native_re_nullable_foldl_empty]
 
@@ -282,7 +282,7 @@ private theorem code_lt_of_prem
   injection hValueEq
 
 private theorem facts
-    (M : SmtModel) (hM : model_total_typed M) (s t : Term)
+    (M : SmtModel) (hM : model_wf M) (s t : Term)
     (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hTTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hPremS : eo_interprets M (mkLenOne s) true)
@@ -320,10 +320,10 @@ private theorem facts
   have hTTValid : native_string_valid (native_unpack_string tt) = true :=
     native_unpack_string_valid_of_typeof_seq_char hTTTy
   have hSUnpack :
-      native_unpack_seq ss = native_string_to_values (native_unpack_string ss) :=
+      native_unpack_seq ss = impl_native_string_to_values (native_unpack_string ss) :=
     native_unpack_seq_eq_string_to_values_of_typeof_seq_char hSSTy
   have hTUnpack :
-      native_unpack_seq tt = native_string_to_values (native_unpack_string tt) :=
+      native_unpack_seq tt = impl_native_string_to_values (native_unpack_string tt) :=
     native_unpack_seq_eq_string_to_values_of_typeof_seq_char hTTTy
   have hSLen : native_seq_len (native_unpack_seq ss) = 1 :=
     seq_len_one_of_prem M s ss hSEval hPremS
@@ -377,7 +377,7 @@ private theorem facts
 end ReRangeEmpProof
 
 public theorem cmd_step_re_range_emp_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_range_emp args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

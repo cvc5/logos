@@ -444,7 +444,7 @@ private theorem smtx_model_eval_str_in_re_sigma_star_rec
                     have hRv : rv = SmtRegLan.epsilon := by
                       change __smtx_model_eval M (SmtTerm.str_to_re (SmtTerm.String (native_string_lit ""))) =
                           SmtValue.RegLan rv at hREval
-                      rw [__smtx_model_eval.eq_105, __smtx_model_eval.eq_4] at hREval
+                      rw [__smtx_model_eval.eq_107, __smtx_model_eval.eq_4] at hREval
                       have hsimpa := hREval.symm
                       try simp [__smtx_model_eval_str_to_re, native_str_to_re, native_pack_string] at hsimpa ⊢
                       exact hsimpa
@@ -462,7 +462,7 @@ private theorem smtx_model_eval_str_in_re_sigma_star_rec
                         SmtValue.Boolean
                           (decide ((((native_unpack_string ss).length : Int) %
                             (Int.ofNat (n + 0))) = 0))
-                    rw [smtx_eval_eq_term_eq, __smtx_model_eval.eq_25,
+                    rw [smtx_eval_eq_term_eq, __smtx_model_eval.eq_27,
                       smtx_eval_str_len_term_eq, __smtx_model_eval.eq_2,
                       __smtx_model_eval.eq_2, hSEval]
                     have hnInt : (Int.ofNat n) ≠ 0 := by
@@ -497,7 +497,7 @@ private theorem smtx_model_eval_str_in_re_sigma_star_rec
                           change __smtx_model_eval M
                               (SmtTerm.re_concat SmtTerm.re_allchar (__eo_to_smt x)) =
                             SmtValue.RegLan rv at hREval
-                          rw [__smtx_model_eval.eq_112, __smtx_model_eval.eq_102] at hREval
+                          rw [__smtx_model_eval.eq_114, __smtx_model_eval.eq_104] at hREval
                           cases hTailEval : __smtx_model_eval M (__eo_to_smt x) with
                           | RegLan rvTail =>
                               have hRv : rv = native_re_concat native_re_allchar rvTail := by
@@ -679,7 +679,7 @@ private theorem smtx_model_eval_str_in_re_eq_sigma_star_side
       SmtValue.Boolean
         (decide ((((native_unpack_string ss).length : Int) %
           (Int.ofNat (0 + m))) = 0))
-  rw [__smtx_model_eval.eq_117, __smtx_model_eval.eq_106]
+  rw [__smtx_model_eval.eq_119, __smtx_model_eval.eq_108]
   rw [hSEval, hREval]
   subst rv
   have hm : m ≠ 0 := by
@@ -693,7 +693,7 @@ private theorem smtx_model_eval_str_in_re_eq_sigma_star_side
       hSSValid
 
 private theorem str_in_re_sigma_star_valid_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r b : Term)
     (hArgTrans :
       RuleProofs.eo_has_smt_translation
@@ -807,7 +807,7 @@ private theorem str_in_re_sigma_star_valid_properties
 end RuleProofs
 
 public theorem cmd_step_str_in_re_sigma_star_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_in_re_sigma_star args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

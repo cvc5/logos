@@ -86,7 +86,7 @@ private theorem typed___eo_prog_str_substr_ctn_impl
   exact hBool
 
 private theorem facts___eo_prog_str_substr_ctn_impl
-    (M : SmtModel) (hModel : model_total_typed M)
+    (M : SmtModel) (hModel : model_wf M)
     (s n m : Term)
     (hSTrans : RuleProofs.eo_has_smt_translation s)
     (hNTrans : RuleProofs.eo_has_smt_translation n)
@@ -155,7 +155,7 @@ private theorem facts___eo_prog_str_substr_ctn_impl
         (__smtx_model_eval M (SmtTerm.Boolean true))
 
 public theorem cmd_step_str_substr_ctn_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_substr_ctn args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

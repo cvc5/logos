@@ -53,7 +53,7 @@ private theorem rel_of_eq {a b : SmtValue} (h : a = b) :
 
 /-- Rel-related values with a common non-`RegLan` type are equal. -/
 private theorem eval_eq_of_rel_of_ty_ne_reglan
-    {M N : SmtModel} (hM : model_total_typed M) (hN : model_total_typed N)
+    {M N : SmtModel} (hM : model_wf M) (hN : model_wf N)
     {x : SmtTerm}
     (hRel : RuleProofs.smt_value_rel (__smtx_model_eval M x)
       (__smtx_model_eval N x))
@@ -660,19 +660,19 @@ private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
     {M N : SmtModel} {s : native_String} {T : SmtType} {body : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical_bool v = true ->
+      __smtx_value_canonical v = true ->
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
-    native_eval_tchoice M s T body = native_eval_tchoice N s T body := by
+    native_eval_choice M s T body = native_eval_choice N s T body := by
   classical
   have hPred : (fun v : SmtValue =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) =
     (fun v : SmtValue =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push N s T v) body =
           SmtValue.Boolean true) := by
     funext v
@@ -684,21 +684,21 @@ private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
       exact ⟨h1, h2, by rw [hBody v h1 h2]; exact h3⟩
   by_cases hSatM : ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true
   · have hSatN : ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical_bool v = true ∧
+          __smtx_value_canonical v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true := by
       rw [show (∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical_bool v = true ∧
+            __smtx_value_canonical v = true ∧
             __smtx_model_eval (native_model_push N s T v) body =
               SmtValue.Boolean true) = ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical_bool v = true ∧
+            __smtx_value_canonical v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true from by rw [hPred]]
       exact hSatM
@@ -706,18 +706,18 @@ private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
     exact choose_eq_of_pred_eq hSatM hSatN hPred
   · have hSatN : ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical_bool v = true ∧
+          __smtx_value_canonical v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true := by
       intro hN
       apply hSatM
       rw [show (∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical_bool v = true ∧
+            __smtx_value_canonical v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true) = ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical_bool v = true ∧
+            __smtx_value_canonical v = true ∧
             __smtx_model_eval (native_model_push N s T v) body =
               SmtValue.Boolean true from by rw [hPred]]
       exact hN
@@ -1664,8 +1664,8 @@ private theorem rel_re_opt_congr {b d : SmtValue}
 private theorem rel_re_exp_rec_congr :
     ∀ (n : native_Nat) {b d : SmtValue},
       RuleProofs.smt_value_rel b d ->
-      RuleProofs.smt_value_rel (__smtx_model_eval_re_exp_rec n b)
-        (__smtx_model_eval_re_exp_rec n d)
+      RuleProofs.smt_value_rel (__smtx_re_exp_rec n b)
+        (__smtx_re_exp_rec n d)
   | 0, b, d, h => RuleProofs.smt_value_rel_refl _
   | (n+1), b, d, h =>
       CongSupport.smt_value_rel_re_concat_congr
@@ -1684,8 +1684,8 @@ private theorem rel_re_exp_congr {v b d : SmtValue}
 private theorem rel_re_loop_rec_congr :
     ∀ (n : native_Nat) (v1 v2 : SmtValue) {b d : SmtValue},
       RuleProofs.smt_value_rel b d ->
-      RuleProofs.smt_value_rel (__smtx_model_eval_re_loop_rec n v1 v2 b)
-        (__smtx_model_eval_re_loop_rec n v1 v2 d)
+      RuleProofs.smt_value_rel (__smtx_re_loop_rec n v1 v2 b)
+        (__smtx_re_loop_rec n v1 v2 d)
   | 0, v1, v2, b, d, h => by
       cases v2 with
       | Numeral m => exact rel_re_exp_congr h
@@ -1751,7 +1751,7 @@ private theorem rel_strings_occur_index_re_congr {a b b' c : SmtValue}
 /-! ### The `Apply` case -/
 
 private theorem apply_rel {M N : SmtModel}
-    (hM : model_total_typed M) (hN : model_total_typed N)
+    (hM : model_wf M) (hN : model_wf N)
     (hGlobals : model_agrees_on_globals M N)
     {f x : SmtTerm}
     (hTy : term_has_non_none_type (SmtTerm.Apply f x))
@@ -1821,7 +1821,7 @@ values. -/
 theorem smt_model_eval_rel_of_var_rel_lt
     (n : Nat) {t : SmtTerm} {M N : SmtModel}
     (hLt : sizeOf t < n)
-    (hM : model_total_typed M) (hN : model_total_typed N)
+    (hM : model_wf M) (hN : model_wf N)
     (hGlobals : model_agrees_on_globals M N)
     (hVars : ModelVarRel M N)
     (hTy : term_has_non_none_type t) :
@@ -1832,7 +1832,7 @@ theorem smt_model_eval_rel_of_var_rel_lt
       let hRec :
           ∀ {u : SmtTerm} {M' N' : SmtModel},
             sizeOf u < sizeOf t ->
-              model_total_typed M' -> model_total_typed N' ->
+              model_wf M' -> model_wf N' ->
               model_agrees_on_globals M' N' -> ModelVarRel M' N' ->
               term_has_non_none_type u ->
               RuleProofs.smt_value_rel (__smtx_model_eval M' u)
@@ -2818,9 +2818,9 @@ theorem smt_model_eval_rel_of_var_rel_lt
         apply InstantiateRule.native_eval_texists_eq_of_body_eval_eq_diff_typed
         intro v hvTy hvCanon
         have hPM := model_total_typed_push hM s0 T0 v hTWf hvTy
-          (by simpa [__smtx_value_canonical] using hvCanon)
+          (by simpa [value_canonical] using hvCanon)
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
-          (by simpa [__smtx_value_canonical] using hvCanon)
+          (by simpa [value_canonical] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
           (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
@@ -2834,9 +2834,9 @@ theorem smt_model_eval_rel_of_var_rel_lt
         apply InstantiateRule.native_eval_tforall_eq_of_body_eval_eq_diff_typed
         intro v hvTy hvCanon
         have hPM := model_total_typed_push hM s0 T0 v hTWf hvTy
-          (by simpa [__smtx_value_canonical] using hvCanon)
+          (by simpa [value_canonical] using hvCanon)
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
-          (by simpa [__smtx_value_canonical] using hvCanon)
+          (by simpa [value_canonical] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
           (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
@@ -2850,9 +2850,9 @@ theorem smt_model_eval_rel_of_var_rel_lt
         apply native_eval_tchoice_eq_of_body_eval_eq_typed
         intro v hvTy hvCanon
         have hPM := model_total_typed_push hM s0 T0 v hTWf hvTy
-          (by simpa [__smtx_value_canonical] using hvCanon)
+          (by simpa [value_canonical] using hvCanon)
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
-          (by simpa [__smtx_value_canonical] using hvCanon)
+          (by simpa [value_canonical] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
           (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
@@ -2883,7 +2883,7 @@ decreasing_by
 /-- The rel-coincidence theorem without the fuel argument. -/
 theorem smt_model_eval_rel_of_var_rel
     {t : SmtTerm} {M N : SmtModel}
-    (hM : model_total_typed M) (hN : model_total_typed N)
+    (hM : model_wf M) (hN : model_wf N)
     (hGlobals : model_agrees_on_globals M N)
     (hVars : ModelVarRel M N)
     (hTy : term_has_non_none_type t) :
@@ -2894,25 +2894,25 @@ theorem smt_model_eval_rel_of_var_rel
 /-- Truth of a non-`None`-typed term is transported between pushes of two
 rel-related values: the congruence core of `quant-var-elim-eq`. -/
 theorem smt_model_eval_true_push_of_rel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (ST : SmtType) (v w : SmtValue) (u : SmtTerm)
     (hSTWf : __smtx_type_wf ST = true)
     (hvTy : __smtx_typeof_value v = ST)
     (hwTy : __smtx_typeof_value w = ST)
-    (hvCanon : __smtx_value_canonical_bool v = true)
-    (hwCanon : __smtx_value_canonical_bool w = true)
+    (hvCanon : __smtx_value_canonical v = true)
+    (hwCanon : __smtx_value_canonical w = true)
     (hRel : RuleProofs.smt_value_rel v w)
     (hTy : term_has_non_none_type u)
     (hTrue : __smtx_model_eval (native_model_push M s ST w) u =
       SmtValue.Boolean true) :
     __smtx_model_eval (native_model_push M s ST v) u =
       SmtValue.Boolean true := by
-  have hPM : model_total_typed (native_model_push M s ST v) :=
+  have hPM : model_wf (native_model_push M s ST v) :=
     model_total_typed_push hM s ST v hSTWf hvTy
-      (by simpa [__smtx_value_canonical] using hvCanon)
-  have hPN : model_total_typed (native_model_push M s ST w) :=
+      (by simpa [value_canonical] using hvCanon)
+  have hPN : model_wf (native_model_push M s ST w) :=
     model_total_typed_push hM s ST w hSTWf hwTy
-      (by simpa [__smtx_value_canonical] using hwCanon)
+      (by simpa [value_canonical] using hwCanon)
   have hGlobals : model_agrees_on_globals
       (native_model_push M s ST v) (native_model_push M s ST w) :=
     globals_push_push (model_agrees_on_globals_refl M) s ST v w

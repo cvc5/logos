@@ -283,7 +283,7 @@ private theorem eval_bvite_equal_cond_1
     (__smtx_model_eval M (__eo_to_smt e2))
 
 theorem facts___eo_prog_bv_ite_equal_cond_1_impl
-    (M : SmtModel) (hM : model_total_typed M) (c1 t1 e1 e2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (c1 t1 e1 e2 : Term) :
     RuleProofs.eo_has_smt_translation c1 ->
     RuleProofs.eo_has_smt_translation t1 ->
     RuleProofs.eo_has_smt_translation e1 ->

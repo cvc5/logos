@@ -81,7 +81,7 @@ theorem strConcat_typeof_list_concat_rec_of_seq (a z : Term) (T : SmtType)
   smt_typeof_list_concat_rec_str_concat_of_seq a z T hList haTy hzTy
 
 theorem strConcat_smt_value_rel_list_nil_right_empty
-    (M : SmtModel) (hM : model_total_typed M) (x nil : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x nil : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) nil = Term.Boolean true)
@@ -95,7 +95,7 @@ theorem strConcat_smt_value_rel_list_nil_right_empty
       hxTy hNil hNilTy
 
 theorem strConcat_smt_value_rel_left_congr
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T)
@@ -111,7 +111,7 @@ theorem strConcat_smt_value_rel_left_congr
     smt_value_rel_str_concat_left_congr M hM x y z T hxTy hyTy hzTy hxy
 
 theorem strConcat_smt_value_rel_right_congr
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T)
@@ -127,7 +127,7 @@ theorem strConcat_smt_value_rel_right_congr
     smt_value_rel_str_concat_right_congr M hM x y z T hxTy hyTy hzTy hyz
 
 theorem strConcat_smt_value_rel_list_concat_rec
-    (M : SmtModel) (hM : model_total_typed M) (a z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (a z : Term) (T : SmtType)
     (hList :
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true)
     (haTy : __smtx_typeof (__eo_to_smt a) = SmtType.Seq T)
@@ -169,7 +169,7 @@ theorem strConcat_is_list_nil_seq_empty_typeof_of_seq
           rfl
 
 theorem strConcat_smt_value_rel_right_empty_typeof
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M
@@ -181,7 +181,7 @@ theorem strConcat_smt_value_rel_right_empty_typeof
     smt_value_rel_str_concat_right_empty M hM x T hxTy
 
 theorem strConcat_smt_value_rel_left_empty_typeof
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M
@@ -193,7 +193,7 @@ theorem strConcat_smt_value_rel_left_empty_typeof
     smt_value_rel_str_concat_left_empty M hM x T hxTy
 
 theorem strConcat_smt_value_rel_right_eval_empty
-    (M : SmtModel) (hM : model_total_typed M) (x empty : Term)
+    (M : SmtModel) (hM : model_wf M) (x empty : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hEmptyEval :
@@ -223,7 +223,7 @@ theorem strConcat_smt_value_rel_right_eval_empty
     (smt_seq_rel_pack_unpack T sx hsxElem)
 
 theorem strConcat_smt_value_rel_left_eval_empty
-    (M : SmtModel) (hM : model_total_typed M) (empty x : Term)
+    (M : SmtModel) (hM : model_wf M) (empty x : Term)
     (T : SmtType)
     (hEmptyEval :
       __smtx_model_eval M (__eo_to_smt empty) =
@@ -362,7 +362,7 @@ theorem smt_value_rel_str_concat_assoc_of_seq_eval
     RuleProofs.smtx_model_eval_eq_refl]
 
 theorem smt_value_rel_str_concat_list_nil_left_empty_eval
-    (M : SmtModel) (hM : model_total_typed M) (nil x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (nil x : Term) (T : SmtType)
     (hNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) nil = Term.Boolean true)
     (hNilTy : __smtx_typeof (__eo_to_smt nil) = SmtType.Seq T)
@@ -404,7 +404,7 @@ theorem smt_value_rel_str_concat_list_nil_right_empty_eval
       cases hA : __eo_to_smt_type A <;>
         simp [__eo_to_smt_seq_empty, hA] at hNilEval ⊢
       case Seq U =>
-        rw [__smtx_model_eval.eq_77] at hNilEval ⊢
+        rw [__smtx_model_eval.eq_79] at hNilEval ⊢
         simp [__smtx_model_eval_str_concat, native_seq_concat]
         rw [native_unpack_seq, List.append_nil]
         change RuleProofs.smt_seq_rel
@@ -484,7 +484,7 @@ theorem strConcat_concat_seq_eval_of_args_seq_eval
     (native_unpack_seq sx ++ native_unpack_seq sy), rfl⟩
 
 theorem smt_value_rel_list_concat_rec_str_concat_eval
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ a z,
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true ->
       ∀ T,
@@ -554,7 +554,7 @@ theorem strConcat_smt_value_rel_list_nil_right_empty_eval
       hNil hxSeq hNilSeq
 
 theorem strConcat_smt_value_rel_list_concat_rec_eval
-    (M : SmtModel) (hM : model_total_typed M) (a z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (a z : Term) (T : SmtType)
     (hList :
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true)
     (haTy : __smtx_typeof (__eo_to_smt a) = SmtType.Seq T)

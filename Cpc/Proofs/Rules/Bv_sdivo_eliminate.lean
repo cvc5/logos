@@ -396,7 +396,7 @@ private theorem typed_bv_sdivo_term (x y w wm : Term) :
       cases h)
 
 private theorem eval_bv_sdivo_term
-    (M : SmtModel) (hM : model_total_typed M) (x y w wm : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y w wm : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvSdivoTerm x y w wm) = Term.Bool ->
@@ -477,7 +477,7 @@ private theorem eval_bv_sdivo_term
       SmtEval.native_and, native_and] at hEq ⊢
 
 private theorem facts_bv_sdivo_term
-    (M : SmtModel) (hM : model_total_typed M) (x y w wm : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y w wm : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvSdivoTerm x y w wm) = Term.Bool ->
@@ -495,7 +495,7 @@ private theorem facts_bv_sdivo_term
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_sdivo_eliminate_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_sdivo_eliminate args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

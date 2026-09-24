@@ -366,7 +366,7 @@ private theorem typed___eo_prog_str_contains_repl_tgt_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_str_contains_repl_tgt_impl
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term)
     (hXTrans : RuleProofs.eo_has_smt_translation x)
     (hYTrans : RuleProofs.eo_has_smt_translation y)
     (hZTrans : RuleProofs.eo_has_smt_translation z)
@@ -451,7 +451,7 @@ private theorem facts___eo_prog_str_contains_repl_tgt_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_contains_repl_tgt_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_contains_repl_tgt args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

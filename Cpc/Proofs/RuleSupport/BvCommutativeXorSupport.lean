@@ -374,7 +374,7 @@ theorem typed_bv_commutative_xor_term (x y : Term) :
       simp)
 
 private theorem smt_eval_binary_of_smt_type_bitvec
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm)
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm)
     (w : native_Nat) :
     __smtx_typeof t = SmtType.BitVec w ->
     ∃ n, __smtx_model_eval M t =
@@ -436,10 +436,10 @@ private theorem native_binary_xor_mod_eq_toNat
       ((BitVec.ofInt w n1 ^^^ BitVec.ofInt w n2).toNat : Int) := by
   cases w with
   | zero =>
-      simp [native_binary_xor, native_pixor, native_mod_total,
+      simp [native_binary_xor, impl_native_pixor, native_mod_total,
         native_int_pow2_nat]
   | succ w =>
-      simp [native_binary_xor, native_pixor, native_mod_total,
+      simp [native_binary_xor, impl_native_pixor, native_mod_total,
         native_nat_to_int, native_ite, native_zeq]
       exact bitvec_toInt_emod_pow (Nat.succ w)
         (BitVec.ofInt (Nat.succ w) n1 ^^^ BitVec.ofInt (Nat.succ w) n2)
@@ -489,7 +489,7 @@ private theorem bvxor_eval_comm (w : Nat) (nx ny : native_Int) :
   exact native_binary_xor_comm_mod_nat w nx ny
 
 private theorem eval_bv_commutative_xor
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvCommutativeXorTerm x y) = Term.Bool ->
@@ -519,7 +519,7 @@ private theorem eval_bv_commutative_xor
   exact bvxor_eval_comm w nx ny
 
 theorem facts_bv_commutative_xor_term
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvCommutativeXorTerm x y) = Term.Bool ->
@@ -610,7 +610,7 @@ theorem typed_bv_commutative_xor_program (x y : Term) :
   exact typed_bv_commutative_xor_term x y hXTrans hYTrans hTermTy
 
 theorem facts_bv_commutative_xor_program
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvCommutativeXorProgram x y) = Term.Bool ->
@@ -1012,7 +1012,7 @@ private theorem bvnot_eval_canonical
   exact ⟨p, hEval, hCan⟩
 
 private theorem eval_bv_xor_not
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvXorNotTerm x y) = Term.Bool ->
@@ -1059,7 +1059,7 @@ private theorem eval_bv_xor_not
   exact bvxor_eval_bvnot_bvnot_of_canonical w nx ny hXCan hYCan
 
 theorem facts_bv_xor_not_term
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvXorNotTerm x y) = Term.Bool ->
@@ -1151,7 +1151,7 @@ theorem typed_bv_xor_not_program (x y : Term) :
   exact typed_bv_xor_not_term x y hXTrans hYTrans hTermTy
 
 theorem facts_bv_xor_not_program
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvXorNotProgram x y) = Term.Bool ->
@@ -1318,7 +1318,7 @@ private theorem native_nat_to_int_of_int_to_nat_of_nonneg (n : native_Int) :
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hn
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem bv_xor_duplicate_context
@@ -1444,7 +1444,7 @@ private theorem bvxor_self_eval (w : Nat) (n : native_Int) :
   exact native_binary_xor_self_mod_nat w n
 
 private theorem eval_bv_xor_duplicate
-    (M : SmtModel) (hM : model_total_typed M) (x w : Term) :
+    (M : SmtModel) (hM : model_wf M) (x w : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvXorDuplicateTerm x w) = Term.Bool ->
     __smtx_model_eval M (__eo_to_smt (bvXorDuplicateLhs x)) =
@@ -1475,7 +1475,7 @@ private theorem eval_bv_xor_duplicate
   exact bvxor_self_eval n payload
 
 theorem facts_bv_xor_duplicate_term
-    (M : SmtModel) (hM : model_total_typed M) (x w : Term) :
+    (M : SmtModel) (hM : model_wf M) (x w : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvXorDuplicateTerm x w) = Term.Bool ->
     eo_interprets M (bvXorDuplicateTerm x w) true := by
@@ -1555,7 +1555,7 @@ theorem typed_bv_xor_duplicate_program (x w : Term) :
   exact typed_bv_xor_duplicate_term x w hXTrans hTermTy
 
 theorem facts_bv_xor_duplicate_program
-    (M : SmtModel) (hM : model_total_typed M) (x w : Term) :
+    (M : SmtModel) (hM : model_wf M) (x w : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation w ->
     __eo_typeof (bvXorDuplicateProgram x w) = Term.Bool ->
@@ -1998,7 +1998,7 @@ theorem bvxor_bvnot_right_eval_eq_bvnot_bvxor
       rw [bvxor_eval_comm w ny nx]
 
 private theorem eval_bv_not_xor
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation z ->
@@ -2028,7 +2028,7 @@ private theorem eval_bv_not_xor
   exact bvnot_bvxor_eval_eq_bvxor_bvnot_of_canonical w nx nt hXCan hTailCan
 
 theorem facts_bv_not_xor_term
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation z ->
@@ -2089,7 +2089,7 @@ theorem typed_bv_not_xor_program (x y z : Term) :
   exact typed_bv_not_xor_term x y z hXTrans hYTrans hZTrans hTermTy
 
 theorem facts_bv_not_xor_program
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation z ->
@@ -2555,7 +2555,7 @@ private theorem native_veq_bvxor_solve
     (bvxor_eq_solve_payload_iff w nx ny nz hXCan hZCan)
 
 private theorem eval_bv_eq_xor_solve_body
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation z ->
@@ -2608,7 +2608,7 @@ private theorem eval_bv_eq_xor_solve_body
   simp [native_veq]
 
 theorem facts_bv_eq_xor_solve_term
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation z ->
@@ -2714,7 +2714,7 @@ theorem typed_bv_eq_xor_solve_program (x y z : Term) :
   exact typed_bv_eq_xor_solve_term x y z hXTrans hYTrans hZTrans hTermTy
 
 theorem facts_bv_eq_xor_solve_program
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation z ->

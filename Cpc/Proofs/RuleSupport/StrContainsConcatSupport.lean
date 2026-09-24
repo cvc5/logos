@@ -243,7 +243,7 @@ theorem concat_middle_smt_types
 /-! ### Semantic containment through an n-ary prefix -/
 
 theorem eval_contains_concat_left
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (left right needle : Term) (T : SmtType)
     (hLeftTy : __smtx_typeof (__eo_to_smt left) = SmtType.Seq T)
     (hRightTy : __smtx_typeof (__eo_to_smt right) = SmtType.Seq T)
@@ -280,7 +280,7 @@ theorem eval_contains_concat_left
     native_seq_contains_append_right _ _ _ hNative]
 
 theorem eval_contains_concat_right
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (left right needle : Term) (T : SmtType)
     (hLeftTy : __smtx_typeof (__eo_to_smt left) = SmtType.Seq T)
     (hRightTy : __smtx_typeof (__eo_to_smt right) = SmtType.Seq T)
@@ -317,7 +317,7 @@ theorem eval_contains_concat_right
     native_seq_contains_append_left _ _ _ hNative]
 
 theorem eval_contains_list_concat_rec
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (pfx tail needle : Term) (T : SmtType),
       __eo_is_list (Term.UOp UserOp.str_concat) pfx =
           Term.Boolean true ->
@@ -392,7 +392,7 @@ theorem eval_contains_list_concat_rec
           simpa [__eo_list_concat_rec] using hContains
 
 theorem eval_contains_concat_middle
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (pfx middle suffix needle : Term) (T : SmtType)
     (hPrefixList :
       __eo_is_list (Term.UOp UserOp.str_concat) pfx =
@@ -438,7 +438,7 @@ theorem eval_contains_concat_middle
   exact hRecContains
 
 theorem eval_contains_self
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term) (T : SmtType)
     (hTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
     __smtx_model_eval M (__eo_to_smt (containsTerm x x)) =
@@ -451,7 +451,7 @@ theorem eval_contains_self
     native_seq_contains_self]
 
 theorem eval_contains_of_interprets_eq_bool
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y : Term) (b : native_Bool) (T : SmtType)
     (hXTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hYTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
@@ -488,7 +488,7 @@ theorem eval_contains_of_interprets_eq_bool
       rw [str_contains_eval_eq M x y sx sy hXEval hYEval, hNative]
 
 theorem eval_contains_false_of_contained_witness
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (outer candidate witness : Term) (T : SmtType)
     (hOuterTy : __smtx_typeof (__eo_to_smt outer) = SmtType.Seq T)
     (hCandidateTy :
@@ -545,7 +545,7 @@ theorem eval_contains_false_of_contained_witness
     hOuterEval hCandidateEval, hOuterCandidate]
 
 theorem eval_eq_false_of_contains_witness
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y witness : Term) (T : SmtType)
     (hXTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hYTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)

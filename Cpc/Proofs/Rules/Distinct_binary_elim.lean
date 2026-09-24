@@ -203,7 +203,7 @@ private theorem typed___eo_prog_distinct_binary_elim_impl
     (by rw [hDistinctBool]; decide)
 
 private theorem facts___eo_prog_distinct_binary_elim_impl
-    (M : SmtModel) (hM : model_total_typed M) (t1 s1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t1 s1 : Term) :
   RuleProofs.eo_has_smt_translation t1 ->
   RuleProofs.eo_has_smt_translation s1 ->
   __smtx_type_wf (__smtx_typeof (__eo_to_smt t1)) = true ->
@@ -279,7 +279,7 @@ private theorem facts___eo_prog_distinct_binary_elim_impl
     all_goals simp [native_veq]
 
 public theorem cmd_step_distinct_binary_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.distinct_binary_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

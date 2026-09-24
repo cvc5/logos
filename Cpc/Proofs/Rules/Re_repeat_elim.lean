@@ -161,11 +161,11 @@ private theorem eval_re_loop_same_bounds
   cases __smtx_model_eval M (__eo_to_smt x1) <;>
   simp [__smtx_model_eval_re_loop, __smtx_model_eval_re_exp,
     __smtx_model_eval_gt, __smtx_model_eval_lt, __smtx_model_eval_ite,
-    __smtx_model_eval_re_loop_rec, SmtEval.native_zlt, SmtEval.native_zplus,
+    __smtx_re_loop_rec, SmtEval.native_zlt, SmtEval.native_zplus,
     SmtEval.native_zneg, native_int_to_nat, hDiffZero]
 
 private theorem facts___eo_prog_re_repeat_elim_impl
-    (M : SmtModel) (hM : model_total_typed M) (n1 x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (n1 x1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_re_repeat_elim n1 x1) = Term.Bool ->
     eo_interprets M (__eo_prog_re_repeat_elim n1 x1) true := by
@@ -192,7 +192,7 @@ private theorem facts___eo_prog_re_repeat_elim_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_re_repeat_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_repeat_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -51,7 +51,7 @@ namespace RuleProofs
 
 /-- Proves correctness of the EO program for `scope`. -/
 theorem correct___eo_prog_scope
-    (M : SmtModel) (hM : model_total_typed M) (x1 x2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 x2 : Term) :
   (eo_interprets M x1 true -> eo_interprets M x2 true) ->
   eo_has_bool_type (__eo_prog_scope x1 (Proof.pf x2)) ->
   eo_interprets M (__eo_prog_scope x1 (Proof.pf x2)) true := by
@@ -91,7 +91,7 @@ theorem correct___eo_prog_scope
       rw [eo_interprets_iff_smt_interprets, eo_to_smt_imp_eq_scope]
       refine smt_interprets.intro_true M
         (SmtTerm.imp (__eo_to_smt x1) (__eo_to_smt x2)) hScopeTy' ?_
-      rw [__smtx_model_eval.eq_9, hEval1, hEval2]
+      rw [__smtx_model_eval.eq_10, hEval1, hEval2]
       cases b2 <;>
         simp [__smtx_model_eval_imp, __smtx_model_eval_or,
           __smtx_model_eval_not, SmtEval.native_not, SmtEval.native_or]
@@ -105,7 +105,7 @@ end RuleProofs
 
 /-- Proves correctness of the EO program for `scope_impl`. -/
 theorem correct___eo_prog_scope_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 x2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 x2 : Term) :
   ((eo_interprets M x1 true) -> eo_interprets M x2 true) ->
   RuleProofs.eo_has_bool_type (__eo_prog_scope x1 (Proof.pf x2)) ->
   eo_interprets M (__eo_prog_scope x1 (Proof.pf x2)) true := by
@@ -113,7 +113,7 @@ theorem correct___eo_prog_scope_impl
 
 /-- Derives the checker facts exposed by the EO program for `scope_impl`. -/
 theorem facts___eo_prog_scope_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 x2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 x2 : Term) :
   (eo_interprets M x1 true -> eo_interprets M x2 true) ->
   RuleProofs.eo_has_smt_translation x1 ->
   RuleProofs.eo_has_smt_translation x2 ->

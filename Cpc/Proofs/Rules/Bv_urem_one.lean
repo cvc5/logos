@@ -230,7 +230,7 @@ private theorem typed___eo_prog_bv_urem_one_impl (x1 n1 : Term) :
       simp)
 
 private theorem eval_bvurem_one_eq_zero
-    (M : SmtModel) (hM : model_total_typed M) (x1 n1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 n1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_bv_urem_one x1 n1) = Term.Bool ->
     __smtx_model_eval M
@@ -258,7 +258,7 @@ private theorem eval_bvurem_one_eq_zero
       simpa [SmtEval.native_zleq] using hNonneg
     have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
       Int.toNat_of_nonneg hnNonneg
-    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   rw [hWidthEq] at hEvalX1
   have hEvalTyN :
@@ -291,7 +291,7 @@ private theorem eval_bvurem_one_eq_zero
     have hRange0 := bitvec_payload_range_of_canonical hWidth0 hPayloadCanon
     have hPayloadZero : payload = 0 := by
       have hlt : payload < 1 := by
-        simpa [native_int_pow2, native_zexp_total, SmtEval.native_nat_to_int,
+        simpa [native_int_pow2, native_zexp_total, Smtm.native_nat_to_int,
           SmtEval.native_int_to_nat] using hRange0.2
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange0.1
     rw [hPayloadZero]
@@ -325,7 +325,7 @@ private theorem eval_bvurem_one_eq_zero
       hPayloadModInt, SmtEval.native_mod_total, SmtEval.native_zeq, native_ite]
 
 private theorem facts___eo_prog_bv_urem_one_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 n1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 n1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_bv_urem_one x1 n1) = Term.Bool ->
     eo_interprets M (__eo_prog_bv_urem_one x1 n1) true := by
@@ -353,7 +353,7 @@ private theorem facts___eo_prog_bv_urem_one_impl
         (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.int_to_bv w) (Term.Numeral 0))))
 
 public theorem cmd_step_bv_urem_one_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_urem_one args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

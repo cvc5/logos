@@ -196,14 +196,14 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
             let P : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists a (SmtTerm.not (SmtTerm.not body))) =
                     SmtValue.Boolean true
             let Q : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists a body) = SmtValue.Boolean true
             have hPQ : P ↔ Q := by
@@ -239,7 +239,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
     simp [__eo_to_smt_exists, __smtx_model_eval]
 
 private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs : Term) (body : SmtTerm)
     (hBody : __smtx_typeof body = SmtType.Bool) :
     __smtx_model_eval M (__eo_to_smt_exists xs (SmtTerm.not (SmtTerm.not body))) =
@@ -268,14 +268,14 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
             let P : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists a (SmtTerm.not (SmtTerm.not body))) =
                     SmtValue.Boolean true
             let Q : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists a body) = SmtValue.Boolean true
             have hPQ : P ↔ Q := by
@@ -628,7 +628,7 @@ private theorem qexists_concat_step
     exact hAccExistsTy
 
 private theorem qforall_concat_step
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (acc xs F : Term)
     (hBool : RuleProofs.eo_has_bool_type (qforall acc (qforall xs F))) :
     __smtx_model_eval M (__eo_to_smt (qforall acc (qforall xs F))) =
@@ -729,7 +729,7 @@ private theorem qforall_concat_step
     rw [eo_to_smt_forall_eq
       (__eo_list_concat Term.__eo_List_cons acc xs) F hConcatNonNil]
     rw [eo_to_smt_forall_eq xs F hXsNonNil]
-    rw [__smtx_model_eval.eq_6, __smtx_model_eval.eq_6]
+    rw [__smtx_model_eval.eq_7, __smtx_model_eval.eq_7]
     have hDouble :
         __smtx_model_eval M
             (__eo_to_smt_exists acc
@@ -844,7 +844,7 @@ private theorem merge_exists_eval
             __eo_l_1___mk_quant_merge_prenex, eoListOfTerms_ne_stuck]
 
 private theorem merge_forall_eval
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ F acc,
       RuleProofs.eo_has_bool_type (qforall acc F) ->
       acc ≠ Term.__eo_List_nil ->
@@ -1153,7 +1153,7 @@ private theorem quant_merge_shape_of_not_stuck
       simp [__eo_prog_quant_merge_prenex] at hProg
 
 private theorem quant_merge_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (Q x F : Term)
     (hQ : Q = Term.UOp UserOp.forall ∨ Q = Term.UOp UserOp.exists)
     (hBool : RuleProofs.eo_has_bool_type
@@ -1263,7 +1263,7 @@ private theorem quant_merge_eval
     exact merge_exists_eval M F x hLhsBool hxNonNil
 
 public theorem cmd_step_quant_merge_prenex_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.quant_merge_prenex args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

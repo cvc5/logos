@@ -714,7 +714,7 @@ private theorem smt_typeof_sbv_to_int_int (t : Term) (w : native_Int)
     Here `wmv` is the (numeral) value of `wm`, `nT` is the third arg `n`, and the
     premise facts give `eval wm = w - 1`, `eval n = 2^w`. -/
 private theorem eval_sides_rel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t : Term) (nT : Term) (wmv w : native_Int)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hNonneg : native_zleq 0 w = true)
@@ -1025,7 +1025,7 @@ private theorem typed_body_impl
 /-- Facts: the conclusion body interprets `true` in `M`, given the premise
     evidence. -/
 private theorem facts_body_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t wm n : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hNTrans : RuleProofs.eo_has_smt_translation n)
@@ -1113,7 +1113,7 @@ private theorem facts_body_impl
   exact eval_sides_rel M hM t n wmv w hTTrans hNonneg hwpos hTSmt hwfit hWmVal hNEval
 
 public theorem cmd_step_uf_sbv_to_int_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.uf_sbv_to_int_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

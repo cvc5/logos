@@ -135,7 +135,7 @@ theorem facts___eo_prog_modus_ponens_impl (M : SmtModel) (x1 x2 : Term) :
       exact False.elim (hProg rfl)
 
 public theorem cmd_step_modus_ponens_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.modus_ponens args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

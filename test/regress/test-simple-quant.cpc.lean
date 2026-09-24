@@ -1,4 +1,4 @@
-import Cpc.Logos
+import Cpc.Native
 open Eo
 def t1 := (Term.Var (Term.String (SmtEval.native_string_lit "x")) (Term.UOp UserOp.Int))
 def t2 := (Term.Apply Term.FunType (Term.UOp UserOp.Int))
@@ -26,15 +26,15 @@ def t23 := (Term.Apply Term.__eo_List_cons t9)
 def t24 := (Term.Apply t23 Term.__eo_List_nil)
 def t25 := (Term.Apply Term.__eo_List_cons t10)
 def t26 := (Term.Apply t25 t24)
-def s0 : CState := logos_init_state
-def s1 : CState := (logos_invoke_assume s0 t9)
-def s2 : CState := (logos_invoke_assume s1 t11)
-def s3 : CState := (logos_invoke_cmd s2 (CCmd.assume_push t9))
-def s4 : CState := (logos_invoke_cmd s3 (CCmd.step CRule.instantiate (CArgList.cons t13 CArgList.nil) (CIndexList.cons 2 CIndexList.nil)))
-def s5 : CState := (logos_invoke_cmd s4 (CCmd.step_pop CRule.scope CArgList.nil (CIndexList.cons 0 CIndexList.nil)))
-def s6 : CState := (logos_invoke_cmd s5 (CCmd.step CRule.process_scope (CArgList.cons t10 CArgList.nil) (CIndexList.cons 0 CIndexList.nil)))
-def s7 : CState := (logos_invoke_cmd s6 (CCmd.step CRule.implies_elim CArgList.nil (CIndexList.cons 0 CIndexList.nil)))
-def s8 : CState := (logos_invoke_cmd s7 (CCmd.step CRule.reordering (CArgList.cons t18 CArgList.nil) (CIndexList.cons 0 CIndexList.nil)))
-def s9 : CState := (logos_invoke_cmd s8 (CCmd.step CRule.chain_m_resolution (CArgList.cons (Term.Boolean false) (CArgList.cons t22 (CArgList.cons t26 CArgList.nil))) (CIndexList.cons 0 (CIndexList.cons 4 (CIndexList.cons 5 CIndexList.nil)))))
+def s0 : LogosState := logos_init_state
+def s1 : LogosState := (logos_invoke_assume s0 t9)
+def s2 : LogosState := (logos_invoke_assume s1 t11)
+def s3 : LogosState := (logos_invoke_cmd s2 (CCmd.assume_push t9))
+def s4 : LogosState := (logos_invoke_cmd s3 (CCmd.step CRule.instantiate (CArgList.cons t13 CArgList.nil) (CIndexList.cons 2 CIndexList.nil)))
+def s5 : LogosState := (logos_invoke_cmd s4 (CCmd.step_pop CRule.scope CArgList.nil (CIndexList.cons 0 CIndexList.nil)))
+def s6 : LogosState := (logos_invoke_cmd s5 (CCmd.step CRule.process_scope (CArgList.cons t10 CArgList.nil) (CIndexList.cons 0 CIndexList.nil)))
+def s7 : LogosState := (logos_invoke_cmd s6 (CCmd.step CRule.implies_elim CArgList.nil (CIndexList.cons 0 CIndexList.nil)))
+def s8 : LogosState := (logos_invoke_cmd s7 (CCmd.step CRule.reordering (CArgList.cons t18 CArgList.nil) (CIndexList.cons 0 CIndexList.nil)))
+def s9 : LogosState := (logos_invoke_cmd s8 (CCmd.step CRule.chain_m_resolution (CArgList.cons (Term.Boolean false) (CArgList.cons t22 (CArgList.cons t26 CArgList.nil))) (CIndexList.cons 0 (CIndexList.cons 4 (CIndexList.cons 5 CIndexList.nil)))))
 #eval!
 (logos_state_is_refutation s9)

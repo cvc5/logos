@@ -27,7 +27,7 @@ private abbrev updateFirstStart (n s : Term) : Term :=
 private abbrev updateFirstBoundPremise (t s n : Term) : Term :=
   Term.Apply
     (Term.Apply Term.eq
-      (Term.Apply (Term.Apply Term.lt (updateFirstStart n s))
+      (Term.Apply (Term.Apply Term.leq (updateFirstStart n s))
         (Term.Apply Term.str_len t)))
     (Term.Boolean true)
 
@@ -158,10 +158,10 @@ private theorem smtx_eval_str_update_term_eq
         (__smtx_model_eval M z) := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
-private theorem smtx_eval_lt_term_eq
+private theorem smtx_eval_leq_term_eq
     (M : SmtModel) (x y : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.lt x y) =
-      __smtx_model_eval_lt
+    __smtx_model_eval M (SmtTerm.leq x y) =
+      __smtx_model_eval_leq
         (__smtx_model_eval M x) (__smtx_model_eval M y) := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
@@ -251,7 +251,7 @@ private theorem typed___eo_prog_str_update_in_first_concat_impl
   exact hBool
 
 private theorem facts___eo_prog_str_update_in_first_concat_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t tail s n pre post P1 P2 P3 P4 T : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hTailTrans : RuleProofs.eo_has_smt_translation tail)
@@ -368,30 +368,30 @@ private theorem facts___eo_prog_str_update_in_first_concat_impl
             __smtx_model_eval_leq, native_veq] using hEval
         simpa [SmtEval.native_zleq] using hLeBool
   have hFit :
-      ni + Int.ofNat (native_unpack_seq ss).length <
+      ni + Int.ofNat (native_unpack_seq ss).length ≤
         Int.ofNat (native_unpack_seq st).length := by
     rw [RuleProofs.eo_interprets_iff_smt_interprets] at hPrem2
     cases hPrem2 with
     | intro_true _ hEval =>
         change __smtx_model_eval M
             (SmtTerm.eq
-              (SmtTerm.lt
+              (SmtTerm.leq
                 (SmtTerm.plus (__eo_to_smt n)
                   (SmtTerm.plus
                     (SmtTerm.str_len (__eo_to_smt s))
                     (SmtTerm.Numeral 0)))
                 (SmtTerm.str_len (__eo_to_smt t)))
               (SmtTerm.Boolean true)) = SmtValue.Boolean true at hEval
-        rw [smtx_eval_eq_term_eq, smtx_eval_lt_term_eq,
+        rw [smtx_eval_eq_term_eq, smtx_eval_leq_term_eq,
           StrSubstrContainsSupport.smtx_eval_plus_term_eq,
           StrSubstrContainsSupport.smtx_eval_plus_term_eq,
           smtx_eval_str_len_term_eq, smtx_eval_str_len_term_eq,
           hNEval, hSEval, hTEval,
           StrEqReplSupport.smtx_eval_numeral_term_eq,
           StrEqReplSupport.smtx_eval_boolean_term_eq] at hEval
-        simpa [__smtx_model_eval_eq, __smtx_model_eval_lt,
+        simpa [__smtx_model_eval_eq, __smtx_model_eval_leq,
           __smtx_model_eval_plus, __smtx_model_eval_str_len,
-          native_veq, SmtEval.native_zlt, native_zplus,
+          native_veq, SmtEval.native_zleq, native_zplus,
           SmtEval.native_zplus, native_seq_len] using hEval
   let unpackValue : SmtValue -> List SmtValue
     | SmtValue.Seq xs => native_unpack_seq xs
@@ -464,11 +464,11 @@ private theorem facts___eo_prog_str_update_in_first_concat_impl
   have hIdxCast : (Int.toNat ni : Int) = ni :=
     Int.toNat_of_nonneg hNonneg
   have hFitNat :
-      Int.toNat ni + (native_unpack_seq ss).length <
+      Int.toNat ni + (native_unpack_seq ss).length ≤
         (native_unpack_seq st).length := by
     have hFitCast := hFit
     rw [← hIdxCast] at hFitCast
-    apply Int.ofNat_lt.mp
+    apply Int.ofNat_le.mp
     simpa using hFitCast
   have hIdxLe : Int.toNat ni ≤ (native_unpack_seq st).length := by omega
   have hPreList :
@@ -482,7 +482,7 @@ private theorem facts___eo_prog_str_update_in_first_concat_impl
   have hStartLe :
       ni + Int.ofNat (native_unpack_seq ss).length ≤
         native_seq_len (native_unpack_seq st) := by
-    simpa [native_seq_len] using Int.le_of_lt hFit
+    simpa [native_seq_len] using hFit
   have hToNatStart :
       Int.toNat (ni + Int.ofNat (native_unpack_seq ss).length) =
         Int.toNat ni + (native_unpack_seq ss).length := by
@@ -502,7 +502,7 @@ private theorem facts___eo_prog_str_update_in_first_concat_impl
           (native_unpack_seq ss) =
         native_unpack_seq spre ++ native_unpack_seq ss ++
           native_unpack_seq spost ++ native_unpack_seq stail := by
-    have hUpdate := native_seq_update_append_of_strict_fit
+    have hUpdate := native_seq_update_append_of_fit
       (native_unpack_seq st) (native_unpack_seq stail)
       (native_unpack_seq ss) ni hNonneg hFit
     rw [← hPreList, ← hPostList] at hUpdate
@@ -569,7 +569,7 @@ private theorem facts___eo_prog_str_update_in_first_concat_impl
       (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_update_in_first_concat_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_update_in_first_concat args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -331,8 +331,8 @@ theorem smt_value_rel_reglan_of_valid_eq {r s : SmtRegLan}
     RuleProofs.smt_value_rel (SmtValue.RegLan r) (SmtValue.RegLan s) := by
   have hModel : ∀ str : native_String,
       native_string_valid str = true →
-        Smtm.native_str_in_re (native_string_to_values str) r =
-          Smtm.native_str_in_re (native_string_to_values str) s := by
+        Smtm.native_str_in_re (impl_native_string_to_values str) r =
+          Smtm.native_str_in_re (impl_native_string_to_values str) s := by
     intro str hValid
     rw [← native_str_in_re_eq_model, ← native_str_in_re_eq_model]
     exact h str hValid

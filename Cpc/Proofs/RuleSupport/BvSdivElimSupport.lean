@@ -564,7 +564,7 @@ theorem bv_sdiv_index_eq_of_premise
   simpa [SmtEval.native_zeq] using hEq
 
 private theorem facts_bv_sdiv_term
-    (M : SmtModel) (hM : model_total_typed M) (x y nm : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y nm : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     eo_interprets M (bvSdivPrem x nm) true ->
@@ -673,7 +673,7 @@ theorem typed_bv_sdiv_program (x y nm : Term) :
   exact typed_bv_sdiv_term x y nm hXTrans hYTrans hTermTy
 
 theorem facts_bv_sdiv_program
-    (M : SmtModel) (hM : model_total_typed M) (x y nm : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y nm : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation nm ->

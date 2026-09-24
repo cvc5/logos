@@ -66,7 +66,7 @@ private theorem typed___eo_prog_bool_eq_true_impl (t1 : Term) :
       decide)
 
 private theorem facts___eo_prog_bool_eq_true_impl
-    (M : SmtModel) (hM : model_total_typed M) (t1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t1 : Term) :
   RuleProofs.eo_has_smt_translation t1 ->
   __eo_typeof (__eo_prog_bool_eq_true t1) = Term.Bool ->
   eo_interprets M (__eo_prog_bool_eq_true t1) true := by
@@ -97,7 +97,7 @@ private theorem facts___eo_prog_bool_eq_true_impl
     cases b <;> simp [RuleProofs.smt_value_rel, __smtx_model_eval_eq, native_veq]
 
 public theorem cmd_step_bool_eq_true_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bool_eq_true args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

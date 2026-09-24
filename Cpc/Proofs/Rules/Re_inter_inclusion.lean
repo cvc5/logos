@@ -60,7 +60,7 @@ private theorem prog_form (a : Term)
   · exact False.elim (hNe rfl)
 
 private theorem facts
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (r1 r2 flat1 flat2 side : Term)
     (hFlat1 :
       flat1 = __re_flatten (Term.Boolean true) r1)
@@ -138,7 +138,7 @@ private theorem facts
         SmtValue.RegLan native_re_none := by
     change __smtx_model_eval M SmtTerm.re_none =
       SmtValue.RegLan native_re_none
-    rw [__smtx_model_eval.eq_103]
+    rw [__smtx_model_eval.eq_105]
   have hSub : RuleProofs.NativeIncludes rv2 rv1 :=
     RuleProofs.re_inclusion_side_native_includes M hM r2 r1 flat2 flat1 side
       rv2 rv1 hR2Ty hArgs.1 hR2Eval hR1Eval hFlat2 hFlat1 hSide hSideTrue
@@ -150,7 +150,7 @@ private theorem facts
 end ReInterInclusionProof
 
 public theorem cmd_step_re_inter_inclusion_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_inter_inclusion args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

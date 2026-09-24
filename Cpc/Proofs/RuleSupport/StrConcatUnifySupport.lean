@@ -242,7 +242,7 @@ theorem eo_has_bool_type_str_concat_unify
     (by rw [hLeftBool]; decide)
 
 theorem eo_interprets_str_concat_unify
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (pfx s2 s3 t1 t2 : Term) (T : SmtType)
     (hPrefixTy : __smtx_typeof (__eo_to_smt pfx) = SmtType.Seq T)
     (hS2Ty : __smtx_typeof (__eo_to_smt s2) = SmtType.Seq T)
@@ -540,7 +540,7 @@ theorem eo_has_bool_type_str_concat_unify_base
     (by rw [hLeftBool]; decide)
 
 theorem eo_interprets_str_concat_unify_base
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x t1 t2 A : Term) (T : SmtType)
     (hXTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hT1Ty : __smtx_typeof (__eo_to_smt t1) = SmtType.Seq T)
@@ -1287,7 +1287,7 @@ theorem str_concat_unify_rev_smt_types_of_eo_type
     hTMiddleList, hSMiddleCases, hTMiddleCases⟩
 
 theorem smt_value_rel_str_concat_unify_rev_append
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (head middle suffix : Term) (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hSuffixTy : __smtx_typeof (__eo_to_smt suffix) = SmtType.Seq T)
@@ -1442,7 +1442,7 @@ theorem eo_has_bool_type_str_concat_unify_rev
     (by rw [hLeftBool]; decide)
 
 theorem eo_interprets_str_concat_unify_rev
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (suffix sHead sMiddle tHead tMiddle : Term) (T : SmtType)
     (hSuffixTy :
       __smtx_typeof (__eo_to_smt suffix) = SmtType.Seq T)
@@ -1564,7 +1564,7 @@ theorem eo_interprets_str_concat_unify_rev
           (strConcatUnifyRevRightEq sHead sMiddle tHead tMiddle)))
 
 theorem eo_interprets_str_concat_unify_base_rev
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (suffix head middle A : Term) (T : SmtType)
     (hSuffixTy :
       __smtx_typeof (__eo_to_smt suffix) = SmtType.Seq T)

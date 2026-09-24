@@ -27,14 +27,14 @@ namespace StrReplaceReCase
 /-! ### Native regex-search facts -/
 
 private theorem native_re_str_valid_string (str : native_String) :
-    native_re_str_valid (native_string_to_values str) =
+    native_re_str_valid (impl_native_string_to_values str) =
       native_string_valid str := by
   induction str with
   | nil => rfl
   | cons c cs ih =>
       change
         (native_char_valid c &&
-          native_re_str_valid (native_string_to_values cs)) =
+          native_re_str_valid (impl_native_string_to_values cs)) =
         (native_char_valid c && native_string_valid cs)
       rw [ih]
 
@@ -62,29 +62,29 @@ private theorem in_re_cons
       (show native_char_valid c = true ∧ native_string_valid cs = true by
         simpa [native_string_valid, Bool.and_eq_true] using hValid).2
   have hValueValid :
-      native_re_str_valid (native_string_to_values (c :: cs)) = true := by
+      native_re_str_valid (impl_native_string_to_values (c :: cs)) = true := by
     rw [native_re_str_valid_string]
     exact hValid
   have hTailValueValid :
-      native_re_str_valid (native_string_to_values cs) = true := by
+      native_re_str_valid (impl_native_string_to_values cs) = true := by
     rw [native_re_str_valid_string]
     exact hTail
-  simp only [native_string_to_values, List.map_cons] at hValueValid hTailValueValid ⊢
+  simp only [impl_native_string_to_values, List.map_cons] at hValueValid hTailValueValid ⊢
   simp [Smtm.native_str_in_re, hValueValid, hTailValueValid]
 
 private theorem prefix_go_shift (r : SmtRegLan) :
     ∀ (xs : List SmtValue) (n : Nat),
-      native_re_prefix_match_len?.go r xs n =
+      impl_native_re_prefix_match_len_go r xs n =
         (native_re_prefix_match_len? r xs).map (n + ·)
   | [], n => by
       rw [native_re_prefix_match_len?.eq_1,
-        native_re_prefix_match_len?.go.eq_1,
-        native_re_prefix_match_len?.go.eq_1]
+        impl_native_re_prefix_match_len_go.eq_1,
+        impl_native_re_prefix_match_len_go.eq_1]
       split <;> simp
   | c :: cs, n => by
       rw [native_re_prefix_match_len?.eq_1,
-        native_re_prefix_match_len?.go.eq_2,
-        native_re_prefix_match_len?.go.eq_2]
+        impl_native_re_prefix_match_len_go.eq_2,
+        impl_native_re_prefix_match_len_go.eq_2]
       split
       · simp
       · rw [prefix_go_shift (native_re_deriv c r) cs (n + 1),
@@ -101,9 +101,9 @@ private theorem prefix_some_shortest (r : SmtRegLan) :
         ∀ k, k < found →
           native_str_in_re (xs.take k) r = false
   | [], found, hValid, hFind => by
-      simp only [native_string_to_values, List.map] at hFind ⊢
+      simp only [impl_native_string_to_values, List.map] at hFind ⊢
       rw [native_re_prefix_match_len?.eq_1,
-        native_re_prefix_match_len?.go.eq_1] at hFind
+        impl_native_re_prefix_match_len_go.eq_1] at hFind
       split at hFind
       · rename_i hNull
         simp only [Option.some.injEq] at hFind
@@ -115,9 +115,9 @@ private theorem prefix_some_shortest (r : SmtRegLan) :
       have hParts : native_char_valid c = true ∧
           native_string_valid cs = true := by
         simpa [native_string_valid] using hValid
-      simp only [native_string_to_values, List.map] at hFind ⊢
+      simp only [impl_native_string_to_values, List.map] at hFind ⊢
       rw [native_re_prefix_match_len?.eq_1,
-        native_re_prefix_match_len?.go.eq_2] at hFind
+        impl_native_re_prefix_match_len_go.eq_2] at hFind
       split at hFind
       · rename_i hNull
         simp only [Option.some.injEq] at hFind
@@ -128,17 +128,17 @@ private theorem prefix_some_shortest (r : SmtRegLan) :
         simp only [Nat.zero_add] at hFind
         have hShift := prefix_go_shift
           (native_re_deriv (SmtValue.Char c) r)
-          (native_string_to_values cs) 1
-        simp only [native_string_to_values] at hShift
+          (impl_native_string_to_values cs) 1
+        simp only [impl_native_string_to_values] at hShift
         rw [hShift] at hFind
         cases hTail :
             native_re_prefix_match_len? (native_re_deriv (SmtValue.Char c) r)
-              (native_string_to_values cs) with
+              (impl_native_string_to_values cs) with
         | none =>
-            simp only [native_string_to_values] at hTail
+            simp only [impl_native_string_to_values] at hTail
             simp [hTail] at hFind
         | some n =>
-            simp only [native_string_to_values] at hTail
+            simp only [impl_native_string_to_values] at hTail
             simp [hTail] at hFind
             subst found
             have ih := prefix_some_shortest (native_re_deriv c r)
@@ -152,7 +152,7 @@ private theorem prefix_some_shortest (r : SmtRegLan) :
               simp only [List.map_take, List.map_cons] at hTakeValues
               rw [hTakeValues]
               have hCons := in_re_cons c (cs.take n) r
-              simp only [native_string_to_values, List.map_take] at hCons
+              simp only [impl_native_string_to_values, List.map_take] at hCons
               rw [hCons]
               · exact hMatch
               · have hTakeValid := valid_take cs n hParts.2
@@ -165,7 +165,7 @@ private theorem prefix_some_shortest (r : SmtRegLan) :
               | succ k =>
                   rw [List.take_succ_cons]
                   have hCons := in_re_cons c (cs.take k) r
-                  simp only [native_string_to_values, List.map_take] at hCons
+                  simp only [impl_native_string_to_values, List.map_take] at hCons
                   rw [hCons]
                   · exact hShortest k (by omega)
                   · have hTakeValid := valid_take cs k hParts.2
@@ -181,9 +181,9 @@ private theorem prefix_none_spec (r : SmtRegLan) :
   | [], hValid, hFind, k, hk => by
       have hk0 : k = 0 := by simpa using hk
       subst k
-      simp only [native_string_to_values, List.map] at hFind ⊢
+      simp only [impl_native_string_to_values, List.map] at hFind ⊢
       rw [native_re_prefix_match_len?.eq_1,
-        native_re_prefix_match_len?.go.eq_1] at hFind
+        impl_native_re_prefix_match_len_go.eq_1] at hFind
       split at hFind
       · simp at hFind
       · rename_i hNull
@@ -192,9 +192,9 @@ private theorem prefix_none_spec (r : SmtRegLan) :
       have hParts : native_char_valid c = true ∧
           native_string_valid cs = true := by
         simpa [native_string_valid] using hValid
-      simp only [native_string_to_values, List.map] at hFind ⊢
+      simp only [impl_native_string_to_values, List.map] at hFind ⊢
       rw [native_re_prefix_match_len?.eq_1,
-        native_re_prefix_match_len?.go.eq_2] at hFind
+        impl_native_re_prefix_match_len_go.eq_2] at hFind
       split at hFind
       · simp at hFind
       · rename_i hNull
@@ -204,21 +204,21 @@ private theorem prefix_none_spec (r : SmtRegLan) :
         | succ k =>
             rw [List.take_succ_cons]
             have hCons := in_re_cons c (cs.take k) r
-            simp only [native_string_to_values, List.map_take] at hCons
+            simp only [impl_native_string_to_values, List.map_take] at hCons
             rw [hCons]
             · apply prefix_none_spec (native_re_deriv c r) cs hParts.2
               · have hShift := prefix_go_shift
                     (native_re_deriv (SmtValue.Char c) r)
-                    (native_string_to_values cs) 1
-                simp only [native_string_to_values] at hShift
+                    (impl_native_string_to_values cs) 1
+                simp only [impl_native_string_to_values] at hShift
                 simp only [Nat.zero_add] at hFind
                 rw [hShift] at hFind
                 cases hTail : native_re_prefix_match_len?
                     (native_re_deriv (SmtValue.Char c) r)
-                    (native_string_to_values cs) with
-                | none => simp [native_string_to_values]
+                    (impl_native_string_to_values cs) with
+                | none => simp [impl_native_string_to_values]
                 | some n =>
-                    simp only [native_string_to_values] at hTail
+                    simp only [impl_native_string_to_values] at hTail
                     simp [hTail] at hFind
               · simpa using hk
             · have hTakeValid := valid_take cs k hParts.2
@@ -228,15 +228,15 @@ private theorem prefix_none_spec (r : SmtRegLan) :
 private theorem find_some_shortest (r : SmtRegLan) :
     ∀ (xs : native_String) (idx found len : Nat),
       native_string_valid xs = true →
-      native_re_find_idx_aux r xs idx = some (found, len) →
+      impl_native_re_find_idx_aux r xs idx = some (found, len) →
       idx ≤ found ∧ found ≤ idx + xs.length ∧
         len ≤ (xs.drop (found - idx)).length ∧
         native_str_in_re ((xs.drop (found - idx)).take len) r = true ∧
         (∀ k, k < len →
           native_str_in_re ((xs.drop (found - idx)).take k) r = false)
   | [], idx, found, len, hValid, hFind => by
-      simp only [native_string_to_values, List.map] at hFind ⊢
-      rw [native_re_find_idx_aux.eq_def] at hFind
+      simp only [impl_native_string_to_values, List.map] at hFind ⊢
+      rw [impl_native_re_find_idx_aux.eq_def] at hFind
       cases hPref : native_re_prefix_match_len? r [] with
       | none => simp [hPref] at hFind
       | some n =>
@@ -245,27 +245,27 @@ private theorem find_some_shortest (r : SmtRegLan) :
           have hSpec := prefix_some_shortest r [] n hValid hPref
           refine ⟨by simp, by simp, ?_, ?_, ?_⟩
           · simpa using hSpec.1
-          · simpa [native_string_to_values] using hSpec.2.1
-          · simpa [native_string_to_values] using hSpec.2.2
+          · simpa [impl_native_string_to_values] using hSpec.2.1
+          · simpa [impl_native_string_to_values] using hSpec.2.2
   | c :: cs, idx, found, len, hValid, hFind => by
       have hParts : native_char_valid c = true ∧
           native_string_valid cs = true := by
         simpa [native_string_valid] using hValid
-      simp only [native_string_to_values, List.map] at hFind ⊢
-      rw [native_re_find_idx_aux.eq_def] at hFind
+      simp only [impl_native_string_to_values, List.map] at hFind ⊢
+      rw [impl_native_re_find_idx_aux.eq_def] at hFind
       cases hPref : native_re_prefix_match_len? r (c :: cs) with
       | some n =>
-          simp only [native_string_to_values, List.map] at hPref
+          simp only [impl_native_string_to_values, List.map] at hPref
           simp [hPref] at hFind
           obtain ⟨rfl, rfl⟩ := hFind
           have hSpec := prefix_some_shortest r (c :: cs) n hValid hPref
-          simp only [native_string_to_values, List.map] at hSpec
+          simp only [impl_native_string_to_values, List.map] at hSpec
           refine ⟨by simp, by simp, ?_, ?_, ?_⟩
           · simpa using hSpec.1
           · simpa using hSpec.2.1
           · simpa using hSpec.2.2
       | none =>
-          simp only [native_string_to_values, List.map] at hPref
+          simp only [impl_native_string_to_values, List.map] at hPref
           simp [hPref] at hFind
           have ih := find_some_shortest r cs (idx + 1) found len
             hParts.2 hFind
@@ -281,10 +281,10 @@ private theorem find_some_shortest (r : SmtRegLan) :
           · simp only [List.length_cons]
             omega
           · simpa [hDropFound] using hLen
-          · simpa [hDropFound, native_string_to_values, List.map_drop,
+          · simpa [hDropFound, impl_native_string_to_values, List.map_drop,
               List.map_take] using hMatch
           · intro k hk
-            simpa [hDropFound, native_string_to_values, List.map_drop,
+            simpa [hDropFound, impl_native_string_to_values, List.map_drop,
               List.map_take] using hMin k hk
 
 private theorem prefix_ne_zero_of_nonnullable
@@ -297,9 +297,9 @@ private theorem prefix_ne_zero_of_nonnullable
   rw [native_re_prefix_match_len?.eq_1] at h
   cases xs with
   | nil =>
-      simp [native_re_prefix_match_len?.go.eq_1, hNull] at h
+      simp [impl_native_re_prefix_match_len_go.eq_1, hNull] at h
   | cons c cs =>
-      simp [native_re_prefix_match_len?.go.eq_2, hNull] at h
+      simp [impl_native_re_prefix_match_len_go.eq_2, hNull] at h
       rw [prefix_go_shift (native_re_deriv c r) cs 1] at h
       cases native_re_prefix_match_len? (native_re_deriv c r) cs <;>
         simp at h
@@ -312,12 +312,12 @@ private theorem positive_prefix_eq_of_nonnullable
   cases xs with
   | nil =>
       simp [native_re_positive_prefix_match_len?,
-        native_re_prefix_match_len?, native_re_prefix_match_len?.go.eq_1,
+        native_re_prefix_match_len?, impl_native_re_prefix_match_len_go.eq_1,
         hNull]
   | cons c cs =>
       rw [native_re_positive_prefix_match_len?.eq_2]
-      change _ = native_re_prefix_match_len?.go r (c :: cs) 0
-      rw [native_re_prefix_match_len?.go.eq_2]
+      change _ = impl_native_re_prefix_match_len_go r (c :: cs) 0
+      rw [impl_native_re_prefix_match_len_go.eq_2]
       simp only [hNull, ↓reduceIte, Nat.zero_add]
       rw [prefix_go_shift (native_re_deriv c r) cs 1]
       cases hPref :
@@ -327,17 +327,17 @@ private theorem positive_prefix_eq_of_nonnullable
 private theorem find_nonempty_aux_eq_of_nonnullable
     (r : SmtRegLan) (hNull : native_re_nullable r = false) :
     ∀ (xs : List SmtValue) (idx : Nat),
-      native_re_find_nonempty_idx_aux r xs idx =
-        native_re_find_idx_aux r xs idx
+      impl_native_re_find_nonempty_idx_aux r xs idx =
+        impl_native_re_find_idx_aux r xs idx
   | [], idx => by
-      rw [native_re_find_nonempty_idx_aux.eq_def,
-        native_re_find_idx_aux.eq_def,
+      rw [impl_native_re_find_nonempty_idx_aux.eq_def,
+        impl_native_re_find_idx_aux.eq_def,
         positive_prefix_eq_of_nonnullable r [] hNull]
-      simp [native_re_prefix_match_len?, native_re_prefix_match_len?.go.eq_1,
+      simp [native_re_prefix_match_len?, impl_native_re_prefix_match_len_go.eq_1,
         hNull]
   | c :: cs, idx => by
-      rw [native_re_find_nonempty_idx_aux.eq_def,
-        native_re_find_idx_aux.eq_def,
+      rw [impl_native_re_find_nonempty_idx_aux.eq_def,
+        impl_native_re_find_idx_aux.eq_def,
         positive_prefix_eq_of_nonnullable r (c :: cs) hNull]
       cases hPref : native_re_prefix_match_len? r (c :: cs) with
       | none =>
@@ -352,11 +352,11 @@ private theorem find_nonempty_aux_eq_of_nonnullable
 private theorem find_nonempty_from_eq_of_nonnullable
     (r : SmtRegLan) (s : native_String) (start : Nat)
     (hNull : native_re_nullable r = false) :
-    native_re_find_nonempty_idx_from r s start =
+    impl_native_re_find_nonempty_idx_from r s start =
       native_re_find_idx_from r s start := by
-  unfold native_re_find_nonempty_idx_from native_re_find_idx_from
+  unfold impl_native_re_find_nonempty_idx_from native_re_find_idx_from
   exact find_nonempty_aux_eq_of_nonnullable r hNull
-    ((native_string_to_values s).drop start) start
+    ((impl_native_string_to_values s).drop start) start
 
 private theorem prefix_zero_of_nullable
     (r : SmtRegLan) (xs : List SmtValue)
@@ -364,17 +364,17 @@ private theorem prefix_zero_of_nullable
     native_re_prefix_match_len? r xs = some 0 := by
   rw [native_re_prefix_match_len?.eq_1]
   cases xs with
-  | nil => simp [native_re_prefix_match_len?.go.eq_1, hNull]
-  | cons c cs => simp [native_re_prefix_match_len?.go.eq_2, hNull]
+  | nil => simp [impl_native_re_prefix_match_len_go.eq_1, hNull]
+  | cons c cs => simp [impl_native_re_prefix_match_len_go.eq_2, hNull]
 
 private theorem find_from_zero_of_nullable
     (r : SmtRegLan) (s : native_String)
     (hNull : native_re_nullable r = true) :
     native_re_find_idx_from r s 0 = some (0, 0) := by
   unfold native_re_find_idx_from
-  rw [native_re_find_idx_aux.eq_def,
+  rw [impl_native_re_find_idx_aux.eq_def,
     prefix_zero_of_nullable r
-      (List.drop 0 (native_string_to_values s)) hNull]
+      (List.drop 0 (impl_native_string_to_values s)) hNull]
 
 private theorem occur_index_re_zero
     (s : native_String) (r : SmtRegLan) :
@@ -383,15 +383,15 @@ private theorem occur_index_re_zero
 
 private theorem occur_index_re_one_of_find
     (s : native_String) (r : SmtRegLan) (idx len : Nat)
-    (hFind : native_re_find_nonempty_idx_from r s 0 = some (idx, len)) :
+    (hFind : impl_native_re_find_nonempty_idx_from r s 0 = some (idx, len)) :
     native_str_occur_index_re s r 1 = Int.ofNat (idx + len) := by
-  simp [native_str_occur_index_re, native_re_scan_ends_aux, hFind]
+  simp [native_str_occur_index_re, impl_native_re_scan_ends_aux, hFind]
 
 private theorem occur_index_re_one_of_none
     (s : native_String) (r : SmtRegLan)
-    (hFind : native_re_find_nonempty_idx_from r s 0 = none) :
+    (hFind : impl_native_re_find_nonempty_idx_from r s 0 = none) :
     native_str_occur_index_re s r 1 = -1 := by
-  simp [native_str_occur_index_re, native_re_scan_ends_aux, hFind]
+  simp [native_str_occur_index_re, impl_native_re_scan_ends_aux, hFind]
 
 private theorem substr_prefix_take
     (s : native_String) (idx : Nat) :
@@ -549,7 +549,7 @@ private theorem eval_forall_encoding_true
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T →
-        __smtx_value_canonical_bool v = true →
+        __smtx_value_canonical v = true →
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval M
@@ -559,7 +559,7 @@ private theorem eval_forall_encoding_true
   have hNoSat :
       ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v)
             (SmtTerm.not body) = SmtValue.Boolean true := by
     rintro ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -567,19 +567,19 @@ private theorem eval_forall_encoding_true
     simp [__smtx_model_eval, __smtx_model_eval_not, native_not,
       hvBody] at hvNot
   have hExistsEval :
-      native_eval_texists M s T (SmtTerm.not body) =
+      native_eval_exists M s T (SmtTerm.not body) =
         SmtValue.Boolean false := by
     change (if _h :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-          __smtx_value_canonical_bool v = true ∧
+          __smtx_value_canonical v = true ∧
           __smtx_model_eval (native_model_push M s T v)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean false
     rw [dif_neg hNoSat]
   change __smtx_model_eval_not
-      (native_eval_texists M s T (SmtTerm.not body)) =
+      (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean true
   rw [hExistsEval]
   rfl
@@ -590,12 +590,12 @@ private theorem unpack_pack_string (s : native_String) :
     Smtm.native_unpack_pack_seq, List.map_map]
   induction s with
   | nil => rfl
-  | cons c cs ih => simp [native_ssm_char_of_value, ih]
+  | cons c cs ih => simp [impl_native_ssm_char_of_value, ih]
 
 @[simp] private theorem unpack_seq_pack_string (s : native_String) :
     native_unpack_seq (native_pack_string s) =
-      native_string_to_values s := by
-  simp [native_pack_string, native_string_to_values,
+      impl_native_string_to_values s := by
+  simp [native_pack_string, impl_native_string_to_values,
     Smtm.native_unpack_pack_seq]
 
 @[simp] private theorem elem_typeof_pack_string (s : native_String) :
@@ -605,37 +605,37 @@ private theorem unpack_pack_string (s : native_String) :
   exact elem_typeof_pack_seq SmtType.Char _
 
 @[simp] private theorem pack_values_eq_string (s : native_String) :
-    native_pack_seq SmtType.Char (native_string_to_values s) =
+    native_pack_seq SmtType.Char (impl_native_string_to_values s) =
       native_pack_string s := by
   rfl
 
 @[simp] private theorem pack_append_values_eq_string
     (s t : native_String) :
     native_pack_seq SmtType.Char
-        (native_string_to_values s ++ native_string_to_values t) =
+        (impl_native_string_to_values s ++ impl_native_string_to_values t) =
       native_pack_string (s ++ t) := by
-  simp [native_pack_string, native_string_to_values, List.map_append]
+  simp [native_pack_string, impl_native_string_to_values, List.map_append]
 
 @[simp] private theorem pack_three_values_eq_string
     (s t u : native_String) :
     native_pack_seq SmtType.Char
-        (native_string_to_values s ++ native_string_to_values t ++
-          native_string_to_values u) =
+        (impl_native_string_to_values s ++ impl_native_string_to_values t ++
+          impl_native_string_to_values u) =
       native_pack_string (s ++ t ++ u) := by
-  simp [native_pack_string, native_string_to_values, List.map_append]
+  simp [native_pack_string, impl_native_string_to_values, List.map_append]
 
 @[simp] private theorem pack_three_values_right_eq_string
     (s t u : native_String) :
     native_pack_seq SmtType.Char
-        (native_string_to_values s ++
-          (native_string_to_values t ++ native_string_to_values u)) =
+        (impl_native_string_to_values s ++
+          (impl_native_string_to_values t ++ impl_native_string_to_values u)) =
       native_pack_string (s ++ (t ++ u)) := by
-  simp [native_pack_string, native_string_to_values, List.map_append]
+  simp [native_pack_string, impl_native_string_to_values, List.map_append]
 
 @[simp] private theorem native_string_to_values_length
     (s : native_String) :
-    (native_string_to_values s).length = s.length := by
-  simp [native_string_to_values]
+    (impl_native_string_to_values s).length = s.length := by
+  simp [impl_native_string_to_values]
 
 private theorem unpack_pack_string_length (s : native_String) :
     (native_unpack_seq (native_pack_string s)).length = s.length := by
@@ -649,7 +649,7 @@ private theorem pack_unpack_string
     typed_unpack_seq_of_typeof_seq_value hTy
   have hMap :
       (native_unpack_seq ss).map
-          (fun v => SmtValue.Char (native_ssm_char_of_value v)) =
+          (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) =
         native_unpack_seq ss := by
     generalize hl : native_unpack_seq ss = l at hTyped ⊢
     clear hl
@@ -658,14 +658,14 @@ private theorem pack_unpack_string
     | cons v vs ih =>
         rcases hTyped with ⟨hv, hvs⟩
         rcases char_value_canonical hv with ⟨c, rfl, _hc⟩
-        simpa [native_ssm_char_of_value] using ih hvs
+        simpa [impl_native_ssm_char_of_value] using ih hvs
   have hElem : __smtx_elem_typeof_seq_value ss = SmtType.Char :=
     elem_typeof_seq_value_of_typeof_seq_value hTy
   unfold native_pack_string native_unpack_string
   simp only [List.map_map]
   change native_pack_seq SmtType.Char
       ((native_unpack_seq ss).map
-        (fun v => SmtValue.Char (native_ssm_char_of_value v))) = ss
+        (fun v => SmtValue.Char (impl_native_ssm_char_of_value v))) = ss
   rw [hMap]
   simpa [hElem] using native_pack_unpack_seq ss
 
@@ -769,7 +769,7 @@ private theorem eo_is_closed_ternary_uop_args
 
 set_option maxHeartbeats 2000000 in
 theorem str_replace_re_reduction_pred_true
-    (M : SmtModel) (hM : model_total_typed M) (z y x : Term)
+    (M : SmtModel) (hM : model_wf M) (z y x : Term)
     (hTrans : RuleProofs.eo_has_smt_translation
       (Term.Apply
         (Term.Apply (Term.Apply (Term.UOp UserOp.str_replace_re) z) y) x))
@@ -1136,7 +1136,7 @@ theorem str_replace_re_reduction_pred_true
         __smtx_model_eval M nullable =
           SmtValue.Boolean (native_str_in_re [] regex) := by
       simp [nullable, __smtx_model_eval, __smtx_model_eval_str_in_re,
-        hEmptyEval, hYEval, unpack_pack_string, native_string_to_values]
+        hEmptyEval, hYEval, unpack_pack_string, impl_native_string_to_values]
     by_cases hEmptyMatch : native_str_in_re [] regex = true
     · have hRegexNullable : native_re_nullable regex = true := by
         simpa [Smtm.native_str_in_re, native_re_str_valid] using hEmptyMatch
@@ -1223,12 +1223,12 @@ theorem str_replace_re_reduction_pred_true
           have hMatch' :
               native_str_in_re ((source.drop idx).take matchLen) regex =
                 true := by
-            simpa [native_string_to_values, List.map_take] using hMatch
+            simpa [impl_native_string_to_values, List.map_take] using hMatch
           have hShortestNative' :
               ∀ k, k < matchLen →
                 native_str_in_re ((source.drop idx).take k) regex = false := by
             intro k hk
-            simpa [native_string_to_values, List.map_take] using
+            simpa [impl_native_string_to_values, List.map_take] using
               hShortestNative k hk
           have hMatchLenPos : 0 < matchLen := by
             apply Nat.pos_of_ne_zero
@@ -1242,7 +1242,7 @@ theorem str_replace_re_reduction_pred_true
             omega
           have hIdxLt : idx < source.length := by omega
           have hNonemptyFind :
-              native_re_find_nonempty_idx_from regex source 0 =
+              impl_native_re_find_nonempty_idx_from regex source 0 =
                 some (idx, matchLen) := by
             rw [find_nonempty_from_eq_of_nonnullable regex source 0
               hRegexNonnullable]
@@ -1377,12 +1377,12 @@ theorem str_replace_re_reduction_pred_true
                   (SmtTerm.neg sourceLen finish)))
               empty suffixNative [] hSuffixPurifyEval hEmptyEval
           have hFindValues := hFind
-          simp only [native_string_to_values] at hFindValues
+          simp only [impl_native_string_to_values] at hFindValues
           have hNativeResult :
               native_str_replace_re source regex repl =
                 preNative ++ repl ++ suffixNative := by
             simp [native_str_replace_re, hFindValues, preNative, suffixNative,
-              native_string_to_values, List.map_take, List.map_drop]
+              impl_native_string_to_values, List.map_take, List.map_drop]
           have hResultEval :
               __smtx_model_eval M result =
                 SmtValue.Seq
@@ -1446,10 +1446,10 @@ theorem str_replace_re_reduction_pred_true
               __smtx_model_eval M (SmtTerm.str_in_re matched ty) =
                 SmtValue.Boolean true := by
             have hMatchValues := hMatch'
-            simp only [native_string_to_values, List.map_drop] at hMatchValues
+            simp only [impl_native_string_to_values, List.map_drop] at hMatchValues
             simp [__smtx_model_eval, __smtx_model_eval_str_in_re,
               hMatchedEval, hYEval, unpack_pack_string, matchNative,
-              native_string_to_values, List.map_take, List.map_drop,
+              impl_native_string_to_values, List.map_take, List.map_drop,
               hMatchValues]
           have hResultEqReplacementEval :
               __smtx_model_eval M (resultEq replacementResult) =
@@ -1550,7 +1550,7 @@ theorem str_replace_re_reduction_pred_true
               simp only [qMatch]
               rw [eval_str_in_re_term_eq, hQSubEval, hYEvalPush]
               simp [__smtx_model_eval_str_in_re, unpack_pack_string,
-                native_string_to_values]
+                impl_native_string_to_values]
             have hQBodyEval :
                 __smtx_model_eval Mk qBody =
                   SmtValue.Boolean
@@ -1595,7 +1595,7 @@ theorem str_replace_re_reduction_pred_true
                         (native_str_substr matchNative 0 k) regex =
                       false := by
                   rw [hSub]
-                  simpa [native_string_to_values, List.map_take] using
+                  simpa [impl_native_string_to_values, List.map_take] using
                     hShortestNative' k.toNat hkNat
                 simp [native_or, native_not, native_zleq, native_zlt,
                   hkNonneg, hkLt, hQFalse]

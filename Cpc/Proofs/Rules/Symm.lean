@@ -93,7 +93,7 @@ private theorem eo_interprets_eq_symm_true (M : SmtModel) (x y : Term) :
 
 /-- Proves correctness of the EO program for `symm_impl`. -/
 theorem correct___eo_prog_symm_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
   eo_interprets M x1 true ->
   RuleProofs.eo_has_bool_type (__eo_prog_symm (Proof.pf x1)) ->
   eo_interprets M (__eo_prog_symm (Proof.pf x1)) true := by
@@ -192,7 +192,7 @@ theorem correct___eo_prog_symm_impl
 
 /-- Derives the checker facts exposed by the EO program for `symm_impl`. -/
 theorem facts___eo_prog_symm_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
   eo_interprets M x1 true ->
   __eo_prog_symm (Proof.pf x1) ≠ Term.Stuck ->
   eo_interprets M (__eo_prog_symm (Proof.pf x1)) true := by
@@ -204,7 +204,7 @@ theorem facts___eo_prog_symm_impl
   exact correct___eo_prog_symm_impl M hM x1 hXTrue hBool
 
 public theorem cmd_step_symm_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.symm args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

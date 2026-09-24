@@ -102,7 +102,7 @@ private theorem typed___eo_prog_ite_true_cond_impl (x1 y1 : Term) :
     (by simpa [iteTerm] using hIteNonNone)
 
 private theorem facts___eo_prog_ite_true_cond_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 y1 : Term) :
   RuleProofs.eo_has_smt_translation x1 ->
   RuleProofs.eo_has_smt_translation y1 ->
   __eo_typeof (__eo_prog_ite_true_cond x1 y1) = Term.Bool ->
@@ -133,7 +133,7 @@ private theorem facts___eo_prog_ite_true_cond_impl
       RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt x1))
 
 public theorem cmd_step_ite_true_cond_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.ite_true_cond args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -228,7 +228,7 @@ private theorem native_qleq_of_qlt_true {a b : native_Rat} :
   have hLt : a < b := by
     simpa [native_qlt, SmtEval.native_qlt] using h
   have hLe : a <= b := Rat.le_of_lt hLt
-  simpa [native_qleq, SmtEval.native_qleq] using hLe
+  simpa [native_qleq, Smtm.native_qleq] using hLe
 
 private theorem native_zlt_add_of_zlt_of_zle {a b c d : native_Int} :
     native_zlt a b = true ->
@@ -280,7 +280,7 @@ private theorem native_qlt_add_of_qlt_of_qle {a b c d : native_Rat} :
   have hltp : a < b := by
     simpa [native_qlt, SmtEval.native_qlt] using hlt
   have hlep : c <= d := by
-    simpa [native_qleq, SmtEval.native_qleq] using hle
+    simpa [native_qleq, Smtm.native_qleq] using hle
   have hres : a + c < b + d := by
     grind
   simp only [native_qlt, SmtEval.native_qlt, native_qplus, SmtEval.native_qplus]
@@ -292,7 +292,7 @@ private theorem native_qlt_add_of_qle_of_qlt {a b c d : native_Rat} :
     native_qlt (native_qplus a c) (native_qplus b d) = true := by
   intro hle hlt
   have hlep : a <= b := by
-    simpa [native_qleq, SmtEval.native_qleq] using hle
+    simpa [native_qleq, Smtm.native_qleq] using hle
   have hltp : c < d := by
     simpa [native_qlt, SmtEval.native_qlt] using hlt
   have hres : a + c < b + d := by
@@ -306,16 +306,16 @@ private theorem native_qleq_add_of_qle_of_qle {a b c d : native_Rat} :
     native_qleq (native_qplus a c) (native_qplus b d) = true := by
   intro hle1 hle2
   have hle1p : a <= b := by
-    simpa [native_qleq, SmtEval.native_qleq] using hle1
+    simpa [native_qleq, Smtm.native_qleq] using hle1
   have hle2p : c <= d := by
-    simpa [native_qleq, SmtEval.native_qleq] using hle2
+    simpa [native_qleq, Smtm.native_qleq] using hle2
   have hres : a + c <= b + d := by
     grind
-  simp only [native_qleq, SmtEval.native_qleq, native_qplus, SmtEval.native_qplus]
+  simp only [native_qleq, Smtm.native_qleq, native_qplus, SmtEval.native_qplus]
   exact decide_eq_true hres
 
 private theorem smt_eval_int_of_type
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Int) :
     ∃ n : native_Int, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Numeral n := by
   have hPres :
@@ -326,7 +326,7 @@ private theorem smt_eval_int_of_type
   exact int_value_canonical (by simpa [hTy] using hPres)
 
 private theorem smt_eval_real_of_type
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
     ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Rational q := by
   have hPres :
@@ -337,7 +337,7 @@ private theorem smt_eval_real_of_type
   exact real_value_canonical (by simpa [hTy] using hPres)
 
 private theorem int_lt_eval_of_lt_true
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Int)
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Int) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.lt) a) b) true ->
@@ -351,12 +351,12 @@ private theorem int_lt_eval_of_lt_true
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_lt_eq] at h
   cases h with
   | intro_true _ hEval =>
-      rw [__smtx_model_eval.eq_15, ha, hb] at hEval
+      rw [__smtx_model_eval.eq_17, ha, hb] at hEval
       simp [__smtx_model_eval_lt] at hEval
       exact ⟨n, m, ha, hb, hEval⟩
 
 private theorem int_le_eval_of_leq_true
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Int)
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Int) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.leq) a) b) true ->
@@ -370,12 +370,12 @@ private theorem int_le_eval_of_leq_true
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_leq_eq] at h
   cases h with
   | intro_true _ hEval =>
-      rw [__smtx_model_eval.eq_16, ha, hb] at hEval
+      rw [__smtx_model_eval.eq_18, ha, hb] at hEval
       simp [__smtx_model_eval_leq] at hEval
       exact ⟨n, m, ha, hb, hEval⟩
 
 private theorem int_le_eval_of_eq_true
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Int)
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Int) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) true ->
@@ -395,7 +395,7 @@ private theorem int_le_eval_of_eq_true
       exact ⟨n, n, ha, hb, by simp [native_zleq, SmtEval.native_zleq]⟩
 
 private theorem real_lt_eval_of_lt_true
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Real)
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Real) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.lt) a) b) true ->
@@ -409,12 +409,12 @@ private theorem real_lt_eval_of_lt_true
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_lt_eq] at h
   cases h with
   | intro_true _ hEval =>
-      rw [__smtx_model_eval.eq_15, ha, hb] at hEval
+      rw [__smtx_model_eval.eq_17, ha, hb] at hEval
       simp [__smtx_model_eval_lt] at hEval
       exact ⟨q, r, ha, hb, hEval⟩
 
 private theorem real_le_eval_of_leq_true
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Real)
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Real) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.leq) a) b) true ->
@@ -428,12 +428,12 @@ private theorem real_le_eval_of_leq_true
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_leq_eq] at h
   cases h with
   | intro_true _ hEval =>
-      rw [__smtx_model_eval.eq_16, ha, hb] at hEval
+      rw [__smtx_model_eval.eq_18, ha, hb] at hEval
       simp [__smtx_model_eval_leq] at hEval
       exact ⟨q, r, ha, hb, hEval⟩
 
 private theorem real_le_eval_of_eq_true
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Real)
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Real) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) true ->
@@ -450,7 +450,7 @@ private theorem real_le_eval_of_eq_true
       rw [smtx_eval_eq_term_eq, ha, hb] at hEval
       simp [__smtx_model_eval_eq, native_veq] at hEval
       subst r
-      exact ⟨q, q, ha, hb, by simp [native_qleq, SmtEval.native_qleq]⟩
+      exact ⟨q, q, ha, hb, by simp [native_qleq, Smtm.native_qleq]⟩
 
 private theorem sum_lt_true_of_int_eval
     (M : SmtModel) (a1 b1 a2 b2 : Term)
@@ -474,7 +474,7 @@ private theorem sum_lt_true_of_int_eval
   apply RuleProofs.eo_interprets_of_bool_eval M
   · exact hBool
   · rw [eo_to_smt_lt_eq, eo_to_smt_plus_eq, eo_to_smt_plus_eq,
-      __smtx_model_eval.eq_15, __smtx_model_eval.eq_12, __smtx_model_eval.eq_12,
+      __smtx_model_eval.eq_17, __smtx_model_eval.eq_14, __smtx_model_eval.eq_14,
       ha1, ha2, hb1, hb2]
     simpa [__smtx_model_eval_plus, __smtx_model_eval_lt] using
       native_zlt_add_of_zlt_of_zle hLt hLe
@@ -501,7 +501,7 @@ private theorem sum_lt_true_of_real_eval
   apply RuleProofs.eo_interprets_of_bool_eval M
   · exact hBool
   · rw [eo_to_smt_lt_eq, eo_to_smt_plus_eq, eo_to_smt_plus_eq,
-      __smtx_model_eval.eq_15, __smtx_model_eval.eq_12, __smtx_model_eval.eq_12,
+      __smtx_model_eval.eq_17, __smtx_model_eval.eq_14, __smtx_model_eval.eq_14,
       ha1, ha2, hb1, hb2]
     simpa [__smtx_model_eval_plus, __smtx_model_eval_lt] using
       native_qlt_add_of_qlt_of_qle hLt hLe
@@ -528,7 +528,7 @@ private theorem sum_lt_true_of_int_eval_right
   apply RuleProofs.eo_interprets_of_bool_eval M
   · exact hBool
   · rw [eo_to_smt_lt_eq, eo_to_smt_plus_eq, eo_to_smt_plus_eq,
-      __smtx_model_eval.eq_15, __smtx_model_eval.eq_12, __smtx_model_eval.eq_12,
+      __smtx_model_eval.eq_17, __smtx_model_eval.eq_14, __smtx_model_eval.eq_14,
       ha1, ha2, hb1, hb2]
     simpa [__smtx_model_eval_plus, __smtx_model_eval_lt] using
       native_zlt_add_of_zle_of_zlt hLe hLt
@@ -555,7 +555,7 @@ private theorem sum_lt_true_of_real_eval_right
   apply RuleProofs.eo_interprets_of_bool_eval M
   · exact hBool
   · rw [eo_to_smt_lt_eq, eo_to_smt_plus_eq, eo_to_smt_plus_eq,
-      __smtx_model_eval.eq_15, __smtx_model_eval.eq_12, __smtx_model_eval.eq_12,
+      __smtx_model_eval.eq_17, __smtx_model_eval.eq_14, __smtx_model_eval.eq_14,
       ha1, ha2, hb1, hb2]
     simpa [__smtx_model_eval_plus, __smtx_model_eval_lt] using
       native_qlt_add_of_qle_of_qlt hLe hLt
@@ -582,7 +582,7 @@ private theorem sum_leq_true_of_int_eval
   apply RuleProofs.eo_interprets_of_bool_eval M
   · exact hBool
   · rw [eo_to_smt_leq_eq, eo_to_smt_plus_eq, eo_to_smt_plus_eq,
-      __smtx_model_eval.eq_16, __smtx_model_eval.eq_12, __smtx_model_eval.eq_12,
+      __smtx_model_eval.eq_18, __smtx_model_eval.eq_14, __smtx_model_eval.eq_14,
       ha1, ha2, hb1, hb2]
     simpa [__smtx_model_eval_plus, __smtx_model_eval_leq] using
       native_zleq_add_of_zle_of_zle hLe1 hLe2
@@ -609,13 +609,13 @@ private theorem sum_leq_true_of_real_eval
   apply RuleProofs.eo_interprets_of_bool_eval M
   · exact hBool
   · rw [eo_to_smt_leq_eq, eo_to_smt_plus_eq, eo_to_smt_plus_eq,
-      __smtx_model_eval.eq_16, __smtx_model_eval.eq_12, __smtx_model_eval.eq_12,
+      __smtx_model_eval.eq_18, __smtx_model_eval.eq_14, __smtx_model_eval.eq_14,
       ha1, ha2, hb1, hb2]
     simpa [__smtx_model_eval_plus, __smtx_model_eval_leq] using
       native_qleq_add_of_qle_of_qle hLe1 hLe2
 
 private theorem arith_rel_sum_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (r1 r2 a1 b1 a2 b2 : Term)
     (h1 : eo_interprets M (Term.Apply (Term.Apply r1 a1) b1) true)
     (h2 : eo_interprets M (Term.Apply (Term.Apply r2 a2) b2) true)
@@ -1830,7 +1830,7 @@ private theorem arith_rel_sum_right_bool_of_bool
               (Or.inr ⟨hReal.2.2.1, hReal.2.2.2⟩)
 
 private theorem arithSumFoldRight_true
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (ps : List Term) (acc : Term),
       AllInterpretedTrue M ps ->
       AllHaveBoolType ps ->
@@ -1888,7 +1888,7 @@ private theorem arithSumFoldRight_true
               simpa [tail, hTailShape, arithSumFoldRight, arithSumStep] using hStepTrue
 
 public theorem cmd_step_arith_sum_ub_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_sum_ub args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -111,7 +111,7 @@ private theorem typed___eo_prog_str_leq_concat_base_1_impl
   exact hBool
 
 private theorem facts___eo_prog_str_leq_concat_base_1_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t tail s P1 P2 : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hTailTrans : RuleProofs.eo_has_smt_translation tail)
@@ -256,7 +256,7 @@ private theorem facts___eo_prog_str_leq_concat_base_1_impl
       (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_leq_concat_base_1_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_leq_concat_base_1 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

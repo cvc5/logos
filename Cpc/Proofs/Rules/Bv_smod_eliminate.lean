@@ -1162,7 +1162,7 @@ private theorem native_nat_to_int_int_to_nat_of_nonneg (n : native_Int) :
         exact Int.le_antisymm hle hInt
       simp [max, hle, hn0]
     · simp [max, hle]
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hMax
 
 private theorem smt_typeof_extract_diag
@@ -1197,7 +1197,7 @@ private theorem smt_typeof_extract_diag
     hLen, hOnePos, native_ite]
 
 private theorem bitvec_eval_payload_with_width
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (n : native_Int) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) (n : native_Int) :
     RuleProofs.eo_has_smt_translation t ->
     native_zleq 0 n = true ->
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec (native_int_to_nat n) ->
@@ -1389,7 +1389,7 @@ private theorem prog_bv_smod_eliminate_canonical_eq_of_ne_stuck
     native_ite, native_teq, native_and, native_not, SmtEval.native_not]
 
 private theorem trusted_bv_smod_eliminate_canonical_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y w wm : Term) :
     cArgListTranslationOk
         (CArgList.cons x
@@ -2040,7 +2040,7 @@ private theorem trusted_bv_smod_eliminate_canonical_properties
     hEqRel
 
 public theorem cmd_step_bv_smod_eliminate_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_smod_eliminate args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

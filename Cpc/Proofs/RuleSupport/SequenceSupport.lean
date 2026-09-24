@@ -816,7 +816,7 @@ theorem eval_seq_empty_of_type (M : SmtModel) (A : Term) (T : SmtType) :
       rw [hA]
       change __smtx_model_eval M (SmtTerm.seq_empty T) =
         SmtValue.Seq (SmtSeq.empty T)
-      rw [__smtx_model_eval.eq_77]
+      rw [__smtx_model_eval.eq_79]
 
 theorem eval_seq_empty_typeof (M : SmtModel) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
@@ -1107,7 +1107,7 @@ theorem smtx_model_eval_str_concat_term_eq (M : SmtModel) (x y : Term) :
   rw [show __eo_to_smt (mkConcat x y) =
       SmtTerm.str_concat (__eo_to_smt x) (__eo_to_smt y) by
     rfl]
-  rw [__smtx_model_eval.eq_79]
+  rw [__smtx_model_eval.eq_81]
 
 theorem str_concat_args_of_non_none (x y : Term) :
     __smtx_typeof (__eo_to_smt (mkConcat x y)) ≠ SmtType.None ->
@@ -3476,7 +3476,7 @@ theorem smt_value_rel_str_concat_nil_empty
               rw [hTyU] at hNilTy
               injection hNilTy
             subst T
-            rw [__smtx_model_eval.eq_77]
+            rw [__smtx_model_eval.eq_79]
             unfold RuleProofs.smt_value_rel
             simp [__smtx_model_eval_eq, native_veq]
         | _ =>
@@ -3497,7 +3497,7 @@ theorem smt_value_rel_str_concat_nil_empty
         native_pack_seq, __smtx_model_eval_eq, native_veq]
 
 theorem smt_value_rel_str_concat_right_empty
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M (__eo_to_smt (mkConcat x (__seq_empty (__eo_typeof x)))))
@@ -3522,7 +3522,7 @@ theorem smt_value_rel_str_concat_right_empty
     (smt_seq_rel_pack_unpack T sx hsxElem)
 
 theorem smt_value_rel_str_concat_left_empty
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M (__eo_to_smt (mkConcat (__seq_empty (__eo_typeof x)) x)))
@@ -3547,7 +3547,7 @@ theorem smt_value_rel_str_concat_left_empty
     (smt_seq_rel_pack_unpack T sx hsxElem)
 
 theorem smt_value_rel_str_concat_list_nil_left_empty
-    (M : SmtModel) (hM : model_total_typed M) (nil x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (nil x : Term) (T : SmtType)
     (hNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) nil = Term.Boolean true)
     (hNilTy : __smtx_typeof (__eo_to_smt nil) = SmtType.Seq T)
@@ -3591,7 +3591,7 @@ theorem smt_value_rel_str_concat_list_nil_left_empty
         (smt_seq_rel_pack_unpack U sx hsxElem)
 
 theorem smt_value_rel_str_concat_list_nil_right_empty
-    (M : SmtModel) (hM : model_total_typed M) (x nil : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x nil : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) nil = Term.Boolean true)
@@ -3636,7 +3636,7 @@ theorem smt_value_rel_str_concat_list_nil_right_empty
         (smt_seq_rel_pack_unpack U sx hsxElem)
 
 theorem smt_value_rel_str_concat_left_of_rel_empty
-    (M : SmtModel) (hM : model_total_typed M) (empty x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (empty x : Term) (T : SmtType)
     (hEmptyTy : __smtx_typeof (__eo_to_smt empty) = SmtType.Seq T)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hEmptyRel : RuleProofs.smt_value_rel
@@ -3680,7 +3680,7 @@ theorem smt_value_rel_str_concat_left_of_rel_empty
         (smt_seq_rel_pack_unpack U sx hsxElem)
 
 theorem smt_value_rel_str_concat_right_of_rel_empty
-    (M : SmtModel) (hM : model_total_typed M) (x empty : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x empty : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hEmptyTy : __smtx_typeof (__eo_to_smt empty) = SmtType.Seq T)
     (hEmptyRel : RuleProofs.smt_value_rel
@@ -3725,7 +3725,7 @@ theorem smt_value_rel_str_concat_right_of_rel_empty
         (smt_seq_rel_pack_unpack U sx hsxElem)
 
 theorem smt_value_rel_str_concat_left_congr
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T)
@@ -3796,7 +3796,7 @@ theorem smt_value_rel_str_concat_left_congr
     hPackXY
 
 theorem smt_value_rel_str_concat_right_congr
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T)
@@ -3858,7 +3858,7 @@ theorem smt_value_rel_str_concat_right_congr
     (native_unpack_seq sy) (native_unpack_seq sz) hPackYZ
 
 theorem smt_value_rel_str_concat_assoc
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T) :
@@ -3893,7 +3893,7 @@ theorem smt_value_rel_str_concat_assoc
     List.append_assoc, RuleProofs.smtx_model_eval_eq_refl]
 
 theorem eo_interprets_str_concat_assoc
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T) :
@@ -3925,7 +3925,7 @@ theorem eo_interprets_str_concat_assoc
     (smt_value_rel_str_concat_assoc M hM x y z T hxTy hyTy hzTy)
 
 theorem eo_interprets_str_concat_assoc_symm
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T) :
@@ -3960,7 +3960,7 @@ theorem eo_interprets_str_concat_assoc_symm
       (smt_value_rel_str_concat_assoc M hM x y z T hxTy hyTy hzTy))
 
 theorem eo_interprets_str_concat_left_congr_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T)
@@ -3984,7 +3984,7 @@ theorem eo_interprets_str_concat_left_congr_of_seq
       (RuleProofs.eo_interprets_eq_rel M x y hXY))
 
 theorem eo_interprets_str_concat_right_congr_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T)
@@ -4008,7 +4008,7 @@ theorem eo_interprets_str_concat_right_congr_of_seq
       (RuleProofs.eo_interprets_eq_rel M y z hYZ))
 
 theorem smt_value_rel_list_concat_rec_str_concat
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ a z T,
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true ->
       __smtx_typeof (__eo_to_smt a) = SmtType.Seq T ->
@@ -4135,7 +4135,7 @@ theorem smt_value_rel_list_concat_rec_str_concat
               nil z T hNilTrue haTy hzTy)
 
 theorem smt_value_rel_str_nary_intro_ite
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hIntro :
       __eo_ite (__eo_eq x (__seq_empty (__eo_typeof x))) x
@@ -4154,7 +4154,7 @@ theorem smt_value_rel_str_nary_intro_ite
     exact smt_value_rel_str_concat_right_empty M hM x T hxTy
 
 theorem smt_value_rel_str_nary_intro_default
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hIntro :
       __eo_ite (__eo_eq x (__seq_empty (__eo_typeof x))) x
@@ -4187,7 +4187,7 @@ theorem smt_value_rel_str_nary_intro_default
     exact smt_value_rel_str_concat_right_empty M hM x T hxTy
 
 theorem smt_value_rel_str_nary_intro
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hIntro : __str_nary_intro x ≠ Term.Stuck) :
     RuleProofs.smt_value_rel
@@ -4507,7 +4507,7 @@ theorem smt_typeof_double_rev_str_nary_intro_of_seq
     T hIntroList hIntroTy hRevIntro
 
 theorem smt_value_rel_str_nary_elim_concat_ite
-    (M : SmtModel) (hM : model_total_typed M) (t ss : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (t ss : Term) (T : SmtType)
     (hConcatTy : __smtx_typeof (__eo_to_smt (mkConcat t ss)) = SmtType.Seq T)
     (hElim :
       __eo_ite (__eo_eq ss (__seq_empty (__eo_typeof t))) t (mkConcat t ss) ≠
@@ -4546,7 +4546,7 @@ theorem smt_value_rel_str_nary_elim_requires
   exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt t))
 
 theorem smt_value_rel_str_nary_elim
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hElim : __str_nary_elim x ≠ Term.Stuck) :
     RuleProofs.smt_value_rel
@@ -4594,7 +4594,7 @@ theorem smt_value_rel_str_nary_elim
       (__smtx_model_eval M (__eo_to_smt x))
 
 theorem smt_value_rel_str_nary_elim_list_nil_empty
-    (M : SmtModel) (hM : model_total_typed M) (nil : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (nil : Term) (T : SmtType)
     (hNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) nil = Term.Boolean true)
     (hNilTy : __smtx_typeof (__eo_to_smt nil) = SmtType.Seq T)
@@ -5105,7 +5105,7 @@ theorem eo_interprets_str_nary_elim_rev_rec_nil_eq
       (__smtx_model_eval M (__eo_to_smt (__str_nary_elim acc))))
 
 theorem eo_interprets_rev_cons_snoc_of_list_nil
-    (M : SmtModel) (hM : model_total_typed M) (head nil : Term)
+    (M : SmtModel) (hM : model_wf M) (head nil : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hNil :
@@ -5210,7 +5210,7 @@ theorem eo_interprets_rev_cons_snoc_of_list_nil
   exact RuleProofs.eo_interprets_eq_of_rel M lhs rhs hBool hRel
 
 theorem eo_interprets_str_concat_right_empty_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hBool : RuleProofs.eo_has_bool_type
       (mkEq (mkConcat x (__seq_empty (__eo_typeof x))) x)) :
@@ -5220,7 +5220,7 @@ theorem eo_interprets_str_concat_right_empty_of_bool
     (smt_value_rel_str_concat_right_empty M hM x T hxTy)
 
 theorem eo_interprets_str_concat_left_empty_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hBool : RuleProofs.eo_has_bool_type
       (mkEq (mkConcat (__seq_empty (__eo_typeof x)) x) x)) :
@@ -5230,7 +5230,7 @@ theorem eo_interprets_str_concat_left_empty_of_bool
     (smt_value_rel_str_concat_left_empty M hM x T hxTy)
 
 theorem eo_interprets_str_concat_list_nil_left_empty_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (nil x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (nil x : Term) (T : SmtType)
     (hNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) nil = Term.Boolean true)
     (hNilTy : __smtx_typeof (__eo_to_smt nil) = SmtType.Seq T)
@@ -5242,7 +5242,7 @@ theorem eo_interprets_str_concat_list_nil_left_empty_of_bool
       hNil hNilTy hxTy)
 
 theorem eo_interprets_str_concat_list_nil_right_empty_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (x nil : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x nil : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) nil = Term.Boolean true)
@@ -5254,7 +5254,7 @@ theorem eo_interprets_str_concat_list_nil_right_empty_of_bool
       hxTy hNil hNilTy)
 
 theorem eo_interprets_str_nary_intro_ite_eq_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hIntro :
       __eo_ite (__eo_eq x (__seq_empty (__eo_typeof x))) x
@@ -5275,7 +5275,7 @@ theorem eo_interprets_str_nary_intro_ite_eq_of_bool
     (smt_value_rel_str_nary_intro_ite M hM x T hxTy hIntro)
 
 theorem eo_interprets_str_nary_elim_concat_ite_eq_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (t ss : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (t ss : Term) (T : SmtType)
     (hConcatTy : __smtx_typeof (__eo_to_smt (mkConcat t ss)) = SmtType.Seq T)
     (hElim :
       __eo_ite (__eo_eq ss (__seq_empty (__eo_typeof t))) t (mkConcat t ss) ≠
@@ -5305,7 +5305,7 @@ theorem eo_interprets_str_nary_elim_requires_eq_of_bool
     (smt_value_rel_str_nary_elim_requires M t hElim)
 
 theorem eo_interprets_str_nary_intro_eq_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hIntro : __str_nary_intro x ≠ Term.Stuck)
     (hBool : RuleProofs.eo_has_bool_type (mkEq (__str_nary_intro x) x)) :
@@ -5314,7 +5314,7 @@ theorem eo_interprets_str_nary_intro_eq_of_bool
     (smt_value_rel_str_nary_intro M hM x T hxTy hIntro)
 
 theorem eo_interprets_str_nary_elim_eq_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hElim : __str_nary_elim x ≠ Term.Stuck)
     (hBool : RuleProofs.eo_has_bool_type (mkEq (__str_nary_elim x) x)) :
@@ -5323,7 +5323,7 @@ theorem eo_interprets_str_nary_elim_eq_of_bool
     (smt_value_rel_str_nary_elim M hM x T hxTy hElim)
 
 theorem eo_interprets_str_nary_elim_intro_eq_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hIntroNN :
       __smtx_typeof (__eo_to_smt (__str_nary_intro x)) ≠ SmtType.None)
@@ -5367,7 +5367,7 @@ theorem eo_interprets_str_nary_elim_intro_eq_of_seq
       (__smtx_model_eval M (__eo_to_smt x)) hElimRel hIntroRel)
 
 theorem eo_interprets_str_nary_elim_intro_eq_of_seq_ne_stuck
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hIntroNN :
       __smtx_typeof (__eo_to_smt (__str_nary_intro x)) ≠ SmtType.None)
@@ -5380,7 +5380,7 @@ theorem eo_interprets_str_nary_elim_intro_eq_of_seq_ne_stuck
       hIntroNN hIntro)
 
 theorem eo_interprets_double_rev_intro_elim_eq_of_rel
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hIntroNN :
       __smtx_typeof (__eo_to_smt (__str_nary_intro x)) ≠ SmtType.None)
@@ -5963,7 +5963,7 @@ theorem str_nary_intro_has_smt_translation_of_seq_wf
 
 
 theorem eo_interprets_str_nary_elim_list_nil_empty_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (nil : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (nil : Term) (T : SmtType)
     (hNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) nil = Term.Boolean true)
     (hNilTy : __smtx_typeof (__eo_to_smt nil) = SmtType.Seq T)
@@ -5975,7 +5975,7 @@ theorem eo_interprets_str_nary_elim_list_nil_empty_of_bool
     (smt_value_rel_str_nary_elim M hM nil T hNilTy hElim)
 
 theorem eo_interprets_str_nary_elim_list_concat_rec_singleton
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a head nil : Term) (T : SmtType)
     (hList :
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true)
@@ -6133,7 +6133,7 @@ theorem eo_interprets_str_nary_elim_list_concat_rec_singleton
     (mkConcat (__str_nary_elim a) head) hBool hRel
 
 theorem eo_interprets_rev_cons_snoc_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (head tail : Term)
+    (M : SmtModel) (hM : model_wf M) (head tail : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hTailList :
@@ -6236,7 +6236,7 @@ theorem eo_interprets_rev_cons_snoc_of_seq
   simpa [hRevConsConcatEq, hRevTailEq] using hCore
 
 theorem eo_interprets_rev_cons_snoc_of_cons_nil
-    (M : SmtModel) (hM : model_total_typed M) (head mid nil : Term)
+    (M : SmtModel) (hM : model_wf M) (head mid nil : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hMidTy : __smtx_typeof (__eo_to_smt mid) = SmtType.Seq T)
@@ -6374,7 +6374,7 @@ theorem eo_interprets_rev_cons_snoc_of_cons_nil
   simpa [lhs, rhs] using hGoal
 
 theorem eo_interprets_str_nary_intro_congr_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hIntroX : __str_nary_intro x ≠ Term.Stuck)
@@ -6404,7 +6404,7 @@ theorem eo_interprets_str_nary_intro_congr_of_seq
     (__str_nary_intro x) (__str_nary_intro y) hBool hRel
 
 theorem eo_interprets_str_nary_elim_congr_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hElimX : __str_nary_elim x ≠ Term.Stuck)
@@ -6470,7 +6470,7 @@ theorem smt_seq_rel_concat_right_cancel (T : SmtType) (sx sy sz : SmtSeq) :
         (smt_seq_rel_pack_unpack T sz hszElem)))
 
 theorem smt_value_rel_str_concat_left_cancel
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T) :
@@ -6517,7 +6517,7 @@ theorem smt_value_rel_str_concat_left_cancel
     (hsyElem.trans hsxElem.symm) (hszElem.trans hsxElem.symm) hRel
 
 theorem smt_value_rel_str_concat_right_cancel
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T) :
@@ -6560,7 +6560,7 @@ theorem smt_value_rel_str_concat_right_cancel
   exact smt_seq_rel_concat_right_cancel T sx sy sz hsyElem hszElem hRel
 
 theorem eo_interprets_str_concat_left_cancel
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) :
     eo_interprets M (mkEq (mkConcat x y) (mkConcat x z)) true ->
     eo_interprets M (mkEq y z) true := by
   intro h
@@ -6590,7 +6590,7 @@ theorem eo_interprets_str_concat_left_cancel
   exact RuleProofs.eo_interprets_eq_of_rel M y z hYZBool hTailRel
 
 theorem eo_interprets_str_concat_tails_of_head_eo_eq_true
-    (M : SmtModel) (hM : model_total_typed M) (t u t2 s2 : Term)
+    (M : SmtModel) (hM : model_wf M) (t u t2 s2 : Term)
     (hHead : __eo_eq t u = Term.Boolean true) :
     eo_interprets M (mkEq (mkConcat t t2) (mkConcat u s2)) true ->
     eo_interprets M (mkEq t2 s2) true := by
@@ -6600,7 +6600,7 @@ theorem eo_interprets_str_concat_tails_of_head_eo_eq_true
   exact eo_interprets_str_concat_left_cancel M hM t t2 s2 h
 
 theorem eo_interprets_str_strip_prefix_concat_step
-    (M : SmtModel) (hM : model_total_typed M) (t u t2 s2 : Term)
+    (M : SmtModel) (hM : model_wf M) (t u t2 s2 : Term)
     (hXY : eo_interprets M (mkEq (mkConcat t t2) (mkConcat u s2)) true)
     (hStrip :
       __str_strip_prefix (mkConcat t t2) (mkConcat u s2) ≠ Term.Stuck)
@@ -6642,7 +6642,7 @@ theorem eo_interprets_str_strip_prefix_concat_step
   · exact eo_interprets_str_strip_prefix_concat_false M t u t2 s2 hCond hXY
 
 theorem eo_interprets_str_strip_prefix_result
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term)
+    (M : SmtModel) (hM : model_wf M) (x y : Term)
     (hXY : eo_interprets M (mkEq x y) true)
     (hStrip : __str_strip_prefix x y ≠ Term.Stuck)
     (hBool : RuleProofs.eo_has_bool_type
@@ -6965,7 +6965,7 @@ theorem eo_interprets_double_rev_intro_elim_eq_of_str_concat_nil
     hConsTy hRevIntro
 
 theorem eo_interprets_double_rev_intro_self_of_elim_intro
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hIntroNN :
       __smtx_typeof (__eo_to_smt (__str_nary_intro x)) ≠ SmtType.None)
@@ -6995,7 +6995,7 @@ theorem eo_interprets_double_rev_intro_self_of_elim_intro
       hIntroNN hIntro hElimIntro)
 
 theorem eo_interprets_double_rev_intros_of_elim_intros
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -7086,7 +7086,7 @@ theorem str_strip_prefix_str_nary_intro_of_not_str_concat_eo_eq_false
 
 
 theorem eo_interprets_str_concat_right_cancel
-    (M : SmtModel) (hM : model_total_typed M) (x y z : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y z : Term) :
     eo_interprets M (mkEq (mkConcat y x) (mkConcat z x)) true ->
     eo_interprets M (mkEq y z) true := by
   intro h
@@ -7116,7 +7116,7 @@ theorem eo_interprets_str_concat_right_cancel
   exact RuleProofs.eo_interprets_eq_of_rel M y z hYZBool hTailRel
 
 theorem eo_interprets_str_concat_heads_of_tail_eo_eq_true
-    (M : SmtModel) (hM : model_total_typed M) (t u t2 s2 : Term)
+    (M : SmtModel) (hM : model_wf M) (t u t2 s2 : Term)
     (hTail : __eo_eq t u = Term.Boolean true) :
     eo_interprets M (mkEq (mkConcat t2 t) (mkConcat s2 u)) true ->
     eo_interprets M (mkEq t2 s2) true := by
@@ -7126,7 +7126,7 @@ theorem eo_interprets_str_concat_heads_of_tail_eo_eq_true
   exact eo_interprets_str_concat_right_cancel M hM t t2 s2 h
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true
-    (M : SmtModel) (hM : model_total_typed M) (t u t2 s2 : Term)
+    (M : SmtModel) (hM : model_wf M) (t u t2 s2 : Term)
     (hHead : __eo_eq t u = Term.Boolean true) :
     eo_interprets M
       (mkEq
@@ -7145,7 +7145,7 @@ theorem eo_interprets_rev_tails_of_head_eo_eq_true
     (__str_nary_elim (__eo_list_rev (Term.UOp UserOp.str_concat) s2)) hHead
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_snoc
-    (M : SmtModel) (hM : model_total_typed M) (t u t2 s2 : Term)
+    (M : SmtModel) (hM : model_wf M) (t u t2 s2 : Term)
     (hHead : __eo_eq t u = Term.Boolean true)
     (hLeftSnoc :
       eo_interprets M
@@ -7201,7 +7201,7 @@ theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_snoc
     hSnocEq
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_seq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t u t2 s2 : Term) (T : SmtType)
     (hHead : __eo_eq t u = Term.Boolean true)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -7361,7 +7361,7 @@ theorem rev_elim_cons_tail_lists_of_interprets
       hs2List⟩
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t u t2 s2 : Term) (T : SmtType)
     (hHead : __eo_eq t u = Term.Boolean true)
     (hLeftTy :
@@ -7401,7 +7401,7 @@ theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq
     hElimTailLeft hElimTailRight hXY
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t u t2 s2 : Term) (T : SmtType)
     (_hStrip :
       __str_strip_prefix (mkConcat t t2) (mkConcat u s2) ≠ Term.Stuck)
@@ -7434,7 +7434,7 @@ theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip
     hElimTailRight hXY
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip_pair
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t u t2 s2 : Term) (T : SmtType)
     (hStrip :
       __str_strip_prefix (mkConcat t t2) (mkConcat u s2) ≠ Term.Stuck)
@@ -7478,7 +7478,7 @@ theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip_pair
     hElimTailRight hXY
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip_tail_false
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t u a aTail b bTail : Term) (T : SmtType)
     (hStrip :
       __str_strip_prefix (mkConcat t (mkConcat a aTail))
@@ -7527,7 +7527,7 @@ theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip_tail_false
     hFinalLeft hFinalRight hXY
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip_tail_left_not_concat
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t u t2 s2 : Term) (T : SmtType)
     (hStrip :
       __str_strip_prefix (mkConcat t t2) (mkConcat u s2) ≠ Term.Stuck)
@@ -7571,7 +7571,7 @@ theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip_tail_left_n
     hFinalLeft hFinalRight hXY
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip_tail_right_not_concat
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t u t2 s2 : Term) (T : SmtType)
     (hStrip :
       __str_strip_prefix (mkConcat t t2) (mkConcat u s2) ≠ Term.Stuck)
@@ -7615,7 +7615,7 @@ theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip_tail_right_
     hFinalLeft hFinalRight hXY
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip_tail_stop
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t u t2 s2 : Term) (T : SmtType)
     (hStrip :
       __str_strip_prefix (mkConcat t t2) (mkConcat u s2) ≠ Term.Stuck)
@@ -7725,7 +7725,7 @@ theorem concat_tail_stop_of_no_head_true_of_seq_type
   · exact False.elim (hNoHeadTrue hHeadTrue)
 
 theorem eo_interprets_rev_tails_of_head_eo_eq_true_of_cons_seq_strip_with_final
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t u t2 s2 : Term) (T : SmtType)
     (hStrip :
       __str_strip_prefix (mkConcat t t2) (mkConcat u s2) ≠ Term.Stuck)

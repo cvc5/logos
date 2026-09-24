@@ -83,7 +83,6 @@ private def applyApplyApplyUOpNeedsSpecialType : UserOp -> Prop
   | UserOp.str_replace_re => True
   | UserOp.str_replace_re_all => True
   | UserOp.str_indexof_re => True
-  | UserOp.str_indexof_re_split => True
   | UserOp._at_strings_occur_index => True
   | UserOp._at_strings_occur_index_re => True
   | _ => False
@@ -1934,7 +1933,6 @@ theorem substitute_simul_apply_apply_branch_residual_head_typeof_ne_stuck
               | exact hApplyUOp.notStrReplaceRe ⟨y, rfl⟩
               | exact hApplyUOp.notStrReplaceReAll ⟨y, rfl⟩
               | exact hApplyUOp.notStrIndexofRe ⟨y, rfl⟩
-              | exact hApplyUOp.notStrIndexofReSplit ⟨y, rfl⟩
               | exact hApplyUOp.notStringsOccurIndex ⟨y, rfl⟩
               | exact hApplyUOp.notStringsOccurIndexRe ⟨y, rfl⟩
               | exact hFTrans (by

@@ -1554,7 +1554,7 @@ theorem atom_eval_eq_of_seqElemVal_veq_true (M : SmtModel) (T : SmtType)
       simp only [__smtx_model_eval]
       rw [hval]
 
-theorem shaped_atoms_sound (M : SmtModel) (hM : model_total_typed M) (T : SmtType)
+theorem shaped_atoms_sound (M : SmtModel) (hM : model_wf M) (T : SmtType)
     (xs ys : List Term)
     (hxTy : ∀ a ∈ xs, __smtx_typeof (__eo_to_smt a) = SmtType.Seq T)
     (hyTy : ∀ b ∈ ys, __smtx_typeof (__eo_to_smt b) = SmtType.Seq T)
@@ -1677,7 +1677,7 @@ def introWordView_string (M : SmtModel) (w : native_String) (S : SmtSeq) (T : Sm
     injection hEval with hS
     rw [← hS, unpack_pack_string_map, charAtoms_unpack]
 
-theorem seqUnit_atoms_sound (M : SmtModel) (hM : model_total_typed M) (T : SmtType)
+theorem seqUnit_atoms_sound (M : SmtModel) (hM : model_wf M) (T : SmtType)
     (xs ys : List Term)
     (hxUnit : ∀ a ∈ xs, ∃ e, a = Term.Apply (Term.UOp UserOp.seq_unit) e)
     (hyUnit : ∀ b ∈ ys, ∃ e, b = Term.Apply (Term.UOp UserOp.seq_unit) e)
@@ -3555,7 +3555,7 @@ theorem eval_string (M : SmtModel) (w : native_String) :
     __smtx_model_eval M (__eo_to_smt (Term.String w)) = SmtValue.Seq (native_pack_string w) := by
   rw [show __eo_to_smt (Term.String w) = SmtTerm.String w from rfl]; simp only [__smtx_model_eval]
 
-theorem no_compat_of_introWordViews (M : SmtModel) (hM : model_total_typed M)
+theorem no_compat_of_introWordViews (M : SmtModel) (hM : model_wf M)
     (c d : Term) (Sc Sd : SmtSeq) (T : SmtType)
     (vc : IntroWordView M c Sc T) (vd : IntroWordView M d Sd T)
     (hgt : __eo_gt (__str_value_len c)
@@ -3574,7 +3574,7 @@ theorem no_compat_of_introWordViews (M : SmtModel) (hM : model_total_typed M)
       vc.hAtomShape vd.hAtomShape)
     hgt
 
-theorem no_compat_of_introWordViews_reversed (M : SmtModel) (hM : model_total_typed M)
+theorem no_compat_of_introWordViews_reversed (M : SmtModel) (hM : model_wf M)
     (c d : Term) (Sc Sd : SmtSeq) (T : SmtType)
     (vc : IntroWordView M c Sc T) (vd : IntroWordView M d Sd T)
     (hgt : __eo_gt (__str_value_len c)
@@ -3635,7 +3635,7 @@ theorem no_compat_of_introWordViews_reversed (M : SmtModel) (hM : model_total_ty
 /-- The no-overlap `(A)` condition, dispatching on the representation of the
 constant-like words `c`/`d`.  The `String`-literal case is closed via the
 committed char-chain bridge `no_compat_string`. -/
-theorem no_compat_dispatch (M : SmtModel) (hM : model_total_typed M)
+theorem no_compat_dispatch (M : SmtModel) (hM : model_wf M)
     (c d : Term) (Sc Sd : SmtSeq) (T : SmtType)
     (hcTy : __smtx_typeof (__eo_to_smt c) = SmtType.Seq T)
     (hdTy : __smtx_typeof (__eo_to_smt d) = SmtType.Seq T)
@@ -3713,7 +3713,7 @@ theorem no_compat_dispatch (M : SmtModel) (hM : model_total_typed M)
     simp at hk
   · exact dispatchD (introWordView_seqUnit M ec Sc T hcTy hSc hcflatNe)
 
-theorem no_compat_dispatch_endpoint_left (M : SmtModel) (hM : model_total_typed M)
+theorem no_compat_dispatch_endpoint_left (M : SmtModel) (hM : model_wf M)
     (c d : Term) (Sc Sd : SmtSeq) (T : SmtType)
     (hcTy : __smtx_typeof (__eo_to_smt c) = SmtType.Seq T)
     (hdTy : __smtx_typeof (__eo_to_smt d) = SmtType.Seq T)
@@ -3786,7 +3786,7 @@ theorem no_compat_dispatch_endpoint_left (M : SmtModel) (hM : model_total_typed 
     simp at hk
   · exact dispatchD (introWordView_seqUnit M ec Sc T hcTy hSc hcflatNe)
 
-theorem no_compat_dispatch_endpoint_right (M : SmtModel) (hM : model_total_typed M)
+theorem no_compat_dispatch_endpoint_right (M : SmtModel) (hM : model_wf M)
     (c d : Term) (Sc Sd : SmtSeq) (T : SmtType)
     (hcTy : __smtx_typeof (__eo_to_smt c) = SmtType.Seq T)
     (hdTy : __smtx_typeof (__eo_to_smt d) = SmtType.Seq T)

@@ -175,7 +175,7 @@ private theorem typed___eo_prog_arith_int_div_total_neg_impl
     (by rw [hDivTotalTy, hRhsTy]) hDivTotalTrans
 
 private theorem facts___eo_prog_arith_int_div_total_neg_impl
-    (M : SmtModel) (hM : model_total_typed M) (t s P : Term) :
+    (M : SmtModel) (hM : model_wf M) (t s P : Term) :
     RuleProofs.eo_has_smt_translation t ->
     RuleProofs.eo_has_smt_translation s ->
     __eo_prog_arith_int_div_total_neg t s (Proof.pf P) =
@@ -249,7 +249,7 @@ private theorem facts___eo_prog_arith_int_div_total_neg_impl
         (SmtValue.Numeral (-(native_div_total ti (-si))))
 
 public theorem cmd_step_arith_int_div_total_neg_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_int_div_total_neg args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

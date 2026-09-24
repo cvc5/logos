@@ -177,7 +177,7 @@ private theorem smtx_model_eval_str_len_zero_eq_seq_empty
       omega
 
 private theorem facts___eo_prog_str_len_eq_zero_base_impl
-    (M : SmtModel) (hM : model_total_typed M) (x T : Term)
+    (M : SmtModel) (hM : model_wf M) (x T : Term)
     (hXTrans : RuleProofs.eo_has_smt_translation x)
     (hXTy : __eo_typeof x = Term.Apply Term.Seq T) :
     eo_interprets M
@@ -233,7 +233,7 @@ private theorem facts___eo_prog_str_len_eq_zero_base_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_str_len_eq_zero_base_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_len_eq_zero_base args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -387,7 +387,7 @@ private theorem int_pow2_add_nat (w1 w2 : Nat) :
   have h12 := natpow2_eq (w1 + w2)
   have hsimpa :=
     h12.trans (Int.pow_add 2 w1 w2)
-  try simp [native_nat_to_int, SmtEval.native_nat_to_int, Int.pow_add] at hsimpa ⊢
+  try simp [native_nat_to_int, Smtm.native_nat_to_int, Int.pow_add] at hsimpa ⊢
   exact hsimpa
 
 private theorem int_mod_mul_pow2_congr
@@ -438,20 +438,20 @@ private theorem int_concat_merge_payload
       native_int_pow2 (native_nat_to_int w1) := by
     have h := natpow2_eq w1
     rw [show native_int_pow2 (native_nat_to_int w1) = (2 : Int) ^ w1 by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using h]
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using h]
     exact_mod_cast Nat.one_le_two_pow
   have hBPos : (0 : Int) <
       native_int_pow2 (native_nat_to_int w2) := by
     have h := natpow2_eq w2
     rw [show native_int_pow2 (native_nat_to_int w2) = (2 : Int) ^ w2 by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using h]
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using h]
     exact_mod_cast Nat.two_pow_pos w2
   have hABPos : (0 : Int) <
       native_int_pow2 (native_nat_to_int (w1 + w2)) := by
     have h := natpow2_eq (w1 + w2)
     rw [show native_int_pow2 (native_nat_to_int (w1 + w2)) =
         (2 : Int) ^ (w1 + w2) by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using h]
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using h]
     exact_mod_cast Nat.two_pow_pos (w1 + w2)
   have hBLe : native_int_pow2 (native_nat_to_int w2) ≤
       native_int_pow2 (native_nat_to_int (w1 + w2)) := by
@@ -541,13 +541,13 @@ theorem bvConcat_int_to_bv_merge_eval
     SmtEval.native_zmult, SmtEval.native_zplus]
   rw [show native_nat_to_int w1 + native_nat_to_int w2 =
       native_nat_to_int (w1 + w2) by
-        simp [native_nat_to_int, SmtEval.native_nat_to_int,
+        simp [native_nat_to_int, Smtm.native_nat_to_int,
           SmtEval.native_zplus]]
   have hPow2Pos : (0 : Int) <
       native_int_pow2 (native_nat_to_int w2) := by
     have h := natpow2_eq w2
     rw [show native_int_pow2 (native_nat_to_int w2) = (2 : Int) ^ w2 by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using h]
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using h]
     exact_mod_cast Nat.two_pow_pos w2
   have hPow2Ne : native_int_pow2 (native_nat_to_int w2) ≠ 0 :=
     Int.ne_of_gt hPow2Pos
@@ -1138,7 +1138,7 @@ theorem typed_bv_concat_merge_const_program
   simpa [hBodyEq] using hTermBool
 
 theorem facts_bv_concat_merge_const_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs n1 w1 n2 w2 ww zs P : Term) :
     RuleProofs.eo_has_smt_translation xs ->
     RuleProofs.eo_has_smt_translation n1 ->
@@ -1189,7 +1189,7 @@ theorem facts_bv_concat_merge_const_program
     calc
       native_nat_to_int (W1n + W2n) =
           native_nat_to_int W1n + native_nat_to_int W2n := by
-        simp [native_nat_to_int, SmtEval.native_nat_to_int]
+        simp [native_nat_to_int, Smtm.native_nat_to_int]
       _ = W1 + W2 := by rw [hRound1, hRound2]
       _ = WW := hWidthEq.symm
   subst WW
@@ -1220,11 +1220,11 @@ theorem facts_bv_concat_merge_const_program
     have hWidth0 : native_zleq 0
         (native_nat_to_int (W1n + W2n)) = true := by
       simp only [SmtEval.native_zleq, native_nat_to_int,
-        SmtEval.native_nat_to_int]
+        Smtm.native_nat_to_int]
       exact decide_eq_true (Int.natCast_nonneg _)
     have hWidthRound : native_int_to_nat
         (native_nat_to_int (W1n + W2n)) = W1n + W2n := by
-      simp only [native_nat_to_int, SmtEval.native_nat_to_int,
+      simp only [native_nat_to_int, Smtm.native_nat_to_int,
         native_int_to_nat, SmtEval.native_int_to_nat]
       exact Int.toNat_natCast (W1n + W2n)
     change __smtx_typeof

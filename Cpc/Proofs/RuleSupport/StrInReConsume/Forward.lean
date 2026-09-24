@@ -272,7 +272,7 @@ theorem StrInReConsumeInternal.smt_typeof_list_rev_re_concat_of_reglan_local
     hNilTy hRecNe
 
 theorem StrInReConsumeInternal.str_re_consume_sflat_type_facts_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -1031,7 +1031,7 @@ theorem StrInReConsumeInternal.smt_typeof_re_split_str_to_re_of_seq_reglan_local
       simpa [__re_split_str_to_re] using hTailTy
 
 theorem StrInReConsumeInternal.re_split_str_to_re_eval_rel_consume_local
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ parts tail partsSs tailRv,
       __eo_is_list (Term.UOp UserOp.str_concat) parts =
         Term.Boolean true ->
@@ -1243,7 +1243,7 @@ theorem StrInReConsumeInternal.re_split_str_to_re_eval_rel_consume_local
                 (native_str_to_re (native_unpack_string partsSs))
                 tailRv)) := by
         rw [hPartsUnpack]
-        simpa [native_string_to_values, List.map_append] using
+        simpa [impl_native_string_to_values, List.map_append] using
           RuleProofs.smt_value_rel_refl
             (SmtValue.RegLan
               (native_re_concat
@@ -3208,7 +3208,7 @@ theorem StrInReConsumeInternal.re_rev_comp_type_local
   exact StrInReConsumeInternal.re_rev_map_rev_comp_type_facts_local.2 c hTy hRev
 
 theorem StrInReConsumeInternal.re_flatten_true_str_to_re_eval_rel_consume_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : Term) (ss : SmtSeq)
     (hSTy :
       __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
@@ -3311,7 +3311,7 @@ theorem StrInReConsumeInternal.re_flatten_true_str_to_re_eval_rel_consume_local
         hPartsStrRel
 
 theorem StrInReConsumeInternal.re_flatten_true_str_to_re_eval_value_rel_consume_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : Term) (ss : SmtSeq) (flatRv : SmtRegLan)
     (hSTy :
       __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
@@ -3340,7 +3340,7 @@ theorem StrInReConsumeInternal.re_flatten_true_str_to_re_eval_value_rel_consume_
   exact hRel
 
 theorem StrInReConsumeInternal.smt_typeof_re_flatten_true_of_reglan_local
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (mode r : Term),
       __smtx_typeof (__eo_to_smt r) = SmtType.RegLan ->
       __re_flatten mode r ≠ Term.Stuck ->
@@ -3355,7 +3355,7 @@ theorem StrInReConsumeInternal.smt_typeof_re_flatten_true_of_reglan_local
   exact hFlatTy
 
 theorem StrInReConsumeInternal.str_re_consume_rflat_type_facts_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (r : Term)
     (hRTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan)
     (hRFlatNe :
@@ -3391,7 +3391,7 @@ theorem StrInReConsumeInternal.str_re_consume_rflat_type_facts_local
   exact ⟨hRFlatTy, hRFlatList, hFlatNe, hFlatList, hFlatTy⟩
 
 theorem StrInReConsumeInternal.str_re_consume_sflat_eval_facts_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -3453,7 +3453,7 @@ theorem StrInReConsumeInternal.str_re_consume_sflat_eval_facts_local
     hFlatRel⟩
 
 theorem StrInReConsumeInternal.str_re_consume_rflat_eval_facts_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (r : Term)
     (hRTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan)
     (hRFlatNe :
@@ -3496,7 +3496,7 @@ theorem StrInReConsumeInternal.str_re_consume_rflat_eval_facts_local
     by simpa [rFlat] using hRFlatList⟩
 
 theorem StrInReConsumeInternal.str_re_consume_first_input_eval_context_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side rFlatSrc : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -3626,7 +3626,7 @@ theorem StrInReConsumeInternal.eval_str_concat_double_rev_seq_rel_consume_local
   exact ⟨revRevSs, hRevRevEval, by simpa [hRevRevEval] using hRel⟩
 
 theorem StrInReConsumeInternal.native_str_in_re_eq_of_double_rev_action_evals_consume_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sParts rParts : Term) (ss : SmtSeq) (rv : SmtRegLan)
     (hSList :
       __eo_is_list (Term.UOp UserOp.str_concat) sParts =
@@ -3677,7 +3677,7 @@ theorem StrInReConsumeInternal.native_str_in_re_eq_of_double_rev_action_evals_co
     native_str_in_re_eq_of_seq_reglan_rel_symm hSeqTy hSRel hRRel⟩
 
 theorem StrInReConsumeInternal.native_str_in_re_eq_of_double_rev_action_eval_values_consume_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sParts rParts : Term) (ss nextSs : SmtSeq)
     (rv nextRv : SmtRegLan)
     (hSList :
@@ -3726,7 +3726,7 @@ theorem StrInReConsumeInternal.native_str_in_re_eq_of_double_rev_action_eval_val
   exact hNative
 
 theorem StrInReConsumeInternal.native_str_in_re_eq_of_rel_double_rev_action_eval_values_consume_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sParts rParts : Term) (ss partsSs nextSs : SmtSeq)
     (rv partsRv nextRv : SmtRegLan)
     (hSeqRel :
@@ -4037,7 +4037,7 @@ theorem StrInReConsumeInternal.eval_re_concat_double_rev_reglan_rel_consume_loca
   exact smt_value_rel_reglan_right_consume_local hRel
 
 theorem StrInReConsumeInternal.native_str_in_re_eq_of_double_rev_evals_consume_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sParts rParts : Term) (ss : SmtSeq)
     (rv : SmtRegLan)
     (hSList :
@@ -4090,7 +4090,7 @@ theorem StrInReConsumeInternal.native_str_in_re_eq_of_double_rev_evals_consume_l
     native_str_in_re_eq_of_seq_reglan_rel_symm hSeqTy hSRel hRRel⟩
 
 theorem StrInReConsumeInternal.native_str_in_re_eq_of_double_rev_eval_values_consume_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sParts rParts : Term) (ss nextSs : SmtSeq)
     (rv nextRv : SmtRegLan)
     (hSList :
@@ -5495,7 +5495,7 @@ theorem StrInReConsumeInternal.str_re_consume_final_raw_projection_types_of_seco
     hSecondTy hMemReNe
 
 theorem StrInReConsumeInternal.str_re_consume_model_rel_of_final_second_native_eq_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side second : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -5552,7 +5552,7 @@ theorem StrInReConsumeInternal.str_re_consume_model_rel_of_final_second_native_e
     hUnflatElimNe hNativeEq
 
 theorem StrInReConsumeInternal.str_re_consume_rec_native_eq_of_rebuilt_result_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (nextS nextR fuel second : Term)
     (ih : StrInReConsumeInternal.str_re_consume_rec_model_rel_motive M nextS nextR fuel)
     (hSecond : second = __str_re_consume_rec nextS nextR fuel)
@@ -5617,7 +5617,7 @@ theorem StrInReConsumeInternal.str_re_consume_rec_native_eq_of_rebuilt_result_lo
       (by simpa [rebuilt] using hEqTrans)
 
 theorem StrInReConsumeInternal.str_re_consume_model_rel_of_final_second_input_native_eq_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side nextS nextR second : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -5700,7 +5700,7 @@ theorem StrInReConsumeInternal.str_re_consume_model_rel_of_final_second_input_na
         hPartsEval hRePartEval
 
 theorem StrInReConsumeInternal.str_re_consume_model_rel_of_final_second_parts_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side second : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -5761,7 +5761,7 @@ theorem StrInReConsumeInternal.str_re_consume_model_rel_of_final_second_parts_lo
     hRePartTy hRePartEvalRel hUnflatElimNe
 
 theorem StrInReConsumeInternal.str_re_consume_candidate_str_eval_rel_of_second_parts_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s candidate second : Term)
     (hCandidateFinal :
       candidate =
@@ -5858,7 +5858,7 @@ theorem StrInReConsumeInternal.str_re_consume_candidate_str_eval_rel_of_second_p
     RuleProofs.smt_value_rel_trans _ _ _ hOutRelParts hPartsRel⟩
 
 theorem StrInReConsumeInternal.str_re_consume_candidate_str_native_eq_of_second_parts_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r candidate second : Term)
     (hCandidateFinal :
       candidate =
@@ -5993,7 +5993,7 @@ theorem StrInReConsumeInternal.str_re_consume_candidate_str_native_eq_of_second_
   exact hOrigPartsNative.trans hCandPartsNative.symm
 
 theorem StrInReConsumeInternal.str_re_consume_non_mult_first_input_type_facts_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -6147,7 +6147,7 @@ theorem StrInReConsumeInternal.str_re_consume_non_mult_second_input_ne_stuck_fac
     by simpa [second] using hSecondNe⟩
 
 theorem StrInReConsumeInternal.str_re_consume_non_mult_second_type_from_rec_type_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (hRecType :
       ∀ s0 r0 fuel0, StrInReConsumeInternal.str_re_consume_rec_type_motive s0 r0 fuel0)
     (s r side : Term)
@@ -6262,7 +6262,7 @@ theorem StrInReConsumeInternal.str_re_consume_non_mult_second_type_from_rec_type
     (by simpa [second] using hSecondNe)
 
 theorem StrInReConsumeInternal.str_re_consume_non_mult_model_rel_of_final_second_eval_rels_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (hRecType :
       ∀ s0 r0 fuel0, StrInReConsumeInternal.str_re_consume_rec_type_motive s0 r0 fuel0)
     (s r side : Term)
@@ -6455,7 +6455,7 @@ theorem StrInReConsumeInternal.str_re_consume_mult_second_input_ne_stuck_facts_l
     by simpa [second] using hSecondNe⟩
 
 theorem StrInReConsumeInternal.str_re_consume_mult_first_input_type_facts_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -6525,7 +6525,7 @@ theorem StrInReConsumeInternal.str_re_consume_mult_first_input_type_facts_local
     hSFlatNe, hRFlatNe⟩
 
 theorem StrInReConsumeInternal.str_re_consume_mult_second_type_from_rec_type_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (hRecType :
       ∀ s0 r0 fuel0, StrInReConsumeInternal.str_re_consume_rec_type_motive s0 r0 fuel0)
     (s r side : Term)
@@ -6652,7 +6652,7 @@ theorem StrInReConsumeInternal.str_re_consume_mult_second_type_from_rec_type_loc
     (by simpa [second] using hSecondNe)
 
 theorem StrInReConsumeInternal.str_re_consume_mult_model_rel_of_final_candidate_str_eval_rel_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -6810,7 +6810,7 @@ theorem StrInReConsumeInternal.str_re_consume_mult_model_rel_of_final_candidate_
         RuleProofs.smt_value_rel_refl (SmtValue.RegLan rv)⟩)
 
 theorem StrInReConsumeInternal.str_re_consume_mult_model_rel_of_final_candidate_native_eq_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation

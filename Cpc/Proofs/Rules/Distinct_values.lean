@@ -164,7 +164,7 @@ private theorem facts___eo_prog_distinct_values_of_eval_eq_false
     (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) hEqFalse
 
 public theorem cmd_step_distinct_values_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.distinct_values args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

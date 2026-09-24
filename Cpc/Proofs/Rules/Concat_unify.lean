@@ -73,7 +73,7 @@ private theorem smt_seq_rel_pack_suffix_of_eq_length (T : SmtType) :
         ((RuleProofs.smt_seq_rel_iff_eq _ _).2 hRel.2)
 
 private theorem seq_unpack_length_eq_of_str_len_eq
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x y : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
     (hLen : eo_interprets M (mkEq (mkStrLen x) (mkStrLen y)) true) :
@@ -108,7 +108,7 @@ private theorem seq_unpack_length_eq_of_str_len_eq
   exact ⟨sx, sy, hxEval, hyEval, hLenEq⟩
 
 private theorem smt_value_rel_str_concat_heads_of_len_eq
-    (M : SmtModel) (hM : model_total_typed M) (x xs y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x xs y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hxsTy : __smtx_typeof (__eo_to_smt xs) = SmtType.Seq T)
@@ -183,7 +183,7 @@ private theorem smt_value_rel_str_concat_heads_of_len_eq
         (smt_seq_rel_pack_unpack T sy hsyElem)))
 
 private theorem smt_value_rel_str_concat_tails_of_len_eq
-    (M : SmtModel) (hM : model_total_typed M) (xs x ys y : Term)
+    (M : SmtModel) (hM : model_wf M) (xs x ys y : Term)
     (T : SmtType)
     (hxsTy : __smtx_typeof (__eo_to_smt xs) = SmtType.Seq T)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
@@ -266,7 +266,7 @@ private theorem smt_value_rel_str_concat_tails_of_len_eq
         (smt_seq_rel_pack_unpack T sy hsyElem)))
 
 private theorem eo_interprets_str_concat_heads_of_len_eq_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (x xs y ys : Term)
+    (M : SmtModel) (hM : model_wf M) (x xs y ys : Term)
     (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hxsTy : __smtx_typeof (__eo_to_smt xs) = SmtType.Seq T)
@@ -303,7 +303,7 @@ private theorem eo_interprets_str_concat_heads_of_len_eq_of_seq
   exact RuleProofs.eo_interprets_eq_of_rel M x y hXYBool hXYRel
 
 private theorem eo_interprets_str_concat_tails_of_len_eq_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (xs x ys y : Term)
+    (M : SmtModel) (hM : model_wf M) (xs x ys y : Term)
     (T : SmtType)
     (hxsTy : __smtx_typeof (__eo_to_smt xs) = SmtType.Seq T)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
@@ -644,7 +644,7 @@ private theorem str_nary_intro_rev_cons_seq_types_of_head_seq
           simpa using smt_typeof_seq_empty_typeof x T hxTy hEmptyNN⟩
 
 private theorem eo_interprets_concat_unify_false
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t s1 t1 : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq s t))
     (hLenBool :
@@ -897,7 +897,7 @@ private theorem concatUnify_rev_cases_of_prog_ne_stuck
     (__str_nary_intro s) hIteNe
 
 private theorem eo_interprets_rev_cons_snoc_of_list_nil_raw
-    (M : SmtModel) (hM : model_total_typed M) (head nil : Term)
+    (M : SmtModel) (hM : model_wf M) (head nil : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hNil :
@@ -985,7 +985,7 @@ private theorem eo_interprets_rev_cons_snoc_of_list_nil_raw
   exact RuleProofs.eo_interprets_eq_of_rel M lhs rhs hBool hRel
 
 private theorem eo_interprets_rev_cons_snoc_prefix_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (head tail : Term)
+    (M : SmtModel) (hM : model_wf M) (head tail : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hTailList :
@@ -1049,7 +1049,7 @@ private theorem eo_interprets_rev_cons_snoc_prefix_of_seq
         hHeadTy hNil hTailTy hRevCons⟩
 
 private theorem eo_interprets_concat_unify_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t s1 t1 : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq s t))
     (hLenBool :
@@ -1266,7 +1266,7 @@ private theorem eo_interprets_concat_unify_true
     hSnocEq
 
 private theorem step_concat_unify_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rev s t s1 t1 : Term)
     (hRevTrans : RuleProofs.eo_has_smt_translation rev)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq s t))
@@ -1316,7 +1316,7 @@ private theorem step_concat_unify_core
       (mkEq s1 t1) hFinalBool
 
 public theorem cmd_step_concat_unify_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.concat_unify args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

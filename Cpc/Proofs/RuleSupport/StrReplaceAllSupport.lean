@@ -242,7 +242,7 @@ theorem positive_prefix_str_to_re_cons
       rw [native_re_positive_prefix_match_len?.eq_2]
       change
         (match native_re_prefix_match_len?
-            (native_re_deriv x (native_re_of_list (p :: ps))) xs with
+            (native_re_deriv x (impl_native_re_of_list (p :: ps))) xs with
           | some n => some (n + 1)
           | none => none) = _
       rw [native_re_deriv_re_of_list_cons]
@@ -261,8 +261,8 @@ private theorem replace_aux_fuel_irrel
     (r : SmtRegLan) (replacement xs : List SmtValue)
     (fuel₁ fuel₂ : Nat)
     (h₁ : xs.length < fuel₁) (h₂ : xs.length < fuel₂) :
-    native_re_replace_all_nonempty_list_aux fuel₁ r replacement xs =
-      native_re_replace_all_nonempty_list_aux fuel₂ r replacement xs := by
+    impl_native_re_replace_all_nonempty_list_aux fuel₁ r replacement xs =
+      impl_native_re_replace_all_nonempty_list_aux fuel₂ r replacement xs := by
   generalize hn : xs.length = n
   induction n using Nat.strongRecOn generalizing xs fuel₁ fuel₂ with
   | ind outerN ih =>
@@ -274,13 +274,13 @@ private theorem replace_aux_fuel_irrel
         | succ fuel₂ =>
           cases xs with
           | nil =>
-              simp [native_re_replace_all_nonempty_list_aux,
+              simp [impl_native_re_replace_all_nonempty_list_aux,
                 native_re_positive_prefix_match_len?]
           | cons c cs =>
               have hn' : cs.length + 1 = outerN := by
                 simpa using hn
-              rw [native_re_replace_all_nonempty_list_aux.eq_3,
-                native_re_replace_all_nonempty_list_aux.eq_3]
+              rw [impl_native_re_replace_all_nonempty_list_aux.eq_3,
+                impl_native_re_replace_all_nonempty_list_aux.eq_3]
               cases hPref :
                   native_re_positive_prefix_match_len? r (c :: cs) with
               | none =>
@@ -313,9 +313,9 @@ private theorem replace_aux_fuel_irrel
 private theorem replace_aux_eq_replace_all_of_length_lt
     (r : SmtRegLan) (replacement xs : List SmtValue) (fuel : Nat)
     (hFuel : xs.length < fuel) :
-    native_re_replace_all_nonempty_list_aux fuel r replacement xs =
-      native_re_replace_all_nonempty_list r replacement xs := by
-  unfold native_re_replace_all_nonempty_list
+    impl_native_re_replace_all_nonempty_list_aux fuel r replacement xs =
+      impl_native_re_replace_all_nonempty_list r replacement xs := by
+  unfold impl_native_re_replace_all_nonempty_list
   exact replace_aux_fuel_irrel r replacement xs fuel (xs.length + 1)
     hFuel (Nat.lt_succ_self xs.length)
 
@@ -368,8 +368,8 @@ theorem replace_all_eq_self_of_indexof_neg (pat repl xs : List SmtValue)
       induction xs with
       | nil =>
           simp [native_seq_replace_all, native_str_replace_re_all,
-            native_re_replace_all_nonempty_list,
-            native_re_replace_all_nonempty_list_aux,
+            impl_native_re_replace_all_nonempty_list,
+            impl_native_re_replace_all_nonempty_list_aux,
             native_re_positive_prefix_match_len?]
       | cons x xs ih =>
           have hPrefix : native_seq_prefix_eq (p :: ps) (x :: xs) = false := by
@@ -406,11 +406,11 @@ theorem replace_all_eq_self_of_indexof_neg (pat repl xs : List SmtValue)
               native_seq_replace_all (x :: xs) (p :: ps) repl =
                 x :: native_seq_replace_all xs (p :: ps) repl := by
             unfold native_seq_replace_all native_str_replace_re_all
-              native_re_replace_all_nonempty_list
-            change native_re_replace_all_nonempty_list_aux
+              impl_native_re_replace_all_nonempty_list
+            change impl_native_re_replace_all_nonempty_list_aux
                 ((x :: xs).length + 1) (native_str_to_re (p :: ps)) repl
                   (x :: xs) = x :: native_seq_replace_all xs (p :: ps) repl
-            rw [native_re_replace_all_nonempty_list_aux.eq_3,
+            rw [impl_native_re_replace_all_nonempty_list_aux.eq_3,
               positive_prefix_str_to_re_cons, hPrefix]
             rfl
           rw [hScan, ih hTailNeg]
@@ -420,20 +420,20 @@ theorem replace_all_nil_pat (repl xs : List SmtValue) :
   induction xs with
   | nil =>
       simp [native_seq_replace_all, native_str_replace_re_all,
-        native_re_replace_all_nonempty_list,
-        native_re_replace_all_nonempty_list_aux,
+        impl_native_re_replace_all_nonempty_list,
+        impl_native_re_replace_all_nonempty_list_aux,
         native_re_positive_prefix_match_len?]
   | cons x xs ih =>
       unfold native_seq_replace_all native_str_replace_re_all
-        native_re_replace_all_nonempty_list
-      change native_re_replace_all_nonempty_list_aux
+        impl_native_re_replace_all_nonempty_list
+      change impl_native_re_replace_all_nonempty_list_aux
           ((x :: xs).length + 1) (native_str_to_re []) repl (x :: xs) =
         x :: xs
-      rw [native_re_replace_all_nonempty_list_aux.eq_3]
+      rw [impl_native_re_replace_all_nonempty_list_aux.eq_3]
       have hPref :
           native_re_positive_prefix_match_len? (native_str_to_re [])
             (x :: xs) = none := by
-        simp [native_str_to_re, native_re_of_list,
+        simp [native_str_to_re, impl_native_re_of_list,
           native_re_positive_prefix_match_len?, native_re_deriv,
           native_re_prefix_match_len?, native_re_prefix_go_empty]
       rw [hPref]
@@ -475,11 +475,11 @@ theorem replace_all_step (pat repl xs : List SmtValue) (hPat : pat ≠ [])
             simp only [Int.toNat_zero, List.take_zero, List.nil_append,
               Nat.zero_add]
             unfold native_seq_replace_all native_str_replace_re_all
-              native_re_replace_all_nonempty_list
-            change native_re_replace_all_nonempty_list_aux
+              impl_native_re_replace_all_nonempty_list
+            change impl_native_re_replace_all_nonempty_list_aux
                 ((x :: xs).length + 1) (native_str_to_re (p :: ps)) repl
                   (x :: xs) = _
-            rw [native_re_replace_all_nonempty_list_aux.eq_3,
+            rw [impl_native_re_replace_all_nonempty_list_aux.eq_3,
               positive_prefix_str_to_re_cons, if_pos hPrefix]
             apply congrArg (List.append repl)
             exact replace_aux_eq_replace_all_of_length_lt
@@ -561,11 +561,11 @@ theorem replace_all_step (pat repl xs : List SmtValue) (hPat : pat ≠ [])
                 native_seq_replace_all (x :: xs) (p :: ps) repl =
                   x :: native_seq_replace_all xs (p :: ps) repl := by
               unfold native_seq_replace_all native_str_replace_re_all
-                native_re_replace_all_nonempty_list
-              change native_re_replace_all_nonempty_list_aux
+                impl_native_re_replace_all_nonempty_list
+              change impl_native_re_replace_all_nonempty_list_aux
                   ((x :: xs).length + 1) (native_str_to_re (p :: ps)) repl
                     (x :: xs) = x :: native_seq_replace_all xs (p :: ps) repl
-              rw [native_re_replace_all_nonempty_list_aux.eq_3,
+              rw [impl_native_re_replace_all_nonempty_list_aux.eq_3,
                 positive_prefix_str_to_re_cons, hPrefixFalse]
               rfl
             rw [hScan]
@@ -588,11 +588,11 @@ theorem replace_all_cons_of_not_prefix
   | nil => exact absurd rfl hPat
   | cons p ps =>
       unfold native_seq_replace_all native_str_replace_re_all
-        native_re_replace_all_nonempty_list
-      change native_re_replace_all_nonempty_list_aux
+        impl_native_re_replace_all_nonempty_list
+      change impl_native_re_replace_all_nonempty_list_aux
           ((x :: xs).length + 1) (native_str_to_re (p :: ps)) repl
             (x :: xs) = x :: native_seq_replace_all xs (p :: ps) repl
-      rw [native_re_replace_all_nonempty_list_aux.eq_3,
+      rw [impl_native_re_replace_all_nonempty_list_aux.eq_3,
         positive_prefix_str_to_re_cons, hPrefix]
       rfl
 

@@ -90,7 +90,7 @@ private theorem typed___eo_prog_seq_rev_rev_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_seq_rev_rev_impl
-    (M : SmtModel) (hM : model_total_typed M) (x : Term)
+    (M : SmtModel) (hM : model_wf M) (x : Term)
     (hXTrans : RuleProofs.eo_has_smt_translation x)
     (hXTy : ∃ T, __eo_typeof x = Term.Apply Term.Seq T) :
     eo_interprets M (__eo_prog_seq_rev_rev x) true := by
@@ -140,7 +140,7 @@ private theorem facts___eo_prog_seq_rev_rev_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_seq_rev_rev_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.seq_rev_rev args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

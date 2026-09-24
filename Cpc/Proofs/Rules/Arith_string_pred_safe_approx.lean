@@ -171,7 +171,7 @@ private theorem arith_string_pred_safe_approx_shape_of_ne_stuck
       simp [__eo_prog_arith_string_pred_safe_approx] at hProg
 
 public theorem cmd_step_arith_string_pred_safe_approx_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_string_pred_safe_approx args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

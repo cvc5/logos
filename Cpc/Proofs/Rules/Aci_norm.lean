@@ -767,7 +767,7 @@ private theorem eo_has_bool_type_or_right_local (A B : Term) :
     (typeof_or_eq (__eo_to_smt A) (__eo_to_smt B)) hNN).2
 
 private theorem eo_interprets_bool_cases_local
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
   RuleProofs.eo_has_bool_type t ->
   eo_interprets M t true ∨ eo_interprets M t false := by
   intro hTy
@@ -778,7 +778,7 @@ private theorem eo_interprets_bool_cases_local
   · exact Or.inl (RuleProofs.eo_interprets_of_bool_eval M t true hTy hEval)
 
 private theorem eo_interprets_or_left_intro_local
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
   eo_interprets M A true ->
   RuleProofs.eo_has_bool_type B ->
   eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.or) A) B)
@@ -793,14 +793,14 @@ private theorem eo_interprets_or_left_intro_local
       refine smt_interprets.intro_true M _ ?_ ?_
       · simpa [RuleProofs.eo_has_bool_type] using
           eo_has_bool_type_or_of_bool_args_local A B hABool hBBool
-      · rw [__smtx_model_eval.eq_7]
+      · rw [__smtx_model_eval.eq_8]
         rcases RuleProofs.eo_eval_is_boolean_of_has_bool_type M hM B hBBool with
           ⟨b, hEvalB⟩
         rw [hEvalA, hEvalB]
         cases b <;> simp [__smtx_model_eval_or, SmtEval.native_or]
 
 private theorem eo_interprets_or_right_intro_local
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
   RuleProofs.eo_has_bool_type A ->
   eo_interprets M B true ->
   eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.or) A) B)
@@ -815,7 +815,7 @@ private theorem eo_interprets_or_right_intro_local
       refine smt_interprets.intro_true M _ ?_ ?_
       · simpa [RuleProofs.eo_has_bool_type] using
           eo_has_bool_type_or_of_bool_args_local A B hABool hBBool
-      · rw [__smtx_model_eval.eq_7]
+      · rw [__smtx_model_eval.eq_8]
         rcases RuleProofs.eo_eval_is_boolean_of_has_bool_type M hM A hABool with
           ⟨a, hEvalA⟩
         rw [hEvalA, hEvalB]
@@ -830,7 +830,7 @@ private theorem eo_interprets_false_local (M : SmtModel) :
   · rw [__smtx_model_eval.eq_1]
 
 private theorem eo_interprets_or_right_of_left_false_local
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
   eo_interprets M A false ->
   eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.or) A) B) true ->
   eo_interprets M B true := by
@@ -848,7 +848,7 @@ private theorem eo_interprets_or_right_of_left_false_local
             __smtx_model_eval M
                 (SmtTerm.or (__eo_to_smt A) (__eo_to_smt B)) =
               SmtValue.Boolean true at hEvalOr
-          rw [__smtx_model_eval.eq_7] at hEvalOr
+          rw [__smtx_model_eval.eq_8] at hEvalOr
           rcases RuleProofs.eo_eval_is_boolean_of_has_bool_type M hM B hBBool with
             ⟨b, hEvalB⟩
           rw [hEvalA, hEvalB, __smtx_model_eval_or, SmtEval.native_or] at hEvalOr
@@ -875,11 +875,11 @@ private theorem eo_interprets_or_false_intro_local
           refine smt_interprets.intro_false M _ ?_ ?_
           · simpa [RuleProofs.eo_has_bool_type] using
               eo_has_bool_type_or_of_bool_args_local A B hABool hBBool
-          · rw [__smtx_model_eval.eq_7, hEvalA, hEvalB]
+          · rw [__smtx_model_eval.eq_8, hEvalA, hEvalB]
             simp [__smtx_model_eval_or, SmtEval.native_or]
 
 private theorem eo_interprets_or_false_left_local
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
   eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.or) A) B) false ->
   eo_interprets M A false := by
   intro hOrFalse
@@ -900,7 +900,7 @@ private theorem eo_interprets_or_false_left_local
   · exact hAFalse
 
 private theorem eo_interprets_or_false_right_local
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
   eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.or) A) B) false ->
   eo_interprets M B false := by
   intro hOrFalse
@@ -1097,7 +1097,7 @@ private theorem aciOr_concat_preserves_bool_type {c1 c2 : Term} :
   exact aciOr_concat_rec_preserves_bool_type hC1 hC1Bool hC2Bool
 
 private theorem aciOr_concat_rec_true_of_left_true
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     AciOrClause c1 ->
     RuleProofs.eo_has_bool_type c1 ->
     RuleProofs.eo_has_bool_type c2 ->
@@ -1142,7 +1142,7 @@ private theorem aciOr_concat_rec_true_of_left_true
           x (__eo_list_concat_rec xs c2) hXBool hTailTrue
 
 private theorem aciOr_concat_rec_true_of_right_true
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     AciOrClause c1 ->
     RuleProofs.eo_has_bool_type c1 ->
     RuleProofs.eo_has_bool_type c2 ->
@@ -1172,7 +1172,7 @@ private theorem aciOr_concat_rec_true_of_right_true
         x (__eo_list_concat_rec xs c2) hXBool hTailTrue
 
 private theorem aciOr_concat_true_of_left_true
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     AciOrClause c1 ->
     AciOrClause c2 ->
     RuleProofs.eo_has_bool_type c1 ->
@@ -1189,7 +1189,7 @@ private theorem aciOr_concat_true_of_left_true
   exact aciOr_concat_rec_true_of_left_true M hM hC1 hC1Bool hC2Bool hC1True
 
 private theorem aciOr_concat_true_of_right_true
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     AciOrClause c1 ->
     AciOrClause c2 ->
     RuleProofs.eo_has_bool_type c1 ->
@@ -1206,7 +1206,7 @@ private theorem aciOr_concat_true_of_right_true
   exact aciOr_concat_rec_true_of_right_true M hM hC1 hC1Bool hC2Bool hC2True
 
 private theorem aciOr_concat_rec_false_of_both_false
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     AciOrClause c1 ->
     RuleProofs.eo_has_bool_type c1 ->
     RuleProofs.eo_has_bool_type c2 ->
@@ -1245,7 +1245,7 @@ private theorem aciOr_concat_rec_false_of_both_false
         (__eo_list_concat_rec xs c2) hXFalse hTailFalse
 
 private theorem aciOr_concat_false_of_both_false
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     AciOrClause c1 ->
     AciOrClause c2 ->
     RuleProofs.eo_has_bool_type c1 ->
@@ -1264,7 +1264,7 @@ private theorem aciOr_concat_false_of_both_false
     hC1False hC2False
 
 private theorem aciOr_concat_true_iff
-    (M : SmtModel) (hM : model_total_typed M) {c1 c2 : Term} :
+    (M : SmtModel) (hM : model_wf M) {c1 c2 : Term} :
     AciOrClause c1 ->
     AciOrClause c2 ->
     RuleProofs.eo_has_bool_type c1 ->
@@ -1410,7 +1410,7 @@ private theorem aciOr_erase_all_rec_preserves_bool_type {c e : Term} :
           x (__eo_list_erase_all_rec xs e) hXBool hTailBool
 
 private theorem aciOr_erase_all_rec_true_of_lit_false
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -1482,7 +1482,7 @@ private theorem aciOr_erase_all_rec_true_of_lit_false
             (__eo_list_erase_all_rec xs e) hXBool hTailTrue
 
 private theorem aciOr_erase_all_rec_true_implies_original_true
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -1586,7 +1586,7 @@ private theorem aciOr_setof_rec_structural {c : Term} :
           (__eo_list_erase_all_rec (__eo_list_setof_rec xs) x) hXBool hEraseBool⟩
 
 private theorem aciOr_setof_rec_true
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c true ->
@@ -1640,7 +1640,7 @@ private theorem aciOr_setof_rec_true
           (__eo_list_erase_all_rec (__eo_list_setof_rec xs) x) hXBool hEraseTrue
 
 private theorem aciOr_setof_rec_true_implies_original_true
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M (__eo_list_setof_rec c) true ->
@@ -1713,7 +1713,7 @@ private theorem aciOr_setof_preserves_bool_type {c : Term} :
   exact (aciOr_setof_rec_structural hClause hCBool).2
 
 private theorem aciOr_setof_true
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M c true ->
@@ -1727,7 +1727,7 @@ private theorem aciOr_setof_true
   exact aciOr_setof_rec_true M hM hClause hCBool hCTrue
 
 private theorem aciOr_setof_true_implies_original_true
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     eo_interprets M (__eo_list_setof (Term.UOp UserOp.or) c) true ->
@@ -1766,7 +1766,7 @@ private theorem aciOr_singleton_elim_preserves_bool_type {c : Term} :
             native_ite, native_teq] using hCBool
 
 private theorem aciOr_singleton_elim_true_iff
-    (M : SmtModel) (hM : model_total_typed M) {c : Term} :
+    (M : SmtModel) (hM : model_wf M) {c : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     (eo_interprets M (__eo_list_singleton_elim (Term.UOp UserOp.or) c) true ↔
@@ -1949,7 +1949,7 @@ private theorem aciOr_get_elements_or_eq {x xs : Term} :
   simp [__eo_get_elements_rec, __eo_mk_apply]
 
 private theorem aciOr_erase_rec_true_implies_original_true
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -1988,7 +1988,7 @@ private theorem aciOr_erase_rec_true_implies_original_true
           exact eo_interprets_or_right_intro_local M hM x xs hXBool hXsTrue
 
 private theorem aciOr_erase_true_implies_original_true
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -2005,7 +2005,7 @@ private theorem aciOr_erase_true_implies_original_true
     hEraseTrue
 
 private theorem aciOr_erase_rec_changed_and_lit_true_implies_clause_true
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -2047,7 +2047,7 @@ private theorem aciOr_erase_rec_changed_and_lit_true_implies_clause_true
           exact eo_interprets_or_right_intro_local M hM x xs hXBool hXsTrue
 
 private theorem aciOr_erase_changed_and_lit_true_implies_clause_true
-    (M : SmtModel) (hM : model_total_typed M) {c e : Term} :
+    (M : SmtModel) (hM : model_wf M) {c e : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     e ≠ Term.Stuck ->
@@ -2134,7 +2134,7 @@ private theorem aciOr_get_elements_erase_eq {c e : Term} :
   exact aciOr_get_elements_erase_rec_eq hClause hCBool hE
 
 private theorem aciOr_true_of_minclude_true
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ {c d : Term},
       AciOrClause c ->
       RuleProofs.eo_has_bool_type c ->
@@ -2240,7 +2240,7 @@ private theorem aciOr_true_of_minclude_true
           hEraseTrue
 
 private theorem aciOr_list_meq_true_iff
-    (M : SmtModel) (hM : model_total_typed M) {c d : Term} :
+    (M : SmtModel) (hM : model_wf M) {c d : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     AciOrClause d ->
@@ -3391,7 +3391,7 @@ private theorem aciAnd_list_meq_true_iff
       hInclDC hDTrue
 
 private theorem smt_value_rel_of_bool_interprets_iff
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b : Term) :
   RuleProofs.eo_has_bool_type a ->
   RuleProofs.eo_has_bool_type b ->
   (eo_interprets M a true ↔ eo_interprets M b true) ->
@@ -3427,7 +3427,7 @@ private theorem smt_value_rel_of_bool_interprets_iff
     simp [__smtx_model_eval_eq, native_veq]
 
 private theorem smt_value_rel_of_aciOr_list_meq
-    (M : SmtModel) (hM : model_total_typed M) {c d : Term} :
+    (M : SmtModel) (hM : model_wf M) {c d : Term} :
     AciOrClause c ->
     RuleProofs.eo_has_bool_type c ->
     AciOrClause d ->
@@ -3441,7 +3441,7 @@ private theorem smt_value_rel_of_aciOr_list_meq
     (aciOr_list_meq_true_iff M hM hC hCBool hD hDBool hMeq)
 
 private theorem smt_value_rel_of_aciAnd_list_meq
-    (M : SmtModel) (hM : model_total_typed M) {c d : Term} :
+    (M : SmtModel) (hM : model_wf M) {c d : Term} :
     AciAndClause c ->
     RuleProofs.eo_has_bool_type c ->
     AciAndClause d ->
@@ -3455,7 +3455,7 @@ private theorem smt_value_rel_of_aciAnd_list_meq
     (aciAnd_list_meq_true_iff M hC hCBool hD hDBool hMeq)
 
 private theorem eo_interprets_or_false_iff
-    (M : SmtModel) (hM : model_total_typed M) (a : Term) :
+    (M : SmtModel) (hM : model_wf M) (a : Term) :
   RuleProofs.eo_has_bool_type a ->
   (eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.or) a)
       (Term.Boolean false)) true ↔
@@ -3476,7 +3476,7 @@ private theorem eo_interprets_or_false_iff
                 __smtx_model_eval M
                   (SmtTerm.or (__eo_to_smt a) (SmtTerm.Boolean false)) =
                     SmtValue.Boolean true at hEvalOr
-              rw [__smtx_model_eval.eq_7, hEvalA, __smtx_model_eval.eq_1] at hEvalOr
+              rw [__smtx_model_eval.eq_8, hEvalA, __smtx_model_eval.eq_1] at hEvalOr
               simp [__smtx_model_eval_or, SmtEval.native_or] at hEvalOr
   · intro hATrue
     exact eo_interprets_or_left_intro_local M hM a (Term.Boolean false)
@@ -3600,7 +3600,7 @@ private theorem aciOr_l1_or_false_structural (t : Term) :
         eo_has_bool_type_false_local⟩
 
 private theorem aciOr_l1_or_false_true_iff
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
     RuleProofs.eo_has_bool_type t ->
     (eo_interprets M
         (__eo_l_1___get_ai_norm_rec (Term.UOp UserOp.or)
@@ -3723,7 +3723,7 @@ private theorem aciOr_get_ai_norm_rec_structural :
         exact aciOr_l1_or_false_structural _ hBool
 
 private theorem aciOr_get_ai_norm_rec_true_iff
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     (t : Term) ->
     (hBool : RuleProofs.eo_has_bool_type t) ->
     (eo_interprets M
@@ -3950,7 +3950,7 @@ private theorem eo_has_bool_type_get_ai_norm_or
     aciOr_singleton_elim_preserves_bool_type hRecStruct.1 hRecStruct.2
 
 private theorem smt_value_rel_get_ai_norm_or
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation
       (Term.Apply (Term.Apply (Term.UOp UserOp.or) y) x) ->
     RuleProofs.smt_value_rel
@@ -4000,7 +4000,7 @@ private theorem smt_value_rel_get_ai_norm_or
     simpa [__eo_nil] using hSingletonIff.symm
 
 private theorem smt_value_rel_of_or_payload_list_meq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation
       (Term.Apply (Term.Apply (Term.UOp UserOp.or) y) x) ->
@@ -4077,7 +4077,7 @@ private theorem get_aci_normal_form_or_eq_marker
     simp [__get_aci_normal_form, __eo_mk_apply, hPayload] at hPayloadNe ⊢
 
 private theorem smt_value_rel_of_or_normal_forms_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation
       (Term.Apply (Term.Apply (Term.UOp UserOp.or) y) x) ->
@@ -4405,7 +4405,7 @@ private theorem eo_has_bool_type_get_ai_norm_and
     aciAnd_singleton_elim_preserves_bool_type hRecStruct.1 hRecStruct.2
 
 private theorem smt_value_rel_get_ai_norm_and
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation
       (Term.Apply (Term.Apply (Term.UOp UserOp.and) y) x) ->
     RuleProofs.smt_value_rel
@@ -4455,7 +4455,7 @@ private theorem smt_value_rel_get_ai_norm_and
     simpa [__eo_nil] using hSingletonIff.symm
 
 private theorem smt_value_rel_of_and_payload_list_meq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation
       (Term.Apply (Term.Apply (Term.UOp UserOp.and) y) x) ->
@@ -4532,7 +4532,7 @@ private theorem get_aci_normal_form_and_eq_marker
     simp [__get_aci_normal_form, __eo_mk_apply, hPayload] at hPayloadNe ⊢
 
 private theorem smt_value_rel_of_and_normal_forms_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation
       (Term.Apply (Term.Apply (Term.UOp UserOp.and) y) x) ->
@@ -4826,7 +4826,7 @@ private theorem strConcat_l1_eq_concat_of_ne_id (id t : Term) :
     contradiction
 
 private theorem strConcat_l1_rel_struct
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (T : SmtType)
     (hIdNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) id = Term.Boolean true)
     (hIdList :
@@ -4905,7 +4905,7 @@ private theorem bvand_args_of_has_smt_translation (y x : Term) :
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y))
           (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_38]) hNN
+        rw [__smtx_typeof.eq_40]) hNN
 
 private theorem bvAnd_args_of_bitvec_type (y x : Term) (w : native_Nat) :
     __smtx_typeof (__eo_to_smt (mkBvAnd y x)) = SmtType.BitVec w ->
@@ -4929,7 +4929,7 @@ private theorem bvAnd_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_38]) hNN with
+        rw [__smtx_typeof.eq_40]) hNN with
     ⟨w', hyTy, hxTy⟩
   have hWidth : w' = w := by
     have hResult :
@@ -4939,9 +4939,9 @@ private theorem bvAnd_args_of_bitvec_type (y x : Term) (w : native_Nat) :
             __smtx_typeof_bv_op_2
               (__smtx_typeof (__eo_to_smt y))
               (__smtx_typeof (__eo_to_smt x)) by
-          rw [__smtx_typeof.eq_38]] at hTy'
+          rw [__smtx_typeof.eq_40]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-        SmtEval.native_nateq] using hTy'
+        Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -4965,7 +4965,7 @@ private theorem bvor_args_of_has_smt_translation (y x : Term) :
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y))
           (__smtx_typeof (__eo_to_smt x)) by
-      rw [__smtx_typeof.eq_39]) hNN
+      rw [__smtx_typeof.eq_41]) hNN
 
 private theorem bvOr_args_of_bitvec_type (y x : Term) (w : native_Nat) :
     __smtx_typeof (__eo_to_smt (mkBvOr y x)) = SmtType.BitVec w ->
@@ -4989,7 +4989,7 @@ private theorem bvOr_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_39]) hNN with
+        rw [__smtx_typeof.eq_41]) hNN with
     ⟨w', hyTy, hxTy⟩
   have hWidth : w' = w := by
     have hResult :
@@ -4999,9 +4999,9 @@ private theorem bvOr_args_of_bitvec_type (y x : Term) (w : native_Nat) :
             __smtx_typeof_bv_op_2
               (__smtx_typeof (__eo_to_smt y))
               (__smtx_typeof (__eo_to_smt x)) by
-          rw [__smtx_typeof.eq_39]] at hTy'
+          rw [__smtx_typeof.eq_41]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-        SmtEval.native_nateq] using hTy'
+        Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -5025,7 +5025,7 @@ private theorem bvxor_args_of_has_smt_translation (y x : Term) :
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y))
           (__smtx_typeof (__eo_to_smt x)) by
-      rw [__smtx_typeof.eq_42]) hNN
+      rw [__smtx_typeof.eq_44]) hNN
 
 private theorem bvXor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
     __smtx_typeof (__eo_to_smt (mkBvXor y x)) = SmtType.BitVec w ->
@@ -5049,7 +5049,7 @@ private theorem bvXor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_42]) hNN with
+        rw [__smtx_typeof.eq_44]) hNN with
     ⟨w', hyTy, hxTy⟩
   have hWidth : w' = w := by
     have hResult :
@@ -5059,9 +5059,9 @@ private theorem bvXor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
             __smtx_typeof_bv_op_2
               (__smtx_typeof (__eo_to_smt y))
               (__smtx_typeof (__eo_to_smt x)) by
-          rw [__smtx_typeof.eq_42]] at hTy'
+          rw [__smtx_typeof.eq_44]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-        SmtEval.native_nateq] using hTy'
+        Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -5078,9 +5078,9 @@ private theorem bvand_result_type_of_has_smt_translation (y x : Term) :
   change __smtx_typeof
       (SmtTerm.bvand (__eo_to_smt y) (__eo_to_smt x)) =
     SmtType.BitVec w
-  rw [__smtx_typeof.eq_38]
+  rw [__smtx_typeof.eq_40]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-    SmtEval.native_nateq]
+    Smtm.native_nateq]
 
 private theorem bvor_result_type_of_has_smt_translation (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvOr y x) ->
@@ -5093,9 +5093,9 @@ private theorem bvor_result_type_of_has_smt_translation (y x : Term) :
   change __smtx_typeof
       (SmtTerm.bvor (__eo_to_smt y) (__eo_to_smt x)) =
     SmtType.BitVec w
-  rw [__smtx_typeof.eq_39]
+  rw [__smtx_typeof.eq_41]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-    SmtEval.native_nateq]
+    Smtm.native_nateq]
 
 private theorem bvand_width_eq_of_same_result_type
     (y x y' x' : Term) :
@@ -5154,9 +5154,9 @@ private theorem bvxor_result_type_of_has_smt_translation (y x : Term) :
   change __smtx_typeof
       (SmtTerm.bvxor (__eo_to_smt y) (__eo_to_smt x)) =
     SmtType.BitVec w
-  rw [__smtx_typeof.eq_42]
+  rw [__smtx_typeof.eq_44]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-    SmtEval.native_nateq]
+    Smtm.native_nateq]
 
 private theorem bvxor_width_eq_of_same_result_type
     (y x y' x' : Term) :
@@ -5292,7 +5292,7 @@ private theorem reUnion_args_of_reglan_type (y x : Term) :
     (typeof_re_union_eq (__eo_to_smt y) (__eo_to_smt x)) hNN
 
 private theorem smt_eval_seq_of_smt_type_seq
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm) (T : SmtType) :
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm) (T : SmtType) :
     __smtx_typeof t = SmtType.Seq T ->
     ∃ s, __smtx_model_eval M t = SmtValue.Seq s := by
   intro hTy
@@ -5307,7 +5307,7 @@ private theorem smt_eval_seq_of_smt_type_seq
   exact seq_value_canonical hValTy
 
 private theorem smt_eval_reglan_of_smt_type_reglan
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm) :
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm) :
     __smtx_typeof t = SmtType.RegLan ->
     ∃ r, __smtx_model_eval M t = SmtValue.RegLan r := by
   intro hTy
@@ -5372,7 +5372,7 @@ private theorem smt_value_rel_eval_reglan_right
     (RuleProofs.smt_value_rel_symm v w hRel) hRe
 
 private theorem smt_eval_ne_notvalue_of_has_smt_translation
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
     RuleProofs.eo_has_smt_translation t ->
     __smtx_model_eval M (__eo_to_smt t) ≠ SmtValue.NotValue := by
   intro hTrans hEval
@@ -5395,7 +5395,7 @@ private theorem smt_value_rel_ne_notvalue_right
     simp [RuleProofs.smt_value_rel, __smtx_model_eval_eq, native_veq] at hRel hvNe
 
 private theorem smt_value_rel_aciNormPayload_right_of_rel_has_translation
-    (M : SmtModel) (hM : model_total_typed M) (t norm : Term) :
+    (M : SmtModel) (hM : model_wf M) (t norm : Term) :
     RuleProofs.eo_has_smt_translation t ->
     RuleProofs.smt_value_rel
       (__smtx_model_eval M (__eo_to_smt t))
@@ -5412,7 +5412,7 @@ private theorem smt_value_rel_aciNormPayload_right_of_rel_has_translation
   exact hRel
 
 private theorem bvConcat_smt_value_rel_right_empty_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x nil : Term) (w : native_Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_model_eval M (__eo_to_smt nil) = SmtValue.Binary 0 0 ->
@@ -5499,7 +5499,7 @@ private theorem bvConcat_smt_value_rel_congr_eval
   rfl
 
 private theorem bvEvalCanonical_of_smt_type_bitvec
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (w : native_Nat) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) (w : native_Nat) :
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w ->
     ∃ n,
       __smtx_model_eval M (__eo_to_smt t) =
@@ -5525,7 +5525,7 @@ private theorem bvEvalCanonical_of_smt_type_bitvec
   · exact bitvec_payload_canonical (by simpa [hEval] using hValTy)
 
 private theorem bvEvalCanonical_of_smt_type_bitvec_any
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (w : native_Nat) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) (w : native_Nat) :
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w ->
     BvEvalCanonical M t := by
   intro hTy
@@ -5763,10 +5763,10 @@ private theorem native_binary_or_mod_eq_toNat
       ((BitVec.ofInt w n1 ||| BitVec.ofInt w n2).toNat : Int) := by
   cases w with
   | zero =>
-      simp [native_binary_or, native_pior, native_mod_total,
+      simp [native_binary_or, impl_native_pior, native_mod_total,
         native_int_pow2_nat]
   | succ w =>
-      simp [native_binary_or, native_pior, native_mod_total,
+      simp [native_binary_or, impl_native_pior, native_mod_total,
         native_nat_to_int, native_ite, native_zeq]
       exact bitvec_toInt_emod_pow (Nat.succ w)
         (BitVec.ofInt (Nat.succ w) n1 ||| BitVec.ofInt (Nat.succ w) n2)
@@ -5933,10 +5933,10 @@ private theorem native_binary_xor_mod_eq_toNat
       ((BitVec.ofInt w n1 ^^^ BitVec.ofInt w n2).toNat : Int) := by
   cases w with
   | zero =>
-      simp [native_binary_xor, native_pixor, native_mod_total,
+      simp [native_binary_xor, impl_native_pixor, native_mod_total,
         native_int_pow2_nat]
   | succ w =>
-      simp [native_binary_xor, native_pixor, native_mod_total,
+      simp [native_binary_xor, impl_native_pixor, native_mod_total,
         native_nat_to_int, native_ite, native_zeq]
       exact bitvec_toInt_emod_pow (Nat.succ w)
         (BitVec.ofInt (Nat.succ w) n1 ^^^ BitVec.ofInt (Nat.succ w) n2)
@@ -6155,7 +6155,7 @@ private theorem bvAndListCanonical_of_head_flat
       simpa [BvAndListCanonical] using hCan
 
 private theorem bvEvalCanonicalWidth_of_smt_type_bitvec
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (w : native_Nat) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) (w : native_Nat) :
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w ->
     BvEvalCanonicalWidth M w t := by
   intro hTy
@@ -6660,7 +6660,7 @@ private theorem bvAnd_l1_eq_and_of_ne_id (id t : Term) :
     contradiction
 
 private theorem bvAnd_l1_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (w : Nat)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (w : Nat)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.bvand) id = Term.Boolean true)
     (hIdEval :
@@ -7833,7 +7833,7 @@ private theorem bvAnd_list_setof_rec_rel_eval
                   (__smtx_model_eval M (__eo_to_smt nil)))))
 
 private theorem bvAnd_get_ai_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (w : Nat)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (w : Nat)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.bvand) id = Term.Boolean true)
     (hIdEval :
@@ -8218,7 +8218,7 @@ private theorem bvAnd_setof_rec_flat_list
           simpa [__eo_list_setof_rec] using hCFlat
 
 private theorem bvAnd_get_ai_norm_rec_flat_list
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (w : Nat)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (w : Nat)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.bvand) id = Term.Boolean true)
     (hIdEval :
@@ -9939,7 +9939,7 @@ private theorem bvXor_l1_eq_xor_of_ne_id (id t : Term) :
     contradiction
 
 private theorem bvXor_l1_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (w : Nat)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (w : Nat)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.bvxor) id = Term.Boolean true)
     (hIdEval :
@@ -10243,7 +10243,7 @@ private theorem bvXor_get_a_norm_rec_apply_apply_ne_bvxor
         __eo_ite, native_ite, native_teq] at hIdStuck ⊢
 
 private theorem bvXor_get_a_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (w : Nat)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (w : Nat)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.bvxor) id = Term.Boolean true)
     (hIdEval :
@@ -10352,7 +10352,7 @@ private theorem bvXor_get_a_norm_rec_rel_eval
             _ hTy
 
 private theorem bvXor_get_a_norm_rec_flat_list
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (w : Nat)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (w : Nat)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.bvxor) id = Term.Boolean true)
     (hIdEval :
@@ -10611,7 +10611,7 @@ private theorem bvXor_singleton_elim_list_canonical_of_flat
       simpa [__eo_list_singleton_elim_2] using hCan
 
 private theorem bvXor_get_a_norm_eval_canonical
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvXor y x) ->
     __get_a_norm (mkBvXor y x) ≠ Term.Stuck ->
     ∃ w : Nat, BvEvalCanonicalWidth M w (__get_a_norm (mkBvXor y x)) := by
@@ -10623,9 +10623,9 @@ private theorem bvXor_get_a_norm_eval_canonical
     dsimp [t, mkBvXor]
     change __smtx_typeof (SmtTerm.bvxor (__eo_to_smt y) (__eo_to_smt x)) =
       SmtType.BitVec w
-    rw [__smtx_typeof.eq_42]
+    rw [__smtx_typeof.eq_44]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-      SmtEval.native_nateq]
+      Smtm.native_nateq]
   have hTypeMatch :=
     TranslationProofs.eo_to_smt_typeof_matches_translation t (by
       rw [htTy]
@@ -10677,7 +10677,7 @@ private theorem bvXor_get_a_norm_eval_canonical
     w hRec.1 hRec.2.1
 
 private theorem smt_value_rel_get_a_norm_bvxor
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvXor y x) ->
     __get_a_norm (mkBvXor y x) ≠ Term.Stuck ->
     RuleProofs.smt_value_rel
@@ -10691,9 +10691,9 @@ private theorem smt_value_rel_get_a_norm_bvxor
     dsimp [t, mkBvXor]
     change __smtx_typeof (SmtTerm.bvxor (__eo_to_smt y) (__eo_to_smt x)) =
       SmtType.BitVec w
-    rw [__smtx_typeof.eq_42]
+    rw [__smtx_typeof.eq_44]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-      SmtEval.native_nateq]
+      Smtm.native_nateq]
   have hTypeMatch :=
     TranslationProofs.eo_to_smt_typeof_matches_translation t (by
       rw [htTy]
@@ -10768,7 +10768,7 @@ private theorem smt_value_rel_get_a_norm_bvxor
     hNormRel
 
 private theorem bvXor_get_a_norm_list_canonical_of_type
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) (w : Nat) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) (w : Nat) :
     RuleProofs.eo_has_smt_translation (mkBvXor y x) ->
     __smtx_typeof (__eo_to_smt (mkBvXor y x)) = SmtType.BitVec w ->
     __eo_is_list (Term.UOp UserOp.bvxor) (__get_a_norm (mkBvXor y x)) =
@@ -11336,7 +11336,7 @@ private theorem bvOr_l1_eq_or_of_ne_id (id t : Term) :
     contradiction
 
 private theorem bvOr_l1_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (w : Nat)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (w : Nat)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.bvor) id = Term.Boolean true)
     (hIdEval :
@@ -12322,7 +12322,7 @@ private theorem bvOr_list_setof_rec_rel_eval
                   (__smtx_model_eval M (__eo_to_smt nil)))))
 
 private theorem bvOr_get_ai_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (w : Nat)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (w : Nat)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.bvor) id = Term.Boolean true)
     (hIdEval :
@@ -12706,7 +12706,7 @@ private theorem bvOr_setof_rec_flat_list
           simpa [__eo_list_setof_rec] using hCFlat
 
 private theorem bvOr_get_ai_norm_rec_flat_list
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (w : Nat)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (w : Nat)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.bvor) id = Term.Boolean true)
     (hIdEval :
@@ -12930,7 +12930,7 @@ private theorem bvOr_singleton_elim_list_canonical
       simpa [__eo_list_singleton_elim_2] using hCan
 
 private theorem smt_value_rel_get_ai_norm_bvor
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvOr y x) ->
     __get_ai_norm (mkBvOr y x) ≠ Term.Stuck ->
     RuleProofs.smt_value_rel
@@ -12944,9 +12944,9 @@ private theorem smt_value_rel_get_ai_norm_bvor
     dsimp [t, mkBvOr]
     change __smtx_typeof (SmtTerm.bvor (__eo_to_smt y) (__eo_to_smt x)) =
       SmtType.BitVec w
-    rw [__smtx_typeof.eq_39]
+    rw [__smtx_typeof.eq_41]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-      SmtEval.native_nateq]
+      Smtm.native_nateq]
   have hTypeMatch :=
     TranslationProofs.eo_to_smt_typeof_matches_translation t (by
       rw [htTy]
@@ -13025,7 +13025,7 @@ private theorem smt_value_rel_get_ai_norm_bvor
     hNormRel
 
 private theorem bvOr_get_ai_norm_list_canonical_of_type
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) (w : Nat) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) (w : Nat) :
     RuleProofs.eo_has_smt_translation (mkBvOr y x) ->
     __smtx_typeof (__eo_to_smt (mkBvOr y x)) = SmtType.BitVec w ->
     __get_ai_norm (mkBvOr y x) ≠ Term.Stuck ->
@@ -13090,7 +13090,7 @@ private theorem bvOr_get_ai_norm_list_canonical_of_type
     w hRec.1 hRec.2.1 hRecFlat
 
 private theorem bvOr_get_ai_norm_eval_canonical
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvOr y x) ->
     __get_ai_norm (mkBvOr y x) ≠ Term.Stuck ->
     ∃ w : Nat, BvEvalCanonicalWidth M w (__get_ai_norm (mkBvOr y x)) := by
@@ -13105,7 +13105,7 @@ private theorem bvOr_get_ai_norm_eval_canonical
       (__get_ai_norm (mkBvOr y x)) hOrigCan hRel⟩
 
 private theorem bvOr_get_ai_norm_eval_canonical_of_normal_form_ne_stuck
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvOr y x) ->
     __get_aci_normal_form (mkBvOr y x) ≠ Term.Stuck ->
     ∃ w : Nat, BvEvalCanonicalWidth M w (__get_ai_norm (mkBvOr y x)) := by
@@ -13114,7 +13114,7 @@ private theorem bvOr_get_ai_norm_eval_canonical_of_normal_form_ne_stuck
     (get_ai_norm_bvor_ne_stuck_of_normal_form_ne_stuck y x hNFNe)
 
 private theorem smt_value_rel_get_ai_norm_bvand
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvAnd y x) ->
     __get_ai_norm (mkBvAnd y x) ≠ Term.Stuck ->
     RuleProofs.smt_value_rel
@@ -13128,9 +13128,9 @@ private theorem smt_value_rel_get_ai_norm_bvand
     dsimp [t, mkBvAnd]
     change __smtx_typeof (SmtTerm.bvand (__eo_to_smt y) (__eo_to_smt x)) =
       SmtType.BitVec w
-    rw [__smtx_typeof.eq_38]
+    rw [__smtx_typeof.eq_40]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-      SmtEval.native_nateq]
+      Smtm.native_nateq]
   have hTypeMatch :=
     TranslationProofs.eo_to_smt_typeof_matches_translation t (by
       rw [htTy]
@@ -13216,7 +13216,7 @@ private theorem smt_value_rel_get_ai_norm_bvand
     hNormRel
 
 private theorem bvAnd_get_ai_norm_list_canonical_of_type
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) (w : Nat) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) (w : Nat) :
     RuleProofs.eo_has_smt_translation (mkBvAnd y x) ->
     __smtx_typeof (__eo_to_smt (mkBvAnd y x)) = SmtType.BitVec w ->
     __get_ai_norm (mkBvAnd y x) ≠ Term.Stuck ->
@@ -13288,7 +13288,7 @@ private theorem bvAnd_get_ai_norm_list_canonical_of_type
     w hRec.1 hRec.2.1 hRecFlat
 
 private theorem bvAnd_get_ai_norm_eval_canonical
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvAnd y x) ->
     __get_ai_norm (mkBvAnd y x) ≠ Term.Stuck ->
     ∃ w : Nat, BvEvalCanonicalWidth M w (__get_ai_norm (mkBvAnd y x)) := by
@@ -13303,7 +13303,7 @@ private theorem bvAnd_get_ai_norm_eval_canonical
       (__get_ai_norm (mkBvAnd y x)) hOrigCan hRel⟩
 
 private theorem bvAnd_get_ai_norm_eval_canonical_of_normal_form_ne_stuck
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvAnd y x) ->
     __get_aci_normal_form (mkBvAnd y x) ≠ Term.Stuck ->
     ∃ w : Nat, BvEvalCanonicalWidth M w (__get_ai_norm (mkBvAnd y x)) := by
@@ -13312,7 +13312,7 @@ private theorem bvAnd_get_ai_norm_eval_canonical_of_normal_form_ne_stuck
     (get_ai_norm_bvand_ne_stuck_of_normal_form_ne_stuck y x hNFNe)
 
 private theorem bvXor_get_a_norm_eval_canonical_of_normal_form_ne_stuck
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvXor y x) ->
     __get_aci_normal_form (mkBvXor y x) ≠ Term.Stuck ->
     ∃ w : Nat, BvEvalCanonicalWidth M w (__get_a_norm (mkBvXor y x)) := by
@@ -13321,7 +13321,7 @@ private theorem bvXor_get_a_norm_eval_canonical_of_normal_form_ne_stuck
     (get_a_norm_bvxor_ne_stuck_of_normal_form_ne_stuck y x hNFNe)
 
 private theorem aci_norm_bvor_normal_forms_eq_true_cases
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkBvOr y x) ->
     RuleProofs.eo_has_smt_translation (mkBvOr y' x') ->
@@ -13380,7 +13380,7 @@ private theorem aci_norm_bvor_normal_forms_eq_true_cases
   · exact Or.inr (by simpa [leftPayload, rightPayload] using hMeq)
 
 private theorem aci_norm_bvand_normal_forms_eq_true_cases
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkBvAnd y x) ->
     RuleProofs.eo_has_smt_translation (mkBvAnd y' x') ->
@@ -13439,7 +13439,7 @@ private theorem aci_norm_bvand_normal_forms_eq_true_cases
   · exact Or.inr (by simpa [leftPayload, rightPayload] using hMeq)
 
 private theorem aci_norm_bvxor_normal_forms_eq_true_cases
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkBvXor y x) ->
     RuleProofs.eo_has_smt_translation (mkBvXor y' x') ->
@@ -13498,7 +13498,7 @@ private theorem aci_norm_bvxor_normal_forms_eq_true_cases
   · exact Or.inr (by simpa [leftPayload, rightPayload] using hMeq)
 
 private theorem smt_value_rel_of_bvor_normal_forms_eq_true_of_payloads_canonical
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) (w : Nat) :
     RuleProofs.eo_has_smt_translation (mkBvOr y x) ->
     RuleProofs.eo_has_smt_translation (mkBvOr y' x') ->
@@ -13573,7 +13573,7 @@ private theorem smt_value_rel_of_bvor_normal_forms_eq_true_of_payloads_canonical
       hRightList hRightCan hMeq
 
 private theorem smt_value_rel_of_bvand_normal_forms_eq_true_of_payloads_canonical
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) (w : Nat) :
     RuleProofs.eo_has_smt_translation (mkBvAnd y x) ->
     RuleProofs.eo_has_smt_translation (mkBvAnd y' x') ->
@@ -13648,7 +13648,7 @@ private theorem smt_value_rel_of_bvand_normal_forms_eq_true_of_payloads_canonica
       hRightList hRightCan hMeq
 
 private theorem smt_value_rel_of_bvor_normal_forms_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkBvOr y x) ->
     RuleProofs.eo_has_smt_translation (mkBvOr y' x') ->
@@ -13694,7 +13694,7 @@ private theorem smt_value_rel_of_bvor_normal_forms_eq_true
       M hM y x y' x' w hLeftTrans hRightTrans hLeftCan hRightCan hEq
 
 private theorem smt_value_rel_of_bvand_normal_forms_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkBvAnd y x) ->
     RuleProofs.eo_has_smt_translation (mkBvAnd y' x') ->
@@ -14092,7 +14092,7 @@ private theorem bvConcat_smt_value_rel_right_empty_canonical_eval
   simp [__smtx_model_eval_eq, native_veq]
 
 private theorem bvConcat_l1_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term)
+    (M : SmtModel) (hM : model_wf M) (id : Term)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.concat) id = Term.Boolean true)
     (hIdEval :
@@ -14261,7 +14261,7 @@ private theorem bvConcat_list_concat_rec_rel_eval
                 (bvConcatListCanonical_eval M z hZCan))⟩
 
 private theorem bvConcat_get_a_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term)
+    (M : SmtModel) (hM : model_wf M) (id : Term)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.concat) id = Term.Boolean true)
     (hIdEval :
@@ -14425,7 +14425,7 @@ private theorem bvConcat_singleton_elim_rel_eval
         RuleProofs.smt_value_rel_refl _
 
 private theorem smt_value_rel_get_a_norm_concat
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvConcat y x) ->
     RuleProofs.smt_value_rel
       (__smtx_model_eval M (__eo_to_smt (mkBvConcat y x)))
@@ -15191,7 +15191,7 @@ private theorem reConcat_smt_value_rel_right_empty_eval
   simp only [__smtx_model_eval, __smtx_model_eval_re_concat, hxEval, hIdEval]
   cases r <;>
     simp [__smtx_model_eval_eq, native_re_concat, native_str_to_re,
-      native_re_of_list, native_string_to_values, native_string_lit_empty]
+      impl_native_re_of_list, impl_native_string_to_values, native_string_lit_empty]
 
 private theorem reConcat_smt_value_rel_left_empty_eval
     (M : SmtModel) (id x : Term) (r : SmtRegLan) :
@@ -15211,7 +15211,7 @@ private theorem reConcat_smt_value_rel_left_empty_eval
   simp only [__smtx_model_eval, __smtx_model_eval_re_concat, hIdEval, hxEval]
   cases r <;>
     simp [__smtx_model_eval_eq, native_re_concat, native_str_to_re,
-      native_re_of_list, native_string_to_values, native_string_lit_empty]
+      impl_native_re_of_list, impl_native_string_to_values, native_string_lit_empty]
 
 private theorem reConcat_eval_reglan_of_reglan_args
     (M : SmtModel) (x y : Term) :
@@ -15371,7 +15371,7 @@ private theorem reConcatListCanonical_eval
           simpa [ReConcatListCanonical] using h
 
 private theorem reConcat_l1_norm_rec_list_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term)
+    (M : SmtModel) (hM : model_wf M) (id : Term)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.re_concat) id = Term.Boolean true)
     (hIdEval :
@@ -15449,8 +15449,8 @@ private theorem reConcat_nil_eval_empty_of_is_list_nil_true
                 (SmtTerm.str_to_re (SmtTerm.String (native_string_lit ""))) =
               SmtValue.RegLan (native_str_to_re (native_string_lit ""))
             simp [__smtx_model_eval, __smtx_model_eval_str_to_re,
-              native_str_to_re, native_re_of_list, native_pack_string,
-              native_string_to_values, native_pack_seq, native_unpack_seq,
+              native_str_to_re, impl_native_re_of_list, native_pack_string,
+              impl_native_string_to_values, native_pack_seq, native_unpack_seq,
               native_string_lit_empty]
           · cases s with
             | nil =>
@@ -15561,7 +15561,7 @@ private theorem reConcat_list_concat_rec_rel_eval
                 hNilEval hzEval)⟩
 
 private theorem reConcat_get_a_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term)
+    (M : SmtModel) (hM : model_wf M) (id : Term)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.re_concat) id = Term.Boolean true)
     (hIdEval :
@@ -15753,7 +15753,7 @@ private theorem reConcat_singleton_elim_rel_eval
         RuleProofs.smt_value_rel_refl _
 
 private theorem smt_value_rel_get_a_norm_re_concat
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkReConcat y x) ->
     RuleProofs.smt_value_rel
       (__smtx_model_eval M (__eo_to_smt (mkReConcat y x)))
@@ -15797,8 +15797,8 @@ private theorem smt_value_rel_get_a_norm_re_concat
     change __smtx_model_eval M (SmtTerm.str_to_re (SmtTerm.String (native_string_lit ""))) =
       SmtValue.RegLan (native_str_to_re (native_string_lit ""))
     simp [__smtx_model_eval, __smtx_model_eval_str_to_re,
-      native_str_to_re, native_re_of_list, native_pack_string,
-      native_string_to_values, native_pack_seq, native_unpack_seq,
+      native_str_to_re, impl_native_re_of_list, native_pack_string,
+      impl_native_string_to_values, native_pack_seq, native_unpack_seq,
       native_string_lit_empty]
   have hIdCan : ReConcatListCanonical M id := by
     rw [hIdEq]
@@ -16053,7 +16053,7 @@ private theorem reUnion_l1_eq_union_of_ne_id (id t : Term) :
     contradiction
 
 private theorem reUnion_l1_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term)
+    (M : SmtModel) (hM : model_wf M) (id : Term)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.re_union) id = Term.Boolean true)
     (hIdEval :
@@ -16097,7 +16097,7 @@ private theorem reUnion_nil_eval_none_of_is_list_nil_true
   cases nil <;> simp [__eo_is_list_nil] at hNilTrue ⊢
   case UOp op =>
     cases op <;> simp  at hNilTrue ⊢
-    rw [__smtx_model_eval.eq_103]
+    rw [__smtx_model_eval.eq_105]
 
 private theorem reUnion_list_concat_rec_rel_eval
     (M : SmtModel) :
@@ -16442,7 +16442,7 @@ private theorem reUnion_list_setof_rec_rel_eval
                   (__smtx_model_eval M (__eo_to_smt nil)))))
 
 private theorem reUnion_get_ai_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term)
+    (M : SmtModel) (hM : model_wf M) (id : Term)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.re_union) id = Term.Boolean true)
     (hIdEval :
@@ -16681,7 +16681,7 @@ private theorem reUnion_singleton_elim_reglan_eval
         reUnionListCanonical_eval M _ hCan
 
 private theorem reUnion_get_ai_norm_reglan_eval
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkReUnion y x) ->
     RegLanEval M (__get_ai_norm (mkReUnion y x)) := by
   intro hTrans
@@ -17357,7 +17357,7 @@ private theorem reUnion_list_meq_contains_iff
       hInclCD hDIn
 
 private theorem smt_value_rel_of_re_union_payload_list_meq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkReUnion y x) ->
     RuleProofs.eo_has_smt_translation (mkReUnion y' x') ->
@@ -17399,7 +17399,7 @@ private theorem smt_value_rel_of_re_union_payload_list_meq
       hRightList hRightCan hMeq)
 
 private theorem get_aci_normal_form_re_union_ne_stuck
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkReUnion y x) ->
     __get_aci_normal_form (mkReUnion y x) ≠ Term.Stuck := by
   intro hTrans
@@ -17412,7 +17412,7 @@ private theorem get_aci_normal_form_re_union_ne_stuck
       at hPayloadNe ⊢
 
 private theorem smt_value_rel_of_re_union_normal_forms_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkReUnion y x) ->
     RuleProofs.eo_has_smt_translation (mkReUnion y' x') ->
@@ -17472,7 +17472,7 @@ private theorem smt_value_rel_of_re_union_normal_forms_eq_true
         simpa [leftPayload, rightPayload] using hMeq)
 
 private theorem smt_value_rel_get_ai_norm_re_union
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkReUnion y x) ->
     __get_ai_norm (mkReUnion y x) ≠ Term.Stuck ->
     RuleProofs.smt_value_rel
@@ -17776,7 +17776,7 @@ private theorem reInter_l1_eq_inter_of_ne_id (id t : Term) :
     contradiction
 
 private theorem reInter_l1_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term)
+    (M : SmtModel) (hM : model_wf M) (id : Term)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.re_inter) id = Term.Boolean true)
     (hIdEval :
@@ -17820,7 +17820,7 @@ private theorem reInter_nil_eval_all_of_is_list_nil_true
   cases nil <;> simp [__eo_is_list_nil] at hNilTrue ⊢
   case UOp op =>
     cases op <;> simp  at hNilTrue ⊢
-    rw [__smtx_model_eval.eq_104]
+    rw [__smtx_model_eval.eq_106]
 
 private theorem reInter_list_concat_rec_rel_eval
     (M : SmtModel) :
@@ -18165,7 +18165,7 @@ private theorem reInter_list_setof_rec_rel_eval
                   (__smtx_model_eval M (__eo_to_smt nil)))))
 
 private theorem reInter_get_ai_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term)
+    (M : SmtModel) (hM : model_wf M) (id : Term)
     (hIdList :
       __eo_is_list (Term.UOp UserOp.re_inter) id = Term.Boolean true)
     (hIdEval :
@@ -18404,7 +18404,7 @@ private theorem reInter_singleton_elim_reglan_eval
         reInterListCanonical_eval M _ hCan
 
 private theorem reInter_get_ai_norm_reglan_eval
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkReInter y x) ->
     RegLanEval M (__get_ai_norm (mkReInter y x)) := by
   intro hTrans
@@ -19077,7 +19077,7 @@ private theorem reInter_list_meq_contains_iff
       hInclDC hDIn
 
 private theorem smt_value_rel_of_re_inter_payload_list_meq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkReInter y x) ->
     RuleProofs.eo_has_smt_translation (mkReInter y' x') ->
@@ -19119,7 +19119,7 @@ private theorem smt_value_rel_of_re_inter_payload_list_meq
       hRightList hRightCan hMeq)
 
 private theorem get_aci_normal_form_re_inter_ne_stuck
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkReInter y x) ->
     __get_aci_normal_form (mkReInter y x) ≠ Term.Stuck := by
   intro hTrans
@@ -19132,7 +19132,7 @@ private theorem get_aci_normal_form_re_inter_ne_stuck
       at hPayloadNe ⊢
 
 private theorem smt_value_rel_of_re_inter_normal_forms_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkReInter y x) ->
     RuleProofs.eo_has_smt_translation (mkReInter y' x') ->
@@ -19192,7 +19192,7 @@ private theorem smt_value_rel_of_re_inter_normal_forms_eq_true
         simpa [leftPayload, rightPayload] using hMeq)
 
 private theorem smt_value_rel_get_ai_norm_re_inter
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkReInter y x) ->
     __get_ai_norm (mkReInter y x) ≠ Term.Stuck ->
     RuleProofs.smt_value_rel
@@ -19290,7 +19290,7 @@ private theorem term_ne_stuck_of_strConcat_is_list_true {t : Term} :
   simp [__eo_is_list] at hList
 
 private theorem strConcat_l1_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (T : SmtType)
     (hIdNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) id = Term.Boolean true)
     (hIdList :
@@ -19326,7 +19326,7 @@ private theorem strConcat_l1_norm_rec_rel_eval
   exact ⟨hL1.1, hL1.2.1, hL1Seq, hL1.2.2⟩
 
 private theorem strConcat_get_a_norm_rec_rel_eval
-    (M : SmtModel) (hM : model_total_typed M) (id : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (id : Term) (T : SmtType)
     (hIdNil :
       __eo_is_list_nil (Term.UOp UserOp.str_concat) id = Term.Boolean true)
     (hIdList :
@@ -19514,7 +19514,7 @@ private theorem strConcat_singleton_elim_rel_eval
         RuleProofs.smt_value_rel_refl _
 
 private theorem smt_value_rel_get_a_norm_str_concat
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkStrConcat y x) ->
     RuleProofs.smt_value_rel
       (__smtx_model_eval M (__eo_to_smt (mkStrConcat y x)))
@@ -19590,7 +19590,7 @@ private theorem smt_value_rel_get_a_norm_str_concat
     hNormRel
 
 private theorem get_a_norm_concat_not_aci_sorted_marker_of_has_smt_translation
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvConcat y x) ->
     ∀ markerArg markerPayload,
       __get_a_norm (mkBvConcat y x) ≠
@@ -19613,7 +19613,7 @@ private theorem get_a_norm_concat_not_aci_sorted_marker_of_has_smt_translation
     (__get_a_norm (mkBvConcat y x)) hNormNe
 
 private theorem get_a_norm_str_concat_not_aci_sorted_marker_of_has_smt_translation
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkStrConcat y x) ->
     ∀ markerArg markerPayload,
       __get_a_norm (mkStrConcat y x) ≠
@@ -19636,7 +19636,7 @@ private theorem get_a_norm_str_concat_not_aci_sorted_marker_of_has_smt_translati
     (__get_a_norm (mkStrConcat y x)) hNormNe
 
 private theorem get_a_norm_re_concat_not_aci_sorted_marker_of_has_smt_translation
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) :
+    (M : SmtModel) (hM : model_wf M) (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkReConcat y x) ->
     ∀ markerArg markerPayload,
       __get_a_norm (mkReConcat y x) ≠
@@ -19659,7 +19659,7 @@ private theorem get_a_norm_re_concat_not_aci_sorted_marker_of_has_smt_translatio
     (__get_a_norm (mkReConcat y x)) hNormNe
 
 private theorem smt_value_rel_of_aci_norm_eq_true_left_marker_right_nonmarker_payload_translation
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (f payload y : Term) :
     RuleProofs.eo_has_smt_translation payload ->
     (∀ markerArg markerPayload,
@@ -20013,7 +20013,7 @@ private theorem bvXor_list_meq_rel_eval
         hDCan hCList hCCan hInclDC
 
 private theorem smt_value_rel_of_bvxor_get_a_norm_meq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkBvXor y x) ->
     RuleProofs.eo_has_smt_translation (mkBvXor y' x') ->
@@ -20061,7 +20061,7 @@ private theorem smt_value_rel_of_bvxor_get_a_norm_meq
       simpa [leftPayload, rightPayload] using hMeq)
 
 private theorem smt_value_rel_of_bvxor_normal_forms_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x y' x' : Term) :
     RuleProofs.eo_has_smt_translation (mkBvXor y x) ->
     RuleProofs.eo_has_smt_translation (mkBvXor y' x') ->
@@ -20127,7 +20127,7 @@ private theorem smt_value_rel_of_bvxor_normal_forms_eq_true
       (by simpa [leftPayload, rightPayload] using hMeq)
 
 private theorem smt_value_rel_of_bvxor_left_normal_form_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y x b : Term) :
     RuleProofs.eo_has_smt_translation (mkBvXor y x) ->
     RuleProofs.eo_has_smt_translation b ->
@@ -20458,7 +20458,7 @@ private theorem smt_value_rel_of_bvxor_left_normal_form_eq_true
     contradiction
 
 private theorem smt_value_rel_of_aci_norm_eq_true_normal_forms
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b : Term) :
   RuleProofs.eo_has_smt_translation a ->
   RuleProofs.eo_has_smt_translation b ->
   __smtx_typeof (__eo_to_smt a) = __smtx_typeof (__eo_to_smt b) ->
@@ -22820,7 +22820,7 @@ private theorem smt_value_rel_of_aci_norm_eq_true_normal_forms
           contradiction
 
 private theorem smt_value_rel_get_aci_normal_form_payload
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
   RuleProofs.eo_has_smt_translation t ->
   __get_aci_normal_form t ≠ Term.Stuck ->
   RuleProofs.smt_value_rel
@@ -23011,7 +23011,7 @@ private theorem smt_value_rel_get_aci_normal_form_payload
           exact False.elim (aci_sorted_marker_not_has_smt_translation y x hTrans)
 
 private theorem smt_value_rel_of_aci_norm_guard_true
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b : Term) :
   RuleProofs.eo_has_smt_translation
     (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) ->
   RuleProofs.eo_has_bool_type
@@ -23102,7 +23102,7 @@ private theorem smt_value_rel_of_aci_norm_guard_true
     contradiction
 
 private theorem facts___eo_prog_aci_norm_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
   RuleProofs.eo_has_smt_translation a1 ->
   __eo_typeof (__eo_prog_aci_norm a1) = Term.Bool ->
   eo_interprets M (__eo_prog_aci_norm a1) true := by
@@ -23151,7 +23151,7 @@ private theorem facts___eo_prog_aci_norm_impl
           exact False.elim (eo_typeof_stuck_ne_bool hResultTy)
 
 public theorem cmd_step_aci_norm_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.aci_norm args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

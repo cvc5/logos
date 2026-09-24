@@ -186,7 +186,7 @@ private theorem native_nat_to_int_int_to_nat_eq
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hn
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem smt_typeof_concat_empty_right_eq
@@ -382,7 +382,7 @@ private theorem native_mod_zero_pow2
     Int.emod_eq_of_lt (by decide : (0 : native_Int) <= 0) hPowPos
 
 private theorem eval_zero_extend_matches_concat
-    (M : SmtModel) (hM : model_total_typed M) (x n : Term) :
+    (M : SmtModel) (hM : model_wf M) (x n : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvZeroExtendElimTerm x n) = Term.Bool ->
     __smtx_model_eval M
@@ -473,7 +473,7 @@ private theorem eval_zero_extend_matches_concat
   rw [hLhsEval, hRhsEval]
 
 private theorem facts_bv_zero_extend_elim_term
-    (M : SmtModel) (hM : model_total_typed M) (x n : Term) :
+    (M : SmtModel) (hM : model_wf M) (x n : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvZeroExtendElimTerm x n) = Term.Bool ->
     eo_interprets M (bvZeroExtendElimTerm x n) true := by
@@ -491,7 +491,7 @@ private theorem facts_bv_zero_extend_elim_term
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_zero_extend_eliminate_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_zero_extend_eliminate args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

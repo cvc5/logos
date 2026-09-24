@@ -236,7 +236,7 @@ private theorem eval_bvite_equal_cond_3
     (__smtx_model_eval M (__eo_to_smt e2))
 
 private theorem facts___eo_prog_bv_ite_equal_cond_3_impl
-    (M : SmtModel) (hM : model_total_typed M) (c1 t1 e1 t2 e2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (c1 t1 e1 t2 e2 : Term) :
     RuleProofs.eo_has_smt_translation c1 ->
     RuleProofs.eo_has_smt_translation t1 ->
     RuleProofs.eo_has_smt_translation e1 ->
@@ -272,7 +272,7 @@ private theorem facts___eo_prog_bv_ite_equal_cond_3_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_ite_equal_cond_3_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_ite_equal_cond_3 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -79,7 +79,7 @@ private theorem facts___eo_prog_eq_refl_impl
     hInnerTrue
 
 public theorem cmd_step_eq_refl_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.eq_refl args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

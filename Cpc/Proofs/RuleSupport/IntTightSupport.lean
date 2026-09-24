@@ -51,7 +51,7 @@ private theorem eo_to_smt_binary_eq (w n : native_Int) :
   rfl
 
 private theorem smt_eval_int_of_type
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Int) :
     ∃ n : native_Int, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Numeral n := by
   have hPres :
@@ -208,7 +208,7 @@ private theorem geq_numeral_has_bool_type
   simp [__smtx_typeof_arith_overload_op_2_ret, hA]
 
 theorem int_tight_ub_interprets_numeral
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a : Term) (n : native_Int)
     (hPremBool :
       RuleProofs.eo_has_bool_type
@@ -242,7 +242,7 @@ theorem int_tight_ub_interprets_numeral
     rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_lt_eq] at hPremTrue
     cases hPremTrue with
     | intro_true _ hEval =>
-        rw [__smtx_model_eval.eq_15, hEvalA, eo_to_smt_numeral_eq n,
+        rw [__smtx_model_eval.eq_17, hEvalA, eo_to_smt_numeral_eq n,
           __smtx_model_eval.eq_2] at hEval
         simp [__smtx_model_eval_lt] at hEval
         exact hEval
@@ -271,7 +271,7 @@ theorem int_tight_ub_interprets_numeral
         __eo_ite, __eo_mk_apply, native_ite, native_teq,
         native_to_real, SmtEval.native_to_real, native_mk_rational,
         SmtEval.native_mk_rational]
-    rw [hTight, eo_to_smt_leq_eq, eo_to_smt_numeral_eq, __smtx_model_eval.eq_16,
+    rw [hTight, eo_to_smt_leq_eq, eo_to_smt_numeral_eq, __smtx_model_eval.eq_18,
       hEvalA, __smtx_model_eval.eq_2]
     simp [__smtx_model_eval_leq, native_zleq, SmtEval.native_zleq, hLe]
 
@@ -311,7 +311,7 @@ theorem int_tight_ub_has_smt_translation_numeral
           (n := native_zplus (-1 : native_Int) n) hAInt)
 
 theorem int_tight_lb_interprets_numeral
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a : Term) (n : native_Int)
     (hPremBool :
       RuleProofs.eo_has_bool_type
@@ -342,7 +342,7 @@ theorem int_tight_lb_interprets_numeral
     rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_gt_eq] at hPremTrue
     cases hPremTrue with
     | intro_true _ hEval =>
-        rw [__smtx_model_eval.eq_17, hEvalA, eo_to_smt_numeral_eq n,
+        rw [__smtx_model_eval.eq_19, hEvalA, eo_to_smt_numeral_eq n,
           __smtx_model_eval.eq_2] at hEval
         simp [__smtx_model_eval_gt, __smtx_model_eval_lt] at hEval
         exact hEval
@@ -365,7 +365,7 @@ theorem int_tight_lb_interprets_numeral
           Term.Apply (Term.Apply (Term.UOp UserOp.geq) a)
             (Term.Numeral (native_zplus (1 : native_Int) n)) := by
       simp [__least_int_gt, __eo_to_z, __eo_add, __eo_mk_apply]
-    rw [hTight, eo_to_smt_geq_eq, eo_to_smt_numeral_eq, __smtx_model_eval.eq_18,
+    rw [hTight, eo_to_smt_geq_eq, eo_to_smt_numeral_eq, __smtx_model_eval.eq_20,
       hEvalA, __smtx_model_eval.eq_2]
     simp [__smtx_model_eval_geq, __smtx_model_eval_leq, native_zleq,
       SmtEval.native_zleq, hLe]
@@ -546,7 +546,7 @@ private theorem false_of_binary_gt_tight_lb
     simp [native_ite, hBinTy] at hBInt
 
 theorem int_tight_ub_interprets
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hPremBool :
       RuleProofs.eo_has_bool_type
@@ -594,7 +594,7 @@ theorem int_tight_ub_has_smt_translation
     exact False.elim (false_of_rational_lt_tight_ub hPremBool hResultTy)
 
 theorem int_tight_lb_interprets
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (hPremBool :
       RuleProofs.eo_has_bool_type
@@ -650,7 +650,7 @@ theorem int_tight_lb_has_smt_translation
     exact False.elim (false_of_binary_gt_tight_lb hPremBool hResultTy)
 
 theorem int_tight_ub_prog_interprets
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (P : Term)
     (hPremBool : RuleProofs.eo_has_bool_type P)
     (hResultTy : __eo_typeof (__eo_prog_int_tight_ub (Proof.pf P)) = Term.Bool)
@@ -710,7 +710,7 @@ theorem int_tight_ub_prog_has_smt_translation
             int_tight_ub_has_smt_translation a b hPremBool hResultTy'
 
 theorem int_tight_lb_prog_interprets
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (P : Term)
     (hPremBool : RuleProofs.eo_has_bool_type P)
     (hResultTy : __eo_typeof (__eo_prog_int_tight_lb (Proof.pf P)) = Term.Bool)

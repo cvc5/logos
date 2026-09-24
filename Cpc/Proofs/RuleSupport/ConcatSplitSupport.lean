@@ -1273,7 +1273,7 @@ theorem concat_split_head_types_same_of_prog
     exact ⟨T, htcTy, by simpa [hUT] using hscTyU⟩
 
 theorem concat_split_false_context
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc sc : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
     (hLenNeBool :
@@ -1371,7 +1371,7 @@ theorem concat_split_false_context
   exact ⟨T, tTail, sTail, htcTy, hscTy, htTailTy, hsTailTy, hConcatEq⟩
 
 theorem eo_interprets_rev_cons_snoc_of_list_nil_raw
-    (M : SmtModel) (hM : model_total_typed M) (head nil : Term)
+    (M : SmtModel) (hM : model_wf M) (head nil : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hNil :
@@ -1459,7 +1459,7 @@ theorem eo_interprets_rev_cons_snoc_of_list_nil_raw
   exact RuleProofs.eo_interprets_eq_of_rel M lhs rhs hBool hRel
 
 theorem eo_interprets_rev_cons_snoc_prefix_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (head tail : Term)
+    (M : SmtModel) (hM : model_wf M) (head tail : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hTailList :
@@ -1523,7 +1523,7 @@ theorem eo_interprets_rev_cons_snoc_prefix_of_seq
         hHeadTy hNil hTailTy hRevCons⟩
 
 theorem concat_split_true_context
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc sc : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
     (hLenNeBool :
@@ -1848,7 +1848,7 @@ theorem concat_split_suffix_eq_take_append_of_append_eq_of_le
   simpa [List.reverse_append, List.drop_reverse] using hBack
 
 theorem concat_split_append_eq_of_concat_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x xtail y ytail : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hxtailTy : __smtx_typeof (__eo_to_smt xtail) = SmtType.Seq T)
@@ -1916,7 +1916,7 @@ theorem native_pack_seq_ne_empty_of_length_pos
   omega
 
 theorem eval_concatSplitTerm_false_left
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tc sc : Term) (T : SmtType)
     (htcTy : __smtx_typeof (__eo_to_smt tc) = SmtType.Seq T)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -1998,7 +1998,7 @@ theorem eval_concatSplitTerm_false_left
   exact congrArg (native_pack_seq T) hSubEval
 
 theorem eval_concatSplitTerm_false_right
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tc sc : Term) (T : SmtType)
     (htcTy : __smtx_typeof (__eo_to_smt tc) = SmtType.Seq T)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -2083,7 +2083,7 @@ theorem eval_concatSplitTerm_false_right
   exact congrArg (native_pack_seq T) hSubEval
 
 theorem eval_concatSplitTerm_true_left
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tc sc : Term) (T : SmtType)
     (htcTy : __smtx_typeof (__eo_to_smt tc) = SmtType.Seq T)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -2164,7 +2164,7 @@ theorem eval_concatSplitTerm_true_left
   exact congrArg (native_pack_seq T) hSubEval
 
 theorem eval_concatSplitTerm_true_right
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tc sc : Term) (T : SmtType)
     (htcTy : __smtx_typeof (__eo_to_smt tc) = SmtType.Seq T)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)

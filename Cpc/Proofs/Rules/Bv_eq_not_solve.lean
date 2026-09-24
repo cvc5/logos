@@ -231,7 +231,7 @@ private theorem int_flip_neg {P a b : Int} (h : ¬ P - 1 - a = b) :
   omega
 
 private theorem eval_bv_eq_not_solve_lhs
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) (n : native_Int) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) (n : native_Int) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     native_zleq 0 n = true ->
@@ -251,7 +251,7 @@ private theorem eval_bv_eq_not_solve_lhs
       simpa [SmtEval.native_zleq] using hNonneg
     have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
       Int.toNat_of_nonneg hnNonneg
-    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   have hEvalTyX :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt x)) =
@@ -359,7 +359,7 @@ private theorem typed_bv_eq_not_solve_body (x y : Term) :
       cases h)
 
 private theorem facts_bv_eq_not_solve_body
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof
@@ -406,7 +406,7 @@ private theorem facts_bv_eq_not_solve_body
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_eq_not_solve_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_eq_not_solve args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

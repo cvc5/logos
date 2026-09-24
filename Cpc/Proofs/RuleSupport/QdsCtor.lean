@@ -651,10 +651,10 @@ theorem dcs_translation {c T : Term} (hs : DCS c)
   have hFinal : __eo_typeof c ≠ Term.Stuck := by rw [hBase]; simp
   have hHeadNe := dcs_apply_head_non_stuck hs hFinal
   rw [hHead] at hHeadNe
-  have hReserved : native_reserved_datatype_name s = false := by
+  have hReserved : __eo_to_smt_reserved_datatype_name s = false := by
     have hWf' := hWf
     rw [hBase] at hWf'
-    cases hRes : native_reserved_datatype_name s <;>
+    cases hRes : __eo_to_smt_reserved_datatype_name s <;>
       simp [__eo_to_smt_type, native_ite, hRes,
         __smtx_type_wf, __smtx_type_wf_component,
         __smtx_type_wf_rec, native_and] at hWf' ⊢
@@ -694,7 +694,7 @@ theorem dcs_translation {c T : Term} (hs : DCS c)
       (Term.DtCons s d i) := by
     unfold RuleProofs.eo_has_smt_translation
     change __smtx_typeof
-        (native_ite (native_reserved_datatype_name s) SmtTerm.None
+        (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
           (SmtTerm.DtCons s dd i)) ≠ SmtType.None
     rw [hReserved]
     change __smtx_typeof_guard_wf

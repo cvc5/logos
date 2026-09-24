@@ -1,0 +1,14 @@
+; Exercises a proof symbol whose name is that of an indexed operator of the
+; signature.  Eunoia also writes an indexed operator in flat form, so cvc5
+; prints the tester as (is c d) rather than ((_ is c) d), and a proof of its own
+; that declares is over two arguments spells its applications the same way.  The
+; name means the reading that has a type: the proof's declaration is preferred,
+; and the tester is still read where that declaration types nothing, as in the
+; first conjunct here.
+(declare-datatypes ((D 0)) (((a) (b))))
+(declare-const d D)
+(declare-const is (-> Int Int Int))
+(declare-const z Int)
+(assume @p0 (and (is a d) (= (is 0 0) z)))
+(assume @p1 (not (and (is a d) (= (is 0 0) z))))
+(step @p2 false :rule contra :premises (@p0 @p1))

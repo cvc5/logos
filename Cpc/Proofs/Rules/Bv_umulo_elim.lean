@@ -1049,7 +1049,7 @@ theorem bvumulo_typeof_args_of_non_none
   · exact hNN
 
 public theorem cmd_step_bv_umulo_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_umulo_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

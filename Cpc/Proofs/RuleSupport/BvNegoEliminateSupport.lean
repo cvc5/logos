@@ -270,7 +270,7 @@ theorem native_nat_to_int_int_to_nat_eq
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hnNonneg
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem native_int_to_nat_one_plus
@@ -434,7 +434,7 @@ theorem smt_typeof_bvnego (a : SmtTerm) (n : native_Int) :
     __smtx_typeof a = SmtType.BitVec (native_int_to_nat n) ->
     __smtx_typeof (SmtTerm.bvnego a) = SmtType.Bool := by
   intro h
-  rw [__smtx_typeof.eq_70]
+  rw [__smtx_typeof.eq_72]
   simp [__smtx_typeof_bv_op_1_ret, h]
 
 theorem typeof_args_of_bv_nego_term_bool (x n : Term) :
@@ -526,7 +526,7 @@ private theorem smtx_eval_bvnego_term_eq
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 theorem eval_bvnego_matches_eq_min
-    (M : SmtModel) (hM : model_total_typed M) (x n : Term) :
+    (M : SmtModel) (hM : model_wf M) (x n : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvNegoTerm x n) = Term.Bool ->
     __smtx_model_eval M (__eo_to_smt (Term.Apply (Term.UOp UserOp.bvnego) x)) =
@@ -572,7 +572,7 @@ theorem eval_bvnego_matches_eq_min
     hSub, SmtEval.native_zeq]
 
 theorem facts_bv_nego_term
-    (M : SmtModel) (hM : model_total_typed M) (x n : Term) :
+    (M : SmtModel) (hM : model_wf M) (x n : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvNegoTerm x n) = Term.Bool ->
     eo_interprets M (bvNegoTerm x n) true := by

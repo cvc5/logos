@@ -4,8 +4,15 @@ module
 Copyright (c) 2021-2022 by the authors listed in the file AUTHORS and their
 institutional affiliations. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Wojciech Nawrocki
+Authors: Wojciech Nawrocki, Abdalrhman Mohamed, Henrik Böving
 Source: https://github.com/ufmg-smite/lean-smt/blob/main/Smt/Data/Sexp.lean
+
+The AUTHORS and LICENSE referred to above are those of lean-smt; copies are
+kept in `licenses/lean-smt-AUTHORS` and `licenses/lean-smt-LICENSE`.
+
+This file has been modified from the original by the Logos authors: it is
+placed in the `Logos` namespace, the `ToSexp` class is removed, and `strLit`
+is rewritten to preserve `""` escapes inside string literals.
 -/
 
 public import Std.Internal.Parsec.String

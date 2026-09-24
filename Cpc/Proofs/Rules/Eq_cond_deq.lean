@@ -290,7 +290,7 @@ private theorem typed___eo_prog_eq_cond_deq_impl
   exact typed_eq_cond_deq_body_impl t s r hTTrans hSTrans hRTrans hBodyTy
 
 private theorem facts___eo_prog_eq_cond_deq_impl
-    (M : SmtModel) (hM : model_total_typed M) (t s r s2 r2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t s r s2 r2 : Term) :
     RuleProofs.eo_has_smt_translation t ->
     RuleProofs.eo_has_smt_translation s ->
     RuleProofs.eo_has_smt_translation r ->
@@ -369,7 +369,7 @@ private theorem facts___eo_prog_eq_cond_deq_impl
       hSrFalse
 
 public theorem cmd_step_eq_cond_deq_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.eq_cond_deq args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

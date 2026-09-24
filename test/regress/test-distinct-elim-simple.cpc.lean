@@ -1,4 +1,4 @@
-import Cpc.Logos
+import Cpc.Native
 open Eo
 def t1 := (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) (Term.UOp UserOp.Int))
 def t2 := (Term.UConst 1 (Term.UOp UserOp.Int))
@@ -40,15 +40,15 @@ def t37 := (Term.Apply Term.__eo_List_cons t13)
 def t38 := (Term.Apply t37 Term.__eo_List_nil)
 def t39 := (Term.Apply Term.__eo_List_cons t17)
 def t40 := (Term.Apply t39 t38)
-def s0 : CState := logos_init_state
-def s1 : CState := (logos_invoke_assume s0 t11)
-def s2 : CState := (logos_invoke_assume s1 t19)
-def s3 : CState := (logos_invoke_cmd s2 (CCmd.step CRule.distinct_elim (CArgList.cons t32 CArgList.nil) CIndexList.nil))
-def s4 : CState := (logos_invoke_cmd s3 (CCmd.step CRule.eq_resolve CArgList.nil (CIndexList.cons 2 (CIndexList.cons 0 CIndexList.nil))))
-def s5 : CState := (logos_invoke_cmd s4 (CCmd.step CRule.and_elim (CArgList.cons (Term.Numeral 2) CArgList.nil) (CIndexList.cons 0 CIndexList.nil)))
-def s6 : CState := (logos_invoke_cmd s5 (CCmd.step CRule.and_elim (CArgList.cons (Term.Numeral 0) CArgList.nil) (CIndexList.cons 1 CIndexList.nil)))
-def s7 : CState := (logos_invoke_cmd s6 (CCmd.step CRule.cnf_or_pos (CArgList.cons t19 CArgList.nil) CIndexList.nil))
-def s8 : CState := (logos_invoke_cmd s7 (CCmd.step CRule.chain_resolution (CArgList.cons t36 (CArgList.cons t40 CArgList.nil)) (CIndexList.cons 0 (CIndexList.cons 1 (CIndexList.cons 2 CIndexList.nil)))))
-def s9 : CState := (logos_invoke_cmd s8 (CCmd.step CRule.contra CArgList.nil (CIndexList.cons 6 (CIndexList.cons 0 CIndexList.nil))))
+def s0 : LogosState := logos_init_state
+def s1 : LogosState := (logos_invoke_assume s0 t11)
+def s2 : LogosState := (logos_invoke_assume s1 t19)
+def s3 : LogosState := (logos_invoke_cmd s2 (CCmd.step CRule.distinct_elim (CArgList.cons t32 CArgList.nil) CIndexList.nil))
+def s4 : LogosState := (logos_invoke_cmd s3 (CCmd.step CRule.eq_resolve CArgList.nil (CIndexList.cons 2 (CIndexList.cons 0 CIndexList.nil))))
+def s5 : LogosState := (logos_invoke_cmd s4 (CCmd.step CRule.and_elim (CArgList.cons (Term.Numeral 2) CArgList.nil) (CIndexList.cons 0 CIndexList.nil)))
+def s6 : LogosState := (logos_invoke_cmd s5 (CCmd.step CRule.and_elim (CArgList.cons (Term.Numeral 0) CArgList.nil) (CIndexList.cons 1 CIndexList.nil)))
+def s7 : LogosState := (logos_invoke_cmd s6 (CCmd.step CRule.cnf_or_pos (CArgList.cons t19 CArgList.nil) CIndexList.nil))
+def s8 : LogosState := (logos_invoke_cmd s7 (CCmd.step CRule.chain_resolution (CArgList.cons t36 (CArgList.cons t40 CArgList.nil)) (CIndexList.cons 0 (CIndexList.cons 1 (CIndexList.cons 2 CIndexList.nil)))))
+def s9 : LogosState := (logos_invoke_cmd s8 (CCmd.step CRule.contra CArgList.nil (CIndexList.cons 6 (CIndexList.cons 0 CIndexList.nil))))
 #eval!
 (logos_state_is_refutation s9)

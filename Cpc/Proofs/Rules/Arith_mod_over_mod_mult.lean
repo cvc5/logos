@@ -353,7 +353,7 @@ private theorem mult_arg_types_of_result_bool
   exact ⟨hOuter.2, hModArgs.1, hSsInt, hTsType⟩
 
 private theorem build_mult_lists
-    (M : SmtModel) (hM : model_total_typed M) (c ts r ss : Term)
+    (M : SmtModel) (hM : model_wf M) (c ts r ss : Term)
     (hCTrans : RuleProofs.eo_has_smt_translation c)
     (hRTrans : RuleProofs.eo_has_smt_translation r)
     (hSsTrans : RuleProofs.eo_has_smt_translation ss)
@@ -414,7 +414,7 @@ private theorem build_mult_lists
       simpa using hRightTail
 
 private theorem typed___eo_prog_arith_mod_over_mod_mult_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (c ts r ss P : Term) :
     RuleProofs.eo_has_smt_translation c ->
     RuleProofs.eo_has_smt_translation ts ->
@@ -454,7 +454,7 @@ private theorem typed___eo_prog_arith_mod_over_mod_mult_impl
     (by rw [hLhsTy, hRhsTy]) (by rw [hLhsTy]; simp)
 
 private theorem facts___eo_prog_arith_mod_over_mod_mult_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (c ts r ss P : Term) :
     RuleProofs.eo_has_smt_translation c ->
     RuleProofs.eo_has_smt_translation ts ->
@@ -512,7 +512,7 @@ end ArithModOverModMult
 open ArithModOverModMult
 
 public theorem cmd_step_arith_mod_over_mod_mult_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_mod_over_mod_mult args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

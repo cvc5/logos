@@ -91,13 +91,13 @@ private theorem smtx_typeof_empty_string :
 private theorem list_typed_char_pack_unpack :
     ∀ {xs : List SmtValue},
       list_typed SmtType.Char xs ->
-        xs.map (fun v => SmtValue.Char (native_ssm_char_of_value v)) = xs
+        xs.map (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) = xs
   | [], _ => rfl
   | v :: vs, hxs => by
       rcases hxs with ⟨hv, hvs⟩
       rcases char_value_canonical hv with ⟨c, hvc, _hc⟩
       rw [hvc]
-      simpa [native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
+      simpa [impl_native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
 
 private theorem native_pack_string_unpack_string_of_typeof_seq_char
     (ss : SmtSeq)
@@ -107,7 +107,7 @@ private theorem native_pack_string_unpack_string_of_typeof_seq_char
     typed_unpack_seq_of_typeof_seq_value hTy
   have hMap :
       (native_unpack_seq ss).map
-          (fun v => SmtValue.Char (native_ssm_char_of_value v)) =
+          (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) =
         native_unpack_seq ss :=
     list_typed_char_pack_unpack hTyped
   have hElem : __smtx_elem_typeof_seq_value ss = SmtType.Char :=
@@ -116,7 +116,7 @@ private theorem native_pack_string_unpack_string_of_typeof_seq_char
   simp only [List.map_map]
   change native_pack_seq SmtType.Char
       ((native_unpack_seq ss).map
-        (fun v => SmtValue.Char (native_ssm_char_of_value v))) =
+        (fun v => SmtValue.Char (impl_native_ssm_char_of_value v))) =
     ss
   rw [hMap]
   simpa [hElem] using native_pack_unpack_seq ss
@@ -158,7 +158,7 @@ private theorem typed___eo_prog_str_leq_empty_eq_impl
     (by rw [hLeq, hEq]) (by rw [hLeq]; simp)
 
 private theorem facts___eo_prog_str_leq_empty_eq_impl
-    (M : SmtModel) (hM : model_total_typed M) (s : Term)
+    (M : SmtModel) (hM : model_wf M) (s : Term)
     (hsTrans : RuleProofs.eo_has_smt_translation s)
     (hsTy : __eo_typeof s = Term.Apply Term.Seq Term.Char) :
     eo_interprets M (__eo_prog_str_leq_empty_eq s) true := by
@@ -201,7 +201,7 @@ private theorem facts___eo_prog_str_leq_empty_eq_impl
   exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_str_leq_empty_eq_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_leq_empty_eq args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

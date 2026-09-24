@@ -102,7 +102,7 @@ private theorem bv_ule_max_bound_vars
     RuleProofs.eq_of_eo_eq_true x px' h4⟩
 
 public theorem cmd_step_bv_ule_max_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_ule_max args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

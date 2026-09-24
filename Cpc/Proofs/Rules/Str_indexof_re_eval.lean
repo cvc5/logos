@@ -88,26 +88,26 @@ private theorem str_indexof_re_args_smt_types_of_has_translation
 private theorem native_re_find_idx_aux_offset
     (r : SmtRegLan) :
     ∀ (xs : native_String) (start : Nat),
-      native_re_find_idx_aux r xs start =
-        match native_re_find_idx_aux r xs 0 with
+      impl_native_re_find_idx_aux r xs start =
+        match impl_native_re_find_idx_aux r xs 0 with
         | some (idx, len) => some (start + idx, len)
         | none => none
   | xs, start => by
       induction xs generalizing start with
       | nil =>
-          simp only [native_string_to_values, List.map]
-          rw [native_re_find_idx_aux.eq_def, native_re_find_idx_aux.eq_def]
+          simp only [impl_native_string_to_values, List.map]
+          rw [impl_native_re_find_idx_aux.eq_def, impl_native_re_find_idx_aux.eq_def]
           cases native_re_prefix_match_len? r [] <;> simp
       | cons c cs ih =>
-          simp only [native_string_to_values, List.map]
-          rw [native_re_find_idx_aux.eq_def, native_re_find_idx_aux.eq_def]
+          simp only [impl_native_string_to_values, List.map]
+          rw [impl_native_re_find_idx_aux.eq_def, impl_native_re_find_idx_aux.eq_def]
           cases hPref : native_re_prefix_match_len? r
-              (SmtValue.Char c :: native_string_to_values cs) with
+              (SmtValue.Char c :: impl_native_string_to_values cs) with
           | none =>
-              simp only [native_string_to_values] at ih hPref
+              simp only [impl_native_string_to_values] at ih hPref
               simp [hPref]
               rw [ih (start + 1), ih 1]
-              cases hTail : native_re_find_idx_aux r
+              cases hTail : impl_native_re_find_idx_aux r
                   (List.map SmtValue.Char cs) 0 with
               | none => simp
               | some p =>
@@ -115,7 +115,7 @@ private theorem native_re_find_idx_aux_offset
                 simp
                 omega
           | some n =>
-              simp only [native_string_to_values] at hPref
+              simp only [impl_native_string_to_values] at hPref
               simp [hPref]
 
 private theorem native_string_valid_drop
@@ -129,13 +129,13 @@ private theorem native_string_valid_drop
 private theorem native_re_prefix_match_len_go_isSome_eq_str_in_re_concat_all
     (r : SmtRegLan) :
     ∀ (xs : native_String) (n : Nat), native_string_valid xs = true ->
-      (match native_re_prefix_match_len?.go r xs n with
+      (match impl_native_re_prefix_match_len_go r xs n with
       | some _ => true
       | none => false) =
         native_str_in_re xs (native_re_concat r native_re_all)
   | [], n, hValid => by
-      simp only [native_string_to_values, List.map]
-      rw [native_re_prefix_match_len?.go.eq_1]
+      simp only [impl_native_string_to_values, List.map]
+      rw [impl_native_re_prefix_match_len_go.eq_1]
       simp only [native_str_in_re, hValid, Bool.true_and, nativeListInRe]
       rw [native_re_nullable_mk_concat]
       cases native_re_nullable r <;>
@@ -144,8 +144,8 @@ private theorem native_re_prefix_match_len_go_isSome_eq_str_in_re_concat_all
       have hParts : native_char_valid c = true ∧ native_string_valid cs = true := by
         simpa [native_string_valid] using hValid
       rcases hParts with ⟨hc, hcs⟩
-      simp only [native_string_to_values, List.map]
-      rw [native_re_prefix_match_len?.go.eq_2]
+      simp only [impl_native_string_to_values, List.map]
+      rw [impl_native_re_prefix_match_len_go.eq_2]
       by_cases hNullTrue : native_re_nullable r = true
       · simp [hNullTrue]
         have hEmpty : native_str_in_re ([] : native_String) r = true := by
@@ -163,7 +163,7 @@ private theorem native_re_prefix_match_len_go_isSome_eq_str_in_re_concat_all
         have hRec :=
           native_re_prefix_match_len_go_isSome_eq_str_in_re_concat_all
             (native_re_deriv c r) cs (n + 1) hcs
-        simp only [native_string_to_values] at hRec
+        simp only [impl_native_string_to_values] at hRec
         rw [hRec]
         simp only [native_str_in_re, hValid, hcs, native_re_concat]
         change
@@ -201,7 +201,7 @@ private theorem str_indexof_re_eval_match_regex_typeof
         (SmtTerm.re_concat SmtTerm.re_all
           (SmtTerm.str_to_re (SmtTerm.String [])))) = SmtType.RegLan
   rw [typeof_re_concat_eq, typeof_re_concat_eq, typeof_str_to_re_eq]
-  rw [__smtx_typeof.eq_104, __smtx_typeof.eq_4]
+  rw [__smtx_typeof.eq_106, __smtx_typeof.eq_4]
   simp [hRTy, native_ite, native_Teq]
   rfl
 
@@ -218,13 +218,13 @@ private theorem str_indexof_re_eval_match_regex_model_eval
   simp [__smtx_model_eval,
     __smtx_model_eval_re_concat, __smtx_model_eval_str_to_re, hREval,
     native_re_concat, native_str_to_re,
-    native_re_of_list]
+    impl_native_re_of_list]
   change native_re_concat rv (native_re_concat native_re_all SmtRegLan.epsilon) =
     native_re_concat rv native_re_all
   rw [show native_re_concat native_re_all SmtRegLan.epsilon = native_re_all by rfl]
 
 private theorem str_indexof_re_eval_match_test_eq_of_bool
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tail : native_String) (r : Term) (rv : SmtRegLan)
     (hTailValid : native_string_valid tail = true)
     (hRTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan)
@@ -360,7 +360,7 @@ private theorem native_str_substr_to_end
     exact hTake
 
 private theorem str_indexof_re_eval_prefix_condition_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs : native_String) (rs : Term) (rv : SmtRegLan)
     (hValid : native_string_valid xs = true)
     (hRsTy : __smtx_typeof (__eo_to_smt rs) = SmtType.RegLan)
@@ -396,7 +396,7 @@ private def str_indexof_re_eval_no_match_pair : Term :=
     (Term.Numeral (-1 : native_Int))
 
 private theorem str_indexof_re_eval_first_match_rec_smallest_eq_go
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (xs : native_String) (r : Term) (rv : SmtRegLan) (n : Nat),
       native_string_valid xs = true ->
       __smtx_typeof (__eo_to_smt r) = SmtType.RegLan ->
@@ -405,7 +405,7 @@ private theorem str_indexof_re_eval_first_match_rec_smallest_eq_go
           (Term.Numeral (Int.ofNat n)) ≠ Term.Stuck ->
       __str_first_match_rec_smallest (substrWord xs 0 xs.length) r
           (Term.Numeral (Int.ofNat n)) =
-        match Smtm.native_re_prefix_match_len?.go rv xs n with
+        match Smtm.impl_native_re_prefix_match_len_go rv xs n with
         | some endIdx => Term.Numeral (Int.ofNat endIdx)
         | none => Term.Stuck
   | [], r, rv, n, hValid, hRTy, hREval, hNe => by
@@ -461,8 +461,8 @@ private theorem str_indexof_re_eval_first_match_rec_smallest_eq_go
           rw [hReq] at hNullEq
           cases hNullEq
         exact False.elim hFalse
-      · simp only [native_string_to_values, List.map]
-        rw [Smtm.native_re_prefix_match_len?.go.eq_1]
+      · simp only [impl_native_string_to_values, List.map]
+        rw [Smtm.impl_native_re_prefix_match_len_go.eq_1]
         simp [hNull]
         exact hStep.trans hReqResult
   | c :: cs, r, rv, n, hValid, hRTy, hREval, hNe => by
@@ -542,7 +542,7 @@ private theorem str_indexof_re_eval_first_match_rec_smallest_eq_go
             __str_first_match_rec_smallest (substrWord cs 0 cs.length)
                 (__derivative (Term.String [c]) r)
                 (Term.Numeral (Int.ofNat n + 1)) =
-              match Smtm.native_re_prefix_match_len?.go drv cs (n + 1) with
+              match Smtm.impl_native_re_prefix_match_len_go drv cs (n + 1) with
               | some endIdx => Term.Numeral (Int.ofNat endIdx)
               | none => Term.Stuck := by
           simpa using hTail
@@ -550,13 +550,13 @@ private theorem str_indexof_re_eval_first_match_rec_smallest_eq_go
           __str_first_match_rec_smallest (substrWord cs 0 cs.length)
               (__derivative (Term.String [c]) r)
               (Term.Numeral (Int.ofNat n + 1)) =
-            match Smtm.native_re_prefix_match_len?.go rv (c :: cs) n with
+            match Smtm.impl_native_re_prefix_match_len_go rv (c :: cs) n with
             | some endIdx => Term.Numeral (Int.ofNat endIdx)
             | none => Term.Stuck
         rw [hTail']
         have hGoCong :
-            Smtm.native_re_prefix_match_len?.go drv cs (n + 1) =
-              Smtm.native_re_prefix_match_len?.go
+            Smtm.impl_native_re_prefix_match_len_go drv cs (n + 1) =
+              Smtm.impl_native_re_prefix_match_len_go
                 (native_re_deriv c rv) cs (n + 1) :=
           _root_.CongSupport.native_re_prefix_match_len_go_congr_valid_ext_of_str_ext cs drv
             (native_re_deriv c rv) (n + 1) hcs (by
@@ -566,16 +566,16 @@ private theorem str_indexof_re_eval_first_match_rec_smallest_eq_go
               rw [RuleProofs.native_str_in_re_eq_model,
                 RuleProofs.native_str_in_re_eq_model]
               exact smt_value_rel_reglan_valid_eq hDerRel hys)
-        rw [Smtm.native_re_prefix_match_len?.go.eq_2]
+        rw [Smtm.impl_native_re_prefix_match_len_go.eq_2]
         simp [hNull]
         rw [← hGoCong]
       · rw [hNull] at hNullEq
         rw [hNullEq]
-        rw [Smtm.native_re_prefix_match_len?.go.eq_2]
+        rw [Smtm.impl_native_re_prefix_match_len_go.eq_2]
         simp [__eo_ite, native_teq, native_ite, hNull]
 
 private theorem str_indexof_re_eval_first_match_rec_eq_find_aux
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (xs : native_String) (r rs : Term) (rv : SmtRegLan) (n : Nat),
       native_string_valid xs = true ->
       __smtx_typeof (__eo_to_smt r) = SmtType.RegLan ->
@@ -587,7 +587,7 @@ private theorem str_indexof_re_eval_first_match_rec_eq_find_aux
           (Term.Numeral (Int.ofNat n)) ≠ Term.Stuck ->
       __str_first_match_rec (substrWord xs 0 xs.length) r rs
           (Term.Numeral (Int.ofNat n)) =
-        match native_re_find_idx_aux rv xs n with
+        match impl_native_re_find_idx_aux rv xs n with
         | some (idx, len) => str_indexof_re_eval_match_pair idx (idx + len)
         | none => str_indexof_re_eval_no_match_pair
   | [], r, rs, rv, n, hValid, hRTy, hREval, hRsTy, hRsEval, hNe => by
@@ -655,14 +655,14 @@ private theorem str_indexof_re_eval_first_match_rec_eq_find_aux
             (by simpa [substrWord] using hCondNe)
       cases hPref : native_re_prefix_match_len? rv ([] : native_String) with
       | none =>
-          simp only [native_string_to_values, List.map] at hPref
+          simp only [impl_native_string_to_values, List.map] at hPref
           refine hStep.trans ?_
           rw [hCondEq]
-          simp only [native_string_to_values, List.map]
-          rw [Smtm.native_re_find_idx_aux.eq_1]
+          simp only [impl_native_string_to_values, List.map]
+          rw [Smtm.impl_native_re_find_idx_aux.eq_1]
           simp [hPref, __eo_ite, native_teq, native_ite]
       | some len =>
-          simp only [native_string_to_values, List.map] at hPref
+          simp only [impl_native_string_to_values, List.map] at hPref
           have hBranchNe :
               __eo_mk_apply
                   ((Term.UOp UserOp._at__at_pair).Apply
@@ -684,20 +684,20 @@ private theorem str_indexof_re_eval_first_match_rec_eq_find_aux
               (by simp [native_string_valid]) hRTy hREval
               (by simpa [substrWord] using hSmallNe)
           have hGoPref :
-              Smtm.native_re_prefix_match_len?.go rv ([] : native_String) 0 =
+              Smtm.impl_native_re_prefix_match_len_go rv ([] : native_String) 0 =
                 some len := by
             simpa [Smtm.native_re_prefix_match_len?.eq_1] using hPref
           have hSmall' :
               __str_first_match_rec_smallest (Term.String []) r
                   (Term.Numeral 0) =
-                match Smtm.native_re_prefix_match_len?.go rv ([] : native_String) 0 with
+                match Smtm.impl_native_re_prefix_match_len_go rv ([] : native_String) 0 with
                 | some endIdx => Term.Numeral (Int.ofNat endIdx)
                 | none => Term.Stuck := by
             simpa [substrWord] using hSmall
           refine hStep.trans ?_
           rw [hCondEq]
-          simp only [native_string_to_values, List.map]
-          rw [Smtm.native_re_find_idx_aux.eq_1]
+          simp only [impl_native_string_to_values, List.map]
+          rw [Smtm.impl_native_re_find_idx_aux.eq_1]
           simp [hPref, __eo_ite, native_teq, native_ite]
           rw [hSmall', hGoPref]
           simp [str_indexof_re_eval_match_pair, __eo_add, native_zplus,
@@ -809,21 +809,21 @@ private theorem str_indexof_re_eval_first_match_rec_eq_find_aux
                 simpa [substrWord, extractString_zero_cons,
                   substrWord_cons_tail] using hSmallNe)
           have hGoPref :
-              Smtm.native_re_prefix_match_len?.go rv (c :: cs) 0 =
+              Smtm.impl_native_re_prefix_match_len_go rv (c :: cs) 0 =
                 some len := by
             simpa [Smtm.native_re_prefix_match_len?.eq_1] using hPref
           have hSmall' :
               __str_first_match_rec_smallest
                   (((Term.UOp UserOp.str_concat).Apply (Term.String [c])).Apply
                     (substrWord cs 0 cs.length)) r (Term.Numeral 0) =
-                match Smtm.native_re_prefix_match_len?.go rv (c :: cs) 0 with
+                match Smtm.impl_native_re_prefix_match_len_go rv (c :: cs) 0 with
                 | some endIdx => Term.Numeral (Int.ofNat endIdx)
                 | none => Term.Stuck := by
             simpa [substrWord, extractString_zero_cons,
               substrWord_cons_tail] using hSmall
           refine hStep.trans ?_
           rw [hCondEq]
-          rw [Smtm.native_re_find_idx_aux.eq_2]
+          rw [Smtm.impl_native_re_find_idx_aux.eq_2]
           simp [hPref, __eo_ite, native_teq, native_ite]
           rw [hSmall', hGoPref]
           simp [str_indexof_re_eval_match_pair, __eo_add, native_zplus,
@@ -840,12 +840,12 @@ private theorem str_indexof_re_eval_first_match_rec_eq_find_aux
               (n + 1) hcs hRTy hREval hRsTy hRsEval hTailNe
           refine hStep.trans ?_
           rw [hCondEq]
-          rw [Smtm.native_re_find_idx_aux.eq_2]
+          rw [Smtm.impl_native_re_find_idx_aux.eq_2]
           simp [hPref, __eo_ite, native_teq, native_ite]
           exact hTail
 
 private theorem str_indexof_re_eval_idx_term_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tail : native_String) (r : Term) (offset : native_Int)
     (rv : SmtRegLan)
     (hTailValid : native_string_valid tail = true)
@@ -856,7 +856,7 @@ private theorem str_indexof_re_eval_idx_term_eq
         Term.Stuck) :
     str_indexof_re_eval_idx_term (Term.String tail) r =
       Term.Numeral
-        (match native_re_find_idx_aux rv tail 0 with
+        (match impl_native_re_find_idx_aux rv tail 0 with
         | some (idx, _) => Int.ofNat idx
         | none => -1) := by
   cases tail with
@@ -920,12 +920,12 @@ private theorem str_indexof_re_eval_idx_term_eq
       cases hPref : native_re_prefix_match_len? rv [] with
       | none =>
           have hFind :
-              native_re_find_idx_aux rv [] 0 = none := by
-            rw [native_re_find_idx_aux.eq_def]
+              impl_native_re_find_idx_aux rv [] 0 = none := by
+            rw [impl_native_re_find_idx_aux.eq_def]
             simp [hPref]
           have hTestFalse : test = Term.Boolean false := by
             simpa [test, hPref] using hTestEq
-          simp only [native_string_to_values, List.map]
+          simp only [impl_native_string_to_values, List.map]
           rw [hFind]
           change __pair_first
               (__str_first_match_rec (Term.String []) r
@@ -936,8 +936,8 @@ private theorem str_indexof_re_eval_idx_term_eq
             __pair_first]
       | some len =>
           have hFind :
-              native_re_find_idx_aux rv [] 0 = some (0, len) := by
-            rw [native_re_find_idx_aux.eq_def]
+              impl_native_re_find_idx_aux rv [] 0 = some (0, len) := by
+            rw [impl_native_re_find_idx_aux.eq_def]
             simp [hPref]
           have hSecondNe : second ≠ Term.Stuck := by
             intro hSecond
@@ -955,7 +955,7 @@ private theorem str_indexof_re_eval_idx_term_eq
             exact hIdxNe hIdxStuck
           have hTestTrue : test = Term.Boolean true := by
             simpa [test, hPref] using hTestEq
-          simp only [native_string_to_values, List.map]
+          simp only [impl_native_string_to_values, List.map]
           rw [hFind]
           change __pair_first
               (__str_first_match_rec (Term.String []) r
@@ -1001,18 +1001,18 @@ private theorem str_indexof_re_eval_idx_term_eq
               (__str_first_match_rec (substrWord (c :: cs) 0 (c :: cs).length) r
                 (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
             Term.Numeral
-              (match native_re_find_idx_aux rv (c :: cs) 0 with
+              (match impl_native_re_find_idx_aux rv (c :: cs) 0 with
               | some (idx, _) => Int.ofNat idx
               | none => -1) := by
         have hFirstEq0 :
             __str_first_match_rec (substrWord (c :: cs) 0 (c :: cs).length) r
                 (str_indexof_re_eval_match_regex r) (Term.Numeral 0) =
-              match native_re_find_idx_aux rv (c :: cs) 0 with
+              match impl_native_re_find_idx_aux rv (c :: cs) 0 with
               | some (idx, len) => str_indexof_re_eval_match_pair idx (idx + len)
               | none => str_indexof_re_eval_no_match_pair := by
           simpa using hFirstEq
         rw [hFirstEq0]
-        cases hFind : native_re_find_idx_aux rv (c :: cs) 0 with
+        cases hFind : impl_native_re_find_idx_aux rv (c :: cs) 0 with
         | none =>
             simp [str_indexof_re_eval_no_match_pair, __pair_first]
         | some p =>
@@ -1024,14 +1024,14 @@ private theorem str_indexof_re_eval_idx_term_eq
             (__str_flatten (__str_nary_intro (Term.String (c :: cs)))) r
             (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
         Term.Numeral
-          (match native_re_find_idx_aux rv (c :: cs) 0 with
+          (match impl_native_re_find_idx_aux rv (c :: cs) 0 with
           | some (idx, _) => Int.ofNat idx
           | none => -1)
       rw [str_flatten_nary_intro_cons]
       exact hPairFirst
 
 private theorem str_indexof_re_eval_tail_search_side_aux_model_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tail : native_String) (r : Term) (offset : native_Int)
     (rv : SmtRegLan)
     (hTailValid : native_string_valid tail = true)
@@ -1045,13 +1045,13 @@ private theorem str_indexof_re_eval_tail_search_side_aux_model_eval
         (__eo_to_smt
           (str_indexof_re_eval_tail_search_side (Term.String tail) r offset)) =
       SmtValue.Numeral
-        (match native_re_find_idx_aux rv tail 0 with
+        (match impl_native_re_find_idx_aux rv tail 0 with
         | some (idx, _) => offset + Int.ofNat idx
         | none => -1) := by
   have hIdxEq :=
     str_indexof_re_eval_idx_term_eq M hM tail r offset rv hTailValid hRTy hREval
       hSearchNe
-  cases hFind : native_re_find_idx_aux rv tail 0 with
+  cases hFind : impl_native_re_find_idx_aux rv tail 0 with
   | none =>
       simp [str_indexof_re_eval_tail_search_side,
         hIdxEq, hFind, __eo_eq, __eo_ite, native_ite, native_teq]
@@ -1074,7 +1074,7 @@ private theorem str_indexof_re_eval_tail_search_side_aux_model_eval
           rw [__smtx_model_eval.eq_2]
 
 private theorem str_indexof_re_eval_tail_search_side_model_eval_of_aux
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tail : native_String) (r : Term) (offset : native_Int)
     (rv : SmtRegLan)
     (hTailValid : native_string_valid tail = true)
@@ -1088,7 +1088,7 @@ private theorem str_indexof_re_eval_tail_search_side_model_eval_of_aux
         (__eo_to_smt
           (str_indexof_re_eval_tail_search_side (Term.String tail) r offset)) =
       SmtValue.Numeral
-        (match native_re_find_idx_aux rv tail (Int.toNat offset) with
+        (match impl_native_re_find_idx_aux rv tail (Int.toNat offset) with
         | some (idx, _) => Int.ofNat idx
         | none => -1) := by
   have hRelative :=
@@ -1096,7 +1096,7 @@ private theorem str_indexof_re_eval_tail_search_side_model_eval_of_aux
       hTailValid hRTy hREval hOffsetNonneg hSearchNe
   rw [hRelative]
   rw [native_re_find_idx_aux_offset rv tail (Int.toNat offset)]
-  cases hFind : native_re_find_idx_aux rv tail 0 with
+  cases hFind : impl_native_re_find_idx_aux rv tail 0 with
   | none =>
       simp
   | some p =>
@@ -1107,7 +1107,7 @@ private theorem str_indexof_re_eval_tail_search_side_model_eval_of_aux
           simp [hOffsetEq]
 
 private theorem str_indexof_re_eval_tail_search_side_model_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (str : native_String) (r : Term) (ni : native_Int) (rv : SmtRegLan)
     (hSTy : __smtx_typeof (__eo_to_smt (Term.String str)) =
       SmtType.Seq SmtType.Char)
@@ -1134,10 +1134,10 @@ private theorem str_indexof_re_eval_tail_search_side_model_eval
     str_indexof_re_eval_tail_search_side_model_eval_of_aux M hM
       (str.drop (Int.toNat ni)) r ni rv hTailValid hRTy hREval hNiNonneg
       hSearchNe
-  simpa [native_re_find_idx_from, native_string_to_values, List.map_drop] using hAux
+  simpa [native_re_find_idx_from, impl_native_string_to_values, List.map_drop] using hAux
 
 private theorem str_indexof_re_eval_search_side_model_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (str : native_String) (r : Term) (ni : native_Int) (rv : SmtRegLan)
     (hSTy : __smtx_typeof (__eo_to_smt (Term.String str)) =
       SmtType.Seq SmtType.Char)
@@ -1166,7 +1166,7 @@ private theorem str_indexof_re_eval_search_side_model_eval
   simpa [str_indexof_re_eval_search_side, hTailEq] using hTailEval
 
 private theorem str_indexof_re_eval_in_bounds_side_model_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (str : native_String) (r : Term) (ni : native_Int) (rv : SmtRegLan)
     (hSTy : __smtx_typeof (__eo_to_smt (Term.String str)) =
       SmtType.Seq SmtType.Char)
@@ -1207,7 +1207,7 @@ private theorem str_indexof_re_eval_in_bounds_side_model_eval
       hSearchEval
 
 private theorem str_indexof_re_eval_concrete_side_model_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (str : native_String) (r : Term) (ni : native_Int) (rv : SmtRegLan)
     (hSTy : __smtx_typeof (__eo_to_smt (Term.String str)) =
       SmtType.Seq SmtType.Char)
@@ -1243,8 +1243,8 @@ private theorem str_indexof_re_eval_concrete_side_model_eval
         rw [hNiEq] at hLe
         omega
       have hStartNotLeValues :
-          ¬ Int.toNat ni <= (native_string_to_values str).length := by
-        simpa [native_string_to_values] using hStartNotLe
+          ¬ Int.toNat ni <= (impl_native_string_to_values str).length := by
+        simpa [impl_native_string_to_values] using hStartNotLe
       simp [str_indexof_re_eval_side,
         __eo_len, __eo_gt, __eo_is_neg, __eo_or, __eo_ite,
         native_ite, native_teq, native_or, hGtBool, hNegBool,
@@ -1256,8 +1256,8 @@ private theorem str_indexof_re_eval_concrete_side_model_eval
       have hStartLe : Int.toNat ni <= str.length := by
         exact Int.toNat_le.mpr hNiLeLen
       have hStartLeValues :
-          Int.toNat ni <= (native_string_to_values str).length := by
-        simpa [native_string_to_values] using hStartLe
+          Int.toNat ni <= (impl_native_string_to_values str).length := by
+        simpa [impl_native_string_to_values] using hStartLe
       have hValid : native_string_valid str = true :=
         native_string_valid_of_smtx_typeof_eo_string str hSTy
       have hSideEval :=
@@ -1268,7 +1268,7 @@ private theorem str_indexof_re_eval_concrete_side_model_eval
       exact hsimpa
 
 private theorem str_indexof_re_eval_side_model_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r n m : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -1371,7 +1371,7 @@ private theorem str_indexof_re_eval_side_model_eval
        native_teq] at hSideNe)
 
 private theorem str_indexof_re_eval_valid_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r n m : Term)
     (hArgTrans :
       RuleProofs.eo_has_smt_translation
@@ -1439,7 +1439,7 @@ private theorem str_indexof_re_eval_valid_properties
 end RuleProofs
 
 public theorem cmd_step_str_indexof_re_eval_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_indexof_re_eval args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -556,7 +556,7 @@ private theorem eval_eq_low_extract_eq_rebuild
       hRightValues, decide_false]
 
 theorem facts_bv_eq_extract_elim2_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y j wm jp : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
@@ -580,10 +580,10 @@ theorem facts_bv_eq_extract_elim2_term
   let W : Nat := native_int_to_nat w
   let D : Nat := native_int_to_nat d
   have hWRound : (↑W : Int) = w := by
-    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hDRound : (↑D : Int) = d := by
-    simpa [D, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [D, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip d
         (native_zleq_of_zlt_true _ _ (by simpa [d] using hD0))
   have hjwInt : jv < w := by
@@ -601,30 +601,30 @@ theorem facts_bv_eq_extract_elim2_term
   have hXEval :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (↑W : Int) p := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval0
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval0
   have hWNat0 : native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hPRange := bitvec_payload_range_of_canonical hWNat0 hPCanonical
   have hp0 : (0 : Int) ≤ p := hPRange.1
   have hp1 : p < (2 : Int) ^ W := by
     simpa [natpow2_eq, native_nat_to_int,
-      SmtEval.native_nat_to_int] using hPRange.2
+      Smtm.native_nat_to_int] using hPRange.2
   rcases smt_eval_binary_of_smt_type_bitvec M hM (__eo_to_smt y) D
       (by simpa [D, d] using hYSmtTy) with
     ⟨q, hYEval0, hQCanonical⟩
   have hYEval :
       __smtx_model_eval M (__eo_to_smt y) =
         SmtValue.Binary (↑D : Int) q := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hYEval0
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hYEval0
   have hDNat0 : native_zleq 0 (native_nat_to_int D) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hQRange := bitvec_payload_range_of_canonical hDNat0 hQCanonical
   have hq0 : (0 : Int) ≤ q := hQRange.1
   have hq1 : q < (2 : Int) ^ D := by
     simpa [natpow2_eq, native_nat_to_int,
-      SmtEval.native_nat_to_int] using hQRange.2
+      Smtm.native_nat_to_int] using hQRange.2
   let X : BitVec W := BitVec.ofInt W p
   let Y : BitVec D := BitVec.ofInt D q
   have hXPayload : (↑X.toNat : Int) = p := by
@@ -920,7 +920,7 @@ theorem typed_bv_eq_extract_elim2_program
     hXTrans hYTrans hTermTy
 
 theorem facts_bv_eq_extract_elim2_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y j wm jp P1 P2 P3 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
@@ -1362,7 +1362,7 @@ private theorem eval_eq_upper_extract_eq_rebuild
       hRightValues, decide_false]
 
 theorem facts_bv_eq_extract_elim3_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y i j im : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
@@ -1399,10 +1399,10 @@ theorem facts_bv_eq_extract_elim3_term
   let W : Nat := native_int_to_nat w
   let I : Nat := native_int_to_nat iv
   have hWRound : (↑W : Int) = w := by
-    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hIRound : (↑I : Int) = iv := by
-    simpa [I, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [I, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip iv hiv0
   have hSliceNonneg : (0 : Int) ≤ w - iv := by
     have h := hSliceWidth0
@@ -1426,7 +1426,7 @@ theorem facts_bv_eq_extract_elim3_term
     have hCast :
         (↑(native_int_to_nat sliceWidth) : Int) =
           (↑(W - I) : Int) := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int,
+      simpa [native_nat_to_int, Smtm.native_nat_to_int,
         hSliceWidthEq, hSubCast] using hSliceRound
     exact_mod_cast hCast
   have hYSmtTyNat :
@@ -1438,30 +1438,30 @@ theorem facts_bv_eq_extract_elim3_term
   have hXEval :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (↑W : Int) p := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval0
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval0
   have hWNat0 : native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hPRange := bitvec_payload_range_of_canonical hWNat0 hPCanonical
   have hp0 : (0 : Int) ≤ p := hPRange.1
   have hp1 : p < (2 : Int) ^ W := by
     simpa [natpow2_eq, native_nat_to_int,
-      SmtEval.native_nat_to_int] using hPRange.2
+      Smtm.native_nat_to_int] using hPRange.2
   rcases smt_eval_binary_of_smt_type_bitvec M hM (__eo_to_smt y) (W - I)
       hYSmtTyNat with
     ⟨q, hYEval0, hQCanonical⟩
   have hYEval :
       __smtx_model_eval M (__eo_to_smt y) =
         SmtValue.Binary (↑(W - I) : Int) q := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hYEval0
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hYEval0
   have hUNat0 : native_zleq 0 (native_nat_to_int (W - I)) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hQRange := bitvec_payload_range_of_canonical hUNat0 hQCanonical
   have hq0 : (0 : Int) ≤ q := hQRange.1
   have hq1 : q < (2 : Int) ^ (W - I) := by
     simpa [natpow2_eq, native_nat_to_int,
-      SmtEval.native_nat_to_int] using hQRange.2
+      Smtm.native_nat_to_int] using hQRange.2
   let X : BitVec W := BitVec.ofInt W p
   let Y : BitVec (W - I) := BitVec.ofInt (W - I) q
   have hXPayload : (↑X.toNat : Int) = p := by
@@ -1758,7 +1758,7 @@ theorem typed_bv_eq_extract_elim3_program
     hXTrans hYTrans hTermTy
 
 theorem facts_bv_eq_extract_elim3_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y i j im P1 P2 P3 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
@@ -2254,7 +2254,7 @@ private theorem bv_eq_extract_elim1_premises_numeric
   exact ⟨hHv, hLv, hMv, hRoom, hPositive⟩
 
 theorem facts_bv_eq_extract_elim1_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y i j wm jp im : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
@@ -2285,13 +2285,13 @@ theorem facts_bv_eq_extract_elim1_term
   let I : Nat := native_int_to_nat iv
   let D : Nat := native_int_to_nat sliceWidth
   have hWRound : (↑W : Int) = w := by
-    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hIRound : (↑I : Int) = iv := by
-    simpa [I, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [I, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip iv hiv0
   have hDRound : (↑D : Int) = sliceWidth := by
-    simpa [D, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [D, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip sliceWidth hSliceWidth0
   have hEndRound : (↑(I + D) : Int) = jv + 1 := by
     rw [show (↑(I + D) : Int) = (↑I : Int) + (↑D : Int) by
@@ -2322,30 +2322,30 @@ theorem facts_bv_eq_extract_elim1_term
   have hXEval :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (↑W : Int) p := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval0
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval0
   have hWNat0 : native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hPRange := bitvec_payload_range_of_canonical hWNat0 hPCanonical
   have hp0 : (0 : Int) ≤ p := hPRange.1
   have hp1 : p < (2 : Int) ^ W := by
     simpa [natpow2_eq, native_nat_to_int,
-      SmtEval.native_nat_to_int] using hPRange.2
+      Smtm.native_nat_to_int] using hPRange.2
   rcases smt_eval_binary_of_smt_type_bitvec M hM (__eo_to_smt y) D
       hYSmtTyNat with
     ⟨q, hYEval0, hQCanonical⟩
   have hYEval :
       __smtx_model_eval M (__eo_to_smt y) =
         SmtValue.Binary (↑D : Int) q := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hYEval0
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hYEval0
   have hDNat0 : native_zleq 0 (native_nat_to_int D) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hQRange := bitvec_payload_range_of_canonical hDNat0 hQCanonical
   have hq0 : (0 : Int) ≤ q := hQRange.1
   have hq1 : q < (2 : Int) ^ D := by
     simpa [natpow2_eq, native_nat_to_int,
-      SmtEval.native_nat_to_int] using hQRange.2
+      Smtm.native_nat_to_int] using hQRange.2
   let X : BitVec W := BitVec.ofInt W p
   let Y : BitVec D := BitVec.ofInt D q
   have hXPayload : (↑X.toNat : Int) = p := by
@@ -2752,7 +2752,7 @@ theorem typed_bv_eq_extract_elim1_program
     hXTrans hYTrans hTermTy
 
 theorem facts_bv_eq_extract_elim1_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y i j wm jp im P1 P2 P3 P4 P5 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->

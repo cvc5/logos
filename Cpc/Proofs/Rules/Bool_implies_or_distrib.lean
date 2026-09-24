@@ -297,7 +297,7 @@ private theorem typed___eo_prog_bool_implies_or_distrib_impl (y1 y2 ys z : Term)
     hLeftBool hRhsBool
 
 private theorem bool_eval_eq_of_true_iff
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     RuleProofs.eo_has_bool_type B ->
     (eo_interprets M A true ↔ eo_interprets M B true) ->
@@ -325,7 +325,7 @@ private theorem bool_eval_eq_of_true_iff
   · rw [hEvalA, hEvalB]
 
 private theorem facts___eo_prog_bool_implies_or_distrib_impl
-    (M : SmtModel) (hM : model_total_typed M) (y1 y2 ys z : Term) :
+    (M : SmtModel) (hM : model_wf M) (y1 y2 ys z : Term) :
     RuleProofs.eo_has_smt_translation y1 ->
     RuleProofs.eo_has_smt_translation y2 ->
     RuleProofs.eo_has_smt_translation ys ->
@@ -442,8 +442,8 @@ private theorem facts___eo_prog_bool_implies_or_distrib_impl
           (SmtTerm.Boolean true)) by
       rw [hRhsEq]
       rfl]
-    rw [__smtx_model_eval.eq_9, __smtx_model_eval.eq_7, __smtx_model_eval.eq_8,
-      __smtx_model_eval.eq_9, __smtx_model_eval.eq_8, __smtx_model_eval.eq_9,
+    rw [__smtx_model_eval.eq_10, __smtx_model_eval.eq_8, __smtx_model_eval.eq_9,
+      __smtx_model_eval.eq_10, __smtx_model_eval.eq_9, __smtx_model_eval.eq_10,
       __smtx_model_eval.eq_1, hEvalY1, hEvalTail, hEvalZ, hSingletonEval, hEvalTail]
     cases by1 <;> cases bt <;> cases bz <;>
       simp [RuleProofs.smt_value_rel, __smtx_model_eval_eq, __smtx_model_eval_and,
@@ -451,7 +451,7 @@ private theorem facts___eo_prog_bool_implies_or_distrib_impl
         native_veq, SmtEval.native_and, SmtEval.native_or, SmtEval.native_not]
 
 public theorem cmd_step_bool_implies_or_distrib_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bool_implies_or_distrib args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

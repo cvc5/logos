@@ -167,13 +167,13 @@ private theorem smtx_typeof_contains_regex
 private theorem list_typed_char_pack_unpack :
     ∀ {xs : List SmtValue},
       list_typed SmtType.Char xs ->
-        xs.map (fun v => SmtValue.Char (native_ssm_char_of_value v)) = xs
+        xs.map (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) = xs
   | [], _ => rfl
   | v :: vs, hxs => by
       rcases hxs with ⟨hv, hvs⟩
       rcases char_value_canonical hv with ⟨c, hvc, _hc⟩
       rw [hvc]
-      simpa [native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
+      simpa [impl_native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
 
 private theorem unpack_seq_eq_map_unpack_string_of_typeof_seq_char
     (ss : SmtSeq)
@@ -183,7 +183,7 @@ private theorem unpack_seq_eq_map_unpack_string_of_typeof_seq_char
     typed_unpack_seq_of_typeof_seq_value hTy
   have hMap :
       (native_unpack_seq ss).map
-          (fun v => SmtValue.Char (native_ssm_char_of_value v)) =
+          (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) =
         native_unpack_seq ss :=
     list_typed_char_pack_unpack hTyped
   unfold native_unpack_string
@@ -198,23 +198,23 @@ private theorem nativeListInRe_char_self
 private theorem nativeListInRe_re_of_list_self :
     ∀ pat : native_String,
       native_string_valid pat = true ->
-        RuleProofs.nativeListInRe pat (native_re_of_list pat) = true
+        RuleProofs.nativeListInRe pat (impl_native_re_of_list pat) = true
   | [], _ => by
-      simp [native_re_of_list, RuleProofs.nativeListInRe, native_re_nullable]
+      simp [impl_native_re_of_list, RuleProofs.nativeListInRe, native_re_nullable]
   | c :: cs, hValid => by
       rcases RuleProofs.native_string_valid_cons_parts hValid with ⟨hc, hcs⟩
       have hHead : RuleProofs.nativeListInRe [c] (SmtRegLan.char c) = true :=
         nativeListInRe_char_self c hc
-      have hTail : RuleProofs.nativeListInRe cs (native_re_of_list cs) = true :=
+      have hTail : RuleProofs.nativeListInRe cs (impl_native_re_of_list cs) = true :=
         nativeListInRe_re_of_list_self cs hcs
       have hConcat :
           RuleProofs.nativeListInRe (c :: cs)
               (native_re_mk_concat (SmtRegLan.char c)
-                (native_re_of_list cs)) = true :=
+                (impl_native_re_of_list cs)) = true :=
         (RuleProofs.nativeListInRe_mk_concat_true_iff_exists_append
-          (c :: cs) (SmtRegLan.char c) (native_re_of_list cs)).2
+          (c :: cs) (SmtRegLan.char c) (impl_native_re_of_list cs)).2
           ⟨[c], cs, rfl, hHead, hTail⟩
-      simpa [native_re_of_list] using hConcat
+      simpa [impl_native_re_of_list] using hConcat
 
 private theorem native_str_in_re_str_to_re_self
     (pat : native_String)
@@ -296,11 +296,11 @@ private theorem native_seq_contains_map_char_iff
     rcases (native_seq_contains_iff_decomp_local
       (xs.map SmtValue.Char) (pat.map SmtValue.Char)).1 h with
       ⟨before, after, hEq⟩
-    refine ⟨before.map native_ssm_char_of_value,
-      after.map native_ssm_char_of_value, ?_⟩
-    have hMap := congrArg (List.map native_ssm_char_of_value) hEq
+    refine ⟨before.map impl_native_ssm_char_of_value,
+      after.map impl_native_ssm_char_of_value, ?_⟩
+    have hMap := congrArg (List.map impl_native_ssm_char_of_value) hEq
     simpa [List.map_append, List.map_map, Function.comp_def,
-      native_ssm_char_of_value, List.append_assoc] using hMap
+      impl_native_ssm_char_of_value, List.append_assoc] using hMap
   · rintro ⟨before, after, rfl⟩
     simpa [List.map_append, List.append_assoc] using
       native_seq_contains_of_decomp_local
@@ -511,10 +511,10 @@ private theorem smtx_model_eval_contains_regex
     native_re_mult, native_re_allchar, native_re_all, native_re_mk_star,
     native_pack_string, native_pack_seq, native_unpack_string, native_unpack_seq]
   rw [native_unpack_seq_eq_string_to_values_of_typeof_seq_char hSsTy]
-  simp [native_string_to_values, native_ssm_char_of_value, Function.comp_def]
+  simp [impl_native_string_to_values, impl_native_ssm_char_of_value, Function.comp_def]
 
 private theorem facts___eo_prog_str_in_re_contains_impl
-    (M : SmtModel) (hM : model_total_typed M) (t s : Term)
+    (M : SmtModel) (hM : model_wf M) (t s : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hSTrans : RuleProofs.eo_has_smt_translation s)
     (hTTy : __eo_typeof t = Term.Apply Term.Seq Term.Char)
@@ -636,7 +636,7 @@ private theorem facts___eo_prog_str_in_re_contains_impl
 end StrInReContainsProof
 
 public theorem cmd_step_str_in_re_contains_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_in_re_contains args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

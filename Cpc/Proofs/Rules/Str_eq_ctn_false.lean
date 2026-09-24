@@ -115,7 +115,7 @@ private theorem eo_has_bool_type_eq_false
     (by rw [hInnerTy, hFalseTy]) (by rw [hInnerTy]; decide)
 
 public theorem cmd_step_str_eq_ctn_false_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_eq_ctn_false args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

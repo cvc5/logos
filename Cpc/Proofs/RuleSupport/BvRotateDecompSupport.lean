@@ -536,7 +536,7 @@ theorem typed_bv_rotate_decomp_term
     simp only [__smtx_typeof_concat]
     rw [hD2Round]
     simp [SmtEval.native_zplus, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hd1 : (0 : Int) ≤ d1 := by
     simpa [d1, SmtEval.native_zleq] using
       native_zleq_of_zlt_true _ _ hD10
@@ -641,7 +641,7 @@ private theorem smt_typeof_bvsize_rotate
   simp [native_ite, hw0, __smtx_typeof]
 
 private theorem eval_rotate_mod_numeral
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term) (i w : native_Int)
     (hw0 : native_zleq 0 w = true)
     (hXSmtTy :
@@ -694,7 +694,7 @@ private theorem eval_rotate_mod_term_of_width_ne_zero
   change __smtx_model_eval M
       (SmtTerm.mod (SmtTerm.Numeral i)
         (__eo_to_smt (Term.Apply (Term.UOp UserOp._at_bvsize) x))) = _
-  rw [__smtx_model_eval.eq_25, eval_bvsize_rotate M x w hw0 hXSmtTy]
+  rw [__smtx_model_eval.eq_27, eval_bvsize_rotate M x w hw0 hXSmtTy]
   simp [__smtx_model_eval, __smtx_model_eval_eq, __smtx_model_eval_ite,
     __smtx_model_eval_mod_total, native_veq, hwNe]
 
@@ -909,7 +909,7 @@ private theorem eval_concat_eo_term
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem eval_bv_rotate_decomp
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (k : BvRotateElimKind) (x amount u1 u2 l1 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvRotateDecompTerm k x amount u1 u2 l1) = Term.Bool ->
@@ -999,12 +999,12 @@ private theorem eval_bv_rotate_decomp
       let A := native_int_to_nat i
       let R := native_int_to_nat r
       have hWRound : (↑W : Int) = w := by
-        simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
+        simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
           _root_.native_int_to_nat_roundtrip w hw0
       have hR0Native : native_zleq 0 r = true := by
         simpa [SmtEval.native_zleq] using hr0
       have hRRound : (↑R : Int) = r := by
-        simpa [R, native_nat_to_int, SmtEval.native_nat_to_int] using
+        simpa [R, native_nat_to_int, Smtm.native_nat_to_int] using
           _root_.native_int_to_nat_roundtrip r hR0Native
       have hR0 : 0 < R := by
         apply Int.ofNat_lt.mp
@@ -1044,7 +1044,7 @@ private theorem eval_bv_rotate_decomp
       have hXEval' :
           __smtx_model_eval M (__eo_to_smt x) =
             SmtValue.Binary (↑W : Int) p := by
-        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
+        simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
       have hRange := bitvec_payload_range_of_canonical
         (w := (↑W : Int)) (n := p) (by simp [SmtEval.native_zleq]) hCan
       have hp0 : (0 : Int) ≤ p := hRange.1
@@ -1061,7 +1061,7 @@ private theorem eval_bv_rotate_decomp
             (SmtTerm.rotate_left (SmtTerm.Numeral i) (__eo_to_smt x)) = _
         rw [__smtx_model_eval.eq_def] <;> simp only
         rw [__smtx_model_eval.eq_2, hXEval']
-        change __smtx_model_eval_rotate_left_rec A
+        change __smtx_rotate_left_rec A
             (SmtValue.Binary (↑W : Int) p) = _
         rw [bv_rotate_left_rec_eval A W p hp0 hp1]
         congr 2
@@ -1145,12 +1145,12 @@ private theorem eval_bv_rotate_decomp
       let A := native_int_to_nat i
       let R := native_int_to_nat r
       have hWRound : (↑W : Int) = w := by
-        simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
+        simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
           _root_.native_int_to_nat_roundtrip w hw0
       have hR0Native : native_zleq 0 r = true := by
         simpa [SmtEval.native_zleq] using hr0
       have hRRound : (↑R : Int) = r := by
-        simpa [R, native_nat_to_int, SmtEval.native_nat_to_int] using
+        simpa [R, native_nat_to_int, Smtm.native_nat_to_int] using
           _root_.native_int_to_nat_roundtrip r hR0Native
       have hR0 : 0 < R := by
         apply Int.ofNat_lt.mp
@@ -1184,7 +1184,7 @@ private theorem eval_bv_rotate_decomp
       have hXEval' :
           __smtx_model_eval M (__eo_to_smt x) =
             SmtValue.Binary (↑W : Int) p := by
-        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
+        simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
       have hRange := bitvec_payload_range_of_canonical
         (w := (↑W : Int)) (n := p) (by simp [SmtEval.native_zleq]) hCan
       have hp0 : (0 : Int) ≤ p := hRange.1
@@ -1202,7 +1202,7 @@ private theorem eval_bv_rotate_decomp
             (SmtTerm.rotate_right (SmtTerm.Numeral i) (__eo_to_smt x)) = _
         rw [__smtx_model_eval.eq_def] <;> simp only
         rw [__smtx_model_eval.eq_2, hXEval']
-        change __smtx_model_eval_rotate_right_rec A
+        change __smtx_rotate_right_rec A
             (SmtValue.Binary (↑W : Int) p) = _
         rw [bv_rotate_right_rec_eval A W p hp0 hp1]
         congr 2
@@ -1250,7 +1250,7 @@ private theorem eval_bv_rotate_decomp
       rw [hLhsEval, hRhsEval]
 
 theorem facts_bv_rotate_decomp_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (k : BvRotateElimKind) (x amount u1 u2 l1 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvRotateDecompTerm k x amount u1 u2 l1) = Term.Bool ->

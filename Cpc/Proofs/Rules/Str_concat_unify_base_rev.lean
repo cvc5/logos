@@ -142,7 +142,7 @@ private theorem str_concat_unify_base_rev_type_shape
         simp [__eo_prog_str_concat_unify_base_rev, hs, hh, hm] at h ⊢
 
 public theorem cmd_step_str_concat_unify_base_rev_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_concat_unify_base_rev args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

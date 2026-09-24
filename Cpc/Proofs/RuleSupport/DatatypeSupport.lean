@@ -192,8 +192,8 @@ theorem eo_list_len_dt_get_constructors_datatype
 theorem datatype_value_head_of_type
     {v : SmtValue} {s : native_String} {dd : SmtDatatypeDecl}
     (hTy : __smtx_typeof_value v = SmtType.Datatype s dd) :
-    ∃ i, __vsm_apply_head v = SmtValue.DtCons s dd i := by
-  by_cases hHead : ∃ s0 d0 i0, __vsm_apply_head v = SmtValue.DtCons s0 d0 i0
+    ∃ i, __smtx_apply_head_value v = SmtValue.DtCons s dd i := by
+  by_cases hHead : ∃ s0 d0 i0, __smtx_apply_head_value v = SmtValue.DtCons s0 d0 i0
   · rcases hHead with ⟨s0, d0, i0, hHead⟩
     have hChain :=
       dt_cons_chain_type_of_non_none hHead (by rw [hTy]; simp)
@@ -292,20 +292,20 @@ theorem datatype_value_head_of_type
     | UValue _ _ => simp [__smtx_typeof_value] at hTy
     | RegLan _ => simp [__smtx_typeof_value] at hTy
     | DtCons s0 d0 i0 =>
-        exact False.elim (hHead ⟨s0, d0, i0, by simp [__vsm_apply_head]⟩)
+        exact False.elim (hHead ⟨s0, d0, i0, by simp [__smtx_apply_head_value]⟩)
     | Apply f a =>
         have hNone :
             __smtx_typeof_value (SmtValue.Apply f a) = SmtType.None :=
           typeof_value_apply_of_head_ne_dt_cons f a
             (by
               intro s0 d0 i0 hf
-              exact hHead ⟨s0, d0, i0, by simpa [__vsm_apply_head] using hf⟩)
+              exact hHead ⟨s0, d0, i0, by simpa [__smtx_apply_head_value] using hf⟩)
         rw [hNone] at hTy
         cases hTy
 
 theorem datatype_head_index_lt
     {v : SmtValue} {s : native_String} {dd : SmtDatatypeDecl} {i : Nat}
-    (hHead : __vsm_apply_head v = SmtValue.DtCons s dd i)
+    (hHead : __smtx_apply_head_value v = SmtValue.DtCons s dd i)
     (hTy : __smtx_typeof_value v = SmtType.Datatype s dd) :
     i < smtDatatypeNumCtors (__smtx_dd_lookup s dd) := by
   have hChain := dt_cons_chain_type_of_non_none hHead (by rw [hTy]; simp)
@@ -328,7 +328,7 @@ theorem unit_tuple_value_head_zero_of_type
           (SmtDatatypeDecl.cons (native_string_lit "@Tuple")
             (SmtDatatype.sum SmtDatatypeCons.unit SmtDatatype.null)
             SmtDatatypeDecl.nil)) :
-    __vsm_apply_head v =
+    __smtx_apply_head_value v =
       SmtValue.DtCons (native_string_lit "@Tuple")
         (SmtDatatypeDecl.cons (native_string_lit "@Tuple")
           (SmtDatatype.sum SmtDatatypeCons.unit SmtDatatype.null)

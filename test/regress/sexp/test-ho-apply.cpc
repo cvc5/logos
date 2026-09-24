@@ -1,0 +1,11 @@
+; Exercises _ as Eunoia's higher-order application marker.  cvc5 prints a
+; partially applied function that way, so a binary uninterpreted function comes
+; out curried as (_ (_ f x) y), whose head is an expression rather than the name
+; an indexed operator needs.  The second conjunct applies the marker to an
+; indexed operator, which is a name and is read as one.
+(declare-const f (-> Int Int Int))
+(declare-const x Int)
+(declare-const v (BitVec 4))
+(assume @p0 (and (= (_ (_ f x) x) 0) (= (_ (_ extract 1 0) v) #b00)))
+(assume @p1 (not (and (= (_ (_ f x) x) 0) (= (_ (_ extract 1 0) v) #b00))))
+(step @p2 false :rule contra :premises (@p0 @p1))

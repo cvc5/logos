@@ -239,7 +239,7 @@ private theorem facts___eo_prog_sets_singleton_inj_impl
       simp [__eo_prog_sets_singleton_inj] at hProg
 
 public theorem cmd_step_sets_singleton_inj_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_singleton_inj args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

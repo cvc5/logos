@@ -378,7 +378,7 @@ private theorem ubvBitAddend_eval
         (SmtTerm.Numeral 0)) =
       SmtValue.Numeral (if n.toNat.testBit start then (2 ^ start : Int) else 0)
   rw [smtx_eval_ite_term_eq, smtx_eval_eq_term_eq,
-    __smtx_model_eval.eq_35, __smtx_model_eval.eq_2,
+    __smtx_model_eval.eq_37, __smtx_model_eval.eq_2,
     __smtx_model_eval.eq_2, hEvalB, __smtx_model_eval.eq_5,
     __smtx_model_eval.eq_2]
   have hWidth :
@@ -410,7 +410,7 @@ private theorem ubvRawExpansion_eval (M : SmtModel) (b : Term) (w n : Int)
           (SmtTerm.plus (__eo_to_smt (ubvBitAddend b start))
             (__eo_to_smt (ubvRawExpansion b (start + 1) len))) =
         SmtValue.Numeral ((natScaledBitSum n.toNat start (len + 1) : Nat) : Int)
-      rw [__smtx_model_eval.eq_12,
+      rw [__smtx_model_eval.eq_14,
         ubvBitAddend_eval M b w n start hEvalB hn, ih (start + 1)]
       cases h : n.toNat.testBit start <;>
         simp [natScaledBitSum, h, __smtx_model_eval_plus, native_zplus]
@@ -551,7 +551,7 @@ private theorem ubvRawExpansion_singleton_eval (M : SmtModel)
               (Nat.succ (Nat.succ len))
 
 private theorem ubv_to_int_expansion_eval_rel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b : Term) (w : native_Nat)
     (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w) :
     RuleProofs.smt_value_rel
@@ -648,7 +648,7 @@ private theorem ubv_to_int_elim_shape_of_ne_stuck (A : Term) :
     exact False.elim (h hStuck)
 
 public theorem cmd_step_ubv_to_int_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.ubv_to_int_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

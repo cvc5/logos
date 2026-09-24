@@ -50,14 +50,14 @@ private theorem facts___eo_prog_re_star_emp (M : SmtModel) :
       change __smtx_model_eval M
           (SmtTerm.re_mult (SmtTerm.str_to_re (SmtTerm.String (native_string_lit "")))) =
         __smtx_model_eval M (SmtTerm.str_to_re (SmtTerm.String (native_string_lit "")))
-      rw [__smtx_model_eval.eq_106, __smtx_model_eval.eq_105, __smtx_model_eval.eq_4]
+      rw [__smtx_model_eval.eq_108, __smtx_model_eval.eq_107, __smtx_model_eval.eq_4]
       rfl
     rw [hEvalEq]
     exact RuleProofs.smt_value_rel_refl
       (__smtx_model_eval M (__eo_to_smt (Term.Apply Term.str_to_re (Term.String (native_string_lit "")))))
 
 public theorem cmd_step_re_star_emp_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_star_emp args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

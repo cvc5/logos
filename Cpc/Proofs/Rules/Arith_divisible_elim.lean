@@ -44,14 +44,14 @@ private theorem smtx_eval_divisible_term_eq
     __smtx_model_eval M (SmtTerm.divisible n t) =
       __smtx_model_eval_divisible
         (__smtx_model_eval M n) (__smtx_model_eval M t) := by
-  rw [__smtx_model_eval.eq_26]
+  rw [__smtx_model_eval.eq_28]
 
 private theorem smtx_eval_mod_total_term_eq
     (M : SmtModel) (t n : SmtTerm) :
     __smtx_model_eval M (SmtTerm.mod_total t n) =
       __smtx_model_eval_mod_total
         (__smtx_model_eval M t) (__smtx_model_eval M n) := by
-  rw [__smtx_model_eval.eq_30]
+  rw [__smtx_model_eval.eq_32]
 
 private theorem smtx_typeof_of_eo_int
     (a : Term)
@@ -171,7 +171,7 @@ private theorem typed___eo_prog_arith_divisible_elim_impl
       decide)
 
 private theorem facts___eo_prog_arith_divisible_elim_impl
-    (M : SmtModel) (hM : model_total_typed M) (n t P : Term) :
+    (M : SmtModel) (hM : model_wf M) (n t P : Term) :
     RuleProofs.eo_has_smt_translation n ->
     RuleProofs.eo_has_smt_translation t ->
     __eo_prog_arith_divisible_elim n t (Proof.pf P) =
@@ -236,7 +236,7 @@ private theorem facts___eo_prog_arith_divisible_elim_impl
           (SmtValue.Numeral (native_mod_total ti ni)) (SmtValue.Numeral 0))
 
 public theorem cmd_step_arith_divisible_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_divisible_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

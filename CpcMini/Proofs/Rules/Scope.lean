@@ -49,7 +49,7 @@ namespace RuleProofs
 
 /-- Proves correctness of the EO program for `scope`. -/
 theorem correct___eo_prog_scope
-    (M : SmtModel) (hM : model_total_typed M) (x1 x2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 x2 : Term) :
   (eo_interprets M x1 true -> eo_interprets M x2 true) ->
   eo_has_bool_type (__eo_prog_scope x1 (Proof.pf x2)) ->
   eo_interprets M (__eo_prog_scope x1 (Proof.pf x2)) true := by
@@ -79,7 +79,7 @@ theorem correct___eo_prog_scope
           cases b2 <;>
             simp [__eo_prog_scope, __eo_to_smt, __smtx_model_eval, hEval1, hEval2,
               __smtx_model_eval_imp, __smtx_model_eval_or, __smtx_model_eval_not,
-              SmtEval.native_not, SmtEval.native_or]
+              SmtEval.native_not, Smtm.native_or]
       | true =>
           have hX1True : eo_interprets M x1 true :=
             eo_interprets_of_bool_eval M x1 true hTy1' hEval1
@@ -89,7 +89,7 @@ theorem correct___eo_prog_scope
           | intro_true _ hEval2 =>
               simp [__eo_prog_scope, __eo_to_smt, __smtx_model_eval, hEval1, hEval2,
                 __smtx_model_eval_imp, __smtx_model_eval_or, __smtx_model_eval_not,
-                SmtEval.native_not, SmtEval.native_or]
+                SmtEval.native_not, Smtm.native_or]
 
 /-- Lemma about `not_eo_interprets_prog_scope_num_true`. -/
 theorem not_eo_interprets_prog_scope_num_true (M : SmtModel) :
@@ -111,7 +111,7 @@ end RuleProofs
 
 /-- Proves correctness of the EO program for `scope_impl`. -/
 theorem correct___eo_prog_scope_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 x2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 x2 : Term) :
   ((eo_interprets M x1 true) -> eo_interprets M x2 true) ->
   RuleProofs.eo_has_bool_type (__eo_prog_scope x1 (Proof.pf x2)) ->
   (eo_interprets M (__eo_prog_scope x1 (Proof.pf x2)) true) :=
@@ -120,7 +120,7 @@ by
 
 /-- Derives the checker facts exposed by the EO program for `scope_impl`. -/
 theorem facts___eo_prog_scope_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 x2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 x2 : Term) :
   (eo_interprets M x1 true -> eo_interprets M x2 true) ->
   RuleProofs.eo_has_smt_translation x1 ->
   RuleProofs.eo_has_smt_translation x2 ->

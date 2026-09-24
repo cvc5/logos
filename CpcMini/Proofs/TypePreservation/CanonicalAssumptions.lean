@@ -26,7 +26,7 @@ theorem cpcmini_datatype_type_default_typed_canonical_assumption
     (_hRec : __smtx_type_wf_rec (SmtType.Datatype s d) = true) :
       __smtx_typeof_value (__smtx_type_default (SmtType.Datatype s d)) =
         SmtType.Datatype s d ∧
-      __smtx_value_canonical (__smtx_type_default (SmtType.Datatype s d)) := by
+      value_canonical (__smtx_type_default (SmtType.Datatype s d)) := by
   classical
   have hTyped : native_Teq (__smtx_typeof_value
       (__smtx_type_default (SmtType.Datatype s d))) (SmtType.Datatype s d) = true := by
@@ -35,7 +35,7 @@ theorem cpcmini_datatype_type_default_typed_canonical_assumption
     exact h2.2
   refine ⟨of_decide_eq_true (by simpa [native_Teq] using hTyped), ?_⟩
   -- Canonicity follows from recursive well-formedness of the datatype block.
-  simpa [__smtx_value_canonical] using
+  simpa [value_canonical] using
     type_default_canonical_of_inhabited_wf_rec
       (SmtType.Datatype s d) _hInh _hRec
 

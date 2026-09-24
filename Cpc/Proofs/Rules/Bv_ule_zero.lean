@@ -163,7 +163,7 @@ private theorem eo_has_bool_type_bvule_zero_lhs
       (SmtTerm.bvule (__eo_to_smt x1)
         (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral n)) (Term.Numeral 0)))) =
     SmtType.Bool
-  rw [__smtx_typeof.eq_55]
+  rw [__smtx_typeof.eq_57]
   simp [__smtx_typeof_bv_op_2_ret, hSmtTy, hZeroTy, native_nateq, native_ite]
 
 private theorem eo_has_bool_type_eq_bv_zero
@@ -221,7 +221,7 @@ private theorem typed___eo_prog_bv_ule_zero_impl (x1 n1 : Term) :
       decide)
 
 private theorem eval_bvule_zero_matches_eq_zero
-    (M : SmtModel) (hM : model_total_typed M) (x1 n1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 n1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_bv_ule_zero x1 n1) = Term.Bool ->
     __smtx_model_eval M
@@ -261,7 +261,7 @@ private theorem eval_bvule_zero_matches_eq_zero
   have hWidthEq : native_nat_to_int (native_int_to_nat n) = n := by
     have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
       Int.toNat_of_nonneg hnNonneg
-    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   have hZeroEval :
       __smtx_model_eval M
@@ -277,7 +277,7 @@ private theorem eval_bvule_zero_matches_eq_zero
     __smtx_model_eval M
       (SmtTerm.eq (__eo_to_smt x1)
         (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral n)) (Term.Numeral 0))))
-  rw [__smtx_model_eval.eq_55, smtx_eval_eq_term_eq, hEvalX1, hZeroEval]
+  rw [__smtx_model_eval.eq_57, smtx_eval_eq_term_eq, hEvalX1, hZeroEval]
   by_cases hPayloadZero : payload = 0
   · subst payload
     simp [__smtx_model_eval_bvule, __smtx_model_eval_bvuge,
@@ -299,7 +299,7 @@ private theorem eval_bvule_zero_matches_eq_zero
       hZeroNePayload, Int.not_lt_of_ge hPayloadNonneg, hWidthEq]
 
 private theorem facts___eo_prog_bv_ule_zero_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 n1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 n1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_bv_ule_zero x1 n1) = Term.Bool ->
     eo_interprets M (__eo_prog_bv_ule_zero x1 n1) true := by
@@ -327,7 +327,7 @@ private theorem facts___eo_prog_bv_ule_zero_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_ule_zero_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_ule_zero args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

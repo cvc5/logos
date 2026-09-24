@@ -228,7 +228,7 @@ private theorem term_ne_stuck_of_smt_bitvec_type
   cases hTy
 
 private theorem bvEvalCanonical_of_smt_type
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w ->
     BvEvalCanonical M t := by
@@ -236,11 +236,11 @@ private theorem bvEvalCanonical_of_smt_type
   rcases smt_eval_binary_of_smt_type_bitvec M hM (__eo_to_smt t) w hTy with
     ⟨p, hEval, hCan⟩
   have hWidth0 : native_zleq 0 (native_nat_to_int w) = true := by
-    simp [SmtEval.native_zleq, native_nat_to_int, SmtEval.native_nat_to_int]
+    simp [SmtEval.native_zleq, native_nat_to_int, Smtm.native_nat_to_int]
   have hRange := bitvec_payload_range_of_canonical hWidth0 hCan
   refine ⟨w, p, ?_, hRange.1, ?_⟩
-  · simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hEval
-  · simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] using
+  · simpa [native_nat_to_int, Smtm.native_nat_to_int] using hEval
+  · simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] using
       hRange.2
 
 private theorem bvConcat_args_of_bitvec_type
@@ -276,7 +276,7 @@ private theorem smt_typeof_bv_concat_eq
     SmtType.BitVec (wx + wy)
   rw [typeof_concat_eq, hXTy, hYTy]
   simp only [__smtx_typeof_concat, SmtEval.native_zplus,
-    native_nat_to_int, SmtEval.native_nat_to_int,
+    native_nat_to_int, Smtm.native_nat_to_int,
     native_int_to_nat, SmtEval.native_int_to_nat]
   congr
 
@@ -840,7 +840,7 @@ private theorem concat_bitvec_values
   rw [hFormula, Nat.mod_eq_of_lt (x ++ y).isLt]
 
 private theorem eval_bv_extract_concat_low
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x tail : Term) (wx wt : Nat) (h l : native_Int) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec wx ->
     __smtx_typeof (__eo_to_smt tail) = SmtType.BitVec wt ->
@@ -861,10 +861,10 @@ private theorem eval_bv_extract_concat_low
   let L : Nat := native_int_to_nat l
   let D : Nat := native_int_to_nat d
   have hLRound : (↑L : Int) = l := by
-    simpa [L, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [L, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip l hl0
   have hDRound : (↑D : Int) = d := by
-    simpa [D, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [D, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip d hd0
   have hDDef : d = h + 1 + -l := by
     simp [d, SmtEval.native_zplus, SmtEval.native_zneg,
@@ -893,10 +893,10 @@ private theorem eval_bv_extract_concat_low
     ⟨pt, hTailEval, hTailCan⟩
   have hWx0 : native_zleq 0 (native_nat_to_int wx) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hWt0 : native_zleq 0 (native_nat_to_int wt) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hXRange := bitvec_payload_range_of_canonical hWx0 hXCan
   have hTailRange := bitvec_payload_range_of_canonical hWt0 hTailCan
   let bx : BitVec wx := BitVec.ofInt wx px
@@ -905,23 +905,23 @@ private theorem eval_bv_extract_concat_low
     rw [show bx.toNat = px.toNat by
       exact ofInt_toNat_canonical wx px hXRange.1 (by
         simpa [natpow2_eq, native_nat_to_int,
-          SmtEval.native_nat_to_int] using hXRange.2)]
+          Smtm.native_nat_to_int] using hXRange.2)]
     exact Int.toNat_of_nonneg hXRange.1
   have hBtPayload : (↑bt.toNat : Int) = pt := by
     rw [show bt.toNat = pt.toNat by
       exact ofInt_toNat_canonical wt pt hTailRange.1 (by
         simpa [natpow2_eq, native_nat_to_int,
-          SmtEval.native_nat_to_int] using hTailRange.2)]
+          Smtm.native_nat_to_int] using hTailRange.2)]
     exact Int.toNat_of_nonneg hTailRange.1
   have hXEvalB :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (↑wx : Int) (↑bx.toNat : Int) := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int, hBxPayload]
+    simpa [native_nat_to_int, Smtm.native_nat_to_int, hBxPayload]
       using hXEval
   have hTailEvalB :
       __smtx_model_eval M (__eo_to_smt tail) =
         SmtValue.Binary (↑wt : Int) (↑bt.toNat : Int) := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int, hBtPayload]
+    simpa [native_nat_to_int, Smtm.native_nat_to_int, hBtPayload]
       using hTailEval
   have hConcatEval :
       __smtx_model_eval M (__eo_to_smt (bvConcatTerm x tail)) =
@@ -973,7 +973,7 @@ private theorem native_zlt_nat_add_right_local
   exact decide_eq_true hltAdd
 
 private theorem eval_bv_extract_list_concat_rec_low
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a z : Term) (wa wz : Nat) (h l : native_Int) :
     __eo_is_list (Term.UOp UserOp.concat) a = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt a) = SmtType.BitVec wa ->
@@ -1046,7 +1046,7 @@ private theorem eval_bv_extract_list_concat_rec_low
       simpa [__eo_list_concat_rec]
 
 private theorem eval_bv_extract_list_concat_low
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a z : Term) (wa wz : Nat) (h l : native_Int) :
     __eo_is_list (Term.UOp UserOp.concat) a = Term.Boolean true ->
     __eo_is_list (Term.UOp UserOp.concat) z = Term.Boolean true ->
@@ -1105,11 +1105,11 @@ private theorem eval_bvsize_of_smt_bitvec_nat
   intro hTy
   have hw0 : native_zleq 0 (native_nat_to_int w) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hTy' :
       __smtx_typeof (__eo_to_smt x) =
         SmtType.BitVec (native_int_to_nat (native_nat_to_int w)) := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int,
+    simpa [native_nat_to_int, Smtm.native_nat_to_int,
       native_int_to_nat, SmtEval.native_int_to_nat] using hTy
   exact eval_bvsize_of_smt_bitvec M x (native_nat_to_int w) hw0 hTy'
 
@@ -1166,7 +1166,7 @@ private theorem bvExtractConcat4Prem_bound
           (native_zneg (native_nat_to_int wx)) =
         native_nat_to_int (wxs + wy) := by
     simp [SmtEval.native_zplus, SmtEval.native_zneg,
-      native_nat_to_int, SmtEval.native_nat_to_int]
+      native_nat_to_int, Smtm.native_nat_to_int]
     calc
       (↑wx : Int) + (↑wy + ↑wxs) + -↑wx =
           ((↑wy + ↑wxs) + ↑wx) + -↑wx := by
@@ -1218,7 +1218,7 @@ private theorem smt_typeof_bvsize_int_inv (t : Term) :
   generalize hT : __smtx_typeof (__eo_to_smt t) = T at hTy
   cases T <;>
     simp [__eo_to_smt_bv_size, SmtEval.native_zleq,
-      SmtEval.native_zneg, native_nat_to_int, SmtEval.native_nat_to_int,
+      SmtEval.native_zneg, native_nat_to_int, Smtm.native_nat_to_int,
       native_ite, __smtx_typeof] at hTy ⊢
 
 private theorem smt_typeof_bvsize_ne_real (t : Term) :
@@ -1237,7 +1237,7 @@ private theorem smt_typeof_bvsize_ne_real (t : Term) :
   generalize hT : __smtx_typeof (__eo_to_smt t) = T at hTy
   cases T <;>
     simp [__eo_to_smt_bv_size, SmtEval.native_zleq,
-      SmtEval.native_zneg, native_nat_to_int, SmtEval.native_nat_to_int,
+      SmtEval.native_zneg, native_nat_to_int, Smtm.native_nat_to_int,
       native_ite, __smtx_typeof] at hTy
 
 private theorem smt_typeof_neg_int_args
@@ -2131,7 +2131,7 @@ theorem typed_bv_extract_concat4_program_body
     using hTermBool
 
 private theorem bvConcatListCanonical_of_smt_type
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     (t : Term) -> (w : Nat) ->
     __eo_is_list (Term.UOp UserOp.concat) t = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w ->
@@ -2296,7 +2296,7 @@ private theorem bvConcatListCanonical_eval
           simpa [BvConcatListCanonical] using h
 
 theorem bvConcatSingletonElimEvalRel
-    (M : SmtModel) (hM : model_total_typed M) (c : Term) (w : Nat) :
+    (M : SmtModel) (hM : model_wf M) (c : Term) (w : Nat) :
     __eo_is_list (Term.UOp UserOp.concat) c = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt c) = SmtType.BitVec w ->
     RuleProofs.smt_value_rel
@@ -2351,7 +2351,7 @@ theorem bvConcatSingletonElimEvalRel
         RuleProofs.smt_value_rel_refl _
 
 private theorem bvConcat_right_empty_eval_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term) (wx : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec wx ->
     __smtx_model_eval M
@@ -2390,7 +2390,7 @@ private theorem bvConcat_right_empty_eval_eq
     cases hConcatValueTy)).mp hRel
 
 private theorem eval_bv_extract_concat1_seed_low
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y : Term) (wx wy : Nat) (h l : native_Int) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec wx ->
     __smtx_typeof (__eo_to_smt y) = SmtType.BitVec wy ->
@@ -2432,7 +2432,7 @@ private theorem eval_bv_extract_concat1_seed_low
     hInnerEval]
 
 private theorem eval_bv_extract_concat1_whole_low
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y xs : Term) (wx wy wxs : Nat) (h l : native_Int) :
     __eo_is_list (Term.UOp UserOp.concat) xs = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec wx ->
@@ -2478,7 +2478,7 @@ private theorem eval_bv_extract_concat1_whole_low
           (Term.Numeral l))) := hSeedLow
 
 theorem facts_bv_extract_concat1_program_body
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x xs y i j : Term) :
     RuleProofs.eo_has_smt_translation xs ->
     RuleProofs.eo_has_smt_translation y ->
@@ -2525,7 +2525,7 @@ theorem facts_bv_extract_concat1_program_body
     have hRound := native_int_to_nat_roundtrip wRhs hwRhs0
     have hWidthEq :
         native_nat_to_int (native_int_to_nat wRhs) = wRhs := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hRound
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hRound
     simpa [hWidthEq] using hhRhs
   have hEvalEq :=
     eval_bv_extract_concat1_whole_low M hM x y xs
@@ -2552,7 +2552,7 @@ theorem facts_bv_extract_concat1_program_body
     exact RuleProofs.smt_value_rel_refl _
 
 theorem facts_bv_extract_concat4_program_body
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y xs i j : Term) :
     RuleProofs.eo_has_bool_type (bvExtractConcat4Prem x y xs j) ->
     __eo_typeof (bvExtractConcat4ProgramBody x y xs i j) = Term.Bool ->
@@ -3592,7 +3592,7 @@ theorem typed_bv_extract_concat3_program_body
   simpa [hBodyEq] using hTermBool
 
 private theorem eval_bv_concat_assoc
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b c : Term) (wa wb wc : Nat) :
     __smtx_typeof (__eo_to_smt a) = SmtType.BitVec wa ->
     __smtx_typeof (__eo_to_smt b) = SmtType.BitVec wb ->
@@ -3610,27 +3610,27 @@ private theorem eval_bv_concat_assoc
       hCTy with ⟨pc, hCEval, hCCan⟩
   have hWa0 : native_zleq 0 (native_nat_to_int wa) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hWb0 : native_zleq 0 (native_nat_to_int wb) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hWc0 : native_zleq 0 (native_nat_to_int wc) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hARange := bitvec_payload_range_of_canonical hWa0 hACan
   have hBRange := bitvec_payload_range_of_canonical hWb0 hBCan
   have hCRange := bitvec_payload_range_of_canonical hWc0 hCCan
   have hpa0 : 0 ≤ pa := hARange.1
   have hpa1 : pa < (2 : Int) ^ wa := by
-    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] using
       hARange.2
   have hpb0 : 0 ≤ pb := hBRange.1
   have hpb1 : pb < (2 : Int) ^ wb := by
-    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] using
       hBRange.2
   have hpc0 : 0 ≤ pc := hCRange.1
   have hpc1 : pc < (2 : Int) ^ wc := by
-    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] using
       hCRange.2
   let ba := BitVec.ofInt wa pa
   let bb := BitVec.ofInt wb pb
@@ -3649,13 +3649,13 @@ private theorem eval_bv_concat_assoc
     exact Int.toNat_of_nonneg hpc0
   have hAEval' : __smtx_model_eval M (__eo_to_smt a) =
       SmtValue.Binary (↑wa : Int) (↑ba.toNat : Int) := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int, hPa] using hAEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int, hPa] using hAEval
   have hBEval' : __smtx_model_eval M (__eo_to_smt b) =
       SmtValue.Binary (↑wb : Int) (↑bb.toNat : Int) := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int, hPb] using hBEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int, hPb] using hBEval
   have hCEval' : __smtx_model_eval M (__eo_to_smt c) =
       SmtValue.Binary (↑wc : Int) (↑bc.toNat : Int) := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int, hPc] using hCEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int, hPc] using hCEval
   change __smtx_model_eval M
       (SmtTerm.concat (__eo_to_smt a)
         (SmtTerm.concat (__eo_to_smt b) (__eo_to_smt c))) =
@@ -3671,7 +3671,7 @@ private theorem eval_bv_concat_assoc
   simp [Nat.add_assoc, hNat]
 
 private theorem eval_bv_list_concat_rec_append
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     (a z1 z2 x : Term) -> (wa wz wx : Nat) ->
     __eo_is_list (Term.UOp UserOp.concat) a = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt a) = SmtType.BitVec wa ->
@@ -3752,7 +3752,7 @@ private theorem eval_bv_list_concat_rec_append
       simpa [__eo_list_concat_rec, hZ1, hZ2Ne] using hBase
 
 private theorem eval_bv_extract_concat_seed_append
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y : Term) (wx wy : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec wx ->
     __smtx_typeof (__eo_to_smt y) = SmtType.BitVec wy ->
@@ -3783,7 +3783,7 @@ private theorem eval_bv_extract_concat_seed_append
   exact hAssoc.trans (hXYEmpty.trans hRight)
 
 private theorem eval_bv_extract_concat_whole_append
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y xs : Term) (wx wy wxs : Nat) :
     __eo_is_list (Term.UOp UserOp.concat) xs = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec wx ->
@@ -3811,7 +3811,7 @@ private theorem eval_bv_extract_concat_whole_append
     SmtEval.native_not] using hRec
 
 private theorem bvConcatSingletonElimEvalEq
-    (M : SmtModel) (hM : model_total_typed M) (c : Term) (w : Nat) :
+    (M : SmtModel) (hM : model_wf M) (c : Term) (w : Nat) :
     __eo_is_list (Term.UOp UserOp.concat) c = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt c) = SmtType.BitVec w ->
     __smtx_model_eval M
@@ -3943,7 +3943,7 @@ theorem bvConcat_singleton_elim_eo_type_inv
             rw [hHeadTy, hEmptyTy]
             simp [__eo_typeof_concat, __eo_lit_type_Binary,
               __eo_mk_apply, __eo_add, native_nat_to_int,
-              SmtEval.native_nat_to_int, SmtEval.native_zplus]
+              Smtm.native_nat_to_int, SmtEval.native_zplus]
       | _ => simpa [__eo_list_singleton_elim_2] using hTy
   | _ => simpa [__eo_list_singleton_elim_2] using hTy
 
@@ -3979,7 +3979,7 @@ theorem bvConcat_eo_typeof_list_concat_right_bitvec
   eo_typeof_list_concat_right_bitvec_of_result a z w
 
 theorem bvConcat_list_concat_rec_eval_append
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a z1 z2 x : Term) (wa wz wx : Nat) :
     __eo_is_list (Term.UOp UserOp.concat) a = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt a) = SmtType.BitVec wa ->
@@ -3994,7 +3994,7 @@ theorem bvConcat_list_concat_rec_eval_append
   eval_bv_list_concat_rec_append M hM a z1 z2 x wa wz wx
 
 theorem bvConcat_assoc_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b c : Term) (wa wb wc : Nat) :
     __smtx_typeof (__eo_to_smt a) = SmtType.BitVec wa ->
     __smtx_typeof (__eo_to_smt b) = SmtType.BitVec wb ->
@@ -4006,7 +4006,7 @@ theorem bvConcat_assoc_eval
   eval_bv_concat_assoc M hM a b c wa wb wc
 
 theorem bvConcat_singleton_elim_eval_eq
-    (M : SmtModel) (hM : model_total_typed M) (c : Term) (w : Nat) :
+    (M : SmtModel) (hM : model_wf M) (c : Term) (w : Nat) :
     __eo_is_list (Term.UOp UserOp.concat) c = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt c) = SmtType.BitVec w ->
     __smtx_model_eval M
@@ -4016,7 +4016,7 @@ theorem bvConcat_singleton_elim_eval_eq
   bvConcatSingletonElimEvalEq M hM c w
 
 theorem bvConcat_eval_right_empty
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (w : Nat) :
+    (M : SmtModel) (hM : model_wf M) (x : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_model_eval M
         (__eo_to_smt (bvConcatTerm x (Term.Binary 0 0))) =
@@ -4024,7 +4024,7 @@ theorem bvConcat_eval_right_empty
   bvConcat_right_empty_eval_eq M hM x w
 
 private theorem eval_bv_extract_concat_whole_append_elim
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y xs : Term) (wx wy wxs : Nat) :
     __eo_is_list (Term.UOp UserOp.concat) xs = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec wx ->
@@ -4246,7 +4246,7 @@ private theorem bvExtractConcat2_high_length_fits
   exact_mod_cast hCast
 
 private theorem eval_bv_extract_concat2_rhs_no_empty
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y xs i u1 u2 : Term) (dLow : Nat) :
     __smtx_typeof (__eo_to_smt (bvExtractConcat2Low x i u2)) =
       SmtType.BitVec dLow ->
@@ -4273,7 +4273,7 @@ private theorem eval_bv_extract_concat2_rhs_no_empty
   rw [hEmpty]
 
 theorem facts_bv_extract_concat2_program_body
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x xs y i j u1 u2 : Term) :
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation xs ->
@@ -4384,12 +4384,12 @@ theorem facts_bv_extract_concat2_program_body
   let dHigh := native_zplus (native_zplus u1v 1) (native_zneg 0)
   let DH := native_int_to_nat dHigh
   have hIRound : (↑I : Int) = iv := by
-    simpa [I, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [I, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip iv hi0
   have hdHighNonneg : native_zleq 0 dHigh = true :=
     native_zleq_of_zlt_true _ _ hdHigh0
   have hDHRound : (↑DH : Int) = dHigh := by
-    simpa [DH, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [DH, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip dHigh hdHighNonneg
   have hiWxInt : iv < (↑wx : Int) := by
     exact of_decide_eq_true hiWx
@@ -4397,11 +4397,11 @@ theorem facts_bv_extract_concat2_program_body
     exact of_decide_eq_true hWxJ
   have hu1Int : u1v = jv - (↑wx : Int) := by
     simpa [SmtEval.native_zplus, SmtEval.native_zneg,
-      native_nat_to_int, SmtEval.native_nat_to_int,
+      native_nat_to_int, Smtm.native_nat_to_int,
       Int.sub_eq_add_neg] using hu1
   have hu2Int : u2v = (↑wx : Int) - 1 := by
     simpa [SmtEval.native_zplus, SmtEval.native_zneg,
-      native_nat_to_int, SmtEval.native_nat_to_int,
+      native_nat_to_int, Smtm.native_nat_to_int,
       Int.sub_eq_add_neg] using hu2
   have hDHCast : u1v + 1 = (↑DH : Int) := by
     rw [hDHRound]
@@ -4416,7 +4416,7 @@ theorem facts_bv_extract_concat2_program_body
   have hHighWidthInt : wHighSrc = (↑(wxs + wy) : Int) := by
     calc
       wHighSrc = native_nat_to_int (native_int_to_nat wHighSrc) := by
-        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+        simpa [native_nat_to_int, Smtm.native_nat_to_int] using
           hHighWidthRound.symm
       _ = (↑(wxs + wy) : Int) := by
         rw [hTailWidthEq]
@@ -4453,7 +4453,7 @@ theorem facts_bv_extract_concat2_program_body
     exact decide_eq_true hNonneg
   have hWx0 : native_zleq 0 (native_nat_to_int wx) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hTRange := bitvec_payload_range_of_canonical hWt0 hTailCan
   have hXRange := bitvec_payload_range_of_canonical hWx0 hXCan
   have hpt0 : 0 ≤ pt := hTRange.1
@@ -4461,14 +4461,14 @@ theorem facts_bv_extract_concat2_program_body
     exact hTRange.2
   have hpx0 : 0 ≤ px := hXRange.1
   have hpx1 : px < (2 : Int) ^ wx := by
-    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] using
       hXRange.2
   have hTailEval' : __smtx_model_eval M (__eo_to_smt tailElim) =
       SmtValue.Binary (↑(wxs + wy) : Int) pt := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hTailEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hTailEval
   have hXEval' : __smtx_model_eval M (__eo_to_smt x) =
       SmtValue.Binary (↑wx : Int) px := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
   have hBool := typed_bv_extract_concat2_program_body x xs y
     (Term.Numeral iv) (Term.Numeral jv) (Term.Numeral u1v)
     (Term.Numeral u2v) hYTrans hXsTrans (by simpa using hPremBool) hBodyTy
@@ -4628,7 +4628,7 @@ private theorem int_cancel_extract_start
   omega
 
 theorem facts_bv_extract_concat3_program_body
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y xs i j u l : Term) :
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation xs ->
@@ -4696,17 +4696,17 @@ theorem facts_bv_extract_concat3_program_body
   let d := native_zplus (native_zplus jv 1) (native_zneg iv)
   let D := native_int_to_nat d
   have hLRound : (↑L : Int) = lv := by
-    simpa [L, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [L, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip lv hl0
   have hd0 : native_zleq 0 d = true :=
     native_zleq_of_zlt_true _ _ hdLhs0
   have hDRound : (↑D : Int) = d := by
-    simpa [D, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [D, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip d hd0
   have hiCast : iv = (↑(wx + L) : Int) := by
     have hlInt : lv = iv - (↑wx : Int) := by
       simpa [SmtEval.native_zplus, SmtEval.native_zneg,
-        native_nat_to_int, SmtEval.native_nat_to_int,
+        native_nat_to_int, Smtm.native_nat_to_int,
         Int.sub_eq_add_neg] using hl
     rw [← Int.ofNat_add_ofNat, hLRound]
     calc
@@ -4718,11 +4718,11 @@ theorem facts_bv_extract_concat3_program_body
     rfl
   have huInt : uv = jv - (↑wx : Int) := by
     simpa [SmtEval.native_zplus, SmtEval.native_zneg,
-      native_nat_to_int, SmtEval.native_nat_to_int,
+      native_nat_to_int, Smtm.native_nat_to_int,
       Int.sub_eq_add_neg] using hu
   have hlInt : lv = iv - (↑wx : Int) := by
     simpa [SmtEval.native_zplus, SmtEval.native_zneg,
-      native_nat_to_int, SmtEval.native_nat_to_int,
+      native_nat_to_int, Smtm.native_nat_to_int,
       Int.sub_eq_add_neg] using hl
   have hdRCast : uv + 1 + -lv = (↑D : Int) := by
     calc
@@ -4738,7 +4738,7 @@ theorem facts_bv_extract_concat3_program_body
     have hWInt : wRhs = (↑(wxs + wy) : Int) := by
       calc
         wRhs = native_nat_to_int (native_int_to_nat wRhs) := by
-          simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+          simpa [native_nat_to_int, Smtm.native_nat_to_int] using
             hWRound.symm
         _ = (↑(wxs + wy) : Int) := by
           rw [hWidthEq]
@@ -4768,7 +4768,7 @@ theorem facts_bv_extract_concat3_program_body
     exact decide_eq_true hNonneg
   have hWx0 : native_zleq 0 (native_nat_to_int wx) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hTRange := bitvec_payload_range_of_canonical hWt0 hTailCan
   have hXRange := bitvec_payload_range_of_canonical hWx0 hXCan
   have hpt0 : 0 ≤ pt := hTRange.1
@@ -4776,14 +4776,14 @@ theorem facts_bv_extract_concat3_program_body
     exact hTRange.2
   have hpx0 : 0 ≤ px := hXRange.1
   have hpx1 : px < (2 : Int) ^ wx := by
-    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] using
       hXRange.2
   have hTailEval' : __smtx_model_eval M (__eo_to_smt tailElim) =
       SmtValue.Binary (↑(wxs + wy) : Int) pt := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hTailEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hTailEval
   have hXEval' : __smtx_model_eval M (__eo_to_smt x) =
       SmtValue.Binary (↑wx : Int) px := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
   have hBool := typed_bv_extract_concat3_program_body x y xs
     (Term.Numeral iv) (Term.Numeral jv) (Term.Numeral uv)
     (Term.Numeral lv) hYTrans hXsTrans (by simpa using hPremBool) hBodyTy
@@ -4859,7 +4859,7 @@ theorem bvConcat_bvsize_smt_type_of_non_none (t : Term) :
     cases T <;>
       simp [__eo_to_smt_bv_size, SmtEval.native_zleq,
         SmtEval.native_zneg, native_nat_to_int,
-        SmtEval.native_nat_to_int, native_ite, __smtx_typeof] at hNN ⊢
+        Smtm.native_nat_to_int, native_ite, __smtx_typeof] at hNN ⊢
   rcases smt_typeof_bvsize_int_inv t hInt with ⟨w, hTy⟩
   exact ⟨w, hTy, hInt⟩
 

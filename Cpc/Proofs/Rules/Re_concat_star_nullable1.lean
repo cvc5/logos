@@ -82,7 +82,7 @@ theorem nullable_of_premise (M : SmtModel) (r1 : Term) (r1v : SmtRegLan)
   have hMem : native_str_in_re ([] : native_String) r1v = true := by
     simpa using hEq
   have hNull : native_re_nullable r1v = true := by
-    simpa [Smtm.native_str_in_re, native_re_str_valid, native_string_to_values]
+    simpa [Smtm.native_str_in_re, native_re_str_valid, impl_native_string_to_values]
       using hMem
   exact hNull
 
@@ -102,7 +102,7 @@ operation involved (`re.concat`, `re.++`, `str.to_re`, `re.*`, `re.allchar`) is
 faithfully translatable.
 -/
 public theorem cmd_step_re_concat_star_nullable1_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_concat_star_nullable1 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

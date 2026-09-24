@@ -499,7 +499,7 @@ private theorem hasBoolTypeBvult
   unfold RuleProofs.eo_has_bool_type
   change __smtx_typeof (SmtTerm.bvult (__eo_to_smt a) (__eo_to_smt b)) =
     SmtType.Bool
-  rw [__smtx_typeof.eq_54]
+  rw [__smtx_typeof.eq_56]
   simp [__smtx_typeof_bv_op_2_ret, hA, hB, native_nateq, native_ite]
 
 theorem typedTerm (x ys zs c w : Term) :
@@ -562,7 +562,7 @@ theorem typedTerm (x ys zs c w : Term) :
           cases h))
 
 theorem evalIncEqBaseAdd
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (ys zs c : Term) (W : Nat) :
     __eo_is_list op ys = Term.Boolean true ->
     __eo_is_list op zs = Term.Boolean true ->
@@ -740,7 +740,7 @@ private theorem binaryRelPayloadEq
     native_veq] using h
 
 theorem factsTerm
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x ys zs c w : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation ys ->
@@ -926,7 +926,7 @@ theorem typedProgram (x ys zs c w P1 P2 : Term) :
     hLists.1 hLists.2 hTermTy
 
 theorem factsProgram
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x ys zs c w P1 P2 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation ys ->

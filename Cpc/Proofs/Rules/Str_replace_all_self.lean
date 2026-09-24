@@ -148,7 +148,7 @@ private theorem typed___eo_prog_str_replace_all_self_impl
   simpa [replaceAllSelfConclusion, lhs, rhs] using hBoolEq
 
 private theorem facts___eo_prog_str_replace_all_self_impl
-    (M : SmtModel) (hM : model_total_typed M) (t s P : Term)
+    (M : SmtModel) (hM : model_wf M) (t s P : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hSTrans : RuleProofs.eo_has_smt_translation s)
     (hTTy : __eo_typeof t = Term.Apply Term.Seq T)
@@ -248,7 +248,7 @@ private theorem facts___eo_prog_str_replace_all_self_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_replace_all_self_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_replace_all_self args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

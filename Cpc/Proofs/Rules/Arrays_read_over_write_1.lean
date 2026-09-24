@@ -190,7 +190,7 @@ private theorem typed___eo_prog_arrays_read_over_write_1_impl
       exact hBNonNone)
 
 private theorem facts___eo_prog_arrays_read_over_write_1_impl
-    (M : SmtModel) (hM : model_total_typed M) (a i e i2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a i e i2 : Term) :
   RuleProofs.eo_has_smt_translation
     (Term.Apply
       (Term.Apply Term.select
@@ -240,7 +240,7 @@ private theorem facts___eo_prog_arrays_read_over_write_1_impl
     simpa [lhs] using hArgTrans
   rcases smt_types_of_select_store_arg a i e i hArgTrans' with
     ⟨A, B, hATy, hITy, hETy, _hIdxTy, _hLhsTy, _hBNonNone, hATrans, _hETrans⟩
-  have hACan : __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt a)) :=
+  have hACan : value_canonical (__smtx_model_eval M (__eo_to_smt a)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM a hATrans
   have hEvalATy :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt a)) =
@@ -251,7 +251,7 @@ private theorem facts___eo_prog_arrays_read_over_write_1_impl
   rcases Smtm.map_value_canonical hEvalATy with ⟨m, hEvalA⟩
   have hMapCan : __smtx_map_canonical m = true := by
     rw [hEvalA] at hACan
-    simpa [__smtx_value_canonical, __smtx_value_canonical_bool] using hACan
+    simpa [value_canonical, __smtx_value_canonical] using hACan
   rw [prog_arrays_read_over_write_1_eq a i e i]
   have hBodyBool : RuleProofs.eo_has_bool_type body := by
     have h := hProgBool
@@ -278,7 +278,7 @@ private theorem facts___eo_prog_arrays_read_over_write_1_impl
       RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt e))
 
 public theorem cmd_step_arrays_read_over_write_1_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arrays_read_over_write_1 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

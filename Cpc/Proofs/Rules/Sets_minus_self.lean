@@ -25,7 +25,7 @@ private theorem prog_sets_minus_self_eq_of_ne_stuck (x T : Term) :
       SetsBasicRewritesSupport.mkSetEmpty] at hx ⊢
 
 public theorem cmd_step_sets_minus_self_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_minus_self args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

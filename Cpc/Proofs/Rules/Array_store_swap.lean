@@ -478,7 +478,7 @@ private theorem typed___eo_prog_array_store_swap_impl
       exact False.elim this
 
 private theorem facts___eo_prog_array_store_swap_impl
-    (M : SmtModel) (hM : model_total_typed M) (t1 i1 j1 e1 f1 p1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t1 i1 j1 e1 f1 p1 : Term) :
   RuleProofs.eo_has_smt_translation t1 ->
   RuleProofs.eo_has_smt_translation i1 ->
   RuleProofs.eo_has_smt_translation j1 ->
@@ -494,19 +494,19 @@ private theorem facts___eo_prog_array_store_swap_impl
       t1 i1 j1 e1 f1 p1
       hT1Trans hI1Trans hJ1Trans hE1Trans hF1Trans hResultTy
   have hT1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt t1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt t1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t1 hT1Trans
   have hI1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt i1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt i1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM i1 hI1Trans
   have hJ1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt j1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt j1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM j1 hJ1Trans
   have hE1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt e1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt e1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM e1 hE1Trans
   have hF1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt f1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt f1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM f1 hF1Trans
   have hT1NotStuck : t1 ≠ Term.Stuck :=
     RuleProofs.term_ne_stuck_of_has_smt_translation t1 hT1Trans
@@ -635,7 +635,7 @@ private theorem facts___eo_prog_array_store_swap_impl
       exact False.elim this
 
 public theorem cmd_step_array_store_swap_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.array_store_swap args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

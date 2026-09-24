@@ -36,7 +36,7 @@ private theorem not_mk_apply_arg_ne_stuck {t : Term} :
   simp [__eo_mk_apply] at hMk
 
 private theorem eq_true_bool_cases
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) A) B) true ->
@@ -58,7 +58,7 @@ private theorem eq_true_bool_cases
     · exact Or.inr ⟨hAFalse, hBFalse⟩
 
 private theorem eq_false_bool_cases
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) A) B) false ->
@@ -80,7 +80,7 @@ private theorem eq_false_bool_cases
       exact False.elim ((RuleProofs.eo_interprets_true_not_false M _ hEqTrue) hEqFalse)
 
 private theorem xor_true_bool_cases
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.xor) A) B) true ->
@@ -102,7 +102,7 @@ private theorem xor_true_bool_cases
       exact False.elim ((RuleProofs.eo_interprets_true_not_false M _ hXorTrue) hXorFalse)
 
 private theorem xor_false_bool_cases
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.xor) A) B) false ->
@@ -169,7 +169,7 @@ private theorem ite_args_bool_of_ite_bool (C T E : Term) :
     hTBool, hEBool⟩
 
 private theorem ite_true_bool_cases
-    (M : SmtModel) (hM : model_total_typed M) (C T E : Term) :
+    (M : SmtModel) (hM : model_wf M) (C T E : Term) :
     RuleProofs.eo_has_bool_type C ->
     RuleProofs.eo_has_bool_type T ->
     RuleProofs.eo_has_bool_type E ->
@@ -194,7 +194,7 @@ private theorem ite_true_bool_cases
       exact False.elim ((RuleProofs.eo_interprets_true_not_false M _ hIteTrue) hIteFalse)
 
 private theorem ite_false_bool_cases
-    (M : SmtModel) (hM : model_total_typed M) (C T E : Term) :
+    (M : SmtModel) (hM : model_wf M) (C T E : Term) :
     RuleProofs.eo_has_bool_type C ->
     RuleProofs.eo_has_bool_type T ->
     RuleProofs.eo_has_bool_type E ->
@@ -274,7 +274,7 @@ private theorem typed_equiv_elim1_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_equiv_elim1_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_typeof (__eo_prog_equiv_elim1 (Proof.pf x1)) = Term.Bool ->
@@ -364,7 +364,7 @@ private theorem typed_equiv_elim2_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_equiv_elim2_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_typeof (__eo_prog_equiv_elim2 (Proof.pf x1)) = Term.Bool ->
@@ -413,7 +413,7 @@ private theorem facts_equiv_elim2_impl
       exact False.elim (hProg rfl)
 
 theorem cmd_step_and_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.and_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -475,7 +475,7 @@ by
           exact False.elim (hProg rfl)
 
 theorem cmd_step_not_or_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.not_or_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -582,7 +582,7 @@ by
           exact False.elim (hProg rfl)
 
 theorem cmd_step_not_and_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.not_and args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -666,7 +666,7 @@ by
       exact False.elim (hProg rfl)
 
 theorem cmd_step_equiv_elim1_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.equiv_elim1 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -715,7 +715,7 @@ by
       exact False.elim (hProg rfl)
 
 theorem cmd_step_equiv_elim2_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.equiv_elim2 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -822,7 +822,7 @@ private theorem typed_not_equiv_elim1_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_not_equiv_elim1_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_typeof (__eo_prog_not_equiv_elim1 (Proof.pf x1)) = Term.Bool ->
@@ -954,7 +954,7 @@ private theorem typed_not_equiv_elim2_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_not_equiv_elim2_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_typeof (__eo_prog_not_equiv_elim2 (Proof.pf x1)) = Term.Bool ->
@@ -1032,7 +1032,7 @@ private theorem facts_not_equiv_elim2_impl
       exact False.elim (hProg rfl)
 
 theorem cmd_step_not_equiv_elim1_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.not_equiv_elim1 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -1082,7 +1082,7 @@ by
       exact False.elim (hProg rfl)
 
 theorem cmd_step_not_equiv_elim2_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.not_equiv_elim2 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -1160,7 +1160,7 @@ private theorem typed_xor_elim1_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_xor_elim1_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_prog_xor_elim1 (Proof.pf x1) ≠ Term.Stuck ->
@@ -1225,7 +1225,7 @@ private theorem typed_xor_elim2_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_xor_elim2_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_prog_xor_elim2 (Proof.pf x1) ≠ Term.Stuck ->
@@ -1315,7 +1315,7 @@ private theorem typed_not_xor_elim1_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_not_xor_elim1_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_prog_not_xor_elim1 (Proof.pf x1) ≠ Term.Stuck ->
@@ -1425,7 +1425,7 @@ private theorem typed_not_xor_elim2_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_not_xor_elim2_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_prog_not_xor_elim2 (Proof.pf x1) ≠ Term.Stuck ->
@@ -1522,7 +1522,7 @@ private theorem typed_ite_elim1_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_ite_elim1_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_prog_ite_elim1 (Proof.pf x1) ≠ Term.Stuck ->
@@ -1599,7 +1599,7 @@ private theorem typed_ite_elim2_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_ite_elim2_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_prog_ite_elim2 (Proof.pf x1) ≠ Term.Stuck ->
@@ -1695,7 +1695,7 @@ private theorem typed_not_ite_elim1_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_not_ite_elim1_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_prog_not_ite_elim1 (Proof.pf x1) ≠ Term.Stuck ->
@@ -1825,7 +1825,7 @@ private theorem typed_not_ite_elim2_impl (x1 : Term) :
       exact False.elim (hProg rfl)
 
 private theorem facts_not_ite_elim2_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_bool_type x1 ->
     eo_interprets M x1 true ->
     __eo_prog_not_ite_elim2 (Proof.pf x1) ≠ Term.Stuck ->
@@ -1896,7 +1896,7 @@ private theorem facts_not_ite_elim2_impl
       exact False.elim (hProg rfl)
 
 theorem cmd_step_xor_elim1_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.xor_elim1 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -1939,7 +1939,7 @@ by
       exact False.elim (hProg rfl)
 
 theorem cmd_step_xor_elim2_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.xor_elim2 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -1982,7 +1982,7 @@ by
       exact False.elim (hProg rfl)
 
 theorem cmd_step_not_xor_elim1_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.not_xor_elim1 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -2025,7 +2025,7 @@ by
       exact False.elim (hProg rfl)
 
 theorem cmd_step_not_xor_elim2_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.not_xor_elim2 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -2068,7 +2068,7 @@ by
       exact False.elim (hProg rfl)
 
 theorem cmd_step_ite_elim1_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.ite_elim1 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -2111,7 +2111,7 @@ by
       exact False.elim (hProg rfl)
 
 theorem cmd_step_ite_elim2_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.ite_elim2 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -2154,7 +2154,7 @@ by
       exact False.elim (hProg rfl)
 
 theorem cmd_step_not_ite_elim1_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.not_ite_elim1 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -2197,7 +2197,7 @@ by
       exact False.elim (hProg rfl)
 
 theorem cmd_step_not_ite_elim2_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.not_ite_elim2 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

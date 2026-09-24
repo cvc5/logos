@@ -307,7 +307,7 @@ private theorem native_binary_uts_mod_self_of_canonical
       native_zexp_total, native_zplus, native_zmult, native_zneg]
 
 private theorem eval_sign_extend_zero_self
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_bv_sign_extend_eliminate_0 x1) = Term.Bool ->
     __smtx_model_eval M
@@ -361,7 +361,7 @@ private theorem eval_sign_extend_zero_self
   simp [__smtx_model_eval_sign_extend, SmtEval.native_zplus, hUtsMod]
 
 private theorem facts___eo_prog_bv_sign_extend_eliminate_0_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_typeof (__eo_prog_bv_sign_extend_eliminate_0 x1) = Term.Bool ->
     eo_interprets M (__eo_prog_bv_sign_extend_eliminate_0 x1) true := by
@@ -382,7 +382,7 @@ private theorem facts___eo_prog_bv_sign_extend_eliminate_0_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt x1))
 
 public theorem cmd_step_bv_sign_extend_eliminate_0_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_sign_extend_eliminate_0 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

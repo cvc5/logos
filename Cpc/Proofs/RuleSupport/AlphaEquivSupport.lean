@@ -311,10 +311,10 @@ private theorem model_agrees_on_globals_push_diff
       (native_model_push M t T v) (native_model_push N s T v) := by
   refine ⟨?_, ?_⟩
   · intro name ty
-    simpa [native_model_lookup, native_model_key, native_model_push]
+    simpa [native_model_lookup, model_key, native_model_push]
       using h.1 name ty
   · intro fid A B
-    simpa [native_model_fun_lookup, native_model_key, native_model_push]
+    simpa [model_fun_lookup, model_key, native_model_push]
       using h.2 fid A B
 
 /-- Model relation used by uniform renaming.  `N` interprets each source key as
@@ -1196,22 +1196,22 @@ theorem native_eval_texists_eq_of_renamed_body
     {bodyM bodyN : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T →
-      __smtx_value_canonical_bool v = true →
+      __smtx_value_canonical v = true →
       __smtx_model_eval (native_model_push M t T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
-    (native_eval_texists M t T bodyM : SmtValue) =
-      (native_eval_texists N s T bodyN : SmtValue) := by
+    (native_eval_exists M t T bodyM : SmtValue) =
+      (native_eval_exists N s T bodyN : SmtValue) := by
   classical
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M t T v) bodyM =
           SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push N s T v) bodyN =
           SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -1237,15 +1237,15 @@ theorem alpha_eval_eo_to_smt_exists
     (hTargetDistinct : SkolemizeRule.DistinctList (targetKeys pairs))
     (hBinders : BinderRenaming vs ts pairs source target binderPairs)
     {M N : SmtModel} {bodyM bodyN : SmtTerm}
-    (hM : model_total_typed M) (hN : model_total_typed N)
+    (hM : model_wf M) (hN : model_wf N)
     (hRel : AlphaRel M N vs ts)
     (hBinderWf :
       ∀ key, key ∈ binderPairs.map Prod.fst →
         __smtx_type_wf (__eo_to_smt_type key.2) = true)
     (hBase :
       ∀ {M' N' : SmtModel},
-        model_total_typed M' →
-        model_total_typed N' →
+        model_wf M' →
+        model_wf N' →
         AlphaRel M' N' vs ts →
         __smtx_model_eval M' bodyM = __smtx_model_eval N' bodyN) :
     __smtx_model_eval M (__eo_to_smt_exists target bodyM) =
@@ -1267,17 +1267,17 @@ theorem alpha_eval_eo_to_smt_exists
         native_eval_texists_eq_of_renamed_body
           (fun v hValTy hValCanon => by
             have hM' :
-                model_total_typed
+                model_wf
                   (native_model_push M t (__eo_to_smt_type T) v) :=
               model_total_typed_push hM t (__eo_to_smt_type T) v
                 hHeadWf hValTy
-                (by simpa [__smtx_value_canonical] using hValCanon)
+                (by simpa [value_canonical] using hValCanon)
             have hN' :
-                model_total_typed
+                model_wf
                   (native_model_push N s (__eo_to_smt_type T) v) :=
               model_total_typed_push hN s (__eo_to_smt_type T) v
                 hHeadWf hValTy
-                (by simpa [__smtx_value_canonical] using hValCanon)
+                (by simpa [value_canonical] using hValCanon)
             exact ih hM' hN'
               (alphaRel_push_mapped hLists hSourceDistinct hTargetDistinct
                 hRel s t T v hPair)
@@ -1309,17 +1309,17 @@ theorem alpha_eval_eo_to_smt_exists
         native_eval_texists_eq_of_renamed_body
           (fun v hValTy hValCanon => by
             have hM' :
-                model_total_typed
+                model_wf
                   (native_model_push M s (__eo_to_smt_type T) v) :=
               model_total_typed_push hM s (__eo_to_smt_type T) v
                 hHeadWf hValTy
-                (by simpa [__smtx_value_canonical] using hValCanon)
+                (by simpa [value_canonical] using hValCanon)
             have hN' :
-                model_total_typed
+                model_wf
                   (native_model_push N s (__eo_to_smt_type T) v) :=
               model_total_typed_push hN s (__eo_to_smt_type T) v
                 hHeadWf hValTy
-                (by simpa [__smtx_value_canonical] using hValCanon)
+                (by simpa [value_canonical] using hValCanon)
             exact ih hM' hN'
               (alphaRel_push_unmapped hLists hSourceDistinct hRel
                 s T v hHeadWf hSourceFree hTargetFree)
@@ -1417,7 +1417,7 @@ theorem alpha_eval_gen_lt
       __contains_atomic_term_list_free_rec F vs bound = Term.Boolean false)
     (hNoTarget :
       __contains_atomic_term_list_free_rec F ts bound = Term.Boolean false)
-    (hM : model_total_typed M) (hN : model_total_typed N)
+    (hM : model_wf M) (hN : model_wf N)
     (hRel : AlphaRel M N vs ts) :
     __smtx_model_eval M
         (__eo_to_smt
@@ -1446,8 +1446,8 @@ theorem alpha_eval_gen_lt
               Term.Boolean false →
             __contains_atomic_term_list_free_rec G ts bound' =
               Term.Boolean false →
-            model_total_typed M' →
-            model_total_typed N' →
+            model_wf M' →
+            model_wf N' →
             AlphaRel M' N' vs ts →
             __smtx_model_eval M'
                 (__eo_to_smt
@@ -1726,7 +1726,7 @@ theorem alpha_eval_gen_lt
 model.  The alpha relation compares against `pushSubstModel`; the source
 no-free guard then collapses that model back to the ambient one. -/
 theorem alpha_renaming_eval_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (F vs ts : Term)
     {pairs : List (EoVarKey × EoVarKey)}
     (hLists : RenamingLists vs ts pairs)
@@ -1750,7 +1750,7 @@ theorem alpha_renaming_eval_eq
             Term.__eo_List_nil)) =
       __smtx_model_eval M (__eo_to_smt F) := by
   let N := InstantiateRule.pushSubstModel M vs ts
-  have hN : model_total_typed N := by
+  have hN : model_wf N := by
     simpa [N] using
       InstantiateRule.pushSubstModel_total_typed_of_smt_typed_actuals
         M hM hActuals

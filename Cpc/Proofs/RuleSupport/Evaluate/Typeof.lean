@@ -70,7 +70,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop
         exact hsimpa
       rcases bv_unop_arg_of_non_none
           (op := SmtTerm.bvnot) (t := __eo_to_smt x)
-          (by rw [__smtx_typeof.eq_37])
+          (by rw [__smtx_typeof.eq_39])
           hBvNotNN with
         ⟨w, hXTy⟩
       have hXTrans : RuleProofs.eo_has_smt_translation x := by
@@ -115,7 +115,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop
         exact hsimpa
       rcases bv_unop_arg_of_non_none
           (op := SmtTerm.bvneg) (t := __eo_to_smt x)
-          (by rw [__smtx_typeof.eq_45])
+          (by rw [__smtx_typeof.eq_47])
           hBvNegNN with
         ⟨w, hXTy⟩
       have hXTrans : RuleProofs.eo_has_smt_translation x := by
@@ -829,7 +829,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop
       · subst w
         have hRunBodyEq :
             EvaluateProofInternal.eo_eval_sbv_to_int_rhs x = Term.Numeral 0 := by
-          simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+          simpa [native_nat_to_int, Smtm.native_nat_to_int] using
             EvaluateProofInternal.eo_eval_sbv_to_int_rhs_eq_zero_of_run_typeof_zero
               x hRunXEoBv
         change
@@ -841,7 +841,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop
         have hwIntPos : 0 < native_nat_to_int w := by
           have hCast : (Int.ofNat 0) < (Int.ofNat w) :=
             Int.ofNat_lt.mpr hwNatPos
-          simpa [native_nat_to_int, SmtEval.native_nat_to_int]
+          simpa [native_nat_to_int, Smtm.native_nat_to_int]
             using hCast
         have hRunBodyTy :
             __eo_typeof (EvaluateProofInternal.eo_eval_sbv_to_int_rhs x) =
@@ -3342,7 +3342,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
     rcases bv_binop_args_of_non_none
         (op := SmtTerm.bvand) (t1 := __eo_to_smt y)
         (t2 := __eo_to_smt x)
-        (by rw [__smtx_typeof.eq_38]) hBvAndNN with
+        (by rw [__smtx_typeof.eq_40]) hBvAndNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hYTrans : RuleProofs.eo_has_smt_translation y := by
       unfold RuleProofs.eo_has_smt_translation
@@ -3419,7 +3419,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
     rcases bv_binop_args_of_non_none
         (op := SmtTerm.bvor) (t1 := __eo_to_smt y)
         (t2 := __eo_to_smt x)
-        (by rw [__smtx_typeof.eq_39]) hBvOrNN with
+        (by rw [__smtx_typeof.eq_41]) hBvOrNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hYTrans : RuleProofs.eo_has_smt_translation y := by
       unfold RuleProofs.eo_has_smt_translation
@@ -3496,7 +3496,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
     rcases bv_binop_args_of_non_none
         (op := SmtTerm.bvxor) (t1 := __eo_to_smt y)
         (t2 := __eo_to_smt x)
-        (by rw [__smtx_typeof.eq_42]) hBvXorNN with
+        (by rw [__smtx_typeof.eq_44]) hBvXorNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hYTrans : RuleProofs.eo_has_smt_translation y := by
       unfold RuleProofs.eo_has_smt_translation
@@ -3651,7 +3651,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
     rcases bv_binop_args_of_non_none
         (op := SmtTerm.bvadd) (t1 := __eo_to_smt y)
         (t2 := __eo_to_smt x)
-        (by rw [__smtx_typeof.eq_46]) hBvAddNN with
+        (by rw [__smtx_typeof.eq_48]) hBvAddNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hYTrans : RuleProofs.eo_has_smt_translation y := by
       unfold RuleProofs.eo_has_smt_translation
@@ -3730,7 +3730,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
     rcases bv_binop_args_of_non_none
         (op := SmtTerm.bvmul) (t1 := __eo_to_smt y)
         (t2 := __eo_to_smt x)
-        (by rw [__smtx_typeof.eq_47]) hBvMulNN with
+        (by rw [__smtx_typeof.eq_49]) hBvMulNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hYTrans : RuleProofs.eo_has_smt_translation y := by
       unfold RuleProofs.eo_has_smt_translation
@@ -3813,7 +3813,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
     rcases bv_binop_args_of_non_none
         (op := SmtTerm.bvsub) (t1 := __eo_to_smt y)
         (t2 := __eo_to_smt x)
-        (by rw [__smtx_typeof.eq_50]) hBvSubNN with
+        (by rw [__smtx_typeof.eq_52]) hBvSubNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hYTrans : RuleProofs.eo_has_smt_translation y := by
       unfold RuleProofs.eo_has_smt_translation
@@ -3892,7 +3892,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
     rcases bv_binop_args_of_non_none
         (op := SmtTerm.bvudiv) (t1 := __eo_to_smt y)
         (t2 := __eo_to_smt x)
-        (by rw [__smtx_typeof.eq_48]) hBvUdivNN with
+        (by rw [__smtx_typeof.eq_50]) hBvUdivNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hYTrans : RuleProofs.eo_has_smt_translation y := by
       unfold RuleProofs.eo_has_smt_translation
@@ -4009,7 +4009,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
     rcases bv_binop_args_of_non_none
         (op := SmtTerm.bvurem) (t1 := __eo_to_smt y)
         (t2 := __eo_to_smt x)
-        (by rw [__smtx_typeof.eq_49]) hBvUremNN with
+        (by rw [__smtx_typeof.eq_51]) hBvUremNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hYTrans : RuleProofs.eo_has_smt_translation y := by
       unfold RuleProofs.eo_has_smt_translation
@@ -4133,7 +4133,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
         (__eo_to_z (__run_evaluate y)) hRunCmpNe
     rcases bv_binop_ret_args_of_non_none
         (op := SmtTerm.bvult) (ret := SmtType.Bool)
-        (by rw [__smtx_typeof.eq_54]) hBvUltNN with
+        (by rw [__smtx_typeof.eq_56]) hBvUltNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hRhsTy :
         __eo_typeof_bvult (__eo_typeof y)
@@ -4171,7 +4171,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
         (__eo_to_z (__run_evaluate x)) hRunCmpNe
     rcases bv_binop_ret_args_of_non_none
         (op := SmtTerm.bvugt) (ret := SmtType.Bool)
-        (by rw [__smtx_typeof.eq_56]) hBvUgtNN with
+        (by rw [__smtx_typeof.eq_58]) hBvUgtNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hRhsTy :
         __eo_typeof_bvult (__eo_typeof y)
@@ -4217,7 +4217,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
         hRunOrNe
     rcases bv_binop_ret_args_of_non_none
         (op := SmtTerm.bvule) (ret := SmtType.Bool)
-        (by rw [__smtx_typeof.eq_55]) hBvUleNN with
+        (by rw [__smtx_typeof.eq_57]) hBvUleNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hRhsTy :
         __eo_typeof_bvult (__eo_typeof y)
@@ -4262,7 +4262,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
         hRunOrNe
     rcases bv_binop_ret_args_of_non_none
         (op := SmtTerm.bvuge) (ret := SmtType.Bool)
-        (by rw [__smtx_typeof.eq_57]) hBvUgeNN with
+        (by rw [__smtx_typeof.eq_59]) hBvUgeNN with
       ⟨w, hYTyBv, hXTyBv⟩
     have hRhsTy :
         __eo_typeof_bvult (__eo_typeof y)

@@ -76,10 +76,10 @@ theorem vsmArgs_vsmMkSpine : ∀ (head : SmtValue) (args : List SmtValue),
 
 /-- Every value is the spine of its head applied to its arguments. -/
 theorem vsm_spine_decomposition :
-    ∀ v : SmtValue, v = vsmMkSpine (__vsm_apply_head v) (vsmArgs v)
+    ∀ v : SmtValue, v = vsmMkSpine (__smtx_apply_head_value v) (vsmArgs v)
   | SmtValue.Apply f a => by
       rw [show vsmArgs (SmtValue.Apply f a) = vsmArgs f ++ [a] from rfl,
-        show __vsm_apply_head (SmtValue.Apply f a) = __vsm_apply_head f from rfl,
+        show __smtx_apply_head_value (SmtValue.Apply f a) = __smtx_apply_head_value f from rfl,
         vsmMkSpine_append_singleton]
       exact congrArg (SmtValue.Apply · a) (vsm_spine_decomposition f)
   | SmtValue.NotValue => rfl
@@ -119,14 +119,14 @@ theorem vsmArgs_length : ∀ v : SmtValue, (vsmArgs v).length = vsm_num_apply_ar
 /-- The index-based accessor reads the list view. -/
 theorem vsm_apply_arg_nth_eq_getElem :
     ∀ (v : SmtValue) (j : Nat), j < (vsmArgs v).length ->
-      __vsm_apply_arg_nth v j (vsm_num_apply_args v) = (vsmArgs v)[j]!
+      __smtx_apply_arg_nth_value v j (vsm_num_apply_args v) = (vsmArgs v)[j]!
   | SmtValue.Apply f a => by
       intro j hj
       rw [show vsmArgs (SmtValue.Apply f a) = vsmArgs f ++ [a] from rfl] at hj ⊢
       rw [show vsm_num_apply_args (SmtValue.Apply f a) = Nat.succ (vsm_num_apply_args f) from rfl,
-        show __vsm_apply_arg_nth (SmtValue.Apply f a) j (Nat.succ (vsm_num_apply_args f)) =
+        show __smtx_apply_arg_nth_value (SmtValue.Apply f a) j (Nat.succ (vsm_num_apply_args f)) =
           native_ite (native_nateq j (vsm_num_apply_args f)) a
-            (__vsm_apply_arg_nth f j (vsm_num_apply_args f)) from rfl]
+            (__smtx_apply_arg_nth_value f j (vsm_num_apply_args f)) from rfl]
       by_cases hEq : j = vsm_num_apply_args f
       · have hbeq : native_nateq j (vsm_num_apply_args f) = true := by
           simp [native_nateq, hEq]
@@ -167,21 +167,21 @@ theorem vsm_apply_arg_nth_eq_getElem :
 /-- Canonicity of a spine gives canonicity of head and all arguments. -/
 theorem vsm_canonical_spine :
     ∀ v : SmtValue,
-      __smtx_value_canonical_bool v = true ->
-      __smtx_value_canonical_bool (__vsm_apply_head v) = true ∧
-        ∀ a ∈ vsmArgs v, __smtx_value_canonical_bool a = true
+      __smtx_value_canonical v = true ->
+      __smtx_value_canonical (__smtx_apply_head_value v) = true ∧
+        ∀ a ∈ vsmArgs v, __smtx_value_canonical a = true
   | SmtValue.Apply f a => by
       intro hCanon
-      rw [show __smtx_value_canonical_bool (SmtValue.Apply f a) =
-        native_and (__smtx_value_canonical_bool f) (__smtx_value_canonical_bool a) from rfl]
+      rw [show __smtx_value_canonical (SmtValue.Apply f a) =
+        native_and (__smtx_value_canonical f) (__smtx_value_canonical a) from rfl]
         at hCanon
-      have hf : __smtx_value_canonical_bool f = true := by
-        cases hcf : __smtx_value_canonical_bool f
+      have hf : __smtx_value_canonical f = true := by
+        cases hcf : __smtx_value_canonical f
         · rw [hcf] at hCanon; cases hCanon
         · rfl
-      have ha : __smtx_value_canonical_bool a = true := by
+      have ha : __smtx_value_canonical a = true := by
         rw [hf] at hCanon
-        cases hca : __smtx_value_canonical_bool a
+        cases hca : __smtx_value_canonical a
         · rw [hca] at hCanon; cases hCanon
         · rfl
       obtain ⟨hHead, hArgs⟩ := vsm_canonical_spine f hf
@@ -208,17 +208,17 @@ theorem vsm_canonical_spine :
 /-- Canonicity of a spine from canonicity of head and arguments (converse). -/
 theorem vsm_canonical_of_spine (args : List SmtValue) :
     ∀ head : SmtValue,
-      __smtx_value_canonical_bool head = true ->
-      (∀ a ∈ args, __smtx_value_canonical_bool a = true) ->
-      __smtx_value_canonical_bool (vsmMkSpine head args) = true := by
+      __smtx_value_canonical head = true ->
+      (∀ a ∈ args, __smtx_value_canonical a = true) ->
+      __smtx_value_canonical (vsmMkSpine head args) = true := by
   induction args with
   | nil => intro head hHead _; simpa using hHead
   | cons a args ih =>
       intro head hHead hArgs
       rw [vsmMkSpine_cons]
       refine ih (SmtValue.Apply head a) ?_ ?_
-      · rw [show __smtx_value_canonical_bool (SmtValue.Apply head a) =
-          native_and (__smtx_value_canonical_bool head) (__smtx_value_canonical_bool a) from rfl,
+      · rw [show __smtx_value_canonical (SmtValue.Apply head a) =
+          native_and (__smtx_value_canonical head) (__smtx_value_canonical a) from rfl,
           hHead, hArgs a (List.mem_cons_self ..)]
         rfl
       · intro b hb
@@ -403,7 +403,7 @@ theorem forall_encoding_true_of_all_inst
     (hWf : ∀ s T, (s, T) ∈ vars ->
       __smtx_type_wf (__eo_to_smt_type T) = true)
     (hBodyTy : __smtx_typeof body = SmtType.Bool) :
-    ∀ M : SmtModel, model_total_typed M ->
+    ∀ M : SmtModel, model_wf M ->
     (∀ N, ForallInstantiationModel M xs N ->
       __smtx_model_eval N body = SmtValue.Boolean true) ->
     __smtx_model_eval M (SmtTerm.not (__eo_to_smt_exists xs (SmtTerm.not body))) =
@@ -430,16 +430,16 @@ theorem forall_encoding_true_of_all_inst
         hWf s T (List.Mem.head _)
       have hnP : ¬ (∃ v : SmtValue,
           __smtx_typeof_value v = __eo_to_smt_type T ∧
-            __smtx_value_canonical_bool v = true ∧
+            __smtx_value_canonical v = true ∧
               __smtx_model_eval
                 (native_model_push M s (__eo_to_smt_type T) v)
                 (__eo_to_smt_exists env (SmtTerm.not body)) =
                 SmtValue.Boolean true) := by
         rintro ⟨v, hvT, hvC, hvE⟩
         have hPushTotal :
-            model_total_typed (native_model_push M s (__eo_to_smt_type T) v) :=
+            model_wf (native_model_push M s (__eo_to_smt_type T) v) :=
           model_total_typed_push hM s (__eo_to_smt_type T) v hHeadWf hvT
-            (by simpa [__smtx_value_canonical] using hvC)
+            (by simpa [value_canonical] using hvC)
         have hInner :
             __smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
               (SmtTerm.not (__eo_to_smt_exists env (SmtTerm.not body))) =
@@ -466,7 +466,7 @@ theorem forall_encoding_true_of_all_inst
             SmtValue.Boolean false := by
         show (if _ : (∃ v : SmtValue,
             __smtx_typeof_value v = __eo_to_smt_type T ∧
-              __smtx_value_canonical_bool v = true ∧
+              __smtx_value_canonical v = true ∧
                 __smtx_model_eval
                   (native_model_push M s (__eo_to_smt_type T) v)
                   (__eo_to_smt_exists env (SmtTerm.not body)) =
@@ -484,7 +484,7 @@ theorem forall_encoding_true_iff
     (hWf : ∀ s T, (s, T) ∈ vars ->
       __smtx_type_wf (__eo_to_smt_type T) = true)
     (hBodyTy : __smtx_typeof body = SmtType.Bool)
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     __smtx_model_eval M
         (SmtTerm.not (__eo_to_smt_exists xs (SmtTerm.not body))) =
         SmtValue.Boolean true ↔
@@ -634,7 +634,7 @@ def CtorInst (x F : Term) {c ys g : Term}
       ∃ (s : native_String) (T : Term) (u : SmtValue),
         y = Term.Var (Term.String s) T ∧
         __smtx_typeof_value u = __eo_to_smt_type T ∧
-        __smtx_value_canonical_bool u = true ∧
+        __smtx_value_canonical u = true ∧
         CtorInst x F tail
           (native_model_push M s (__eo_to_smt_type T) u) v
   | @ConjRel.unwrap _ _ c _ _ _ =>
@@ -704,7 +704,7 @@ theorem dtEoSpine_spine_translation
 theorem dtEoSpine_translation_head
     {c : Term} {s : native_String} {d : DatatypeDecl} {i : Nat}
     (hSpine : DtEoSpine c s d i)
-    (hReserved : native_reserved_datatype_name s = false) :
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false) :
     qdsSmtApplyHead (__eo_to_smt c) =
       SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i := by
   induction hSpine with
@@ -841,7 +841,7 @@ theorem ctorInst_of_one_absorbed
       (u : SmtValue),
       conjAbsorbed rel = [Term.Var (Term.String s) T] ->
       __smtx_typeof_value u = __eo_to_smt_type T ->
-      __smtx_value_canonical_bool u = true ->
+      __smtx_value_canonical u = true ->
       __smtx_model_eval
           (native_model_push M s (__eo_to_smt_type T) u)
           (__eo_to_smt (conjFinal rel)) = v ->
@@ -876,9 +876,9 @@ theorem ctorInst_of_two_absorbed
       conjAbsorbed rel =
         [Term.Var (Term.String s₁) T₁, Term.Var (Term.String s₂) T₂] ->
       __smtx_typeof_value u₁ = __eo_to_smt_type T₁ ->
-      __smtx_value_canonical_bool u₁ = true ->
+      __smtx_value_canonical u₁ = true ->
       __smtx_typeof_value u₂ = __eo_to_smt_type T₂ ->
-      __smtx_value_canonical_bool u₂ = true ->
+      __smtx_value_canonical u₂ = true ->
       __smtx_model_eval
           (native_model_push
             (native_model_push M s₁ (__eo_to_smt_type T₁) u₁)
@@ -925,7 +925,7 @@ theorem eoTermArgs_eoTermSpine : ∀ (head : Term) (args : List Term),
 
 theorem eo_to_smt_spine_dtcons
     (s : native_String) (d : DatatypeDecl) (i : Nat) (args : List Term)
-    (hReserved : native_reserved_datatype_name s = false) :
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false) :
     __eo_to_smt (eoTermSpine (Term.DtCons s d i) args) =
       List.foldl (fun f a => SmtTerm.Apply f (__eo_to_smt a))
         (SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i) args := by
@@ -1112,14 +1112,14 @@ theorem native_model_push_shadow_of_key_eq
 /-! ## Single-binder step characterization of the forall encoding -/
 
 theorem forall_encoding_step_iff
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T : SmtType) (tail : SmtTerm)
     (hWf : __smtx_type_wf T = true)
     (hTailTy : __smtx_typeof tail = SmtType.Bool) :
     __smtx_model_eval M (SmtTerm.not (SmtTerm.exists s T tail)) =
         SmtValue.Boolean true ↔
       ∀ v : SmtValue, __smtx_typeof_value v = T ->
-        __smtx_value_canonical_bool v = true ->
+        __smtx_value_canonical v = true ->
         __smtx_model_eval (native_model_push M s T v) (SmtTerm.not tail) =
           SmtValue.Boolean true := by
   classical
@@ -1131,7 +1131,7 @@ theorem forall_encoding_step_iff
       (InstantiateRule.smtx_model_eval_not_true_iff _).1 h
     have hNoSat : ¬ (∃ w : SmtValue,
         __smtx_typeof_value w = T ∧
-          __smtx_value_canonical_bool w = true ∧
+          __smtx_value_canonical w = true ∧
             __smtx_model_eval (native_model_push M s T w) tail =
               SmtValue.Boolean true) := by
       intro hSat
@@ -1139,7 +1139,7 @@ theorem forall_encoding_step_iff
           SmtValue.Boolean true := by
         show (if _ : (∃ w : SmtValue,
             __smtx_typeof_value w = T ∧
-              __smtx_value_canonical_bool w = true ∧
+              __smtx_value_canonical w = true ∧
                 __smtx_model_eval (native_model_push M s T w) tail =
                   SmtValue.Boolean true)
           then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -1147,9 +1147,9 @@ theorem forall_encoding_step_iff
         rw [dif_pos hSat]
       rw [hExFalse] at this
       exact absurd this (by decide)
-    have hPushTotal : model_total_typed (native_model_push M s T v) :=
+    have hPushTotal : model_wf (native_model_push M s T v) :=
       model_total_typed_push hM s T v hWf hvT
-        (by simpa [__smtx_value_canonical] using hvC)
+        (by simpa [value_canonical] using hvC)
     obtain ⟨b, hb⟩ :=
       smt_model_eval_bool_is_boolean (native_model_push M s T v) hPushTotal
         tail hTailTy
@@ -1160,7 +1160,7 @@ theorem forall_encoding_step_iff
   · intro h
     have hNoSat : ¬ (∃ w : SmtValue,
         __smtx_typeof_value w = T ∧
-          __smtx_value_canonical_bool w = true ∧
+          __smtx_value_canonical w = true ∧
             __smtx_model_eval (native_model_push M s T w) tail =
               SmtValue.Boolean true) := by
       rintro ⟨w, hwT, hwC, hwE⟩
@@ -1171,7 +1171,7 @@ theorem forall_encoding_step_iff
         SmtValue.Boolean false := by
       show (if _ : (∃ w : SmtValue,
           __smtx_typeof_value w = T ∧
-            __smtx_value_canonical_bool w = true ∧
+            __smtx_value_canonical w = true ∧
               __smtx_model_eval (native_model_push M s T w) tail =
                 SmtValue.Boolean true)
         then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -1190,7 +1190,7 @@ then it is true when `x ↦ v` is pushed after the chain instead.
 theorem inst_push_last_bridge
     (sx : native_String) (Tx : SmtType) (v : SmtValue) (body : SmtTerm)
     (hvT : __smtx_typeof_value v = Tx)
-    (hvC : __smtx_value_canonical_bool v = true) :
+    (hvC : __smtx_value_canonical v = true) :
     ∀ {M N : SmtModel} {ys : Term},
       ForallInstantiationModel M ys N ->
       (∀ K, ForallInstantiationModel (native_model_push M sx Tx v) ys K ->
@@ -1335,7 +1335,7 @@ theorem lhs_gives_push_last
     ∀ N, ForallInstantiationModel M ys N ->
     ∀ v : SmtValue,
       __smtx_typeof_value v = __eo_to_smt_type xT ->
-      __smtx_value_canonical_bool v = true ->
+      __smtx_value_canonical v = true ->
       __smtx_model_eval
           (native_model_push N sx (__eo_to_smt_type xT) v) (__eo_to_smt F) =
         SmtValue.Boolean true := by
@@ -1352,24 +1352,24 @@ theorem inst_rebase_push_last
     (sx : native_String) (Tx : SmtType) :
     ∀ {M N : SmtModel} {ys : Term} {v : SmtValue},
       __smtx_typeof_value v = Tx ->
-      __smtx_value_canonical_bool v = true ->
+      __smtx_value_canonical v = true ->
       ForallInstantiationModel (native_model_push M sx Tx v) ys N ->
       ∃ (N₀ : SmtModel) (w : SmtValue),
         ForallInstantiationModel M ys N₀ ∧
         __smtx_typeof_value w = Tx ∧
-        __smtx_value_canonical_bool w = true ∧
+        __smtx_value_canonical w = true ∧
         N = native_model_push N₀ sx Tx w := by
   intro M N ys v hvTy hvCanon hInst
   have aux : ∀ {K N : SmtModel} {ys : Term},
       ForallInstantiationModel K ys N ->
       ∀ (M : SmtModel) (v : SmtValue),
         __smtx_typeof_value v = Tx ->
-        __smtx_value_canonical_bool v = true ->
+        __smtx_value_canonical v = true ->
         K = native_model_push M sx Tx v ->
         ∃ (N₀ : SmtModel) (w : SmtValue),
           ForallInstantiationModel M ys N₀ ∧
           __smtx_typeof_value w = Tx ∧
-          __smtx_value_canonical_bool w = true ∧
+          __smtx_value_canonical w = true ∧
           N = native_model_push N₀ sx Tx w := by
     intro K N ys hKN
     induction hKN with
@@ -1657,12 +1657,12 @@ private theorem conj_final_forward_core
     (hFTrans : eoHasSmtTranslation F)
     (hCxType : __eo_typeof c = __eo_typeof (Term.Var (Term.String sx) xT))
     (hSubst : substOne (Term.Var (Term.String sx) xT) c F = G)
-    (hSpine : CS c) (M₀ : SmtModel) (hM₀ : model_total_typed M₀)
+    (hSpine : CS c) (M₀ : SmtModel) (hM₀ : model_wf M₀)
     (hGTy : __smtx_typeof (__eo_to_smt G) = SmtType.Bool)
     (hH : ∀ N, ForallInstantiationModel M₀ Term.__eo_List_nil N →
       ∀ v : SmtValue,
         __smtx_typeof_value v = __eo_to_smt_type xT →
-        __smtx_value_canonical_bool v = true →
+        __smtx_value_canonical v = true →
         __smtx_model_eval
             (native_model_push N sx (__eo_to_smt_type xT) v)
             (__eo_to_smt F) = SmtValue.Boolean true) :
@@ -1696,7 +1696,7 @@ private theorem conj_final_forward_core
   have hBody := hH M₀ (ForallInstantiationModel.nil M₀)
     (__smtx_model_eval M₀ (__eo_to_smt c))
     (by simpa [hCxTy] using hEvalCxTy)
-    (by simpa [__smtx_value_canonical] using hEvalCxCanon)
+    (by simpa [value_canonical] using hEvalCxCanon)
   calc
     __smtx_model_eval M₀ (__eo_to_smt G) =
         __smtx_model_eval M₀
@@ -1725,12 +1725,12 @@ theorem conj_forward_aux
     ∀ {c ysRem g : Term},
       ConjRel (Term.Var (Term.String sx) xT) F c ysRem g ->
       CS c ->
-      ∀ M₀ : SmtModel, model_total_typed M₀ ->
+      ∀ M₀ : SmtModel, model_wf M₀ ->
       __smtx_typeof (gEnc g) = SmtType.Bool ->
       (∀ N, ForallInstantiationModel M₀ ysRem N ->
         ∀ v : SmtValue,
           __smtx_typeof_value v = __eo_to_smt_type xT ->
-          __smtx_value_canonical_bool v = true ->
+          __smtx_value_canonical v = true ->
           __smtx_model_eval
               (native_model_push N sx (__eo_to_smt_type xT) v)
               (__eo_to_smt F) = SmtValue.Boolean true) ->
@@ -1755,7 +1755,7 @@ theorem conj_forward_aux
       intro v hvT hvC
       have hStep := ih hSpine (native_model_push M₀ sy (__eo_to_smt_type Ty) v)
         (model_total_typed_push hM₀ sy (__eo_to_smt_type Ty) v hWfY hvT
-          (by simpa [__smtx_value_canonical] using hvC))
+          (by simpa [value_canonical] using hvC))
         (by rw [gEnc_forall]; exact smtx_typeof_not_bool_intro hTailTy)
         (by
           intro N hInst u huT huC
@@ -1781,7 +1781,7 @@ theorem conj_forward_aux
       have hStep := ih (CS.apply hSpine hWfW)
         (native_model_push M₀ sw (__eo_to_smt_type Tw) u)
         (model_total_typed_push hM₀ sw (__eo_to_smt_type Tw) u hWfW huT
-          (by simpa [__smtx_value_canonical] using huC))
+          (by simpa [value_canonical] using huC))
         (by rw [gEnc_forall]; exact smtx_typeof_not_bool_intro hTailTy)
         (by
           intro N hInst v hvT hvC
@@ -1825,7 +1825,7 @@ private theorem conj_final_backward_core
     (hFTrans : eoHasSmtTranslation F)
     (hCxType : __eo_typeof c = __eo_typeof (Term.Var (Term.String sx) xT))
     (hSubst : substOne (Term.Var (Term.String sx) xT) c F = G)
-    (hSpine : CS c) (M : SmtModel) (hM : model_total_typed M)
+    (hSpine : CS c) (M : SmtModel) (hM : model_wf M)
     (hGTy : __smtx_typeof (__eo_to_smt G) = SmtType.Bool)
     (hGTrue : __smtx_model_eval M (__eo_to_smt G) = SmtValue.Boolean true)
     (v : SmtValue) (hCI : __smtx_model_eval M (__eo_to_smt c) = v) :
@@ -1878,7 +1878,7 @@ theorem conj_backward_aux
     ∀ {c ysRem g : Term}
       (rel : ConjRel (Term.Var (Term.String sx) xT) F c ysRem g),
       CS c ->
-      ∀ M : SmtModel, model_total_typed M ->
+      ∀ M : SmtModel, model_wf M ->
       __smtx_typeof (gEnc g) = SmtType.Bool ->
       __smtx_model_eval M (gEnc g) = SmtValue.Boolean true ->
       ∀ N, ForallInstantiationModel M ysRem N ->
@@ -1912,7 +1912,7 @@ theorem conj_backward_aux
           refine ih hSpine
             (native_model_push M sy (__eo_to_smt_type Ty) _)
             (model_total_typed_push hM sy (__eo_to_smt_type Ty) _ hWfY
-              huTy (by simpa [__smtx_value_canonical] using huCanon))
+              huTy (by simpa [value_canonical] using huCanon))
             ?_ ?_ N hInstTail v hCI
           · rw [gEnc_forall]
             exact smtx_typeof_not_bool_intro hTailTy
@@ -1942,7 +1942,7 @@ theorem conj_backward_aux
       have hStep := ih (CS.apply hSpine hWfW)
         (native_model_push M sw (__eo_to_smt_type Tw) u)
         (model_total_typed_push hM sw (__eo_to_smt_type Tw) u hWfW huTy
-          (by simpa [__smtx_value_canonical] using huCanon))
+          (by simpa [value_canonical] using huCanon))
         (by rw [gEnc_forall]; exact smtx_typeof_not_bool_intro hTailTy)
         (by rw [gEnc_forall]; exact hTailTrue)
         (native_model_push M sw (__eo_to_smt_type Tw) u)
@@ -1997,8 +1997,8 @@ theorem datatype_name_not_reserved_of_type_wf
     (s : native_String) (d : DatatypeDecl)
     (hWf : __smtx_type_wf
       (__eo_to_smt_type (Term.DatatypeType s d)) = true) :
-    native_reserved_datatype_name s = false := by
-  cases hRes : native_reserved_datatype_name s
+    __eo_to_smt_reserved_datatype_name s = false := by
+  cases hRes : __eo_to_smt_reserved_datatype_name s
   · rfl
   · simp [__eo_to_smt_type, hRes, native_ite, __smtx_type_wf,
       __smtx_type_wf_component, __smtx_type_wf_rec, native_and] at hWf
@@ -2006,10 +2006,10 @@ theorem datatype_name_not_reserved_of_type_wf
 theorem smt_model_eval_apply_of_dt_head
     (M : SmtModel) (f u : SmtValue)
     {s : native_String} {d : SmtDatatypeDecl} {i : Nat}
-    (hHead : __vsm_apply_head f = SmtValue.DtCons s d i)
+    (hHead : __smtx_apply_head_value f = SmtValue.DtCons s d i)
     (hu : u ≠ SmtValue.NotValue) :
     __smtx_model_eval_apply M f u = SmtValue.Apply f u := by
-  cases f <;> simp_all [__vsm_apply_head, __smtx_model_eval_apply]
+  cases f <;> simp_all [__smtx_apply_head_value, __smtx_model_eval_apply]
 
 theorem conj_final_smt_type
     (sx : native_String) (xT F : Term)
@@ -2170,7 +2170,7 @@ selected conjunct so that its final constructor evaluates to the requested
 constructor value. -/
 private theorem conj_ctor_inst_from_values_aux
     (s : native_String) (d : DatatypeDecl) (i : Nat)
-    (hReserved : native_reserved_datatype_name s = false) :
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false) :
     ∀ {x F c ys g : Term}
       (rel : ConjRel x F c ys g),
       DtEoSpine c s d i ->
@@ -2187,8 +2187,8 @@ private theorem conj_ctor_inst_from_values_aux
       (∀ j, j < args.length ->
         __smtx_typeof_value args[j]! =
           __smtx_typeof (__eo_to_smt (conjAbsorbed rel)[j]!)) ->
-      (∀ u ∈ args, __smtx_value_canonical_bool u = true) ->
-      __vsm_apply_head (__smtx_model_eval M (__eo_to_smt c)) =
+      (∀ u ∈ args, __smtx_value_canonical u = true) ->
+      __smtx_apply_head_value (__smtx_model_eval M (__eo_to_smt c)) =
         SmtValue.DtCons s (__eo_to_smt_datatype_decl d) i ->
       v = vsmMkSpine (__smtx_model_eval M (__eo_to_smt c)) args ->
       CtorInst x F rel M v := by
@@ -2251,7 +2251,7 @@ private theorem conj_ctor_inst_from_values_aux
             (__eo_to_smt (Term.Var (Term.String sy) Ty)) at huTyRaw
           rw [hVarTy] at huTyRaw
           exact huTyRaw
-        have huCanon : __smtx_value_canonical_bool u = true :=
+        have huCanon : __smtx_value_canonical u = true :=
           hCanon u (by simp)
         have huNN : u ≠ SmtValue.NotValue := by
           intro hu
@@ -2407,7 +2407,7 @@ private theorem conj_ctor_inst_from_values_aux
         · intro a ha
           exact hCanon a (List.mem_cons_of_mem u ha)
         · rw [hEvalApply]
-          simpa [__vsm_apply_head] using hEvalHead
+          simpa [__smtx_apply_head_value] using hEvalHead
         · rw [hEvalApply]
           simpa [vsmMkSpine] using hTarget
   | @unwrap c G hCxType hSubst =>
@@ -2429,7 +2429,7 @@ private theorem conj_ctor_inst_from_values_aux
 
 theorem conj_ctor_inst_from_values
     (s : native_String) (d : DatatypeDecl) (i : Nat)
-    (hReserved : native_reserved_datatype_name s = false) :
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false) :
     ∀ {x F ys g : Term}
       (rel : ConjRel x F (Term.DtCons s d i) ys g),
       ∀ (M : SmtModel) (v : SmtValue) (args : List SmtValue),
@@ -2440,8 +2440,8 @@ theorem conj_ctor_inst_from_values
       (∀ j, j < args.length ->
         __smtx_typeof_value args[j]! =
           __smtx_typeof (__eo_to_smt (conjAbsorbed rel)[j]!)) ->
-      (∀ u ∈ args, __smtx_value_canonical_bool u = true) ->
-      __vsm_apply_head
+      (∀ u ∈ args, __smtx_value_canonical u = true) ->
+      __smtx_apply_head_value
           (__smtx_model_eval M (__eo_to_smt (Term.DtCons s d i))) =
         SmtValue.DtCons s (__eo_to_smt_datatype_decl d) i ->
       v = vsmMkSpine
@@ -2505,7 +2505,7 @@ equal the corresponding (substituted) selector type and the result type to be
 `D̂`.  When x is NOT free in F, `substOne x cx F = F` and both directions avoid
 the spine entirely: F̂ is insensitive to the constructor-arg keys and to x's
 key, and a typed-canonical witness for instantiating comes from
-`model_total_typed` lookups (every well-formed type is inhabited in M).
+`model_wf` lookups (every well-formed type is inhabited in M).
 
 Both directions case on `__contains_atomic_term_list_free_rec F [x] nil`.
 -/
@@ -2779,7 +2779,7 @@ variables (deferred) and the impossible junk-type shapes (whose constructor
 lists are `Stuck` or whose types are untranslatable).
 -/
 theorem split_forward_nondatatype
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sx : native_String) (xT ys F G : Term)
     (hxT : ∀ s d, xT ≠ Term.DatatypeType s d)
     (srel : SplitRel (Term.Var (Term.String sx) xT) ys F
@@ -2790,7 +2790,7 @@ theorem split_forward_nondatatype
     (hH : ∀ N, ForallInstantiationModel M ys N ->
       ∀ v : SmtValue,
         __smtx_typeof_value v = __eo_to_smt_type xT ->
-        __smtx_value_canonical_bool v = true ->
+        __smtx_value_canonical v = true ->
         __smtx_model_eval
             (native_model_push N sx (__eo_to_smt_type xT) v)
             (__eo_to_smt F) = SmtValue.Boolean true) :
@@ -2874,14 +2874,14 @@ Forward direction over the conjunction: walk the `SplitRel` chain, discharging
 each conjunct with `conj_forward_aux`.
 -/
 theorem split_forward_chain
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sx : native_String) (xT ys F : Term)
     (hWfX : __smtx_type_wf (__eo_to_smt_type xT) = true)
     (hFTrans : eoHasSmtTranslation F)
     (hH : ∀ N, ForallInstantiationModel M ys N ->
       ∀ v : SmtValue,
         __smtx_typeof_value v = __eo_to_smt_type xT ->
-        __smtx_value_canonical_bool v = true ->
+        __smtx_value_canonical v = true ->
         __smtx_model_eval
             (native_model_push N sx (__eo_to_smt_type xT) v)
             (__eo_to_smt F) = SmtValue.Boolean true) :
@@ -2940,7 +2940,7 @@ Forward direction: if the left-hand universal is true, the conjunction produced
 by a successful guard run is true.
 -/
 theorem split_forward
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x ys F G : Term)
     (srel : SplitRel x ys F (__dt_get_constructors (__eo_typeof x)) G)
     (hTrans : RuleProofs.eo_has_smt_translation (qdsFormula x ys F G))
@@ -3050,7 +3050,7 @@ Backward direction: if the conjunction produced by a successful guard run is
 true, the left-hand universal is true.
 -/
 theorem split_backward
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x ys F G : Term)
     (srel : SplitRel x ys F (__dt_get_constructors (__eo_typeof x)) G)
     (hTrans : RuleProofs.eo_has_smt_translation (qdsFormula x ys F G))
@@ -3223,12 +3223,12 @@ theorem split_backward
               (qdsSmtApplyArgs (__eo_to_smt (conjFinal crel)))[j]! := hStatic.symm
           _ = __smtx_typeof
               (__eo_to_smt (conjAbsorbed crel)[j]!) := congrArg __smtx_typeof hMap
-      have hEvalHead : __vsm_apply_head
+      have hEvalHead : __smtx_apply_head_value
           (__smtx_model_eval N₀ (__eo_to_smt (Term.DtCons sD dD ci))) =
           SmtValue.DtCons sD (__eo_to_smt_datatype_decl dD) ci := by
         have hRootTo : __eo_to_smt (Term.DtCons sD dD ci) =
             SmtTerm.DtCons sD (__eo_to_smt_datatype_decl dD) ci := by
-          change native_ite (native_reserved_datatype_name sD) SmtTerm.None
+          change native_ite (__eo_to_smt_reserved_datatype_name sD) SmtTerm.None
             (SmtTerm.DtCons sD (__eo_to_smt_datatype_decl dD) ci) = _
           rw [hReserved]
           rfl
@@ -3238,14 +3238,14 @@ theorem split_backward
           (__smtx_model_eval N₀ (__eo_to_smt (Term.DtCons sD dD ci))) args := by
         have hRootTo : __eo_to_smt (Term.DtCons sD dD ci) =
             SmtTerm.DtCons sD (__eo_to_smt_datatype_decl dD) ci := by
-          change native_ite (native_reserved_datatype_name sD) SmtTerm.None
+          change native_ite (__eo_to_smt_reserved_datatype_name sD) SmtTerm.None
             (SmtTerm.DtCons sD (__eo_to_smt_datatype_decl dD) ci) = _
           rw [hReserved]
           rfl
         rw [hRootTo]
         exact hW
       have hArgsCanon' : ∀ a ∈ args,
-          __smtx_value_canonical_bool a = true := by
+          __smtx_value_canonical a = true := by
         intro a ha
         apply hArgsCanon a
         have hArgs : vsmArgs w = args := by
@@ -3374,10 +3374,10 @@ theorem split_backward
               rw [hW, vsmArgs_vsmMkSpine]
               rfl
             obtain ⟨hRootCanon, hArgsCanon⟩ := vsm_canonical_spine w hwCanon
-            have huCanon : __smtx_value_canonical_bool u = true :=
+            have huCanon : __smtx_value_canonical u = true :=
               hArgsCanon u (by rw [hArgsView]; simp)
             have hRestCanon : ∀ a ∈ rest,
-                __smtx_value_canonical_bool a = true := by
+                __smtx_value_canonical a = true := by
               intro a ha
               exact hArgsCanon a (by rw [hArgsView]; simp [ha])
             let tailRoot := SmtValue.DtCons
@@ -3405,7 +3405,7 @@ theorem split_backward
               rw [show tailVal = vsmMkSpine tailRoot rest from rfl,
                 hTailValTyRaw, hRestLen,
                 qds_dtc_full_arity (native_string_lit "@Tuple") tailDD c]
-            have hTailValCanon : __smtx_value_canonical_bool tailVal = true := by
+            have hTailValCanon : __smtx_value_canonical tailVal = true := by
               apply vsm_canonical_of_spine rest tailRoot
               · rfl
               · exact hRestCanon
@@ -3472,16 +3472,16 @@ theorem split_backward
             let P := native_model_push
               (native_model_push N₀ s₁ A u)
               s₂ (__eo_to_smt_type T₂) tailVal
-            have hN₀Typed : model_total_typed N₀ := hN₀.total_typed hM
-            have hP₁Typed : model_total_typed
+            have hN₀Typed : model_wf N₀ := hN₀.total_typed hM
+            have hP₁Typed : model_wf
                 (native_model_push N₀ s₁ A u) :=
               model_total_typed_push hN₀Typed s₁ A u
                 (by simpa [A] using hU₁Wf) huTy
-                (by simpa [__smtx_value_canonical] using huCanon)
-            have hPTyped : model_total_typed P :=
+                (by simpa [value_canonical] using huCanon)
+            have hPTyped : model_wf P :=
               model_total_typed_push hP₁Typed s₂ (__eo_to_smt_type T₂)
                 tailVal hU₂Wf hTailValTyEo
-                (by simpa [__smtx_value_canonical] using hTailValCanon)
+                (by simpa [value_canonical] using hTailValCanon)
             have hEvalHead : __smtx_model_eval P
                 (__eo_to_smt (Term.Var (Term.String s₁) T₁)) = u := by
               change native_model_var_lookup P s₁ A = u
@@ -3620,7 +3620,7 @@ Truth of the concluded equality, from a successful guard run.  This is the
 target consumed by `Cpc/Proofs/Rules/Quant_dt_split.lean`.
 -/
 theorem qds_formula_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x ys F G : Term)
     (hGuard : __is_quant_dt_split x (__dt_get_constructors (__eo_typeof x)) ys F G =
       Term.Boolean true)

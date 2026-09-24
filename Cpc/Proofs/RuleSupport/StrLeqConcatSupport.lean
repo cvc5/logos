@@ -138,13 +138,13 @@ theorem smtx_eval_numeral_term_eq
 theorem list_typed_char_pack_unpack :
     ∀ {xs : List SmtValue},
       list_typed SmtType.Char xs →
-        xs.map (fun v => SmtValue.Char (native_ssm_char_of_value v)) = xs
+        xs.map (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) = xs
   | [], _ => rfl
   | v :: vs, hxs => by
       rcases hxs with ⟨hv, hvs⟩
       rcases char_value_canonical hv with ⟨c, hvc, _hc⟩
       rw [hvc]
-      simpa [native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
+      simpa [impl_native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
 
 theorem native_pack_string_unpack_string_of_typeof_seq_char
     (ss : SmtSeq)
@@ -154,7 +154,7 @@ theorem native_pack_string_unpack_string_of_typeof_seq_char
     typed_unpack_seq_of_typeof_seq_value hTy
   have hMap :
       (native_unpack_seq ss).map
-          (fun v => SmtValue.Char (native_ssm_char_of_value v)) =
+          (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) =
         native_unpack_seq ss :=
     list_typed_char_pack_unpack hTyped
   have hElem : __smtx_elem_typeof_seq_value ss = SmtType.Char :=
@@ -163,14 +163,14 @@ theorem native_pack_string_unpack_string_of_typeof_seq_char
   simp only [List.map_map]
   change native_pack_seq SmtType.Char
       ((native_unpack_seq ss).map
-        (fun v => SmtValue.Char (native_ssm_char_of_value v))) = ss
+        (fun v => SmtValue.Char (impl_native_ssm_char_of_value v))) = ss
   rw [hMap]
   simpa [hElem] using native_pack_unpack_seq ss
 
 theorem native_unpack_string_pack_string (s : native_String) :
     native_unpack_string (native_pack_string s) = s := by
   simp [native_unpack_string, native_pack_string,
-    Smtm.native_unpack_pack_seq, native_ssm_char_of_value,
+    Smtm.native_unpack_pack_seq, impl_native_ssm_char_of_value,
     Function.comp_def]
 
 theorem native_pack_string_inj (s t : native_String) :
@@ -198,12 +198,12 @@ theorem native_pack_seq_concat_eq_pack_string_append
   have hSyMap := list_typed_char_pack_unpack hSyTyped
   have hSxMap' :
       (native_unpack_seq sx).map
-          (SmtValue.Char ∘ native_ssm_char_of_value) =
+          (SmtValue.Char ∘ impl_native_ssm_char_of_value) =
         native_unpack_seq sx := by
     simpa [Function.comp_def] using hSxMap
   have hSyMap' :
       (native_unpack_seq sy).map
-          (SmtValue.Char ∘ native_ssm_char_of_value) =
+          (SmtValue.Char ∘ impl_native_ssm_char_of_value) =
         native_unpack_seq sy := by
     simpa [Function.comp_def] using hSyMap
   have hSxElem : __smtx_elem_typeof_seq_value sx = SmtType.Char :=

@@ -57,7 +57,7 @@ theorem typed___eo_prog_true_elim_impl (x1 : Term) :
 
 /-- Derives the checker facts exposed by the EO program for `true_elim`. -/
 theorem facts___eo_prog_true_elim_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
   eo_interprets M x1 true ->
   __eo_prog_true_elim (Proof.pf x1) ≠ Term.Stuck ->
   eo_interprets M (__eo_prog_true_elim (Proof.pf x1)) true := by

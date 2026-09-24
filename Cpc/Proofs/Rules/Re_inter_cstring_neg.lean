@@ -195,7 +195,7 @@ private theorem smt_value_rel_inter_cstring_neg
     simp [hSg, hFullAtStr]
 
 private theorem facts
-    (M : SmtModel) (hM : model_total_typed M) (x ys s : Term)
+    (M : SmtModel) (hM : model_wf M) (x ys s : Term)
     (hXTy : __smtx_typeof (__eo_to_smt x) = SmtType.RegLan)
     (hYsTy : __smtx_typeof (__eo_to_smt ys) = SmtType.RegLan)
     (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
@@ -269,7 +269,7 @@ private theorem facts
 end ReInterCstringNegProof
 
 public theorem cmd_step_re_inter_cstring_neg_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_inter_cstring_neg args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

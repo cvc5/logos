@@ -601,7 +601,7 @@ private theorem smt_bitvec_type_of_eo_bitvec_type_with_width
 /-! ## Semantic crux: the two sides evaluate to the same Boolean. -/
 
 private theorem eval_lhs_matches_rhs
-    (M : SmtModel) (hM : model_total_typed M) (x n w : Term) :
+    (M : SmtModel) (hM : model_wf M) (x n w : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation n ->
     __eo_typeof (ufGeqElimConclusion x n w) = Term.Bool ->
@@ -629,7 +629,7 @@ private theorem eval_lhs_matches_rhs
   have hWidthInt : native_nat_to_int (native_int_to_nat k) = k := by
     have hnNonneg : 0 <= k := by simpa [SmtEval.native_zleq] using hNonneg
     have hInt : (Int.ofNat (Int.toNat k) : Int) = k := Int.toNat_of_nonneg hnNonneg
-    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   rw [hWidthInt] at hEvalX
   -- canonicity payload in range.
@@ -771,7 +771,7 @@ private theorem eval_lhs_matches_rhs
 /-! ## Bool-typedness and interpretation of the conclusion -/
 
 private theorem facts_conclusion_impl
-    (M : SmtModel) (hM : model_total_typed M) (x n w : Term) :
+    (M : SmtModel) (hM : model_wf M) (x n w : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation n ->
     __eo_typeof (ufGeqElimConclusion x n w) = Term.Bool ->
@@ -855,7 +855,7 @@ private theorem facts_conclusion_impl
   exact RuleProofs.smt_value_rel_refl _
 
 private theorem typed_conclusion_impl
-    (M : SmtModel) (hM : model_total_typed M) (x n w : Term) :
+    (M : SmtModel) (hM : model_wf M) (x n w : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation n ->
     __eo_typeof (ufGeqElimConclusion x n w) = Term.Bool ->
@@ -867,7 +867,7 @@ private theorem typed_conclusion_impl
 /-! ## Top-level dispatch -/
 
 public theorem cmd_step_uf_bv2nat_geq_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.uf_bv2nat_geq_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -253,7 +253,7 @@ private theorem typed___eo_prog_arrays_ext_impl
   simpa [__eo_prog_arrays_ext, idx, lhs, rhs] using hNotBool
 
 private theorem facts___eo_prog_arrays_ext_impl
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b : Term) :
   RuleProofs.eo_has_bool_type
     (Term.Apply Term.not (Term.Apply (Term.Apply Term.eq a) b)) ->
   __eo_typeof
@@ -310,14 +310,14 @@ private theorem facts___eo_prog_arrays_ext_impl
     have hsimpa := hEvalBTy
     try simp [hEvalB] at hsimpa ⊢
     exact hsimpa
-  have hACan : __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt a)) :=
+  have hACan : value_canonical (__smtx_model_eval M (__eo_to_smt a)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM a hATrans
-  have hBCan : __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt b)) :=
+  have hBCan : value_canonical (__smtx_model_eval M (__eo_to_smt b)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM b hBTrans
   have hm1Can : __smtx_map_canonical m1 = true := by
-    simpa [hEvalA, __smtx_value_canonical, __smtx_value_canonical_bool] using hACan
+    simpa [hEvalA, value_canonical, __smtx_value_canonical] using hACan
   have hm2Can : __smtx_map_canonical m2 = true := by
-    simpa [hEvalB, __smtx_value_canonical, __smtx_value_canonical_bool] using hBCan
+    simpa [hEvalB, value_canonical, __smtx_value_canonical] using hBCan
   have hMapsEqFalse :
       __smtx_model_eval_eq (SmtValue.Map m1) (SmtValue.Map m2) =
         SmtValue.Boolean false := by
@@ -332,8 +332,8 @@ private theorem facts___eo_prog_arrays_ext_impl
       (__eo_to_smt a) (__eo_to_smt_type I) (__eo_to_smt_type E) hSmtA
   have hSelectEqFalse :
       __smtx_model_eval_eq
-          (__smtx_msm_lookup m1 (native_eval_map_diff_msm m1 m2))
-          (__smtx_msm_lookup m2 (native_eval_map_diff_msm m1 m2)) =
+          (__smtx_map_lookup m1 (native_eval_map_diff m1 m2))
+          (__smtx_map_lookup m2 (native_eval_map_diff m1 m2)) =
         SmtValue.Boolean false :=
     RuleProofs.map_diff_selects_model_eval_eq_false
       m1 m2 (__eo_to_smt_type I) (__eo_to_smt_type E)
@@ -353,7 +353,7 @@ private theorem facts___eo_prog_arrays_ext_impl
   simpa [__eo_prog_arrays_ext, idx, lhs, rhs] using hNotTrue
 
 public theorem cmd_step_arrays_ext_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arrays_ext args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

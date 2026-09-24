@@ -501,7 +501,7 @@ theorem typed_base
   exact hBool
 
 theorem facts_first_concat
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t tail pat repl pre post P1 P2 P3 T : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hTailTrans : RuleProofs.eo_has_smt_translation tail)
@@ -810,7 +810,7 @@ theorem facts_first_concat
       (__smtx_model_eval M (__eo_to_smt rhs))
 
 theorem facts_base
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t pat repl pre post P1 P2 P3 T : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hPatTrans : RuleProofs.eo_has_smt_translation pat)

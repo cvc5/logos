@@ -131,14 +131,14 @@ private theorem native_nat_to_int_of_int_to_nat_of_nonneg (n : native_Int) :
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hn
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem smt_typeof_binary_nat_to_int_zero_local (w : native_Nat) :
     __smtx_typeof (SmtTerm.Binary (native_nat_to_int w) 0) =
       SmtType.BitVec w := by
   have hWidth : native_zleq 0 (native_nat_to_int w) = true := by
-    simp [SmtEval.native_zleq, SmtEval.native_nat_to_int]
+    simp [SmtEval.native_zleq, Smtm.native_nat_to_int]
   have hMod0 :
       native_mod_total 0 (native_int_pow2 (native_nat_to_int w)) = 0 := by
     simp [SmtEval.native_mod_total]
@@ -152,7 +152,7 @@ private theorem smt_typeof_binary_nat_to_int_zero_local (w : native_Nat) :
         SmtType.None := by
     unfold __smtx_typeof
     simp [SmtEval.native_and, hWidth, hMod, native_ite]
-  simpa [SmtEval.native_int_to_nat, SmtEval.native_nat_to_int] using
+  simpa [SmtEval.native_int_to_nat, Smtm.native_nat_to_int] using
     TranslationProofs.smtx_typeof_binary_of_non_none
       (native_nat_to_int w) 0 hNN
 
@@ -303,7 +303,7 @@ theorem typed_bv_sub_elim_term (x y : Term) :
       simp)
 
 private theorem smt_eval_binary_of_smt_type_bitvec
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm)
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm)
     (w : native_Nat) :
     __smtx_typeof t = SmtType.BitVec w ->
     ∃ n, __smtx_model_eval M t =
@@ -411,7 +411,7 @@ private theorem eval_bvsub_matches_bvadd_bvneg_with_zero
   rw [bvadd_right_zero_of_canonical (native_nat_to_int w) p hNegCan]
 
 private theorem eval_bv_sub_elim
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvSubElimTerm x y) = Term.Bool ->
@@ -436,7 +436,7 @@ private theorem eval_bv_sub_elim
   exact eval_bvsub_matches_bvadd_bvneg_with_zero w nx ny
 
 theorem facts_bv_sub_elim_term
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvSubElimTerm x y) = Term.Bool ->
@@ -512,7 +512,7 @@ theorem typed_bv_sub_elim_program (x y : Term) :
   exact typed_bv_sub_elim_term x y hXTrans hYTrans hTermTy
 
 theorem facts_bv_sub_elim_program
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvSubElimProgram x y) = Term.Bool ->
@@ -759,7 +759,7 @@ private theorem bvadd_eval_comm (w : Nat) (nx ny : native_Int) :
   simp [__smtx_model_eval_bvadd, native_zplus, Int.add_comm]
 
 private theorem eval_bv_commutative_add
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvCommutativeAddTerm x y) = Term.Bool ->
@@ -789,7 +789,7 @@ private theorem eval_bv_commutative_add
   exact bvadd_eval_comm w nx ny
 
 theorem facts_bv_commutative_add_term
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvCommutativeAddTerm x y) = Term.Bool ->
@@ -877,7 +877,7 @@ theorem typed_bv_commutative_add_program (x y : Term) :
   exact typed_bv_commutative_add_term x y hXTrans hYTrans hTermTy
 
 theorem facts_bv_commutative_add_program
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (bvCommutativeAddProgram x y) = Term.Bool ->

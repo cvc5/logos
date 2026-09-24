@@ -135,7 +135,7 @@ private theorem raw_str_concat_unify_rev_eq
   rw [eOuter, eLeft, eRight, eSAppend', eTAppend']
 
 public theorem cmd_step_str_concat_unify_rev_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_concat_unify_rev args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

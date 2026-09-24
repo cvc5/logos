@@ -715,7 +715,7 @@ theorem eval_bvSaddoLhs
   rfl
 
 private theorem facts_bv_saddo_term
-    (M : SmtModel) (hM : model_total_typed M) (x y nm : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y nm : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     eo_interprets M (bvSdivPrem x nm) true ->
@@ -738,7 +738,7 @@ private theorem facts_bv_saddo_term
   have hW : 0 < W := by
     rw [← hRound] at hwPos
     have hwPos' : (0 : Int) < (W : Int) := by
-      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hwPos
+      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hwPos
     exact_mod_cast hwPos'
   have hOneLe : 1 ≤ W := hW
   have hIndexNat : n = native_nat_to_int (W - 1) := by
@@ -878,7 +878,7 @@ theorem typed_bv_saddo_program (x y nm : Term) :
   exact typed_bv_saddo_term x y nm hXTrans hYTrans hTermTy
 
 theorem facts_bv_saddo_program
-    (M : SmtModel) (hM : model_total_typed M) (x y nm : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y nm : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation nm ->

@@ -103,7 +103,7 @@ private theorem typed___eo_prog_re_in_sigma_star_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_re_in_sigma_star_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term)
+    (M : SmtModel) (hM : model_wf M) (a1 : Term)
     (hA1Trans : RuleProofs.eo_has_smt_translation a1)
     (hA1Ty : __eo_typeof a1 = Term.Apply Term.Seq Term.Char) :
     eo_interprets M (__eo_prog_re_in_sigma_star a1) true := by
@@ -172,7 +172,7 @@ private theorem facts___eo_prog_re_in_sigma_star_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_re_in_sigma_star_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_in_sigma_star args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

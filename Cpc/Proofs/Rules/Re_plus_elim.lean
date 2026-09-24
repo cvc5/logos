@@ -36,7 +36,7 @@ private theorem smtx_model_eval_re_plus_elim
       simp [__smtx_model_eval_re_plus, __smtx_model_eval_re_concat,
         __smtx_model_eval_re_mult, __smtx_model_eval_str_to_re,
         native_re_concat, native_re_mult,
-        native_str_to_re, native_re_of_list, native_pack_string,
+        native_str_to_re, impl_native_re_of_list, native_pack_string,
         native_pack_seq, native_unpack_seq,
         native_string_lit_empty]
   all_goals
@@ -131,7 +131,7 @@ private theorem typed___eo_prog_re_plus_elim_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_re_plus_elim_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term)
+    (M : SmtModel) (hM : model_wf M) (a1 : Term)
     (hA1Trans : RuleProofs.eo_has_smt_translation a1)
     (hA1Ty : __eo_typeof a1 = Term.RegLan) :
   eo_interprets M (__eo_prog_re_plus_elim a1) true := by
@@ -199,8 +199,8 @@ private theorem facts___eo_prog_re_plus_elim_impl
               (Term.Apply (Term.Apply Term.re_concat (Term.Apply Term.re_mult a1))
                 (Term.Apply Term.str_to_re (Term.String (native_string_lit "")))))) := by
     rw [hLhsTranslate, hRhsTranslate, hInnerConcatTranslate, hStarTranslate, hEmpTranslate]
-    rw [__smtx_model_eval.eq_107, __smtx_model_eval.eq_112,
-      __smtx_model_eval.eq_112, __smtx_model_eval.eq_106, __smtx_model_eval.eq_105]
+    rw [__smtx_model_eval.eq_109, __smtx_model_eval.eq_114,
+      __smtx_model_eval.eq_114, __smtx_model_eval.eq_108, __smtx_model_eval.eq_107]
     simpa [hEmptyStringEval] using
       smtx_model_eval_re_plus_elim (__smtx_model_eval M (__eo_to_smt a1))
   rw [hProg]
@@ -218,7 +218,7 @@ private theorem facts___eo_prog_re_plus_elim_impl
               (Term.Apply Term.str_to_re (Term.String (native_string_lit "")))))))
 
 public theorem cmd_step_re_plus_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_plus_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

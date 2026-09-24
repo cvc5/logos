@@ -248,7 +248,7 @@ private theorem typed___eo_prog_bool_and_de_morgan_impl (x y zs : Term) :
     (lhsAndDeMorgan x y zs) (rhsAndDeMorgan x y zs) hLeftBool hRhsBool
 
 private theorem bool_eval_eq_of_true_iff
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     RuleProofs.eo_has_bool_type B ->
     (eo_interprets M A true ↔ eo_interprets M B true) ->
@@ -276,7 +276,7 @@ private theorem bool_eval_eq_of_true_iff
   · rw [hEvalA, hEvalB]
 
 private theorem facts___eo_prog_bool_and_de_morgan_impl
-    (M : SmtModel) (hM : model_total_typed M) (x y zs : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y zs : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     RuleProofs.eo_has_smt_translation zs ->
@@ -377,8 +377,8 @@ private theorem facts___eo_prog_bool_and_de_morgan_impl
           (SmtTerm.Boolean false)) by
       rw [hRhsEq]
       rfl]
-    rw [__smtx_model_eval.eq_6, __smtx_model_eval.eq_8, __smtx_model_eval.eq_7,
-      __smtx_model_eval.eq_6, __smtx_model_eval.eq_7, __smtx_model_eval.eq_6,
+    rw [__smtx_model_eval.eq_7, __smtx_model_eval.eq_9, __smtx_model_eval.eq_8,
+      __smtx_model_eval.eq_7, __smtx_model_eval.eq_8, __smtx_model_eval.eq_7,
       __smtx_model_eval.eq_1, hEvalX, hEvalTail, hSingletonEval, hEvalTail]
     cases bx <;> cases bt <;>
       simp [RuleProofs.smt_value_rel, __smtx_model_eval_eq, __smtx_model_eval_and,
@@ -386,7 +386,7 @@ private theorem facts___eo_prog_bool_and_de_morgan_impl
         SmtEval.native_or, SmtEval.native_not]
 
 public theorem cmd_step_bool_and_de_morgan_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bool_and_de_morgan args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

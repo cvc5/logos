@@ -135,19 +135,19 @@ private theorem mss_inter_lookup_acc :
       __smtx_typeof_map_value acc = SmtType.Map A SmtType.Bool ->
       __smtx_map_canonical m1 = true ->
       __smtx_map_canonical acc = true ->
-      __smtx_msm_get_default m1 = SmtValue.Boolean false ->
-      __smtx_msm_lookup (__smtx_mss_op_internal true m1 m2 acc) i =
+      __smtx_map_get_default m1 = SmtValue.Boolean false ->
+      __smtx_map_lookup (__smtx_set_op_rec true m1 m2 acc) i =
         native_ite
           (native_and
-            (native_veq (__smtx_msm_lookup m1 i) (SmtValue.Boolean true))
-            (native_veq (__smtx_msm_lookup m2 i) (SmtValue.Boolean true)))
+            (native_veq (__smtx_map_lookup m1 i) (SmtValue.Boolean true))
+            (native_veq (__smtx_map_lookup m2 i) (SmtValue.Boolean true)))
           (SmtValue.Boolean true)
-          (__smtx_msm_lookup acc i)
+          (__smtx_map_lookup acc i)
   | SmtMap.default T efalse, m2, acc, A, i, hm1Ty, hm2Ty, haccTy, hm1Can,
       haccCan, hm1Def => by
       have hefalse : efalse = SmtValue.Boolean false := by
-        simpa [__smtx_msm_get_default] using hm1Def
-      simp [__smtx_mss_op_internal, __smtx_msm_lookup, hefalse, native_veq,
+        simpa [__smtx_map_get_default] using hm1Def
+      simp [__smtx_set_op_rec, __smtx_map_lookup, hefalse, native_veq,
         SmtEval.native_and, native_ite]
   | SmtMap.cons e etrue m1, m2, acc, A, i, hm1Ty, hm2Ty, haccTy, hm1Can,
       haccCan, hm1Def => by
@@ -157,37 +157,37 @@ private theorem mss_inter_lookup_acc :
         map_cons_head_key_type hm1Ty
       have hmTailCan : __smtx_map_canonical m1 = true :=
         map_cons_tail_canonical hm1Can
-      have heCan : __smtx_value_canonical e :=
+      have heCan : value_canonical e :=
         map_cons_head_key_canonical hm1Can
       have hOrdTail : __smtx_map_entries_ordered_after e m1 = true :=
         map_cons_tail_ordered hm1Can
-      have hmTailDef : __smtx_msm_get_default m1 = SmtValue.Boolean false := by
-        simpa [__smtx_msm_get_default] using hm1Def
+      have hmTailDef : __smtx_map_get_default m1 = SmtValue.Boolean false := by
+        simpa [__smtx_map_get_default] using hm1Def
       have hetrue : etrue = SmtValue.Boolean true :=
         set_map_cons_entry_true hm1Ty hm1Can hm1Def
       subst etrue
-      cases hCond : native_veq (__smtx_msm_lookup m2 e) (SmtValue.Boolean true)
+      cases hCond : native_veq (__smtx_map_lookup m2 e) (SmtValue.Boolean true)
       · have hRec := mss_inter_lookup_acc (m1 := m1) (m2 := m2) (acc := acc)
           (A := A) (i := i) hmTailTy hm2Ty haccTy hmTailCan haccCan hmTailDef
         cases hei : native_veq e i
-        · simpa [__smtx_mss_op_internal, hCond, __smtx_msm_lookup, native_ite,
+        · simpa [__smtx_set_op_rec, hCond, __smtx_map_lookup, native_ite,
             native_iff, hei] using hRec
         · have heiEq : e = i := eq_of_native_veq_true hei
           subst i
           have hTailLookup :
-              __smtx_msm_lookup m1 e = SmtValue.Boolean false := by
+              __smtx_map_lookup m1 e = SmtValue.Boolean false := by
             calc
-              __smtx_msm_lookup m1 e = __smtx_msm_get_default m1 :=
+              __smtx_map_lookup m1 e = __smtx_map_get_default m1 :=
                 map_lookup_eq_default_of_entries_ordered_after hmTailCan hOrdTail
               _ = SmtValue.Boolean false := hmTailDef
           have hM2Ne :
-              __smtx_msm_lookup m2 e ≠ SmtValue.Boolean true :=
+              __smtx_map_lookup m2 e ≠ SmtValue.Boolean true :=
             ne_of_native_veq_false hCond
-          simpa [__smtx_mss_op_internal, hCond, __smtx_msm_lookup, native_ite,
+          simpa [__smtx_set_op_rec, hCond, __smtx_map_lookup, native_ite,
             native_iff, native_veq, hTailLookup, hM2Ne,
             SmtEval.native_and] using hRec
       · let acc' :=
-          __smtx_msm_update_aux (__smtx_msm_get_default acc) acc e
+          __smtx_map_update_aux (__smtx_map_get_default acc) acc e
             (SmtValue.Boolean true)
         have hacc'Ty : __smtx_typeof_map_value acc' = SmtType.Map A SmtType.Bool := by
           dsimp [acc']
@@ -200,32 +200,32 @@ private theorem mss_inter_lookup_acc :
           hmTailDef
         cases hei : native_veq e i
         · have hAccLookup :
-              __smtx_msm_lookup acc' i = __smtx_msm_lookup acc i := by
+              __smtx_map_lookup acc' i = __smtx_map_lookup acc i := by
             dsimp [acc']
             exact map_lookup_update_aux_other haccCan hei
-          simpa [__smtx_mss_op_internal, hCond, __smtx_msm_lookup, native_ite,
+          simpa [__smtx_set_op_rec, hCond, __smtx_map_lookup, native_ite,
             native_iff, hei, hAccLookup] using hRec
         · have heiEq : e = i := eq_of_native_veq_true hei
           subst i
           have hTailLookup :
-              __smtx_msm_lookup m1 e = SmtValue.Boolean false := by
+              __smtx_map_lookup m1 e = SmtValue.Boolean false := by
             calc
-              __smtx_msm_lookup m1 e = __smtx_msm_get_default m1 :=
+              __smtx_map_lookup m1 e = __smtx_map_get_default m1 :=
                 map_lookup_eq_default_of_entries_ordered_after hmTailCan hOrdTail
               _ = SmtValue.Boolean false := hmTailDef
           have hAccLookup :
-              __smtx_msm_lookup acc' e = SmtValue.Boolean true := by
+              __smtx_map_lookup acc' e = SmtValue.Boolean true := by
             dsimp [acc']
             exact map_lookup_update_aux_same haccCan
           have hM2Eq :
-              __smtx_msm_lookup m2 e = SmtValue.Boolean true :=
+              __smtx_map_lookup m2 e = SmtValue.Boolean true :=
             eq_of_native_veq_true hCond
-          simpa [__smtx_mss_op_internal, hCond, __smtx_msm_lookup, native_ite,
+          simpa [__smtx_set_op_rec, hCond, __smtx_map_lookup, native_ite,
             native_iff, native_veq, hTailLookup, hAccLookup, hM2Eq,
             SmtEval.native_and] using hRec
 
 private theorem facts___eo_prog_sets_inter_member_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term)
     (hxTrans : RuleProofs.eo_has_smt_translation x)
     (hyTrans : RuleProofs.eo_has_smt_translation y)
@@ -313,28 +313,28 @@ private theorem facts___eo_prog_sets_inter_member_impl
       __smtx_typeof_map_value mz = SmtType.Map (__eo_to_smt_type T) SmtType.Bool :=
     set_map_value_typed (by simpa [hzVal] using hzEvalTy)
   have hYCanEval :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt y)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt y)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM y hyTrans
   have hZCanEval :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt z)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt z)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM z hzTrans
-  have hYCanSet : __smtx_value_canonical (SmtValue.Set my) := by
+  have hYCanSet : value_canonical (SmtValue.Set my) := by
     simpa [hyVal] using hYCanEval
-  have hZCanSet : __smtx_value_canonical (SmtValue.Set mz) := by
+  have hZCanSet : value_canonical (SmtValue.Set mz) := by
     simpa [hzVal] using hZCanEval
   have hMyCan : __smtx_map_canonical my = true := by
     have hParts := hYCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
   have hMzCan : __smtx_map_canonical mz = true := by
     have hParts := hZCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
-  have hMyDef : __smtx_msm_get_default my = SmtValue.Boolean false := by
+  have hMyDef : __smtx_map_get_default my = SmtValue.Boolean false := by
     have hParts := hYCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact eq_of_native_veq_true hParts.2
   let acc :=
@@ -350,35 +350,35 @@ private theorem facts___eo_prog_sets_inter_member_impl
     dsimp [acc]
     exact set_empty_map_canonical (__smtx_index_typeof_map (__smtx_typeof_map_value my))
   have hInterLookup :
-      __smtx_msm_lookup (__smtx_mss_op_internal true my mz acc)
+      __smtx_map_lookup (__smtx_set_op_rec true my mz acc)
           (__smtx_model_eval M (__eo_to_smt x)) =
         native_ite
           (native_and
             (native_veq
-              (__smtx_msm_lookup my (__smtx_model_eval M (__eo_to_smt x)))
+              (__smtx_map_lookup my (__smtx_model_eval M (__eo_to_smt x)))
               (SmtValue.Boolean true))
             (native_veq
-              (__smtx_msm_lookup mz (__smtx_model_eval M (__eo_to_smt x)))
+              (__smtx_map_lookup mz (__smtx_model_eval M (__eo_to_smt x)))
               (SmtValue.Boolean true)))
           (SmtValue.Boolean true)
-          (__smtx_msm_lookup acc (__smtx_model_eval M (__eo_to_smt x))) :=
+          (__smtx_map_lookup acc (__smtx_model_eval M (__eo_to_smt x))) :=
     mss_inter_lookup_acc (m1 := my) (m2 := mz) (acc := acc)
       (A := __eo_to_smt_type T) (i := __smtx_model_eval M (__eo_to_smt x))
       hMyTy hMzTy hAccTy hMyCan hAccCan hMyDef
   have hYLookupTy :
       __smtx_typeof_value
-          (__smtx_msm_lookup my (__smtx_model_eval M (__eo_to_smt x))) =
+          (__smtx_map_lookup my (__smtx_model_eval M (__eo_to_smt x))) =
         SmtType.Bool :=
     map_lookup_typed hMyTy hxEvalTy
   have hZLookupTy :
       __smtx_typeof_value
-          (__smtx_msm_lookup mz (__smtx_model_eval M (__eo_to_smt x))) =
+          (__smtx_map_lookup mz (__smtx_model_eval M (__eo_to_smt x))) =
         SmtType.Bool :=
     map_lookup_typed hMzTy hxEvalTy
   have hAccLookupFalse :
-      __smtx_msm_lookup acc (__smtx_model_eval M (__eo_to_smt x)) =
+      __smtx_map_lookup acc (__smtx_model_eval M (__eo_to_smt x)) =
         SmtValue.Boolean false := by
-    simp [acc, __smtx_msm_lookup]
+    simp [acc, __smtx_map_lookup]
   let mem := Term.Apply Term.set_member x
   let lhs := Term.Apply mem (Term.Apply (Term.Apply Term.set_inter y) z)
   let rhs :=
@@ -423,7 +423,7 @@ private theorem facts___eo_prog_sets_inter_member_impl
     RuleProofs.eo_interprets_eq_of_rel M lhs rhs hEqBool hRel
 
 public theorem cmd_step_sets_inter_member_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_inter_member args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

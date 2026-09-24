@@ -22,7 +22,7 @@ private theorem eo_interprets_of_not_false (M : SmtModel) (F : Term) :
   change smt_interprets M (SmtTerm.not (__eo_to_smt F)) false at hNotFalse
   cases hNotFalse with
   | intro_false _ hEvalNot =>
-      rw [__smtx_model_eval.eq_6] at hEvalNot
+      rw [__smtx_model_eval.eq_7] at hEvalNot
       cases hEvalF : __smtx_model_eval M (__eo_to_smt F) with
       | NotValue =>
           exfalso
@@ -140,7 +140,7 @@ theorem facts___eo_prog_not_not_elim_impl (M : SmtModel) (x1 : Term) :
       simp [__eo_prog_not_not_elim] at hProg
 
 public theorem cmd_step_not_not_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.not_not_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

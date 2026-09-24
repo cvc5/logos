@@ -329,7 +329,7 @@ private theorem real_abs_eq_bool (x y : native_Rat) :
   grind
 
 private theorem eval_result_int
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term)
+    (M : SmtModel) (hM : model_wf M) (x y : Term)
     (hxTrans : RuleProofs.eo_has_smt_translation x)
     (hyTrans : RuleProofs.eo_has_smt_translation y)
     (hxTy : __eo_typeof x = Term.Int)
@@ -403,7 +403,7 @@ private theorem eval_result_int
   simp [__smtx_model_eval_eq, native_veq]
 
 private theorem eval_result_real
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term)
+    (M : SmtModel) (hM : model_wf M) (x y : Term)
     (hxTrans : RuleProofs.eo_has_smt_translation x)
     (hyTrans : RuleProofs.eo_has_smt_translation y)
     (hxTy : __eo_typeof x = Term.Real)
@@ -477,7 +477,7 @@ private theorem eval_result_real
   simp [__smtx_model_eval_eq, native_veq]
 
 private theorem facts___eo_prog_arith_abs_eq_impl
-    (M : SmtModel) (hM : model_total_typed M) (x y : Term) :
+    (M : SmtModel) (hM : model_wf M) (x y : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation y ->
     __eo_typeof (__eo_prog_arith_abs_eq x y) = Term.Bool ->
@@ -503,7 +503,7 @@ end ArithAbsEq
 
 open ArithAbsEq in
 public theorem cmd_step_arith_abs_eq_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_abs_eq args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

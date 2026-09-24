@@ -5,6 +5,8 @@ public import Cpc.Proofs.Common
 import all Cpc.Proofs.Common
 public import Cpc.Proofs.Assumptions
 import all Cpc.Proofs.Assumptions
+public import Cpc.Proofs.RuleSupport.Contract
+import all Cpc.Proofs.RuleSupport.Contract
 
 public section
 
@@ -14,18 +16,6 @@ open Smtm
 
 set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
-
-/--
-Two models agree on the global part of the interpretation.
-
-Variables may vary, but user constants and native function interpretations are
-kept fixed. This is the model relation used when a binder pushes fresh variable
-assignments.
--/
-def model_agrees_on_globals (M N : SmtModel) : Prop :=
-  (∀ s T, native_model_lookup M s T = native_model_lookup N s T) ∧
-  (∀ fid T U, native_model_fun_lookup M fid T U =
-    native_model_fun_lookup N fid T U)
 
 abbrev SmtVarKey : Type := native_String × SmtType
 
@@ -38,11 +28,6 @@ def model_agrees_on_vars (vars : List SmtVarKey) (M N : SmtModel) : Prop :=
 structure model_agrees_on_env (vars : List SmtVarKey) (M N : SmtModel) : Prop where
   globals : model_agrees_on_globals M N
   vars_eq : model_agrees_on_vars vars M N
-
-theorem model_agrees_on_globals_refl (M : SmtModel) :
-  model_agrees_on_globals M M :=
-by
-  exact ⟨by intro s T; rfl, by intro fid T U; rfl⟩
 
 theorem model_agrees_on_env_refl (vars : List SmtVarKey) (M : SmtModel) :
   model_agrees_on_env vars M M :=
@@ -57,20 +42,6 @@ by
   intro hAgree
   exact ⟨hAgree, by intro s T hMem; cases hMem⟩
 
-theorem model_agrees_on_globals_trans {M N K : SmtModel} :
-  model_agrees_on_globals M N ->
-  model_agrees_on_globals N K ->
-  model_agrees_on_globals M K :=
-by
-  intro hMN hNK
-  exact
-    ⟨by
-      intro s T
-      exact (hMN.1 s T).trans (hNK.1 s T),
-    by
-      intro fid T U
-      exact (hMN.2 fid T U).trans (hNK.2 fid T U)⟩
-
 theorem model_agrees_on_globals_push
     (M : SmtModel) (s : native_String) (T : SmtType) (v : SmtValue) :
   model_agrees_on_globals M (native_model_push M s T v) :=
@@ -78,10 +49,10 @@ by
   exact
     ⟨by
       intro s' T'
-      simp [native_model_lookup, native_model_key, native_model_push],
+      simp [native_model_lookup, model_key, native_model_push],
     by
       intro fid A B
-      simp [native_model_fun_lookup, native_model_key, native_model_push]⟩
+      simp [model_fun_lookup, model_key, native_model_push]⟩
 
 theorem model_agrees_on_globals_push₂
     {M N : SmtModel} {s : native_String} {T : SmtType} {v : SmtValue} :
@@ -92,11 +63,11 @@ by
   exact
     ⟨by
       intro s' T'
-      simpa [native_model_lookup, native_model_key, native_model_push]
+      simpa [native_model_lookup, model_key, native_model_push]
         using hAgree.1 s' T',
     by
       intro fid A B
-      simpa [native_model_fun_lookup, native_model_key, native_model_push]
+      simpa [model_fun_lookup, model_key, native_model_push]
         using hAgree.2 fid A B⟩
 
 theorem model_agrees_on_env_push_same
@@ -134,8 +105,8 @@ theorem native_model_fun_lookup_eq_of_env
     {vars : List SmtVarKey} {M N : SmtModel}
     (hAgree : model_agrees_on_env vars M N)
     (fid : native_String) (T U : SmtType) :
-  native_model_fun_lookup M fid T U =
-    native_model_fun_lookup N fid T U :=
+  model_fun_lookup M fid T U =
+    model_fun_lookup N fid T U :=
 by
   exact hAgree.globals.2 fid T U
 
@@ -201,19 +172,19 @@ theorem native_eval_texists_eq_of_body_eval_eq
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
-  (native_eval_texists M s T body : SmtValue) =
-    (native_eval_texists N s T body : SmtValue) :=
+  (native_eval_exists M s T body : SmtValue) =
+    (native_eval_exists N s T body : SmtValue) :=
 by
   classical
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -236,19 +207,19 @@ theorem native_eval_tforall_eq_of_body_eval_eq
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
-  (native_eval_tforall M s T body : SmtValue) =
-    (native_eval_tforall N s T body : SmtValue) :=
+  (native_eval_forall M s T body : SmtValue) =
+    (native_eval_forall N s T body : SmtValue) :=
 by
   classical
   let PM : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical_bool v = true ->
+        __smtx_value_canonical v = true ->
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PN : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical_bool v = true ->
+        __smtx_value_canonical v = true ->
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -269,20 +240,20 @@ theorem native_eval_tchoice_eq_of_body_eval_eq
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
-  (native_eval_tchoice M s T body : SmtValue) =
-    (native_eval_tchoice N s T body : SmtValue) :=
+  (native_eval_choice M s T body : SmtValue) =
+    (native_eval_choice N s T body : SmtValue) :=
 by
   classical
   let PredM : SmtValue -> Prop := fun v =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PredN : SmtValue -> Prop := fun v =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   let PTy : Prop :=
-    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical_bool v
+    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical v
   change
     (if hSat : ∃ v : SmtValue, PredM v then Classical.choose hSat
       else if hTy : PTy then Classical.choose hTy else SmtValue.NotValue) =
@@ -1176,9 +1147,9 @@ theorem smtTermClosedIn_eo_to_smt_dtcons
   SmtTermClosedIn vars (__eo_to_smt (Term.DtCons s d i)) :=
 by
   change SmtTermClosedIn vars
-    (native_ite (native_reserved_datatype_name s) SmtTerm.None
+    (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
       (SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i))
-  cases native_reserved_datatype_name s <;> trivial
+  cases __eo_to_smt_reserved_datatype_name s <;> trivial
 
 theorem smtTermClosedIn_eo_to_smt_dtsel
     (vars : List SmtVarKey) (s : native_String) (d : DatatypeDecl)
@@ -1186,9 +1157,9 @@ theorem smtTermClosedIn_eo_to_smt_dtsel
   SmtTermClosedIn vars (__eo_to_smt (Term.DtSel s d i j)) :=
 by
   change SmtTermClosedIn vars
-    (native_ite (native_reserved_datatype_name s) SmtTerm.None
+    (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
       (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
-  cases native_reserved_datatype_name s <;> trivial
+  cases __eo_to_smt_reserved_datatype_name s <;> trivial
 
 theorem smtTermClosedIn_eo_to_smt_uconst
     (vars : List SmtVarKey) (i : native_Nat) (T : Term) :
@@ -3480,19 +3451,6 @@ theorem smtTermClosedIn_eo_to_smt_str_indexof_re
 by
   exact ⟨hx, hy, hz⟩
 
-theorem smtTermClosedIn_eo_to_smt_str_indexof_re_split
-    {vars : List SmtVarKey} {x y z : Term}
-    (hx : SmtTermClosedIn vars (__eo_to_smt x))
-    (hy : SmtTermClosedIn vars (__eo_to_smt y))
-    (hz : SmtTermClosedIn vars (__eo_to_smt z)) :
-  SmtTermClosedIn vars
-    (__eo_to_smt
-      (Term.Apply
-        (Term.Apply (Term.Apply (Term.UOp UserOp.str_indexof_re_split) x) y)
-        z)) :=
-by
-  exact ⟨hx, hy, hz⟩
-
 theorem smtTermClosedIn_eo_to_smt_not_of_closed_rec_using
     {x env : Term} {vars : List SmtVarKey}
     (hEnv : EoSmtVarEnvPerm env vars)
@@ -5500,13 +5458,6 @@ by
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
-  case str_indexof_re_split =>
-    exact smtTermClosedIn_eo_to_smt_ternary_uop_of_closed_rec_using
-      (op := UserOp.str_indexof_re_split) (by decide) (by decide)
-      (fun hx hy hz => smtTermClosedIn_eo_to_smt_str_indexof_re_split hx hy hz)
-      hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed')
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
-      (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   case _at_strings_occur_index =>
     exact smtTermClosedIn_eo_to_smt_ternary_uop_of_closed_rec_using
       (op := UserOp._at_strings_occur_index) (by decide) (by decide)
@@ -6875,13 +6826,6 @@ by
       hEnv (fun hEnv' hClosed' => hRec hXLt hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hYLt hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hZLt hEnv' hClosed') hClosed
-  case str_indexof_re_split =>
-    exact smtTermClosedIn_eo_to_smt_ternary_uop_of_closed_rec_using
-      (op := UserOp.str_indexof_re_split) (by decide) (by decide)
-      (fun hx hy hz => smtTermClosedIn_eo_to_smt_str_indexof_re_split hx hy hz)
-      hEnv (fun hEnv' hClosed' => hRec hXLt hEnv' hClosed')
-      (fun hEnv' hClosed' => hRec hYLt hEnv' hClosed')
-      (fun hEnv' hClosed' => hRec hZLt hEnv' hClosed') hClosed
   case _at_strings_occur_index =>
     exact smtTermClosedIn_eo_to_smt_ternary_uop_of_closed_rec_using
       (op := UserOp._at_strings_occur_index) (by decide) (by decide)
@@ -7593,12 +7537,12 @@ by
 
 /-- A formula remains true when only SMT variable assignments are changed. -/
 def StableInAnyVarModel (M : SmtModel) (P : Term) : Prop :=
-  ∀ N, model_total_typed N -> model_agrees_on_globals M N ->
+  ∀ N, model_wf N -> model_agrees_on_globals M N ->
     eo_interprets N P true
 
 /-- A formula remains true under variable-model changes whenever it is true. -/
 def StableWhenTrueInAnyVarModel (P : Term) : Prop :=
-  ∀ M, model_total_typed M -> eo_interprets M P true ->
+  ∀ M, model_wf M -> eo_interprets M P true ->
     StableInAnyVarModel M P
 
 theorem smt_interprets_of_model_eval_eq

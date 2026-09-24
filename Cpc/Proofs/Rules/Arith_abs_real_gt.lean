@@ -258,7 +258,7 @@ private theorem typed_result (x1 y1 : Term)
     (by rw [hLhs, hRhs]) (by rw [hLhs]; simp)
 
 /-- The core integer arithmetic identity expressed at the value level. -/
-private theorem eval_rel (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term)
+private theorem eval_rel (M : SmtModel) (hM : model_wf M) (x1 y1 : Term)
     (hxTrans : RuleProofs.eo_has_smt_translation x1)
     (hyTrans : RuleProofs.eo_has_smt_translation y1)
     (hxTy : __eo_typeof x1 = Term.Real)
@@ -371,7 +371,7 @@ private theorem eval_rel (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term
   rw [hEq]
   exact RuleProofs.smtx_model_eval_eq_refl _
 
-private theorem facts_result (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term)
+private theorem facts_result (M : SmtModel) (hM : model_wf M) (x1 y1 : Term)
     (hxTrans : RuleProofs.eo_has_smt_translation x1)
     (hyTrans : RuleProofs.eo_has_smt_translation y1)
     (hxTy : __eo_typeof x1 = Term.Real)
@@ -387,7 +387,7 @@ end ArithAbsRealGt
 
 open ArithAbsRealGt in
 public theorem cmd_step_arith_abs_real_gt_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_abs_real_gt args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

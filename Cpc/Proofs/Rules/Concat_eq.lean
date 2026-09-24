@@ -1320,7 +1320,7 @@ private theorem concatEq_seq_pack_of_empty_typeof_intros
   exact ⟨T, hsTy, hIntroSNN, hIntroTNN⟩
 
 private theorem eo_interprets_double_rev_intros_of_prog_elim_intros
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -1376,7 +1376,7 @@ private theorem eo_interprets_double_rev_intros_of_prog_elim_intros
     hElimIntroT hDoubleS hDoubleT hST
 
 private theorem eo_interprets_double_rev_intros_of_prog_seq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -1632,7 +1632,7 @@ private theorem concatEq_false_has_bool_type_of_seq
   simpa [strip, concatEqLhs_false, concatEqRhs_false] using hFinalBool
 
 private theorem eo_interprets_concat_eq_false_of_seq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -1744,7 +1744,7 @@ private theorem eo_interprets_concat_eq_false_of_seq
   simpa [strip, concatEqLhs_false, concatEqRhs_false] using hFinal
 
 private theorem eo_interprets_concat_eq_false_of_seq'
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -1961,7 +1961,7 @@ private theorem concatEq_result_operands_same_eo_type (rev s t : Term)
     (concatEqLhs rev s t) (concatEqRhs rev s t) hOutTy
 
 private theorem step_concat_eq_false_of_seq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -1992,7 +1992,7 @@ private theorem step_concat_eq_false_of_seq
         (concatEqRhs (Term.Boolean false) s t)) hFinalBool
 
 private theorem step_concat_eq_false_of_left_seq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq s t))
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
@@ -2011,7 +2011,7 @@ private theorem step_concat_eq_false_of_left_seq
     hIntroSNN hIntroTNN hProg
 
 private theorem step_concat_eq_true_of_seq_from_rev_strip_with_final_seq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -2081,7 +2081,7 @@ private theorem step_concat_eq_true_of_seq_from_rev_strip_with_final_seq
         (concatEqRhs (Term.Boolean true) s t)) hFinalBool
 
 private theorem step_concat_eq_true_of_seq_from_rev_strip_with_final_seq_cancel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -2117,7 +2117,7 @@ private theorem step_concat_eq_true_of_seq_from_rev_strip_with_final_seq_cancel
       hFinalLeft hFinalRight hXY
 
 private theorem step_concat_eq_true_of_seq_with_final_seq_cancel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -2137,7 +2137,7 @@ private theorem step_concat_eq_true_of_seq_with_final_seq_cancel
     hsTy htTy hIntroSNN hIntroTNN hProg hPrem
 
 private theorem step_concat_eq_true_of_left_seq_with_final_seq_cancel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s t : Term) (T : SmtType)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq s t))
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
@@ -2156,7 +2156,7 @@ private theorem step_concat_eq_true_of_left_seq_with_final_seq_cancel
     hsTy htTy hIntroSNN hIntroTNN hProg
 
 private theorem step_concat_eq_true_of_left_concat_with_final_seq_cancel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sHead sTail t : Term)
     (hPremBool :
       RuleProofs.eo_has_bool_type (mkEq (mkConcat sHead sTail) t))
@@ -2177,7 +2177,7 @@ private theorem step_concat_eq_true_of_left_concat_with_final_seq_cancel
     hIntroRightNN hProg
 
 private theorem step_concat_eq_true_of_right_concat_with_final_seq_cancel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s tHead tTail : Term)
     (hPremBool :
       RuleProofs.eo_has_bool_type (mkEq s (mkConcat tHead tTail)))
@@ -2198,7 +2198,7 @@ private theorem step_concat_eq_true_of_right_concat_with_final_seq_cancel
     hIntroRightNN hProg
 
 private theorem step_concat_eq_true_of_left_concat_intro_eq_self_with_final_seq_cancel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sHead sTail t : Term)
     (hPremBool :
       RuleProofs.eo_has_bool_type (mkEq (mkConcat sHead sTail) t))
@@ -2217,7 +2217,7 @@ private theorem step_concat_eq_true_of_left_concat_intro_eq_self_with_final_seq_
     hIntroRightNN hProg
 
 private theorem step_concat_eq_true_of_right_concat_intro_eq_self_with_final_seq_cancel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s tHead tTail : Term)
     (hPremBool :
       RuleProofs.eo_has_bool_type (mkEq s (mkConcat tHead tTail)))
@@ -2236,7 +2236,7 @@ private theorem step_concat_eq_true_of_right_concat_intro_eq_self_with_final_seq
     hIntroRightNN hProg
 
 private theorem step_concat_eq_true_of_both_concat_with_final_seq_cancel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sHead sTail tHead tTail : Term)
     (hPremBool :
       RuleProofs.eo_has_bool_type
@@ -2257,7 +2257,7 @@ private theorem step_concat_eq_true_of_both_concat_with_final_seq_cancel
     hLeftTy hIntroLeftNN hIntroRightNN hProg
 
 private theorem step_concat_eq_true_of_left_concat_empty_typeof_with_final_seq_cancel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sHead sTail t : Term)
     (hPremBool :
       RuleProofs.eo_has_bool_type (mkEq (mkConcat sHead sTail) t))
@@ -2279,7 +2279,7 @@ private theorem step_concat_eq_true_of_left_concat_empty_typeof_with_final_seq_c
     hIntroRightNN hProg
 
 private theorem step_concat_eq_true_of_right_concat_empty_typeof_with_final_seq_cancel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s tHead tTail : Term)
     (hPremBool :
       RuleProofs.eo_has_bool_type (mkEq s (mkConcat tHead tTail)))
@@ -2480,7 +2480,7 @@ private theorem step_concat_eq_of_left_seq_eo_eq_true
     hProg hHead
 
 private theorem step_concat_eq_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rev s t : Term)
     (hRevTrans : RuleProofs.eo_has_smt_translation rev)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq s t))
@@ -3736,7 +3736,7 @@ private theorem step_concat_eq_core
                                                 hHead⟩)
 
 public theorem cmd_step_concat_eq_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.concat_eq args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

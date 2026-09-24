@@ -352,7 +352,7 @@ theorem eval_sign_extend_term
   simp [__smtx_model_eval]
 
 private theorem eval_bv_extract_sign_extend_1
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x low high k : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvExtractSignExtend1Term x low high k) = Term.Bool ->
@@ -370,31 +370,31 @@ private theorem eval_bv_extract_sign_extend_1
   let L := native_int_to_nat l
   let D := native_int_to_nat d
   have hWRound : (↑W : Int) = w := by
-    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hKRound : (↑K : Int) = a := by
-    simpa [K, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [K, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip a ha0
   have hLRound : (↑L : Int) = l := by
-    simpa [L, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [L, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip l hl0
   have hd0Nonneg : native_zleq 0 d = true :=
     native_zleq_of_zlt_true _ _ hd0
   have hDRound : (↑D : Int) = d := by
-    simpa [D, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [D, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip d hd0Nonneg
   rcases smt_eval_binary_of_smt_type_bitvec M hM (__eo_to_smt x) W
       (by simpa [W] using hXSmtTy) with ⟨p, hXEval, hCan⟩
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (↑W : Int) p := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
   have hWidth0 : native_zleq 0 (native_nat_to_int W) = true := by
-    simp [SmtEval.native_zleq, native_nat_to_int, SmtEval.native_nat_to_int]
+    simp [SmtEval.native_zleq, native_nat_to_int, Smtm.native_nat_to_int]
   have hRange := bitvec_payload_range_of_canonical hWidth0 hCan
   have hp0 : (0 : Int) ≤ p := hRange.1
   have hp1 : p < (2 : Int) ^ W := by
-    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] using
       hRange.2
   have hhwInt : h < w := by
     simpa [SmtEval.native_zlt] using hhw
@@ -420,7 +420,7 @@ private theorem eval_bv_extract_sign_extend_1
       hLRound.symm hdCast hFit
 
 private theorem facts_bv_extract_sign_extend_1_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x low high k : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvExtractSignExtend1Term x low high k) = Term.Bool ->
@@ -546,7 +546,7 @@ theorem typed_bv_extract_sign_extend_1_program
     x low high k hXTrans hTermTy
 
 theorem facts_bv_extract_sign_extend_1_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x low high k P : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation low ->

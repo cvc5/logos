@@ -103,7 +103,7 @@ theorem native_str_leq_bool_append_both_of_same_len_ne
               List.cons_lt_cons_iff, hxy]
 
 private theorem eval_type_seq_char
-    (M : SmtModel) (hM : model_total_typed M) (x : Term)
+    (M : SmtModel) (hM : model_wf M) (x : Term)
     (hxTy : __smtx_typeof (__eo_to_smt x) =
       SmtType.Seq SmtType.Char) :
     __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt x)) =
@@ -179,7 +179,7 @@ theorem smtx_typeof_list_concat_rec_of_eo_type
         hZTrans hRecEoTy
 
 theorem smtx_eval_str_leq_list_concat_rec_common
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (a z1 z2 : Term),
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true ->
       __smtx_typeof (__eo_to_smt z1) = SmtType.Seq SmtType.Char ->

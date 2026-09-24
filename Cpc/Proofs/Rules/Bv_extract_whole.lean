@@ -293,7 +293,7 @@ private theorem native_nat_to_int_int_to_nat_eq
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hn
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem typed_bv_extract_whole_term
@@ -345,7 +345,7 @@ private theorem smtx_eval_numeral_term_eq
   rw [__smtx_model_eval.eq_def]
 
 private theorem eval_extract_whole_matches
-    (M : SmtModel) (hM : model_total_typed M) (x n : Term) :
+    (M : SmtModel) (hM : model_wf M) (x n : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvExtractWholeTerm x n) = Term.Bool ->
     __smtx_model_eval M (__eo_to_smt (bvExtractWholeLhs x n)) =
@@ -392,7 +392,7 @@ private theorem eval_extract_whole_matches
     SmtEval.native_div_total, hPow0, hWidthExpr, hPayloadMod]
 
 private theorem facts_bv_extract_whole_term
-    (M : SmtModel) (hM : model_total_typed M) (x n : Term) :
+    (M : SmtModel) (hM : model_wf M) (x n : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvExtractWholeTerm x n) = Term.Bool ->
     eo_interprets M (bvExtractWholeTerm x n) true := by
@@ -408,7 +408,7 @@ private theorem facts_bv_extract_whole_term
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_extract_whole_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_extract_whole args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

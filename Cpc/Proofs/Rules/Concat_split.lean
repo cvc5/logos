@@ -134,7 +134,7 @@ private theorem concat_split_lengths_ne_of_not_len_eq_eval
   exact hEval (by exact_mod_cast hLen)
 
 private theorem facts_concat_split_false_formula
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tc sc tTail sTail : Term) (T : SmtType)
     (htcTy : __smtx_typeof (__eo_to_smt tc) = SmtType.Seq T)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -368,7 +368,7 @@ private theorem facts_concat_split_false_formula
         hOrTrue hTailTrue
 
 private theorem facts_concat_split_true_formula
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tc sc tPrefix sPrefix : Term) (T : SmtType)
     (htcTy : __smtx_typeof (__eo_to_smt tc) = SmtType.Seq T)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -606,7 +606,7 @@ private theorem facts_concat_split_true_formula
         hOrTrue hTailTrue
 
 private theorem step_concat_split_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rev t s tc sc : Term)
     (hRevTrans : RuleProofs.eo_has_smt_translation rev)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
@@ -679,7 +679,7 @@ private theorem step_concat_split_core
         (concatSplitFalseFormula_has_bool_type tc sc T htcTy hscTy)
 
 public theorem cmd_step_concat_split_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.concat_split args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

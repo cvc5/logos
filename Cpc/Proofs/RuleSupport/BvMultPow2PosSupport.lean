@@ -304,7 +304,7 @@ theorem typed_direct_term
     rw [typeof_concat_eq, hZeroTy, hEmptyTy]
     simp [__smtx_typeof_concat, native_int_to_nat,
       SmtEval.native_int_to_nat, native_nat_to_int,
-      SmtEval.native_nat_to_int, SmtEval.native_zplus,
+      Smtm.native_nat_to_int, SmtEval.native_zplus,
       Int.max_eq_left hEInt]
   have hDRound := native_int_to_nat_roundtrip D hDNonneg
   have hERound := native_int_to_nat_roundtrip E hE0
@@ -328,7 +328,7 @@ theorem typed_direct_term
     rw [typeof_concat_eq, hExtractTy, hZerosTy]
     simp [__smtx_typeof_concat, native_int_to_nat,
       SmtEval.native_int_to_nat, native_nat_to_int,
-      SmtEval.native_nat_to_int, SmtEval.native_zplus, hWidthNat,
+      Smtm.native_nat_to_int, SmtEval.native_zplus, hWidthNat,
       hDRound, hERound, hDE, hDEInt, Int.max_eq_left hDInt,
       Int.max_eq_left hEInt]
   unfold bvMultPow2PosDirectTerm
@@ -351,7 +351,7 @@ private theorem model_eval_eq_true_of_eo_eq_true
       exact hEval
 
 private theorem premises_numeric
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (n : Term) (E : native_Int) :
     __smtx_typeof (__eo_to_smt n) = SmtType.Int ->
     eo_interprets M (bvMultPow2PosIspowPrem n) true ->
@@ -432,7 +432,7 @@ private theorem bitvec_mult_pow2_pos_core_toNat
   exact congrArg BitVec.toNat hEq
 
 theorem eval_direct
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (z size n exponent u : Term) :
     RuleProofs.eo_has_smt_translation z ->
     RuleProofs.eo_has_smt_translation size ->
@@ -455,13 +455,13 @@ theorem eval_direct
   have hD0 : native_zleq 0 D = true :=
     native_zleq_of_zlt_true _ _ hDPos
   have hWRound : (native_nat_to_int WN : Int) = W := by
-    simpa [WN, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [WN, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip W hW0
   have hERound : (native_nat_to_int EN : Int) = E := by
-    simpa [EN, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [EN, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip E hE0
   have hDRound : (native_nat_to_int DN : Int) = D := by
-    simpa [DN, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [DN, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip D hD0
   have hDInt : (0 : Int) < D := by
     simpa [SmtEval.native_zlt] using hDPos
@@ -482,12 +482,12 @@ theorem eval_direct
       (by simpa [WN] using hZSmtTy) with
     ⟨p, hZEval, hZCan⟩
   have hWidth0 : native_zleq 0 (native_nat_to_int WN) = true := by
-    simp [SmtEval.native_zleq, native_nat_to_int, SmtEval.native_nat_to_int]
+    simp [SmtEval.native_zleq, native_nat_to_int, Smtm.native_nat_to_int]
   have hRange := bitvec_payload_range_of_canonical hWidth0 hZCan
   have hp0 : (0 : Int) ≤ p := hRange.1
   have hp1 : p < (2 : Int) ^ WN := by
     simpa [natpow2_eq, native_nat_to_int,
-      SmtEval.native_nat_to_int] using hRange.2
+      Smtm.native_nat_to_int] using hRange.2
   let Z := p.toNat
   have hZCast : (Z : Int) = p := Int.toNat_of_nonneg hp0
   let x := BitVec.ofInt WN (Z : Int)
@@ -553,7 +553,7 @@ theorem eval_direct
       U + 1 + -0 = D := by
         simpa [SmtEval.native_zplus] using hD.symm
       _ = (DN : Int) := by
-        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hDRound.symm
+        simpa [native_nat_to_int, Smtm.native_nat_to_int] using hDRound.symm
   have hExtractEval :
       __smtx_model_eval M
           (__eo_to_smt
@@ -567,7 +567,7 @@ theorem eval_direct
     have hOf : BitVec.ofInt WN (x.toNat : Int) = x :=
       bitvec_ofInt_natCast_toNat x
     rw [hOf] at hExtract
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hExtract
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hExtract
   have hZeroConstEval :
       __smtx_model_eval M
           (__eo_to_smt
@@ -611,7 +611,7 @@ theorem eval_direct
   exact bitvec_mult_pow2_pos_core_toNat DN EN WN hWidthNat hDNPos x
 
 theorem facts_direct_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (z size n exponent u : Term) :
     RuleProofs.eo_has_smt_translation z ->
     RuleProofs.eo_has_smt_translation size ->

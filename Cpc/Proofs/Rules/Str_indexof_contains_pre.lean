@@ -288,7 +288,7 @@ private theorem typed___eo_prog_str_indexof_contains_pre_impl
   exact hBool
 
 private theorem facts___eo_prog_str_indexof_contains_pre_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t₁ t₂ s n P₁ P₂ T : Term)
     (hT₁Trans : RuleProofs.eo_has_smt_translation t₁)
     (hT₂Trans : RuleProofs.eo_has_smt_translation t₂)
@@ -486,7 +486,7 @@ private theorem facts___eo_prog_str_indexof_contains_pre_impl
       (__smtx_model_eval M (__eo_to_smt right))
 
 public theorem cmd_step_str_indexof_contains_pre_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_indexof_contains_pre args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

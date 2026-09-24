@@ -331,16 +331,16 @@ private theorem native_eval_map_diff_msm_typed
     (hm1 : __smtx_typeof_map_value m1 = SmtType.Map A B)
     (hm2 : __smtx_typeof_map_value m2 = SmtType.Map A B)
     (hDefault : __smtx_typeof_value (__smtx_type_default A) = A) :
-    __smtx_typeof_value (native_eval_map_diff_msm m1 m2) = A := by
+    __smtx_typeof_value (native_eval_map_diff m1 m2) = A := by
   classical
-  change __smtx_typeof_value (native_eval_map_diff_msm m1 m2) = A
+  change __smtx_typeof_value (native_eval_map_diff m1 m2) = A
   rw [hm1, hm2]
   simp [native_ite, native_Teq, SmtEval.native_and]
   by_cases hDiff :
       ∃ i : SmtValue,
         __smtx_typeof_value i = A ∧
-          __smtx_value_canonical_bool i = true ∧
-          native_veq (__smtx_msm_lookup m1 i) (__smtx_msm_lookup m2 i) = false
+          __smtx_value_canonical i = true ∧
+          native_veq (__smtx_map_lookup m1 i) (__smtx_map_lookup m2 i) = false
   · simpa [hDiff] using (Classical.choose_spec hDiff).1
   · simpa [hDiff] using hDefault
 
@@ -349,19 +349,19 @@ private theorem native_eval_map_diff_msm_canonical
     {A B : SmtType}
     (hm1 : __smtx_typeof_map_value m1 = SmtType.Map A B)
     (hm2 : __smtx_typeof_map_value m2 = SmtType.Map A B)
-    (hDefault : __smtx_value_canonical (__smtx_type_default A)) :
-    __smtx_value_canonical (native_eval_map_diff_msm m1 m2) := by
+    (hDefault : value_canonical (__smtx_type_default A)) :
+    value_canonical (native_eval_map_diff m1 m2) := by
   classical
-  change __smtx_value_canonical (native_eval_map_diff_msm m1 m2)
+  change value_canonical (native_eval_map_diff m1 m2)
   rw [hm1, hm2]
   simp [native_ite, native_Teq, SmtEval.native_and]
   by_cases hDiff :
       ∃ i : SmtValue,
         __smtx_typeof_value i = A ∧
-          __smtx_value_canonical_bool i = true ∧
-          native_veq (__smtx_msm_lookup m1 i) (__smtx_msm_lookup m2 i) = false
-  · have hCan : __smtx_value_canonical (Classical.choose hDiff) := by
-      simpa [__smtx_value_canonical] using (Classical.choose_spec hDiff).2.1
+          __smtx_value_canonical i = true ∧
+          native_veq (__smtx_map_lookup m1 i) (__smtx_map_lookup m2 i) = false
+  · have hCan : value_canonical (Classical.choose hDiff) := by
+      simpa [value_canonical] using (Classical.choose_spec hDiff).2.1
     simpa [hDiff] using hCan
   · simpa [hDiff] using hDefault
 
@@ -417,10 +417,10 @@ theorem model_eval_map_diff_canonical
     (hDefault :
       ∀ {A : SmtType},
         __smtx_typeof (SmtTerm.map_diff t1 t2) = A ->
-          __smtx_value_canonical (__smtx_type_default A))
+          value_canonical (__smtx_type_default A))
     (hpres1 : __smtx_typeof_value (__smtx_model_eval M t1) = __smtx_typeof t1)
     (hpres2 : __smtx_typeof_value (__smtx_model_eval M t2) = __smtx_typeof t2) :
-    __smtx_value_canonical (__smtx_model_eval M (SmtTerm.map_diff t1 t2)) := by
+    value_canonical (__smtx_model_eval M (SmtTerm.map_diff t1 t2)) := by
   rcases map_diff_args_of_non_none ht with hMap | hSet
   · rcases hMap with ⟨A, B, h1, h2, hTy⟩
     rw [show __smtx_model_eval M (SmtTerm.map_diff t1 t2) =
@@ -959,7 +959,7 @@ theorem fun_type_wf_real_real :
 /-- Shows that evaluating `apply_lookup_fun` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_apply_lookup_fun
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (s : native_String)
     (A B : SmtType)
     (hA : A ≠ SmtType.None)
@@ -1076,7 +1076,7 @@ theorem typeof_value_model_eval_int_log2
 /-- Shows that evaluating `div` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_div
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (t1 t2 : SmtTerm)
     (ht : term_has_non_none_type (SmtTerm.div t1 t2))
     (hpres1 : __smtx_typeof_value (__smtx_model_eval M t1) = __smtx_typeof t1)
@@ -1104,7 +1104,7 @@ theorem typeof_value_model_eval_div
 /-- Shows that evaluating `mod` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_mod
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (t1 t2 : SmtTerm)
     (ht : term_has_non_none_type (SmtTerm.mod t1 t2))
     (hpres1 : __smtx_typeof_value (__smtx_model_eval M t1) = __smtx_typeof t1)
@@ -1160,7 +1160,7 @@ theorem typeof_value_model_eval_qdiv_total
 /-- Shows that evaluating `qdiv` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_qdiv
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (t1 t2 : SmtTerm)
     (ht : term_has_non_none_type (SmtTerm.qdiv t1 t2))
     (hpres1 : __smtx_typeof_value (__smtx_model_eval M t1) = __smtx_typeof t1)
@@ -1177,12 +1177,12 @@ theorem typeof_value_model_eval_qdiv
     rcases int_value_canonical (by simpa [hArgs.2] using hpres2) with ⟨n2, hn2⟩
     rw [hn1, hn2]
     by_cases hZero : native_to_real n2 = native_mk_rational 0 1
-    · simpa [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_model_eval_to_real_coerce,
+    · simpa [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_to_real_coerce,
         __smtx_model_eval_qdiv_total, native_veq, hZero] using
         typeof_value_model_eval_apply_lookup_fun M hM
           native_qdiv_by_zero_id SmtType.Real SmtType.Real (by simp) type_inhabited_real fun_type_wf_real_real
           (SmtValue.Rational (native_to_real n1)) rfl
-    · simp [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_model_eval_to_real_coerce,
+    · simp [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_to_real_coerce,
         __smtx_model_eval_qdiv_total, __smtx_typeof_value, native_veq, hZero]
   · rw [show __smtx_typeof (SmtTerm.qdiv t1 t2) = SmtType.Real by
       rw [typeof_qdiv_eq]
@@ -1192,12 +1192,12 @@ theorem typeof_value_model_eval_qdiv
     rcases real_value_canonical (by simpa [hArgs.2] using hpres2) with ⟨q2, hq2⟩
     rw [hq1, hq2]
     by_cases hZero : q2 = native_mk_rational 0 1
-    · simpa [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_model_eval_to_real_coerce,
+    · simpa [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_to_real_coerce,
         __smtx_model_eval_qdiv_total, native_veq, hZero] using
         typeof_value_model_eval_apply_lookup_fun M hM
           native_qdiv_by_zero_id SmtType.Real SmtType.Real (by simp) type_inhabited_real fun_type_wf_real_real
           (SmtValue.Rational q1) rfl
-    · simp [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_model_eval_to_real_coerce,
+    · simp [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_to_real_coerce,
         __smtx_model_eval_qdiv_total, __smtx_typeof_value, native_veq, hZero]
 
 end Smtm

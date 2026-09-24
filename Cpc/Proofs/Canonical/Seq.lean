@@ -22,19 +22,19 @@ theorem seq_canonical_empty (T : SmtType) :
 theorem seq_canonical_cons
     {v : SmtValue}
     {s : SmtSeq}
-    (hv : __smtx_value_canonical v)
+    (hv : value_canonical v)
     (hs : __smtx_seq_canonical s = true) :
     __smtx_seq_canonical (SmtSeq.cons v s) = true := by
-  have hvBool : __smtx_value_canonical_bool v = true := by
-    simpa [__smtx_value_canonical] using hv
+  have hvBool : __smtx_value_canonical v = true := by
+    simpa [value_canonical] using hv
   simp [__smtx_seq_canonical, hvBool, hs, SmtEval.native_and]
 
 /-- Canonical sequences give canonical `Seq` values. -/
 theorem value_canonical_seq_of_seq_canonical
     {s : SmtSeq}
     (h : __smtx_seq_canonical s = true) :
-    __smtx_value_canonical (SmtValue.Seq s) := by
-  simpa [__smtx_value_canonical, __smtx_value_canonical_bool] using h
+    value_canonical (SmtValue.Seq s) := by
+  simpa [value_canonical, __smtx_value_canonical] using h
 
 /-- Packing and then unpacking a list of values gives the original list. -/
 theorem native_unpack_pack_seq (T : SmtType) :
@@ -48,13 +48,13 @@ theorem native_unpack_pack_seq (T : SmtType) :
 theorem seq_canonical_pack_seq
     (T : SmtType) :
     ∀ {xs : List SmtValue},
-      (∀ v, v ∈ xs -> __smtx_value_canonical v) ->
+      (∀ v, v ∈ xs -> value_canonical v) ->
         __smtx_seq_canonical (native_pack_seq T xs) = true
   | [], _h => by
       simp [native_pack_seq, __smtx_seq_canonical]
   | v :: vs, h => by
-      have hv : __smtx_value_canonical v := h v (by simp)
-      have hvs : ∀ u, u ∈ vs -> __smtx_value_canonical u := by
+      have hv : value_canonical v := h v (by simp)
+      have hvs : ∀ u, u ∈ vs -> value_canonical u := by
         intro u hu
         exact h u (by simp [hu])
       simpa [native_pack_seq] using
@@ -64,11 +64,11 @@ theorem seq_canonical_pack_seq
 theorem seq_unpack_values_canonical :
     ∀ {s : SmtSeq},
       __smtx_seq_canonical s = true ->
-        ∀ v, v ∈ native_unpack_seq s -> __smtx_value_canonical v
+        ∀ v, v ∈ native_unpack_seq s -> value_canonical v
   | SmtSeq.empty T, _h, v, hv => by
       simp [native_unpack_seq] at hv
   | SmtSeq.cons x xs, h, v, hv => by
-      have hx : __smtx_value_canonical x := by
+      have hx : value_canonical x := by
         have hParts := h
         simp [__smtx_seq_canonical, SmtEval.native_and] at hParts
         exact hParts.1
@@ -188,29 +188,29 @@ theorem seq_canonical_pack_unpack_replace_re
 theorem seq_canonical_pack_replace_all_aux
     (T : SmtType)
     {r : SmtRegLan} {repl : List SmtValue}
-    (hrepl : ∀ v, v ∈ repl -> __smtx_value_canonical v) :
+    (hrepl : ∀ v, v ∈ repl -> value_canonical v) :
     ∀ (fuel : Nat) {xs : List SmtValue},
-      (∀ v, v ∈ xs -> __smtx_value_canonical v) ->
+      (∀ v, v ∈ xs -> value_canonical v) ->
         __smtx_seq_canonical
           (native_pack_seq T
-            (native_re_replace_all_nonempty_list_aux fuel r repl xs)) = true
+            (impl_native_re_replace_all_nonempty_list_aux fuel r repl xs)) = true
   | 0, xs, hxs => by
-      simpa [native_re_replace_all_nonempty_list_aux] using
+      simpa [impl_native_re_replace_all_nonempty_list_aux] using
         seq_canonical_pack_seq T hxs
   | fuel + 1, xs, hxs => by
       cases hMatch : native_re_positive_prefix_match_len? r xs with
       | none =>
           cases xs with
           | nil =>
-              simpa [native_re_replace_all_nonempty_list_aux, hMatch] using
+              simpa [impl_native_re_replace_all_nonempty_list_aux, hMatch] using
                 seq_canonical_pack_seq T hxs
           | cons x xs =>
-              have hx : __smtx_value_canonical x := hxs x List.mem_cons_self
-              have htail : ∀ u, u ∈ xs -> __smtx_value_canonical u :=
+              have hx : value_canonical x := hxs x List.mem_cons_self
+              have htail : ∀ u, u ∈ xs -> value_canonical u :=
                 fun u hu => hxs u (List.mem_cons_of_mem x hu)
               apply seq_canonical_pack_seq
               intro u hu
-              simp [native_re_replace_all_nonempty_list_aux, hMatch] at hu
+              simp [impl_native_re_replace_all_nonempty_list_aux, hMatch] at hu
               rcases hu with rfl | hu
               · exact hx
               · exact seq_unpack_values_canonical
@@ -222,15 +222,15 @@ theorem seq_canonical_pack_replace_all_aux
           | zero =>
               cases xs with
               | nil =>
-                  simpa [native_re_replace_all_nonempty_list_aux, hMatch] using
+                  simpa [impl_native_re_replace_all_nonempty_list_aux, hMatch] using
                     seq_canonical_pack_seq T hxs
               | cons x xs =>
-                  have hx : __smtx_value_canonical x := hxs x List.mem_cons_self
-                  have htail : ∀ u, u ∈ xs -> __smtx_value_canonical u :=
+                  have hx : value_canonical x := hxs x List.mem_cons_self
+                  have htail : ∀ u, u ∈ xs -> value_canonical u :=
                     fun u hu => hxs u (List.mem_cons_of_mem x hu)
                   apply seq_canonical_pack_seq
                   intro u hu
-                  simp [native_re_replace_all_nonempty_list_aux, hMatch] at hu
+                  simp [impl_native_re_replace_all_nonempty_list_aux, hMatch] at hu
                   rcases hu with rfl | hu
                   · exact hx
                   · exact seq_unpack_values_canonical
@@ -240,7 +240,7 @@ theorem seq_canonical_pack_replace_all_aux
           | succ len =>
               apply seq_canonical_pack_seq
               intro v hv
-              simp [native_re_replace_all_nonempty_list_aux, hMatch,
+              simp [impl_native_re_replace_all_nonempty_list_aux, hMatch,
                 List.mem_append] at hv
               rcases hv with hv | hv
               · exact hrepl v hv
@@ -261,7 +261,7 @@ theorem seq_canonical_pack_unpack_replace_all
         (native_seq_replace_all (native_unpack_seq s)
           (native_unpack_seq pat) (native_unpack_seq repl))) = true := by
   unfold native_seq_replace_all
-  unfold native_str_replace_re_all native_re_replace_all_nonempty_list
+  unfold native_str_replace_re_all impl_native_re_replace_all_nonempty_list
   exact seq_canonical_pack_replace_all_aux T
     (fun u hu => seq_unpack_values_canonical hrepl u hu)
     ((native_unpack_seq s).length + 1)
@@ -278,7 +278,7 @@ theorem seq_canonical_pack_unpack_replace_re_all
       (native_pack_seq T
         (native_str_replace_re_all (native_unpack_seq s) r
           (native_unpack_seq repl))) = true := by
-  unfold native_str_replace_re_all native_re_replace_all_nonempty_list
+  unfold native_str_replace_re_all impl_native_re_replace_all_nonempty_list
   exact seq_canonical_pack_replace_all_aux T
     (fun u hu => seq_unpack_values_canonical hrepl u hu)
     ((native_unpack_seq s).length + 1)
@@ -322,11 +322,11 @@ theorem native_unpack_string_valid_of_seq_canonical
   rw [native_string_valid, List.all_eq_true]
   intro c hc
   rcases List.mem_map.mp hc with ⟨v, hv, rfl⟩
-  have hvCan : __smtx_value_canonical v :=
+  have hvCan : value_canonical v :=
     seq_unpack_values_canonical hs v hv
   cases v <;>
-    simp [native_ssm_char_of_value, native_char_valid,
-      __smtx_value_canonical, __smtx_value_canonical_bool] at hvCan ⊢
+    simp [impl_native_ssm_char_of_value, native_char_valid,
+      value_canonical, __smtx_value_canonical] at hvCan ⊢
   exact decide_eq_true hvCan
 
 /-- Packing a valid native string gives a canonical sequence. -/
@@ -346,19 +346,19 @@ theorem seq_canonical_pack_string
 theorem value_canonical_string
     (s : native_String)
     (hs : native_string_valid s = true) :
-    __smtx_value_canonical (SmtValue.Seq (native_pack_string s)) := by
+    value_canonical (SmtValue.Seq (native_pack_string s)) := by
   exact value_canonical_seq_of_seq_canonical (seq_canonical_pack_string s hs)
 
 theorem value_canonical_seq_empty (T : SmtType) :
-    __smtx_value_canonical (SmtValue.Seq (SmtSeq.empty T)) := by
+    value_canonical (SmtValue.Seq (SmtSeq.empty T)) := by
   exact value_canonical_seq_of_seq_canonical (seq_canonical_empty T)
 
 theorem value_canonical_seq_cons
     {v : SmtValue}
     {s : SmtSeq}
-    (hv : __smtx_value_canonical v)
+    (hv : value_canonical v)
     (hs : __smtx_seq_canonical s = true) :
-    __smtx_value_canonical (SmtValue.Seq (SmtSeq.cons v s)) := by
+    value_canonical (SmtValue.Seq (SmtSeq.cons v s)) := by
   exact value_canonical_seq_of_seq_canonical (seq_canonical_cons hv hs)
 
 end Smtm

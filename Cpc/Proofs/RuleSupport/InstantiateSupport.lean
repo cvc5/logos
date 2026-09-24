@@ -172,7 +172,7 @@ well-typedness of the actuals (`SubstActualsHaveSmtTypes`) is exactly what the
 checker's `__is_instantiation` guard certifies; see
 `substActualsHaveSmtTypes_of_is_instantiation`. -/
 theorem instantiate_body_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs F ts : Term)
     (hPrem : eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.forall) xs) F) true)
     (hWf : RuleProofs.eo_has_smt_translation
@@ -230,7 +230,7 @@ Soundness core: if the premise `(forall xs F)` is true in `M`, the conclusion
 `substitute_simul_eval`, plus the `Bool`-typedness of the result to package as
 `eo_interprets`. -/
 theorem instantiate_sound
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs F ts : Term)
     (hPrem : eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.forall) xs) F) true)
     (hWf : RuleProofs.eo_has_smt_translation

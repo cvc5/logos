@@ -141,7 +141,7 @@ private noncomputable def bv_mon_denote (M : SmtModel) : Term -> native_Int
   | _ => 0
 
 private noncomputable def bv_poly_denote (M : SmtModel) : Term -> native_Int
-  | Term.UOp UserOp._at__at_Polynomial => 0
+  | Term.UOp UserOp._at__at_poly_zero => 0
   | Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) m) p =>
       bv_mon_denote M m + bv_poly_denote M p
   | _ => 0
@@ -161,7 +161,7 @@ private inductive bv_mon_int_wf : Term -> Prop where
           (Term.Rational (native_to_real c)))
 
 private inductive bv_poly_int_wf : Term -> Prop where
-  | zero : bv_poly_int_wf (Term.UOp UserOp._at__at_Polynomial)
+  | zero : bv_poly_int_wf (Term.UOp UserOp._at__at_poly_zero)
   | cons (m p : Term) :
       bv_mon_int_wf m ->
       bv_poly_int_wf p ->
@@ -195,7 +195,7 @@ private def bv_var_poly (t : Term) : Term :=
         (Term.Apply (Term.UOp UserOp._at__at_mon)
           (Term.Apply (Term.Apply Term.__eo_List_cons t) Term.__eo_List_nil))
         (Term.Rational (native_mk_rational 1 1))))
-    (Term.UOp UserOp._at__at_Polynomial)
+    (Term.UOp UserOp._at__at_poly_zero)
 
 private theorem bv_poly_int_wf_var
     {t : Term}
@@ -207,7 +207,7 @@ private theorem bv_poly_int_wf_var
         (Term.Apply (Term.UOp UserOp._at__at_mon)
           (Term.Apply (Term.Apply Term.__eo_List_cons t) Term.__eo_List_nil))
         (Term.Rational (native_to_real 1)))
-      (Term.UOp UserOp._at__at_Polynomial)
+      (Term.UOp UserOp._at__at_poly_zero)
       (bv_mon_int_wf.mk
         (Term.Apply (Term.Apply Term.__eo_List_cons t) Term.__eo_List_nil)
         1 (bv_mvar_wf.cons t Term.__eo_List_nil hNotStuck bv_mvar_wf.nil))
@@ -864,11 +864,11 @@ private theorem bv_poly_int_wf_of_poly_mul_mon
           bv_poly_int_wf
             (__eo_mk_apply
               (__eo_mk_apply (Term.UOp UserOp._at__at_poly) (__mon_mul_mon m m2))
-              (Term.UOp UserOp._at__at_Polynomial)) := by
+              (Term.UOp UserOp._at__at_poly_zero)) := by
         simpa [__eo_mk_apply, hMulNe] using
           (bv_poly_int_wf.cons
             (__mon_mul_mon m m2)
-            (Term.UOp UserOp._at__at_Polynomial)
+            (Term.UOp UserOp._at__at_poly_zero)
             hMul
             bv_poly_int_wf.zero)
       simpa [__poly_mul_mon, hMNe] using bv_poly_int_wf_of_poly_add hHead ih
@@ -892,11 +892,11 @@ private theorem bv_poly_denote_of_poly_mul_mon
           bv_poly_int_wf
             (__eo_mk_apply
               (__eo_mk_apply (Term.UOp UserOp._at__at_poly) (__mon_mul_mon m m2))
-              (Term.UOp UserOp._at__at_Polynomial)) := by
+              (Term.UOp UserOp._at__at_poly_zero)) := by
         simpa [__eo_mk_apply, hMulNe] using
           (bv_poly_int_wf.cons
             (__mon_mul_mon m m2)
-            (Term.UOp UserOp._at__at_Polynomial)
+            (Term.UOp UserOp._at__at_poly_zero)
             hMul
             bv_poly_int_wf.zero)
       rw [show
@@ -905,7 +905,7 @@ private theorem bv_poly_denote_of_poly_mul_mon
           __poly_add
             (__eo_mk_apply
               (__eo_mk_apply (Term.UOp UserOp._at__at_poly) (__mon_mul_mon m m2))
-              (Term.UOp UserOp._at__at_Polynomial))
+              (Term.UOp UserOp._at__at_poly_zero))
             (__poly_mul_mon m p2) by
         simp [__poly_mul_mon]]
       rw [bv_poly_denote_of_poly_add M hHead
@@ -954,8 +954,8 @@ private theorem bv_poly_int_wf_of_poly_mod_coeffs
   induction hp with
   | zero =>
       rw [show
-        __poly_mod_coeffs (Term.UOp UserOp._at__at_Polynomial) (Term.Numeral m) =
-          Term.UOp UserOp._at__at_Polynomial by
+        __poly_mod_coeffs (Term.UOp UserOp._at__at_poly_zero) (Term.Numeral m) =
+          Term.UOp UserOp._at__at_poly_zero by
         simp [__poly_mod_coeffs]]
       exact bv_poly_int_wf.zero
   | cons mon p hm hp ih =>
@@ -1027,8 +1027,8 @@ private theorem bv_poly_mod_coeffs_mod_denote
   induction hp with
   | zero =>
       rw [show
-        __poly_mod_coeffs (Term.UOp UserOp._at__at_Polynomial) (Term.Numeral m) =
-          Term.UOp UserOp._at__at_Polynomial by
+        __poly_mod_coeffs (Term.UOp UserOp._at__at_poly_zero) (Term.Numeral m) =
+          Term.UOp UserOp._at__at_poly_zero by
         simp [__poly_mod_coeffs]]
   | cons mon p hm hp ih =>
       cases hm with
@@ -1101,7 +1101,7 @@ private theorem bv_poly_mod_coeffs_mod_denote
             exact emod_add_congr (emod_mul_left_congr c (bv_mvar_denote M vars) m) ih
 
 private theorem model_eval_bitvec_payload
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (w : native_Nat)
+    (M : SmtModel) (hM : model_wf M) (t : Term) (w : native_Nat)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w) :
     ∃ n : native_Int,
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Binary (native_nat_to_int w) n ∧
@@ -1142,12 +1142,12 @@ private theorem bvneg_arg_of_bitvec_type (x : Term) (w : native_Nat) :
   rcases bv_unop_arg_of_non_none (op := SmtTerm.bvneg)
       (show __smtx_typeof (SmtTerm.bvneg (__eo_to_smt x)) =
         __smtx_typeof_bv_op_1 (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_45]) hNN with ⟨w', hx⟩
+        rw [__smtx_typeof.eq_47]) hNN with ⟨w', hx⟩
   have hWidth : w' = w := by
     have hResult : SmtType.BitVec w' = SmtType.BitVec w := by
       rw [show __smtx_typeof (SmtTerm.bvneg (__eo_to_smt x)) =
         __smtx_typeof_bv_op_1 (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_45]] at hTy'
+        rw [__smtx_typeof.eq_47]] at hTy'
       simpa [__smtx_typeof_bv_op_1, hx] using hTy'
     cases hResult
     rfl
@@ -1175,15 +1175,15 @@ private theorem bvadd_args_of_bitvec_type (y x : Term) (w : native_Nat) :
       (show __smtx_typeof (SmtTerm.bvadd (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_46]) hNN with ⟨w', hy, hx⟩
+        rw [__smtx_typeof.eq_48]) hNN with ⟨w', hy, hx⟩
   have hWidth : w' = w := by
     have hResult : SmtType.BitVec w' = SmtType.BitVec w := by
       rw [show __smtx_typeof (SmtTerm.bvadd (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_46]] at hTy'
+        rw [__smtx_typeof.eq_48]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-        SmtEval.native_nateq] using hTy'
+        Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -1210,15 +1210,15 @@ private theorem bvmul_args_of_bitvec_type (y x : Term) (w : native_Nat) :
       (show __smtx_typeof (SmtTerm.bvmul (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_47]) hNN with ⟨w', hy, hx⟩
+        rw [__smtx_typeof.eq_49]) hNN with ⟨w', hy, hx⟩
   have hWidth : w' = w := by
     have hResult : SmtType.BitVec w' = SmtType.BitVec w := by
       rw [show __smtx_typeof (SmtTerm.bvmul (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_47]] at hTy'
+        rw [__smtx_typeof.eq_49]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-        SmtEval.native_nateq] using hTy'
+        Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -1245,22 +1245,22 @@ private theorem bvsub_args_of_bitvec_type (y x : Term) (w : native_Nat) :
       (show __smtx_typeof (SmtTerm.bvsub (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_50]) hNN with ⟨w', hy, hx⟩
+        rw [__smtx_typeof.eq_52]) hNN with ⟨w', hy, hx⟩
   have hWidth : w' = w := by
     have hResult : SmtType.BitVec w' = SmtType.BitVec w := by
       rw [show __smtx_typeof (SmtTerm.bvsub (__eo_to_smt y) (__eo_to_smt x)) =
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_50]] at hTy'
+        rw [__smtx_typeof.eq_52]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-        SmtEval.native_nateq] using hTy'
+        Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
   exact ⟨hy, hx⟩
 
 private theorem bv_atom_denote_bvneg_mod
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (w : native_Nat)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (w : native_Nat)
     (hTy : __smtx_typeof (__eo_to_smt (Term.Apply (Term.UOp UserOp.bvneg) x)) =
       SmtType.BitVec w) :
   bv_atom_denote M (Term.Apply (Term.UOp UserOp.bvneg) x) %
@@ -1271,12 +1271,12 @@ private theorem bv_atom_denote_bvneg_mod
   simp [bv_atom_denote]
   rw [show __eo_to_smt (Term.Apply (Term.UOp UserOp.bvneg) x) =
       SmtTerm.bvneg (__eo_to_smt x) by rfl]
-  rw [__smtx_model_eval.eq_45, hxEval]
+  rw [__smtx_model_eval.eq_47, hxEval]
   simp [__smtx_model_eval_bvneg, SmtEval.native_zneg,
     SmtEval.native_mod_total]
 
 private theorem bv_atom_denote_bvadd_mod
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) (w : native_Nat)
+    (M : SmtModel) (hM : model_wf M) (y x : Term) (w : native_Nat)
     (hTy : __smtx_typeof (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) y) x)) =
       SmtType.BitVec w) :
   bv_atom_denote M (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) y) x) %
@@ -1288,12 +1288,12 @@ private theorem bv_atom_denote_bvadd_mod
   simp [bv_atom_denote]
   rw [show __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) y) x) =
       SmtTerm.bvadd (__eo_to_smt y) (__eo_to_smt x) by rfl]
-  rw [__smtx_model_eval.eq_46, hyEval, hxEval]
+  rw [__smtx_model_eval.eq_48, hyEval, hxEval]
   simp [__smtx_model_eval_bvadd, SmtEval.native_zplus,
     SmtEval.native_mod_total]
 
 private theorem bv_atom_denote_bvmul_mod
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) (w : native_Nat)
+    (M : SmtModel) (hM : model_wf M) (y x : Term) (w : native_Nat)
     (hTy : __smtx_typeof (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) y) x)) =
       SmtType.BitVec w) :
   bv_atom_denote M (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) y) x) %
@@ -1305,12 +1305,12 @@ private theorem bv_atom_denote_bvmul_mod
   simp [bv_atom_denote]
   rw [show __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) y) x) =
       SmtTerm.bvmul (__eo_to_smt y) (__eo_to_smt x) by rfl]
-  rw [__smtx_model_eval.eq_47, hyEval, hxEval]
+  rw [__smtx_model_eval.eq_49, hyEval, hxEval]
   simp [__smtx_model_eval_bvmul, SmtEval.native_zmult,
     SmtEval.native_mod_total]
 
 private theorem bv_atom_denote_bvsub_mod
-    (M : SmtModel) (hM : model_total_typed M) (y x : Term) (w : native_Nat)
+    (M : SmtModel) (hM : model_wf M) (y x : Term) (w : native_Nat)
     (hTy : __smtx_typeof (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) y) x)) =
       SmtType.BitVec w) :
   bv_atom_denote M (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) y) x) %
@@ -1323,13 +1323,13 @@ private theorem bv_atom_denote_bvsub_mod
   simp [bv_atom_denote]
   rw [show __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) y) x) =
       SmtTerm.bvsub (__eo_to_smt y) (__eo_to_smt x) by rfl]
-  rw [__smtx_model_eval.eq_50, hyEval, hxEval]
+  rw [__smtx_model_eval.eq_52, hyEval, hxEval]
   simp [__smtx_model_eval_bvsub, __smtx_model_eval_bvadd, __smtx_model_eval_bvneg,
     SmtEval.native_zplus, SmtEval.native_zneg,
     SmtEval.native_mod_total]
 
 private theorem bv_poly_norm_rec_sound
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     (t : Term) -> (w : native_Nat) ->
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w ->
     bv_poly_int_wf (__get_bv_poly_norm_rec t) ∧
@@ -1419,7 +1419,7 @@ private theorem bv_poly_norm_rec_sound
         · subst n
           have hNorm :
               __get_bv_poly_norm_rec (Term.Binary bw 0) =
-                Term.UOp UserOp._at__at_Polynomial := by
+                Term.UOp UserOp._at__at_poly_zero := by
             simp [__get_bv_poly_norm_rec, __eo_to_z, __eo_is_bin, __eo_is_bin_internal,
               __eo_is_eq, __eo_ite, native_ite, native_teq, SmtEval.native_and,
               SmtEval.native_not]
@@ -1442,7 +1442,7 @@ private theorem bv_poly_norm_rec_sound
               (Term.Apply (Term.UOp UserOp._at__at_poly)
                 (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) Term.__eo_List_nil)
                   (Term.Rational (native_to_real n))))
-              (Term.UOp UserOp._at__at_Polynomial)
+              (Term.UOp UserOp._at__at_poly_zero)
           have hNorm : __get_bv_poly_norm_rec (Term.Binary bw n) = p := by
             simp [__get_bv_poly_norm_rec, __eo_to_z, __eo_is_bin, __eo_is_bin_internal,
               __eo_is_eq, __eo_ite, native_ite, native_teq, hZeroSym, SmtEval.native_and,
@@ -1452,7 +1452,7 @@ private theorem bv_poly_norm_rec_sound
             exact bv_poly_int_wf.cons
               (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) Term.__eo_List_nil)
                 (Term.Rational (native_to_real n)))
-              (Term.UOp UserOp._at__at_Polynomial)
+              (Term.UOp UserOp._at__at_poly_zero)
               (bv_mon_int_wf.mk Term.__eo_List_nil n bv_mvar_wf.nil)
               bv_poly_int_wf.zero
           · rw [hNorm]
@@ -1847,7 +1847,7 @@ theorem typed___eo_prog_bv_poly_norm_impl
   exact RuleProofs.eo_typeof_bool_implies_has_bool_type a1 hA1Trans hA1Ty
 
 private theorem smt_value_rel_of_equal_bv_poly_norm
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b modulus : Term) :
   RuleProofs.eo_has_bool_type (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) ->
   modulus =
@@ -1937,7 +1937,7 @@ private theorem smt_value_rel_of_equal_bv_poly_norm
     RuleProofs.smt_value_rel_refl (SmtValue.Binary (native_nat_to_int w) na)
 
 theorem facts___eo_prog_bv_poly_norm_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
   RuleProofs.eo_has_smt_translation a1 ->
   __eo_typeof (__eo_prog_bv_poly_norm a1) = Term.Bool ->
   eo_interprets M (__eo_prog_bv_poly_norm a1) true := by
@@ -1963,7 +1963,7 @@ theorem facts___eo_prog_bv_poly_norm_impl
       hEqBool hModulus hNormEq hNormNotStuck)
 
 public theorem cmd_step_bv_poly_norm_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_poly_norm args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

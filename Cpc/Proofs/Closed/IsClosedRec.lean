@@ -3011,7 +3011,7 @@ theorem typeof_bvnot_eq_closed
   __smtx_typeof (SmtTerm.bvnot t) =
     __smtx_typeof_bv_op_1 (__smtx_typeof t) :=
 by
-  rw [__smtx_typeof.eq_37]
+  rw [__smtx_typeof.eq_39]
 
 theorem bvnot_arg_has_smt_translation_of_has_smt_translation
     {x : Term}
@@ -3031,14 +3031,14 @@ theorem typeof_bvneg_eq_closed
   __smtx_typeof (SmtTerm.bvneg t) =
     __smtx_typeof_bv_op_1 (__smtx_typeof t) :=
 by
-  rw [__smtx_typeof.eq_45]
+  rw [__smtx_typeof.eq_47]
 
 theorem typeof_bvnego_eq_closed
     (t : SmtTerm) :
   __smtx_typeof (SmtTerm.bvnego t) =
     __smtx_typeof_bv_op_1_ret (__smtx_typeof t) SmtType.Bool :=
 by
-  rw [__smtx_typeof.eq_70]
+  rw [__smtx_typeof.eq_72]
 
 theorem bvneg_arg_has_smt_translation_of_has_smt_translation
     {x : Term}
@@ -12066,50 +12066,6 @@ by
       hEnv (by decide) (by decide) hTrans (by rfl)
       str_indexof_re_args_have_smt_translation_of_non_none ihX ihY ihZ
 
-theorem is_closed_rec_apply_apply_apply_str_indexof_re_split_eq_and_bool_of_has_smt_translation
-    {x y z env : Term} {vars : List SmtVarKey}
-    (hEnv : EoSmtVarEnv env vars)
-    (hTrans :
-      eoHasSmtTranslation
-        (Term.Apply
-          (Term.Apply
-            (Term.Apply (Term.UOp UserOp.str_indexof_re_split) x) y) z))
-    (ihX :
-      eoHasSmtTranslation x ->
-        __is_closed_rec x env = __eo_is_closed_rec x env ∧
-          ∃ b, __eo_is_closed_rec x env = Term.Boolean b)
-    (ihY :
-      eoHasSmtTranslation y ->
-        __is_closed_rec y env = __eo_is_closed_rec y env ∧
-          ∃ b, __eo_is_closed_rec y env = Term.Boolean b)
-    (ihZ :
-      eoHasSmtTranslation z ->
-        __is_closed_rec z env = __eo_is_closed_rec z env ∧
-          ∃ b, __eo_is_closed_rec z env = Term.Boolean b) :
-  __is_closed_rec
-      (Term.Apply
-        (Term.Apply
-          (Term.Apply (Term.UOp UserOp.str_indexof_re_split) x) y) z)
-      env =
-    __eo_is_closed_rec
-      (Term.Apply
-        (Term.Apply
-          (Term.Apply (Term.UOp UserOp.str_indexof_re_split) x) y) z)
-      env ∧
-    ∃ b,
-      __eo_is_closed_rec
-        (Term.Apply
-          (Term.Apply
-            (Term.Apply (Term.UOp UserOp.str_indexof_re_split) x) y) z)
-        env =
-        Term.Boolean b :=
-by
-  exact
-    is_closed_rec_apply_apply_apply_uop_nonquantifier_eq_and_bool_of_smt_triop_non_none
-      hEnv (by decide) (by decide) hTrans (by rfl)
-      str_indexof_re_split_args_have_smt_translation_of_non_none
-      ihX ihY ihZ
-
 theorem is_closed_rec_apply_apply_strings_deq_diff_eq_and_bool_of_has_smt_translation
     {x y env : Term} {vars : List SmtVarKey}
     (hEnv : EoSmtVarEnv env vars)
@@ -13953,13 +13909,6 @@ by
                 (Term.Apply (Term.Apply Term.__eo_List_cons v) vs)))
             hNN)
         (by rfl) hTrans
-  case str_indexof_re_split =>
-    exact
-      false_of_apply_apply_apply_uop_smt_triop_middle_raw_list
-        (eoOp := UserOp.str_indexof_re_split)
-        (smtOp := SmtTerm.str_indexof_re_split)
-        (by rfl) str_indexof_re_split_args_have_smt_translation_of_non_none
-        hTrans
   case seq_nth =>
     exact
       false_of_apply_apply_apply_uop_over_binary_smt_binop_middle_raw_list
@@ -14271,13 +14220,6 @@ by
         (eoOp := UserOp.str_indexof_re)
         (smtOp := SmtTerm.str_indexof_re)
         (by rfl) str_indexof_re_args_have_smt_translation_of_non_none hTrans
-  case str_indexof_re_split =>
-    exact
-      false_of_apply_apply_apply_uop_smt_triop_last_raw_list
-        (eoOp := UserOp.str_indexof_re_split)
-        (smtOp := SmtTerm.str_indexof_re_split)
-        (by rfl) str_indexof_re_split_args_have_smt_translation_of_non_none
-        hTrans
   case _at_strings_occur_index =>
     exact False.elim
       (term_not_eo_list_cons_of_has_smt_translation
@@ -16307,11 +16249,6 @@ by
             (ret := SmtType.Bool)
             (typeof_str_in_re_eq (__eo_to_smt x) (__eo_to_smt y)) hNN)
         (by rfl) hTrans ih
-  case str_indexof_re_split =>
-    exact
-      is_closed_rec_apply_apply_apply_str_indexof_re_split_eq_and_bool_of_has_smt_translation
-        hEnv hTrans (fun hx => ih hXLt hEnv hx)
-        (fun hy => ih hYLt hEnv hy) (fun hz => ih hZLt hEnv hz)
   case seq_nth =>
     exact
       is_closed_rec_apply_apply_apply_uop_over_binary_smt_binop_eq_and_bool_of_has_smt_translation
@@ -16556,7 +16493,7 @@ theorem apply_dt_sel_arg_has_smt_translation_of_has_smt_translation
   eoHasSmtTranslation x :=
 by
   unfold eoHasSmtTranslation at hTrans ⊢
-  cases hReserved : native_reserved_datatype_name s
+  cases hReserved : __eo_to_smt_reserved_datatype_name s
   · have hTrans' :
         __smtx_typeof
             (SmtTerm.Apply
@@ -16566,7 +16503,7 @@ by
       change
           __smtx_typeof
               (SmtTerm.Apply
-                (native_ite (native_reserved_datatype_name s) SmtTerm.None
+                (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
                   (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
                 (__eo_to_smt x)) ≠
             SmtType.None at hTrans
@@ -16589,7 +16526,7 @@ by
     change
         __smtx_typeof
             (SmtTerm.Apply
-              (native_ite (native_reserved_datatype_name s) SmtTerm.None
+              (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
                 (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
               (__eo_to_smt x)) ≠
           SmtType.None at hTrans

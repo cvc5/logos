@@ -225,8 +225,8 @@ theorem native_str_in_re_of_reglan_rel
   have hValid := native_string_valid_of_str_in_re_true hMem
   have hModelExt : ∀ str : native_String,
       native_string_valid str = true ->
-        Smtm.native_str_in_re (native_string_to_values str) r =
-          Smtm.native_str_in_re (native_string_to_values str) s := by
+        Smtm.native_str_in_re (impl_native_string_to_values str) r =
+          Smtm.native_str_in_re (impl_native_string_to_values str) s := by
     rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true] at hRel
     simpa [__smtx_model_eval_eq] using hRel
   have hExt : native_str_in_re str r = native_str_in_re str s := by
@@ -254,9 +254,9 @@ theorem reConcat_nil_eval_empty_of_is_list_nil_true
                   (SmtTerm.str_to_re (SmtTerm.String [])) =
                 SmtValue.RegLan (native_str_to_re ([] : native_String))
               simp [__smtx_model_eval, __smtx_model_eval_str_to_re,
-                native_str_to_re, native_re_of_list, native_pack_string,
+                native_str_to_re, impl_native_re_of_list, native_pack_string,
                 native_pack_seq, native_unpack_seq,
-                native_string_to_values]
+                impl_native_string_to_values]
           | cons _ _ =>
               simp only [__eo_is_list_nil] at hNil
               cases hNil
@@ -279,7 +279,7 @@ private theorem reConcat_smt_value_rel_right_empty_eval
   simp only [__smtx_model_eval, __smtx_model_eval_re_concat, hxEval, hIdEval]
   cases r <;>
     simp [__smtx_model_eval_eq, native_re_concat,
-      native_str_to_re, native_re_of_list, native_string_to_values]
+      native_str_to_re, impl_native_re_of_list, impl_native_string_to_values]
 
 private theorem reConcat_is_list_nil_boolean_of_ne_stuck (t : Term) :
     t ≠ Term.Stuck ->
@@ -473,7 +473,7 @@ theorem reConcat_singleton_elim_has_reglan_type (c : Term) :
       simpa [__eo_list_singleton_elim_2] using hTy
 
 theorem smt_eval_seq_char_of_smt_type_seq_char
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm) :
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm) :
     __smtx_typeof t = SmtType.Seq SmtType.Char ->
     ∃ s, __smtx_model_eval M t = SmtValue.Seq s := by
   intro hTy
@@ -489,7 +489,7 @@ theorem smt_eval_seq_char_of_smt_type_seq_char
   exact seq_value_canonical hValTy
 
 theorem smt_eval_reglan_of_smt_type_reglan
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm) :
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm) :
     __smtx_typeof t = SmtType.RegLan ->
     ∃ r, __smtx_model_eval M t = SmtValue.RegLan r := by
   intro hTy
@@ -504,7 +504,7 @@ theorem smt_eval_reglan_of_smt_type_reglan
   exact reglan_value_canonical hValTy
 
 theorem smt_eval_int_of_smt_type_int
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm) :
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm) :
     __smtx_typeof t = SmtType.Int ->
     ∃ n, __smtx_model_eval M t = SmtValue.Numeral n := by
   intro hTy
@@ -543,7 +543,7 @@ theorem eval_str_in_re_of_seq_reglan (M : SmtModel)
   simp [__smtx_model_eval, __smtx_model_eval_str_in_re, hs, hr]
 
 theorem negated_str_in_re_native_false
-    (M : SmtModel) (hM : model_total_typed M) (s r : Term)
+    (M : SmtModel) (hM : model_wf M) (s r : Term)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hrTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan) :
     eo_interprets M (mkNot (mkStrInRe s r)) true ->
@@ -583,7 +583,7 @@ theorem negated_str_in_re_native_false
       exact ⟨ss, rv, hsEval, hrEval, hNative⟩
 
 theorem negated_str_in_re_re_concat_native_false
-    (M : SmtModel) (hM : model_total_typed M) (s r1 r2 : Term)
+    (M : SmtModel) (hM : model_wf M) (s r1 r2 : Term)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hr1Ty : __smtx_typeof (__eo_to_smt r1) = SmtType.RegLan)
     (hr2Ty : __smtx_typeof (__eo_to_smt r2) = SmtType.RegLan) :

@@ -137,7 +137,7 @@ private theorem typed___eo_prog_str_eq_repl_emp_tgt_nemp_impl
   exact hBool
 
 private theorem facts___eo_prog_str_eq_repl_emp_tgt_nemp_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z emp P1 P2 : Term)
     (hXTrans : RuleProofs.eo_has_smt_translation x)
     (hYTrans : RuleProofs.eo_has_smt_translation y)
@@ -317,7 +317,7 @@ private theorem facts___eo_prog_str_eq_repl_emp_tgt_nemp_impl
       (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_eq_repl_emp_tgt_nemp_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_eq_repl_emp_tgt_nemp args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -18,7 +18,7 @@ namespace Smtm
 theorem smtx_model_eval_choice_eq
     (M : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm) :
   __smtx_model_eval M (SmtTerm.choice s T body) =
-    native_eval_tchoice M s T body :=
+    native_eval_choice M s T body :=
 by
   rw [__smtx_model_eval.eq_def]
 
@@ -100,7 +100,7 @@ theorem typeof_value_model_eval_binary
 /-- Shows that evaluating `var` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_var
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (s : native_String)
     (T : SmtType)
     (hT : type_inhabited T)
@@ -122,7 +122,7 @@ theorem typeof_value_model_eval_var
 /-- Shows that evaluating `uconst` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_uconst
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (s : native_String)
     (T : SmtType)
     (hT : type_inhabited T)
@@ -473,7 +473,7 @@ theorem typeof_value_model_eval_exists
   by_cases h :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical_bool v = true ∧
+          __smtx_value_canonical v = true ∧
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   · simp [h, __smtx_typeof_value]
   · simp [h, __smtx_typeof_value]
@@ -531,7 +531,7 @@ theorem typeof_value_model_eval_forall
   by_cases h :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T ->
-          __smtx_value_canonical_bool v = true ->
+          __smtx_value_canonical v = true ->
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   · simp [dif_pos h, __smtx_typeof_value]
   · simp [dif_neg h, __smtx_typeof_value]
@@ -539,12 +539,12 @@ theorem typeof_value_model_eval_forall
 /-- Provides a witness for a `choice` term whose typing is non-`None`. -/
 theorem choice_term_has_witness
     (Mw : SmtModel)
-    (hMw : model_total_typed Mw)
+    (hMw : model_wf Mw)
     {s : native_String}
     {T : SmtType}
     {body : SmtTerm}
     (ht : term_has_non_none_type (SmtTerm.choice s T body)) :
-    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical v := by
+    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical v := by
   unfold term_has_non_none_type at ht
   have hEq : native_Teq (__smtx_typeof body) SmtType.Bool = true := by
     by_cases hEq : native_Teq (__smtx_typeof body) SmtType.Bool = true
@@ -687,7 +687,7 @@ theorem choice_term_fun_components_non_none
 /-- Shows that evaluating `choice` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_choice
     (Mw : SmtModel)
-    (hMw : model_total_typed Mw)
+    (hMw : model_wf Mw)
     (M : SmtModel)
     (s : native_String)
     (T : SmtType)
@@ -697,18 +697,18 @@ theorem typeof_value_model_eval_choice
       __smtx_typeof (SmtTerm.choice s T body) := by
   classical
   have hTy : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-      __smtx_value_canonical_bool v = true := by
+      __smtx_value_canonical v = true := by
     rcases choice_term_has_witness Mw hMw ht with ⟨v, hvTy, hvCanon⟩
-    exact ⟨v, hvTy, by simpa [__smtx_value_canonical] using hvCanon⟩
+    exact ⟨v, hvTy, by simpa [value_canonical] using hvCanon⟩
   have hTyIf : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-      __smtx_value_canonical_bool v := by
+      __smtx_value_canonical v := by
     rcases hTy with ⟨v, hvTy, hvCanon⟩
     exact ⟨v, hvTy, by simp [hvCanon]⟩
   rw [choice_term_typeof_of_non_none ht]
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical_bool v = true ∧
+          __smtx_value_canonical v = true ∧
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   · rw [smtx_model_eval_choice_eq]
     simp [hSat]
@@ -720,7 +720,7 @@ theorem typeof_value_model_eval_choice
 /-- Extracts inhabitation of the computed `choice` type from a non-`None` typing judgment. -/
 theorem choice_term_inhabited_of_non_none
     (Mw : SmtModel)
-    (hMw : model_total_typed Mw)
+    (hMw : model_wf Mw)
     {s : native_String}
     {T : SmtType}
     {body : SmtTerm}
@@ -811,7 +811,7 @@ theorem bind_arg2_non_none_of_non_none
 /-- Shows that evaluating a `bind` (let) term produces a value of the expected
 type, given type preservation for the body `x2` under the pushed model.  The
 caller supplies `hx2` (via canonicity preservation of `x1` so that the pushed
-model stays `model_total_typed`); `bind` is the only construct whose result type
+model stays `model_wf`); `bind` is the only construct whose result type
 is the body's type under a pushed binding, so it needs this extra input. -/
 theorem typeof_value_model_eval_bind
     (M : SmtModel)

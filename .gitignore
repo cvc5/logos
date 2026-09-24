@@ -1,5 +1,10 @@
 /.lake
 
+# Downloaded and built by install/get-eo-compiler.sh: the ethos source tree,
+# ethos-eoc, and the compiler's staged output. What is kept in git instead is
+# install/defs, the signature those compile.
+/install/deps
+
 # LaTeX build artifacts (see docs/Makefile)
 docs/*.aux
 docs/*.log
@@ -8,4 +13,14 @@ docs/*.toc
 docs/*.fls
 docs/*.fdb_latexmk
 docs/*.synctex.gz
-docs/*.pdf
+# docs/smt-model-definitions.pdf is deliberately not ignored: the built PDF is
+# committed so that it can be read without a LaTeX installation. Rebuild it
+# with `make -C docs`.
+
+# Working space, kept out of the tree rather than tidied out of it later:
+# scratch output, and local notes written beside a document.
+scratch/
+*.local.md
+
+# macOS directory metadata, which is not part of anything this repository ships.
+.DS_Store

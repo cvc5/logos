@@ -130,12 +130,12 @@ private theorem sr_eval_str_in_re_term_eq
 /-- `seq.nth` at a natural index agrees with list `getD`. -/
 private theorem sr_ssm_seq_nth_ofNat (d : SmtValue) :
     ∀ (s : SmtSeq) (j : Nat),
-      __smtx_ssm_seq_nth s (Int.ofNat j) d =
+      __smtx_seq_value_nth s (Int.ofNat j) d =
         (native_unpack_seq s).getD j d
   | SmtSeq.empty T, j => by
-      simp [__smtx_ssm_seq_nth, native_unpack_seq]
+      simp [__smtx_seq_value_nth, native_unpack_seq]
   | SmtSeq.cons v vs, 0 => by
-      simp [__smtx_ssm_seq_nth, native_unpack_seq]
+      simp [__smtx_seq_value_nth, native_unpack_seq]
   | SmtSeq.cons v vs, (j + 1) => by
       have hidx :
           native_zplus (Int.ofNat (j + 1)) (native_zneg 1) =
@@ -143,7 +143,7 @@ private theorem sr_ssm_seq_nth_ofNat (d : SmtValue) :
         show Int.ofNat j + 1 + (-1) = Int.ofNat j
         omega
       have ih := sr_ssm_seq_nth_ofNat d vs j
-      simp only [__smtx_ssm_seq_nth, hidx, ih, native_unpack_seq,
+      simp only [__smtx_seq_value_nth, hidx, ih, native_unpack_seq,
         List.getD_cons_succ]
 
 /-- In bounds, the default supplied to `getD` is irrelevant. -/
@@ -174,7 +174,7 @@ private theorem sr_native_unpack_pack_string (s : native_String) :
     Smtm.native_unpack_pack_seq, List.map_map]
   induction s with
   | nil => rfl
-  | cons c cs ih => simp [native_ssm_char_of_value, ih]
+  | cons c cs ih => simp [impl_native_ssm_char_of_value, ih]
 
 private theorem sr_native_unpack_pack_string_length (s : native_String) :
     (native_unpack_seq (native_pack_string s)).length = s.length := by
@@ -182,8 +182,8 @@ private theorem sr_native_unpack_pack_string_length (s : native_String) :
 
 @[simp] private theorem sr_native_string_to_values_length
     (s : native_String) :
-    (native_string_to_values s).length = s.length := by
-  simp [native_string_to_values]
+    (impl_native_string_to_values s).length = s.length := by
+  simp [impl_native_string_to_values]
 
 private theorem sr_native_pack_string_injective :
     Function.Injective native_pack_string := by
@@ -225,7 +225,7 @@ private theorem sr_native_pack_unpack_string
     typed_unpack_seq_of_typeof_seq_value hTy
   have hMap :
       (native_unpack_seq ss).map
-          (fun v => SmtValue.Char (native_ssm_char_of_value v)) =
+          (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) =
         native_unpack_seq ss := by
     generalize hl : native_unpack_seq ss = l at hTyped ⊢
     clear hl
@@ -234,14 +234,14 @@ private theorem sr_native_pack_unpack_string
     | cons v vs ih =>
         rcases hTyped with ⟨hv, hvs⟩
         rcases char_value_canonical hv with ⟨c, rfl, _hc⟩
-        simpa [native_ssm_char_of_value] using ih hvs
+        simpa [impl_native_ssm_char_of_value] using ih hvs
   have hElem : __smtx_elem_typeof_seq_value ss = SmtType.Char :=
     elem_typeof_seq_value_of_typeof_seq_value hTy
   unfold native_pack_string native_unpack_string
   simp only [List.map_map]
   change native_pack_seq SmtType.Char
       ((native_unpack_seq ss).map
-        (fun v => SmtValue.Char (native_ssm_char_of_value v))) = ss
+        (fun v => SmtValue.Char (impl_native_ssm_char_of_value v))) = ss
   rw [hMap]
   simpa [hElem] using native_pack_unpack_seq ss
 
@@ -249,9 +249,9 @@ private theorem sr_native_pack_unpack_string
 private theorem sr_native_seq_extract_pack_string
     (s : native_String) (i n : native_Int) :
     native_pack_seq SmtType.Char
-        (native_seq_extract (native_string_to_values s) i n) =
+        (native_seq_extract (impl_native_string_to_values s) i n) =
       native_pack_string (native_str_substr s i n) := by
-  simp only [native_pack_string, native_string_to_values,
+  simp only [native_pack_string, impl_native_string_to_values,
     native_seq_extract, native_str_substr, native_str_len]
   simp only [List.length_map, apply_ite, List.map_nil,
     List.map_take, List.map_drop]
@@ -272,7 +272,7 @@ private theorem sr_native_seq_extract_pack_string
 private theorem sr_native_seq_extract_pack_string_eval
     (s : native_String) (i n : native_Int) :
     native_pack_seq (__smtx_elem_typeof_seq_value (native_pack_string s))
-        (native_seq_extract (native_string_to_values s) i n) =
+        (native_seq_extract (impl_native_string_to_values s) i n) =
       native_pack_string (native_str_substr s i n) := by
   have hElem :
       __smtx_elem_typeof_seq_value (native_pack_string s) =
@@ -293,7 +293,7 @@ private theorem sr_native_unpack_extract_pack_string
     (s : native_String) (i n : native_Int) :
     native_unpack_string
         (native_pack_seq (__smtx_elem_typeof_seq_value (native_pack_string s))
-          (native_seq_extract (native_string_to_values s) i n)) =
+          (native_seq_extract (impl_native_string_to_values s) i n)) =
       native_str_substr s i n := by
   have hElem :
       __smtx_elem_typeof_seq_value (native_pack_string s) =
@@ -308,7 +308,7 @@ private theorem sr_native_unpack_extract_pack_string
     (s : native_String) (i n : native_Int) :
     native_unpack_string
         (native_pack_seq SmtType.Char
-          (native_seq_extract (native_string_to_values s) i n)) =
+          (native_seq_extract (impl_native_string_to_values s) i n)) =
       native_str_substr s i n := by
   have h := congrArg native_unpack_string
     (sr_native_seq_extract_pack_string s i n)
@@ -318,8 +318,8 @@ private theorem sr_native_unpack_extract_pack_string
     (s : native_String) (i n : native_Int) :
     native_unpack_seq
         (native_pack_seq (__smtx_elem_typeof_seq_value (native_pack_string s))
-          (native_seq_extract (native_string_to_values s) i n)) =
-      native_string_to_values (native_str_substr s i n) := by
+          (native_seq_extract (impl_native_string_to_values s) i n)) =
+      impl_native_string_to_values (native_str_substr s i n) := by
   have h := congrArg native_unpack_seq
     (sr_native_seq_extract_pack_string_eval s i n)
   have hsimpa := h
@@ -812,8 +812,8 @@ private theorem sr_lower_code_at (s : native_String) (j : Nat)
   have hCode : native_str_to_code [s[j]] = Int.ofNat s[j] := by
     simp [native_str_to_code, hc]
   have hLowerCode :
-      native_str_to_code [native_char_to_lower s[j]] =
-        Int.ofNat (native_char_to_lower s[j]) := by
+      native_str_to_code [impl_native_char_to_lower s[j]] =
+        Int.ofNat (impl_native_char_to_lower s[j]) := by
     simp [native_str_to_code, hcLower]
   rw [hCode, hLowerCode]
   by_cases hRange : 65 ≤ s[j] ∧ s[j] ≤ 90
@@ -824,7 +824,7 @@ private theorem sr_lower_code_at (s : native_String) (j : Nat)
           decide (Int.ofNat s[j] ≤ 90)) = true := by
       simpa only [Bool.and_eq_true, decide_eq_true_eq] using hRangeInt
     rw [if_pos hRangeBool]
-    simp [native_char_to_lower, hRange]
+    simp [impl_native_char_to_lower, hRange]
   · have hRangeInt : ¬ ((65 : Int) ≤ Int.ofNat s[j] ∧ Int.ofNat s[j] ≤ 90) := by
       intro h
       exact hRange ⟨Int.ofNat_le.mp h.1, Int.ofNat_le.mp h.2⟩
@@ -833,7 +833,7 @@ private theorem sr_lower_code_at (s : native_String) (j : Nat)
           decide (Int.ofNat s[j] ≤ 90)) ≠ true := by
       simpa [Bool.and_eq_true] using hRangeInt
     rw [if_neg hRangeBool]
-    simp [native_char_to_lower, hRange]
+    simp [impl_native_char_to_lower, hRange]
 
 /-- The code constraint generated for uppercasing matches the native operation. -/
 private theorem sr_upper_code_at (s : native_String) (j : Nat)
@@ -856,8 +856,8 @@ private theorem sr_upper_code_at (s : native_String) (j : Nat)
   have hCode : native_str_to_code [s[j]] = Int.ofNat s[j] := by
     simp [native_str_to_code, hc]
   have hUpperCode :
-      native_str_to_code [native_char_to_upper s[j]] =
-        Int.ofNat (native_char_to_upper s[j]) := by
+      native_str_to_code [impl_native_char_to_upper s[j]] =
+        Int.ofNat (impl_native_char_to_upper s[j]) := by
     simp [native_str_to_code, hcUpper]
   rw [hCode, hUpperCode]
   by_cases hRange : 97 ≤ s[j] ∧ s[j] ≤ 122
@@ -868,7 +868,7 @@ private theorem sr_upper_code_at (s : native_String) (j : Nat)
           decide (Int.ofNat s[j] ≤ 122)) = true := by
       simpa only [Bool.and_eq_true, decide_eq_true_eq] using hRangeInt
     rw [if_pos hRangeBool]
-    simp [native_char_to_upper, hRange]
+    simp [impl_native_char_to_upper, hRange]
     have h32 : 32 ≤ s[j] :=
       Nat.le_trans (by decide) hRange.1
     rw [Int.ofNat_sub h32]
@@ -883,7 +883,7 @@ private theorem sr_upper_code_at (s : native_String) (j : Nat)
           decide (Int.ofNat s[j] ≤ 122)) ≠ true := by
       simpa [Bool.and_eq_true] using hRangeInt
     rw [if_neg hRangeBool]
-    simp [native_char_to_upper, hRange]
+    simp [impl_native_char_to_upper, hRange]
 
 private def sr_native_str_leq_bool (s t : native_String) : Bool :=
   native_or (decide (s = t)) (native_str_lt s t)
@@ -915,69 +915,69 @@ private theorem sr_digitChar_toNat_sub (n : Nat) (h : n < 10) :
   | n + 10 => omega
 
 private theorem sr_decimal_append (xs : native_String) (c : native_Char) :
-    native_decimal_digits_to_nat (xs ++ [c]) =
-      10 * native_decimal_digits_to_nat xs + (c - 48) := by
-  simp [native_decimal_digits_to_nat, List.foldl_append]
+    impl_native_decimal_digits_to_nat (xs ++ [c]) =
+      10 * impl_native_decimal_digits_to_nat xs + (c - 48) := by
+  simp [impl_native_decimal_digits_to_nat, List.foldl_append]
 
 private theorem sr_all_digits_take (xs : native_String) (j : Nat)
-    (h : xs.all native_char_is_digit = true) :
-    (xs.take j).all native_char_is_digit = true := by
+    (h : xs.all impl_native_char_is_digit = true) :
+    (xs.take j).all impl_native_char_is_digit = true := by
   rw [List.all_eq_true] at h ⊢
   intro c hc
   exact h c (List.mem_of_mem_take hc)
 
 private theorem sr_all_digits_drop (xs : native_String) (j : Nat)
-    (h : xs.all native_char_is_digit = true) :
-    (xs.drop j).all native_char_is_digit = true := by
+    (h : xs.all impl_native_char_is_digit = true) :
+    (xs.drop j).all impl_native_char_is_digit = true := by
   rw [List.all_eq_true] at h ⊢
   intro c hc
   exact h c (List.mem_of_mem_drop hc)
 
 private theorem sr_fold_digits_ge (acc : Nat) : ∀ xs : native_String,
-    xs.all native_char_is_digit = true →
+    xs.all impl_native_char_is_digit = true →
     acc ≤ xs.foldl (fun a c => 10 * a + (c - 48)) acc
   | [], _ => by simp
   | c :: cs, h => by
-      have hp : native_char_is_digit c = true ∧
-          cs.all native_char_is_digit = true := by
+      have hp : impl_native_char_is_digit c = true ∧
+          cs.all impl_native_char_is_digit = true := by
         simpa [Bool.and_eq_true] using h
       have hbounds : 48 ≤ c ∧ c ≤ 57 := by
-        unfold native_char_is_digit at hp
+        unfold impl_native_char_is_digit at hp
         simpa [Bool.and_eq_true] using hp.1
       simp only [List.foldl]
       exact Nat.le_trans (by omega)
         (sr_fold_digits_ge (10 * acc + (c - 48)) cs hp.2)
 
 private theorem sr_decimal_take_le (xs : native_String) (j : Nat)
-    (h : xs.all native_char_is_digit = true) :
-    native_decimal_digits_to_nat (xs.take j) ≤
-      native_decimal_digits_to_nat xs := by
-  let acc := native_decimal_digits_to_nat (xs.take j)
+    (h : xs.all impl_native_char_is_digit = true) :
+    impl_native_decimal_digits_to_nat (xs.take j) ≤
+      impl_native_decimal_digits_to_nat xs := by
+  let acc := impl_native_decimal_digits_to_nat (xs.take j)
   calc
-    native_decimal_digits_to_nat (xs.take j) = acc := rfl
+    impl_native_decimal_digits_to_nat (xs.take j) = acc := rfl
     _ ≤ (xs.drop j).foldl (fun a c => 10 * a + (c - 48)) acc :=
       sr_fold_digits_ge acc (xs.drop j) (sr_all_digits_drop xs j h)
-    _ = native_decimal_digits_to_nat (xs.take j ++ xs.drop j) := by
+    _ = impl_native_decimal_digits_to_nat (xs.take j ++ xs.drop j) := by
       rw [show acc = (xs.take j).foldl
         (fun a c => 10 * a + (c - 48)) 0 by rfl]
       rw [← List.foldl_append]
       rfl
-    _ = native_decimal_digits_to_nat xs := by rw [List.take_append_drop]
+    _ = impl_native_decimal_digits_to_nat xs := by rw [List.take_append_drop]
 
 private theorem sr_decimal_take_succ (xs : native_String) (j : Nat)
     (hj : j < xs.length) :
-    native_decimal_digits_to_nat (xs.take (j + 1)) =
-      10 * native_decimal_digits_to_nat (xs.take j) + (xs[j] - 48) := by
+    impl_native_decimal_digits_to_nat (xs.take (j + 1)) =
+      10 * impl_native_decimal_digits_to_nat (xs.take j) + (xs[j] - 48) := by
   rw [List.take_succ_eq_append_getElem hj, sr_decimal_append]
 
 private theorem sr_decimal_toDigits (n : Nat) :
-    native_decimal_digits_to_nat ((Nat.toDigits 10 n).map Char.toNat) = n := by
+    impl_native_decimal_digits_to_nat ((Nat.toDigits 10 n).map Char.toNat) = n := by
   induction n using Nat.strongRecOn with
   | ind n ih =>
       rw [Nat.toDigits_eq_if (by omega)]
       split
       · rename_i hn
-        simp only [List.map_cons, List.map_nil, native_decimal_digits_to_nat,
+        simp only [List.map_cons, List.map_nil, impl_native_decimal_digits_to_nat,
           List.foldl]
         simpa using sr_digitChar_toNat_sub n hn
       · rename_i hn
@@ -1016,7 +1016,7 @@ private theorem sr_toDigits_head_nonzero (n : Nat) (hn : 0 < n) :
         exact ⟨c, cs ++ [Char.toNat (Nat.digitChar (n % 10))], rfl, hc⟩
 
 private theorem sr_decimal_string_toNat (n : Nat) :
-    native_decimal_digits_to_nat (native_string_lit (toString n)) = n := by
+    impl_native_decimal_digits_to_nat (native_string_lit (toString n)) = n := by
   unfold native_string_lit
   rw [Nat.toString_eq_ofList_toDigits, String.toList_ofList]
   exact sr_decimal_toDigits n
@@ -1033,8 +1033,8 @@ private theorem sr_native_string_lit_nat_toString_ne_nil (n : Nat) :
   omega
 
 private theorem sr_native_str_to_int_of_ne_nil_all (s : native_String)
-    (hs : s ≠ []) (hAll : s.all native_char_is_digit = true) :
-    native_str_to_int s = Int.ofNat (native_decimal_digits_to_nat s) := by
+    (hs : s ≠ []) (hAll : s.all impl_native_char_is_digit = true) :
+    native_str_to_int s = Int.ofNat (impl_native_decimal_digits_to_nat s) := by
   cases s with
   | nil => contradiction
   | cons c cs => simp [native_str_to_int, hAll]
@@ -1047,7 +1047,7 @@ private theorem sr_native_str_to_int_from_int (i : native_Int)
   | ofNat n =>
       have hNonneg : ¬ (Int.ofNat n < 0) := Int.not_lt_of_ge hi
       have hAll : (native_string_lit (toString n)).all
-          native_char_is_digit = true := by
+          impl_native_char_is_digit = true := by
         have hsimpa :=
           (StrInReFromIntDigRangeProof.native_str_from_int_all_digits
             (Int.ofNat n))
@@ -1110,12 +1110,12 @@ private theorem sr_take_ne_nil (s : native_String) (j : Nat)
 
 private theorem sr_native_stoi_result_ofNat (s : native_String) (j : Nat)
     (hj : j ≤ s.length)
-    (hAll : s.all native_char_is_digit = true) :
+    (hAll : s.all impl_native_char_is_digit = true) :
     sr_native_stoi_result s (Int.ofNat j) =
-      Int.ofNat (native_decimal_digits_to_nat (s.take j)) := by
+      Int.ofNat (impl_native_decimal_digits_to_nat (s.take j)) := by
   by_cases hj0 : j = 0
   · subst j
-    simp [sr_native_stoi_result, native_decimal_digits_to_nat]
+    simp [sr_native_stoi_result, impl_native_decimal_digits_to_nat]
   have hjPos : 0 < j := Nat.pos_of_ne_zero hj0
   have hInt : (Int.ofNat j : native_Int) ≠ 0 :=
     Int.ofNat_ne_zero.mpr hj0
@@ -1126,14 +1126,14 @@ private theorem sr_native_stoi_result_ofNat (s : native_String) (j : Nat)
 
 private theorem sr_native_stoi_result_recurrence
     (s : native_String) (j : Nat) (hj : j < s.length)
-    (hAll : s.all native_char_is_digit = true) :
+    (hAll : s.all impl_native_char_is_digit = true) :
     sr_native_stoi_result s (Int.ofNat (j + 1)) =
       Int.ofNat (s[j] - 48) +
         10 * sr_native_stoi_result s (Int.ofNat j) := by
   rw [sr_native_stoi_result_ofNat s (j + 1) (by omega) hAll]
   rw [sr_native_stoi_result_ofNat s j (by omega) hAll]
   rw [sr_decimal_take_succ s j hj]
-  let a := native_decimal_digits_to_nat (s.take j)
+  let a := impl_native_decimal_digits_to_nat (s.take j)
   let b := s[j] - 48
   change Int.ofNat (10 * a + b) = Int.ofNat b + 10 * Int.ofNat a
   rw [show Int.ofNat (10 * a + b) =
@@ -1146,32 +1146,32 @@ private theorem sr_native_stoi_result_recurrence
 
 private theorem sr_native_stoi_result_le_total
     (s : native_String) (j : Nat) (hj : j ≤ s.length)
-    (hAll : s.all native_char_is_digit = true) :
+    (hAll : s.all impl_native_char_is_digit = true) :
     sr_native_stoi_result s (Int.ofNat j) ≤
-      Int.ofNat (native_decimal_digits_to_nat s) := by
+      Int.ofNat (impl_native_decimal_digits_to_nat s) := by
   rw [sr_native_stoi_result_ofNat s j hj hAll]
   exact Int.ofNat_le.mpr (sr_decimal_take_le s j hAll)
 
 private theorem sr_digit_at (s : native_String) (j : Nat)
-    (hj : j < s.length) (hAll : s.all native_char_is_digit = true) :
-    native_char_is_digit s[j] = true := by
+    (hj : j < s.length) (hAll : s.all impl_native_char_is_digit = true) :
+    impl_native_char_is_digit s[j] = true := by
   rw [List.all_eq_true] at hAll
   exact hAll s[j] (List.getElem_mem hj)
 
 private theorem sr_str_to_int_nonneg_data (s : native_String)
     (hNonneg : 0 ≤ native_str_to_int s) :
-    s ≠ [] ∧ s.all native_char_is_digit = true ∧
-      native_str_to_int s = Int.ofNat (native_decimal_digits_to_nat s) := by
+    s ≠ [] ∧ s.all impl_native_char_is_digit = true ∧
+      native_str_to_int s = Int.ofNat (impl_native_decimal_digits_to_nat s) := by
   have hs : s ≠ [] := by
     intro hs
     subst s
     simp [native_str_to_int] at hNonneg
-  have hAll : s.all native_char_is_digit = true := by
+  have hAll : s.all impl_native_char_is_digit = true := by
     cases s with
     | nil => contradiction
     | cons c cs =>
         simp only [native_str_to_int] at hNonneg
-        by_cases hAll : (c :: cs).all native_char_is_digit = true
+        by_cases hAll : (c :: cs).all impl_native_char_is_digit = true
         · exact hAll
         · rw [if_neg hAll] at hNonneg
           simp at hNonneg
@@ -1181,11 +1181,11 @@ private theorem sr_str_to_int_nonneg_data (s : native_String)
 private theorem sr_str_to_int_neg_data (s : native_String)
     (hNeg : native_str_to_int s < 0) :
     native_str_to_int s = -1 ∧
-      (s = [] ∨ s.all native_char_is_digit ≠ true) := by
+      (s = [] ∨ s.all impl_native_char_is_digit ≠ true) := by
   by_cases hs : s = []
   · subst s
     simp [native_str_to_int]
-  · by_cases hAll : s.all native_char_is_digit = true
+  · by_cases hAll : s.all impl_native_char_is_digit = true
     · have hEq := sr_native_str_to_int_of_ne_nil_all s hs hAll
       rw [hEq] at hNeg
       exact False.elim (Int.not_lt_of_ge (Int.natCast_nonneg _) hNeg)
@@ -1203,23 +1203,23 @@ private theorem sr_str_to_code_at (s : native_String) (j : Nat)
 
 private theorem sr_digit_code_value (s : native_String) (j : Nat)
     (hValid : native_string_valid s = true) (hj : j < s.length)
-    (hAll : s.all native_char_is_digit = true) :
+    (hAll : s.all impl_native_char_is_digit = true) :
     Int.ofNat (s[j] - 48) =
       native_str_to_code (native_str_substr s (Int.ofNat j) 1) - 48 := by
-  have hd : native_char_is_digit s[j] = true := sr_digit_at s j hj hAll
+  have hd : impl_native_char_is_digit s[j] = true := sr_digit_at s j hj hAll
   have hb := StrInReFromIntDigRangeProof.native_digit_bounds s[j] hd
   rw [sr_str_to_code_at s j hValid hj]
   simpa using Int.ofNat_sub hb.1
 
 private theorem sr_digit_code_bounds (s : native_String) (j : Nat)
     (hValid : native_string_valid s = true) (hj : j < s.length)
-    (hAll : s.all native_char_is_digit = true) :
+    (hAll : s.all impl_native_char_is_digit = true) :
     0 ≤ native_str_to_code
           (native_str_substr s (Int.ofNat j) 1) - 48 ∧
       native_str_to_code
           (native_str_substr s (Int.ofNat j) 1) - 48 < 10 := by
   let c := s[j]
-  have hd : native_char_is_digit c = true := by
+  have hd : impl_native_char_is_digit c = true := by
     simpa [c] using sr_digit_at s j hj hAll
   have hb := StrInReFromIntDigRangeProof.native_digit_bounds c hd
   have hCode :
@@ -1238,17 +1238,17 @@ private theorem sr_digit_code_bounds (s : native_String) (j : Nat)
 
 private theorem sr_nondigit_code_outside (s : native_String) (j : Nat)
     (hValid : native_string_valid s = true) (hj : j < s.length)
-    (hNotDigit : native_char_is_digit s[j] ≠ true) :
+    (hNotDigit : impl_native_char_is_digit s[j] ≠ true) :
     native_str_to_code (native_str_substr s (Int.ofNat j) 1) - 48 < 0 ∨
       10 ≤ native_str_to_code
         (native_str_substr s (Int.ofNat j) 1) - 48 := by
   let c := s[j]
-  have hNotDigit' : native_char_is_digit c ≠ true := by
+  have hNotDigit' : impl_native_char_is_digit c ≠ true := by
     simpa [c] using hNotDigit
   have hOutside : ¬ (48 ≤ c ∧ c ≤ 57) := by
     intro h
     apply hNotDigit'
-    unfold native_char_is_digit
+    unfold impl_native_char_is_digit
     simpa [Bool.and_eq_true] using h
   have hCode :
       native_str_to_code (native_str_substr s (Int.ofNat j) 1) =
@@ -1279,77 +1279,77 @@ private def sr_nondigit_re : SmtRegLan :=
       (native_re_range (native_string_lit "0") (native_string_lit "9")))
 
 private theorem sr_prefix_empty (xs : native_String) (n : Nat) :
-    native_re_prefix_match_len?.go SmtRegLan.empty xs n = none := by
+    impl_native_re_prefix_match_len_go SmtRegLan.empty xs n = none := by
   simpa using
-    native_re_prefix_go_empty (native_string_to_values xs) n
+    native_re_prefix_go_empty (impl_native_string_to_values xs) n
 
 private theorem sr_prefix_digit_dead (xs : native_String) (n : Nat) :
-    native_re_prefix_match_len?.go
+    impl_native_re_prefix_match_len_go
         (SmtRegLan.inter SmtRegLan.epsilon (SmtRegLan.comp SmtRegLan.epsilon))
         xs n = none := by
   cases xs with
-  | nil => simp [native_re_prefix_match_len?.go, native_re_nullable]
+  | nil => simp [impl_native_re_prefix_match_len_go, native_re_nullable]
   | cons c cs =>
-      change native_re_prefix_match_len?.go
+      change impl_native_re_prefix_match_len_go
         (SmtRegLan.inter SmtRegLan.epsilon
           (SmtRegLan.comp SmtRegLan.epsilon))
-        (SmtValue.Char c :: native_string_to_values cs) n = none
-      rw [native_re_prefix_match_len?.go.eq_2]
+        (SmtValue.Char c :: impl_native_string_to_values cs) n = none
+      rw [impl_native_re_prefix_match_len_go.eq_2]
       simp [native_re_nullable, native_re_deriv, native_re_mk_inter,
         native_re_mk_comp, native_re_inter, native_re_comp,
         native_re_prefix_go_empty, sr_prefix_empty]
 
 private theorem sr_prefix_nondigit_live (xs : native_String) (n : Nat) :
-    native_re_prefix_match_len?.go
+    impl_native_re_prefix_match_len_go
         (SmtRegLan.inter SmtRegLan.epsilon (SmtRegLan.comp SmtRegLan.empty))
         xs n = some n := by
-  cases xs <;> simp [native_re_prefix_match_len?.go, native_re_nullable]
+  cases xs <;> simp [impl_native_re_prefix_match_len_go, native_re_nullable]
 
 private theorem sr_nondigit_prefix (c : native_Char) (cs : native_String)
     (hc : native_char_valid c = true) :
     native_re_prefix_match_len? sr_nondigit_re (c :: cs) =
-      if native_char_is_digit c then none else some 1 := by
+      if impl_native_char_is_digit c then none else some 1 := by
   unfold sr_nondigit_re native_re_prefix_match_len? native_re_allchar
     native_re_comp native_re_inter native_re_range native_string_lit
-  rw [native_re_prefix_match_len?.go.eq_2]
+  rw [impl_native_re_prefix_match_len_go.eq_2]
   by_cases hd : 48 ≤ c ∧ c ≤ 57
   · have h48 : native_char_valid 48 = true := by native_decide
     have h57 : native_char_valid 57 = true := by native_decide
     simp [native_re_nullable, native_re_deriv, native_re_mk_inter,
-      native_re_mk_comp, native_re_elem_valid, native_re_elem_le,
+      native_re_mk_comp, native_re_elem_valid, impl_native_re_elem_le,
       native_re_inter, native_re_comp, hc, h48, h57, hd,
-      native_char_is_digit, sr_prefix_digit_dead]
+      impl_native_char_is_digit, sr_prefix_digit_dead]
   · have h48 : native_char_valid 48 = true := by native_decide
     have h57 : native_char_valid 57 = true := by native_decide
     simp [native_re_nullable, native_re_deriv, native_re_mk_inter,
-      native_re_mk_comp, native_re_elem_valid, native_re_elem_le,
+      native_re_mk_comp, native_re_elem_valid, impl_native_re_elem_le,
       native_re_inter, native_re_comp, hc, h48, h57, hd,
-      native_char_is_digit, sr_prefix_nondigit_live]
+      impl_native_char_is_digit, sr_prefix_nondigit_live]
 
 private theorem sr_nondigit_find_aux :
     ∀ (xs : native_String) (idx : Nat),
       native_string_valid xs = true →
-      xs.all native_char_is_digit ≠ true →
+      xs.all impl_native_char_is_digit ≠ true →
       ∃ j : Nat, ∃ c : native_Char, ∃ pre post : native_String,
         xs = pre ++ (c :: post) ∧ pre.length = j ∧
-        native_char_is_digit c ≠ true ∧
-        native_re_find_idx_aux sr_nondigit_re xs idx = some (idx + j, 1)
+        impl_native_char_is_digit c ≠ true ∧
+        impl_native_re_find_idx_aux sr_nondigit_re xs idx = some (idx + j, 1)
   | [], idx, _hv, h => by simp at h
   | c :: cs, idx, hv, h => by
       have hp : native_char_valid c = true ∧
           native_string_valid cs = true := by
         simpa [native_string_valid, Bool.and_eq_true] using hv
-      simp only [native_string_to_values, List.map_cons]
+      simp only [impl_native_string_to_values, List.map_cons]
       have hPrefix :
           native_re_prefix_match_len? sr_nondigit_re
               (SmtValue.Char c :: List.map SmtValue.Char cs) =
-            if native_char_is_digit c then none else some 1 := by
-        simpa [native_string_to_values] using
+            if impl_native_char_is_digit c then none else some 1 := by
+        simpa [impl_native_string_to_values] using
           sr_nondigit_prefix c cs hp.1
-      rw [native_re_find_idx_aux.eq_def, hPrefix]
-      by_cases hc : native_char_is_digit c = true
+      rw [impl_native_re_find_idx_aux.eq_def, hPrefix]
+      by_cases hc : impl_native_char_is_digit c = true
       · simp [hc]
-        have htail : cs.all native_char_is_digit ≠ true := by
+        have htail : cs.all impl_native_char_is_digit ≠ true := by
           intro ht
           apply h
           simp [hc, ht]
@@ -1367,10 +1367,10 @@ private theorem sr_nondigit_find_aux :
 
 private theorem sr_nondigit_index_data (s : native_String)
     (hValid : native_string_valid s = true)
-    (hNotAll : s.all native_char_is_digit ≠ true) :
+    (hNotAll : s.all impl_native_char_is_digit ≠ true) :
     ∃ j c pre post,
       s = pre ++ c :: post ∧ pre.length = j ∧
-      native_char_is_digit c ≠ true ∧
+      impl_native_char_is_digit c ≠ true ∧
       native_str_indexof_re s sr_nondigit_re 0 = Int.ofNat j ∧
       j < s.length := by
   rcases sr_nondigit_find_aux s 0 hValid hNotAll with
@@ -1745,7 +1745,7 @@ private theorem sr_eval_forall_encoding_true
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T →
-        __smtx_value_canonical_bool v = true →
+        __smtx_value_canonical v = true →
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval M
@@ -1755,7 +1755,7 @@ private theorem sr_eval_forall_encoding_true
   have hNoSat :
       ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v)
             (SmtTerm.not body) = SmtValue.Boolean true := by
     rintro ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -1763,19 +1763,19 @@ private theorem sr_eval_forall_encoding_true
     simp [__smtx_model_eval, __smtx_model_eval_not, native_not,
       hvBody] at hvNot
   have hExistsEval :
-      native_eval_texists M s T (SmtTerm.not body) =
+      native_eval_exists M s T (SmtTerm.not body) =
         SmtValue.Boolean false := by
     change (if _h :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-          __smtx_value_canonical_bool v = true ∧
+          __smtx_value_canonical v = true ∧
           __smtx_model_eval (native_model_push M s T v)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean false
     rw [dif_neg hNoSat]
   change __smtx_model_eval_not
-      (native_eval_texists M s T (SmtTerm.not body)) =
+      (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean true
   rw [hExistsEval]
   rfl
@@ -1788,9 +1788,9 @@ private theorem sr_eval_forall2_encoding_true
     (hAll :
       ∀ v₁ v₂ : SmtValue,
         __smtx_typeof_value v₁ = T₁ →
-        __smtx_value_canonical_bool v₁ = true →
+        __smtx_value_canonical v₁ = true →
         __smtx_typeof_value v₂ = T₂ →
-        __smtx_value_canonical_bool v₂ = true →
+        __smtx_value_canonical v₂ = true →
         __smtx_model_eval
             (native_model_push (native_model_push M s₁ T₁ v₁) s₂ T₂ v₂)
             body = SmtValue.Boolean true) :
@@ -1803,7 +1803,7 @@ private theorem sr_eval_forall2_encoding_true
   have hNoSat :
       ¬ ∃ v₁ : SmtValue,
         __smtx_typeof_value v₁ = T₁ ∧
-        __smtx_value_canonical_bool v₁ = true ∧
+        __smtx_value_canonical v₁ = true ∧
         __smtx_model_eval (native_model_push M s₁ T₁ v₁)
             (SmtTerm.exists s₂ T₂ (SmtTerm.not body)) =
           SmtValue.Boolean true := by
@@ -1811,7 +1811,7 @@ private theorem sr_eval_forall2_encoding_true
     change (if _h :
         ∃ v₂ : SmtValue,
           __smtx_typeof_value v₂ = T₂ ∧
-          __smtx_value_canonical_bool v₂ = true ∧
+          __smtx_value_canonical v₂ = true ∧
           __smtx_model_eval
               (native_model_push (native_model_push M s₁ T₁ v₁)
                 s₂ T₂ v₂) (SmtTerm.not body) =
@@ -1827,13 +1827,13 @@ private theorem sr_eval_forall2_encoding_true
         hvBody] at hv₂Not
     · simp at hv₁Exists
   have hExistsEval :
-      native_eval_texists M s₁ T₁
+      native_eval_exists M s₁ T₁
           (SmtTerm.exists s₂ T₂ (SmtTerm.not body)) =
         SmtValue.Boolean false := by
     change (if _h :
         ∃ v₁ : SmtValue,
           __smtx_typeof_value v₁ = T₁ ∧
-          __smtx_value_canonical_bool v₁ = true ∧
+          __smtx_value_canonical v₁ = true ∧
           __smtx_model_eval (native_model_push M s₁ T₁ v₁)
               (SmtTerm.exists s₂ T₂ (SmtTerm.not body)) =
             SmtValue.Boolean true then
@@ -1841,7 +1841,7 @@ private theorem sr_eval_forall2_encoding_true
       SmtValue.Boolean false
     rw [dif_neg hNoSat]
   change __smtx_model_eval_not
-      (native_eval_texists M s₁ T₁
+      (native_eval_exists M s₁ T₁
         (SmtTerm.exists s₂ T₂ (SmtTerm.not body))) =
       SmtValue.Boolean true
   rw [hExistsEval]
@@ -1853,7 +1853,7 @@ private theorem sr_eval_forall_encoding_false
     (M : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm)
     (v : SmtValue)
     (hvTy : __smtx_typeof_value v = T)
-    (hvCanonical : __smtx_value_canonical_bool v = true)
+    (hvCanonical : __smtx_value_canonical v = true)
     (hvBody :
       __smtx_model_eval (native_model_push M s T v) body =
         SmtValue.Boolean false) :
@@ -1868,24 +1868,24 @@ private theorem sr_eval_forall_encoding_false
   have hSat :
       ∃ w : SmtValue,
         __smtx_typeof_value w = T ∧
-        __smtx_value_canonical_bool w = true ∧
+        __smtx_value_canonical w = true ∧
         __smtx_model_eval (native_model_push M s T w)
             (SmtTerm.not body) = SmtValue.Boolean true :=
     ⟨v, hvTy, hvCanonical, hvNot⟩
   have hExistsEval :
-      native_eval_texists M s T (SmtTerm.not body) =
+      native_eval_exists M s T (SmtTerm.not body) =
         SmtValue.Boolean true := by
     change (if _h :
         ∃ w : SmtValue,
           __smtx_typeof_value w = T ∧
-          __smtx_value_canonical_bool w = true ∧
+          __smtx_value_canonical w = true ∧
           __smtx_model_eval (native_model_push M s T w)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean true
     rw [dif_pos hSat]
   change __smtx_model_eval_not
-      (native_eval_texists M s T (SmtTerm.not body)) =
+      (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean false
   rw [hExistsEval]
   rfl
@@ -1924,7 +1924,7 @@ private theorem string_reduction_body_true
 
 /-- Semantic obligations specific to the individual string-reduction cases. -/
 private theorem string_reduction_pred_true
-    (M : SmtModel) (hM : model_total_typed M) (s : Term)
+    (M : SmtModel) (hM : model_wf M) (s : Term)
     (hTrans : RuleProofs.eo_has_smt_translation s)
     (hClosed : __eo_is_closed s = Term.Boolean true)
     (hBodyTy : __eo_typeof (stringReductionBody s) = Term.Bool) :
@@ -2220,7 +2220,7 @@ private theorem string_reduction_pred_true
                     (SmtTerm.not qBody))) = SmtValue.Boolean true
               have hAll : ∀ v : SmtValue,
                   __smtx_typeof_value v = SmtType.Int →
-                  __smtx_value_canonical_bool v = true →
+                  __smtx_value_canonical v = true →
                   __smtx_model_eval
                       (native_model_push M idxName SmtType.Int v) qBody =
                     SmtValue.Boolean true := by
@@ -2249,7 +2249,7 @@ private theorem string_reduction_pred_true
                   simp [sourceLen, tx, __smtx_model_eval,
                     __smtx_model_eval_str_len, hTxEvalPush, native_seq_len,
                     sr_native_unpack_pack_string_length]
-                have hMkTotal : model_total_typed Mk :=
+                have hMkTotal : model_wf Mk :=
                   model_total_typed_push hM idxName SmtType.Int
                     (SmtValue.Numeral k) sr_smt_type_wf_int hvTy hvCanonical
                 change __smtx_model_eval Mk qBody = SmtValue.Boolean true
@@ -2421,7 +2421,7 @@ private theorem string_reduction_pred_true
                   simp
                 exact Option.some.inj
                   ((List.getElem?_eq_getElem hj).symm.trans hGet)
-              have hNotDigitAt : native_char_is_digit w[j] ≠ true := by
+              have hNotDigitAt : impl_native_char_is_digit w[j] ≠ true := by
                 simpa [hAt] using hc
               have hOutside := sr_nondigit_code_outside
                 w j hValid hj hNotDigitAt
@@ -2600,7 +2600,7 @@ private theorem string_reduction_pred_true
           let w := native_str_from_int n
           have hValid : native_string_valid w = true := by
             exact native_str_from_int_valid n
-          have hAllDigits : w.all native_char_is_digit = true := by
+          have hAllDigits : w.all impl_native_char_is_digit = true := by
             exact StrInReFromIntDigRangeProof.native_str_from_int_all_digits n
           have hOutputEval :
               __smtx_model_eval M output =
@@ -2634,7 +2634,7 @@ private theorem string_reduction_pred_true
             have hLenOne : (1 : Int) ≤ Int.ofNat w.length := by
               exact Int.ofNat_le.mpr hLenPos
             have hTotalEq :
-                Int.ofNat (native_decimal_digits_to_nat w) = n := by
+                Int.ofNat (impl_native_decimal_digits_to_nat w) = n := by
               have hRound := sr_native_str_to_int_from_int n hn
               have hDecimal := sr_native_str_to_int_of_ne_nil_all
                 w hNonempty hAllDigits
@@ -2652,7 +2652,7 @@ private theorem string_reduction_pred_true
                     (SmtTerm.not qBody))) = SmtValue.Boolean true
               have hAll : ∀ v : SmtValue,
                   __smtx_typeof_value v = SmtType.Int →
-                  __smtx_value_canonical_bool v = true →
+                  __smtx_value_canonical v = true →
                   __smtx_model_eval
                       (native_model_push M idxName SmtType.Int v) qBody =
                     SmtValue.Boolean true := by
@@ -2683,7 +2683,7 @@ private theorem string_reduction_pred_true
                   simp [outputLen, __smtx_model_eval,
                     __smtx_model_eval_str_len, hOutputEvalPush,
                     native_seq_len, sr_native_unpack_pack_string_length]
-                have hMkTotal : model_total_typed Mk :=
+                have hMkTotal : model_wf Mk :=
                   model_total_typed_push hM idxName SmtType.Int
                     (SmtValue.Numeral k) sr_smt_type_wf_int hvTy
                     _hvCanonical
@@ -3049,7 +3049,7 @@ private theorem string_reduction_pred_true
               have hAll :
                   ∀ v : SmtValue,
                     __smtx_typeof_value v = SmtType.Int →
-                    __smtx_value_canonical_bool v = true →
+                    __smtx_value_canonical v = true →
                     __smtx_model_eval
                         (native_model_push M idxName SmtType.Int v) qBody =
                       SmtValue.Boolean true := by
@@ -3105,7 +3105,7 @@ private theorem string_reduction_pred_true
                       hCode, hk0, hklt,
                       hNotLenLe]
                     right
-                    rw [show List.map native_char_to_lower w =
+                    rw [show List.map impl_native_char_to_lower w =
                       native_str_to_lower w by rfl]
                     let c := native_str_to_code (native_str_substr w k 1)
                     by_cases hLo : 65 ≤ c
@@ -3287,7 +3287,7 @@ private theorem string_reduction_pred_true
               have hAll :
                   ∀ v : SmtValue,
                     __smtx_typeof_value v = SmtType.Int →
-                    __smtx_value_canonical_bool v = true →
+                    __smtx_value_canonical v = true →
                     __smtx_model_eval
                         (native_model_push M idxName SmtType.Int v) qBody =
                       SmtValue.Boolean true := by
@@ -3343,7 +3343,7 @@ private theorem string_reduction_pred_true
                       hCode, hk0, hklt,
                       hNotLenLe]
                     right
-                    rw [show List.map native_char_to_upper w =
+                    rw [show List.map impl_native_char_to_upper w =
                       native_str_to_upper w by rfl]
                     let c := native_str_to_code (native_str_substr w k 1)
                     by_cases hLo : 97 ≤ c
@@ -3501,7 +3501,7 @@ private theorem string_reduction_pred_true
               have hAll :
                   ∀ v : SmtValue,
                     __smtx_typeof_value v = SmtType.Int →
-                    __smtx_value_canonical_bool v = true →
+                    __smtx_value_canonical v = true →
                     __smtx_model_eval
                         (native_model_push M idxName SmtType.Int v) qBody =
                       SmtValue.Boolean true := by
@@ -3783,7 +3783,7 @@ private theorem string_reduction_pred_true
                     native_not, hIdxLe, hIdxLeCast]
                 exact sr_eval_forall_encoding_false M idxName SmtType.Int
                   qBody (SmtValue.Numeral (Int.ofNat j)) rfl
-                  (by simp [__smtx_value_canonical_bool]) hAtFalse
+                  (by simp [__smtx_value_canonical]) hAtFalse
               simp [formula, __smtx_model_eval, hContainsEval, hContains,
                 hForallFalse, __smtx_model_eval_eq,
                 __smtx_model_eval_not, native_veq, native_not]
@@ -3794,7 +3794,7 @@ private theorem string_reduction_pred_true
               have hAll :
                   ∀ v : SmtValue,
                     __smtx_typeof_value v = SmtType.Int →
-                    __smtx_value_canonical_bool v = true →
+                    __smtx_value_canonical v = true →
                     __smtx_model_eval
                         (native_model_push M idxName SmtType.Int v) qBody =
                       SmtValue.Boolean true := by
@@ -4402,7 +4402,7 @@ private theorem string_reduction_pred_true
                     hjY, hjX]
                 exact sr_eval_forall_encoding_false M idxName SmtType.Int
                   qBody (SmtValue.Numeral (Int.ofNat j)) rfl
-                  (by simp [__smtx_value_canonical_bool]) hAtFalse
+                  (by simp [__smtx_value_canonical]) hAtFalse
               simp [formula, __smtx_model_eval, hYEvalString,
                 hXEvalString, hLeqEval, hForallFalse,
                 __smtx_model_eval_ite, __smtx_model_eval_eq,
@@ -7243,7 +7243,7 @@ private theorem string_reduction_pred_true
                         simpa [foundForall] using
                           sr_eval_forall_encoding_false M lenName SmtType.Int
                             foundBody (SmtValue.Numeral k) rfl
-                            (by simp [__smtx_value_canonical_bool])
+                            (by simp [__smtx_value_canonical])
                             hFoundBodyFalse
                       have hResultNotFound : nativeResult ≠ -1 := by
                         have hStartNonneg : 0 ≤ start :=
@@ -7270,7 +7270,7 @@ private theorem string_reduction_pred_true
                     hMinimalEval, hFoundClauseEval, native_and]
 /-- The complete generated result is true whenever its guard succeeds. -/
 private theorem string_reduction_true
-    (M : SmtModel) (hM : model_total_typed M) (s : Term)
+    (M : SmtModel) (hM : model_wf M) (s : Term)
     (hTrans : RuleProofs.eo_has_smt_translation s)
     (hTy : __eo_typeof (__eo_prog_string_reduction s) = Term.Bool) :
     eo_interprets M (__eo_prog_string_reduction s) true := by
@@ -7304,7 +7304,7 @@ private theorem string_reduction_true
     (string_reduction_pred_true M hM s hTrans hClosed hBodyTy)
 
 public theorem cmd_step_string_reduction_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.string_reduction args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

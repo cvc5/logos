@@ -507,7 +507,7 @@ theorem typed___eo_prog_ho_cong_impl (premises : List Term) :
             simp [premiseAndFormulaList, __eo_prog_ho_cong]))
 
 theorem congTrueSpine_generic_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (f g x y : Term)
     (hEqBool :
       RuleProofs.eo_has_bool_type
@@ -580,7 +580,7 @@ private theorem hoCongTypeSpine_of_hoCongTrueSpine
         (RuleProofs.eo_has_bool_type_of_interprets_true M _ hArg)
 
 private theorem hoCongTrueSpine_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     {f g l r : Term}
     (hSpine : HoCongTrueSpine M f g l r) :
     RuleProofs.eo_has_bool_type (mkEq l r) ->
@@ -711,7 +711,7 @@ private theorem mk_ho_cong_true_spine_of_list
 
 /-- Correctness for the generated EO implementation of `ho_cong`. -/
 theorem facts___eo_prog_ho_cong_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (premises : List Term) :
   RulePremiseEvidence M premises ->
   RuleProofs.eo_has_bool_type
@@ -801,7 +801,7 @@ theorem congTypeSpine_same_generic_head_apply_eq_has_bool_type
     hTrans
 
 theorem congTrueSpine_same_generic_head_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (f x y : Term)
     (hToSmt :
       ∀ a,
@@ -902,7 +902,7 @@ theorem congTypeSpine_int_to_bv_head_congr_eq_has_bool_type
     hHeadTypes.1, hArgTypes.1]
 
 theorem congTrueSpine_int_to_bv_head_congr_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (w n n' x y : Term)
     (hEqBool : RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Apply (Term.UOp1 UserOp1.int_to_bv w) n) x)

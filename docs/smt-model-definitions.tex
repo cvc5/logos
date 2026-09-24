@@ -104,11 +104,22 @@
 
 \pagestyle{empty}
 
+% No \date: this document is built into a PDF that is committed alongside it,
+% and \today would make every rebuild a diff.
+\title{Logos: A Verified Proof Checker for SMT Solvers in Lean\\[0.35em]
+  \large SMT-LIB Semantics, Specification, and Checker Definitions}
+\author{}
+\date{}
+
 % Allow extra interword stretch so long typewriter identifiers do not push
 % text into the margins.
 \emergencystretch=3em
 
 \begin{document}
+
+\maketitle
+% \maketitle asks for the `plain` style, which would number this page alone.
+\thispagestyle{empty}
 
 \section{Introduction}
 
@@ -165,6 +176,33 @@ For example, CPC defines several non-standard extensions of SMT-LIB (e.g. sets a
 supports non-standard extensions of theories, and defines non-standard internal symbols
 (i.e. Skolem variables) to define several of its proof rules.
 
+\subsection{Deviations from SMT-LIB}
+
+The formalization that follows departs from SMT-LIB in three ways, which are
+different in kind.
+
+First, on three standard theories it admits fewer models than SMT-LIB does:
+arrays are interpreted as almost-constant maps, values of type \code{Real} are
+assumed to be rational, and uninterpreted sorts are assumed to be of infinite
+cardinality. Each restriction is stated again at the definition that introduces
+it, and they are collected here so that the list can be read in one place. Read
+on the standard theories alone, every model of this semantics is an SMT-LIB
+model and the converse does not hold, so unsatisfiability as defined here is
+implied by unsatisfiability in SMT-LIB and does not imply it: a formula
+satisfiable in SMT-LIB only by a model this semantics cannot express is treated
+here as unsatisfiable. All three are confined to quantified or nonlinear
+reasoning, and on the quantifier-free linear fragments the two notions agree.
+
+Second, the semantics interprets sorts and operators that SMT-LIB does not
+define, including the theories of sets and sequences and the auxiliary operators
+introduced below. Conformance to SMT-LIB is not defined for these, and what they
+are measured against is the meaning CPC gives them.
+
+Third, parametric datatypes are rejected by the parser rather than interpreted.
+
+The file \code{docs/smt-lib-conformance.md} records the same list from the point
+of view of somebody running the checker, with what each restriction costs.
+
 \subsection{An Overview of Core Definitions}
 
 Before looking into the definitions,
@@ -210,7 +248,7 @@ Second, methods that define the semantics of Eunoia terms
 based on a reduction to SMT-LIB.
 Third, the core methods that Logos depends on.
 
-\noindent\textbf{SMT-LIB definition (roughly 2600 LOC):}
+\noindent\textbf{SMT-LIB definition (roughly 2050 LOC):}
 \begin{itemize}
   \item \smttypeofvalue \code{:} \smtvalue \code{->} \smttype
     \begin{itemize}
@@ -237,7 +275,7 @@ Third, the core methods that Logos depends on.
     \end{itemize}
 \end{itemize}
 
-\noindent\textbf{Specification definition (roughly 750 LOC):}
+\noindent\textbf{Specification definition (roughly 650 LOC):}
 \begin{itemize}
   \item \eotosmt \code{:} \term \code{->} \smtterm
     \begin{itemize}
@@ -253,7 +291,7 @@ Third, the core methods that Logos depends on.
     \end{itemize}
 \end{itemize}
 
-\noindent\textbf{Logos definitions (roughly 10500 LOC):}
+\noindent\textbf{Logos definitions (roughly 8200 LOC):}
 \begin{itemize}
   \item \eotypeof \code{:} \term \code{->} \term
     \begin{itemize}
@@ -276,11 +314,11 @@ then indeed $F$ is unsatisfiable.
 Our trusted core for this specification is thus the definition of \eosatisfiability,
 which is contained in the SMT-LIB and specification layers.
 The third layer does not need to be trusted.
-Roughly, the first layer is 2600 lines of Lean,
-the second layer is 750 lines of Lean (including the shared definition of Eunoia terms),
-and the third layer is roughly 10500 lines of Lean.
+Roughly, the first layer is 2050 lines of Lean,
+the second layer is 650 lines of Lean (including the shared definition of Eunoia terms),
+and the third layer is roughly 8200 lines of Lean.
 In other words, the trusted computing base of Logos
-is the sum of the first two layers, roughly 3350 lines of Lean.
+is the sum of the first two layers, roughly 2700 lines of Lean.
 
 The executable portion of the Logos checker (the third layer) 
 does \emph{not} depend on the SMT-LIB definition or the specification definition.
@@ -327,8 +365,7 @@ we write the native type aliases \code{Nat}, \code{Int}, \code{Bool},
 \code{native_Bool}, \code{native_Char} and \code{native_String},
 and we write \code{if}/\code{then}/\code{else} for the method \code{native_ite}.
 We additionally use a small number of friendlier names, e.g.
-\code{model_wf} for the Lean definition \code{model_total_typed},
-and \code{Cmd} and \code{CmdList} for the checker types \code{CCmd} and \code{CCmdList}.
+\code{Cmd} and \code{CmdList} for the checker types \code{CCmd} and \code{CCmdList}.
 Beyond renaming, figures may inline or abbreviate helper definitions,
 reorder declarations, and elide cases (indicated by ellipses);
 the presentation is otherwise faithful to the code.
@@ -1322,6 +1359,72 @@ yielding \code{(Apply (DtCons "A" DD 0) (DtCons "B" DD 1))}.
 For self references such as the \code{listc} constructor of \code{List},
 the failing reference simply forces the choice of a
 non-recursive constructor (\code{listn}).
+This treatment of field references imposes a requirement on the \emph{order}
+of a declaration block that is stronger than well-foundedness.
+Say that a block is in \emph{productive order} when every datatype it declares
+has a constructor whose type references all name datatypes declared strictly
+later in the block.
+Only blocks in productive order have inhabited datatypes by the definitions
+above, whereas the notion we intend to capture --- that each datatype of the
+block has a finite value --- does not depend on the order in which the block
+was written.
+The two notions coincide only up to reordering.
+For a block whose recursion goes exclusively through direct constructor fields,
+which is the only form of recursion these definitions admit (see
+Section~\ref{sec:type-wf}),
+every datatype has a finite value iff \emph{some} permutation of the block is
+in productive order: sorting the datatypes by decreasing height of their
+smallest value gives one, since the constructor witnessing a smallest value of
+height \code{h} has fields whose smallest values have height below \code{h},
+placing them later in that order.
+Assuming a productive order is therefore without loss of generality.
+
+The definitions do not perform that reordering, however.
+It is discharged upstream of them instead, and only for one of the two front
+ends: the parser of the s-expression front end sorts a declaration block into a
+productive order before building it (\code{productiveOrder} in
+\code{Logos/Parser.lean}), which is sound but unverified, being part of the
+front end rather than of the checker.
+A block that reaches these definitions in another order is rejected, and it is
+rejected \emph{as a whole}.
+Since \code{smt_decl_wf_rec} (Section~\ref{sec:type-wf}) requires
+\code{inhabited_type} of every datatype of the block, a single datatype whose
+references all point earlier makes every type of the block ill-formed,
+including those datatypes that do have a default value.
+For example, of the two SMT-LIB declarations
+\begin{examplecode}
+(declare-datatypes ((Tree 0) (TreeList 0))
+  (((node (children TreeList))) ((tlistn) (tlistc (head Tree) (tail TreeList)))))
+
+(declare-datatypes ((TreeList 0) (Tree 0))
+  (((tlistn) (tlistc (head Tree) (tail TreeList))) ((node (children TreeList)))))
+\end{examplecode}
+which declare the same two datatypes, the first is accepted and the second is
+rejected, and in the second neither \code{Tree} nor \code{TreeList} is a
+well-formed type.
+A proof file writing the second is accepted nonetheless, since the parser
+rewrites it into the first; a Lean-native proof script naming the second
+directly is not.
+Note this limitation is unrelated to the exclusion of nested recursion
+described in Section~\ref{sec:type-wf}: a datatype such as
+\code{(declare-datatypes ((T 0)) (((mk (s (Seq T))))))} likewise has no
+well-formed type here, but for a different reason, and no reordering admits it.
+
+Note also that the specification is not uniform in this respect.
+Finiteness of a datatype is decided by the fixpoint computation
+\code{smt_datatype_decl_bounded} described above, which does not depend on the
+order of the block, whereas inhabitedness is decided by the suffix walk of
+\code{smt_type_default}, which does.
+The two therefore disagree: for the block above written with \code{TreeList}
+first, \code{smt_is_finite_type} of a datatype of the block is unchanged by
+the reordering while \code{inhabited_type} of it becomes false.
+Reformulating \code{smt_type_default} as a fixpoint of the same shape, so that
+a reference resolves against the declarations already known to have a default
+value rather than against the suffix, would remove the ordering requirement;
+the cost is that the recursion is then no longer structural in the block, and
+so needs a termination argument of the kind \code{smt_datatype_decl_bounded}
+already carries.
+
 
 The other definitions of default values are trivial.
 Maps and sets use a default (constant) map, where maps store the default
@@ -1344,6 +1447,9 @@ succeeds in generating a value of that type,
 where recall that the type of values can be computed by the method \code{smt_typeof_value}.
 Note that any datatype that is not well-founded (i.e. does not have finite values)
 will be such that \code{smt_type_default} fails to return a value of that sort.
+The converse does not hold: as discussed above, \code{smt_type_default} also
+fails on a well-founded datatype whose declaration block is not in productive
+order.
 It is important to note that the definition of \code{inhabited_type}
 could alternatively have been defined by a native Lean binder,
 i.e. a type is inhabited iff there exists a value having that type.
@@ -1487,6 +1593,7 @@ For the remaining composite SMT-LIB values, we simply traverse their structure
 and confirm that all values they are built from are also canonical.
 
 \subsection{Well-Formedness of Types}
+\label{sec:type-wf}
 
 \begin{figure}
 \begin{lstlisting}
@@ -2306,7 +2413,7 @@ The next set of operators denote the other builtin types
 of Eunoia including Booleans (\code{Bool}),
 the arrow type (\code{FunType}), and
 the type of types (\code{Type}).
-The next four constructors denote the SMT-LIB literal categories
+The next five constructors denote the SMT-LIB literal categories
 supported by Eunoia.
 Note that these constructors carry native Lean types
 that denote their values, similar to our definition of SMT-LIB terms and values.

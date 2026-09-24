@@ -122,7 +122,7 @@ private theorem smtx_eval_geq_term_eq
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem facts_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (y z w P1 P2 : Term)
     (hYTrans : RuleProofs.eo_has_smt_translation y)
     (hZTrans : RuleProofs.eo_has_smt_translation z)
@@ -261,7 +261,7 @@ private theorem facts_program
 end StrReplReplLookaheadIdSimpProof
 
 public theorem cmd_step_str_repl_repl_lookahead_id_simp_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk
       (CCmd.step CRule.str_repl_repl_lookahead_id_simp args premises) ->

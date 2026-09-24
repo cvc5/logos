@@ -130,7 +130,7 @@ private theorem typed___eo_prog_sets_choose_singleton_impl
   rw [hProg]; exact hBoolEq
 
 private theorem facts___eo_prog_sets_choose_singleton_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term)
+    (M : SmtModel) (hM : model_wf M) (a1 : Term)
     (hWf : __smtx_type_wf_component (__smtx_typeof (__eo_to_smt a1)) = true) :
     eo_interprets M (__eo_prog_sets_choose_singleton a1) true := by
   have ha1Trans : RuleProofs.eo_has_smt_translation a1 := a1_trans_of_wfElem a1 hWf
@@ -161,10 +161,10 @@ private theorem facts___eo_prog_sets_choose_singleton_impl
     smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt a1)
       (by unfold term_has_non_none_type; exact ha1Trans)
   have hA1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt a1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt a1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM a1 ha1Trans
   have hA1CanBool :
-      __smtx_value_canonical_bool (__smtx_model_eval M (__eo_to_smt a1)) = true := by
+      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt a1)) = true := by
     simpa [Smtm.value_canonical_bool_eq_true] using hA1Can
   have hSetWf :
       __smtx_type_wf (SmtType.Set (__smtx_typeof (__eo_to_smt a1))) = true :=
@@ -194,7 +194,7 @@ private theorem facts___eo_prog_sets_choose_singleton_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_sets_choose_singleton_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_choose_singleton args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

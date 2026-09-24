@@ -67,7 +67,7 @@ private theorem native_unpack_seq_pack_seq (T : SmtType) :
 
 /-- The native string underlying a value sequence. -/
 def valueSeqString (xs : List SmtValue) : native_String :=
-  xs.map native_ssm_char_of_value
+  xs.map impl_native_ssm_char_of_value
 
 theorem native_re_str_valid_cons {x : SmtValue} {xs : List SmtValue}
     (h : native_re_str_valid (x :: xs) = true) :
@@ -77,14 +77,14 @@ theorem native_re_str_valid_cons {x : SmtValue} {xs : List SmtValue}
 /-- A valid value sequence is the image of its underlying string. -/
 theorem native_string_to_values_valueSeqString :
     ∀ xs : List SmtValue, native_re_str_valid xs = true ->
-      native_string_to_values (valueSeqString xs) = xs
+      impl_native_string_to_values (valueSeqString xs) = xs
   | [], _ => rfl
   | x :: xs, h => by
       have hx := native_re_str_valid_cons h
       cases x with
       | Char c =>
-          simpa [valueSeqString, native_string_to_values,
-            native_ssm_char_of_value] using
+          simpa [valueSeqString, impl_native_string_to_values,
+            impl_native_ssm_char_of_value] using
             native_string_to_values_valueSeqString xs hx.2
       | _ => simp [native_re_elem_valid] at hx
 
@@ -99,7 +99,7 @@ theorem native_string_valid_valueSeqString :
       | Char c =>
           have hc : native_char_valid c = true := by
             simpa [native_re_elem_valid] using hx.1
-          simpa [valueSeqString, native_string_valid, native_ssm_char_of_value,
+          simpa [valueSeqString, native_string_valid, impl_native_ssm_char_of_value,
             hc] using native_string_valid_valueSeqString xs hx.2
       | _ => simp [native_re_elem_valid] at hx
 
@@ -128,7 +128,7 @@ theorem native_re_str_valid_extract {xs : List SmtValue}
 the string it unpacks to. -/
 theorem native_unpack_seq_eq_values_of_valid {ss : SmtSeq}
     (h : native_re_str_valid (native_unpack_seq ss) = true) :
-    native_unpack_seq ss = native_string_to_values (native_unpack_string ss) := by
+    native_unpack_seq ss = impl_native_string_to_values (native_unpack_string ss) := by
   have := native_string_to_values_valueSeqString (native_unpack_seq ss) h
   simpa [native_unpack_string, valueSeqString] using this.symm
 
@@ -232,8 +232,8 @@ theorem reglan_str_in_re_eq_of_smt_value_rel {r s : SmtRegLan}
     native_str_in_re str r = native_str_in_re str s := by
   have hModel : ∀ str : native_String,
       native_string_valid str = true ->
-        Smtm.native_str_in_re (native_string_to_values str) r =
-          Smtm.native_str_in_re (native_string_to_values str) s := by
+        Smtm.native_str_in_re (impl_native_string_to_values str) r =
+          Smtm.native_str_in_re (impl_native_string_to_values str) s := by
     change __smtx_model_eval_eq (SmtValue.RegLan r) (SmtValue.RegLan s) =
       SmtValue.Boolean true at h
     simpa [__smtx_model_eval_eq] using h

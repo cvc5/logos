@@ -19,7 +19,7 @@ namespace TranslationProofs
 
 /-- Proof-local compatibility name for the reserved datatype-name guard. -/
 abbrev __eo_reserved_datatype_name : native_String -> native_Bool :=
-  native_reserved_datatype_name
+  __eo_to_smt_reserved_datatype_name
 
 /-- Computes `__eo_typeof` for `boolean`. -/
 @[simp] theorem eo_typeof_boolean (b : native_Bool) :

@@ -158,7 +158,7 @@ private theorem smt_typeof_str_value_len_of_ne_stuck (x : Term)
   rw [__smtx_typeof.eq_2]
 
 private theorem seq_eval_of_seq_type
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (T : SmtType) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) (T : SmtType) :
     __smtx_typeof (__eo_to_smt t) = SmtType.Seq T ->
     ∃ ss, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Seq ss := by
   intro hTy
@@ -294,7 +294,7 @@ private theorem str_nary_intro_ne_stuck_of_seq_type
       simpa [hIntroEq] using hxNe
 
 private theorem smt_typeof_seq_value_of_eval_seq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t : Term) (T : SmtType) (sx : SmtSeq)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
     (hEval : __smtx_model_eval M (__eo_to_smt t) = SmtValue.Seq sx) :
@@ -421,7 +421,7 @@ private theorem smtx_model_eval_str_substr_term_eq
         (__smtx_model_eval M (__eo_to_smt s))
         (__smtx_model_eval M (__eo_to_smt i))
         (__smtx_model_eval M (__eo_to_smt n))
-  rw [__smtx_model_eval.eq_80]
+  rw [__smtx_model_eval.eq_82]
 
 private theorem smtx_model_eval_str_at_term_eq
     (M : SmtModel) (s i : Term) :
@@ -484,7 +484,7 @@ private theorem smtx_model_eval_raw_seq_empty_typeof
   rw [hA]
   change __smtx_model_eval M (SmtTerm.seq_empty T) =
     SmtValue.Seq (SmtSeq.empty T)
-  rw [__smtx_model_eval.eq_77]
+  rw [__smtx_model_eval.eq_79]
 
 private theorem smtx_model_eval_seq_empty_term_of_type
     (M : SmtModel) (A : Term) (T : SmtType)
@@ -762,7 +762,7 @@ private theorem native_seq_extract_cons_nonzero
     exact native_seq_extract_cons_pos_nat x xs k' n
 
 private theorem smt_value_rel_raw_empty_str_substr_of_end_neg
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a : Term) (T : SmtType) (i n : native_Int)
     (hATy : __smtx_typeof (__eo_to_smt a) = SmtType.Seq T)
     (hEnd : i + n < 0) :
@@ -1271,7 +1271,7 @@ private theorem smt_typeof_list_concat_str_concat_of_seq
   exact smt_typeof_list_concat_rec_str_concat_of_seq a z T hLists.1 haTy hzTy
 
 private theorem eo_list_concat_str_concat_unpack_of_seq_evals
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a z : Term) (T : SmtType) (sa sz sc : SmtSeq)
     (haTy : __smtx_typeof (__eo_to_smt a) = SmtType.Seq T)
     (hzTy : __smtx_typeof (__eo_to_smt z) = SmtType.Seq T)
@@ -1599,7 +1599,7 @@ private theorem smt_typeof_seq_eval_replace_all_rec_of_seq :
       simp [__seq_eval_replace_all_rec] at hNe
 
 private theorem smt_value_rel_seq_subsequence_rec_str_substr_of_numerals
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (l u a : Term) (T : SmtType) (i e : native_Int)
     (hL : l = Term.Numeral i)
     (hU : u = Term.Numeral e)
@@ -2242,7 +2242,7 @@ private theorem smt_typeof_list_nth_rec_str_concat_of_seq :
       simp [__eo_list_nth_rec] at hNe
 
 private theorem smt_value_rel_seq_nth_left_congr
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y n : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T)
@@ -2327,7 +2327,7 @@ private theorem str_value_len_concat_tail_ne_stuck (e tail : Term)
   cases hTailLen
 
 private theorem smt_value_rel_list_nth_rec_ssm_of_value_len
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ a n e T sx i d,
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true ->
       __smtx_typeof (__eo_to_smt a) = SmtType.Seq T ->
@@ -2337,7 +2337,7 @@ private theorem smt_value_rel_list_nth_rec_ssm_of_value_len
       __smtx_model_eval M (__eo_to_smt n) = SmtValue.Numeral i ->
       RuleProofs.smt_value_rel
         (__smtx_model_eval M (__eo_to_smt e))
-        (__smtx_ssm_seq_nth sx i d) := by
+        (__smtx_seq_value_nth sx i d) := by
   intro a n
   induction a, n using __eo_list_nth_rec.induct with
   | case1 n =>
@@ -2373,7 +2373,7 @@ private theorem smt_value_rel_list_nth_rec_ssm_of_value_len
       injection hEvalN with hi
       subst i
       rw [hsx]
-      simp [__smtx_ssm_seq_nth, native_pack_seq,
+      simp [__smtx_seq_value_nth, native_pack_seq,
         RuleProofs.smt_value_rel_refl]
   | case3 f x y n _hnStuck hnZero ih =>
       intro e T sx i d hList hTy hLen hNth hEvalA hEvalN
@@ -2471,14 +2471,14 @@ private theorem smt_value_rel_list_nth_rec_ssm_of_value_len
           ih e T sy (native_zplus j (native_zneg 1)) d hTailList hTailTy
             hTailLen hTailNth hTailEval hPredEval
         rw [hsx]
-        simpa [__smtx_ssm_seq_nth, native_pack_seq, hPackTail, hj0] using
+        simpa [__smtx_seq_value_nth, native_pack_seq, hPackTail, hj0] using
           hTailRel
   | case4 t x hxStuck hNotZero hNotCons =>
       intro e T sx i d hList hTy hLen hNth hEvalA hEvalN
       simp [__eo_list_nth_rec] at hNth
 
 private theorem smt_value_rel_seq_nth_list_rec_of_value_len
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a n e : Term) (T : SmtType)
     (hList :
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true)
@@ -2585,7 +2585,7 @@ private theorem seq_empty_uop1_unpack_nil_of_seq
         at hTy
 
 private theorem seq_unit_concat_unpack_cons
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e tail : Term) (T : SmtType) (sx : SmtSeq)
     (hTNN : T ≠ SmtType.None)
     (hTy :
@@ -2645,7 +2645,7 @@ private theorem seq_unit_concat_unpack_cons
   rfl
 
 private theorem seq_prefix_l2_eq_bool_native
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ a b T sx sy,
       T ≠ SmtType.None ->
       __smtx_typeof (__eo_to_smt a) = SmtType.Seq T ->
@@ -2742,7 +2742,7 @@ private theorem seq_prefix_l2_eq_bool_native
     rfl
 
 private theorem seq_prefix_l1_eq_bool_native
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ a b T sx sy,
       T ≠ SmtType.None ->
       __smtx_typeof (__eo_to_smt a) = SmtType.Seq T ->
@@ -2885,7 +2885,7 @@ private theorem seq_prefix_l1_eq_bool_native
       rw [hCond, eo_ite_false, hL1Eq]
 
 private theorem seq_prefix_eq_bool_native
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term) (T : SmtType) (sx sy : SmtSeq)
     (hTNN : T ≠ SmtType.None)
     (hATy : __smtx_typeof (__eo_to_smt a) = SmtType.Seq T)
@@ -3921,7 +3921,7 @@ private theorem smtx_eval_str_replace_all_term_eq
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem seq_eval_replace_all_rec_unpack_eq_chain
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ a b u skip lent T sa sb su sout skipNat,
       T ≠ SmtType.None ->
       __is_seq_const_rec a = Term.Boolean true ->
@@ -4582,7 +4582,7 @@ private def SeqFindPatternOk (b : Term) (T : SmtType) (sy : SmtSeq) : Prop :=
         b = Term.UOp1 UserOp1.seq_empty A
 
 private theorem seq_find_explicit_empty_eq_native_indexof_offset
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b n U : Term) (T : SmtType) (sy : SmtSeq) (off : Nat)
     (hEmptyTy :
       __smtx_typeof
@@ -4656,7 +4656,7 @@ private theorem seq_find_explicit_empty_eq_native_indexof_offset
       (native_unpack_seq sy) off hPatNonempty]
 
 private theorem guarded_intro_pattern_ok
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : Term) (T : SmtType) (sy : SmtSeq)
     (hTNN : T ≠ SmtType.None)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
@@ -4733,7 +4733,7 @@ private theorem guarded_intro_pattern_ok
         ((Term.UOp UserOp.Seq).Apply U) A T hBTy hEmptyTy
 
 private theorem seq_find_const_rec_eq_native_indexof_offset
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ a b n T sx sy off,
       T ≠ SmtType.None ->
       __is_seq_const_rec a = Term.Boolean true ->
@@ -4904,7 +4904,7 @@ private theorem smt_seq_component_ne_none_of_typeof_seq
     at hSeqWF
 
 private theorem seq_find_empty_string_tail_contra
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b n : Term) (T : SmtType) (sy : SmtSeq)
     (hTailTy :
       __smtx_typeof (__eo_to_smt (Term.String [])) = SmtType.Seq T)
@@ -4977,7 +4977,7 @@ private theorem seq_find_empty_string_tail_contra
     exact hL1Ne hL1Stuck
 
 private theorem seq_find_str_nary_intro_guarded_eq_native_indexof_offset
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t b n : Term) (T : SmtType) (sa sb : SmtSeq) (off : Nat)
     (hTNN : T ≠ SmtType.None)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
@@ -5200,7 +5200,7 @@ private theorem smtx_model_eval_not_is_neg_indexof_contains
       hLe]
 
 private theorem seq_find_str_nary_intro_guarded_eq_native_indexof
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s : Term) (T : SmtType) (sa sb : SmtSeq)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
@@ -5237,7 +5237,7 @@ private theorem seq_find_str_nary_intro_guarded_eq_native_indexof
   simpa [native_seq_indexof_offset_zero] using hOffset
 
 private theorem str_value_len_eval_seq_length
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hLenNe : __str_value_len x ≠ Term.Stuck) :
@@ -5376,7 +5376,7 @@ private theorem str_nary_elim_list_rev_str_nary_intro_ne_stuck_of_seq
     hRevTy hRevList
 
 private theorem smt_value_rel_str_rev_seq_unit_snoc
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e tail : Term) (T : SmtType)
     (hHeadTy :
       __smtx_typeof (__eo_to_smt (Term.Apply (Term.UOp UserOp.seq_unit) e)) =
@@ -5414,7 +5414,7 @@ private theorem smt_value_rel_str_rev_seq_unit_snoc
     (__smtx_model_eval M
       (SmtTerm.str_rev (__eo_to_smt (mkConcat head tail)))) =
       SmtValue.Boolean true
-  rw [__smtx_model_eval.eq_87, __smtx_model_eval.eq_87]
+  rw [__smtx_model_eval.eq_89, __smtx_model_eval.eq_89]
   rw [smtx_model_eval_str_concat_term_eq, hTailEval, hHeadEval]
   simp [__smtx_model_eval_str_rev, __smtx_model_eval_str_concat,
     native_seq_rev, native_seq_concat, hTailElem, hHeadElem, hHeadUnp,
@@ -5458,7 +5458,7 @@ private theorem smt_value_rel_str_rev_list_nil_empty_term
   change RuleProofs.smt_value_rel
     (__smtx_model_eval M (SmtTerm.str_rev (__eo_to_smt nil)))
     (SmtValue.Seq (SmtSeq.empty T))
-  rw [__smtx_model_eval.eq_87]
+  rw [__smtx_model_eval.eq_89]
   exact smt_value_rel_str_rev_list_nil_empty M nil T hNil hNilTy
 
 private theorem smt_value_rel_seq_nil_to_str_rev
@@ -5485,7 +5485,7 @@ private theorem smt_value_rel_seq_nil_to_str_rev
       (SmtValue.Seq (SmtSeq.empty T)) hRevEmpty)
 
 private theorem smt_value_rel_seq_unit_to_str_rev
-    (M : SmtModel) (hM : model_total_typed M) (e : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (e : Term) (T : SmtType)
     (hHeadTy :
       __smtx_typeof (__eo_to_smt (Term.Apply (Term.UOp UserOp.seq_unit) e)) =
         SmtType.Seq T) :
@@ -5509,7 +5509,7 @@ private theorem smt_value_rel_seq_unit_to_str_rev
     (__smtx_model_eval M (__eo_to_smt head))
     (__smtx_model_eval M (SmtTerm.str_rev (__eo_to_smt head))) =
       SmtValue.Boolean true
-  rw [__smtx_model_eval.eq_87, hHeadEval]
+  rw [__smtx_model_eval.eq_89, hHeadEval]
   simp only [__smtx_model_eval_str_rev, native_seq_rev, hHeadElem]
   rw [hHeadUnp]
   simp [List.reverse_cons, List.reverse_nil]
@@ -5519,7 +5519,7 @@ private theorem smt_value_rel_seq_unit_to_str_rev
   exact smt_seq_rel_pack_unpack T shead hHeadElem
 
 private theorem smt_value_rel_elim_rev_seq_unit_cons_nil
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (e nil : Term) (T : SmtType)
     (hHeadTy :
       __smtx_typeof (__eo_to_smt (Term.Apply (Term.UOp UserOp.seq_unit) e)) =
@@ -5611,7 +5611,7 @@ private theorem smt_value_rel_elim_rev_seq_unit_cons_nil
       (by simpa [head] using hSnoc))
 
 private theorem smt_value_rel_elim_rev_seq_unit_list
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (ss e : Term) (T : SmtType)
     (hList :
       __eo_is_list (Term.UOp UserOp.str_concat)
@@ -5811,7 +5811,7 @@ private theorem smt_value_rel_elim_rev_seq_unit_list
 termination_by ss
 
 private theorem smt_value_rel_elim_rev_str_nary_intro_to_str_rev
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t : Term) (T : SmtType)
     (htTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq T)
     (hGuard : __is_seq_const t = Term.Boolean true)
@@ -5957,7 +5957,7 @@ private theorem smt_value_rel_elim_rev_str_nary_intro_to_str_rev
 
 set_option linter.unusedSimpArgs false in
 private theorem seq_eval_smt_type_and_value_rel
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ t,
       __seq_eval t ≠ Term.Stuck ->
       __smtx_typeof (__eo_to_smt t) ≠ SmtType.None ->
@@ -8460,7 +8460,7 @@ private theorem seq_eval_smt_type_and_value_rel
                 __smtx_model_eval_str_prefixof
                   (__smtx_model_eval M (__eo_to_smt t))
                   (__smtx_model_eval M (__eo_to_smt s)) by
-              rw [__smtx_model_eval.eq_85])
+              rw [__smtx_model_eval.eq_87])
           try simp at hsimpa ⊢
           exact hsimpa
         rw [hEvalEq]
@@ -8723,7 +8723,7 @@ private theorem seq_eval_smt_type_and_value_rel
                 __smtx_model_eval_str_suffixof
                   (__smtx_model_eval M (__eo_to_smt t))
                   (__smtx_model_eval M (__eo_to_smt s)) by
-              rw [__smtx_model_eval.eq_86])
+              rw [__smtx_model_eval.eq_88])
           try simp at hsimpa ⊢
           exact hsimpa
         rw [hEvalEq]
@@ -8799,7 +8799,7 @@ private theorem seq_eval_smt_type_and_value_rel
               SmtValue.Seq
                 (native_pack_seq (__smtx_elem_typeof_seq_value st)
                   (native_seq_rev (native_unpack_seq st)))
-            rw [__smtx_model_eval.eq_87, hTEval]
+            rw [__smtx_model_eval.eq_89, hTEval]
             rfl
           have hRevSEval :
               __smtx_model_eval M
@@ -8811,7 +8811,7 @@ private theorem seq_eval_smt_type_and_value_rel
               SmtValue.Seq
                 (native_pack_seq (__smtx_elem_typeof_seq_value ss)
                   (native_seq_rev (native_unpack_seq ss)))
-            rw [__smtx_model_eval.eq_87, hSEval]
+            rw [__smtx_model_eval.eq_89, hSEval]
             rfl
           have hRTUnpack :
               native_unpack_seq sx =
@@ -9254,7 +9254,7 @@ private theorem seq_eval_smt_type_and_value_rel
             (__smtx_model_eval M (__eo_to_smt t))
 
 private theorem seq_eval_smt_value_rel
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hEvalNe : __seq_eval t ≠ Term.Stuck)
     (hNN : __smtx_typeof (__eo_to_smt t) ≠ SmtType.None) :
     RuleProofs.smt_value_rel
@@ -9263,7 +9263,7 @@ private theorem seq_eval_smt_value_rel
   (seq_eval_smt_type_and_value_rel M hM t hEvalNe hNN).2
 
 public theorem cmd_step_seq_eval_op_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.seq_eval_op args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

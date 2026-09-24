@@ -13,7 +13,7 @@ set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_not_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b : Term)
     (rec :
       ∀ A : Term,
@@ -131,7 +131,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_not_core
     simpa [__eo_not, __smtx_model_eval, __smtx_model_eval_not] using hRelNot
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvnot_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b : Term)
     (rec :
       ∀ A : Term,
@@ -147,7 +147,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvnot_core
     exact hsimpa
   rcases bv_unop_arg_of_non_none
       (op := SmtTerm.bvnot) (t := __eo_to_smt b)
-      (by rw [__smtx_typeof.eq_37])
+      (by rw [__smtx_typeof.eq_39])
       hBvNotNN with
     ⟨w, hBTy⟩
   have hBTrans : RuleProofs.eo_has_smt_translation b := by
@@ -258,7 +258,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvnot_core
     rw [show
         __smtx_typeof (SmtTerm.bvnot (__eo_to_smt b)) =
           __smtx_typeof_bv_op_1 (__smtx_typeof (__eo_to_smt b)) by
-      rw [__smtx_typeof.eq_37]]
+      rw [__smtx_typeof.eq_39]]
     rw [hBTy]
     change SmtType.BitVec w =
       __smtx_typeof
@@ -315,7 +315,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvnot_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvneg_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b : Term)
     (rec :
       ∀ A : Term,
@@ -331,7 +331,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvneg_core
     exact hsimpa
   rcases bv_unop_arg_of_non_none
       (op := SmtTerm.bvneg) (t := __eo_to_smt b)
-      (by rw [__smtx_typeof.eq_45])
+      (by rw [__smtx_typeof.eq_47])
       hBvNegNN with
     ⟨w, hBTy⟩
   have hBTrans : RuleProofs.eo_has_smt_translation b := by
@@ -441,7 +441,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvneg_core
     rw [show
         __smtx_typeof (SmtTerm.bvneg (__eo_to_smt b)) =
           __smtx_typeof_bv_op_1 (__smtx_typeof (__eo_to_smt b)) by
-      rw [__smtx_typeof.eq_45]]
+      rw [__smtx_typeof.eq_47]]
     rw [hBTy]
     change SmtType.BitVec w =
       __smtx_typeof
@@ -470,7 +470,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvneg_core
         __smtx_model_eval M (SmtTerm.bvneg (__eo_to_smt b)) =
           __smtx_model_eval_bvneg
             (__smtx_model_eval M (__eo_to_smt b)) by
-      rw [__smtx_model_eval.eq_45]]
+      rw [__smtx_model_eval.eq_47]]
     rw [hEvalB]
     change
       RuleProofs.smt_value_rel
@@ -493,7 +493,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvneg_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_to_real_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term)
     (rec :
       ∀ A : Term,
@@ -581,7 +581,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_to_real_core
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_to_int_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term)
     (rec :
       ∀ A : Term,
@@ -671,7 +671,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_to_int_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_is_int_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term)
     (rec :
       ∀ A : Term,
@@ -769,7 +769,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_is_int_core
     exact EvaluateProofInternal.eo_is_int_result_rel M runQ
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_uneg_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b : Term)
     (rec :
       ∀ A : Term,
@@ -900,7 +900,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_uneg_core
           __smtx_model_eval M (SmtTerm.uneg (__eo_to_smt b)) =
             __smtx_model_eval_uneg
               (__smtx_model_eval M (__eo_to_smt b)) by
-        rw [__smtx_model_eval.eq_23]]
+        rw [__smtx_model_eval.eq_25]]
       rw [hEvalB]
       change
         RuleProofs.smt_value_rel
@@ -1020,7 +1020,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_uneg_core
           __smtx_model_eval M (SmtTerm.uneg (__eo_to_smt b)) =
             __smtx_model_eval_uneg
               (__smtx_model_eval M (__eo_to_smt b)) by
-        rw [__smtx_model_eval.eq_23]]
+        rw [__smtx_model_eval.eq_25]]
       rw [hEvalB]
       change
         RuleProofs.smt_value_rel
@@ -1030,7 +1030,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_uneg_core
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_abs_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b : Term)
     (rec :
       ∀ A : Term,
@@ -1180,7 +1180,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_abs_core
           __smtx_model_eval M (SmtTerm.abs (__eo_to_smt b)) =
             __smtx_model_eval_abs
               (__smtx_model_eval M (__eo_to_smt b)) by
-        rw [__smtx_model_eval.eq_22]]
+        rw [__smtx_model_eval.eq_24]]
       rw [hEvalB]
       by_cases hLt : runN < 0
       · have hNeg : native_zlt runN 0 = true := by
@@ -1344,7 +1344,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_abs_core
           __smtx_model_eval M (SmtTerm.abs (__eo_to_smt b)) =
             __smtx_model_eval_abs
               (__smtx_model_eval M (__eo_to_smt b)) by
-        rw [__smtx_model_eval.eq_22]]
+        rw [__smtx_model_eval.eq_24]]
       rw [hEvalB]
       by_cases hLt : runQ < 0
       · have hNeg : native_qlt runQ (native_mk_rational 0 1) = true := by
@@ -1375,7 +1375,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_abs_core
         rw [__smtx_model_eval.eq_3]
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_int_pow2_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b : Term)
     (rec :
       ∀ A : Term,
@@ -1513,7 +1513,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_int_pow2_core
             __smtx_model_eval M (SmtTerm.int_pow2 (__eo_to_smt b)) =
               __smtx_model_eval_int_pow2
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_27]]
+          rw [__smtx_model_eval.eq_29]]
         rw [hEvalB]
         rw [EvaluateProofInternal.eo_int_pow2_eval_numeral_to_smt]
         change
@@ -1544,13 +1544,13 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_int_pow2_core
       · rw [hRunPowToSmt]
         rw [typeof_int_pow2_eq, typeof_int_pow2_eq, ← hBSameTy, hBTyInt]
       · rw [hRunPowToSmt]
-        rw [__smtx_model_eval.eq_27, __smtx_model_eval.eq_27]
+        rw [__smtx_model_eval.eq_29, __smtx_model_eval.eq_29]
         exact EvaluateProofInternal.smt_value_rel_model_eval_int_pow2_of_rel
           (__smtx_model_eval M (__eo_to_smt b))
           (__smtx_model_eval M (__eo_to_smt (__run_evaluate b))) hBRel
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_int_log2_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b : Term)
     (rec :
       ∀ A : Term,
@@ -1688,7 +1688,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_int_log2_core
             __smtx_model_eval M (SmtTerm.int_log2 (__eo_to_smt b)) =
               __smtx_model_eval_int_log2
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_28]]
+          rw [__smtx_model_eval.eq_30]]
         rw [hEvalB]
         rw [EvaluateProofInternal.eo_int_log2_eval_numeral_to_smt]
         change
@@ -1719,13 +1719,13 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_int_log2_core
       · rw [hRunLogToSmt]
         rw [typeof_int_log2_eq, typeof_int_log2_eq, ← hBSameTy, hBTyInt]
       · rw [hRunLogToSmt]
-        rw [__smtx_model_eval.eq_28, __smtx_model_eval.eq_28]
+        rw [__smtx_model_eval.eq_30, __smtx_model_eval.eq_30]
         exact EvaluateProofInternal.smt_value_rel_model_eval_int_log2_of_rel
           (__smtx_model_eval M (__eo_to_smt b))
           (__smtx_model_eval M (__eo_to_smt (__run_evaluate b))) hBRel
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_int_ispow2_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b : Term)
     (rec :
       ∀ A : Term,
@@ -1950,7 +1950,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_int_ispow2_core
         exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_at_bvsize_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (b : Term)
     (rec :
       ∀ A : Term,
@@ -2013,7 +2013,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_at_bvsize_core
     rfl]
   have hWNonneg : native_zleq 0 (native_nat_to_int w) = true := by
     simp [native_zleq, SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   constructor
   · rw [hTranslate, hBTy]
     simp [__eo_to_smt_bv_size, __smtx_typeof, native_ite, hWNonneg]
@@ -2023,7 +2023,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_at_bvsize_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_zero_extend_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (n x : Term)
     (rec :
       ∀ A : Term,
@@ -2170,7 +2170,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_zero_extend_core
     simpa [SmtEval.native_zleq] using hi0
   have hwNonneg : native_zleq 0 (native_nat_to_int w) = true := by
     simp [native_zleq, SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hw : 0 <= native_nat_to_int w := by
     simpa [SmtEval.native_zleq] using hwNonneg
   have hWidthNonneg :
@@ -2259,7 +2259,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_zero_extend_core
           __smtx_model_eval_zero_extend
             (SmtValue.Numeral i)
             (__smtx_model_eval M (__eo_to_smt x)) by
-      rw [__smtx_model_eval.eq_65, __smtx_model_eval.eq_2]]
+      rw [__smtx_model_eval.eq_67, __smtx_model_eval.eq_2]]
     rw [hXEval]
     change
       RuleProofs.smt_value_rel
@@ -2282,7 +2282,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_zero_extend_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_sign_extend_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (n x : Term)
     (rec :
       ∀ A : Term,
@@ -2420,7 +2420,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_sign_extend_core
     simpa [SmtEval.native_zleq] using hi0
   have hwNonneg : native_zleq 0 (native_nat_to_int w) = true := by
     simp [native_zleq, SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hw : 0 <= native_nat_to_int w := by
     simpa [SmtEval.native_zleq] using hwNonneg
   have hWidthNonneg :
@@ -2534,7 +2534,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_sign_extend_core
           __smtx_model_eval_sign_extend
             (SmtValue.Numeral i)
             (__smtx_model_eval M (__eo_to_smt x)) by
-      rw [__smtx_model_eval.eq_66, __smtx_model_eval.eq_2]]
+      rw [__smtx_model_eval.eq_68, __smtx_model_eval.eq_2]]
     rw [hXEval]
     change
       RuleProofs.smt_value_rel
@@ -2566,7 +2566,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_sign_extend_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_repeat_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (n x : Term)
     (rec :
       ∀ A : Term,
@@ -2603,7 +2603,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_repeat_core
   have hIntNat :
       native_nat_to_int (native_int_to_nat i) = i := by
     simpa [native_nat_to_int, native_int_to_nat,
-      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+      Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
       Int.toNat_of_nonneg hi0Int]
   have hXTrans : RuleProofs.eo_has_smt_translation x := by
     unfold RuleProofs.eo_has_smt_translation
@@ -2752,7 +2752,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_repeat_core
   have hWidthNonneg :
       native_zleq 0 (native_zmult i (native_nat_to_int w)) = true := by
     have hw : 0 <= native_nat_to_int w := by
-      simp [SmtEval.native_nat_to_int]
+      simp [Smtm.native_nat_to_int]
     have hMul : 0 <= i * native_nat_to_int w :=
       Int.mul_nonneg hi0Int hw
     have hsimpa := hMul
@@ -2780,7 +2780,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_repeat_core
     cases hRunRepeatTerm
     rfl
   have hRepeatEvalRec' :
-      __smtx_model_eval_repeat_rec (native_int_to_nat i)
+      __smtx_repeat_rec (native_int_to_nat i)
           (SmtValue.Binary (native_nat_to_int w) runN) =
         SmtValue.Binary (native_zmult i (native_nat_to_int w)) repM := by
     rw [hRepeatEvalRec, hRepMEq]
@@ -2816,11 +2816,11 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_repeat_core
           __smtx_model_eval_repeat
             (SmtValue.Numeral i)
             (__smtx_model_eval M (__eo_to_smt x)) by
-      rw [__smtx_model_eval.eq_36, __smtx_model_eval.eq_2]]
+      rw [__smtx_model_eval.eq_38, __smtx_model_eval.eq_2]]
     rw [hXEval]
     change
       RuleProofs.smt_value_rel
-        (__smtx_model_eval_repeat_rec (native_int_to_nat i)
+        (__smtx_repeat_rec (native_int_to_nat i)
           (SmtValue.Binary (native_nat_to_int w) runN))
         (__smtx_model_eval M
           (SmtTerm.Binary (native_zmult i (native_nat_to_int w)) repM))
@@ -2833,7 +2833,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_repeat_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvand_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -2850,7 +2850,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvand_core
     simpa [RuleProofs.eo_has_smt_translation] using hATrans
   rcases bv_binop_args_of_non_none
       (op := SmtTerm.bvand) (t1 := __eo_to_smt a) (t2 := __eo_to_smt b)
-      (by rw [__smtx_typeof.eq_38]) hBvAndNN with
+      (by rw [__smtx_typeof.eq_40]) hBvAndNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -3006,7 +3006,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvand_core
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt a))
             (__smtx_typeof (__eo_to_smt b)) by
-      rw [__smtx_typeof.eq_38]]
+      rw [__smtx_typeof.eq_40]]
     rw [hATy, hBTy]
     simp [__smtx_typeof_bv_op_2, native_ite, native_nateq]
     rw [EvaluateProofInternal.smtx_typeof_binary_mod_nat_to_int]
@@ -3086,7 +3086,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvand_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvor_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -3103,7 +3103,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvor_core
     simpa [RuleProofs.eo_has_smt_translation] using hATrans
   rcases bv_binop_args_of_non_none
       (op := SmtTerm.bvor) (t1 := __eo_to_smt a) (t2 := __eo_to_smt b)
-      (by rw [__smtx_typeof.eq_39]) hBvOrNN with
+      (by rw [__smtx_typeof.eq_41]) hBvOrNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -3259,7 +3259,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvor_core
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt a))
             (__smtx_typeof (__eo_to_smt b)) by
-      rw [__smtx_typeof.eq_39]]
+      rw [__smtx_typeof.eq_41]]
     rw [hATy, hBTy]
     simp [__smtx_typeof_bv_op_2, native_ite, native_nateq]
     rw [EvaluateProofInternal.smtx_typeof_binary_mod_nat_to_int]
@@ -3339,7 +3339,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvor_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvxor_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -3356,7 +3356,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvxor_core
     simpa [RuleProofs.eo_has_smt_translation] using hATrans
   rcases bv_binop_args_of_non_none
       (op := SmtTerm.bvxor) (t1 := __eo_to_smt a) (t2 := __eo_to_smt b)
-      (by rw [__smtx_typeof.eq_42]) hBvXorNN with
+      (by rw [__smtx_typeof.eq_44]) hBvXorNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -3512,7 +3512,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvxor_core
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt a))
             (__smtx_typeof (__eo_to_smt b)) by
-      rw [__smtx_typeof.eq_42]]
+      rw [__smtx_typeof.eq_44]]
     rw [hATy, hBTy]
     simp [__smtx_typeof_bv_op_2, native_ite, native_nateq]
     rw [EvaluateProofInternal.smtx_typeof_binary_mod_nat_to_int]
@@ -3592,7 +3592,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvxor_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_concat_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -3798,7 +3798,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_concat_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvadd_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -3817,7 +3817,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvadd_core
     exact hsimpa
   rcases bv_binop_args_of_non_none
       (op := SmtTerm.bvadd) (t1 := __eo_to_smt a) (t2 := __eo_to_smt b)
-      (by rw [__smtx_typeof.eq_46]) hBvAddNN with
+      (by rw [__smtx_typeof.eq_48]) hBvAddNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -3973,7 +3973,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvadd_core
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt a))
             (__smtx_typeof (__eo_to_smt b)) by
-      rw [__smtx_typeof.eq_46]]
+      rw [__smtx_typeof.eq_48]]
     rw [hATy, hBTy]
     simp [__smtx_typeof_bv_op_2, native_ite, native_nateq]
     rw [EvaluateProofInternal.smtx_typeof_binary_mod_nat_to_int]
@@ -4017,7 +4017,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvadd_core
           __smtx_model_eval_bvadd
             (__smtx_model_eval M (__eo_to_smt a))
             (__smtx_model_eval M (__eo_to_smt b)) by
-      rw [__smtx_model_eval.eq_46]]
+      rw [__smtx_model_eval.eq_48]]
     rw [hAEval, hBEval]
     rw [show
         __smtx_model_eval_bvadd
@@ -4053,7 +4053,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvadd_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvmul_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -4072,7 +4072,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvmul_core
     exact hsimpa
   rcases bv_binop_args_of_non_none
       (op := SmtTerm.bvmul) (t1 := __eo_to_smt a) (t2 := __eo_to_smt b)
-      (by rw [__smtx_typeof.eq_47]) hBvMulNN with
+      (by rw [__smtx_typeof.eq_49]) hBvMulNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -4228,7 +4228,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvmul_core
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt a))
             (__smtx_typeof (__eo_to_smt b)) by
-      rw [__smtx_typeof.eq_47]]
+      rw [__smtx_typeof.eq_49]]
     rw [hATy, hBTy]
     simp [__smtx_typeof_bv_op_2, native_ite, native_nateq]
     rw [EvaluateProofInternal.smtx_typeof_binary_mod_nat_to_int]
@@ -4272,7 +4272,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvmul_core
           __smtx_model_eval_bvmul
             (__smtx_model_eval M (__eo_to_smt a))
             (__smtx_model_eval M (__eo_to_smt b)) by
-      rw [__smtx_model_eval.eq_47]]
+      rw [__smtx_model_eval.eq_49]]
     rw [hAEval, hBEval]
     rw [show
         __smtx_model_eval_bvmul
@@ -4308,7 +4308,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvmul_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -4327,7 +4327,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
     exact hsimpa
   rcases bv_binop_args_of_non_none
       (op := SmtTerm.bvudiv) (t1 := __eo_to_smt a) (t2 := __eo_to_smt b)
-      (by rw [__smtx_typeof.eq_48]) hBvUdivNN with
+      (by rw [__smtx_typeof.eq_50]) hBvUdivNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -4473,7 +4473,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
         dsimp [runDiv, runBTerm, maxTerm, widthTerm] at hRunDivEoBv
         rw [hRunB] at hRunDivEoBv
         have hsimpa := hRunDivEoBv
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, SmtEval.native_nat_to_int] at hsimpa ⊢
+        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, Smtm.native_nat_to_int] at hsimpa ⊢
         exact hsimpa
       have hRunDivEq :
           runDiv =
@@ -4487,7 +4487,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
         dsimp [runDiv, runBTerm, maxTerm, widthTerm]
         rw [hRunB]
         have hsimpa := hToBin
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, SmtEval.native_nat_to_int] at hsimpa ⊢
+        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, Smtm.native_nat_to_int] at hsimpa ⊢
         exact hsimpa
       rw [hRunDivEq]
       constructor
@@ -4497,7 +4497,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
               __smtx_typeof_bv_op_2
                 (__smtx_typeof (__eo_to_smt a))
                 (__smtx_typeof (__eo_to_smt b)) by
-          rw [__smtx_typeof.eq_48]]
+          rw [__smtx_typeof.eq_50]]
         rw [hATy, hBTy]
         simp [__smtx_typeof_bv_op_2, native_ite, native_nateq]
         change SmtType.BitVec w =
@@ -4518,7 +4518,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
               __smtx_model_eval_bvudiv
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_48]]
+          rw [__smtx_model_eval.eq_50]]
         rw [hAEval, hBEvalRel]
         change
           RuleProofs.smt_value_rel
@@ -4594,7 +4594,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
               __smtx_typeof_bv_op_2
                 (__smtx_typeof (__eo_to_smt a))
                 (__smtx_typeof (__eo_to_smt b)) by
-          rw [__smtx_typeof.eq_48]]
+          rw [__smtx_typeof.eq_50]]
         rw [hATy, hBTy]
         simp [__smtx_typeof_bv_op_2, native_ite, native_nateq]
         rw [EvaluateProofInternal.smtx_typeof_binary_mod_nat_to_int]
@@ -4621,7 +4621,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
               __smtx_model_eval_bvudiv
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_48]]
+          rw [__smtx_model_eval.eq_50]]
         rw [hAEval, hBEvalRel]
         rw [show
             __eo_to_smt runDiv =
@@ -4677,7 +4677,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
     exact False.elim (hRunDivNe hRunDivStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvurem_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -4696,7 +4696,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvurem_core
     exact hsimpa
   rcases bv_binop_args_of_non_none
       (op := SmtTerm.bvurem) (t1 := __eo_to_smt a) (t2 := __eo_to_smt b)
-      (by rw [__smtx_typeof.eq_49]) hBvUremNN with
+      (by rw [__smtx_typeof.eq_51]) hBvUremNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -4860,7 +4860,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvurem_core
               __smtx_typeof_bv_op_2
                 (__smtx_typeof (__eo_to_smt a))
                 (__smtx_typeof (__eo_to_smt b)) by
-          rw [__smtx_typeof.eq_49]]
+          rw [__smtx_typeof.eq_51]]
         rw [hATy, hBTy]
         simp [__smtx_typeof_bv_op_2, native_ite, native_nateq]
         exact hATy.symm.trans hASameTy
@@ -4881,7 +4881,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvurem_core
               __smtx_model_eval_bvurem
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_49]]
+          rw [__smtx_model_eval.eq_51]]
         rw [hAEval, hBEvalRel]
         rw [show __eo_to_smt runRem =
               __eo_to_smt (__run_evaluate a) by
@@ -4959,7 +4959,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvurem_core
               __smtx_typeof_bv_op_2
                 (__smtx_typeof (__eo_to_smt a))
                 (__smtx_typeof (__eo_to_smt b)) by
-          rw [__smtx_typeof.eq_49]]
+          rw [__smtx_typeof.eq_51]]
         rw [hATy, hBTy]
         simp [__smtx_typeof_bv_op_2, native_ite, native_nateq]
         rw [EvaluateProofInternal.smtx_typeof_binary_mod_nat_to_int]
@@ -4986,7 +4986,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvurem_core
               __smtx_model_eval_bvurem
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_49]]
+          rw [__smtx_model_eval.eq_51]]
         rw [hAEval, hBEvalRel]
         rw [show
             __eo_to_smt runRem =
@@ -5041,7 +5041,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvurem_core
     exact False.elim (hRunRemNe hRunRemStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvult_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -5060,7 +5060,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvult_core
     exact hsimpa
   rcases bv_binop_ret_args_of_non_none
       (op := SmtTerm.bvult) (ret := SmtType.Bool)
-      (by rw [__smtx_typeof.eq_54]) hBvUltNN with
+      (by rw [__smtx_typeof.eq_56]) hBvUltNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -5219,7 +5219,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvult_core
               __smtx_typeof_bv_op_2_ret
                 (__smtx_typeof (__eo_to_smt a))
                 (__smtx_typeof (__eo_to_smt b)) SmtType.Bool by
-          rw [__smtx_typeof.eq_54]]
+          rw [__smtx_typeof.eq_56]]
         rw [hATy, hBTy]
         simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq]
         rw [__smtx_typeof.eq_1]
@@ -5229,7 +5229,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvult_core
               __smtx_model_eval_bvult
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_54]]
+          rw [__smtx_model_eval.eq_56]]
         rw [hAEval, hBEval]
         rw [show __eo_to_smt runCmp =
             SmtTerm.Boolean (native_zlt runA runB) by
@@ -5297,7 +5297,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvult_core
     exact False.elim (hRunCmpNe hRunCmpStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvugt_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -5316,7 +5316,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvugt_core
     exact hsimpa
   rcases bv_binop_ret_args_of_non_none
       (op := SmtTerm.bvugt) (ret := SmtType.Bool)
-      (by rw [__smtx_typeof.eq_56]) hBvUgtNN with
+      (by rw [__smtx_typeof.eq_58]) hBvUgtNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -5398,7 +5398,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvugt_core
       term_has_non_none_type
         (SmtTerm.bvult (__eo_to_smt b) (__eo_to_smt a)) := by
     unfold term_has_non_none_type
-    rw [__smtx_typeof.eq_54, hBTy, hATy]
+    rw [__smtx_typeof.eq_56, hBTy, hATy]
     simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq]
   have hBvUltSwapTrans :
       RuleProofs.eo_has_smt_translation
@@ -5464,7 +5464,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvugt_core
   · have hTypeEq :
         __smtx_typeof (SmtTerm.bvugt (__eo_to_smt a) (__eo_to_smt b)) =
           __smtx_typeof (SmtTerm.bvult (__eo_to_smt b) (__eo_to_smt a)) := by
-      rw [__smtx_typeof.eq_56, __smtx_typeof.eq_54, hATy, hBTy]
+      rw [__smtx_typeof.eq_58, __smtx_typeof.eq_56, hATy, hBTy]
     rw [hTypeEq]
     exact hSwap.1
   · have hEvalEq :
@@ -5472,13 +5472,13 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvugt_core
             (SmtTerm.bvugt (__eo_to_smt a) (__eo_to_smt b)) =
           __smtx_model_eval M
             (SmtTerm.bvult (__eo_to_smt b) (__eo_to_smt a)) := by
-      rw [__smtx_model_eval.eq_56, __smtx_model_eval.eq_54]
+      rw [__smtx_model_eval.eq_58, __smtx_model_eval.eq_56]
       rfl
     rw [hEvalEq]
     exact hSwap.2
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvuge_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -5497,7 +5497,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvuge_core
     exact hsimpa
   rcases bv_binop_ret_args_of_non_none
       (op := SmtTerm.bvuge) (ret := SmtType.Bool)
-      (by rw [__smtx_typeof.eq_57]) hBvUgeNN with
+      (by rw [__smtx_typeof.eq_59]) hBvUgeNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -5683,7 +5683,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvuge_core
               __smtx_typeof_bv_op_2_ret
                 (__smtx_typeof (__eo_to_smt a))
                 (__smtx_typeof (__eo_to_smt b)) SmtType.Bool by
-          rw [__smtx_typeof.eq_57]]
+          rw [__smtx_typeof.eq_59]]
         rw [hATy, hBTy]
         simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq]
         rw [__smtx_typeof.eq_1]
@@ -5693,7 +5693,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvuge_core
               __smtx_model_eval_bvuge
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_57]]
+          rw [__smtx_model_eval.eq_59]]
         rw [hAEval, hBEval]
         rw [hRunCmpSmt]
         change
@@ -5756,7 +5756,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvuge_core
     exact False.elim (hRunCmpNe hRunCmpStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvule_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -5775,7 +5775,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvule_core
     exact hsimpa
   rcases bv_binop_ret_args_of_non_none
       (op := SmtTerm.bvule) (ret := SmtType.Bool)
-      (by rw [__smtx_typeof.eq_55]) hBvUleNN with
+      (by rw [__smtx_typeof.eq_57]) hBvUleNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -5954,7 +5954,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvule_core
               __smtx_typeof_bv_op_2_ret
                 (__smtx_typeof (__eo_to_smt a))
                 (__smtx_typeof (__eo_to_smt b)) SmtType.Bool by
-          rw [__smtx_typeof.eq_55]]
+          rw [__smtx_typeof.eq_57]]
         rw [hATy, hBTy]
         simp [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq]
         rw [__smtx_typeof.eq_1]
@@ -5964,7 +5964,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvule_core
               __smtx_model_eval_bvule
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_55]]
+          rw [__smtx_model_eval.eq_57]]
         rw [hAEval, hBEval]
         rw [hRunCmpSmt]
         change
@@ -6028,7 +6028,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvule_core
     exact False.elim (hRunCmpNe hRunCmpStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsgt_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -6346,7 +6346,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsgt_core
     exact False.elim (hRunCmpNe hRunCmpStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvslt_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -6554,7 +6554,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvslt_core
     exact hSwap.2
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsge_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -6890,7 +6890,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsge_core
     exact False.elim (hRunCmpNe hRunCmpStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsle_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -7227,7 +7227,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsle_core
     exact False.elim (hRunCmpNe hRunCmpStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvshl_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -7356,7 +7356,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvshl_core
     rw [← hBSameTy]
     exact hBTy
   have hWNonneg : 0 <= native_nat_to_int w := by
-    simp [native_nat_to_int, SmtEval.native_nat_to_int]
+    simp [native_nat_to_int, Smtm.native_nat_to_int]
   change
     __smtx_typeof (SmtTerm.bvshl (__eo_to_smt a) (__eo_to_smt b)) =
         __smtx_typeof (__eo_to_smt runShift) ∧
@@ -7637,7 +7637,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvshl_core
     exact False.elim (hRunShiftNe hRunShiftStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvlshr_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -7766,7 +7766,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvlshr_core
     rw [← hBSameTy]
     exact hBTy
   have hWNonneg : 0 <= native_nat_to_int w := by
-    simp [native_nat_to_int, SmtEval.native_nat_to_int]
+    simp [native_nat_to_int, Smtm.native_nat_to_int]
   change
     __smtx_typeof (SmtTerm.bvlshr (__eo_to_smt a) (__eo_to_smt b)) =
         __smtx_typeof (__eo_to_smt runShift) ∧
@@ -8056,7 +8056,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvlshr_core
     exact False.elim (hRunShiftNe hRunShiftStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvashr_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -8431,7 +8431,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvashr_core
     exact False.elim (hRunShiftNe hRunShiftStuck)
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsub_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -8450,7 +8450,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsub_core
     exact hsimpa
   rcases bv_binop_args_of_non_none
       (op := SmtTerm.bvsub) (t1 := __eo_to_smt a) (t2 := __eo_to_smt b)
-      (by rw [__smtx_typeof.eq_50]) hBvSubNN with
+      (by rw [__smtx_typeof.eq_52]) hBvSubNN with
     ⟨w, hATy, hBTy⟩
   have hATransA : RuleProofs.eo_has_smt_translation a := by
     unfold RuleProofs.eo_has_smt_translation
@@ -8625,7 +8625,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsub_core
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt a))
             (__smtx_typeof (__eo_to_smt b)) by
-      rw [__smtx_typeof.eq_50]]
+      rw [__smtx_typeof.eq_52]]
     rw [hATy, hBTy]
     simp [__smtx_typeof_bv_op_2, native_ite, native_nateq]
     rw [EvaluateProofInternal.smtx_typeof_binary_mod_nat_to_int]
@@ -8669,7 +8669,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsub_core
           __smtx_model_eval_bvsub
             (__smtx_model_eval M (__eo_to_smt a))
             (__smtx_model_eval M (__eo_to_smt b)) by
-      rw [__smtx_model_eval.eq_50]]
+      rw [__smtx_model_eval.eq_52]]
     rw [hAEval, hBEval]
     rw [show
         __smtx_model_eval_bvsub

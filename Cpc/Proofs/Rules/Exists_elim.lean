@@ -187,14 +187,14 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
             let P : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists a (SmtTerm.not (SmtTerm.not body))) =
                     SmtValue.Boolean true
             let Q : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists a body) = SmtValue.Boolean true
             have hPQ : P ↔ Q := by
@@ -230,7 +230,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
     simp [__eo_to_smt_exists, __smtx_model_eval]
 
 private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs : Term) (body : SmtTerm)
     (hBody : __smtx_typeof body = SmtType.Bool) :
     __smtx_model_eval M (__eo_to_smt_exists xs (SmtTerm.not (SmtTerm.not body))) =
@@ -259,14 +259,14 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
             let P : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists a (SmtTerm.not (SmtTerm.not body))) =
                     SmtValue.Boolean true
             let Q : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists a body) = SmtValue.Boolean true
             have hPQ : P ↔ Q := by
@@ -319,7 +319,7 @@ private theorem smtx_typeof_not_arg_of_non_none
     simp [typeof_not_eq, h, native_ite, native_Teq] at hNN ⊢
 
 private theorem smtx_model_eval_not_not
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t : SmtTerm)
     (hTy : __smtx_typeof t = SmtType.Bool) :
     __smtx_model_eval M (SmtTerm.not (SmtTerm.not t)) =
@@ -479,7 +479,7 @@ private theorem typed___eo_prog_exists_elim_impl
   simpa [hx1] using hTrans
 
 private theorem smtx_model_eval_exists_elim_formula
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x F : Term)
     (hTrans : RuleProofs.eo_has_smt_translation (exists_elim_formula x F)) :
     __smtx_model_eval M (__eo_to_smt (exists_elim_rhs x F)) =
@@ -527,7 +527,7 @@ private theorem smtx_model_eval_exists_elim_formula
   simpa [body, lhsS, innerS, rhsS] using hEvalRhsInner.trans hEvalInnerLhs
 
 private theorem facts___eo_prog_exists_elim_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     __eo_prog_exists_elim x1 ≠ Term.Stuck ->
@@ -544,7 +544,7 @@ private theorem facts___eo_prog_exists_elim_impl
       (__smtx_model_eval M (__eo_to_smt (exists_elim_lhs x F)))
 
 public theorem cmd_step_exists_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.exists_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

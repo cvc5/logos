@@ -97,7 +97,7 @@ private theorem bv_xor_ones_shape_of_ne_stuck
     exact False.elim (hProg hStuck)
 
 public theorem cmd_step_bv_xor_ones_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_xor_ones args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

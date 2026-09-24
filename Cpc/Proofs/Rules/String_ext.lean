@@ -541,7 +541,7 @@ private theorem typed___eo_prog_string_ext_impl
 /-! ### Value-level semantics of `seq_diff` (the deq-diff index).
 
 `@strings_deq_diff a b` translates (Spec.lean) to `SmtTerm.seq_diff (smt a) (smt b)`,
-whose evaluation `native_eval_seq_diff_ssm` selects, via `Classical.choose`, some index
+whose evaluation `native_eval_seq_diff` selects, via `Classical.choose`, some index
 at which the two evaluated sequence VALUES disagree (counting a missing element past the
 end of the shorter sequence as a disagreement), or `-1` when they are equal.  No model
 push / fresh variable is involved, so the rule's soundness needs no premise-closedness
@@ -626,15 +626,15 @@ private theorem seq_diff_pick (s1 s2 : SmtSeq)
 /-- `seq.nth` on a value reduces to list `getD` at the (nonneg) index. -/
 private theorem ssm_seq_nth_ofNat (d : SmtValue) :
     ∀ (s : SmtSeq) (j : Nat),
-      __smtx_ssm_seq_nth s (Int.ofNat j) d = (native_unpack_seq s).getD j d
-  | SmtSeq.empty T, j => by simp [__smtx_ssm_seq_nth, native_unpack_seq]
-  | SmtSeq.cons v vs, 0 => by simp [__smtx_ssm_seq_nth, native_unpack_seq]
+      __smtx_seq_value_nth s (Int.ofNat j) d = (native_unpack_seq s).getD j d
+  | SmtSeq.empty T, j => by simp [__smtx_seq_value_nth, native_unpack_seq]
+  | SmtSeq.cons v vs, 0 => by simp [__smtx_seq_value_nth, native_unpack_seq]
   | SmtSeq.cons v vs, (j + 1) => by
       have hidx : native_zplus (Int.ofNat (j + 1)) (native_zneg 1) = Int.ofNat j := by
         show Int.ofNat j + 1 + (-1) = Int.ofNat j
         omega
       have ih := ssm_seq_nth_ofNat d vs j
-      simp only [__smtx_ssm_seq_nth, hidx, ih, native_unpack_seq, List.getD_cons_succ]
+      simp only [__smtx_seq_value_nth, hidx, ih, native_unpack_seq, List.getD_cons_succ]
 
 /-- In bounds, `getD` does not depend on the default. -/
 private theorem getD_lt_eq (d d' : SmtValue) (l : List SmtValue) (j : Nat)
@@ -756,7 +756,7 @@ private theorem getD_ne_reglan (xs : List SmtValue) (As : SmtType)
     exact SmtValue.noConfusion h
 
 private theorem facts___eo_prog_string_ext_impl
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hPremBool :
       RuleProofs.eo_has_bool_type
         (Term.Apply Term.not (Term.Apply (Term.Apply Term.eq a) b)))
@@ -957,7 +957,7 @@ elements differ; `j` is in bounds (`getD_ge`), giving the deq conjunct (chars/el
 at `j` differ) and the bounds `0 ≤ j < len a`.
 -/
 public theorem cmd_step_string_ext_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.string_ext args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

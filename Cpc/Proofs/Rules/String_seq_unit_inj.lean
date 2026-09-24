@@ -225,7 +225,7 @@ private theorem facts___eo_prog_string_seq_unit_inj_impl (M : SmtModel) (x1 : Te
       simp [__eo_prog_string_seq_unit_inj] at hProg
 
 public theorem cmd_step_string_seq_unit_inj_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.string_seq_unit_inj args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

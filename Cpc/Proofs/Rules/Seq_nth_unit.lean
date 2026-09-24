@@ -100,7 +100,7 @@ private theorem typed___eo_prog_seq_nth_unit_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_seq_nth_unit_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term)
+    (M : SmtModel) (hM : model_wf M) (a1 : Term)
     (hWf : __smtx_type_wf_component (__smtx_typeof (__eo_to_smt a1)) = true) :
     eo_interprets M (__eo_prog_seq_nth_unit a1) true := by
   have hA1Trans : RuleProofs.eo_has_smt_translation a1 :=
@@ -137,14 +137,14 @@ private theorem facts___eo_prog_seq_nth_unit_impl
         __smtx_model_eval M (SmtTerm.Numeral 0) = SmtValue.Numeral 0 := by
       rw [__smtx_model_eval.eq_def] <;> simp only
     rw [hNumEval]
-    simp [__smtx_seq_nth, __smtx_ssm_seq_nth]
+    simp [__smtx_seq_nth, __smtx_seq_value_nth]
   rw [hProg]
   exact RuleProofs.eo_interprets_eq_of_rel M lhs rhs hBoolEq <| by
     rw [hEvalEq]
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_seq_nth_unit_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.seq_nth_unit args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

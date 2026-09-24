@@ -258,7 +258,7 @@ private theorem typed___eo_prog_str_substr_concat2_impl
   exact hBool
 
 private theorem facts___eo_prog_str_substr_concat2_impl
-    (M : SmtModel) (hModel : model_total_typed M)
+    (M : SmtModel) (hModel : model_wf M)
     (s1 s2 s3 n m P : Term)
     (hS1Trans : RuleProofs.eo_has_smt_translation s1)
     (hS2Trans : RuleProofs.eo_has_smt_translation s2)
@@ -451,7 +451,7 @@ private theorem facts___eo_prog_str_substr_concat2_impl
       (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_substr_concat2_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_substr_concat2 args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -780,7 +780,7 @@ private theorem str_nary_intro_rev_cons_seq_types_of_head_seq
           simpa using smt_typeof_seq_empty_typeof x T hxTy hEmptyNN⟩
 
 private theorem eo_interprets_rev_cons_snoc_of_list_nil_raw
-    (M : SmtModel) (hM : model_total_typed M) (head nil : Term)
+    (M : SmtModel) (hM : model_wf M) (head nil : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hNil :
@@ -868,7 +868,7 @@ private theorem eo_interprets_rev_cons_snoc_of_list_nil_raw
   exact RuleProofs.eo_interprets_eq_of_rel M lhs rhs hBool hRel
 
 private theorem eo_interprets_rev_cons_snoc_prefix_of_seq
-    (M : SmtModel) (hM : model_total_typed M) (head tail : Term)
+    (M : SmtModel) (hM : model_wf M) (head tail : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hTailList :
@@ -932,7 +932,7 @@ private theorem eo_interprets_rev_cons_snoc_prefix_of_seq
         hHeadTy hNil hTailTy hRevCons⟩
 
 private theorem concat_csplit_append_eq_of_concat_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x xtail y ytail : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
     (hxtailTy : __smtx_typeof (__eo_to_smt xtail) = SmtType.Seq T)
@@ -1052,7 +1052,7 @@ private theorem smt_typeof_concatCSplitSuffix
       (by simp [__smtx_typeof]) hLen
 
 private theorem csplit_context_false
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s u : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
     (hNonzeroBool :
@@ -1170,7 +1170,7 @@ private theorem csplit_context_false
     hScLen, hConcatEq⟩
 
 private theorem csplit_context_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s u : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
     (hNonzeroBool :
@@ -1410,7 +1410,7 @@ private theorem csplit_context_true
     hsPrefixTy, hScLen, hSnocEq⟩
 
 private theorem concat_csplit_false_facts
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (u sc tTail sTail : Term) (T : SmtType)
     (huTy : __smtx_typeof (__eo_to_smt u) = SmtType.Seq T)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -1556,7 +1556,7 @@ private theorem concat_csplit_false_facts
   exact RuleProofs.eo_interprets_eq_of_rel M u rhs hFormulaBool hEqRel
 
 private theorem concat_csplit_true_facts
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (u sc tPrefix sPrefix : Term) (T : SmtType)
     (huTy : __smtx_typeof (__eo_to_smt u) = SmtType.Seq T)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -1970,7 +1970,7 @@ private theorem csplit_context_true_head_type
   exact ⟨T, huTy, by simpa [sc] using hscTy⟩
 
 private theorem step_concat_csplit_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rev t s u : Term)
     (hRevTrans : RuleProofs.eo_has_smt_translation rev)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
@@ -2049,7 +2049,7 @@ private theorem step_concat_csplit_core
           hHeadTy (Or.inr rfl))
 
 public theorem cmd_step_concat_csplit_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.concat_csplit args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

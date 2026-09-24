@@ -22,7 +22,7 @@ namespace Smtm
   native_decide
 
 @[simp] theorem native_re_canonical_none :
-    native_re_canonical native_re_none = true := by
+    __smtx_re_canonical native_re_none = true := by
   native_decide
 
 /-- The typing conjunct carried by the generated Boolean inhabitation check. -/
@@ -62,9 +62,9 @@ theorem type_default_typed_canonical_of_native_inhabited_type
     (h : native_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
-      __smtx_value_canonical (__smtx_type_default T) := by
+      value_canonical (__smtx_type_default T) := by
   refine ⟨(native_inhabited_type_parts h).2, ?_⟩
-  simpa [__smtx_value_canonical] using
+  simpa [value_canonical] using
     type_default_canonical_of_inhabited_wf_rec T h hRec
 
 /-- Non-inhabited types fail the generated Boolean inhabitation check. -/
@@ -194,7 +194,7 @@ theorem type_inhabited_of_type_wf
         cases T <;>
           simp [__smtx_type_wf, __smtx_type_wf_component, native_and] at hWF hReg hFun ⊢
         all_goals first | contradiction | exact hWF.1 | exact hWF.1.1 | simp [native_inhabited_type,
-          __smtx_type_default, __smtx_typeof_value, __smtx_value_canonical_bool,
+          __smtx_type_default, __smtx_typeof_value, __smtx_value_canonical,
           native_and]
       exact type_inhabited_of_native_inhabited_type T hInh
 

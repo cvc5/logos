@@ -119,7 +119,7 @@ theorem substitute_simul_apply_dtsel_preserves_type_and_translation_of_typeof_ne
         Term.Stuck := by
     simpa [hResultEq] using hTy
   have hReserved :
-      native_reserved_datatype_name s = false :=
+      __eo_to_smt_reserved_datatype_name s = false :=
     SubstituteSupport.dtsel_reserved_false_of_apply_has_smt_translation hTrans
   have hApplyNN :
       term_has_non_none_type
@@ -131,7 +131,7 @@ theorem substitute_simul_apply_dtsel_preserves_type_and_translation_of_typeof_ne
     change
       __smtx_typeof
           (SmtTerm.Apply
-            (native_ite (native_reserved_datatype_name s) SmtTerm.None
+            (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
               (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
             (__eo_to_smt a)) ≠
         SmtType.None at hTrans
@@ -204,7 +204,7 @@ theorem substitute_simul_apply_dtsel_preserves_type_and_translation_of_typeof_ne
   change
     __smtx_typeof
         (SmtTerm.Apply
-          (native_ite (native_reserved_datatype_name s) SmtTerm.None
+          (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
             (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
           (__eo_to_smt aSub)) ≠
       SmtType.None

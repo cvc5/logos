@@ -36,9 +36,9 @@ theorem eo_to_smt_eq_eq (x y : Term) :
   rfl
 
 theorem model_eval_eo_to_smt_canonical
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTrans : eo_has_smt_translation t) :
-    __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt t)) := by
+    value_canonical (__smtx_model_eval M (__eo_to_smt t)) := by
   exact Smtm.model_eval_canonical M hM (__eo_to_smt t) (by
     simpa [eo_has_smt_translation, term_has_non_none_type] using hTrans)
 

@@ -440,22 +440,22 @@ theorem typeof_value_model_eval_bvsdivo
 theorem model_eval_repeat_rec_binary :
     ∀ n : native_Nat, ∀ w x : native_Int,
       ∃ m : native_Int,
-        __smtx_model_eval_repeat_rec n (SmtValue.Binary w x) =
+        __smtx_repeat_rec n (SmtValue.Binary w x) =
           SmtValue.Binary (native_zmult (native_nat_to_int n) w) m ∧
         native_zeq m
           (native_mod_total m (native_int_pow2 (native_zmult (native_nat_to_int n) w))) = true
   | native_nat_zero, w, x => by
       refine ⟨0, ?_⟩
       constructor
-      · simp [__smtx_model_eval_repeat_rec, SmtEval.native_zmult, SmtEval.native_nat_to_int]
+      · simp [__smtx_repeat_rec, SmtEval.native_zmult, Smtm.native_nat_to_int]
       · simp [SmtEval.native_zeq, SmtEval.native_mod_total, SmtEval.native_zmult,
-          SmtEval.native_nat_to_int]
+          Smtm.native_nat_to_int]
   | native_nat_succ n, w, x => by
       rcases model_eval_repeat_rec_binary n w x with ⟨m, hm, hCanon⟩
       refine ⟨native_mod_total
         (native_binary_concat w x (native_zmult (native_nat_to_int n) w) m)
         (native_int_pow2 (native_zmult (native_nat_to_int (native_nat_succ n)) w)), ?_, ?_⟩
-      rw [__smtx_model_eval_repeat_rec, hm, __smtx_model_eval_concat]
+      rw [__smtx_repeat_rec, hm, __smtx_model_eval_concat]
       have hWidthEq : w + ↑n * w = (↑n + 1) * w := by
         calc
           w + ↑n * w = 1 * w + ↑n * w := by simp
@@ -464,7 +464,7 @@ theorem model_eval_repeat_rec_binary :
       have hWidthEq' :
           native_zplus w (native_zmult (native_nat_to_int n) w) =
             native_zmult (native_nat_to_int (native_nat_succ n)) w := by
-        simpa [SmtEval.native_zplus, SmtEval.native_zmult, SmtEval.native_nat_to_int] using hWidthEq
+        simpa [SmtEval.native_zplus, SmtEval.native_zmult, Smtm.native_nat_to_int] using hWidthEq
       exact congrArg
         (fun z =>
           SmtValue.Binary z
@@ -513,11 +513,11 @@ theorem typeof_value_model_eval_repeat
   have hNat :
       native_zmult (native_nat_to_int (native_int_to_nat i)) (native_nat_to_int w) =
         native_zmult i (native_nat_to_int w) := by
-    simp [SmtEval.native_zmult, SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+    simp [SmtEval.native_zmult, Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
       Int.toNat_of_nonneg hi]
   rw [hNat]
   exact typeof_value_binary_of_nonneg (native_zmult i (native_nat_to_int w)) m hMult (by
-    simpa [SmtEval.native_zmult, SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [SmtEval.native_zmult, Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
       Int.toNat_of_nonneg hi] using hCanon)
 
 /-- Lemma about `model_eval_rotate_left_step_binary`. -/
@@ -571,17 +571,17 @@ theorem model_eval_rotate_left_rec_binary :
     ∀ n : native_Nat, ∀ w x : native_Int,
       native_zeq x (native_mod_total x (native_int_pow2 w)) = true ->
       ∃ m : native_Int,
-        __smtx_model_eval_rotate_left_rec n (SmtValue.Binary w x) =
+        __smtx_rotate_left_rec n (SmtValue.Binary w x) =
           SmtValue.Binary w m ∧
         native_zeq m (native_mod_total m (native_int_pow2 w)) = true
   | native_nat_zero, w, x, hCanon => by
       refine ⟨x, ?_, hCanon⟩
-      simp [__smtx_model_eval_rotate_left_rec]
+      simp [__smtx_rotate_left_rec]
   | native_nat_succ n, w, x, hCanon => by
       rcases model_eval_rotate_left_step_binary w x with ⟨y, hy, hCanonY⟩
       rcases model_eval_rotate_left_rec_binary n w y hCanonY with ⟨m, hm, hCanon⟩
       refine ⟨m, ?_, hCanon⟩
-      rw [__smtx_model_eval_rotate_left_rec, hy, hm]
+      rw [__smtx_rotate_left_rec, hy, hm]
 
 /-- Shows that evaluating `rotate_left` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_rotate_left
@@ -608,10 +608,10 @@ theorem typeof_value_model_eval_rotate_left
   rw [hm]
   have hw0 : native_zleq 0 (native_nat_to_int w) = true := by
     exact bitvec_width_nonneg (by simpa [h2, hv] using hpres2)
-  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat] using
       typeof_value_binary_of_nonneg (native_nat_to_int w) m hw0
-        (by simpa [SmtEval.native_nat_to_int] using hCanon)
+        (by simpa [Smtm.native_nat_to_int] using hCanon)
 
 /-- Lemma about `model_eval_rotate_right_step_binary`. -/
 theorem model_eval_rotate_right_step_binary
@@ -655,17 +655,17 @@ theorem model_eval_rotate_right_rec_binary :
     ∀ n : native_Nat, ∀ w x : native_Int,
       native_zeq x (native_mod_total x (native_int_pow2 w)) = true ->
       ∃ m : native_Int,
-        __smtx_model_eval_rotate_right_rec n (SmtValue.Binary w x) =
+        __smtx_rotate_right_rec n (SmtValue.Binary w x) =
           SmtValue.Binary w m ∧
         native_zeq m (native_mod_total m (native_int_pow2 w)) = true
   | native_nat_zero, w, x, hCanon => by
       refine ⟨x, ?_, hCanon⟩
-      simp [__smtx_model_eval_rotate_right_rec]
+      simp [__smtx_rotate_right_rec]
   | native_nat_succ n, w, x, hCanon => by
       rcases model_eval_rotate_right_step_binary w x with ⟨y, hy, hCanonY⟩
       rcases model_eval_rotate_right_rec_binary n w y hCanonY with ⟨m, hm, hCanon⟩
       refine ⟨m, ?_, hCanon⟩
-      rw [__smtx_model_eval_rotate_right_rec, hy, hm]
+      rw [__smtx_rotate_right_rec, hy, hm]
 
 /-- Shows that evaluating `rotate_right` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_rotate_right
@@ -692,10 +692,10 @@ theorem typeof_value_model_eval_rotate_right
   rw [hm]
   have hw0 : native_zleq 0 (native_nat_to_int w) = true := by
     exact bitvec_width_nonneg (by simpa [h2, hv] using hpres2)
-  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat] using
       typeof_value_binary_of_nonneg (native_nat_to_int w) m hw0
-        (by simpa [SmtEval.native_nat_to_int] using hCanon)
+        (by simpa [Smtm.native_nat_to_int] using hCanon)
 
 /-- Shows that evaluating `bvuaddo` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_bvuaddo

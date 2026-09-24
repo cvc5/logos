@@ -116,7 +116,7 @@ private theorem quant_dt_split_shape_of_non_stuck (a : Term) :
       exact False.elim (hProg rfl)
 
 private theorem quant_dt_split_formula_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x ys F G : Term) :
     RuleProofs.eo_has_smt_translation (quantDtSplitFormula x ys F G) ->
     __eo_typeof (quantDtSplitFormula x ys F G) = Term.Bool ->
@@ -127,7 +127,7 @@ private theorem quant_dt_split_formula_true
   exact QuantDtSplitRule.qds_formula_true M hM x ys F G hGuard hTrans hTy
 
 public theorem cmd_step_quant_dt_split_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.quant_dt_split args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

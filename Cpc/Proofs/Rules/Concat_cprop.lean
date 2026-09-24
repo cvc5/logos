@@ -2399,7 +2399,7 @@ private theorem str_is_compatible_full_word_flatten_rec_non_concat_ne_false
     simpa [hUnpack] using hAlign
 
 private theorem str_is_compatible_full_word_flatten_rec_ne_false_of_append_eval
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (x : Term) (T : SmtType) (sx : SmtSeq) (word : native_String)
       (acc : Term) (accVals suffixTail : List SmtValue),
       __smtx_typeof (__eo_to_smt x) = SmtType.Seq T →
@@ -2622,7 +2622,7 @@ private theorem str_is_compatible_full_word_flatten_rec_ne_false_of_append_eval
 termination_by x => sizeOf x
 
 private theorem str_is_compatible_full_word_flatten_ne_false_of_append_eval
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (x : Term) (T : SmtType) (sx : SmtSeq) (word : native_String)
       (xTail suffixTail : List SmtValue),
       __smtx_typeof (__eo_to_smt x) = SmtType.Seq T →
@@ -3608,7 +3608,7 @@ private theorem str_flatten_get_nil_empty_of_seq_if_list :
               hList
 
 private theorem str_is_compatible_full_word_flatten_intro_ne_false_of_append_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term) (T : SmtType) (sx : SmtSeq) (word : native_String)
     (xTail suffixTail : List SmtValue)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
@@ -3792,7 +3792,7 @@ private theorem str_is_compatible_full_word_flatten_intro_ne_false_of_append_eva
                 cases hEq)
 
 private theorem str_is_compatible_rev_word_flatten_intro_ne_false_of_append_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x : Term) (T : SmtType) (sx : SmtSeq) (word : native_String)
     (xPrefix prefixTail : List SmtValue)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
@@ -4718,7 +4718,7 @@ private theorem cprop_suffix_false_seq_type
   simpa [__smtx_typeof] using hSubTy
 
 private theorem cprop_context_false
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
     (hNonzeroBool :
@@ -4860,7 +4860,7 @@ private theorem cprop_context_false
     hSTailList, htcTy, hscTy, htTailTy, hsTailTy, hConcatEq⟩
 
 private theorem eo_interprets_rev_cons_snoc_prefix_of_seq_with_cons_eq
-    (M : SmtModel) (hM : model_total_typed M) (head tail : Term)
+    (M : SmtModel) (hM : model_wf M) (head tail : Term)
     (T : SmtType)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.Seq T)
     (hTailList :
@@ -4932,7 +4932,7 @@ private theorem eo_interprets_rev_cons_snoc_prefix_of_seq_with_cons_eq
     exact False.elim (hTailConcat ⟨a, aTail, hEq⟩)
 
 private theorem cprop_context_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
     (hNonzeroBool :
@@ -5630,7 +5630,7 @@ private theorem cprop_reverse_suffix_true_seq_type
   simpa [__smtx_typeof] using hSubTy
 
 private theorem cprop_suffix_false_eval_of_prefix_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc : Term) (T : SmtType) (st spfx : SmtSeq)
     (htcTy : __smtx_typeof (__eo_to_smt tc) = SmtType.Seq T)
     (hPrefixTy :
@@ -5811,7 +5811,7 @@ private theorem native_seq_extract_zero_nat_any
           List.take_of_length_le hLenLe]
 
 private theorem cprop_prefix_false_eval_of_overlap
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s sc : Term) (T : SmtType) (ss : SmtSeq) (n : Nat)
     (hScEq : sc = concatCPropHead (Term.Boolean false) s)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -5973,7 +5973,7 @@ private theorem concat_cprop_tail_eq_drop_append_of_append_eq_of_le
   exact List.append_cancel_left h
 
 private theorem cprop_reverse_end_true_eval_of_overlap
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s sc : Term) (T : SmtType) (ss : SmtSeq) (n : Nat)
     (hScEq : sc = concatCPropHead (Term.Boolean true) s)
     (hscTy : __smtx_typeof (__eo_to_smt sc) = SmtType.Seq T)
@@ -6027,7 +6027,7 @@ private theorem cprop_reverse_end_true_eval_of_overlap
     native_zplus, native_zneg, hElem]
 
 private theorem cprop_reverse_suffix_true_eval_of_end_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc : Term) (T : SmtType) (st send : SmtSeq)
     (htcTy : __smtx_typeof (__eo_to_smt tc) = SmtType.Seq T)
     (hEndTy :
@@ -6205,7 +6205,7 @@ private theorem cprop_length_ne_zero_of_not_len_eq_eval
   exact List.eq_nil_of_length_eq_zero hLen
 
 private theorem cprop_false_formula_of_overlap_bounds
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc sc tTail sTail : Term) (T : SmtType)
     (st stail ss sstail : SmtSeq) (n : Nat)
     (hScEq : sc = concatCPropHead (Term.Boolean false) s)
@@ -6405,7 +6405,7 @@ private theorem cprop_false_formula_of_overlap_bounds
   simpa [hFormulaEq] using hEqTrue
 
 private theorem cprop_true_formula_of_overlap_bounds
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc sc tPrefix sPrefix : Term) (T : SmtType)
     (stp st ssp ss : SmtSeq) (n : Nat)
     (hScEq : sc = concatCPropHead (Term.Boolean true) s)
@@ -6606,7 +6606,7 @@ private theorem cprop_true_formula_of_overlap_bounds
   simpa [hFormulaEq] using hEqTrue
 
 private theorem facts_concat_cprop_false_formula
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc sc tTail sTail : Term) (T : SmtType)
     (hScEq : sc = concatCPropHead (Term.Boolean false) s)
     (hIntroT : __str_nary_intro t = mkConcat tc tTail)
@@ -6803,7 +6803,7 @@ private theorem facts_concat_cprop_false_formula
     htcEval htTailEval hscEval hsTailEval hAppend hOverlap hnPfx
 
 private theorem facts_concat_cprop_true_formula
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t s tc sc tPrefix sPrefix tTail sTail : Term) (T : SmtType)
     (hScEq : sc = concatCPropHead (Term.Boolean true) s)
     (hRevIntroT :
@@ -7429,7 +7429,7 @@ private theorem concatCPropFormula_has_smt_translation_true
   exact RuleProofs.eo_has_smt_translation_of_has_bool_type _ hEqBool
 
 private theorem step_concat_cprop_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (rev t s tc : Term)
     (hPremBool : RuleProofs.eo_has_bool_type (mkEq t s))
     (hNonzeroBool :
@@ -7505,7 +7505,7 @@ private theorem step_concat_cprop_core
         hNonzeroBool hProg hResultTy
 
 public theorem cmd_step_concat_cprop_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.concat_cprop args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

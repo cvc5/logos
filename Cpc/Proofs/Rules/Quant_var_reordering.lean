@@ -176,13 +176,13 @@ private theorem smtExistsOfBinders_cons_congr
   let P : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) t =
           SmtValue.Boolean true
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) u =
           SmtValue.Boolean true
   have hPQ : P ↔ Q := by
@@ -210,10 +210,10 @@ private theorem smtExistsOfBinders_swap
   let P : Prop :=
     ∃ v1 : SmtValue,
       __smtx_typeof_value v1 = T1 ∧
-        __smtx_value_canonical_bool v1 = true ∧
+        __smtx_value_canonical v1 = true ∧
         ∃ v2 : SmtValue,
           __smtx_typeof_value v2 = T2 ∧
-            __smtx_value_canonical_bool v2 = true ∧
+            __smtx_value_canonical v2 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s1 T1 v1) s2 T2 v2)
                 rest =
@@ -221,10 +221,10 @@ private theorem smtExistsOfBinders_swap
   let Q : Prop :=
     ∃ v2 : SmtValue,
       __smtx_typeof_value v2 = T2 ∧
-        __smtx_value_canonical_bool v2 = true ∧
+        __smtx_value_canonical v2 = true ∧
         ∃ v1 : SmtValue,
           __smtx_typeof_value v1 = T1 ∧
-            __smtx_value_canonical_bool v1 = true ∧
+            __smtx_value_canonical v1 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s2 T2 v2) s1 T1 v1)
                 rest =
@@ -800,7 +800,7 @@ private theorem quant_var_shape_of_not_stuck
       simp [__eo_prog_quant_var_reordering] at hProg
 
 public theorem cmd_step_quant_var_reordering_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.quant_var_reordering args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

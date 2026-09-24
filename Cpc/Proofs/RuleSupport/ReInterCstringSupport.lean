@@ -291,7 +291,7 @@ private theorem smt_value_rel_inter_cstring
     simp [hSg, hRest]
 
 theorem facts
-    (M : SmtModel) (hM : model_total_typed M) (x ys s : Term)
+    (M : SmtModel) (hM : model_wf M) (x ys s : Term)
     (hXTy : __smtx_typeof (__eo_to_smt x) = SmtType.RegLan)
     (hYsTy : __smtx_typeof (__eo_to_smt ys) = SmtType.RegLan)
     (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)

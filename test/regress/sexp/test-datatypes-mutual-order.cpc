@@ -1,0 +1,10 @@
+; The same two datatypes as test-datatypes-mutual.cpc, with the block written
+; in the other order: A is now declared after the B it is witnessed by.  The
+; parser normalizes the order (Logos/Parser.lean), so this proof checks too.
+(declare-datatypes ((B 0) (A 0))
+  (((mkB (unB A)) (nilB))
+   ((mkA (unA B)))))
+(declare-const a A)
+(assume @p0 (not (= (unA a) (unA a))))
+(step @p1 :rule refl :args ((unA a)))
+(step @p2 :rule contra :premises (@p1 @p0))

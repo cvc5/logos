@@ -491,23 +491,23 @@ theorem ssm_seq_nth_typed :
     ∀ {ss : SmtSeq} {n : native_Int} {d : SmtValue} {T : SmtType},
       __smtx_typeof_seq_value ss = SmtType.Seq T ->
         __smtx_typeof_value d = T ->
-        __smtx_typeof_value (__smtx_ssm_seq_nth ss n d) = T
+        __smtx_typeof_value (__smtx_seq_value_nth ss n d) = T
   | SmtSeq.empty U, n, d, T, hss, hd => by
       cases hss
-      simpa [__smtx_ssm_seq_nth] using hd
+      simpa [__smtx_seq_value_nth] using hd
   | SmtSeq.cons v vs, n, d, T, hss, hd => by
       rcases seq_cons_typed_of_typeof_seq_value hss with ⟨hv, hvs⟩
       by_cases hZero : n = 0
       · subst hZero
-        simpa [__smtx_ssm_seq_nth] using hv
-      · simpa [__smtx_ssm_seq_nth, hZero] using
+        simpa [__smtx_seq_value_nth] using hv
+      · simpa [__smtx_seq_value_nth, hZero] using
           ssm_seq_nth_typed (ss := vs) (n := native_zplus n (native_zneg 1))
             (d := d) (T := T) hvs hd
 
 /-- Lemma about `typeof_value_seq_nth_wrong`. -/
 theorem typeof_value_seq_nth_wrong
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (ss : SmtSeq)
     (n : native_Int)
     (T : SmtType)
@@ -1062,7 +1062,7 @@ theorem typeof_seq_diff_eq (t1 t2 : SmtTerm) :
 
 /-- Shows that evaluating `seq_diff` terms produces values of the expected (`Int`) type.
 
-`native_eval_seq_diff_ssm` is a macro containing a `let rec`, so each textual occurrence
+`native_eval_seq_diff` is a macro containing a `let rec`, so each textual occurrence
 elaborates to a distinct recursion that is not definitionally equal across expansions.  We
 therefore unfold `__smtx_model_eval_seq_diff` (which bakes in a single expansion) rather than
 restating the macro, and only ever observe that the result is a `Numeral`. -/
@@ -1085,7 +1085,7 @@ theorem typeof_value_model_eval_seq_diff
   rcases seq_value_canonical (by simpa [h1] using hpres1) with ⟨ss1, hss1⟩
   rcases seq_value_canonical (by simpa [h2] using hpres2) with ⟨ss2, hss2⟩
   rw [hss1, hss2]
-  -- `native_eval_seq_diff_ssm` now always returns a `Numeral` (the differing index,
+  -- `native_eval_seq_diff` now always returns a `Numeral` (the differing index,
   -- or `-1` as the default), so the result type is unconditionally `Int`.
   simp only [__smtx_model_eval_seq_diff]
   split <;> rfl
@@ -1792,14 +1792,14 @@ theorem typeof_value_model_eval_re_plus
 theorem model_eval_re_exp_rec_reglan :
     ∀ (n : native_Nat) (r : SmtRegLan),
       ∃ r' : SmtRegLan,
-        __smtx_model_eval_re_exp_rec n (SmtValue.RegLan r) = SmtValue.RegLan r'
+        __smtx_re_exp_rec n (SmtValue.RegLan r) = SmtValue.RegLan r'
   | native_nat_zero, r =>
       ⟨native_str_to_re (native_unpack_seq (SmtSeq.empty SmtType.Char)), by
-        simp [__smtx_model_eval_re_exp_rec]⟩
+        simp [__smtx_re_exp_rec]⟩
   | native_nat_succ n, r => by
       rcases model_eval_re_exp_rec_reglan n r with ⟨r', hr'⟩
       refine ⟨native_re_concat r' r, ?_⟩
-      simp [__smtx_model_eval_re_exp_rec, hr', __smtx_model_eval_re_concat]
+      simp [__smtx_re_exp_rec, hr', __smtx_model_eval_re_concat]
 
 /-- Lemma about `model_eval_re_exp_reglan`. -/
 theorem model_eval_re_exp_reglan
@@ -1825,7 +1825,7 @@ theorem typeof_value_model_eval_re_exp
       SmtType.RegLan by
     rw [typeof_re_exp_eq]
     simp [__smtx_typeof_re_exp, hArg, hn, native_ite]]
-  rw [__smtx_model_eval.eq_108, __smtx_model_eval.eq_2]
+  rw [__smtx_model_eval.eq_110, __smtx_model_eval.eq_2]
   change __smtx_typeof_value (__smtx_model_eval_re_exp (SmtValue.Numeral n) (__smtx_model_eval M t)) =
     SmtType.RegLan
   rcases reglan_value_canonical (by simpa [hArg] using hpres) with ⟨r, hr⟩
@@ -1988,17 +1988,17 @@ theorem typeof_value_model_eval_re_diff
 theorem model_eval_re_loop_rec_reglan :
     ∀ (n : native_Nat) (n1 n2 : native_Int) (r : SmtRegLan),
       ∃ r' : SmtRegLan,
-        __smtx_model_eval_re_loop_rec n (SmtValue.Numeral n1) (SmtValue.Numeral n2)
+        __smtx_re_loop_rec n (SmtValue.Numeral n1) (SmtValue.Numeral n2)
           (SmtValue.RegLan r) = SmtValue.RegLan r'
   | native_nat_zero, n1, n2, r => by
       rcases model_eval_re_exp_reglan n1 r with ⟨r', hr'⟩
-      exact ⟨r', by simpa [__smtx_model_eval_re_loop_rec] using hr'⟩
+      exact ⟨r', by simpa [__smtx_re_loop_rec] using hr'⟩
   | native_nat_succ n, n1, n2, r => by
       rcases model_eval_re_loop_rec_reglan n n1 (native_zplus n2 (native_zneg 1)) r with
         ⟨r1, hr1⟩
       rcases model_eval_re_exp_reglan n2 r with ⟨r2, hr2⟩
       refine ⟨native_re_union r1 r2, ?_⟩
-      simp [__smtx_model_eval_re_loop_rec, hr1, hr2, __smtx_model_eval_re_union]
+      simp [__smtx_re_loop_rec, hr1, hr2, __smtx_model_eval_re_union]
 
 /-- Shows that evaluating `re_loop` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_re_loop
@@ -2019,7 +2019,7 @@ theorem typeof_value_model_eval_re_loop
       (SmtTerm.re_loop (SmtTerm.Numeral n1) (SmtTerm.Numeral n2) t) = SmtType.RegLan by
     rw [typeof_re_loop_eq]
     simp [__smtx_typeof_re_loop, hArg, hn1, hn2, native_ite]]
-  rw [__smtx_model_eval.eq_116, __smtx_model_eval.eq_2, __smtx_model_eval.eq_2]
+  rw [__smtx_model_eval.eq_118, __smtx_model_eval.eq_2, __smtx_model_eval.eq_2]
   change __smtx_typeof_value
       (__smtx_model_eval_re_loop (SmtValue.Numeral n1) (SmtValue.Numeral n2)
         (__smtx_model_eval M t)) = SmtType.RegLan
@@ -2190,7 +2190,7 @@ theorem typeof_value_model_eval_str_is_digit
 /-- Shows that evaluating `seq_nth` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_seq_nth
     (M : SmtModel)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (t1 t2 : SmtTerm)
     (ht : term_has_non_none_type (SmtTerm.seq_nth t1 t2))
     (hElemRec :

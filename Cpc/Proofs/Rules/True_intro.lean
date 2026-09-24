@@ -49,7 +49,7 @@ theorem facts___eo_prog_true_intro_impl (M : SmtModel) (x1 : Term) :
         exact RuleProofs.smt_value_rel_refl (SmtValue.Boolean true)
 
 public theorem cmd_step_true_intro_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.true_intro args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

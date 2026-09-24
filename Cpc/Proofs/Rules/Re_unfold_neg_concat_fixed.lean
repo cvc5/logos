@@ -786,7 +786,7 @@ theorem re_unfold_neg_concat_fixed_false_singleton_ne_of_ne_stuck
     exact eo_mk_apply_arg_ne_stuck_of_ne_stuck _ _ hRightIn
 
 theorem re_unfold_neg_concat_fixed_false_eval_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t r1 r2 : Term) (n : native_Int)
     (ht : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hr1 : __smtx_typeof (__eo_to_smt r1) = SmtType.RegLan)
@@ -1077,7 +1077,7 @@ theorem re_unfold_neg_concat_fixed_false_eval_true
       SmtEval.native_not]
 
 theorem re_unfold_neg_concat_fixed_true_eval_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t r r1 r2 : Term) (n : native_Int)
     (ht : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hr : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan)
@@ -1467,7 +1467,7 @@ theorem re_unfold_neg_concat_fixed_true_eval_true
           native_str_in_re ([] : native_String)
             (native_str_to_re ([] : native_String)) = true := by
         simp [RuleProofs.native_str_in_re, RuleProofs.nativeListInRe,
-          native_str_to_re, native_re_of_list, native_re_nullable,
+          native_str_to_re, impl_native_re_of_list, native_re_nullable,
           native_string_valid]
       have hSuffixSingleton :
           native_str_in_re suffixStr
@@ -1565,7 +1565,7 @@ private theorem re_unfold_neg_concat_fixed_nonstuck_shape
 end RuleProofs
 
 public theorem cmd_step_re_unfold_neg_concat_fixed_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_unfold_neg_concat_fixed args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

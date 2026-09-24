@@ -760,16 +760,16 @@ theorem dtcons_reserved_false_of_apply_has_smt_translation
     (hTrans :
       RuleProofs.eo_has_smt_translation
         (Term.Apply (Term.DtCons s d i) a)) :
-    native_reserved_datatype_name s = false := by
+    __eo_to_smt_reserved_datatype_name s = false := by
   unfold RuleProofs.eo_has_smt_translation at hTrans
   change
     __smtx_typeof
         (SmtTerm.Apply
-          (native_ite (native_reserved_datatype_name s) SmtTerm.None
+          (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
             (SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i))
           (__eo_to_smt a)) ≠
       SmtType.None at hTrans
-  cases hReserved : native_reserved_datatype_name s
+  cases hReserved : __eo_to_smt_reserved_datatype_name s
   · rfl
   · exfalso
     rw [hReserved] at hTrans
@@ -782,16 +782,16 @@ theorem dtsel_reserved_false_of_apply_has_smt_translation
     (hTrans :
       RuleProofs.eo_has_smt_translation
         (Term.Apply (Term.DtSel s d i j) a)) :
-    native_reserved_datatype_name s = false := by
+    __eo_to_smt_reserved_datatype_name s = false := by
   unfold RuleProofs.eo_has_smt_translation at hTrans
   change
     __smtx_typeof
         (SmtTerm.Apply
-          (native_ite (native_reserved_datatype_name s) SmtTerm.None
+          (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
             (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
           (__eo_to_smt a)) ≠
       SmtType.None at hTrans
-  cases hReserved : native_reserved_datatype_name s
+  cases hReserved : __eo_to_smt_reserved_datatype_name s
   · rfl
   · exfalso
     rw [hReserved] at hTrans
@@ -1432,7 +1432,7 @@ theorem substitute_simul_rec_apply_dtsel_typeof_eq_of_typeof_ne_stuck
     eo_mk_apply_eq_apply_of_typeof_ne_stuck hTy
   rw [hMk] at hTy ⊢
   have hReserved :
-      native_reserved_datatype_name s = false :=
+      __eo_to_smt_reserved_datatype_name s = false :=
     dtsel_reserved_false_of_apply_has_smt_translation hTrans
   have hApplyNN :
       term_has_non_none_type
@@ -1444,7 +1444,7 @@ theorem substitute_simul_rec_apply_dtsel_typeof_eq_of_typeof_ne_stuck
     change
       __smtx_typeof
           (SmtTerm.Apply
-            (native_ite (native_reserved_datatype_name s) SmtTerm.None
+            (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
               (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
             (__eo_to_smt a)) ≠
         SmtType.None at hTrans

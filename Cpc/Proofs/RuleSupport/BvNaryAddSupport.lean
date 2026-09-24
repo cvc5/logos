@@ -75,7 +75,7 @@ theorem addArgsOfBitvecType (x y : Term) (w : Nat) :
               (__smtx_typeof (__eo_to_smt y)) by
           rw [__smtx_typeof.eq_def] <;> simp only] at hTy'
       simpa [__smtx_typeof_bv_op_2, hXTy, hYTy, native_ite,
-        native_nateq, SmtEval.native_nateq] using hTy'
+        native_nateq, Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -90,7 +90,7 @@ theorem addSmtType (x y : Term) (w : Nat) :
       (SmtTerm.bvadd (__eo_to_smt x) (__eo_to_smt y)) = _
   rw [__smtx_typeof.eq_def] <;> simp only
   simp [__smtx_typeof_bv_op_2, hXTy, hYTy, native_ite,
-    native_nateq, SmtEval.native_nateq]
+    native_nateq, Smtm.native_nateq]
 
 private theorem emod_add_left_congr
     (a b m : Int) : ((a % m) + b) % m = (a + b) % m := by
@@ -103,7 +103,7 @@ private theorem emod_add_right_congr
   exact emod_add_left_congr b a m
 
 theorem addAssocEval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt y) = SmtType.BitVec w ->
@@ -154,7 +154,7 @@ theorem addAssocEval
   rw [hPayload]
 
 theorem addCommEval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt y) = SmtType.BitVec w ->
@@ -209,7 +209,7 @@ private theorem nilPayloadEqZero
     exact hNilTrue.symm
 
 private theorem addLeftZeroEval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (nil x : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt nil) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
@@ -236,7 +236,7 @@ private theorem addLeftZeroEval
   simp [__smtx_model_eval_bvadd, native_zplus, hMod]
 
 private theorem addRightZeroEval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x nil : Term) (w : Nat) :
     __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w ->
     __smtx_typeof (__eo_to_smt nil) = SmtType.BitVec w ->
@@ -263,7 +263,7 @@ private theorem addRightZeroEval
   simp [__smtx_model_eval_bvadd, native_zplus, hMod]
 
 theorem evalRightZero
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x nil : Term) (w : Nat)
     (hXTy : __smtx_typeof (__eo_to_smt x) = SmtType.BitVec w)
     (hNilTy : __smtx_typeof (__eo_to_smt nil) = SmtType.BitVec w)
@@ -366,7 +366,7 @@ theorem listSingletonElimSmtType
   | _ => simpa [__eo_list_singleton_elim_2] using hTy
 
 theorem listConcatRecEvalEq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a z : Term) (w : Nat) :
     __eo_is_list op a = Term.Boolean true ->
     __eo_is_list op z = Term.Boolean true ->
@@ -416,7 +416,7 @@ theorem listConcatRecEvalEq
       exact (addLeftZeroEval M hM nil z w hATy hZTy hNilTrue).symm
 
 theorem listConcatEvalEq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a z : Term) (w : Nat) :
     __eo_is_list op a = Term.Boolean true ->
     __eo_is_list op z = Term.Boolean true ->
@@ -430,7 +430,7 @@ theorem listConcatEvalEq
     listConcatRecEvalEq M hM a z w hAList hZList hATy hZTy
 
 theorem listSingletonElimEvalEq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (c : Term) (w : Nat) :
     __eo_is_list op c = Term.Boolean true ->
     __smtx_typeof (__eo_to_smt c) = SmtType.BitVec w ->

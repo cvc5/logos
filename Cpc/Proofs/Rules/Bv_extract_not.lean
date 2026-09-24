@@ -11,7 +11,7 @@ set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
 
 public theorem cmd_step_bv_extract_not_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_extract_not args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

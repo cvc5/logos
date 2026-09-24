@@ -107,7 +107,7 @@ private theorem eval_str_replace_all_term_eq
 private theorem eval_choice_term_eq
     (M : SmtModel) (s : native_String) (T : SmtType) (b : SmtTerm) :
     __smtx_model_eval M (SmtTerm.choice s T b) =
-      native_eval_tchoice M s T b := by
+      native_eval_choice M s T b := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 /-! ### Choice determination by a unique witness -/
@@ -116,17 +116,17 @@ private theorem tchoice_eq_of_unique
     (M : SmtModel) (s : native_String) (T : SmtType) (b : SmtTerm)
     (v₀ : SmtValue)
     (hTy : __smtx_typeof_value v₀ = T)
-    (hCanon : __smtx_value_canonical_bool v₀ = true)
+    (hCanon : __smtx_value_canonical v₀ = true)
     (hSat : __smtx_model_eval (native_model_push M s T v₀) b =
       SmtValue.Boolean true)
     (hUnique : ∀ v : SmtValue, __smtx_typeof_value v = T ->
-      __smtx_value_canonical_bool v = true ->
+      __smtx_value_canonical v = true ->
       __smtx_model_eval (native_model_push M s T v) b =
         SmtValue.Boolean true -> v = v₀) :
-    native_eval_tchoice M s T b = v₀ := by
+    native_eval_choice M s T b = v₀ := by
   classical
   have hEx : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-      __smtx_value_canonical_bool v = true ∧
+      __smtx_value_canonical v = true ∧
       __smtx_model_eval (native_model_push M s T v) b =
         SmtValue.Boolean true := ⟨v₀, hTy, hCanon, hSat⟩
   rw [dif_pos hEx]
@@ -214,8 +214,8 @@ private theorem eval_eq_term_eq (M : SmtModel) (x y : SmtTerm) :
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem numeral_canonical (m : native_Int) :
-    __smtx_value_canonical_bool (SmtValue.Numeral m) = true := by
-  simp [__smtx_value_canonical_bool]
+    __smtx_value_canonical (SmtValue.Numeral m) = true := by
+  simp [__smtx_value_canonical]
 
 private theorem numeral_typeof (m : native_Int) :
     __smtx_typeof_value (SmtValue.Numeral m) = SmtType.Int := by
@@ -266,20 +266,20 @@ private def oiBody (S T w : SmtTerm) : SmtTerm :=
 private theorem find_nonempty_aux_str_to_re_cons_eq
     (p : SmtValue) (ps : List SmtValue) :
     ∀ (xs : List SmtValue) (idx : Nat),
-      native_re_find_nonempty_idx_aux (native_str_to_re (p :: ps)) xs idx =
-        native_re_find_idx_aux (native_str_to_re (p :: ps)) xs idx
+      impl_native_re_find_nonempty_idx_aux (native_str_to_re (p :: ps)) xs idx =
+        impl_native_re_find_idx_aux (native_str_to_re (p :: ps)) xs idx
   | [], idx => by
-      rw [native_re_find_nonempty_idx_aux.eq_def,
-        native_re_find_idx_aux.eq_def,
+      rw [impl_native_re_find_nonempty_idx_aux.eq_def,
+        impl_native_re_find_idx_aux.eq_def,
         positive_prefix_str_to_re_cons,
-        show native_str_to_re (p :: ps) = native_re_of_list (p :: ps) from rfl,
+        show native_str_to_re (p :: ps) = impl_native_re_of_list (p :: ps) from rfl,
         native_re_prefix_match_re_of_list]
       simp [native_str_to_re, native_seq_prefix_eq]
   | x :: xs, idx => by
-      rw [native_re_find_nonempty_idx_aux.eq_def,
-        native_re_find_idx_aux.eq_def,
+      rw [impl_native_re_find_nonempty_idx_aux.eq_def,
+        impl_native_re_find_idx_aux.eq_def,
         positive_prefix_str_to_re_cons,
-        show native_str_to_re (p :: ps) = native_re_of_list (p :: ps) from rfl,
+        show native_str_to_re (p :: ps) = impl_native_re_of_list (p :: ps) from rfl,
         native_re_prefix_match_re_of_list]
       by_cases hPrefix : native_seq_prefix_eq (p :: ps) (x :: xs) = true
       · simp [hPrefix]
@@ -288,23 +288,23 @@ private theorem find_nonempty_aux_str_to_re_cons_eq
 
 private theorem find_nonempty_from_str_to_re_cons_eq
     (p : SmtValue) (ps xs : List SmtValue) (start : Nat) :
-    native_re_find_nonempty_idx_from (native_str_to_re (p :: ps)) xs start =
+    impl_native_re_find_nonempty_idx_from (native_str_to_re (p :: ps)) xs start =
       native_re_find_idx_from (native_str_to_re (p :: ps)) xs start := by
-  unfold native_re_find_nonempty_idx_from native_re_find_idx_from
+  unfold impl_native_re_find_nonempty_idx_from native_re_find_idx_from
   exact find_nonempty_aux_str_to_re_cons_eq p ps _ _
 
 private theorem find_nonempty_aux_add_offset
     (r : SmtRegLan) :
     ∀ (xs : List SmtValue) (off base : Nat),
-      native_re_find_nonempty_idx_aux r xs (base + off) =
-        (native_re_find_nonempty_idx_aux r xs off).map
+      impl_native_re_find_nonempty_idx_aux r xs (base + off) =
+        (impl_native_re_find_nonempty_idx_aux r xs off).map
           (fun result => (base + result.1, result.2))
   | [], off, base => by
-      simp [native_re_find_nonempty_idx_aux,
+      simp [impl_native_re_find_nonempty_idx_aux,
         native_re_positive_prefix_match_len?]
   | x :: xs, off, base => by
-      rw [native_re_find_nonempty_idx_aux.eq_def,
-        native_re_find_nonempty_idx_aux.eq_def]
+      rw [impl_native_re_find_nonempty_idx_aux.eq_def,
+        impl_native_re_find_nonempty_idx_aux.eq_def]
       cases hPrefix : native_re_positive_prefix_match_len? r (x :: xs) with
       | none =>
           simp only [hPrefix]
@@ -320,22 +320,22 @@ private theorem find_nonempty_aux_add_offset
 
 private theorem find_nonempty_from_shift
     (r : SmtRegLan) (xs : List SmtValue) (start : Nat) :
-    native_re_find_nonempty_idx_from r xs start =
-      (native_re_find_nonempty_idx_from r (xs.drop start) 0).map
+    impl_native_re_find_nonempty_idx_from r xs start =
+      (impl_native_re_find_nonempty_idx_from r (xs.drop start) 0).map
         (fun result => (start + result.1, result.2)) := by
-  unfold native_re_find_nonempty_idx_from
+  unfold impl_native_re_find_nonempty_idx_from
   simpa using find_nonempty_aux_add_offset r (xs.drop start) 0 start
 
 private theorem scan_ends_aux_str_to_re_cons_eq
     (p : SmtValue) (ps xs : List SmtValue) :
     ∀ (fuel pos : Nat), pos ≤ xs.length →
-      native_re_scan_ends_aux fuel (native_str_to_re (p :: ps)) xs pos =
+      impl_native_re_scan_ends_aux fuel (native_str_to_re (p :: ps)) xs pos =
         (occEndsAux fuel (p :: ps) (xs.drop pos)).map
           (fun endPos => pos + endPos)
   | 0, pos, hPos => by
-      simp [native_re_scan_ends_aux, occEndsAux]
+      simp [impl_native_re_scan_ends_aux, occEndsAux]
   | fuel + 1, pos, hPos => by
-      rw [native_re_scan_ends_aux, occEndsAux_succ,
+      rw [impl_native_re_scan_ends_aux, occEndsAux_succ,
         find_nonempty_from_shift,
         find_nonempty_from_str_to_re_cons_eq]
       cases hFind : native_re_find_idx_from
@@ -371,28 +371,28 @@ private theorem scan_ends_aux_str_to_re_cons_eq
             Function.comp_def, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
 
 private theorem occ_ends_aux_eq (fuel : Nat) (pat xs : List SmtValue) :
-    native_re_scan_ends_aux fuel (native_str_to_re pat) xs 0 =
+    impl_native_re_scan_ends_aux fuel (native_str_to_re pat) xs 0 =
       occEndsAux fuel pat xs := by
   cases pat with
   | nil =>
       have hEpsilon : ∀ (ys : List SmtValue) (idx : Nat),
-          native_re_find_nonempty_idx_aux SmtRegLan.epsilon ys idx = none := by
+          impl_native_re_find_nonempty_idx_aux SmtRegLan.epsilon ys idx = none := by
         intro ys
         induction ys with
         | nil =>
             intro idx
-            simp [native_re_find_nonempty_idx_aux,
+            simp [impl_native_re_find_nonempty_idx_aux,
               native_re_positive_prefix_match_len?]
         | cons y ys ih =>
             intro idx
-            rw [native_re_find_nonempty_idx_aux.eq_def]
+            rw [impl_native_re_find_nonempty_idx_aux.eq_def]
             simp [native_re_positive_prefix_match_len?, native_re_deriv,
               native_re_prefix_match_len?, native_re_prefix_go_empty, ih]
-      have hFind : native_re_find_nonempty_idx_from
+      have hFind : impl_native_re_find_nonempty_idx_from
           (native_str_to_re []) xs 0 = none := by
-        simpa [native_re_find_nonempty_idx_from, native_str_to_re,
-          native_re_of_list] using hEpsilon xs 0
-      cases fuel <;> simp [native_re_scan_ends_aux, occEndsAux, hFind]
+        simpa [impl_native_re_find_nonempty_idx_from, native_str_to_re,
+          impl_native_re_of_list] using hEpsilon xs 0
+      cases fuel <;> simp [impl_native_re_scan_ends_aux, occEndsAux, hFind]
   | cons p ps =>
       simpa using scan_ends_aux_str_to_re_cons_eq p ps xs fuel 0 (by omega)
 
@@ -401,7 +401,7 @@ private theorem occ_index_eq_bound (ss ts : List SmtValue) (nn : Nat)
     (hnn : nn ≤ (occEnds ts ss).length) :
     native_seq_occur_index ss ts ((nn : Nat) : Int) =
       ((bound ts ss nn : Nat) : Int) := by
-  have hAux : native_re_scan_ends_aux (ss.length + 1)
+  have hAux : impl_native_re_scan_ends_aux (ss.length + 1)
       (native_str_to_re ts) ss 0 =
       occEnds ts ss := occ_ends_aux_eq (ss.length + 1) ts ss
   simp only [native_seq_occur_index, native_str_occur_index_re, hAux]
@@ -613,7 +613,7 @@ private theorem eval_forall_encoding_true
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T ->
-        __smtx_value_canonical_bool v = true ->
+        __smtx_value_canonical v = true ->
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval M
@@ -623,7 +623,7 @@ private theorem eval_forall_encoding_true
   have hNoSat :
       ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v)
             (SmtTerm.not body) = SmtValue.Boolean true := by
     rintro ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -631,19 +631,19 @@ private theorem eval_forall_encoding_true
     simp [__smtx_model_eval, __smtx_model_eval_not, native_not,
       hvBody] at hvNot
   have hExistsEval :
-      native_eval_texists M s T (SmtTerm.not body) =
+      native_eval_exists M s T (SmtTerm.not body) =
         SmtValue.Boolean false := by
     change (if _h :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-          __smtx_value_canonical_bool v = true ∧
+          __smtx_value_canonical v = true ∧
           __smtx_model_eval (native_model_push M s T v)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean false
     rw [dif_neg hNoSat]
   change __smtx_model_eval_not
-      (native_eval_texists M s T (SmtTerm.not body)) =
+      (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean true
   rw [hExistsEval]
   rfl
@@ -673,22 +673,22 @@ private theorem int_wf : __smtx_type_wf SmtType.Int = true := by
 private theorem tchoice_typed_canonical_of_wf'
     (N : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm)
     (hWf : __smtx_type_wf T = true) :
-    __smtx_typeof_value (native_eval_tchoice N s T body) = T ∧
-      __smtx_value_canonical_bool (native_eval_tchoice N s T body) =
+    __smtx_typeof_value (native_eval_choice N s T body) = T ∧
+      __smtx_value_canonical (native_eval_choice N s T body) =
         true := by
   classical
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical_bool v = true ∧
+          __smtx_value_canonical v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true
   · rw [dif_pos hSat]
     exact ⟨(Classical.choose_spec hSat).1, (Classical.choose_spec hSat).2.1⟩
   · have hTy : ∃ v : SmtValue,
-        __smtx_typeof_value v = T ∧ __smtx_value_canonical_bool v := by
+        __smtx_typeof_value v = T ∧ __smtx_value_canonical v := by
       rcases canonical_type_inhabited_of_type_wf T hWf with ⟨v, hvTy, hvCan⟩
-      exact ⟨v, hvTy, by simpa [__smtx_value_canonical] using hvCan⟩
+      exact ⟨v, hvTy, by simpa [value_canonical] using hvCan⟩
     rw [dif_neg hSat, dif_pos hTy]
     refine ⟨(Classical.choose_spec hTy).1, ?_⟩
     simpa using (Classical.choose_spec hTy).2
@@ -700,16 +700,16 @@ private theorem agrees_push_push
       (native_model_push (native_model_push M s₁ T₁ v₁) s₂ T₂ v₂) := by
   refine ⟨?_, ?_⟩
   · intro s' T'
-    simp [native_model_lookup, native_model_key, native_model_push]
+    simp [native_model_lookup, model_key, native_model_push]
   · intro fid A B
-    simp [native_model_fun_lookup, native_model_key, native_model_push]
+    simp [model_fun_lookup, model_key, native_model_push]
 
 /-! ### The `str_replace_all` case -/
 
 set_option maxHeartbeats 40000000 in
 /-- The `str_replace_all` case of `string_reduction_pred_true`. -/
 theorem str_replace_all_reduction_pred_true
-    (M : SmtModel) (hM : model_total_typed M) (z y x : Term)
+    (M : SmtModel) (hM : model_wf M) (z y x : Term)
     (hTrans : RuleProofs.eo_has_smt_translation
       (Term.Apply
         (Term.Apply (Term.Apply (Term.UOp UserOp.str_replace_all) z) y) x))

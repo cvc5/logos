@@ -74,9 +74,9 @@ private theorem distinct_pairs_true_not_mem
                           (SmtTerm.not (SmtTerm.eq s (__eo_to_smt x)))
                           (__eo_to_smt_distinct_pairs s a)) =
                       SmtValue.Boolean true at h
-                  rw [__smtx_model_eval.eq_8] at h
+                  rw [__smtx_model_eval.eq_9] at h
                   rcases smt_eval_and_eq_true h with ⟨hHead, hTail⟩
-                  rw [__smtx_model_eval.eq_6, smtx_eval_eq_term_eq] at hHead
+                  rw [__smtx_model_eval.eq_7, smtx_eval_eq_term_eq] at hHead
                   have hEqFalse :
                       __smtx_model_eval_eq
                           (__smtx_model_eval M s)
@@ -209,7 +209,7 @@ private theorem distinct_true_nodup
                           (__eo_to_smt_distinct_pairs (__eo_to_smt x) a)
                           (__eo_to_smt_distinct a)) =
                       SmtValue.Boolean true at h
-                  rw [__smtx_model_eval.eq_8] at h
+                  rw [__smtx_model_eval.eq_9] at h
                   rcases smt_eval_and_eq_true h with ⟨hPairs, hTail⟩
                   have hNotMem :
                       __smtx_model_eval M (__eo_to_smt x) ∉
@@ -710,7 +710,7 @@ private theorem typed___eo_prog_distinct_false_impl
   exact RuleProofs.eo_typeof_bool_implies_has_bool_type a1 hA1Trans hA1Ty
 
 private theorem distinct_false_sound
-    (M : SmtModel) (hM : model_total_typed M) (xs : Term) :
+    (M : SmtModel) (hM : model_wf M) (xs : Term) :
   RuleProofs.eo_has_bool_type
     (Term.Apply
       (Term.Apply (Term.UOp UserOp.eq)
@@ -790,7 +790,7 @@ private theorem distinct_false_sound
       cases hGuardTrue
 
 private theorem facts___eo_prog_distinct_false_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
   RuleProofs.eo_has_smt_translation a1 ->
   __eo_typeof (__eo_prog_distinct_false a1) = Term.Bool ->
   eo_interprets M (__eo_prog_distinct_false a1) true := by
@@ -836,7 +836,7 @@ private theorem facts___eo_prog_distinct_false_impl
   exact distinct_false_sound M hM xs hFormulaBool hGuard
 
 public theorem cmd_step_distinct_false_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.distinct_false args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

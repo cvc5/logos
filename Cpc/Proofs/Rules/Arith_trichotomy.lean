@@ -291,7 +291,7 @@ private theorem native_qlt_of_not_eq_not_gt {a b : native_Rat} :
     native_qlt a b = true := by
   intro hEq hGt
   have hNe : a ≠ b := by
-    simpa [native_qeq, SmtEval.native_qeq] using hEq
+    simpa [native_qeq, Eo.native_qeq] using hEq
   have hNotGt : ¬ b < a := by
     simpa [native_qlt, SmtEval.native_qlt] using hGt
   have hLe : a ≤ b := Rat.not_lt.mp hNotGt
@@ -309,7 +309,7 @@ private theorem native_qgt_of_not_eq_not_lt {a b : native_Rat} :
     native_qlt b a = true := by
   intro hEq hLt
   have hNe : a ≠ b := by
-    simpa [native_qeq, SmtEval.native_qeq] using hEq
+    simpa [native_qeq, Eo.native_qeq] using hEq
   have hNotLt : ¬ a < b := by
     simpa [native_qlt, SmtEval.native_qlt] using hLt
   have hLe : b ≤ a := Rat.not_lt.mp hNotLt
@@ -333,7 +333,7 @@ private theorem native_qeq_of_not_lt_not_gt {a b : native_Rat} :
   have hAB : a ≤ b := Rat.not_lt.mp hNotGt
   have hBA : b ≤ a := Rat.not_lt.mp hNotLt
   have hEq : a = b := Rat.le_antisymm hAB hBA
-  simpa [native_qeq, SmtEval.native_qeq] using hEq
+  simpa [native_qeq, Eo.native_qeq] using hEq
 
 private theorem native_zlt_false_of_zleq_true {a b : native_Int} :
     native_zleq b a = true ->
@@ -358,7 +358,7 @@ private theorem native_qlt_false_of_qleq_true {a b : native_Rat} :
     native_qlt a b = false := by
   intro hLe
   have hLe' : b ≤ a := by
-    simpa [native_qleq, SmtEval.native_qleq] using hLe
+    simpa [native_qleq, Smtm.native_qleq] using hLe
   have hNotLt : ¬ a < b := Rat.not_lt.mpr hLe'
   simpa [native_qlt, SmtEval.native_qlt] using hNotLt
 
@@ -367,7 +367,7 @@ private theorem native_qgt_false_of_qleq_true {a b : native_Rat} :
     native_qlt b a = false := by
   intro hLe
   have hLe' : a ≤ b := by
-    simpa [native_qleq, SmtEval.native_qleq] using hLe
+    simpa [native_qleq, Smtm.native_qleq] using hLe
   have hNotGt : ¬ b < a := Rat.not_lt.mpr hLe'
   simpa [native_qlt, SmtEval.native_qlt] using hNotGt
 
@@ -395,7 +395,7 @@ private theorem int_lt_false_of_eval
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_lt_eq] at h
   cases h with
   | intro_false _ hEval =>
-      rw [__smtx_model_eval.eq_15, ha, hb] at hEval
+      rw [__smtx_model_eval.eq_17, ha, hb] at hEval
       simpa [__smtx_model_eval_lt] using hEval
 
 private theorem int_gt_false_of_eval
@@ -408,7 +408,7 @@ private theorem int_gt_false_of_eval
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_gt_eq] at h
   cases h with
   | intro_false _ hEval =>
-      rw [__smtx_model_eval.eq_17, ha, hb] at hEval
+      rw [__smtx_model_eval.eq_19, ha, hb] at hEval
       simpa [__smtx_model_eval_gt, __smtx_model_eval_lt] using hEval
 
 private theorem real_eq_false_of_eval
@@ -423,7 +423,7 @@ private theorem real_eq_false_of_eval
   | intro_false _ hEval =>
       rw [smtx_eval_eq_term_eq, ha, hb] at hEval
       simp [__smtx_model_eval_eq, native_veq] at hEval
-      simp [native_qeq, SmtEval.native_qeq, hEval]
+      simp [native_qeq, Eo.native_qeq, hEval]
 
 private theorem real_lt_false_of_eval
     (M : SmtModel) (a b : Term) {q r : native_Rat}
@@ -435,7 +435,7 @@ private theorem real_lt_false_of_eval
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_lt_eq] at h
   cases h with
   | intro_false _ hEval =>
-      rw [__smtx_model_eval.eq_15, ha, hb] at hEval
+      rw [__smtx_model_eval.eq_17, ha, hb] at hEval
       simpa [__smtx_model_eval_lt] using hEval
 
 private theorem real_gt_false_of_eval
@@ -448,11 +448,11 @@ private theorem real_gt_false_of_eval
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_gt_eq] at h
   cases h with
   | intro_false _ hEval =>
-      rw [__smtx_model_eval.eq_17, ha, hb] at hEval
+      rw [__smtx_model_eval.eq_19, ha, hb] at hEval
       simpa [__smtx_model_eval_gt, __smtx_model_eval_lt] using hEval
 
 private theorem lt_false_of_geq_true
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hGeqTrue :
       eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.geq) a) b) true)
     (hLtBool :
@@ -465,26 +465,26 @@ private theorem lt_false_of_geq_true
     rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_geq_eq] at hGeqTrue
     cases hGeqTrue with
     | intro_true _ hEval =>
-        rw [__smtx_model_eval.eq_18, ha, hb] at hEval
+        rw [__smtx_model_eval.eq_20, ha, hb] at hEval
         simp [__smtx_model_eval_geq, __smtx_model_eval_leq] at hEval
         apply RuleProofs.eo_interprets_of_bool_eval M
         · exact hLtBool
-        · rw [eo_to_smt_lt_eq, __smtx_model_eval.eq_15, ha, hb]
+        · rw [eo_to_smt_lt_eq, __smtx_model_eval.eq_17, ha, hb]
           simp [__smtx_model_eval_lt, native_zlt_false_of_zleq_true hEval]
   · rcases smt_eval_real_of_type M hM a hReal.1 with ⟨q, ha⟩
     rcases smt_eval_real_of_type M hM b hReal.2 with ⟨r, hb⟩
     rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_geq_eq] at hGeqTrue
     cases hGeqTrue with
     | intro_true _ hEval =>
-        rw [__smtx_model_eval.eq_18, ha, hb] at hEval
+        rw [__smtx_model_eval.eq_20, ha, hb] at hEval
         simp [__smtx_model_eval_geq, __smtx_model_eval_leq] at hEval
         apply RuleProofs.eo_interprets_of_bool_eval M
         · exact hLtBool
-        · rw [eo_to_smt_lt_eq, __smtx_model_eval.eq_15, ha, hb]
+        · rw [eo_to_smt_lt_eq, __smtx_model_eval.eq_17, ha, hb]
           simp [__smtx_model_eval_lt, native_qlt_false_of_qleq_true hEval]
 
 private theorem gt_false_of_leq_true
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hLeqTrue :
       eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.leq) a) b) true)
     (hGtBool :
@@ -497,11 +497,11 @@ private theorem gt_false_of_leq_true
     rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_leq_eq] at hLeqTrue
     cases hLeqTrue with
     | intro_true _ hEval =>
-        rw [__smtx_model_eval.eq_16, ha, hb] at hEval
+        rw [__smtx_model_eval.eq_18, ha, hb] at hEval
         simp [__smtx_model_eval_leq] at hEval
         apply RuleProofs.eo_interprets_of_bool_eval M
         · exact hGtBool
-        · rw [eo_to_smt_gt_eq, __smtx_model_eval.eq_17, ha, hb]
+        · rw [eo_to_smt_gt_eq, __smtx_model_eval.eq_19, ha, hb]
           simp [__smtx_model_eval_gt, __smtx_model_eval_lt,
             native_zgt_false_of_zleq_true hEval]
   · rcases smt_eval_real_of_type M hM a hReal.1 with ⟨q, ha⟩
@@ -509,16 +509,16 @@ private theorem gt_false_of_leq_true
     rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_leq_eq] at hLeqTrue
     cases hLeqTrue with
     | intro_true _ hEval =>
-        rw [__smtx_model_eval.eq_16, ha, hb] at hEval
+        rw [__smtx_model_eval.eq_18, ha, hb] at hEval
         simp [__smtx_model_eval_leq] at hEval
         apply RuleProofs.eo_interprets_of_bool_eval M
         · exact hGtBool
-        · rw [eo_to_smt_gt_eq, __smtx_model_eval.eq_17, ha, hb]
+        · rw [eo_to_smt_gt_eq, __smtx_model_eval.eq_19, ha, hb]
           simp [__smtx_model_eval_gt, __smtx_model_eval_lt,
             native_qgt_false_of_qleq_true hEval]
 
 private theorem gt_true_of_eq_false_lt_false
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hEqFalse :
       eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) false)
     (hLtFalse :
@@ -534,7 +534,7 @@ private theorem gt_true_of_eq_false_lt_false
     have hLtB := int_lt_false_of_eval M a b ha hb hLtFalse
     apply RuleProofs.eo_interprets_of_bool_eval M
     · exact hGtBool
-    · rw [eo_to_smt_gt_eq, __smtx_model_eval.eq_17, ha, hb]
+    · rw [eo_to_smt_gt_eq, __smtx_model_eval.eq_19, ha, hb]
       simpa [__smtx_model_eval_gt, __smtx_model_eval_lt] using
         native_zgt_of_not_eq_not_lt hEqB hLtB
   · rcases smt_eval_real_of_type M hM a hReal.1 with ⟨q, ha⟩
@@ -543,12 +543,12 @@ private theorem gt_true_of_eq_false_lt_false
     have hLtB := real_lt_false_of_eval M a b ha hb hLtFalse
     apply RuleProofs.eo_interprets_of_bool_eval M
     · exact hGtBool
-    · rw [eo_to_smt_gt_eq, __smtx_model_eval.eq_17, ha, hb]
+    · rw [eo_to_smt_gt_eq, __smtx_model_eval.eq_19, ha, hb]
       simpa [__smtx_model_eval_gt, __smtx_model_eval_lt] using
         native_qgt_of_not_eq_not_lt hEqB hLtB
 
 private theorem lt_true_of_eq_false_gt_false
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hEqFalse :
       eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) false)
     (hGtFalse :
@@ -564,7 +564,7 @@ private theorem lt_true_of_eq_false_gt_false
     have hGtB := int_gt_false_of_eval M a b ha hb hGtFalse
     apply RuleProofs.eo_interprets_of_bool_eval M
     · exact hLtBool
-    · rw [eo_to_smt_lt_eq, __smtx_model_eval.eq_15, ha, hb]
+    · rw [eo_to_smt_lt_eq, __smtx_model_eval.eq_17, ha, hb]
       simpa [__smtx_model_eval_lt] using
         native_zlt_of_not_eq_not_gt hEqB hGtB
   · rcases smt_eval_real_of_type M hM a hReal.1 with ⟨q, ha⟩
@@ -573,12 +573,12 @@ private theorem lt_true_of_eq_false_gt_false
     have hGtB := real_gt_false_of_eval M a b ha hb hGtFalse
     apply RuleProofs.eo_interprets_of_bool_eval M
     · exact hLtBool
-    · rw [eo_to_smt_lt_eq, __smtx_model_eval.eq_15, ha, hb]
+    · rw [eo_to_smt_lt_eq, __smtx_model_eval.eq_17, ha, hb]
       simpa [__smtx_model_eval_lt] using
         native_qlt_of_not_eq_not_gt hEqB hGtB
 
 private theorem eq_true_of_lt_false_gt_false
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term)
+    (M : SmtModel) (hM : model_wf M) (a b : Term)
     (hLtFalse :
       eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.lt) a) b) false)
     (hGtFalse :
@@ -611,7 +611,7 @@ private theorem eq_true_of_lt_false_gt_false
     · exact hEqBool
     · rw [eo_to_smt_eq_eq, smtx_eval_eq_term_eq, ha, hb]
       have hEqVal : q = r := by
-        simpa [native_qeq, SmtEval.native_qeq] using
+        simpa [native_qeq, Eo.native_qeq] using
           native_qeq_of_not_lt_not_gt hLtB hGtB
       simp [__smtx_model_eval_eq, native_veq, hEqVal]
 
@@ -808,7 +808,7 @@ private theorem arith_normalize_lit_not_eq_false
       simp [__arith_normalize_lit] at hNorm
 
 private theorem arith_normalize_lit_not_lt_false
-    (M : SmtModel) (hM : model_total_typed M) (F a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (F a b : Term) :
     eo_interprets M F true ->
     RuleProofs.eo_has_bool_type F ->
     __arith_normalize_lit (Term.Apply (Term.UOp UserOp.not) F) =
@@ -894,7 +894,7 @@ private theorem arith_normalize_lit_not_lt_false
       simp [__arith_normalize_lit] at hNorm
 
 private theorem arith_normalize_lit_not_gt_false
-    (M : SmtModel) (hM : model_total_typed M) (F a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (F a b : Term) :
     eo_interprets M F true ->
     RuleProofs.eo_has_bool_type F ->
     __arith_normalize_lit (Term.Apply (Term.UOp UserOp.not) F) =
@@ -1156,7 +1156,7 @@ private theorem typed___eo_prog_arith_trichotomy_impl
       simp [__mk_arith_trichotomy] at hProg
 
 private theorem facts___eo_prog_arith_trichotomy_impl
-    (M : SmtModel) (hM : model_total_typed M) (F1 F2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (F1 F2 : Term) :
     eo_interprets M F1 true ->
     eo_interprets M F2 true ->
     RuleProofs.eo_has_bool_type F1 ->
@@ -1349,7 +1349,7 @@ private theorem facts___eo_prog_arith_trichotomy_impl
       simp [__mk_arith_trichotomy] at hProg
 
 public theorem cmd_step_arith_trichotomy_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_trichotomy args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

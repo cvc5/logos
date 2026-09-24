@@ -107,7 +107,7 @@ private theorem typed___eo_prog_sets_subset_elim_impl
     hxSmtTy, hySmtTy]
 
 private theorem facts___eo_prog_sets_subset_elim_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y : Term)
     (hxTrans : RuleProofs.eo_has_smt_translation x)
     (hyTrans : RuleProofs.eo_has_smt_translation y)
@@ -183,33 +183,33 @@ private theorem facts___eo_prog_sets_subset_elim_impl
       __smtx_typeof_map_value my = SmtType.Map (__eo_to_smt_type T) SmtType.Bool :=
     set_map_value_typed (by simpa [hyVal] using hyEvalTy)
   have hXCanEval :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt x)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt x)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM x hxTrans
   have hYCanEval :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt y)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt y)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM y hyTrans
-  have hXCanSet : __smtx_value_canonical (SmtValue.Set mx) := by
+  have hXCanSet : value_canonical (SmtValue.Set mx) := by
     simpa [hxVal] using hXCanEval
-  have hYCanSet : __smtx_value_canonical (SmtValue.Set my) := by
+  have hYCanSet : value_canonical (SmtValue.Set my) := by
     simpa [hyVal] using hYCanEval
   have hMxCan : __smtx_map_canonical mx = true := by
     have hParts := hXCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
   have hMyCan : __smtx_map_canonical my = true := by
     have hParts := hYCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
-  have hMxDef : __smtx_msm_get_default mx = SmtValue.Boolean false := by
+  have hMxDef : __smtx_map_get_default mx = SmtValue.Boolean false := by
     have hParts := hXCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact eq_of_native_veq_true hParts.2
-  have hMyDef : __smtx_msm_get_default my = SmtValue.Boolean false := by
+  have hMyDef : __smtx_map_get_default my = SmtValue.Boolean false := by
     have hParts := hYCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact eq_of_native_veq_true hParts.2
   -- The core equivalence: subset evaluates as (= (inter x y) x);
@@ -270,7 +270,7 @@ private theorem facts___eo_prog_sets_subset_elim_impl
     RuleProofs.eo_interprets_eq_of_rel M lhs rhs hEqBool hRel
 
 public theorem cmd_step_sets_subset_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_subset_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

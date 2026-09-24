@@ -284,7 +284,7 @@ theorem str_re_consume_no_prefix_side_str_in_re_absurd_local
   cases hFalse
 
 theorem str_re_consume_residual_side_str_in_re_local
-    (M : SmtModel) (hM : model_total_typed M) (s r side : Term)
+    (M : SmtModel) (hM : model_wf M) (s r side : Term)
     (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hRTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan)
     (hSide :
@@ -338,7 +338,7 @@ theorem str_re_consume_residual_side_str_in_re_local
     rw [native_re_concat_left_empty_local]
 
 theorem str_re_consume_rec_semantic_of_side_eq_str_in_re_local
-    (M : SmtModel) (hM : model_total_typed M) (s r fuel : Term)
+    (M : SmtModel) (hM : model_wf M) (s r fuel : Term)
     (hEq :
       __str_re_consume_rec s r fuel =
         Term.Apply (Term.Apply (Term.UOp UserOp.str_in_re) s) r) :
@@ -358,7 +358,7 @@ theorem str_re_consume_rec_semantic_of_side_eq_str_in_re_local
       hSTy hRTy hSideStr hMemEq
 
 theorem str_re_consume_union_semantic_of_side_eq_str_in_re_local
-    (M : SmtModel) (hM : model_total_typed M) (s r fuel : Term)
+    (M : SmtModel) (hM : model_wf M) (s r fuel : Term)
     (hEq :
       __str_re_consume_union s r fuel =
         Term.Apply (Term.Apply (Term.UOp UserOp.str_in_re) s) r) :
@@ -378,7 +378,7 @@ theorem str_re_consume_union_semantic_of_side_eq_str_in_re_local
       hSTy hRTy hSideStr hMemEq
 
 theorem str_re_consume_inter_semantic_of_side_eq_str_in_re_local
-    (M : SmtModel) (hM : model_total_typed M) (s r fuel : Term)
+    (M : SmtModel) (hM : model_wf M) (s r fuel : Term)
     (hEq :
       __str_re_consume_inter s r fuel =
         Term.Apply (Term.Apply (Term.UOp UserOp.str_in_re) s) r) :
@@ -473,7 +473,7 @@ theorem str_re_consume_inter_semantic_of_false_local
     cases hMemEq
 
 theorem str_re_consume_rec_re_concat_empty_left_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M) (s r fuel : Term)
+    (M : SmtModel) (hM : model_wf M) (s r fuel : Term)
     (hS : s ≠ Term.Stuck)
     (hFuel : fuel ≠ Term.Stuck)
     (ih : StrInReConsumeInternal.str_re_consume_rec_semantic_motive M s r fuel) :
@@ -574,7 +574,7 @@ theorem str_re_consume_rec_re_concat_empty_left_semantic_from_ih
         hSEval hRTailEval hTailEval hQEval
 
 theorem str_re_consume_union_re_none_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M) (s r fuel : Term)
+    (M : SmtModel) (hM : model_wf M) (s r fuel : Term)
     (hS : s ≠ Term.Stuck)
     (hFuel : fuel ≠ Term.Stuck)
     (ih : StrInReConsumeInternal.str_re_consume_rec_semantic_motive M s r fuel) :
@@ -639,7 +639,7 @@ theorem str_re_consume_union_re_none_semantic_from_ih
       hSEval hREval hTailEval hQEval
 
 theorem str_re_consume_inter_re_all_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M) (s r fuel : Term)
+    (M : SmtModel) (hM : model_wf M) (s r fuel : Term)
     (hS : s ≠ Term.Stuck)
     (hFuel : fuel ≠ Term.Stuck)
     (ih : StrInReConsumeInternal.str_re_consume_rec_semantic_motive M s r fuel) :
@@ -704,7 +704,7 @@ theorem str_re_consume_inter_re_all_semantic_from_ih
       hSEval hREval hTailEval hQEval
 
 theorem str_re_consume_union_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s c1 c2 fuel : Term)
     (hS : s ≠ Term.Stuck)
     (hFuel : fuel ≠ Term.Stuck)
@@ -990,7 +990,7 @@ theorem str_re_consume_union_semantic_from_ih
           hSTy hUnionTy hSideFallback hMemEq
 
 theorem str_re_consume_inter_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s c1 c2 fuel : Term)
     (hS : s ≠ Term.Stuck)
     (hFuel : fuel ≠ Term.Stuck)
@@ -1297,7 +1297,7 @@ theorem str_re_consume_inter_semantic_from_ih
             hSTy hInterTy hSideFallback hMemEq
 
 theorem str_re_consume_rec_str_concat_str_to_re_eq_true_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 s3 r fuel : Term)
     (hFuel : fuel ≠ Term.Stuck)
     (hS3Ne : s3 ≠ Term.String [])
@@ -1378,7 +1378,7 @@ theorem str_re_consume_rec_str_concat_str_to_re_eq_true_semantic_from_ih
         hTailResidual.2
 
 theorem str_re_consume_rec_str_concat_re_allchar_len_one_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 r fuel : Term)
     (hFuel : fuel ≠ Term.Stuck)
     (hLen : __eo_is_eq (__eo_len s1) (Term.Numeral 1) =
@@ -1460,7 +1460,7 @@ theorem str_re_consume_rec_str_concat_re_allchar_len_one_semantic_from_ih
         hTailResidual.2
 
 theorem str_re_consume_rec_str_concat_re_range_match_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 s3 s5 r fuel : Term)
     (hFuel : fuel ≠ Term.Stuck)
     (hLen :
@@ -1574,7 +1574,7 @@ theorem str_re_consume_rec_str_concat_re_range_match_semantic_from_ih
         hTailResidual.2
 
 theorem str_re_consume_rec_str_concat_str_to_re_len_mismatch_semantic
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 s3 r fuel : Term)
     (hFuel : fuel ≠ Term.Stuck)
     (hS3Ne : s3 ≠ Term.String [])
@@ -1649,7 +1649,7 @@ theorem str_re_consume_rec_str_concat_str_to_re_len_mismatch_semantic
       pre suf hAppend
 
 theorem str_re_consume_rec_str_concat_re_range_mismatch_semantic
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 s3 s5 r fuel : Term)
     (hFuel : fuel ≠ Term.Stuck)
     (hLen :
@@ -1747,7 +1747,7 @@ theorem str_re_consume_rec_str_concat_re_range_mismatch_semantic
       hAppend
 
 theorem str_re_consume_rec_str_concat_re_allchar_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 r fuel : Term)
     (hFuel : fuel ≠ Term.Stuck)
     (ih : StrInReConsumeInternal.str_re_consume_rec_semantic_motive M s2 r fuel) :
@@ -1820,7 +1820,7 @@ theorem str_re_consume_rec_str_concat_re_allchar_semantic_from_ih
           side hSTy hRTy hSide hMemEq
 
 theorem str_re_consume_rec_str_concat_str_to_re_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 s3 r fuel : Term)
     (hFuel : fuel ≠ Term.Stuck)
     (hS3Ne : s3 ≠ Term.String [])
@@ -1928,7 +1928,7 @@ theorem str_re_consume_rec_str_concat_str_to_re_semantic_from_ih
             side hSTy hRTy hSide hMemEq
 
 theorem str_re_consume_rec_str_concat_re_range_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 s3 s5 r fuel : Term)
     (hFuel : fuel ≠ Term.Stuck)
     (ih : StrInReConsumeInternal.str_re_consume_rec_semantic_motive M s2 r fuel) :
@@ -2039,7 +2039,7 @@ theorem str_re_consume_rec_str_concat_re_range_semantic_from_ih
           side hSTy hRTy hSide hMemEq
 
 theorem str_re_consume_rec_str_concat_re_mult_concat_fuel_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 r3 r2 fc fr : Term)
     (ihLeft :
       StrInReConsumeInternal.str_re_consume_rec_semantic_motive M
@@ -2504,7 +2504,7 @@ theorem str_re_consume_rec_str_concat_re_mult_concat_fuel_semantic_from_ih
           side hSTy hRTy hSideFallback hMemEq
 
 theorem str_re_consume_rec_str_concat_re_concat_semantic_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 r1 r2 fuel : Term)
     (hFuel : fuel ≠ Term.Stuck)
     (hR1Empty :
@@ -2811,7 +2811,7 @@ theorem StrInReConsumeInternal.str_re_consume_rec_type_of_translation_local
     hEqTrans
 
 theorem str_re_consume_rec_native_false_of_ih_false
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r fuel : Term)
     (ih : StrInReConsumeInternal.str_re_consume_rec_model_rel_motive M s r fuel)
     (hFalse :
@@ -2854,7 +2854,7 @@ theorem str_re_consume_rec_native_false_of_ih_false
   exact smt_value_rel_boolean_eq_consume_local hRel
 
 theorem str_re_consume_rec_native_eq_of_ih_residual
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r fuel s' r' : Term)
     (ih : StrInReConsumeInternal.str_re_consume_rec_model_rel_motive M s r fuel)
     (hResidual :
@@ -2986,7 +2986,7 @@ theorem str_re_consume_tail_model_rel_from_ih
     hReducedNe
 
 theorem str_re_consume_rec_re_concat_empty_left_model_rel_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r fuel side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -3071,7 +3071,7 @@ theorem str_re_consume_rec_re_concat_empty_left_model_rel_from_ih
     (by simpa [eps, concat] using hEqTrans) hSide hS hFuel hReducedRel
 
 theorem str_re_consume_union_re_none_model_rel_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r fuel side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -3151,7 +3151,7 @@ theorem str_re_consume_union_re_none_model_rel_from_ih
     (by simpa [none, union] using hEqTrans) hSide hS hFuel hReducedRel
 
 theorem str_re_consume_union_model_rel_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s c1 c2 fuel side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -3438,7 +3438,7 @@ theorem str_re_consume_union_model_rel_from_ih
         (by simpa [fallback] using hSideFallback)
 
 theorem str_re_consume_inter_re_all_model_rel_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r fuel side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -3518,7 +3518,7 @@ theorem str_re_consume_inter_re_all_model_rel_from_ih
     (by simpa [all, inter] using hEqTrans) hSide hS hFuel hReducedRel
 
 theorem str_re_consume_inter_model_rel_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s c1 c2 fuel side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -3810,7 +3810,7 @@ theorem str_re_consume_inter_model_rel_from_ih
           (by simpa [fallback] using hSideFallback)
 
 theorem str_re_consume_rec_str_concat_re_allchar_model_rel_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 r2 fuel side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -3888,7 +3888,7 @@ theorem str_re_consume_rec_str_concat_re_allchar_model_rel_from_ih
       (by simpa [cond] using hLenFalse)
 
 theorem str_re_consume_rec_str_concat_str_to_re_model_rel_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 s3 r2 fuel side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -3983,7 +3983,7 @@ theorem str_re_consume_rec_str_concat_str_to_re_model_rel_from_ih
         (by simpa [condLen] using hLenFalse)
 
 theorem str_re_consume_rec_str_concat_re_range_model_rel_from_ih
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 s3 s5 r2 fuel side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation

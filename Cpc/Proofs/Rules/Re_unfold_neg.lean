@@ -631,8 +631,8 @@ theorem reConcat_nil_eval_empty_of_is_list_nil_true
                   (SmtTerm.str_to_re (SmtTerm.String [])) =
                 SmtValue.RegLan (native_str_to_re ([] : native_String))
               simp [__smtx_model_eval, __smtx_model_eval_str_to_re,
-                native_str_to_re, native_re_of_list, native_pack_string,
-                native_string_to_values, native_pack_seq, native_unpack_seq]
+                native_str_to_re, impl_native_re_of_list, native_pack_string,
+                impl_native_string_to_values, native_pack_seq, native_unpack_seq]
           | cons c cs =>
               simp at hNil
 
@@ -654,7 +654,7 @@ private theorem reConcat_smt_value_rel_right_empty_eval
   simp only [__smtx_model_eval, __smtx_model_eval_re_concat, hxEval, hIdEval]
   cases r <;>
     simp [__smtx_model_eval_eq, native_re_concat,
-      native_str_to_re, native_re_of_list, native_string_to_values]
+      native_str_to_re, impl_native_re_of_list, impl_native_string_to_values]
 
 private theorem reConcat_is_list_nil_boolean_of_ne_stuck (t : Term) :
     t ≠ Term.Stuck ->
@@ -848,7 +848,7 @@ theorem reConcat_singleton_elim_has_reglan_type (c : Term) :
       simpa [__eo_list_singleton_elim_2] using hTy
 
 theorem smt_eval_seq_char_of_smt_type_seq_char
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm) :
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm) :
     __smtx_typeof t = SmtType.Seq SmtType.Char ->
     ∃ s, __smtx_model_eval M t = SmtValue.Seq s := by
   intro hTy
@@ -864,7 +864,7 @@ theorem smt_eval_seq_char_of_smt_type_seq_char
   exact seq_value_canonical hValTy
 
 theorem smt_eval_reglan_of_smt_type_reglan
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm) :
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm) :
     __smtx_typeof t = SmtType.RegLan ->
     ∃ r, __smtx_model_eval M t = SmtValue.RegLan r := by
   intro hTy
@@ -879,7 +879,7 @@ theorem smt_eval_reglan_of_smt_type_reglan
   exact reglan_value_canonical hValTy
 
 theorem smt_eval_int_of_smt_type_int
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm) :
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm) :
     __smtx_typeof t = SmtType.Int ->
     ∃ n, __smtx_model_eval M t = SmtValue.Numeral n := by
   intro hTy
@@ -928,7 +928,7 @@ theorem eval_str_in_re_of_seq_reglan (M : SmtModel)
   simp [__smtx_model_eval, __smtx_model_eval_str_in_re, hs, hr]
 
 theorem negated_str_in_re_native_false
-    (M : SmtModel) (hM : model_total_typed M) (s r : Term)
+    (M : SmtModel) (hM : model_wf M) (s r : Term)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hrTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan) :
     eo_interprets M (mkNot (mkStrInRe s r)) true ->
@@ -968,7 +968,7 @@ theorem negated_str_in_re_native_false
       exact ⟨ss, rv, hsEval, hrEval, hNative⟩
 
 theorem negated_str_in_re_re_mult_native_false
-    (M : SmtModel) (hM : model_total_typed M) (s r : Term)
+    (M : SmtModel) (hM : model_wf M) (s r : Term)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hrTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan) :
     eo_interprets M (mkNot (mkStrInRe s (mkReMult r))) true ->
@@ -988,7 +988,7 @@ theorem negated_str_in_re_re_mult_native_false
   exact ⟨ss, rv, hsEval, hrEval, hNo⟩
 
 theorem negated_str_in_re_re_concat_native_false
-    (M : SmtModel) (hM : model_total_typed M) (s r1 r2 : Term)
+    (M : SmtModel) (hM : model_wf M) (s r1 r2 : Term)
     (hsTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hr1Ty : __smtx_typeof (__eo_to_smt r1) = SmtType.RegLan)
     (hr2Ty : __smtx_typeof (__eo_to_smt r2) = SmtType.RegLan) :
@@ -1093,7 +1093,7 @@ private theorem qforall_idx_eval_true_of_forall_values
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = SmtType.Int ->
-        __smtx_value_canonical_bool v = true ->
+        __smtx_value_canonical v = true ->
         __smtx_model_eval (native_model_push M idxName SmtType.Int v)
           (__eo_to_smt body) = SmtValue.Boolean true) :
     __smtx_model_eval M (__eo_to_smt (qforallIdx body)) =
@@ -1108,7 +1108,7 @@ private theorem qforall_idx_eval_true_of_forall_values
   by_cases hEx :
       ∃ v : SmtValue,
         __smtx_typeof_value v = SmtType.Int ∧
-          __smtx_value_canonical_bool v = true ∧
+          __smtx_value_canonical v = true ∧
           __smtx_model_eval_not
               (__smtx_model_eval
                 (native_model_push M idxName SmtType.Int v)
@@ -1123,7 +1123,7 @@ private theorem qforall_idx_eval_true_of_forall_values
     simp [__smtx_model_eval_not, SmtEval.native_not]
 
 private theorem re_unfold_neg_star_body_eval_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t r1 : Term) (i : native_Int)
     (ht : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hr1 : __smtx_typeof (__eo_to_smt r1) = SmtType.RegLan)
@@ -1181,13 +1181,13 @@ private theorem re_unfold_neg_star_body_eval_true
     simpa [htEval, ht, __smtx_typeof_value] using hValTy
   have hLeftUnpack :
       native_unpack_seq leftSeq =
-        native_string_to_values (native_unpack_string leftSeq) := by
+        impl_native_string_to_values (native_unpack_string leftSeq) := by
     apply native_unpack_seq_eq_values_of_valid
     simpa [leftSeq, native_unpack_seq_pack_seq] using
       native_re_str_valid_extract hSsValid 0 i
   have hRightUnpack :
       native_unpack_seq rightSeq =
-        native_string_to_values (native_unpack_string rightSeq) := by
+        impl_native_string_to_values (native_unpack_string rightSeq) := by
     apply native_unpack_seq_eq_values_of_valid
     simpa [rightSeq, native_unpack_seq_pack_seq] using
       native_re_str_valid_extract hSsValid i (len - i)
@@ -1397,7 +1397,7 @@ private theorem re_unfold_neg_star_body_eval_true
           SmtEval.native_or, SmtEval.native_not]
 
 theorem re_unfold_neg_concat_body_eval_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t r1 r2 tail : Term) (i : native_Int)
     (ht : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hr1 : __smtx_typeof (__eo_to_smt r1) = SmtType.RegLan)
@@ -1467,13 +1467,13 @@ theorem re_unfold_neg_concat_body_eval_true
     simpa [htEval, ht, __smtx_typeof_value] using hValTy
   have hLeftUnpack :
       native_unpack_seq leftSeq =
-        native_string_to_values (native_unpack_string leftSeq) := by
+        impl_native_string_to_values (native_unpack_string leftSeq) := by
     apply native_unpack_seq_eq_values_of_valid
     simpa [leftSeq, native_unpack_seq_pack_seq] using
       native_re_str_valid_extract hSsValid 0 i
   have hRightUnpack :
       native_unpack_seq rightSeq =
-        native_string_to_values (native_unpack_string rightSeq) := by
+        impl_native_string_to_values (native_unpack_string rightSeq) := by
     apply native_unpack_seq_eq_values_of_valid
     simpa [rightSeq, native_unpack_seq_pack_seq] using
       native_re_str_valid_extract hSsValid i (len - i)
@@ -1676,7 +1676,7 @@ theorem re_unfold_neg_concat_body_eval_true
           SmtEval.native_or, SmtEval.native_not]
 
 private theorem re_unfold_neg_star_nonempty_eval_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t r1 : Term)
     (ht : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hr1 : __smtx_typeof (__eo_to_smt r1) = SmtType.RegLan) :
@@ -1715,12 +1715,12 @@ private theorem re_unfold_neg_star_nonempty_eval_true
     native_veq, htEval, hSeqNe, SmtEval.native_not]
 
 private theorem re_unfold_neg_star_qforall_eval_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t r1 : Term)
     (ht : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hr1 : __smtx_typeof (__eo_to_smt r1) = SmtType.RegLan)
     (hPremVar :
-      ∀ N, model_total_typed N ->
+      ∀ N, model_wf N ->
         model_agrees_on_globals M N ->
         eo_interprets N (mkNot (mkStrInRe t (mkReMult r1))) true) :
     __smtx_model_eval M (__eo_to_smt (qforallIdx (reUnfoldNegStarBody t r1))) =
@@ -1732,10 +1732,10 @@ private theorem re_unfold_neg_star_qforall_eval_true
   have hWF : __smtx_type_wf SmtType.Int = true := by
     simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and]
-  have hN : model_total_typed N := by
+  have hN : model_wf N := by
     exact model_total_typed_push hM idxName SmtType.Int
       (SmtValue.Numeral i) hWF rfl (by
-        simp [__smtx_value_canonical, __smtx_value_canonical_bool])
+        simp [value_canonical, __smtx_value_canonical])
   have hAgree : model_agrees_on_globals M N := by
     exact model_agrees_on_globals_push M idxName SmtType.Int (SmtValue.Numeral i)
   have hIdxEval :
@@ -1747,13 +1747,13 @@ private theorem re_unfold_neg_star_qforall_eval_true
     (hPremVar N hN hAgree)
 
 private theorem re_unfold_neg_star_formula_eval_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t r1 : Term)
     (ht : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hr1 : __smtx_typeof (__eo_to_smt r1) = SmtType.RegLan)
     (hPrem : eo_interprets M (mkNot (mkStrInRe t (mkReMult r1))) true)
     (hPremVar :
-      ∀ N, model_total_typed N ->
+      ∀ N, model_wf N ->
         model_agrees_on_globals M N ->
         eo_interprets N (mkNot (mkStrInRe t (mkReMult r1))) true) :
     __smtx_model_eval M (__eo_to_smt (reUnfoldNegStarFormula t r1)) =
@@ -1790,7 +1790,7 @@ private theorem re_unfold_neg_star_formula_eval_true
     SmtEval.native_and]
 
 theorem re_unfold_neg_concat_formula_eval_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t r1 r2 : Term)
     (ht : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hr1 : __smtx_typeof (__eo_to_smt r1) = SmtType.RegLan)
@@ -1802,7 +1802,7 @@ theorem re_unfold_neg_concat_formula_eval_true
             (__eo_list_singleton_elim (Term.UOp UserOp.re_concat) r2)) =
         SmtType.RegLan)
     (hPremVar :
-      ∀ N, model_total_typed N ->
+      ∀ N, model_wf N ->
         model_agrees_on_globals M N ->
         eo_interprets N (mkNot (mkStrInRe t (mkReConcat r1 r2))) true) :
     __smtx_model_eval M (__eo_to_smt (reUnfoldNegConcatFormula t r1 r2)) =
@@ -1820,10 +1820,10 @@ theorem re_unfold_neg_concat_formula_eval_true
   have hWF : __smtx_type_wf SmtType.Int = true := by
     simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and]
-  have hN : model_total_typed N := by
+  have hN : model_wf N := by
     exact model_total_typed_push hM idxName SmtType.Int
       (SmtValue.Numeral i) hWF rfl (by
-        simp [__smtx_value_canonical, __smtx_value_canonical_bool])
+        simp [value_canonical, __smtx_value_canonical])
   have hAgree : model_agrees_on_globals M N := by
     exact model_agrees_on_globals_push M idxName SmtType.Int (SmtValue.Numeral i)
   have hIdxEval :
@@ -1937,7 +1937,7 @@ private theorem re_unfold_neg_nonstuck_shape (p : Term) :
 end RuleProofs
 
 public theorem cmd_step_re_unfold_neg_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_unfold_neg args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
@@ -2018,7 +2018,7 @@ by
                             have h := hTrue.true_here p (by simp [p])
                             simpa [hp, r1, RuleProofs.mkReMult] using h
                           have hPremVar :
-                              ∀ N, model_total_typed N ->
+                              ∀ N, model_wf N ->
                                 model_agrees_on_globals M N ->
                                 eo_interprets N
                                   (RuleProofs.mkNot
@@ -2098,7 +2098,7 @@ by
                             refine ⟨?_, ?_⟩
                             · intro hTrue
                               have hPremVar :
-                                  ∀ N, model_total_typed N ->
+                                  ∀ N, model_wf N ->
                                     model_agrees_on_globals M N ->
                                     eo_interprets N
                                       (RuleProofs.mkNot

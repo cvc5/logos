@@ -231,7 +231,7 @@ private theorem facts___eo_prog_sets_is_singleton_elim_impl
       (__smtx_model_eval M (__eo_to_smt (setsIsSingletonRhs x)))
 
 public theorem cmd_step_sets_is_singleton_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_is_singleton_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -152,19 +152,19 @@ private theorem native_eval_texists_eq_of_body_eval_eq_same
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push M s T v) body') :
-    native_eval_texists M s T body =
-      native_eval_texists M s T body' := by
+    native_eval_exists M s T body =
+      native_eval_exists M s T body' := by
   classical
   let P : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body' =
           SmtValue.Boolean true
   change (if _ : P then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -187,7 +187,7 @@ private theorem smtx_eval_exists_term_eq
     (M : SmtModel) (s : native_String) (T : SmtType)
     (body : SmtTerm) :
     __smtx_model_eval M (SmtTerm.exists s T body) =
-      native_eval_texists M s T body := by
+      native_eval_exists M s T body := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem smtx_model_eval_not_eq_of_arg_eq_same
@@ -243,7 +243,7 @@ private theorem smt_model_eval_eo_to_smt_exists_eq_of_body_eval_eq_same_mapped
       · exact hAgreePush
 
 private theorem smtx_model_eval_qforall_ite_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xVars : List EoVarKey)
     (x A F1 F2 : Term)
     (hLeftTrans :
@@ -353,7 +353,7 @@ private theorem smtx_model_eval_qforall_ite_eq
       exact hLeft.trans hRight.symm
 
 private theorem smtx_model_eval_quant_miniscope_ite
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x A F1 F2 : Term)
     (hBool :
       RuleProofs.eo_has_bool_type
@@ -592,7 +592,7 @@ private theorem quant_miniscope_ite_shape_of_not_stuck
       simp [__eo_prog_quant_miniscope_ite] at hProg
 
 public theorem cmd_step_quant_miniscope_ite_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.quant_miniscope_ite args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

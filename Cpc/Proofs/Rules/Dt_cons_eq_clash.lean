@@ -44,7 +44,7 @@ private theorem prog_dt_cons_eq_clash_shape_of_not_stuck
       _root_.eo_requires_result_eq_of_ne_stuck hReq
 
 public theorem cmd_step_dt_cons_eq_clash_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.dt_cons_eq_clash args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

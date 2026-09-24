@@ -109,7 +109,7 @@ private theorem native_unpack_string_singleton_of_seq_len_one (ss : SmtSeq)
   | cons v vs =>
       cases vs with
       | nil =>
-          exact ⟨native_ssm_char_of_value v, by simp [native_unpack_string, hUnpack]⟩
+          exact ⟨impl_native_ssm_char_of_value v, by simp [native_unpack_string, hUnpack]⟩
       | cons w ws =>
           have hLen' : (Int.ofNat (List.length (v :: w :: ws))) = 1 := by
             simpa [native_seq_len, hUnpack] using hLen
@@ -136,42 +136,42 @@ private theorem native_str_in_re_range_refl_eq_str_to_re
       native_str_in_re str (native_str_to_re [c]) := by
   cases str with
   | nil =>
-      simp [native_re_range, native_str_to_re, native_re_of_list,
-        native_re_mk_concat, native_re_concat, native_str_in_re, native_string_to_values,
-              native_re_str_valid, native_re_elem_valid, native_re_elem_le, hValid, native_re_nullable]
+      simp [native_re_range, native_str_to_re, impl_native_re_of_list,
+        native_re_mk_concat, native_re_concat, native_str_in_re, impl_native_string_to_values,
+              native_re_str_valid, native_re_elem_valid, impl_native_re_elem_le, hValid, native_re_nullable]
   | cons d rest =>
       rcases native_string_valid_cons_parts hValid with ⟨hd, hRestValid⟩
       cases rest with
       | nil =>
           by_cases hdc : d = c
           · subst d
-            simp [native_re_range, native_str_to_re, native_re_of_list,
-              native_re_mk_concat, native_re_concat, native_str_in_re, native_string_to_values,
-              native_re_str_valid, native_re_elem_valid, native_re_elem_le, hValid, native_re_deriv,
+            simp [native_re_range, native_str_to_re, impl_native_re_of_list,
+              native_re_mk_concat, native_re_concat, native_str_in_re, impl_native_string_to_values,
+              native_re_str_valid, native_re_elem_valid, impl_native_re_elem_le, hValid, native_re_deriv,
               native_re_nullable, hc]
           · have hBounds : ¬ (c ≤ d ∧ d ≤ c) := by
               intro h
               exact hdc (Nat.le_antisymm h.2 h.1)
-            simp [native_re_range, native_str_to_re, native_re_of_list,
-              native_re_mk_concat, native_re_concat, native_str_in_re, native_string_to_values,
-              native_re_str_valid, native_re_elem_valid, native_re_elem_le, hValid, native_re_deriv,
+            simp [native_re_range, native_str_to_re, impl_native_re_of_list,
+              native_re_mk_concat, native_re_concat, native_str_in_re, impl_native_string_to_values,
+              native_re_str_valid, native_re_elem_valid, impl_native_re_elem_le, hValid, native_re_deriv,
               native_re_nullable, hc, hd, hdc, hBounds]
       | cons e es =>
           have hTailEmpty := RuleProofs.nativeListInRe_empty es
           by_cases hBounds : c ≤ d ∧ d ≤ c
           · have hdc : d = c := Nat.le_antisymm hBounds.2 hBounds.1
             subst d
-            simp [native_re_range, native_str_to_re, native_re_of_list,
-              native_re_mk_concat, native_re_concat, native_str_in_re, native_string_to_values,
-              native_re_str_valid, native_re_elem_valid, native_re_elem_le, hValid, native_re_deriv,
+            simp [native_re_range, native_str_to_re, impl_native_re_of_list,
+              native_re_mk_concat, native_re_concat, native_str_in_re, impl_native_string_to_values,
+              native_re_str_valid, native_re_elem_valid, impl_native_re_elem_le, hValid, native_re_deriv,
               native_re_nullable, hc, RuleProofs.nativeListInRe, hTailEmpty]
           · have hdc : d ≠ c := by
               intro hdc
               subst d
               exact hBounds ⟨Nat.le_refl c, Nat.le_refl c⟩
-            simp [native_re_range, native_str_to_re, native_re_of_list,
-              native_re_mk_concat, native_re_concat, native_str_in_re, native_string_to_values,
-              native_re_str_valid, native_re_elem_valid, native_re_elem_le, hValid, native_re_deriv,
+            simp [native_re_range, native_str_to_re, impl_native_re_of_list,
+              native_re_mk_concat, native_re_concat, native_str_in_re, impl_native_string_to_values,
+              native_re_str_valid, native_re_elem_valid, impl_native_re_elem_le, hValid, native_re_deriv,
               native_re_nullable, hc, hd, hdc, hBounds, RuleProofs.nativeListInRe,
               hTailEmpty]
 
@@ -195,7 +195,7 @@ private theorem typed_concl
     (by rw [hLhsTy, hRhsTy]) (by rw [hLhsTy]; decide)
 
 private theorem facts
-    (M : SmtModel) (hM : model_total_typed M) (s : Term)
+    (M : SmtModel) (hM : model_wf M) (s : Term)
     (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hPrem : eo_interprets M (mkLenOne s) true) :
     eo_interprets M (concl s) true := by
@@ -216,7 +216,7 @@ private theorem facts
   have hSSValid : native_string_valid (native_unpack_string ss) = true :=
     native_unpack_string_valid_of_typeof_seq_char hSSTy
   have hUnpack :
-      native_unpack_seq ss = native_string_to_values (native_unpack_string ss) :=
+      native_unpack_seq ss = impl_native_string_to_values (native_unpack_string ss) :=
     native_unpack_seq_eq_string_to_values_of_typeof_seq_char hSSTy
   have hPremRel :=
     RuleProofs.eo_interprets_eq_rel M
@@ -272,7 +272,7 @@ private theorem facts
 end ReRangeReflProof
 
 public theorem cmd_step_re_range_refl_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_range_refl args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

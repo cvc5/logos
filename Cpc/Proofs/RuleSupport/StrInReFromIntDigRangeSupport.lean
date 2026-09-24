@@ -48,7 +48,7 @@ theorem prog_eq_of_ne_stuck (n : Term) :
 
 private theorem native_char_is_digit_digitChar_lt10
     (n : Nat) (hn : n < 10) :
-    native_char_is_digit (Char.toNat (Nat.digitChar n)) = true := by
+    impl_native_char_is_digit (Char.toNat (Nat.digitChar n)) = true := by
   by_cases h0 : n = 0
   · subst n; native_decide
   by_cases h1 : n = 1
@@ -74,9 +74,9 @@ private theorem native_char_is_digit_digitChar_lt10
 
 private theorem native_toDigitsCore_all_digits :
     ∀ fuel n ds,
-      (ds.map Char.toNat).all native_char_is_digit = true ->
+      (ds.map Char.toNat).all impl_native_char_is_digit = true ->
         ((Nat.toDigitsCore 10 fuel n ds).map Char.toNat).all
-          native_char_is_digit = true
+          impl_native_char_is_digit = true
   | 0, _n, _ds, hds => by
       simpa [Nat.toDigitsCore.eq_1] using hds
   | fuel + 1, n, ds, hds => by
@@ -95,7 +95,7 @@ private theorem native_toDigitsCore_all_digits :
 
 private theorem native_string_lit_nat_toString_all_digits
     (n : Nat) :
-    (native_string_lit (toString n)).all native_char_is_digit = true := by
+    (native_string_lit (toString n)).all impl_native_char_is_digit = true := by
   unfold native_string_lit
   rw [show (toString n).toList = Nat.toDigits 10 n by
     rw [show (toString n) = n.repr by rfl]
@@ -106,7 +106,7 @@ private theorem native_string_lit_nat_toString_all_digits
 
 theorem native_str_from_int_all_digits
     (i : native_Int) :
-    (native_str_from_int i).all native_char_is_digit = true := by
+    (native_str_from_int i).all impl_native_char_is_digit = true := by
   cases i with
   | ofNat n =>
       unfold native_str_from_int
@@ -123,10 +123,10 @@ theorem native_str_from_int_all_digits
 
 theorem native_char_valid_of_digit
     (c : native_Char)
-    (hDigit : native_char_is_digit c = true) :
+    (hDigit : impl_native_char_is_digit c = true) :
     native_char_valid c = true := by
   have hBounds : 48 ≤ c ∧ c ≤ 57 := by
-    unfold native_char_is_digit at hDigit
+    unfold impl_native_char_is_digit at hDigit
     simpa [Bool.and_eq_true] using hDigit
   unfold native_char_valid
   have h57 : 57 < 196608 := by native_decide
@@ -134,14 +134,14 @@ theorem native_char_valid_of_digit
 
 theorem native_digit_bounds
     (c : native_Char)
-    (hDigit : native_char_is_digit c = true) :
+    (hDigit : impl_native_char_is_digit c = true) :
     48 ≤ c ∧ c ≤ 57 := by
-  unfold native_char_is_digit at hDigit
+  unfold impl_native_char_is_digit at hDigit
   simpa [Bool.and_eq_true] using hDigit
 
 theorem nativeListInRe_digit_range_singleton
     (c : native_Char)
-    (hDigit : native_char_is_digit c = true) :
+    (hDigit : impl_native_char_is_digit c = true) :
     RuleProofs.nativeListInRe [c] digitRange = true := by
   have hValid : native_char_valid c = true :=
     native_char_valid_of_digit c hDigit
@@ -150,12 +150,12 @@ theorem nativeListInRe_digit_range_singleton
   have hHiValid : native_char_valid 57 = true := by native_decide
   simp [digitRange, zeroStr, nineStr, native_re_range, native_string_lit,
     RuleProofs.nativeListInRe, native_re_deriv, native_re_nullable,
-    native_re_elem_valid, native_re_elem_le, hValid, hLoValid, hHiValid,
+    native_re_elem_valid, impl_native_re_elem_le, hValid, hLoValid, hHiValid,
     hBounds.1, hBounds.2]
 
 theorem native_str_in_re_digit_range_singleton
     (c : native_Char)
-    (hDigit : native_char_is_digit c = true) :
+    (hDigit : impl_native_char_is_digit c = true) :
     RuleProofs.native_str_in_re [c] digitRange = true := by
   have hValidChar : native_char_valid c = true :=
     native_char_valid_of_digit c hDigit
@@ -166,7 +166,7 @@ theorem native_str_in_re_digit_range_singleton
 
 theorem nativeListInRe_digit_star_of_all_digits
     (xs : native_String)
-    (hDigits : xs.all native_char_is_digit = true) :
+    (hDigits : xs.all impl_native_char_is_digit = true) :
     RuleProofs.nativeListInRe xs (native_re_mult digitRange) = true := by
   induction xs with
   | nil =>
@@ -176,8 +176,8 @@ theorem nativeListInRe_digit_star_of_all_digits
       exact hsimpa
   | cons c cs ih =>
       have hParts :
-          native_char_is_digit c = true ∧
-            cs.all native_char_is_digit = true := by
+          impl_native_char_is_digit c = true ∧
+            cs.all impl_native_char_is_digit = true := by
         simpa [Bool.and_eq_true] using hDigits
       have hCValid : native_string_valid [c] = true := by
         have hValidChar := native_char_valid_of_digit c hParts.1
@@ -212,7 +212,7 @@ private theorem native_str_in_re_from_int_digit_range_star
       (native_re_mult digitRange) = true := by
   have hValid : native_string_valid (native_str_from_int i) = true :=
     native_str_from_int_valid i
-  have hDigits : (native_str_from_int i).all native_char_is_digit = true :=
+  have hDigits : (native_str_from_int i).all impl_native_char_is_digit = true :=
     native_str_from_int_all_digits i
   have hList :=
     nativeListInRe_digit_star_of_all_digits (native_str_from_int i) hDigits
@@ -396,7 +396,7 @@ private theorem smtx_eval_star_range
   rfl
 
 theorem facts
-    (M : SmtModel) (hM : model_total_typed M) (n : Term)
+    (M : SmtModel) (hM : model_wf M) (n : Term)
     (hNTrans : RuleProofs.eo_has_smt_translation n)
     (hNTy : __eo_typeof n = Term.UOp UserOp.Int) :
     eo_interprets M (concl n) true := by
@@ -420,7 +420,7 @@ theorem facts
     rfl
   have hFromIntMem :
       Smtm.native_str_in_re
-          (native_string_to_values (native_str_from_int z))
+          (impl_native_string_to_values (native_str_from_int z))
           (native_re_mult digitRange) = true := by
     rw [← RuleProofs.native_str_in_re_eq_model]
     exact native_str_in_re_from_int_digit_range_star z

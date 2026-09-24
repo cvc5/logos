@@ -312,7 +312,7 @@ theorem native_int_to_nat_roundtrip
     native_nat_to_int (native_int_to_nat n) = n := by
   have hn : (0 : Int) ≤ n := by
     simpa [SmtEval.native_zleq] using hn0
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using Int.toNat_of_nonneg hn
 
 theorem native_zleq_of_zlt_true
@@ -469,7 +469,7 @@ theorem typed_bv_extract_not_term (x hi lo : Term) :
     (hLhsTy.trans hRhsTy.symm) (by rw [hLhsTy]; simp)
 
 theorem smt_eval_binary_of_smt_type_bitvec
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm) (w : native_Nat) :
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm) (w : native_Nat) :
     __smtx_typeof t = SmtType.BitVec w ->
     ∃ p, __smtx_model_eval M t = SmtValue.Binary (native_nat_to_int w) p ∧
       native_zeq p
@@ -510,7 +510,7 @@ private theorem eval_bvnot_term (M : SmtModel) (x : Term) :
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem eval_bv_extract_not
-    (M : SmtModel) (hM : model_total_typed M) (x hi lo : Term) :
+    (M : SmtModel) (hM : model_wf M) (x hi lo : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvExtractNotTerm x hi lo) = Term.Bool ->
     __smtx_model_eval M (__eo_to_smt (bvExtractNotLhs x hi lo)) =
@@ -534,27 +534,27 @@ private theorem eval_bv_extract_not
   let L := native_int_to_nat l
   let D := native_int_to_nat d
   have hWRound : (↑W : Int) = w := by
-    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hLRound : (↑L : Int) = l := by
-    simpa [L, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [L, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip l hl0
   have hdNonneg : native_zleq 0 d = true :=
     native_zleq_of_zlt_true _ _ hd0
   have hDRound : (↑D : Int) = d := by
-    simpa [D, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [D, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip d hdNonneg
   rcases smt_eval_binary_of_smt_type_bitvec M hM (__eo_to_smt x) W
       (by simpa [W] using hXSmtTy) with ⟨p, hXEval, hCan⟩
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) = SmtValue.Binary (↑W) p := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
   have hWidth0 : native_zleq 0 (native_nat_to_int W) = true := by
-    simp [SmtEval.native_zleq, native_nat_to_int, SmtEval.native_nat_to_int]
+    simp [SmtEval.native_zleq, native_nat_to_int, Smtm.native_nat_to_int]
   have hRange := bitvec_payload_range_of_canonical hWidth0 hCan
   have hp0 : (0 : Int) ≤ p := hRange.1
   have hp1 : p < (2 : Int) ^ W := by
-    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] using hRange.2
+    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] using hRange.2
   have hhwInt : h < w := by simpa [SmtEval.native_zlt] using hhw
   have hwInt : (0 : Int) ≤ w := by simpa [SmtEval.native_zleq] using hw0
   have hlInt : (0 : Int) ≤ l := by simpa [SmtEval.native_zleq] using hl0
@@ -580,7 +580,7 @@ private theorem eval_bv_extract_not
   exact extract_not_val W L D p h l hp0 hp1 hLRound.symm hdCast hFit
 
 theorem facts_bv_extract_not_term
-    (M : SmtModel) (hM : model_total_typed M) (x hi lo : Term) :
+    (M : SmtModel) (hM : model_wf M) (x hi lo : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvExtractNotTerm x hi lo) = Term.Bool ->
     eo_interprets M (bvExtractNotTerm x hi lo) true := by
@@ -637,7 +637,7 @@ theorem typed_bv_extract_not_program (x i j : Term) :
   exact typed_bv_extract_not_term x j i hXTrans hTermTy
 
 theorem facts_bv_extract_not_program
-    (M : SmtModel) (hM : model_total_typed M) (x i j : Term) :
+    (M : SmtModel) (hM : model_wf M) (x i j : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation i ->
     RuleProofs.eo_has_smt_translation j ->
@@ -879,7 +879,7 @@ theorem typed_bv_extract_extract_term (x i j k l ll kk : Term) :
     (by rw [hLhsTy']; simp)
 
 private theorem eval_bv_extract_extract
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x i j k l ll kk : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvExtractExtractTerm x i j k l ll kk) = Term.Bool ->
@@ -908,19 +908,19 @@ private theorem eval_bv_extract_extract
   have hDO0Nonneg : native_zleq 0 dOuter = true :=
     native_zleq_of_zlt_true _ _ hDO0
   have hWRound : (↑W : Int) = w := by
-    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hIRound : (↑I : Int) = inn := by
-    simpa [I, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [I, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip inn hi0
   have hDIRound : (↑DI : Int) = dInner := by
-    simpa [DI, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [DI, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip dInner hDI0Nonneg
   have hKRound : (↑K : Int) = kn := by
-    simpa [K, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [K, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip kn hk0
   have hDORound : (↑DO : Int) = dOuter := by
-    simpa [DO, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [DO, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip dOuter hDO0Nonneg
   have hDICast : jn + 1 + -inn = (↑DI : Int) := by
     rw [hDIRound]
@@ -962,13 +962,13 @@ private theorem eval_bv_extract_extract
       (by simpa [W] using hXSmtTy) with ⟨p, hXEval, hCan⟩
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) = SmtValue.Binary (↑W) p := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
   have hWidth0 : native_zleq 0 (native_nat_to_int W) = true := by
-    simp [SmtEval.native_zleq, native_nat_to_int, SmtEval.native_nat_to_int]
+    simp [SmtEval.native_zleq, native_nat_to_int, Smtm.native_nat_to_int]
   have hRange := bitvec_payload_range_of_canonical hWidth0 hCan
   have hp0 : (0 : Int) ≤ p := hRange.1
   have hp1 : p < (2 : Int) ^ W := by
-    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] using
       hRange.2
   unfold bvExtractExtractLhs bvExtractExtractRhs
   rw [eval_extract_term M
@@ -979,7 +979,7 @@ private theorem eval_bv_extract_extract
     hKkCast hRhsWidthCast hOuterFit
 
 theorem facts_bv_extract_extract_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x i j k l ll kk : Term) :
     RuleProofs.eo_has_smt_translation x ->
     __eo_typeof (bvExtractExtractTerm x i j k l ll kk) = Term.Bool ->
@@ -1185,7 +1185,7 @@ theorem typed_bv_extract_extract_program
   exact typed_bv_extract_extract_term x i j k l ll kk hXTrans hTermTy
 
 theorem facts_bv_extract_extract_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x i j k l ll kk P1 P2 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation i ->

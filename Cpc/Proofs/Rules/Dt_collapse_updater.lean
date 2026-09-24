@@ -183,7 +183,7 @@ private theorem dt_collapse_updater_guard_true_of_rhs_non_stuck
       simpa [selectors, idx, hNeg] using hGuard.symm
 
 private theorem smt_model_eval_ne_notvalue_of_non_none
-    (M : SmtModel) (hM : model_total_typed M) (x : SmtTerm) :
+    (M : SmtModel) (hM : model_wf M) (x : SmtTerm) :
     __smtx_typeof x ≠ SmtType.None ->
     __smtx_model_eval M x ≠ SmtValue.NotValue := by
   intro hNN hEval
@@ -205,11 +205,11 @@ private theorem eo_to_smt_updater_typeof_none_of_not_dt_sel
 private theorem vsm_apply_ext_aux :
     ∀ (n : Nat) (v w : SmtValue),
       vsm_num_apply_args v = n ->
-      __vsm_apply_head v = __vsm_apply_head w ->
+      __smtx_apply_head_value v = __smtx_apply_head_value w ->
       vsm_num_apply_args v = vsm_num_apply_args w ->
       (∀ j, j < vsm_num_apply_args v ->
-        __vsm_apply_arg_nth v j (vsm_num_apply_args v) =
-          __vsm_apply_arg_nth w j (vsm_num_apply_args w)) ->
+        __smtx_apply_arg_nth_value v j (vsm_num_apply_args v) =
+          __smtx_apply_arg_nth_value w j (vsm_num_apply_args w)) ->
       v = w := by
   intro n
   induction n with
@@ -218,7 +218,7 @@ private theorem vsm_apply_ext_aux :
       cases v <;> simp [vsm_num_apply_args] at hv
       all_goals
         cases w <;> simp [vsm_num_apply_args] at hCount
-        simp [__vsm_apply_head] at hHead ⊢
+        simp [__smtx_apply_head_value] at hHead ⊢
         all_goals try exact hHead
   | succ n ih =>
       intro v w hv hHead hCount hArgs
@@ -228,17 +228,17 @@ private theorem vsm_apply_ext_aux :
         case Apply g b =>
           have hCountFG : vsm_num_apply_args f = vsm_num_apply_args g := hCount
           have hLast :
-              __vsm_apply_arg_nth (SmtValue.Apply f a) (vsm_num_apply_args f)
+              __smtx_apply_arg_nth_value (SmtValue.Apply f a) (vsm_num_apply_args f)
                   (vsm_num_apply_args (SmtValue.Apply f a)) =
-                __vsm_apply_arg_nth (SmtValue.Apply g b) (vsm_num_apply_args f)
+                __smtx_apply_arg_nth_value (SmtValue.Apply g b) (vsm_num_apply_args f)
                   (vsm_num_apply_args (SmtValue.Apply g b)) :=
             hArgs (vsm_num_apply_args f) (by simp [vsm_num_apply_args])
           have hab : a = b := by
-            simpa [__vsm_apply_arg_nth, vsm_num_apply_args, hCountFG,
-              SmtEval.native_nateq] using hLast
+            simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, hCountFG,
+              Smtm.native_nateq] using hLast
           have hfg : f = g := by
             apply ih f g hv
-            · simpa [__vsm_apply_head] using hHead
+            · simpa [__smtx_apply_head_value] using hHead
             · exact hCountFG
             · intro j hj
               have hjTop : j < vsm_num_apply_args (SmtValue.Apply f a) := by
@@ -250,30 +250,30 @@ private theorem vsm_apply_ext_aux :
                 intro hEq
                 apply hNeF
                 rw [hCountFG, hEq]
-              simpa [__vsm_apply_arg_nth, vsm_num_apply_args, hCountFG,
-                SmtEval.native_nateq, hNeF, hNeG] using hArg
+              simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, hCountFG,
+                Smtm.native_nateq, hNeF, hNeG] using hArg
           subst hfg
           subst hab
           rfl
 
 private theorem vsm_apply_ext
     (v w : SmtValue)
-    (hHead : __vsm_apply_head v = __vsm_apply_head w)
+    (hHead : __smtx_apply_head_value v = __smtx_apply_head_value w)
     (hCount : vsm_num_apply_args v = vsm_num_apply_args w)
     (hArgs : ∀ j, j < vsm_num_apply_args v ->
-      __vsm_apply_arg_nth v j (vsm_num_apply_args v) =
-        __vsm_apply_arg_nth w j (vsm_num_apply_args w)) :
+      __smtx_apply_arg_nth_value v j (vsm_num_apply_args v) =
+        __smtx_apply_arg_nth_value w j (vsm_num_apply_args w)) :
     v = w :=
   vsm_apply_ext_aux (vsm_num_apply_args v) v w rfl hHead hCount hArgs
 
 private theorem smtx_model_eval_apply_of_dt_chain
     (M : SmtModel) (v x : SmtValue)
-    (hHead : ∃ s d i, __vsm_apply_head v = SmtValue.DtCons s d i)
+    (hHead : ∃ s d i, __smtx_apply_head_value v = SmtValue.DtCons s d i)
     (hx : x ≠ SmtValue.NotValue) :
     __smtx_model_eval_apply M v x = SmtValue.Apply v x := by
   cases x <;> simp [__smtx_model_eval_apply] at hx ⊢
   all_goals
-    cases v <;> simp [__vsm_apply_head] at hHead ⊢
+    cases v <;> simp [__smtx_apply_head_value] at hHead ⊢
 
 private theorem smtx_ite_then_non_none
     (c x y : SmtTerm) :
@@ -364,14 +364,14 @@ private theorem smtx_model_eval_apply_eq_apply_of_not_dt_ops
   | _ => simp [__smtx_model_eval]
 
 private theorem updater_rec_eval_components
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (d : SmtDatatypeDecl) (i m n : native_Nat)
     (t u : SmtTerm) :
     __smtx_typeof
         (__eo_to_smt_updater_rec (SmtTerm.DtSel s d i m) n t u
           (SmtTerm.DtCons s d i)) ≠
       SmtType.None ->
-    __vsm_apply_head
+    __smtx_apply_head_value
         (__smtx_model_eval M
           (__eo_to_smt_updater_rec (SmtTerm.DtSel s d i m) n t u
             (SmtTerm.DtCons s d i))) =
@@ -382,7 +382,7 @@ private theorem updater_rec_eval_components
               (SmtTerm.DtCons s d i))) =
         n ∧
       ∀ q, q < n ->
-        __vsm_apply_arg_nth
+        __smtx_apply_arg_nth_value
             (__smtx_model_eval M
               (__eo_to_smt_updater_rec (SmtTerm.DtSel s d i m) n t u
                 (SmtTerm.DtCons s d i)))
@@ -394,7 +394,7 @@ private theorem updater_rec_eval_components
   | zero =>
       intro _hNN
       constructor
-      · simp [__eo_to_smt_updater_rec, __smtx_model_eval, __vsm_apply_head]
+      · simp [__eo_to_smt_updater_rec, __smtx_model_eval, __smtx_apply_head_value]
       constructor
       · simp [__eo_to_smt_updater_rec, __smtx_model_eval, vsm_num_apply_args]
       · intro q hq
@@ -446,7 +446,7 @@ private theorem updater_rec_eval_components
         simpa [__eo_to_smt_updater_rec, recTerm, argTerm] using hEvalApply
       constructor
       · rw [hEval]
-        simpa [__vsm_apply_head] using hHeadRec
+        simpa [__smtx_apply_head_value] using hHeadRec
       constructor
       · rw [hEval]
         simp [vsm_num_apply_args]
@@ -455,15 +455,15 @@ private theorem updater_rec_eval_components
         by_cases hLast : q = k
         · subst q
           have hEqBool : native_nateq k k = true := by
-            simp [native_nateq, SmtEval.native_nateq]
+            simp [native_nateq, Smtm.native_nateq]
           rw [hEval]
-          simp [__vsm_apply_arg_nth,hEqBool, argTerm]
+          simp [__smtx_apply_arg_nth_value,hEqBool, argTerm]
         · have hqk : q < k := by
             exact Nat.lt_of_le_of_ne (Nat.lt_succ_iff.mp hq) hLast
           have hNeBool : native_nateq q k = false := by
-            simp [native_nateq, SmtEval.native_nateq, hLast]
+            simp [native_nateq, Smtm.native_nateq, hLast]
           rw [hEval]
-          simp [__vsm_apply_arg_nth,hNeBool]
+          simp [__smtx_apply_arg_nth_value,hNeBool]
           exact hArgsRec q hqk
 
 private theorem tuple_update_shape_of_non_none
@@ -552,7 +552,7 @@ private theorem tuple_update_shape_of_non_none
                     (__smtx_dt_num_sels body native_nat_zero : Int) := by
                 apply of_decide_eq_true
                 simpa [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-                  SmtEval.native_nat_to_int] using hIdxBoundBool
+                  Smtm.native_nat_to_int] using hIdxBoundBool
               exact Int.ofNat_lt.mp hInt
             exact ⟨body, n, rfl, hIdxEq, hNonneg, hLt⟩
           · exfalso
@@ -642,7 +642,7 @@ private theorem tuple_update_rec_non_none_of_shape
             (__eo_to_smt t)) ≠
         SmtType.None := by
     simpa [__eo_to_smt_updater, native_ite, hIdxBool, native_zlt,
-      SmtEval.native_zlt, native_nat_to_int, SmtEval.native_nat_to_int,
+      SmtEval.native_zlt, native_nat_to_int, Smtm.native_nat_to_int,
       hIdxProp, __eo_to_smt_tuple_decl, __smtx_dd_lookup, native_streq,
       SmtEval.native_streq] using hUpdaterNN
   exact smtx_ite_then_non_none _ _ _ hIteNN
@@ -655,7 +655,7 @@ private theorem tuple_value_count_of_type_local
           (__eo_to_smt_tuple_decl
             (SmtDatatype.sum c SmtDatatype.null)))
     (hHead :
-      __vsm_apply_head v =
+      __smtx_apply_head_value v =
         SmtValue.DtCons (native_string_lit "@Tuple")
           (__eo_to_smt_tuple_decl
             (SmtDatatype.sum c SmtDatatype.null)) native_nat_zero) :
@@ -668,7 +668,7 @@ private theorem tuple_value_count_of_type_local
     SmtEval.native_streq, native_ite, dt_num_sels_resolve] using hCount
 
 private theorem tuple_update_eval_eq_rec_of_tuple_type
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (idx t a : Term) (c : SmtDatatypeCons) (n : native_Int) :
     __smtx_typeof (__eo_to_smt t) =
         SmtType.Datatype (native_string_lit "@Tuple")
@@ -716,7 +716,7 @@ private theorem tuple_update_eval_eq_rec_of_tuple_type
         native_nat_to_int
           (__smtx_dt_num_sels (SmtDatatype.sum c SmtDatatype.null)
             native_nat_zero) := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hIdxProp
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hIdxProp
   have hTNN : __smtx_typeof (__eo_to_smt t) ≠ SmtType.None := by
     rw [hT]
     simp
@@ -728,7 +728,7 @@ private theorem tuple_update_eval_eq_rec_of_tuple_type
     rw [smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt t) hTNN,
       hT]
   have hHead :
-      __vsm_apply_head (__smtx_model_eval M (__eo_to_smt t)) =
+      __smtx_apply_head_value (__smtx_model_eval M (__eo_to_smt t)) =
         SmtValue.DtCons (native_string_lit "@Tuple")
           (__eo_to_smt_tuple_decl
             (SmtDatatype.sum c SmtDatatype.null)) native_nat_zero :=
@@ -790,7 +790,7 @@ private theorem tuple_update_type_eq_tuple_type_of_shape
   have hIdxLt :
       native_nat_to_int (native_int_to_nat n) <
         native_nat_to_int (__smtx_dt_num_sels d native_nat_zero) := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hIdxProp
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hIdxProp
   have hRecNN :=
     tuple_update_rec_non_none_of_shape (Term.Numeral n) t a d n
       hT rfl hNonneg hLt hNN
@@ -1002,7 +1002,7 @@ private theorem native_int_to_nat_eq_succ_pred_of_nonneg_ne_zero
       simp at hNonneg
 
 private theorem tuple_collapse_updater_rhs_projection
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (idx t a : Term) (d : SmtDatatype) (n : native_Int)
     (k : native_Nat) :
     __smtx_typeof (__eo_to_smt t) =
@@ -1015,7 +1015,7 @@ private theorem tuple_collapse_updater_rhs_projection
         SmtType.Datatype (native_string_lit "@Tuple")
           (__eo_to_smt_tuple_decl d) ->
     k < __smtx_dt_num_sels d native_nat_zero ->
-    __vsm_apply_arg_nth
+    __smtx_apply_arg_nth_value
         (__smtx_model_eval M
           (__eo_to_smt (__tuple_collapse_updater_rhs t a idx)))
         k (__smtx_dt_num_sels d native_nat_zero) =
@@ -1170,7 +1170,7 @@ private theorem tuple_collapse_updater_rhs_projection
                         tailSmt) ≠ SmtType.None
                 have hsimpa := hRhsBaseNN; (try simp [aSmt, tailSmt] at hsimpa ⊢); exact hsimpa)
           have hsimpa := hProj
-          try simp [fullD, fullC, aSmt, native_nateq, SmtEval.native_nateq] at hsimpa ⊢
+          try simp [fullD, fullC, aSmt, native_nateq, Smtm.native_nateq] at hsimpa ⊢
           exact hsimpa
       | succ j =>
           have hjTail :
@@ -1195,7 +1195,7 @@ private theorem tuple_collapse_updater_rhs_projection
                       (__eo_to_smt_tuple_decl fullD)
                       native_nat_zero (Nat.succ j))
                     (__eo_to_smt tupleTerm)) =
-                __vsm_apply_arg_nth
+                __smtx_apply_arg_nth_value
                   (__smtx_model_eval M (__eo_to_smt tupleTerm))
                   (Nat.succ j)
                   (__smtx_dt_num_sels fullD native_nat_zero) := by
@@ -1214,13 +1214,13 @@ private theorem tuple_collapse_updater_rhs_projection
                 have hsimpa := hTupleNN; (try simp [tupleTerm, headSmt, tailSmt, headTy] at hsimpa ⊢); exact hsimpa)
               (by simpa [tailD] using hjTail)
           have hRhsSucc' :
-              __vsm_apply_arg_nth
+              __smtx_apply_arg_nth_value
                   (__smtx_model_eval M
                     (__eo_to_smt
                       (Term.Apply (Term.Apply (Term.UOp UserOp.tuple) a)
                         tail)))
                   (Nat.succ j) (__smtx_dt_num_sels fullD native_nat_zero) =
-                __vsm_apply_arg_nth (__smtx_model_eval M tailSmt) j
+                __smtx_apply_arg_nth_value (__smtx_model_eval M tailSmt) j
                   (__smtx_dt_num_sels tailD native_nat_zero) := by
             have hsimpa := hRhsSucc
             try simp [aSmt, tailSmt, tailD, hFullArgEq] at hsimpa ⊢
@@ -1228,7 +1228,7 @@ private theorem tuple_collapse_updater_rhs_projection
           rw [hRhsSucc']
           have hsimpa :=
             (hSelEval.trans hOrigSucc).symm
-          try simp [fullD, fullC, native_nateq, SmtEval.native_nateq] at hsimpa ⊢
+          try simp [fullD, fullC, native_nateq, Smtm.native_nateq] at hsimpa ⊢
           exact hsimpa
     · let pred := native_zplus n (-1 : native_Int)
       let tailRhs := __tuple_collapse_updater_rhs tail a (Term.Numeral pred)
@@ -1345,7 +1345,7 @@ private theorem tuple_collapse_updater_rhs_projection
                       (__eo_to_smt_tuple_decl fullD)
                       native_nat_zero native_nat_zero)
                     (__eo_to_smt tupleTerm)) =
-                __vsm_apply_arg_nth
+                __smtx_apply_arg_nth_value
                   (__smtx_model_eval M (__eo_to_smt tupleTerm))
                   native_nat_zero
                   (__smtx_dt_num_sels fullD native_nat_zero) := by
@@ -1363,7 +1363,7 @@ private theorem tuple_collapse_updater_rhs_projection
                     SmtType.None
                 have hsimpa := hTupleNN; (try simp [tupleTerm, headSmt, tailSmt, headTy] at hsimpa ⊢); exact hsimpa)
           have hRhsZero' :
-              __vsm_apply_arg_nth
+              __smtx_apply_arg_nth_value
                   (__smtx_model_eval M
                     (__eo_to_smt
                       (Term.Apply (Term.Apply (Term.UOp UserOp.tuple) head)
@@ -1376,7 +1376,7 @@ private theorem tuple_collapse_updater_rhs_projection
             exact hsimpa
           rw [hRhsZero']
           simpa [fullD, fullC, hNatSucc, native_nateq,
-            SmtEval.native_nateq] using
+            Smtm.native_nateq] using
             (hSelEval.trans hOrigZero).symm
       | succ j =>
           have hjTail :
@@ -1408,7 +1408,7 @@ private theorem tuple_collapse_updater_rhs_projection
                       (__eo_to_smt_tuple_decl fullD)
                       native_nat_zero (Nat.succ j))
                     (__eo_to_smt tupleTerm)) =
-                __vsm_apply_arg_nth
+                __smtx_apply_arg_nth_value
                   (__smtx_model_eval M (__eo_to_smt tupleTerm))
                   (Nat.succ j)
                   (__smtx_dt_num_sels fullD native_nat_zero) := by
@@ -1433,7 +1433,7 @@ private theorem tuple_collapse_updater_rhs_projection
                       (__eo_to_smt_tuple_decl tailD)
                       native_nat_zero j)
                     tailSmt) =
-                __vsm_apply_arg_nth
+                __smtx_apply_arg_nth_value
                   (__smtx_model_eval M tailSmt) j
                   (__smtx_dt_num_sels tailD native_nat_zero) := by
             simpa [tailSmt, tailD] using
@@ -1457,15 +1457,15 @@ private theorem tuple_collapse_updater_rhs_projection
               native_nateq (native_int_to_nat n) (Nat.succ j) =
                 native_nateq (native_int_to_nat pred) j := by
             rw [hNatSucc]
-            simp [native_nateq, SmtEval.native_nateq]
+            simp [native_nateq, Smtm.native_nateq]
           have hRhsSucc' :
-              __vsm_apply_arg_nth
+              __smtx_apply_arg_nth_value
                   (__smtx_model_eval M
                     (__eo_to_smt
                       (Term.Apply (Term.Apply (Term.UOp UserOp.tuple) head)
                         tailRhs)))
                   (Nat.succ j) (__smtx_dt_num_sels fullD native_nat_zero) =
-                __vsm_apply_arg_nth (__smtx_model_eval M (__eo_to_smt tailRhs))
+                __smtx_apply_arg_nth_value (__smtx_model_eval M (__eo_to_smt tailRhs))
                   j (__smtx_dt_num_sels tailD native_nat_zero) := by
             have hsimpa := hRhsSucc
             try simp [headSmt, tailD, fullD, fullC] at hsimpa ⊢
@@ -1483,7 +1483,7 @@ decreasing_by
   omega
 
 private theorem tuple_collapse_updater_eval_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (idx t a : Term) :
     __smtx_typeof
         (__eo_to_smt
@@ -1697,7 +1697,7 @@ private theorem tuple_collapse_updater_eval_eq
             (Term.Apply (Term.Apply (Term.UOp UserOp.tuple) a) tail))
           hRhsNNBase, hRhsTy]
       have hRhsHead :
-          __vsm_apply_head
+          __smtx_apply_head_value
               (__smtx_model_eval M
                 (__eo_to_smt
                   (Term.Apply (Term.Apply (Term.UOp UserOp.tuple) a) tail))) =
@@ -1749,7 +1749,7 @@ private theorem tuple_collapse_updater_eval_eq
                         (__eo_to_smt_tuple_decl fullD)
                         native_nat_zero (Nat.succ j))
                       (__eo_to_smt tupleTerm)) =
-                  __vsm_apply_arg_nth
+                  __smtx_apply_arg_nth_value
                     (__smtx_model_eval M (__eo_to_smt tupleTerm))
                     (Nat.succ j)
                     (__smtx_dt_num_sels fullD native_nat_zero) := by
@@ -1779,7 +1779,7 @@ private theorem tuple_collapse_updater_eval_eq
                   have hsimpa := hRhsNNBase; (try simp [aSmt, tailSmt] at hsimpa ⊢); exact hsimpa)
                 (by simpa [tailD] using hjTail)
             have hLhsArg' :
-                __vsm_apply_arg_nth
+                __smtx_apply_arg_nth_value
                     (__smtx_model_eval M
                       (__eo_to_smt_updater_rec
                         (SmtTerm.DtSel (native_string_lit "@Tuple")
@@ -1791,13 +1791,13 @@ private theorem tuple_collapse_updater_eval_eq
                           (__eo_to_smt_tuple_decl fullD)
                           native_nat_zero)))
                     (Nat.succ j) (__smtx_dt_num_sels fullD native_nat_zero) =
-                  __vsm_apply_arg_nth
+                  __smtx_apply_arg_nth_value
                     (__smtx_model_eval M tailSmt) j
                     (__smtx_dt_num_sels tailD native_nat_zero) := by
               have hNe : native_nateq native_nat_zero (Nat.succ j) = false := by
-                simp [native_nateq, SmtEval.native_nateq]
+                simp [native_nateq, Smtm.native_nateq]
               have hLhsSel :
-                  __vsm_apply_arg_nth
+                  __smtx_apply_arg_nth_value
                       (__smtx_model_eval M
                         (__eo_to_smt_updater_rec
                           (SmtTerm.DtSel (native_string_lit "@Tuple")
@@ -1895,7 +1895,7 @@ private theorem tuple_collapse_updater_eval_eq
             (__tuple_collapse_updater_rhs tupleTerm a (Term.Numeral n)))
           (by have hsimpa := hRhsNN; (try simp [tupleTerm] at hsimpa ⊢); exact hsimpa), hRhsTy]
       have hRhsHead :
-          __vsm_apply_head
+          __smtx_apply_head_value
               (__smtx_model_eval M
                 (__eo_to_smt
                   (__tuple_collapse_updater_rhs tupleTerm a (Term.Numeral n)))) =
@@ -1925,7 +1925,7 @@ private theorem tuple_collapse_updater_eval_eq
           hLhsArg.trans hRhsArg.symm
 
 private theorem tuple_collapse_updater_eval_rel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (idx t a : Term) :
     __smtx_typeof
         (__eo_to_smt
@@ -1948,7 +1948,7 @@ private theorem tuple_collapse_updater_eval_rel
   exact RuleProofs.smt_value_rel_refl _
 
 private theorem facts___eo_prog_dt_collapse_updater_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
   RuleProofs.eo_has_smt_translation a1 ->
   __eo_typeof (__eo_prog_dt_collapse_updater a1) = Term.Bool ->
   eo_interprets M (__eo_prog_dt_collapse_updater a1) true := by
@@ -2160,7 +2160,7 @@ private theorem facts___eo_prog_dt_collapse_updater_impl
       exact False.elim (eq_rhs_stuck_not_bool _ hBool)
 
 public theorem cmd_step_dt_collapse_updater_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.dt_collapse_updater args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

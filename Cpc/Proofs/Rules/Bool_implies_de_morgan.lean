@@ -100,7 +100,7 @@ private theorem typed___eo_prog_bool_implies_de_morgan_impl (x1 y1 : Term) :
       decide)
 
 private theorem facts___eo_prog_bool_implies_de_morgan_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 y1 : Term) :
   RuleProofs.eo_has_smt_translation x1 ->
   RuleProofs.eo_has_smt_translation y1 ->
   __eo_typeof (__eo_prog_bool_implies_de_morgan x1 y1) = Term.Bool ->
@@ -138,15 +138,15 @@ private theorem facts___eo_prog_bool_implies_de_morgan_impl
           (Term.Boolean true))) =
       SmtTerm.and (__eo_to_smt x1)
         (SmtTerm.and (SmtTerm.not (__eo_to_smt y1)) (SmtTerm.Boolean true)) by rfl]
-    simp only [__smtx_model_eval.eq_1, __smtx_model_eval.eq_6,
-      __smtx_model_eval.eq_8, __smtx_model_eval.eq_9, hEvalX1, hEvalY1]
+    simp only [__smtx_model_eval.eq_1, __smtx_model_eval.eq_7,
+      __smtx_model_eval.eq_9, __smtx_model_eval.eq_10, hEvalX1, hEvalY1]
     cases bx <;> cases bY <;>
       simp [RuleProofs.smt_value_rel, __smtx_model_eval_eq, __smtx_model_eval_and,
         __smtx_model_eval_imp, __smtx_model_eval_or, __smtx_model_eval_not, native_veq,
         SmtEval.native_and, SmtEval.native_or, SmtEval.native_not]
 
 public theorem cmd_step_bool_implies_de_morgan_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bool_implies_de_morgan args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

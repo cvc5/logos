@@ -696,16 +696,6 @@ private theorem false_of_typeof_str_indexof_re_eq_dtcapp_full
   repeat (first | split at hTy)
   all_goals cases hTy
 
-private theorem false_of_typeof_str_indexof_re_split_eq_dtcapp_full
-    {z y x A B : Term}
-    (hTy :
-      __eo_typeof_str_indexof_re_split (__eo_typeof z) (__eo_typeof y) (__eo_typeof x) =
-        Term.DtcAppType A B) :
-    False := by
-  unfold __eo_typeof_str_indexof_re_split at hTy
-  repeat (first | split at hTy)
-  all_goals cases hTy
-
 private theorem false_of_typeof_strings_num_occur_re_eq_dtcapp_full
     {y x A B : Term}
     (hTy :
@@ -1669,7 +1659,7 @@ private theorem eo_type_valid_of_tuple_select_eq_dtcapp_full
               have hNatInt :
                   native_nat_to_int (native_int_to_nat n) = n := by
                 simp [native_nat_to_int, native_int_to_nat,
-                  SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+                  Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
                   Int.toNat_of_nonneg hnNonneg]
               have hSelectedValid :
                   eo_type_valid_rec []
@@ -1884,7 +1874,6 @@ private theorem eo_to_smt_apply_apply_apply_uop_generic_full
     (hStrReplaceRe : op ≠ UserOp.str_replace_re)
     (hStrReplaceReAll : op ≠ UserOp.str_replace_re_all)
     (hStrIndexofRe : op ≠ UserOp.str_indexof_re)
-    (hStrIndexofReSplit : op ≠ UserOp.str_indexof_re_split)
     (hStringsOccurIndex : op ≠ UserOp._at_strings_occur_index)
     (hStringsOccurIndexRe : op ≠ UserOp._at_strings_occur_index_re) :
       __eo_to_smt
@@ -1906,7 +1895,6 @@ private theorem eo_to_smt_apply_apply_apply_uop_generic_full
       | exact False.elim (hStrReplaceRe rfl)
       | exact False.elim (hStrReplaceReAll rfl)
       | exact False.elim (hStrIndexofRe rfl)
-      | exact False.elim (hStrIndexofReSplit rfl)
       | exact False.elim (hStringsOccurIndex rfl)
       | exact False.elim (hStringsOccurIndexRe rfl)
 
@@ -1923,7 +1911,6 @@ private theorem eo_typeof_apply_apply_apply_uop_generic_full
     (hStrReplaceRe : op ≠ UserOp.str_replace_re)
     (hStrReplaceReAll : op ≠ UserOp.str_replace_re_all)
     (hStrIndexofRe : op ≠ UserOp.str_indexof_re)
-    (hStrIndexofReSplit : op ≠ UserOp.str_indexof_re_split)
     (hStringsOccurIndex : op ≠ UserOp._at_strings_occur_index)
     (hStringsOccurIndexRe : op ≠ UserOp._at_strings_occur_index_re) :
       __eo_typeof
@@ -1945,7 +1932,6 @@ private theorem eo_typeof_apply_apply_apply_uop_generic_full
       | exact False.elim (hStrReplaceRe rfl)
       | exact False.elim (hStrReplaceReAll rfl)
       | exact False.elim (hStrIndexofRe rfl)
-      | exact False.elim (hStrIndexofReSplit rfl)
       | exact False.elim (hStringsOccurIndex rfl)
       | exact False.elim (hStringsOccurIndexRe rfl)
 
@@ -2095,11 +2081,11 @@ private theorem eo_to_smt_apply_dt_sel_ne_dtcapp_full
   change
     __smtx_typeof
         (SmtTerm.Apply
-          (native_ite (native_reserved_datatype_name s) SmtTerm.None
+          (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
             (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
           (__eo_to_smt x)) =
       SmtType.DtcAppType A B at h
-  cases hRes : native_reserved_datatype_name s
+  cases hRes : __eo_to_smt_reserved_datatype_name s
   · simp [native_ite, hRes] at h
     exact smtx_typeof_apply_dt_sel_ne_dtcapp_full s (__eo_to_smt_datatype_decl d) i j
       (__eo_to_smt x) A B h
@@ -4067,16 +4053,6 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                               (__eo_typeof y) (__eo_typeof x) =
                             Term.DtcAppType a b
                         exact hTy))
-                  by_cases hStrIndexofReSplit :
-                      op = UserOp.str_indexof_re_split
-                  · subst op
-                    exact False.elim
-                      (false_of_typeof_str_indexof_re_split_eq_dtcapp_full (by
-                        change
-                          __eo_typeof_str_indexof_re_split (__eo_typeof z)
-                              (__eo_typeof y) (__eo_typeof x) =
-                            Term.DtcAppType a b
-                        exact hTy))
                   by_cases hStringsOccurIndex :
                       op = UserOp._at_strings_occur_index
                   · subst op
@@ -4104,12 +4080,12 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                     (eo_to_smt_apply_apply_apply_uop_generic_full op z y x
                       hIte hStore hBvite hStrSubstr hStrReplace hStrIndexof
                       hStrUpdate hStrReplaceAll hStrReplaceRe hStrReplaceReAll
-                      hStrIndexofRe hStrIndexofReSplit hStringsOccurIndex
+                      hStrIndexofRe hStringsOccurIndex
                       hStringsOccurIndexRe)
                     (eo_typeof_apply_apply_apply_uop_generic_full op z y x
                       hIte hStore hBvite hStrSubstr hStrReplace hStrIndexof
                       hStrUpdate hStrReplaceAll hStrReplaceRe hStrReplaceReAll
-                      hStrIndexofRe hStrIndexofReSplit hStringsOccurIndex
+                      hStrIndexofRe hStringsOccurIndex
                       hStringsOccurIndexRe)
                     hTermNN hTy
                 ·
@@ -4458,18 +4434,18 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                 (by
                   intro s' d' i' j' h
                   change
-                    native_ite (native_reserved_datatype_name s) SmtTerm.None
+                    native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
                         (SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i) =
                       SmtTerm.DtSel s' d' i' j' at h
-                  cases hRes : native_reserved_datatype_name s <;>
+                  cases hRes : __eo_to_smt_reserved_datatype_name s <;>
                     simp [native_ite, hRes] at h)
                 (by
                   intro s' d' i' h
                   change
-                    native_ite (native_reserved_datatype_name s) SmtTerm.None
+                    native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
                         (SmtTerm.DtCons s (__eo_to_smt_datatype_decl d) i) =
                       SmtTerm.DtTester s' d' i' at h
-                  cases hRes : native_reserved_datatype_name s <;>
+                  cases hRes : __eo_to_smt_reserved_datatype_name s <;>
                     simp [native_ite, hRes] at h)
                 rfl rfl hTermNN hTy
             case DtSel s d i j =>
@@ -4673,7 +4649,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                                       simpa [__eo_to_smt_nat_is_valid, native_zleq,
                                         SmtEval.native_zleq] using hIdxValid)
                                   simp [native_nat_to_int, native_int_to_nat,
-                                    SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]
+                                    Smtm.native_nat_to_int, SmtEval.native_int_to_nat]
                                   exact Int.max_eq_left hNonneg
                                 have hEoSk :
                                     __eo_to_smt_type
@@ -4788,7 +4764,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                                       simpa [__eo_to_smt_nat_is_valid, native_zleq,
                                         SmtEval.native_zleq] using hIdxValid)
                                   simp [native_nat_to_int, native_int_to_nat,
-                                    SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]
+                                    Smtm.native_nat_to_int, SmtEval.native_int_to_nat]
                                   exact Int.max_eq_left hNonneg
                                 have hSkValid :=
                                   eo_to_smt_quantifiers_skolemize_var_type_valid_of_non_none xs

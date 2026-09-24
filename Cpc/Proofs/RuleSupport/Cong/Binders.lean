@@ -54,7 +54,7 @@ private theorem eo_eq_true_not_eval_true_iff
     (__smtx_model_eval M (SmtTerm.not (__eo_to_smt body)) = SmtValue.Boolean true ↔
       __smtx_model_eval M (SmtTerm.not (__eo_to_smt body')) = SmtValue.Boolean true) := by
   intro hEq
-  rw [__smtx_model_eval.eq_6, __smtx_model_eval.eq_6]
+  rw [__smtx_model_eval.eq_7, __smtx_model_eval.eq_7]
   exact smtx_model_eval_eq_true_not_true_iff
       (__smtx_model_eval M (__eo_to_smt body))
       (__smtx_model_eval M (__eo_to_smt body'))
@@ -66,13 +66,13 @@ private theorem eo_eq_true_not_eval_true_iff
 private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
     (M : SmtModel) (body body' : SmtTerm)
     (hBody :
-      ∀ N, model_total_typed N ->
+      ∀ N, model_wf N ->
         model_agrees_on_globals M N ->
         (__smtx_model_eval N body = SmtValue.Boolean true ↔
           __smtx_model_eval N body' = SmtValue.Boolean true)) :
     ∀ (xs : Term) (N : SmtModel),
       QuantifierBinderTypesWf xs ->
-      model_total_typed N ->
+      model_wf N ->
       model_agrees_on_globals M N ->
       (__smtx_model_eval N (__eo_to_smt_exists xs body) =
           SmtValue.Boolean true ↔
@@ -105,7 +105,7 @@ private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
                 by_cases hSat :
                     ∃ v : SmtValue,
                       __smtx_typeof_value v = __eo_to_smt_type T ∧
-                        __smtx_value_canonical_bool v = true ∧
+                        __smtx_value_canonical v = true ∧
                         __smtx_model_eval
                             (native_model_push N s (__eo_to_smt_type T) v)
                             (__eo_to_smt_exists xs body) =
@@ -113,7 +113,7 @@ private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
                 · have hSat' :
                       ∃ v : SmtValue,
                         __smtx_typeof_value v = __eo_to_smt_type T ∧
-                          __smtx_value_canonical_bool v = true ∧
+                          __smtx_value_canonical v = true ∧
                           __smtx_model_eval
                               (native_model_push N s (__eo_to_smt_type T) v)
                               (__eo_to_smt_exists xs body') =
@@ -127,7 +127,7 @@ private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
                         hBinderWf.2
                         (model_total_typed_push hN s (__eo_to_smt_type T) v
                           hBinderWf.1 hvTy
-                          (by simpa [__smtx_value_canonical] using hvCan))
+                          (by simpa [value_canonical] using hvCan))
                         (model_agrees_on_globals_trans hAgree
                           (model_agrees_on_globals_push N s (__eo_to_smt_type T) v))).1
                         hvEval
@@ -137,7 +137,7 @@ private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
                 by_cases hSat :
                     ∃ v : SmtValue,
                       __smtx_typeof_value v = __eo_to_smt_type T ∧
-                        __smtx_value_canonical_bool v = true ∧
+                        __smtx_value_canonical v = true ∧
                         __smtx_model_eval
                             (native_model_push N s (__eo_to_smt_type T) v)
                             (__eo_to_smt_exists xs body') =
@@ -145,7 +145,7 @@ private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
                 · have hSat' :
                       ∃ v : SmtValue,
                         __smtx_typeof_value v = __eo_to_smt_type T ∧
-                          __smtx_value_canonical_bool v = true ∧
+                          __smtx_value_canonical v = true ∧
                           __smtx_model_eval
                               (native_model_push N s (__eo_to_smt_type T) v)
                               (__eo_to_smt_exists xs body) =
@@ -159,7 +159,7 @@ private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
                         hBinderWf.2
                         (model_total_typed_push hN s (__eo_to_smt_type T) v
                           hBinderWf.1 hvTy
-                          (by simpa [__smtx_value_canonical] using hvCan))
+                          (by simpa [value_canonical] using hvCan))
                         (model_agrees_on_globals_trans hAgree
                           (model_agrees_on_globals_push N s (__eo_to_smt_type T) v))).2
                         hvEval
@@ -216,7 +216,7 @@ termination_by xs N _ _ _ => xs
 private theorem eo_to_smt_exists_eval_eq_of_body_true_iff_cons
     (M : SmtModel) (body body' : SmtTerm)
     (hBody :
-      ∀ N, model_total_typed N ->
+      ∀ N, model_wf N ->
         model_agrees_on_globals M N ->
         (__smtx_model_eval N body = SmtValue.Boolean true ↔
           __smtx_model_eval N body' = SmtValue.Boolean true))
@@ -224,7 +224,7 @@ private theorem eo_to_smt_exists_eval_eq_of_body_true_iff_cons
     (hBindersWf :
       QuantifierBinderTypesWf
         (Term.Apply (Term.Apply Term.__eo_List_cons head) tail))
-    (hN : model_total_typed N)
+    (hN : model_wf N)
     (hAgree : model_agrees_on_globals M N) :
     __smtx_model_eval N
         (__eo_to_smt_exists
@@ -247,7 +247,7 @@ private theorem eo_to_smt_exists_eval_eq_of_body_true_iff_cons
       by_cases hSat :
           ∃ v : SmtValue,
             __smtx_typeof_value v = __eo_to_smt_type T ∧
-              __smtx_value_canonical_bool v = true ∧
+              __smtx_value_canonical v = true ∧
               __smtx_model_eval
                   (native_model_push N s (__eo_to_smt_type T) v)
                   (__eo_to_smt_exists tail body) =
@@ -255,7 +255,7 @@ private theorem eo_to_smt_exists_eval_eq_of_body_true_iff_cons
       · have hSat' :
             ∃ v : SmtValue,
               __smtx_typeof_value v = __eo_to_smt_type T ∧
-                __smtx_value_canonical_bool v = true ∧
+                __smtx_value_canonical v = true ∧
                 __smtx_model_eval
                     (native_model_push N s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists tail body') =
@@ -269,7 +269,7 @@ private theorem eo_to_smt_exists_eval_eq_of_body_true_iff_cons
               hBinderWf.2
               (model_total_typed_push hN s (__eo_to_smt_type T) v
                 hBinderWf.1 hvTy
-                (by simpa [__smtx_value_canonical] using hvCan))
+                (by simpa [value_canonical] using hvCan))
               (model_agrees_on_globals_trans hAgree
                 (model_agrees_on_globals_push N s (__eo_to_smt_type T) v))).1
               hvEval
@@ -277,7 +277,7 @@ private theorem eo_to_smt_exists_eval_eq_of_body_true_iff_cons
       · have hSat' :
             ¬ ∃ v : SmtValue,
               __smtx_typeof_value v = __eo_to_smt_type T ∧
-                __smtx_value_canonical_bool v = true ∧
+                __smtx_value_canonical v = true ∧
                 __smtx_model_eval
                     (native_model_push N s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists tail body') =
@@ -293,7 +293,7 @@ private theorem eo_to_smt_exists_eval_eq_of_body_true_iff_cons
               hBinderWf.2
               (model_total_typed_push hN s (__eo_to_smt_type T) v
                 hBinderWf.1 hvTy
-                (by simpa [__smtx_value_canonical] using hvCan))
+                (by simpa [value_canonical] using hvCan))
               (model_agrees_on_globals_trans hAgree
                 (model_agrees_on_globals_push N s (__eo_to_smt_type T) v))).2
               hvEval
@@ -303,7 +303,7 @@ private abbrev mkBinderApp (op : UserOp) (xs body : Term) : Term :=
   Term.Apply (Term.Apply (Term.UOp op) xs) body
 
 private theorem premiseEvidence_lifts_congruence_over_binders
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (premises : List Term)
     (op : UserOp) (xs body body' : Term)
     (hOp : op = UserOp.forall ∨ op = UserOp.exists) :
@@ -319,7 +319,7 @@ private theorem premiseEvidence_lifts_congruence_over_binders
   -- the required checker-side fact is now explicit: the body equality premise
   -- is available in every variable-variant model via `true_in_var_model`.
   have hBodyAny :
-      ∀ N, model_total_typed N ->
+      ∀ N, model_wf N ->
         model_agrees_on_globals M N ->
         eo_interprets N (mkEq body body') true := by
     intro N hN hAgree
@@ -339,7 +339,7 @@ private theorem premiseEvidence_lifts_congruence_over_binders
     | inl hForall =>
         subst hForall
         have hNotBody :
-            ∀ N, model_total_typed N ->
+            ∀ N, model_wf N ->
               model_agrees_on_globals M N ->
               (__smtx_model_eval N (SmtTerm.not (__eo_to_smt body)) =
                   SmtValue.Boolean true ↔
@@ -376,7 +376,7 @@ private theorem premiseEvidence_lifts_congruence_over_binders
                 (Term.Apply (Term.Apply Term.__eo_List_cons head) tail)
                 (SmtTerm.not (__eo_to_smt body'))))) =
             SmtValue.Boolean true
-        rw [__smtx_model_eval.eq_6, __smtx_model_eval.eq_6]
+        rw [__smtx_model_eval.eq_7, __smtx_model_eval.eq_7]
         rw [hInner]
         exact RuleProofs.smtx_model_eval_eq_refl
           (__smtx_model_eval_not
@@ -387,7 +387,7 @@ private theorem premiseEvidence_lifts_congruence_over_binders
     | inr hExists =>
         subst hExists
         have hBodyTrue :
-            ∀ N, model_total_typed N ->
+            ∀ N, model_wf N ->
               model_agrees_on_globals M N ->
               (__smtx_model_eval N (__eo_to_smt body) =
                   SmtValue.Boolean true ↔
@@ -431,7 +431,7 @@ private theorem premiseEvidence_lifts_congruence_over_binders
     (mkBinderApp op xs body) (mkBinderApp op xs body') hEqBool hRel
 
 private theorem stable_lifts_congruence_over_binders
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (op : UserOp) (xs body body' : Term)
     (hOp : op = UserOp.forall ∨ op = UserOp.exists) :
     StableInAnyVarModel M (mkEq body body') ->
@@ -457,7 +457,7 @@ private theorem stable_lifts_congruence_over_binders
     (by simp) hBinderTypesWf hEqBool
 
 theorem congEvidenceSpine_quantifier_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (premises : List Term)
     (op : UserOp) (xs body rhs : Term)
     (hOp : op = UserOp.forall ∨ op = UserOp.exists) :
@@ -517,7 +517,7 @@ theorem congEvidenceSpine_quantifier_eq_true
                   (by simpa [mkEq] using hListBool))
 
 theorem congStableSpine_quantifier_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (op : UserOp) (xs body rhs : Term)
     (hOp : op = UserOp.forall ∨ op = UserOp.exists) :
     QuantifierBinderTypesWf xs ->
@@ -974,177 +974,177 @@ theorem eo_apply_apply_arg_has_translation_of_has_translation
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvand (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvand
-            (by intro a b; rw [__smtx_typeof.eq_38])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_40])) hx)
       case bvor =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvor (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvor
-            (by intro a b; rw [__smtx_typeof.eq_39])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_41])) hx)
       case bvnand =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvnand (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvnand
-            (by intro a b; rw [__smtx_typeof.eq_40])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_42])) hx)
       case bvnor =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvnor (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvnor
-            (by intro a b; rw [__smtx_typeof.eq_41])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_43])) hx)
       case bvxor =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvxor (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvxor
-            (by intro a b; rw [__smtx_typeof.eq_42])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_44])) hx)
       case bvxnor =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvxnor (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvxnor
-            (by intro a b; rw [__smtx_typeof.eq_43])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_45])) hx)
       case bvcomp =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvcomp (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvcomp
-            (SmtType.BitVec 1) (by intro a b; rw [__smtx_typeof.eq_44])) hx)
+            (SmtType.BitVec 1) (by intro a b; rw [__smtx_typeof.eq_46])) hx)
       case bvadd =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvadd (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvadd
-            (by intro a b; rw [__smtx_typeof.eq_46])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_48])) hx)
       case bvmul =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvmul (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvmul
-            (by intro a b; rw [__smtx_typeof.eq_47])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_49])) hx)
       case bvudiv =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvudiv (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvudiv
-            (by intro a b; rw [__smtx_typeof.eq_48])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_50])) hx)
       case bvurem =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvurem (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvurem
-            (by intro a b; rw [__smtx_typeof.eq_49])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_51])) hx)
       case bvsub =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvsub (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvsub
-            (by intro a b; rw [__smtx_typeof.eq_50])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_52])) hx)
       case bvsdiv =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvsdiv (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvsdiv
-            (by intro a b; rw [__smtx_typeof.eq_51])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_53])) hx)
       case bvsrem =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvsrem (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvsrem
-            (by intro a b; rw [__smtx_typeof.eq_52])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_54])) hx)
       case bvsmod =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvsmod (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvsmod
-            (by intro a b; rw [__smtx_typeof.eq_53])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_55])) hx)
       case bvult =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvult (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvult
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_54])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_56])) hx)
       case bvule =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvule (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvule
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_55])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_57])) hx)
       case bvugt =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvugt (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvugt
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_56])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_58])) hx)
       case bvuge =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvuge (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvuge
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_57])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_59])) hx)
       case bvslt =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvslt (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvslt
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_58])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_60])) hx)
       case bvsle =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvsle (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvsle
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_59])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_61])) hx)
       case bvsgt =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvsgt (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvsgt
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_60])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_62])) hx)
       case bvsge =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvsge (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvsge
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_61])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_63])) hx)
       case bvshl =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvshl (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvshl
-            (by intro a b; rw [__smtx_typeof.eq_62])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_64])) hx)
       case bvlshr =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvlshr (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvlshr
-            (by intro a b; rw [__smtx_typeof.eq_63])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_65])) hx)
       case bvashr =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvashr (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_args_non_reg_of_non_none SmtTerm.bvashr
-            (by intro a b; rw [__smtx_typeof.eq_64])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_66])) hx)
       case bvuaddo =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvuaddo (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvuaddo
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_69])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_71])) hx)
       case bvsaddo =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvsaddo (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvsaddo
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_71])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_73])) hx)
       case bvumulo =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvumulo (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvumulo
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_72])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_74])) hx)
       case bvsmulo =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvsmulo (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvsmulo
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_73])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_75])) hx)
       case bvusubo =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvusubo (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvusubo
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_74])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_76])) hx)
       case bvssubo =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvssubo (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvssubo
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_75])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_77])) hx)
       case bvsdivo =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           SmtTerm.bvsdivo (__eo_to_smt z) (__eo_to_smt x)
           (bv_binop_ret_args_non_reg_of_non_none SmtTerm.bvsdivo
-            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_76])) hx)
+            SmtType.Bool (by intro a b; rw [__smtx_typeof.eq_78])) hx)
       case bvultbv =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           (bvPredToBv SmtTerm.bvult) (__eo_to_smt z) (__eo_to_smt x)
           (bv_pred_to_bv_args_non_reg_of_non_none SmtTerm.bvult
-            (by intro a b; rw [__smtx_typeof.eq_54])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_56])) hx)
       case bvsltbv =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           (bvPredToBv SmtTerm.bvslt) (__eo_to_smt z) (__eo_to_smt x)
           (bv_pred_to_bv_args_non_reg_of_non_none SmtTerm.bvslt
-            (by intro a b; rw [__smtx_typeof.eq_58])) hx)
+            (by intro a b; rw [__smtx_typeof.eq_60])) hx)
       case _at_from_bools =>
         exact hTrans (smt_binop_type_none_of_second_arg_none
           bvFromBoolsTerm (__eo_to_smt z) (__eo_to_smt x)
@@ -1439,10 +1439,6 @@ theorem eo_apply_apply_arg_has_translation_of_has_translation
           case str_indexof_re =>
             exact hTrans (smt_str_indexof_re_type_none_of_third_arg_none
               (__eo_to_smt y) (__eo_to_smt z) (__eo_to_smt x) hx)
-          case str_indexof_re_split =>
-            exact hTrans
-              (smt_str_indexof_re_split_type_none_of_third_arg_none
-                (__eo_to_smt y) (__eo_to_smt z) (__eo_to_smt x) hx)
           case _at_strings_occur_index =>
             exact hTrans (by
               change

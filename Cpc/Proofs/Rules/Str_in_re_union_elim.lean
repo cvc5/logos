@@ -206,7 +206,7 @@ private theorem typed_concl
     (by rw [hLhsTy, hRhsTy]) (by rw [hLhsTy]; simp)
 
 private theorem facts
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r1 r2 rs : Term)
     (hS : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hR1 : __smtx_typeof (__eo_to_smt r1) = SmtType.RegLan)
@@ -311,7 +311,7 @@ private theorem facts
 end StrInReUnionElimProof
 
 public theorem cmd_step_str_in_re_union_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_in_re_union_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

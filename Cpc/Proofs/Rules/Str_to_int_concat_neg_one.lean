@@ -179,7 +179,7 @@ private theorem string_nonempty_of_seq_nonempty
 private theorem native_str_to_int_neg_one_nonempty_not_all_digits
     (s : native_String) (hNe : s ≠ [])
     (hToInt : native_str_to_int s = (-1 : native_Int)) :
-    s.all native_char_is_digit ≠ true := by
+    s.all impl_native_char_is_digit ≠ true := by
   cases s with
   | nil => exact False.elim (hNe rfl)
   | cons c cs =>
@@ -189,27 +189,27 @@ private theorem native_str_to_int_neg_one_nonempty_not_all_digits
 private theorem contained_unpack_string_all_digits
     (whole needle : SmtSeq)
     (hWholeDigits :
-      (native_unpack_string whole).all native_char_is_digit = true)
+      (native_unpack_string whole).all impl_native_char_is_digit = true)
     (hContains :
       native_seq_contains (native_unpack_seq whole)
         (native_unpack_seq needle) = true) :
-    (native_unpack_string needle).all native_char_is_digit = true := by
+    (native_unpack_string needle).all impl_native_char_is_digit = true := by
   rcases (StrContainsReplCharSupport.native_seq_contains_iff_decomp
       (native_unpack_seq whole) (native_unpack_seq needle)).1 hContains with
     ⟨before, after, hWhole⟩
   change
-    ((native_unpack_seq whole).map native_ssm_char_of_value).all
-        native_char_is_digit = true at hWholeDigits
+    ((native_unpack_seq whole).map impl_native_ssm_char_of_value).all
+        impl_native_char_is_digit = true at hWholeDigits
   rw [hWhole] at hWholeDigits
   simp only [List.map_append, List.all_append, Bool.and_eq_true] at hWholeDigits
   change
-    ((native_unpack_seq needle).map native_ssm_char_of_value).all
-      native_char_is_digit = true
+    ((native_unpack_seq needle).map impl_native_ssm_char_of_value).all
+      impl_native_char_is_digit = true
   exact hWholeDigits.1.2
 
 private theorem native_str_to_int_neg_one_of_nonempty_not_all_digits
     (s : native_String) (hNe : s ≠ [])
-    (hDigits : s.all native_char_is_digit ≠ true) :
+    (hDigits : s.all impl_native_char_is_digit ≠ true) :
     native_str_to_int s = (-1 : native_Int) := by
   cases s with
   | nil => exact False.elim (hNe rfl)
@@ -217,7 +217,7 @@ private theorem native_str_to_int_neg_one_of_nonempty_not_all_digits
       simp [native_str_to_int, hDigits]
 
 private theorem facts___eo_prog_str_to_int_concat_neg_one_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s₁ s₂ s₃ P₁ P₂ : Term)
     (hStructure :
       __eo_is_list (Term.UOp UserOp.str_concat) s₁ = Term.Boolean true ∧
@@ -301,11 +301,11 @@ private theorem facts___eo_prog_str_to_int_concat_neg_one_impl
   have hS₂NonemptyString : native_unpack_string ss₂ ≠ [] :=
     string_nonempty_of_seq_nonempty ss₂ hS₂NonemptySeq
   have hS₂NotDigits :
-      (native_unpack_string ss₂).all native_char_is_digit ≠ true :=
+      (native_unpack_string ss₂).all impl_native_char_is_digit ≠ true :=
     native_str_to_int_neg_one_nonempty_not_all_digits
       (native_unpack_string ss₂) hS₂NonemptyString hS₂ToInt
   have hWholeNotDigits :
-      (native_unpack_string swhole).all native_char_is_digit ≠ true := by
+      (native_unpack_string swhole).all impl_native_char_is_digit ≠ true := by
     intro hDigits
     exact hS₂NotDigits
       (contained_unpack_string_all_digits swhole ss₂ hDigits
@@ -339,7 +339,7 @@ private theorem facts___eo_prog_str_to_int_concat_neg_one_impl
       (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_to_int_concat_neg_one_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_to_int_concat_neg_one args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

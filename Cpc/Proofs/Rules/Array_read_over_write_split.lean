@@ -229,7 +229,7 @@ private theorem smtx_model_eval_eq_false_of_ne_true
   · exact False.elim (h hb)
 
 private theorem facts___eo_prog_array_read_over_write_split_impl
-    (M : SmtModel) (hM : model_total_typed M) (t1 i1 e1 j1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t1 i1 e1 j1 : Term) :
   RuleProofs.eo_has_smt_translation t1 ->
   RuleProofs.eo_has_smt_translation i1 ->
   RuleProofs.eo_has_smt_translation e1 ->
@@ -279,16 +279,16 @@ private theorem facts___eo_prog_array_read_over_write_split_impl
       __smtx_typeof (__eo_to_smt j1) = A :=
     TranslationProofs.eo_to_smt_typeof_matches_translation j1 hJ1Trans
   have hT1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt t1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt t1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t1 hT1Trans
   have hI1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt i1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt i1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM i1 hI1Trans
   have hE1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt e1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt e1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM e1 hE1Trans
   have hJ1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt j1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt j1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM j1 hJ1Trans
   have hEvalT1Ty :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t1)) =
@@ -299,7 +299,7 @@ private theorem facts___eo_prog_array_read_over_write_split_impl
   rcases Smtm.map_value_canonical hEvalT1Ty with ⟨m, hT1EvalMap⟩
   have hMapCan : __smtx_map_canonical m = true := by
     rw [hT1EvalMap] at hT1Can
-    simpa [__smtx_value_canonical, __smtx_value_canonical_bool] using hT1Can
+    simpa [value_canonical, __smtx_value_canonical] using hT1Can
   have hARec : __smtx_type_wf_rec A = true :=
     (Smtm.smt_map_components_wf_rec_of_non_none_type
       (__eo_to_smt t1) A B hSmtT1).1
@@ -393,7 +393,7 @@ private theorem facts___eo_prog_array_read_over_write_split_impl
           hT1Can hJ1Can hI1Can hE1Can hij)
 
 public theorem cmd_step_array_read_over_write_split_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.array_read_over_write_split args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

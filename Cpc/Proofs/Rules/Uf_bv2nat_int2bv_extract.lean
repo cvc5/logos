@@ -393,7 +393,7 @@ private theorem width_nat_to_int_eq
     native_nat_to_int (native_int_to_nat n) = n := by
   have hnNonneg : 0 <= n := by
     simpa [SmtEval.native_zleq] using hNonneg
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using Int.toNat_of_nonneg hnNonneg
 
 private theorem smt_bitvec_type_of_eo_bitvec_type_with_width
@@ -551,7 +551,7 @@ private theorem typed_conclusion_impl
   · rw [hLhsTy']; intro h; cases h
 
 private theorem eval_extract_low_zero_matches_int_to_bv
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t : Term) (wi wmv tw : native_Int)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hWiNonneg : native_zleq 0 wi = true)
@@ -592,7 +592,7 @@ private theorem eval_extract_low_zero_matches_int_to_bv
     native_zexp_total, native_div_total, hWiEq, native_zplus, native_zneg]
 
 private theorem facts_conclusion_impl
-    (M : SmtModel) (hM : model_total_typed M) (w t wm : Term) :
+    (M : SmtModel) (hM : model_wf M) (w t wm : Term) :
     RuleProofs.eo_has_smt_translation t ->
     __eo_typeof (ufBv2natInt2bvExtractConclusion w t wm) = Term.Bool ->
     eo_interprets M (ufBv2natInt2bvExtractConclusion w t wm) true := by
@@ -623,7 +623,7 @@ private theorem facts_conclusion_impl
   exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_uf_bv2nat_int2bv_extract_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.uf_bv2nat_int2bv_extract args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -301,7 +301,7 @@ private theorem typed_bv_lshr_by_const_2_term
     (by rw [hLhsTy]; intro h; cases h)
 
 private theorem eval_int_term_local
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
     __smtx_typeof (__eo_to_smt t) = SmtType.Int ->
     ∃ k : native_Int,
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Numeral k := by
@@ -312,7 +312,7 @@ private theorem eval_int_term_local
   exact int_value_canonical (by simpa [hTy] using hEvalTy)
 
 private theorem eval_bv_term_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (t : Term) (W : native_Int) :
     native_zleq 0 W = true ->
     __smtx_typeof (__eo_to_smt t) =
@@ -518,7 +518,7 @@ private theorem native_mod_div_pow2_eq_zero_of_le
   simp [native_mod_total]
 
 private theorem eval_shift_const_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x amount : Term) (W : native_Int) :
     RuleProofs.eo_has_smt_translation x ->
     native_zleq 0 W = true ->
@@ -600,7 +600,7 @@ private theorem eval_shift_zero_local
   simp [native_mod_total]
 
 private theorem facts_bv_shl_by_const_2_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x amount sz w : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation amount ->
@@ -634,7 +634,7 @@ private theorem facts_bv_shl_by_const_2_term
     exact RuleProofs.smt_value_rel_refl _
 
 private theorem facts_bv_lshr_by_const_2_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x amount sz : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation amount ->
@@ -970,7 +970,7 @@ theorem typed_bv_lshr_by_const_2_program
     hXTrans hAmountTrans hSzTrans hTermTy
 
 theorem facts_bv_shl_by_const_2_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x amount sz w P1 P2 P3 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation amount ->
@@ -1006,7 +1006,7 @@ theorem facts_bv_shl_by_const_2_program
     hGePrem hLtPrem hWidthPrem
 
 theorem facts_bv_lshr_by_const_2_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x amount sz P1 P2 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation amount ->
@@ -1070,40 +1070,40 @@ private theorem native_pow2_minus_one_mod_self_local (w : native_Int) :
 
 private theorem eval_repeat_rec_zero_bit :
     ∀ n : native_Nat,
-      __smtx_model_eval_repeat_rec n (SmtValue.Binary 1 0) =
+      __smtx_repeat_rec n (SmtValue.Binary 1 0) =
         SmtValue.Binary (native_nat_to_int n) 0
   | Nat.zero => by
-      simp [__smtx_model_eval_repeat_rec, native_nat_to_int,
-        SmtEval.native_nat_to_int]
+      simp [__smtx_repeat_rec, native_nat_to_int,
+        Smtm.native_nat_to_int]
   | Nat.succ n => by
-      rw [__smtx_model_eval_repeat_rec, eval_repeat_rec_zero_bit n]
+      rw [__smtx_repeat_rec, eval_repeat_rec_zero_bit n]
       have hWidth :
           native_zplus (1 : native_Int) (native_nat_to_int n) =
             native_nat_to_int (Nat.succ n) := by
         simp [SmtEval.native_zplus, native_nat_to_int,
-          SmtEval.native_nat_to_int]
+          Smtm.native_nat_to_int]
         rw [Int.add_comm]
       have hWidthInt : (1 : Int) + ↑n = ↑n + 1 := by
         rw [Int.add_comm]
       simp [__smtx_model_eval_concat, native_binary_concat,
         SmtEval.native_zplus, SmtEval.native_zmult,
-        native_nat_to_int, SmtEval.native_nat_to_int,
+        native_nat_to_int, Smtm.native_nat_to_int,
         native_mod_total, hWidth, hWidthInt]
 
 private theorem eval_repeat_rec_one_bit :
     ∀ n : native_Nat,
-      __smtx_model_eval_repeat_rec n (SmtValue.Binary 1 1) =
+      __smtx_repeat_rec n (SmtValue.Binary 1 1) =
         SmtValue.Binary (native_nat_to_int n)
           (native_int_pow2 (native_nat_to_int n) - 1)
   | Nat.zero => by
-      simp [__smtx_model_eval_repeat_rec, native_nat_to_int,
-        SmtEval.native_nat_to_int, native_int_pow2, native_zexp_total]
+      simp [__smtx_repeat_rec, native_nat_to_int,
+        Smtm.native_nat_to_int, native_int_pow2, native_zexp_total]
   | Nat.succ n => by
-      rw [__smtx_model_eval_repeat_rec, eval_repeat_rec_one_bit n]
+      rw [__smtx_repeat_rec, eval_repeat_rec_one_bit n]
       have hPowSucc :
           native_int_pow2 (native_nat_to_int (Nat.succ n)) =
             2 * native_int_pow2 (native_nat_to_int n) := by
-        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+        simpa [native_nat_to_int, Smtm.native_nat_to_int] using
           native_int_pow2_nat_succ_local n
       have hRaw :
           native_int_pow2 (native_nat_to_int n) +
@@ -1130,7 +1130,7 @@ private theorem eval_repeat_rec_one_bit :
           native_zplus (1 : native_Int) (native_nat_to_int n) =
             native_nat_to_int (Nat.succ n) := by
         simp [SmtEval.native_zplus, native_nat_to_int,
-          SmtEval.native_nat_to_int]
+          Smtm.native_nat_to_int]
         rw [Int.add_comm]
       have hWidthInt : (1 : Int) + ↑n = ↑n + 1 := by
         rw [Int.add_comm]
@@ -1141,10 +1141,10 @@ private theorem eval_repeat_rec_one_bit :
               (native_int_pow2 (↑n + 1)) =
             native_int_pow2 (↑n + 1) - 1 := by
         rw [hRaw]
-        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hMod
+        simpa [native_nat_to_int, Smtm.native_nat_to_int] using hMod
       simpa [__smtx_model_eval_concat, native_binary_concat,
         SmtEval.native_zplus, SmtEval.native_zmult,
-        native_nat_to_int, SmtEval.native_nat_to_int, hWidthInt]
+        native_nat_to_int, Smtm.native_nat_to_int, hWidthInt]
         using hPayload
 
 def bvAshrByConst2Lhs (x amount sz : Term) : Term :=
@@ -1334,7 +1334,7 @@ private theorem typed_bv_ashr_by_const_2_term
           (Term.Numeral N)))) = _
     rw [typeof_repeat_eq, hSignTy]
     simp [__smtx_typeof_repeat, native_ite, hROne,
-      SmtEval.native_zmult, native_nat_to_int, SmtEval.native_nat_to_int]
+      SmtEval.native_zmult, native_nat_to_int, Smtm.native_nat_to_int]
   have hLhsTrans : RuleProofs.eo_has_smt_translation
       (bvAshrByConst2Lhs x amount (Term.Numeral W)) := by
     unfold RuleProofs.eo_has_smt_translation
@@ -1384,11 +1384,11 @@ private theorem eval_repeat_bit_local2 (A : Nat) (b : Bool) :
   | false =>
       simp [__smtx_model_eval_repeat, hAToNat,
         eval_repeat_rec_zero_bit, BitVec.fill_toNat,
-        native_nat_to_int, SmtEval.native_nat_to_int]
+        native_nat_to_int, Smtm.native_nat_to_int]
   | true =>
       simp [__smtx_model_eval_repeat, hAToNat,
         eval_repeat_rec_one_bit, BitVec.fill_toNat,
-        native_nat_to_int, SmtEval.native_nat_to_int, natpow2_eq]
+        native_nat_to_int, Smtm.native_nat_to_int, natpow2_eq]
       exact hOnesCast.symm
 
 private theorem bvlshr_bitvec_value_local2 (x : BitVec W) (A : Nat) :
@@ -1599,7 +1599,7 @@ private theorem bv_ashr_by_const_2_premises_numeric
   exact ⟨hWA, hAPow, hNmEq, hRnEq⟩
 
 private theorem eval_bv_ashr_by_const_2_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x amount sz nm rn : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation amount ->
@@ -1696,7 +1696,7 @@ private theorem eval_bv_ashr_by_const_2_term
     hR hRange.1 hRange.2
 
 private theorem facts_bv_ashr_by_const_2_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x amount sz nm rn : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation amount ->
@@ -1913,7 +1913,7 @@ theorem typed_bv_ashr_by_const_2_program
     hXTrans hAmountTrans hSzTrans hNmTrans hRnTrans hTermTy
 
 theorem facts_bv_ashr_by_const_2_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x amount sz nm rn P1 P2 P3 P4 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation amount ->

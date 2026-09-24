@@ -206,7 +206,7 @@ private theorem zlt_of_gt_premise
   simpa using hEq
 
 private theorem facts
-    (M : SmtModel) (hM : model_total_typed M) (r : Term)
+    (M : SmtModel) (hM : model_wf M) (r : Term)
     (lo hi : Int)
     (hRTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan)
     (hLo : native_zleq 0 lo = true)
@@ -252,7 +252,7 @@ private theorem facts
 end ReLoopNegProof
 
 public theorem cmd_step_re_loop_neg_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_loop_neg args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

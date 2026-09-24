@@ -96,12 +96,12 @@ private theorem eo_interprets_not_false_of_true (M : SmtModel) (t : Term) :
       refine smt_interprets.intro_false M (SmtTerm.not (__eo_to_smt t)) ?_ ?_
       · rw [typeof_not_eq]
         simp [hTy, native_Teq, native_ite]
-      · rw [__smtx_model_eval.eq_6]
+      · rw [__smtx_model_eval.eq_7]
         rw [hEval]
         simp [__smtx_model_eval_not, SmtEval.native_not]
 
 private theorem eo_interprets_eq_true_implies_true
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (t : Term) :
   eo_interprets M (Term.Apply (Term.Apply Term.eq t) (Term.Boolean true)) true ->
   eo_interprets M t true := by
   intro hEqTrue
@@ -187,7 +187,7 @@ theorem typed___eo_prog_bool_not_false_impl (t1 x1 : Term) :
 
 /-- Derives the checker facts exposed by the EO program for `bool_not_false`. -/
 theorem facts___eo_prog_bool_not_false_impl
-    (M : SmtModel) (hM : model_total_typed M) (t1 x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t1 x1 : Term) :
   eo_interprets M x1 true ->
   __eo_prog_bool_not_false t1 (Proof.pf x1) ≠ Term.Stuck ->
   eo_interprets M (__eo_prog_bool_not_false t1 (Proof.pf x1)) true := by
@@ -241,7 +241,7 @@ theorem facts___eo_prog_bool_not_false_impl
       cases t1 <;> simp [__eo_prog_bool_not_false] at hProg
 
 public theorem cmd_step_bool_not_false_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bool_not_false args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -92,7 +92,7 @@ theorem facts___eo_prog_false_intro_impl (M : SmtModel) (x1 : Term) :
       exact False.elim (hProg rfl)
 
 public theorem cmd_step_false_intro_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.false_intro args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

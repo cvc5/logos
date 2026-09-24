@@ -14,7 +14,7 @@ set_option maxHeartbeats 10000000
 namespace RuleProofs
 
 theorem str_re_consume_model_rel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r side : Term)
     (hEqTrans :
       RuleProofs.eo_has_smt_translation
@@ -5689,7 +5689,7 @@ theorem str_re_consume_model_rel
             hNonMultInputNative hSideFalse hNotMult)
 
 private theorem StrInReConsumeInternal.str_in_re_consume_valid_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s r b : Term)
     (hArgTrans :
       RuleProofs.eo_has_smt_translation
@@ -5750,7 +5750,7 @@ private theorem StrInReConsumeInternal.str_in_re_consume_valid_properties
 end RuleProofs
 
 public theorem cmd_step_str_in_re_consume_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_in_re_consume args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

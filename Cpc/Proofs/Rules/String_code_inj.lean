@@ -214,13 +214,13 @@ private theorem sciFormula_has_bool_type
 private theorem list_typed_char_pack_unpack :
     ∀ {xs : List SmtValue},
       list_typed SmtType.Char xs ->
-        xs.map (fun v => SmtValue.Char (native_ssm_char_of_value v)) = xs
+        xs.map (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) = xs
   | [], _ => rfl
   | v :: vs, hxs => by
       rcases hxs with ⟨hv, hvs⟩
       rcases char_value_canonical hv with ⟨c, hvc, _hc⟩
       rw [hvc]
-      simpa [native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
+      simpa [impl_native_ssm_char_of_value] using list_typed_char_pack_unpack hvs
 
 private theorem native_pack_string_unpack_string_of_typeof_seq_char
     (ss : SmtSeq)
@@ -230,7 +230,7 @@ private theorem native_pack_string_unpack_string_of_typeof_seq_char
     typed_unpack_seq_of_typeof_seq_value hTy
   have hMap :
       (native_unpack_seq ss).map
-          (fun v => SmtValue.Char (native_ssm_char_of_value v)) =
+          (fun v => SmtValue.Char (impl_native_ssm_char_of_value v)) =
         native_unpack_seq ss :=
     list_typed_char_pack_unpack hTyped
   unfold native_pack_string native_unpack_string
@@ -238,7 +238,7 @@ private theorem native_pack_string_unpack_string_of_typeof_seq_char
     elem_typeof_seq_value_of_typeof_seq_value hTy
   simp only [List.map_map]
   change native_pack_seq SmtType.Char
-      ((native_unpack_seq ss).map (fun v => SmtValue.Char (native_ssm_char_of_value v))) =
+      ((native_unpack_seq ss).map (fun v => SmtValue.Char (impl_native_ssm_char_of_value v))) =
     ss
   rw [hMap]
   rw [← native_pack_unpack_seq ss, hElem]
@@ -285,7 +285,7 @@ private theorem native_str_to_code_inj_of_ne_neg_one
           simp [native_str_to_code] at hNe
 
 private theorem eval_seq_of_seq_char_type
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char) :
     ∃ ss : SmtSeq,
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Seq ss ∧
@@ -303,7 +303,7 @@ private theorem eval_seq_of_seq_char_type
   simpa [hEval, __smtx_typeof_value] using hPres
 
 private theorem facts_sciFormula
-    (M : SmtModel) (hM : model_total_typed M) (t s : Term)
+    (M : SmtModel) (hM : model_wf M) (t s : Term)
     (hT : __smtx_typeof (__eo_to_smt t) = SmtType.Seq SmtType.Char)
     (hS : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char) :
     eo_interprets M (sciFormula t s) true := by
@@ -327,7 +327,7 @@ private theorem facts_sciFormula
           (SmtTerm.or (SmtTerm.eq (__eo_to_smt t) (__eo_to_smt s))
             (SmtTerm.Boolean false)))) = SmtValue.Boolean true
   by_cases hNeg : native_str_to_code (native_unpack_string ts) = (-1 : native_Int)
-  · simp [__smtx_model_eval.eq_7, __smtx_model_eval.eq_6,
+  · simp [__smtx_model_eval.eq_8, __smtx_model_eval.eq_7,
       smtx_eval_eq_term_eq, smtx_eval_str_to_code_term_eq,
       __smtx_model_eval.eq_2, __smtx_model_eval.eq_1,
       hEvalT, hEvalS, hNeg, __smtx_model_eval_str_to_code,
@@ -342,13 +342,13 @@ private theorem facts_sciFormula
       have hSeq : ts = ss := by
         rw [← native_pack_string_unpack_string_of_typeof_seq_char ts hTsTy,
           ← native_pack_string_unpack_string_of_typeof_seq_char ss hSsTy, hString]
-      simp [__smtx_model_eval.eq_7, __smtx_model_eval.eq_6,
+      simp [__smtx_model_eval.eq_8, __smtx_model_eval.eq_7,
         smtx_eval_eq_term_eq, smtx_eval_str_to_code_term_eq,
         __smtx_model_eval.eq_2, __smtx_model_eval.eq_1,
         hEvalT, hEvalS,hSeq, __smtx_model_eval_str_to_code,
         __smtx_model_eval_eq, __smtx_model_eval_or, __smtx_model_eval_not,
         native_veq, SmtEval.native_or, SmtEval.native_not]
-    · simp [__smtx_model_eval.eq_7, __smtx_model_eval.eq_6,
+    · simp [__smtx_model_eval.eq_8, __smtx_model_eval.eq_7,
         smtx_eval_eq_term_eq, smtx_eval_str_to_code_term_eq,
         __smtx_model_eval.eq_2, __smtx_model_eval.eq_1,
         hEvalT, hEvalS, hNeg, hCodes, __smtx_model_eval_str_to_code,
@@ -356,7 +356,7 @@ private theorem facts_sciFormula
         native_veq, SmtEval.native_or, SmtEval.native_not]
 
 public theorem cmd_step_string_code_inj_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.string_code_inj args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

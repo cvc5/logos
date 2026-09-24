@@ -110,12 +110,12 @@ theorem native_includes_re_all (r : SmtRegLan) :
 
 private theorem native_re_concat_right_empty (r : SmtRegLan) :
     native_re_concat r (native_str_to_re []) = r := by
-  cases r <;> simp [native_re_concat, native_str_to_re, native_re_of_list,
+  cases r <;> simp [native_re_concat, native_str_to_re, impl_native_re_of_list,
     ]
 
 private theorem native_re_concat_left_empty (r : SmtRegLan) :
     native_re_concat (native_str_to_re []) r = r := by
-  cases r <;> simp [native_re_concat, native_str_to_re, native_re_of_list,
+  cases r <;> simp [native_re_concat, native_str_to_re, impl_native_re_of_list,
     ]
 
 theorem native_includes_concat
@@ -523,20 +523,20 @@ private theorem nativeListInRe_char_true_eq
 
 private theorem nativeListInRe_re_of_list_true_eq :
     (pat xs : List native_Char) ->
-      nativeListInRe xs (native_re_of_list pat) = true ->
+      nativeListInRe xs (impl_native_re_of_list pat) = true ->
         xs = pat
   | [], xs, hMem => by
       exact (nativeListInRe_epsilon_iff xs).1 (by
-        simpa [native_re_of_list] using hMem)
+        simpa [impl_native_re_of_list] using hMem)
   | c :: pat, xs, hMem => by
       have hConcat :
           nativeListInRe xs
               (native_re_mk_concat (SmtRegLan.char c)
-                (native_re_of_list pat)) = true := by
-        simpa [native_re_of_list] using hMem
+                (impl_native_re_of_list pat)) = true := by
+        simpa [impl_native_re_of_list] using hMem
       rcases
           (nativeListInRe_mk_concat_true_iff_exists_append xs
-            (SmtRegLan.char c) (native_re_of_list pat)).1 hConcat with
+            (SmtRegLan.char c) (impl_native_re_of_list pat)).1 hConcat with
         ⟨left, right, hAppend, hLeft, hRight⟩
       have hLeftEq : left = [c] :=
         nativeListInRe_char_true_eq left c hLeft
@@ -551,7 +551,7 @@ theorem native_str_in_re_str_to_re_eq
     (hValid : native_string_valid str = true)
     (hMem : native_str_in_re str (native_str_to_re pat) = true) :
     str = pat := by
-  have hList : nativeListInRe str (native_re_of_list pat) = true := by
+  have hList : nativeListInRe str (impl_native_re_of_list pat) = true := by
     simpa [native_str_in_re, hValid, native_str_to_re, nativeListInRe] using hMem
   exact nativeListInRe_re_of_list_true_eq pat str hList
 
@@ -563,23 +563,23 @@ private theorem nativeListInRe_char_self
 private theorem nativeListInRe_re_of_list_self :
     ∀ pat : native_String,
       native_string_valid pat = true ->
-        nativeListInRe pat (native_re_of_list pat) = true
+        nativeListInRe pat (impl_native_re_of_list pat) = true
   | [], _ => by
-      simp [native_re_of_list, nativeListInRe, native_re_nullable]
+      simp [impl_native_re_of_list, nativeListInRe, native_re_nullable]
   | c :: cs, hValid => by
       rcases native_string_valid_cons_parts hValid with ⟨hc, hcs⟩
       have hHead : nativeListInRe [c] (SmtRegLan.char c) = true :=
         nativeListInRe_char_self c hc
-      have hTail : nativeListInRe cs (native_re_of_list cs) = true :=
+      have hTail : nativeListInRe cs (impl_native_re_of_list cs) = true :=
         nativeListInRe_re_of_list_self cs hcs
       have hConcat :
           nativeListInRe (c :: cs)
               (native_re_mk_concat (SmtRegLan.char c)
-                (native_re_of_list cs)) = true :=
+                (impl_native_re_of_list cs)) = true :=
         (nativeListInRe_mk_concat_true_iff_exists_append (c :: cs)
-          (SmtRegLan.char c) (native_re_of_list cs)).2
+          (SmtRegLan.char c) (impl_native_re_of_list cs)).2
           ⟨[c], cs, rfl, hHead, hTail⟩
-      simpa [native_re_of_list] using hConcat
+      simpa [impl_native_re_of_list] using hConcat
 
 private theorem native_str_in_re_str_to_re_self
     (pat : native_String)
@@ -598,7 +598,7 @@ theorem smt_value_rel_str_to_re_append
   · intro str hValid hMem
     have hEq : str = xs ++ ys :=
       native_str_in_re_str_to_re_eq (pat := xs ++ ys) hValid (by
-        simpa [native_string_to_values, List.map_append] using hMem)
+        simpa [impl_native_string_to_values, List.map_append] using hMem)
     subst str
     exact native_str_in_re_re_concat_intro xs ys
       (native_str_to_re xs) (native_str_to_re ys)
@@ -636,7 +636,7 @@ theorem smt_value_rel_str_to_re_append
     subst left
     subst right
     subst str
-    simpa [native_string_to_values, List.map_append] using
+    simpa [impl_native_string_to_values, List.map_append] using
       native_str_in_re_str_to_re_self (xs ++ ys) hValid
 
 private theorem native_includes_range_singleton
@@ -664,23 +664,23 @@ private theorem native_includes_range_singleton
             · exact hb
             · simp [native_re_range, native_str_in_re, hValid,
                 nativeListInRe, native_re_deriv, native_re_nullable,
-                native_re_elem_valid, native_re_elem_le, hc, hLoSub,
+                native_re_elem_valid, impl_native_re_elem_le, hc, hLoSub,
                 hHiSub, hb] at hMem
           have hSupBounds : loSup ≤ c ∧ c ≤ hiSup := by
             exact ⟨Nat.le_trans hLo hBounds.1, Nat.le_trans hBounds.2 hHi⟩
           simp [native_re_range, native_str_in_re, hValid,
             nativeListInRe, native_re_deriv, native_re_nullable, hc,
-            native_re_elem_valid, native_re_elem_le, hLoSup, hHiSup,
+            native_re_elem_valid, impl_native_re_elem_le, hLoSup, hHiSup,
             hSupBounds.1, hSupBounds.2]
       | cons d ds =>
           by_cases hb : loSub ≤ c ∧ c ≤ hiSub
           · simp [native_re_range, native_str_in_re, hValid,
               nativeListInRe, native_re_deriv, native_re_elem_valid,
-              native_re_elem_le, nativeListInRe_empty, hc, hLoSub,
+              impl_native_re_elem_le, nativeListInRe_empty, hc, hLoSub,
               hHiSub, hb] at hMem
           · simp [native_re_range, native_str_in_re, hValid,
               nativeListInRe, native_re_deriv, native_re_elem_valid,
-              native_re_elem_le, nativeListInRe_empty, hc, hLoSub,
+              impl_native_re_elem_le, nativeListInRe_empty, hc, hLoSub,
               hHiSub, hb] at hMem
 
 theorem native_str_in_re_re_none (str : native_String) :
@@ -809,7 +809,7 @@ private theorem smtx_model_eval_sigma_star_concat_eps (M : SmtModel) :
   simp [__smtx_model_eval, __smtx_model_eval_re_mult,
     __smtx_model_eval_re_concat, __smtx_model_eval_str_to_re,
     native_re_mult, native_re_concat,
-    native_re_allchar, native_re_all, native_str_to_re, native_re_of_list,
+    native_re_allchar, native_re_all, native_str_to_re, impl_native_re_of_list,
     ]
 
 private theorem smtx_model_eval_re_empty_string (M : SmtModel) :
@@ -834,7 +834,7 @@ private theorem smtx_typeof_re_empty_string :
   simp [native_string_valid, native_ite, native_Teq]
 
 theorem smt_model_eval_reglan_of_type
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.RegLan) :
     ∃ r : SmtRegLan,
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.RegLan r := by
@@ -1114,7 +1114,7 @@ private theorem seq_char_term_to_z_singleton
       simp [__eo_to_z, __eo_is_neg] at hNonneg
 
 private theorem native_includes_str_to_re_of_eval_side
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (r : Term) (pat : native_String) (rv : SmtRegLan)
     (hSTy :
       __smtx_typeof (__eo_to_smt (Term.String pat)) =
@@ -1148,7 +1148,7 @@ private theorem native_includes_str_to_re_of_eval_side
   exact hPatMem
 
 private theorem native_includes_range_of_side
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 s3 s4 : Term) (rvSup rvSub : SmtRegLan)
     (hSupTy :
       __smtx_typeof
@@ -1275,7 +1275,7 @@ private theorem native_includes_range_of_side
     hHiSubValid hLo hHi
 
 private theorem re_unbound_base_prefix_closed
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tail : Term) (rv : SmtRegLan)
     (hTy :
       __smtx_typeof
@@ -1339,7 +1339,7 @@ private theorem re_unbound_base_prefix_closed
   exact native_prefix_closed_all_concat rtail
 
 private theorem re_unbound_allchar_prefix_closed
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (tail : Term) (rv rtail : SmtRegLan)
     (hTailEval :
       __smtx_model_eval M (__eo_to_smt tail) = SmtValue.RegLan rtail)
@@ -1358,7 +1358,7 @@ private theorem re_unbound_allchar_prefix_closed
         SmtValue.RegLan native_re_allchar := by
     change __smtx_model_eval M SmtTerm.re_allchar =
       SmtValue.RegLan native_re_allchar
-    rw [__smtx_model_eval.eq_102]
+    rw [__smtx_model_eval.eq_104]
   have hFullEval :
       __smtx_model_eval M
           (__eo_to_smt
@@ -1374,7 +1374,7 @@ private theorem re_unbound_allchar_prefix_closed
   exact native_prefix_closed_allchar_concat hTailClosed
 
 private theorem re_is_unbound_wildcard_prefix_closed
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     (t : Term) -> (rv : SmtRegLan) ->
       __smtx_typeof (__eo_to_smt t) = SmtType.RegLan ->
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.RegLan rv ->
@@ -1438,7 +1438,7 @@ private theorem re_is_unbound_wildcard_prefix_closed
 termination_by t _ _ _ _ => sizeOf t
 
 private theorem native_includes_concat_rhs_of_unbound
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (lhs : Term) (rvLhs rvHead rvTail : SmtRegLan)
     (hLhsTy : __smtx_typeof (__eo_to_smt lhs) = SmtType.RegLan)
     (hLhsEval :
@@ -1453,7 +1453,7 @@ private theorem native_includes_concat_rhs_of_unbound
 
 private def ReIncludesCheckerSound
     (checker : Term -> Term -> Term)
-    (M : SmtModel) (_hM : model_total_typed M)
+    (M : SmtModel) (_hM : model_wf M)
     (sup sub : Term) : Prop :=
   ∀ (rvSup rvSub : SmtRegLan),
     __smtx_typeof (__eo_to_smt sup) = SmtType.RegLan ->
@@ -1464,7 +1464,7 @@ private def ReIncludesCheckerSound
       NativeIncludes rvSup rvSub
 
 private theorem str_re_includes_sound_mutual
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     (∀ sup sub,
       ReIncludesCheckerSound __str_re_includes_lhs_union M hM sup sub) ∧
     (∀ sup sub,
@@ -2088,7 +2088,7 @@ private theorem str_re_includes_sound_mutual
     simp_all
 
 private theorem str_re_includes_rec_sound
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     (sup sub : Term) -> (rvSup rvSub : SmtRegLan) ->
       __smtx_typeof (__eo_to_smt sup) = SmtType.RegLan ->
       __smtx_typeof (__eo_to_smt sub) = SmtType.RegLan ->
@@ -2745,7 +2745,7 @@ private theorem eo_is_list_eo_list_concat_str_concat
     (Term.UOp UserOp.str_concat) a z hListA hListZ
 
 private theorem smt_value_rel_eo_list_concat_str_concat
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a z : Term) (T : SmtType)
     (hListA :
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true)
@@ -2762,7 +2762,7 @@ private theorem smt_value_rel_eo_list_concat_str_concat
     hListA haTy hzTy
 
 private theorem str_flatten_list_eval_rel
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (parts : Term) (ss : SmtSeq) (T : SmtType),
       __eo_is_list (Term.UOp UserOp.str_concat) parts = Term.Boolean true ->
       __smtx_typeof (__eo_to_smt parts) = SmtType.Seq T ->
@@ -3206,7 +3206,7 @@ private theorem str_nary_intro_is_list_true_of_seq
     simpa using hListBool
 
 theorem str_flatten_nary_intro_eval_rel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : Term) (ss : SmtSeq)
     (hTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hEval : __smtx_model_eval M (__eo_to_smt s) = SmtValue.Seq ss)
@@ -3262,7 +3262,7 @@ theorem str_flatten_nary_intro_eval_rel
     RuleProofs.smt_value_rel_trans _ _ _ hFlatRelIntro hIntroRel⟩
 
 private theorem re_split_str_to_re_eval_rel
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (parts tail : Term) (ss : SmtSeq) (rtail : SmtRegLan),
       __eo_is_list (Term.UOp UserOp.str_concat) parts = Term.Boolean true ->
       __smtx_typeof (__eo_to_smt parts) = SmtType.Seq SmtType.Char ->
@@ -3451,7 +3451,7 @@ private theorem re_split_str_to_re_eval_rel
           hRelStep
           (RuleProofs.smt_value_rel_trans _ _ _
             (RuleProofs.smt_value_rel_symm _ _ hAssoc) (by
-              simpa [native_string_to_values, List.map_append] using
+              simpa [impl_native_string_to_values, List.map_append] using
                 hAppendRel))
   | case4 parts tail hPartsNe hTailNe hNotConcat =>
       intro ss rtail hList hPartsTy hPartsEval hTailTy hTailEval
@@ -3536,7 +3536,7 @@ Evaluation, typing and value relation for `__eo_list_concat_rec` on
 their values (up to extensional equivalence).
 -/
 private theorem eval_list_concat_rec_re_concat_rel_local
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (x z : Term),
       __eo_is_list (Term.UOp UserOp.re_concat) x = Term.Boolean true ->
       __smtx_typeof (__eo_to_smt x) = SmtType.RegLan ->
@@ -3662,7 +3662,7 @@ Evaluation, typing and value relation for `__eo_list_concat` on
 `re_concat` lists (unwraps the two `requires` guards).
 -/
 private theorem eval_list_concat_re_concat_rel_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x z : Term) (xv zv : SmtRegLan)
     (hXTy : __smtx_typeof (__eo_to_smt x) = SmtType.RegLan)
     (hZTy : __smtx_typeof (__eo_to_smt z) = SmtType.RegLan)
@@ -3707,7 +3707,7 @@ private theorem eval_list_concat_re_concat_rel_local
     hXTy hZTy xv zv hXEval hZEval
 
 theorem re_flatten_false_eval_rel
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (mode r : Term) (rv : SmtRegLan),
       __smtx_typeof (__eo_to_smt r) = SmtType.RegLan ->
       __smtx_model_eval M (__eo_to_smt r) = SmtValue.RegLan rv ->
@@ -4319,7 +4319,7 @@ theorem re_flatten_false_eval_rel
       simp [__re_flatten] at hFlatNe
 
 theorem re_inclusion_side_native_includes
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sup sub flatSup flatSub side : Term)
     (rvSup rvSub : SmtRegLan)
     (hSupTy : __smtx_typeof (__eo_to_smt sup) = SmtType.RegLan)

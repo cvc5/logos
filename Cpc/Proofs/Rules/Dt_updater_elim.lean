@@ -531,13 +531,13 @@ private theorem smtx_typeof_eo_to_smt_stuck_none :
 
 private theorem eo_to_smt_apply_dt_sel_unreserved
     (s : native_String) (d : DatatypeDecl) (i j : native_Nat) (x : Term)
-    (hReserved : native_reserved_datatype_name s = false) :
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false) :
     __eo_to_smt (Term.Apply (Term.DtSel s d i j) x) =
       SmtTerm.Apply (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j)
         (__eo_to_smt x) := by
   change
     SmtTerm.Apply
-        (native_ite (native_reserved_datatype_name s) SmtTerm.None
+        (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
           (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
         (__eo_to_smt x) =
       SmtTerm.Apply (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j)
@@ -705,7 +705,7 @@ private theorem smtDtUpdaterElimRhsRec_self_eq_updater_rec
 private theorem eo_to_smt_dt_updater_elim_rhs_selectors
     (s : native_String) (root : DatatypeDecl) (n m : native_Nat)
     (t a acc : Term)
-    (hReserved : native_reserved_datatype_name s = false)
+    (hReserved : __eo_to_smt_reserved_datatype_name s = false)
     (hAcc : DtConsSpineRoot acc s root n) :
     ∀ (d : Datatype) (ci ai : native_Nat),
       __smtx_typeof
@@ -1119,7 +1119,7 @@ private theorem assoc_nil_nth_dt_constructors_find_self
       s d (__eo_dd_lookup s d) 0 i hlt
 
 private theorem dt_updater_elim_update_rel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (sel t a c tu : Term) :
   __mk_dt_updater_elim_rhs
       (Term.Apply (Term.Apply (Term.UOp1 UserOp1.update sel) t) a)
@@ -1217,7 +1217,7 @@ private theorem dt_updater_elim_update_rel
                 (__eo_to_smt_datatype (__eo_dd_lookup s d0)) i : Int) := by
           apply of_decide_eq_true
           simpa [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-            SmtEval.native_nat_to_int, D,
+            Smtm.native_nat_to_int, D,
             TranslationProofs.eo_to_smt_dd_lookup] using hIdx
         exact Int.ofNat_lt.mp hInt
       have hIteNN :
@@ -1548,7 +1548,7 @@ private theorem dt_updater_elim_non_update_absurd
         (Term.Apply (Term.Apply u t) a) c t tu hMk) hBool
 
 private theorem facts___eo_prog_dt_updater_elim_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
   RuleProofs.eo_has_smt_translation a1 ->
   __eo_typeof (__eo_prog_dt_updater_elim a1) = Term.Bool ->
   eo_interprets M (__eo_prog_dt_updater_elim a1) true := by
@@ -1618,7 +1618,7 @@ private theorem facts___eo_prog_dt_updater_elim_impl
             hMk hBool)
 
 public theorem cmd_step_dt_updater_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.dt_updater_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -52,7 +52,7 @@ end RuleProofs
 
 /-- Proves correctness of the EO program for `refl_impl`. -/
 theorem correct___eo_prog_refl_impl
-    (M : SmtModel) (_hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (_hM : model_wf M) (x1 : Term) :
   RuleProofs.eo_has_smt_translation x1 ->
   RuleProofs.eo_has_bool_type (__eo_prog_refl x1) ->
   (eo_interprets M (__eo_prog_refl x1) true) :=
@@ -61,7 +61,7 @@ by
 
 /-- Derives the checker facts exposed by the EO program for `refl_impl`. -/
 theorem facts___eo_prog_refl_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
   RuleProofs.eo_has_smt_translation x1 ->
   __eo_prog_refl x1 ≠ Term.Stuck ->
   eo_interprets M (__eo_prog_refl x1) true :=
@@ -73,7 +73,7 @@ by
 
 /-- Packages the properties required for the `refl` checker step. -/
 public theorem cmd_step_refl_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.refl args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

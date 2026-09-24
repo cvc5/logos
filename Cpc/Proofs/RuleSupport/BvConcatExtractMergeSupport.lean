@@ -712,7 +712,7 @@ private theorem bv_concat_extract_merge_value
   simpa [x, BitVec.toNat_cast] using congrArg BitVec.toNat hAdjacent
 
 private theorem eval_bv_concat_extract_merge_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : Term) (w kv j2v j1v iv : native_Int) :
     __smtx_typeof (__eo_to_smt s) =
         SmtType.BitVec (native_int_to_nat w) ->
@@ -776,16 +776,16 @@ private theorem eval_bv_concat_extract_merge_core
   let J := native_int_to_nat j1v
   let I := native_int_to_nat iv
   have hWRound : (↑W : Int) = w := by
-    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hKRound : (↑K : Int) = kv := by
-    simpa [K, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [K, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip kv hK0
   have hJRound : (↑J : Int) = j1v := by
-    simpa [J, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [J, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip j1v hJ10
   have hIRound : (↑I : Int) = iv := by
-    simpa [I, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [I, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip iv hi0
   have hJ2Round : (↑(J + 1) : Int) = j2v := by
     calc
@@ -812,15 +812,15 @@ private theorem eval_bv_concat_extract_merge_core
   have hSEval' :
       __smtx_model_eval M (__eo_to_smt s) =
         SmtValue.Binary (↑W : Int) p := by
-    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hSEval
+    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hSEval
   have hWidth0 : native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      SmtEval.native_nat_to_int]
+      Smtm.native_nat_to_int]
   have hRange := bitvec_payload_range_of_canonical hWidth0 hCanonical
   have hp0 : (0 : Int) ≤ p := hRange.1
   have hp1 : p < (2 : Int) ^ W := by
     simpa [natpow2_eq, native_nat_to_int,
-      SmtEval.native_nat_to_int] using hRange.2
+      Smtm.native_nat_to_int] using hRange.2
   change __smtx_model_eval_concat
       (__smtx_model_eval M
         (__eo_to_smt
@@ -1046,7 +1046,7 @@ theorem typed_bv_concat_extract_merge_program
   simpa [hBodyEq] using hTermBool
 
 theorem facts_bv_concat_extract_merge_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs s ys i j1 j2 k P : Term) :
     RuleProofs.eo_has_smt_translation xs ->
     RuleProofs.eo_has_smt_translation s ->
@@ -1100,13 +1100,13 @@ theorem facts_bv_concat_extract_merge_program
   have hDWholeNonneg : native_zleq 0 dWhole = true :=
     native_zleq_of_zlt_true _ _ hDWhole0
   have hDHighRound : (↑DH : Int) = dHigh := by
-    simpa [DH, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [DH, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip dHigh hDHighNonneg
   have hDLowRound : (↑DL : Int) = dLow := by
-    simpa [DL, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [DL, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip dLow hDLowNonneg
   have hDWholeRound : (↑DW : Int) = dWhole := by
-    simpa [DW, native_nat_to_int, SmtEval.native_nat_to_int] using
+    simpa [DW, native_nat_to_int, Smtm.native_nat_to_int] using
       native_int_to_nat_roundtrip dWhole hDWholeNonneg
   have hDIntEq : dWhole = dHigh + dLow := by
     have hArithmetic :

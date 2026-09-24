@@ -184,7 +184,7 @@ private theorem nat_eq_zero_of_lt_one
       exact False.elim (Nat.not_lt_zero n h0)
 
 private theorem dt_collapse_tester_singleton_sound
-    (M : SmtModel) (hM : model_total_typed M) (c t : Term) :
+    (M : SmtModel) (hM : model_wf M) (c t : Term) :
   RuleProofs.eo_has_bool_type
     (Term.Apply (Term.Apply (Term.UOp UserOp.eq)
       (Term.Apply (Term.UOp1 UserOp1.is c) t)) (Term.Boolean true)) ->
@@ -297,7 +297,7 @@ private theorem dt_collapse_tester_singleton_sound
       exact nat_eq_zero_of_lt_one (by
         simpa [hCtorCountSmt] using hIdxLt)
     have hHeadTarget :
-        __vsm_apply_head (__smtx_model_eval M (__eo_to_smt t)) =
+        __smtx_apply_head_value (__smtx_model_eval M (__eo_to_smt t)) =
           SmtValue.DtCons cs (__eo_to_smt_datatype_decl d0) ci := by
       subst idx
       subst ci
@@ -319,7 +319,7 @@ private theorem dt_collapse_tester_singleton_sound
     subst cd
     subst ci
     have hHeadUnit :
-        __vsm_apply_head (__smtx_model_eval M (__eo_to_smt t)) =
+        __smtx_apply_head_value (__smtx_model_eval M (__eo_to_smt t)) =
           SmtValue.DtCons (native_string_lit "@Tuple")
             (__eo_to_smt_tuple_decl
               (SmtDatatype.sum SmtDatatypeCons.unit SmtDatatype.null))
@@ -338,7 +338,7 @@ private theorem dt_collapse_tester_singleton_sound
       simp [__smtx_model_eval, __smtx_model_eval_eq, native_veq]
 
 private theorem facts___eo_prog_dt_collapse_tester_singleton_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
   RuleProofs.eo_has_smt_translation a1 ->
   __eo_typeof (__eo_prog_dt_collapse_tester_singleton a1) = Term.Bool ->
   eo_interprets M (__eo_prog_dt_collapse_tester_singleton a1) true := by
@@ -367,7 +367,7 @@ private theorem facts___eo_prog_dt_collapse_tester_singleton_impl
   exact dt_collapse_tester_singleton_sound M hM c t hBool hGuard
 
 public theorem cmd_step_dt_collapse_tester_singleton_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.dt_collapse_tester_singleton args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

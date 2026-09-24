@@ -348,7 +348,7 @@ private theorem typed___eo_prog_str_to_lower_concat_impl
     (by rw [hLhsTy, hRhsTy]) (by rw [hLhsTy]; exact seq_ne_none SmtType.Char)
 
 private theorem facts___eo_prog_str_to_lower_concat_impl
-    (M : SmtModel) (hM : model_total_typed M) (s1 s2 s3 : Term)
+    (M : SmtModel) (hM : model_wf M) (s1 s2 s3 : Term)
     (hS1Trans : RuleProofs.eo_has_smt_translation s1)
     (hS2Trans : RuleProofs.eo_has_smt_translation s2)
     (hS3Trans : RuleProofs.eo_has_smt_translation s3)
@@ -619,7 +619,7 @@ private theorem facts___eo_prog_str_to_lower_concat_impl
     (RuleProofs.smt_value_rel_symm _ _ hRhsToLhs)
 
 public theorem cmd_step_str_to_lower_concat_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_to_lower_concat args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -1,0 +1,7 @@
+; Exercises binder syntax: forall and exists read their sorted variable lists.
+(declare-const P (-> Int Bool))
+(assume @p0 (forall ((x Int)) (P x)))
+(assume @p1 (exists ((x Int) (y Int)) (and (P x) (not (P y)))))
+(assume @p2 (not (P 7)))
+(step @p3 :rule instantiate :premises (@p0) :args ((@list 7)))
+(step @p4 :rule contra :premises (@p3 @p2))

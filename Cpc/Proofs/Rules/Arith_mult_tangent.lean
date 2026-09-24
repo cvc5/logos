@@ -129,7 +129,7 @@ private theorem eo_to_smt_mtTangent_false_real
   rfl
 
 private theorem smt_eval_int_of_type
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Int) :
     ∃ n : native_Int, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Numeral n := by
   have hPres :
@@ -140,7 +140,7 @@ private theorem smt_eval_int_of_type
   exact int_value_canonical (by simpa [hTy] using hPres)
 
 private theorem smt_eval_real_of_type
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
     ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Rational q := by
   have hPres :
@@ -348,7 +348,7 @@ private theorem native_q_tangent_geq (x y a b : native_Rat) :
       native_or (native_and (native_qleq x a) (native_qleq y b))
         (native_and (native_qleq a x) (native_qleq b y)) := by
   have hiff := rat_tangent_geq_prop x y a b
-  simp [native_qleq, SmtEval.native_qleq, native_qplus, SmtEval.native_qplus,
+  simp [native_qleq, Smtm.native_qleq, native_qplus, SmtEval.native_qplus,
     native_qmult, SmtEval.native_qmult, native_qneg, SmtEval.native_qneg,
     native_and, SmtEval.native_and, native_or, SmtEval.native_or]
   -- v4.33 keeps the goal's `decide _ = true` shape (stale `Decidable`
@@ -363,7 +363,7 @@ private theorem native_q_tangent_leq (x y a b : native_Rat) :
       native_or (native_and (native_qleq x a) (native_qleq b y))
         (native_and (native_qleq a x) (native_qleq y b)) := by
   have hiff := rat_tangent_leq_prop x y a b
-  simp [native_qleq, SmtEval.native_qleq, native_qplus, SmtEval.native_qplus,
+  simp [native_qleq, Smtm.native_qleq, native_qplus, SmtEval.native_qplus,
     native_qmult, SmtEval.native_qmult, native_qneg, SmtEval.native_qneg,
     native_and, SmtEval.native_and, native_or, SmtEval.native_or]
   -- v4.33 keeps the goal's `decide _ = true` shape (stale `Decidable`
@@ -426,7 +426,7 @@ private theorem mtTangent_false_has_bool_type_of_smt_type
       hOne, hZero, hX, hY, hA, hB, native_ite, native_Teq]
 
 private theorem mtTangent_true_int_eval
-    (M : SmtModel) (hM : model_total_typed M) (x y a b : Term)
+    (M : SmtModel) (hM : model_wf M) (x y a b : Term)
     (hX : __smtx_typeof (__eo_to_smt x) = SmtType.Int)
     (hY : __smtx_typeof (__eo_to_smt y) = SmtType.Int)
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Int)
@@ -450,7 +450,7 @@ private theorem mtTangent_true_int_eval
     native_or, SmtEval.native_or] using native_z_tangent_geq xv yv av bv
 
 private theorem mtTangent_false_int_eval
-    (M : SmtModel) (hM : model_total_typed M) (x y a b : Term)
+    (M : SmtModel) (hM : model_wf M) (x y a b : Term)
     (hX : __smtx_typeof (__eo_to_smt x) = SmtType.Int)
     (hY : __smtx_typeof (__eo_to_smt y) = SmtType.Int)
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Int)
@@ -474,7 +474,7 @@ private theorem mtTangent_false_int_eval
     native_or, SmtEval.native_or] using native_z_tangent_leq xv yv av bv
 
 private theorem mtTangent_true_real_eval
-    (M : SmtModel) (hM : model_total_typed M) (x y a b : Term)
+    (M : SmtModel) (hM : model_wf M) (x y a b : Term)
     (hX : __smtx_typeof (__eo_to_smt x) = SmtType.Real)
     (hY : __smtx_typeof (__eo_to_smt y) = SmtType.Real)
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Real)
@@ -501,7 +501,7 @@ private theorem mtTangent_true_real_eval
     native_or, SmtEval.native_or] using native_q_tangent_geq xv yv av bv
 
 private theorem mtTangent_false_real_eval
-    (M : SmtModel) (hM : model_total_typed M) (x y a b : Term)
+    (M : SmtModel) (hM : model_wf M) (x y a b : Term)
     (hX : __smtx_typeof (__eo_to_smt x) = SmtType.Real)
     (hY : __smtx_typeof (__eo_to_smt y) = SmtType.Real)
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Real)
@@ -1124,7 +1124,7 @@ private theorem prog_eq_real_false
     hv5Ty, hTx,hTa, hTb]
 
 private theorem tangent_true_int_properties
-    (M : SmtModel) (hM : model_total_typed M) (x y a b : Term)
+    (M : SmtModel) (hM : model_wf M) (x y a b : Term)
     (hXTrans : RuleProofs.eo_has_smt_translation x)
     (hYTrans : RuleProofs.eo_has_smt_translation y)
     (hATrans : RuleProofs.eo_has_smt_translation a)
@@ -1154,7 +1154,7 @@ private theorem tangent_true_int_properties
   exact RuleProofs.eo_interprets_of_bool_eval M _ true hBool hEval
 
 private theorem tangent_false_int_properties
-    (M : SmtModel) (hM : model_total_typed M) (x y a b : Term)
+    (M : SmtModel) (hM : model_wf M) (x y a b : Term)
     (hXTrans : RuleProofs.eo_has_smt_translation x)
     (hYTrans : RuleProofs.eo_has_smt_translation y)
     (hATrans : RuleProofs.eo_has_smt_translation a)
@@ -1184,7 +1184,7 @@ private theorem tangent_false_int_properties
   exact RuleProofs.eo_interprets_of_bool_eval M _ true hBool hEval
 
 private theorem tangent_true_real_properties
-    (M : SmtModel) (hM : model_total_typed M) (x y a b : Term)
+    (M : SmtModel) (hM : model_wf M) (x y a b : Term)
     (hXTrans : RuleProofs.eo_has_smt_translation x)
     (hYTrans : RuleProofs.eo_has_smt_translation y)
     (hATrans : RuleProofs.eo_has_smt_translation a)
@@ -1216,7 +1216,7 @@ private theorem tangent_true_real_properties
   exact RuleProofs.eo_interprets_of_bool_eval M _ true hBool hEval
 
 private theorem tangent_false_real_properties
-    (M : SmtModel) (hM : model_total_typed M) (x y a b : Term)
+    (M : SmtModel) (hM : model_wf M) (x y a b : Term)
     (hXTrans : RuleProofs.eo_has_smt_translation x)
     (hYTrans : RuleProofs.eo_has_smt_translation y)
     (hATrans : RuleProofs.eo_has_smt_translation a)
@@ -1248,7 +1248,7 @@ private theorem tangent_false_real_properties
   exact RuleProofs.eo_interprets_of_bool_eval M _ true hBool hEval
 
 public theorem cmd_step_arith_mult_tangent_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_mult_tangent args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

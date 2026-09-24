@@ -20,8 +20,8 @@ proof actually uses.
 | `logos_check_translatableAssumptionList`    | `TranslatableAssumptionList F`   |
 | `logos_check_cmdListTranslationOk`          | `CmdListTranslationOk cmds`      |
 
-throughout with `F = logos_assumption_term assums`.  `Cpc/ApiCorrect.lean` feeds
-these into `correct___eo_is_refutation`.
+throughout with `F = logos_assumption_arglist assums`.  `Cpc/ApiCorrect.lean`
+feeds these into `correct___eo_is_refutation`.
 
 Only the direction soundness needs is proved -- a check that returned `true` too
 rarely would only reject proofs the theorem would not have covered anyway.
@@ -37,7 +37,7 @@ namespace Eo
 
 /-! ## The refutation check computes `eo_is_refutation`
 
-`__eo_invoke_assume_list` walks an `and`-chain and pushes each conjunct with the
+`__eo_invoke_assume_list` walks a `CArgList` and pushes each entry with the
 guard `(and (is_bool_type A) (is_closed A))`.  `logos_check_refutation` folds
 `logos_invoke_input_assume` over the parser's list instead, which applies the
 same guard in the same order with no stack growth.  These lemmas prove the two
@@ -46,8 +46,8 @@ agree, so that the executable's check is literally the theorem's hypothesis.
 
 /-- Generalized over the accumulator, so the induction goes through. -/
 private theorem invoke_assume_list_foldl (assums : List Term) :
-    ∀ (rest : Term) (S : CState),
-      __eo_invoke_assume_list S (assums.foldl logos_assumption_chain_step rest)
+    ∀ (rest : CArgList) (S : CState),
+      __eo_invoke_assume_list S (assums.foldl logos_assumption_list_step rest)
         = assums.foldl logos_invoke_input_assume (__eo_invoke_assume_list S rest) := by
   induction assums with
   | nil => intro rest S; rfl
@@ -58,39 +58,41 @@ private theorem invoke_assume_list_foldl (assums : List Term) :
 
 /--
 Folding the guarded push over the parser's assumptions builds exactly the state
-`__eo_invoke_assume_list` builds from the corresponding `and`-chain.
+`__eo_invoke_assume_list` builds from the corresponding `CArgList`.
 -/
 theorem invoke_assume_list_eq_fold (assums : List Term) :
-    __eo_invoke_assume_list CState.nil (logos_assumption_term assums)
-      = assums.foldl logos_invoke_input_assume logos_init_state := by
-  simpa [logos_assumption_term, logos_init_state, __eo_invoke_assume_list]
-    using invoke_assume_list_foldl assums (Term.Boolean true) CState.nil
+    __eo_invoke_assume_list logos_checker_init_state (logos_assumption_arglist assums)
+      = assums.foldl logos_invoke_input_assume logos_checker_init_state := by
+  simpa [logos_assumption_arglist, logos_checker_init_state, __eo_invoke_assume_list]
+    using invoke_assume_list_foldl assums CArgList.nil logos_checker_init_state
 
 /-- The executable's refutation check is the generated `__eo_checker_is_refutation`. -/
 theorem logos_check_refutation_eq_checker (assums : List Term) (cmds : CCmdList) :
     logos_check_refutation assums cmds
-      = __eo_checker_is_refutation (logos_assumption_term assums) cmds := by
-  simp [logos_check_refutation, __eo_checker_is_refutation, invoke_assume_list_eq_fold]
+      = __eo_checker_is_refutation (logos_assumption_arglist assums) cmds := by
+  unfold logos_check_refutation __eo_checker_is_refutation
+  rw [← invoke_assume_list_eq_fold]
+  rfl
 
 /-- `logos_check_refutation` returning `true` is `eo_is_refutation` on the same data. -/
 theorem eo_is_refutation_of_check (assums : List Term) (cmds : CCmdList)
     (h : logos_check_refutation assums cmds = true) :
-    eo_is_refutation (logos_assumption_term assums) cmds :=
+    eo_is_refutation (logos_assumption_arglist assums) cmds :=
   eo_is_refutation.intro _ _ (by rwa [logos_check_refutation_eq_checker] at h)
 
 /-! ## The two translation side conditions
 
 Both checks are `decide` of the predicate the theorem uses, so the only thing
 left to prove is that checking the parser's *list* of assumptions gives
-`TranslatableAssumptionList` of the `and`-chain built from it.
+`TranslatableAssumptionList` of the `CArgList` built from it.
 -/
 
 /-- Generalized over the accumulator, mirroring `invoke_assume_list_foldl`. -/
 private theorem translatableAssumptionList_foldl (assums : List Term) :
-    ∀ rest : Term,
+    ∀ rest : CArgList,
       logos_check_translatableAssumptionList assums = true ->
       TranslatableAssumptionList rest ->
-      TranslatableAssumptionList (assums.foldl logos_assumption_chain_step rest) := by
+      TranslatableAssumptionList (assums.foldl logos_assumption_list_step rest) := by
   induction assums with
   | nil => intro rest _ hrest; exact hrest
   | cons A assums ih =>
@@ -98,16 +100,16 @@ private theorem translatableAssumptionList_foldl (assums : List Term) :
     simp only [logos_check_translatableAssumptionList, List.all_cons, Bool.and_eq_true,
       decide_eq_true_eq] at h
     exact ih _ (by simpa [logos_check_translatableAssumptionList] using h.2)
-      (TranslatableAssumptionList.step A rest h.1 hrest)
+      (show eoHasSmtTranslation A ∧ TranslatableAssumptionList rest from ⟨h.1, hrest⟩)
 
 /--
 `logos_check_translatableAssumptionList` gives the first hypothesis of
-`correct___eo_is_refutation` for the term the executable uses as `F`.
+`correct___eo_is_refutation` for the list the executable uses as `F`.
 -/
 theorem translatableAssumptionList_of_check (assums : List Term)
     (h : logos_check_translatableAssumptionList assums = true) :
-    TranslatableAssumptionList (logos_assumption_term assums) :=
-  translatableAssumptionList_foldl assums (Term.Boolean true) h TranslatableAssumptionList.base
+    TranslatableAssumptionList (logos_assumption_arglist assums) :=
+  translatableAssumptionList_foldl assums CArgList.nil h trivial
 
 /--
 `logos_check_cmdListTranslationOk` gives the second hypothesis of

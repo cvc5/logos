@@ -78,13 +78,15 @@ private abbrev TestCmd := String × List TestTerm × List Nat
 
 private def testConfig : Config TestTerm String TestCmd (List TestCmd) where
   ops := [
-    { name := "Type", arity := .exact 0, build := fun | [] => some .type | _ => none },
     { name := "->", arity := .rightAssoc, build := fun | [] => some (.atom "->") | _ => none },
     { name := "indexed", indexArity := 1, arity := .exact 1,
-      build := fun | [i] => some (.app (.atom "indexed") i) | _ => none }
+      build := fun | [i] => some (.app (.atom "indexed") i) | _ => none },
+    { name := "all", arity := .exact 2,
+      build := fun | [] => some (.atom "all") | _ => none, binder := some gather }
   ]
   parseLiteral := fun _ => none
   isType := (· == .type)
+  mkType := .type
   mkUSort := .usort
   mkUConst := .uconst
   apply := .app
@@ -93,6 +95,7 @@ private def testConfig : Config TestTerm String TestCmd (List TestCmd) where
   mkStep := fun rule args premises => (rule, args, premises)
   mkStepPop := fun rule args premises => ("pop:" ++ rule, args, premises)
   mkCmdList := id
+  mkVar := some fun name ty => .app (.atom ("var " ++ name)) ty
 
 /-- The assumptions of a parsed proof, or `none` if it does not parse. -/
 private def assumptions (input : String) : Option (List TestTerm) :=
@@ -149,13 +152,15 @@ private def arrow (dom cod : TestTerm) : TestTerm := .app (.app (.atom "->") dom
      (assume @p0 b)"
   == some [.uconst 2 (.app (.uconst 1 (arrow .type .type)) (.usort 1))]
 
--- `declare-type` is the Eunoia spelling of the same declaration.
+-- `Type` is not syntax: a user symbol of that name is an ordinary sort, and does
+-- not affect what a later `declare-sort` declares.
 #guard assumptions
-    "(declare-type U ())
-     (declare-type Box (Type))
-     (declare-const b (Box U))
-     (assume @p0 b)"
-  == some [.uconst 2 (.app (.uconst 1 (arrow .type .type)) (.usort 1))]
+    "(declare-sort Type 0)
+     (declare-sort Poly 0)
+     (declare-sort Box 1)
+     (declare-const x Poly)
+     (assume @p0 x)"
+  == some [.uconst 2 (.usort 2)]
 
 -- `reference` is ignored as well.
 #guard assumptions
@@ -184,6 +189,12 @@ private def gTy : TestTerm := arrow (.usort 1) (arrow (.usort 1) (.usort 1))
 -- them in `(_ ...)`; both spellings build the same operator application.
 #guard assumptions (binary ++ "(assume @p0 (indexed a b))") ==
   assumptions (binary ++ "(assume @p0 ((_ indexed a) b))")
+
+-- Eunoia marks a curried application with `_`, so a parenthesized head that
+-- does not is rejected rather than read as one; Ethos refuses the same file.
+#guard assumptions (binary ++ "(assume @p0 ((g a) b))") == none
+#guard assumptions (binary ++ "(assume @p0 (_ (_ g a) b))") ==
+  assumptions (binary ++ "(assume @p0 (g a b))")
 
 -- `let` bindings are parallel, and their scope ends after the body.
 #guard assumptions (binary ++
@@ -232,5 +243,73 @@ private def gTy : TestTerm := arrow (.usort 1) (arrow (.usort 1) (.usort 1))
      (declare-const x U)
      (assume @p0 x)"
   == some [.uconst 2 (.usort 1)]
+
+/-!
+### Binders
+
+A binder applied to a sorted variable list gathers the variables it makes into
+its first argument, and binds them in the rest of the application only.
+-/
+
+private def var (name : String) : TestTerm := .app (.atom ("var " ++ name)) (.usort 1)
+
+-- A quoted symbol names the variable its bars enclose.
+#guard assumptions (binary ++ "(assume @p0 (all ((x U) (|y| U)) (g x |y|)))") ==
+  some [.app (.app (.atom "all") (.gathered [var "x", var "y"]))
+    (.app (.app (.uconst 1 gTy) (var "x")) (var "y"))]
+
+#guard assumptions (binary ++ "(assume @p0 (g (all ((a U)) a) a))") ==
+  some [.app (.app (.uconst 1 gTy) (.app (.app (.atom "all") (.gathered [var "a"])) (var "a")))
+    (.uconst 2 (.usort 1))]
+
+-- Without a variable list, the first argument is an ordinary term.
+#guard assumptions (binary ++ "(assume @p0 (all a b))") ==
+  some [.app (.app (.atom "all") (.uconst 2 (.usort 1))) (.uconst 3 (.usort 1))]
+
+-- A symbol the proof declares under the binder's name is not a binder.
+#guard assumptions (binary ++ "(declare-const all U) (assume @p0 (all ((x U)) x))") == none
+
+/-!
+### Declared names are symbols
+
+A name a command or binder introduces is a symbol, as in Ethos.  A bound name is
+looked up before a literal is, so accepting a literal there would change what
+that literal means for the rest of the proof.
+-/
+
+#guard assumptions "(declare-sort U 0) (declare-const 5 U) (assume @p0 5)" == none
+#guard assumptions "(declare-sort U 0) (declare-const #b1 U) (assume @p0 #b1)" == none
+#guard assumptions (binary ++ "(declare-const :k U) (assume @p0 a)") == none
+#guard assumptions (binary ++ "(declare-const \"s\" U) (assume @p0 a)") == none
+#guard assumptions (binary ++ "(declare-sort 1/2 0) (assume @p0 a)") == none
+#guard assumptions (binary ++ "(declare-fun 1.5 (U) U) (assume @p0 a)") == none
+-- Each of those differs from an accepted proof only in the name it declares.
+#guard (assumptions (binary ++ "(declare-const k U) (declare-sort h 0) (assume @p0 a)")).isSome
+#guard assumptions (binary ++ "(define 7 () a) (assume @p0 7)") == none
+#guard assumptions (binary ++ "(define h ((7 U)) (g a a)) (assume @p0 (h a))") == none
+#guard assumptions (binary ++ "(assume @p0 (let ((7 a)) 7))") == none
+-- A quoted symbol is a symbol, whatever it quotes.
+#guard assumptions "(declare-sort U 0) (declare-const |5| U) (assume @p0 |5|)"
+  == some [.uconst 1 (.usort 1)]
+
+/-!
+### The shape of a proof file
+
+A proof is a bare sequence of commands.  cvc5 prints one inside the parentheses
+of the `get-proof` response it is answering; that wrapper is refused rather than
+unwrapped, as Ethos refuses it.
+-/
+
+-- Commands standing on their own are read.
+#guard assumptions "(declare-sort U 0) (declare-const a U) (assume @p0 a)"
+  == some [.uconst 1 (.usort 1)]
+
+-- The same commands wrapped in a pair of parentheses are not.
+#guard assumptions "((declare-sort U 0) (declare-const a U) (assume @p0 a))"
+  == none
+
+-- A file holding one command is that command, not a wrapper around one.
+#guard assumptions "(declare-sort U 0)" == some []
+#guard assumptions "((declare-sort U 0))" == none
 
 end Logos.Parser.Tests

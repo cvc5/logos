@@ -1,4 +1,4 @@
-; The s-expression form of examples/test-simple.cpc.lean.
+; The s-expression form of test/regress/test-simple.cpc.lean.
 (declare-const x Int)
 (declare-const y Int)
 (assume @p0 (= y x))

@@ -52,7 +52,7 @@ private theorem native_width_roundtrip
     simpa [SmtEval.native_zleq] using hW
   have hInt : (Int.ofNat (Int.toNat W) : Int) = W :=
     Int.toNat_of_nonneg hWProp
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem list_concat_eq_rec_of_lists
@@ -277,7 +277,7 @@ private theorem list_smt_type_or_nil_of_concat_type
               __smtx_typeof_bv_op_2
                 (__smtx_typeof (__eo_to_smt x))
                 (__smtx_typeof (__eo_to_smt xs)) by
-            rw [__smtx_typeof.eq_42]) hNonNone with
+            rw [__smtx_typeof.eq_44]) hNonNone with
         ⟨smtWidth, hXTy, hXsTy⟩
       have hXTrans : RuleProofs.eo_has_smt_translation x := by
         rw [RuleProofs.eo_has_smt_translation, hXTy]
@@ -299,7 +299,7 @@ private theorem list_smt_type_or_nil_of_concat_type
       apply Or.inl
       change __smtx_typeof
           (SmtTerm.bvxor (__eo_to_smt x) (__eo_to_smt xs)) = _
-      rw [__smtx_typeof.eq_42]
+      rw [__smtx_typeof.eq_44]
       simp [__smtx_typeof_bv_op_2, hXTy, hXsTy,
         native_nateq, native_ite]
   | case4 nil z hNil hZ hNot =>
@@ -576,7 +576,7 @@ theorem typed_term_of_type_or_nil
       (by rw [hLhsTy, hRhsTy]) (by rw [hLhsTy]; simp)
 
 theorem facts_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs zs n w : Term) (W : native_Int) :
     __smtx_typeof (__eo_to_smt xs) =
       SmtType.BitVec (native_int_to_nat W) ->
@@ -697,7 +697,7 @@ theorem facts_term
     exact RuleProofs.smt_value_rel_refl _
 
 theorem facts_term_of_type_or_nil
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs zs n w : Term) (W : native_Int) :
     (__smtx_typeof (__eo_to_smt xs) =
         SmtType.BitVec (native_int_to_nat W) ∨

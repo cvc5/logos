@@ -13,7 +13,7 @@ set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_plus_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -189,7 +189,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_plus_core
             __smtx_model_eval_plus
               (__smtx_model_eval M (__eo_to_smt a))
               (__smtx_model_eval M (__eo_to_smt b)) by
-        rw [__smtx_model_eval.eq_12]]
+        rw [__smtx_model_eval.eq_14]]
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
@@ -353,7 +353,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_plus_core
             __smtx_model_eval_plus
               (__smtx_model_eval M (__eo_to_smt a))
               (__smtx_model_eval M (__eo_to_smt b)) by
-        rw [__smtx_model_eval.eq_12]]
+        rw [__smtx_model_eval.eq_14]]
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
@@ -364,7 +364,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_plus_core
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_mult_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -540,7 +540,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mult_core
             __smtx_model_eval_mult
               (__smtx_model_eval M (__eo_to_smt a))
               (__smtx_model_eval M (__eo_to_smt b)) by
-        rw [__smtx_model_eval.eq_14]]
+        rw [__smtx_model_eval.eq_16]]
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
@@ -704,7 +704,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mult_core
             __smtx_model_eval_mult
               (__smtx_model_eval M (__eo_to_smt a))
               (__smtx_model_eval M (__eo_to_smt b)) by
-        rw [__smtx_model_eval.eq_14]]
+        rw [__smtx_model_eval.eq_16]]
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
@@ -715,7 +715,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mult_core
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_neg_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -913,7 +913,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_neg_core
             __smtx_model_eval__
               (__smtx_model_eval M (__eo_to_smt a))
               (__smtx_model_eval M (__eo_to_smt b)) by
-        rw [__smtx_model_eval.eq_13]]
+        rw [__smtx_model_eval.eq_15]]
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
@@ -1100,7 +1100,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_neg_core
             __smtx_model_eval__
               (__smtx_model_eval M (__eo_to_smt a))
               (__smtx_model_eval M (__eo_to_smt b)) by
-        rw [__smtx_model_eval.eq_13]]
+        rw [__smtx_model_eval.eq_15]]
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
@@ -1111,7 +1111,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_neg_core
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_lt_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -1351,7 +1351,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_lt_core
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_leq_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -1592,7 +1592,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_leq_core
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_gt_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -1832,7 +1832,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_gt_core
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_geq_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -2073,7 +2073,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_geq_core
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_div_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -2276,7 +2276,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_div_core
             (__smtx_model_eval_div_total
               (__smtx_model_eval M (__eo_to_smt a))
               (__smtx_model_eval M (__eo_to_smt b))) by
-      rw [__smtx_model_eval.eq_24]]
+      rw [__smtx_model_eval.eq_26]]
     rw [hAEval, hBEval, hDivByZeroFalse]
     rw [show
         __eo_to_smt
@@ -2293,7 +2293,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_div_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_mod_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -2496,7 +2496,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mod_core
             (__smtx_model_eval_mod_total
               (__smtx_model_eval M (__eo_to_smt a))
               (__smtx_model_eval M (__eo_to_smt b))) by
-      rw [__smtx_model_eval.eq_25]]
+      rw [__smtx_model_eval.eq_27]]
     rw [hAEval, hBEval, hModByZeroFalse]
     rw [show
         __eo_to_smt
@@ -2513,7 +2513,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mod_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -2681,9 +2681,9 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
       rw [show
           __smtx_model_eval M
               (SmtTerm.qdiv (__eo_to_smt a) (__eo_to_smt b)) =
-            let _v0 := __smtx_model_eval_to_real_coerce
+            let _v0 := __smtx_to_real_coerce
               (__smtx_model_eval M (__eo_to_smt b))
-            let _v1 := __smtx_model_eval_to_real_coerce
+            let _v1 := __smtx_to_real_coerce
               (__smtx_model_eval M (__eo_to_smt a))
             __smtx_model_eval_ite
               (__smtx_model_eval_eq _v0
@@ -2703,7 +2703,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
           EvaluateProofInternal.native_to_real_qdiv_total_eval]
         rfl]
       rw [__smtx_model_eval.eq_3]
-      simp [__smtx_model_eval_to_real_coerce, __smtx_model_eval_eq,
+      simp [__smtx_to_real_coerce, __smtx_model_eval_eq,
         __smtx_model_eval_ite, __smtx_model_eval_qdiv_total, native_veq,
         hRunBZeroNe, EvaluateProofInternal.native_to_real_qdiv_total_eval]
       exact RuleProofs.smt_value_rel_refl _
@@ -2822,9 +2822,9 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
       rw [show
           __smtx_model_eval M
               (SmtTerm.qdiv (__eo_to_smt a) (__eo_to_smt b)) =
-            let _v0 := __smtx_model_eval_to_real_coerce
+            let _v0 := __smtx_to_real_coerce
               (__smtx_model_eval M (__eo_to_smt b))
-            let _v1 := __smtx_model_eval_to_real_coerce
+            let _v1 := __smtx_to_real_coerce
               (__smtx_model_eval M (__eo_to_smt a))
             __smtx_model_eval_ite
               (__smtx_model_eval_eq _v0
@@ -2843,13 +2843,13 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
         simp [__eo_to_q, __eo_qdiv, native_ite, hNZ]
         rfl]
       rw [__smtx_model_eval.eq_3]
-      simp [__smtx_model_eval_to_real_coerce, __smtx_model_eval_eq,
+      simp [__smtx_to_real_coerce, __smtx_model_eval_eq,
         __smtx_model_eval_ite, __smtx_model_eval_qdiv_total, native_veq,
         hRunBZeroNe]
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -3438,7 +3438,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
           exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_div_total_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -3623,7 +3623,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_div_total_core
               __smtx_model_eval_div_total
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_29]]
+          rw [__smtx_model_eval.eq_31]]
         rw [hAEval, hBEval]
         rw [show
             __eo_to_smt
@@ -3700,7 +3700,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_div_total_core
               __smtx_model_eval_div_total
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_29]]
+          rw [__smtx_model_eval.eq_31]]
         rw [hAEval, hBEval]
         rw [show
             __eo_to_smt
@@ -3720,7 +3720,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_div_total_core
         exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_mod_total_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a b : Term)
     (rec :
       ∀ A : Term,
@@ -3920,7 +3920,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mod_total_core
               __smtx_model_eval_mod_total
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_30]]
+          rw [__smtx_model_eval.eq_32]]
         rw [hAEval, hBEval]
         rw [show
             __eo_to_smt
@@ -4000,7 +4000,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mod_total_core
               __smtx_model_eval_mod_total
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (__eo_to_smt b)) by
-          rw [__smtx_model_eval.eq_30]]
+          rw [__smtx_model_eval.eq_32]]
         rw [hAEval, hBEval]
         rw [show
             __eo_to_smt

@@ -140,7 +140,7 @@ private theorem typed___eo_prog_sets_minus_member_impl
     native_ite, native_Teq, __smtx_typeof.eq_1, hxSmtTy, hySmtTy, hzSmtTy]
 
 private theorem facts___eo_prog_sets_minus_member_impl
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x y z : Term)
     (hxTrans : RuleProofs.eo_has_smt_translation x)
     (hyTrans : RuleProofs.eo_has_smt_translation y)
@@ -228,18 +228,18 @@ private theorem facts___eo_prog_sets_minus_member_impl
       __smtx_typeof_map_value mz = SmtType.Map (__eo_to_smt_type T) SmtType.Bool :=
     set_map_value_typed (by simpa [hzVal] using hzEvalTy)
   have hYCanEval :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt y)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt y)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM y hyTrans
-  have hYCanSet : __smtx_value_canonical (SmtValue.Set my) := by
+  have hYCanSet : value_canonical (SmtValue.Set my) := by
     simpa [hyVal] using hYCanEval
   have hMyCan : __smtx_map_canonical my = true := by
     have hParts := hYCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
-  have hMyDef : __smtx_msm_get_default my = SmtValue.Boolean false := by
+  have hMyDef : __smtx_map_get_default my = SmtValue.Boolean false := by
     have hParts := hYCanSet
-    simp [__smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact eq_of_native_veq_true hParts.2
   let acc :=
@@ -255,35 +255,35 @@ private theorem facts___eo_prog_sets_minus_member_impl
     dsimp [acc]
     exact set_empty_map_canonical (__smtx_index_typeof_map (__smtx_typeof_map_value my))
   have hAccLookupFalse :
-      __smtx_msm_lookup acc (__smtx_model_eval M (__eo_to_smt x)) =
+      __smtx_map_lookup acc (__smtx_model_eval M (__eo_to_smt x)) =
         SmtValue.Boolean false := by
-    simp [acc, __smtx_msm_lookup]
+    simp [acc, __smtx_map_lookup]
   have hMinusLookup :
-      __smtx_msm_lookup (__smtx_mss_op_internal false my mz acc)
+      __smtx_map_lookup (__smtx_set_op_rec false my mz acc)
           (__smtx_model_eval M (__eo_to_smt x)) =
         native_ite
           (native_and
             (native_veq
-              (__smtx_msm_lookup my (__smtx_model_eval M (__eo_to_smt x)))
+              (__smtx_map_lookup my (__smtx_model_eval M (__eo_to_smt x)))
               (SmtValue.Boolean true))
             (native_iff
               (native_veq
-                (__smtx_msm_lookup mz (__smtx_model_eval M (__eo_to_smt x)))
+                (__smtx_map_lookup mz (__smtx_model_eval M (__eo_to_smt x)))
                 (SmtValue.Boolean true))
               false))
           (SmtValue.Boolean true)
-          (__smtx_msm_lookup acc (__smtx_model_eval M (__eo_to_smt x))) :=
+          (__smtx_map_lookup acc (__smtx_model_eval M (__eo_to_smt x))) :=
     mss_op_lookup_acc false (m1 := my) (m2 := mz) (acc := acc)
       (A := __eo_to_smt_type T) (i := __smtx_model_eval M (__eo_to_smt x))
       hMyTy hMzTy hAccTy hMyCan hAccCan hMyDef
   have hYLookupTy :
       __smtx_typeof_value
-          (__smtx_msm_lookup my (__smtx_model_eval M (__eo_to_smt x))) =
+          (__smtx_map_lookup my (__smtx_model_eval M (__eo_to_smt x))) =
         SmtType.Bool :=
     map_lookup_typed hMyTy hxEvalTy
   have hZLookupTy :
       __smtx_typeof_value
-          (__smtx_msm_lookup mz (__smtx_model_eval M (__eo_to_smt x))) =
+          (__smtx_map_lookup mz (__smtx_model_eval M (__eo_to_smt x))) =
         SmtType.Bool :=
     map_lookup_typed hMzTy hxEvalTy
   let mem := Term.Apply Term.set_member x
@@ -332,7 +332,7 @@ private theorem facts___eo_prog_sets_minus_member_impl
     RuleProofs.eo_interprets_eq_of_rel M lhs rhs hEqBool hRel
 
 public theorem cmd_step_sets_minus_member_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_minus_member args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

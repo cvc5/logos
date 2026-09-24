@@ -302,7 +302,7 @@ private theorem typed_bv_udiv_pow2_term
     rw [hEmptyTy]
     simp [__smtx_typeof_concat, native_int_to_nat,
       SmtEval.native_int_to_nat, native_nat_to_int,
-      SmtEval.native_nat_to_int, SmtEval.native_zplus,
+      Smtm.native_nat_to_int, SmtEval.native_zplus,
       Int.max_eq_left hDInt]
   have hPRound := native_int_to_nat_roundtrip P hP0
   have hDRound := native_int_to_nat_roundtrip D hDNonneg
@@ -329,7 +329,7 @@ private theorem typed_bv_udiv_pow2_term
     rw [typeof_concat_eq, hZeroTy, hTailTy]
     simp [__smtx_typeof_concat, native_int_to_nat,
       SmtEval.native_int_to_nat, native_nat_to_int,
-      SmtEval.native_nat_to_int, SmtEval.native_zplus, hWidthNat,
+      Smtm.native_nat_to_int, SmtEval.native_zplus, hWidthNat,
       hPRound, hDRound, hPD, hPDInt, Int.max_eq_left hPInt,
       Int.max_eq_left hDInt]
   unfold bvUdivPow2Term
@@ -369,7 +369,7 @@ private theorem model_eval_eq_true_of_eo_eq_true_pow2
       exact hEval
 
 private theorem bv_udiv_pow2_premises_numeric
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (v : Term) (W P N : native_Int) :
     __smtx_typeof (__eo_to_smt v) = SmtType.Int ->
     eo_interprets M (bvPow2IspowPrem v) true ->
@@ -713,7 +713,7 @@ private theorem typed_bv_urem_pow2_term
     rw [hEmptyTy]
     simp [__smtx_typeof_concat, native_int_to_nat,
       SmtEval.native_int_to_nat, native_nat_to_int,
-      SmtEval.native_nat_to_int, SmtEval.native_zplus,
+      Smtm.native_nat_to_int, SmtEval.native_zplus,
       Int.max_eq_left hDInt]
   have hWidthNat :
       native_int_to_nat A + native_int_to_nat D = native_int_to_nat W := by
@@ -740,7 +740,7 @@ private theorem typed_bv_urem_pow2_term
     rw [typeof_concat_eq, hZeroTy, hTailTy]
     simp [__smtx_typeof_concat, native_int_to_nat,
       SmtEval.native_int_to_nat, native_nat_to_int,
-      SmtEval.native_nat_to_int, SmtEval.native_zplus, hWidthNat,
+      Smtm.native_nat_to_int, SmtEval.native_zplus, hWidthNat,
       hARound, hDRound, hAD, hADInt, Int.max_eq_left hAInt,
       Int.max_eq_left hDInt]
   unfold bvUremPow2Term
@@ -749,7 +749,7 @@ private theorem typed_bv_urem_pow2_term
     (by rw [hLhsTy]; intro h; cases h)
 
 private theorem bv_urem_pow2_premises_numeric
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (v : Term) (W A Q : native_Int) :
     __smtx_typeof (__eo_to_smt v) = SmtType.Int ->
     eo_interprets M (bvPow2IspowPrem v) true ->
@@ -952,7 +952,7 @@ private theorem smtx_eval_bvudiv_term_eq_div
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem eval_bv_udiv_pow2_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x v n power nm : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation v ->
@@ -1047,7 +1047,7 @@ private theorem eval_bv_udiv_pow2_term
     hRange.1 hRange.2
 
 private theorem facts_bv_udiv_pow2_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x v n power nm : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation v ->
@@ -1164,7 +1164,7 @@ private theorem smtx_eval_bvurem_term_eq_div
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem eval_bv_urem_pow2_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x v n nmp pm : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation v ->
@@ -1262,7 +1262,7 @@ private theorem eval_bv_urem_pow2_term
     hRange.1 hRange.2
 
 private theorem facts_bv_urem_pow2_term
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x v n nmp pm : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation v ->
@@ -1470,7 +1470,7 @@ theorem typed_bv_urem_pow2_program
     hNTrans hNmpTrans hTermTy
 
 theorem facts_bv_urem_pow2_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x v n nmp pm P1 P2 P3 P4 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation v ->
@@ -1668,7 +1668,7 @@ theorem typed_bv_udiv_pow2_program
     hNTrans hPowerTrans hTermTy
 
 theorem facts_bv_udiv_pow2_program
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x v n power nm P1 P2 P3 P4 : Term) :
     RuleProofs.eo_has_smt_translation x ->
     RuleProofs.eo_has_smt_translation v ->

@@ -1478,7 +1478,7 @@ theorem StrInReConsumeInternal.native_str_in_re_snoc_word_eq_consume_local
 
 theorem StrInReConsumeInternal.map_char_of_comp_char_consume_local :
     ∀ w : native_String,
-      w.map (native_ssm_char_of_value ∘ SmtValue.Char) = w
+      w.map (impl_native_ssm_char_of_value ∘ SmtValue.Char) = w
   | [] => rfl
   | c :: cs => by
       simp only [List.map_cons]
@@ -1494,16 +1494,16 @@ theorem StrInReConsumeInternal.eval_string_unpack_consume_local
   refine ⟨native_pack_string w, ?_, ?_⟩
   · change __smtx_model_eval M (SmtTerm.String w) = _
     simp only [__smtx_model_eval]
-  · simp [native_unpack_string, native_string_to_values,
+  · simp [native_unpack_string, impl_native_string_to_values,
      
       StrInReConsumeInternal.map_char_of_comp_char_consume_local]
 
 theorem StrInReConsumeInternal.typed_seq_unpack_values_of_eval_local
-    (M : SmtModel) (hM : model_total_typed M) (s : Term) (ss : SmtSeq)
+    (M : SmtModel) (hM : model_wf M) (s : Term) (ss : SmtSeq)
     (hTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hEval : __smtx_model_eval M (__eo_to_smt s) = SmtValue.Seq ss) :
     native_unpack_seq ss =
-      native_string_to_values (native_unpack_string ss) := by
+      impl_native_string_to_values (native_unpack_string ss) := by
   apply native_unpack_seq_eq_string_to_values_of_typeof_seq_char
   have h := smt_model_eval_preserves_type_of_non_none M hM
     (__eo_to_smt s) (by
@@ -1516,7 +1516,7 @@ theorem StrInReConsumeInternal.typed_seq_unpack_values_of_eval_local
   exact hsimpa
 
 theorem StrInReConsumeInternal.typed_seq_value_of_eval_local
-    (M : SmtModel) (hM : model_total_typed M) (s : SmtTerm) (ss : SmtSeq)
+    (M : SmtModel) (hM : model_wf M) (s : SmtTerm) (ss : SmtSeq)
     (hTy : __smtx_typeof s = SmtType.Seq SmtType.Char)
     (hEval : __smtx_model_eval M s = SmtValue.Seq ss) :
     __smtx_typeof_value (SmtValue.Seq ss) =
@@ -1551,7 +1551,7 @@ theorem StrInReConsumeInternal.native_str_in_re_congr_of_reglan_rel_consume_loca
 theorem StrInReConsumeInternal.native_str_in_re_nil_str_to_re_nil_consume_local :
     native_str_in_re [] (native_str_to_re []) = true := by
   simp [native_str_in_re, native_string_valid, native_str_to_re,
-    native_re_of_list, nativeListInRe, native_re_nullable]
+    impl_native_re_of_list, nativeListInRe, native_re_nullable]
 
 theorem StrInReConsumeInternal.smt_value_rel_union_right_none_consume_local
     (r : SmtRegLan) :
@@ -1946,7 +1946,7 @@ evaluation of the whole unrev transform (used for the generic concat
 head, where the head value is not known a priori).
 -/
 theorem StrInReConsumeInternal.eval_unrev_re_concat_head_bridge_exists_local
-    (M : SmtModel) (hM : model_total_typed M) (head r2 : Term)
+    (M : SmtModel) (hM : model_wf M) (head r2 : Term)
     (rvU : SmtRegLan)
     (hHeadTy : __smtx_typeof (__eo_to_smt head) = SmtType.RegLan)
     (hRvU :
@@ -2121,7 +2121,7 @@ apply, and the tail residual composes via the LEFT-continuation ∀q
 equalities.
 -/
 theorem StrInReConsumeInternal.str_re_consume_rec_unrev_str_concat_re_concat_from_ih_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s1 s2 r1 r2 fuel : Term)
     (hFuel : fuel ≠ Term.Stuck)
     (hR1Empty :
@@ -2423,7 +2423,7 @@ component is the CHAIN transform of `c1`, the right is `__re_rev_comp`
 of the tail.
 -/
 theorem StrInReConsumeInternal.re_rev_comp_union_decomp_local
-    (M : SmtModel) (hM : model_total_typed M) (c1 c2 : Term)
+    (M : SmtModel) (hM : model_wf M) (c1 c2 : Term)
     (rvU : SmtRegLan)
     (hTy :
       __smtx_typeof
@@ -2509,7 +2509,7 @@ theorem StrInReConsumeInternal.re_rev_comp_union_decomp_local
 Value decomposition of `__re_rev_comp` on an inter tree.
 -/
 theorem StrInReConsumeInternal.re_rev_comp_inter_decomp_local
-    (M : SmtModel) (hM : model_total_typed M) (c1 c2 : Term)
+    (M : SmtModel) (hM : model_wf M) (c1 c2 : Term)
     (rvU : SmtRegLan)
     (hTy :
       __smtx_typeof
@@ -2949,7 +2949,7 @@ theorem StrInReConsumeInternal.native_str_in_re_concat_inter_both_eq_local
 Unrev semantic case for the union combinator.
 -/
 theorem StrInReConsumeInternal.str_re_consume_union_unrev_from_ih_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s c1 c2 fuel : Term)
     (hS : s ≠ Term.Stuck)
     (hFuel : fuel ≠ Term.Stuck)
@@ -3170,7 +3170,7 @@ theorem StrInReConsumeInternal.str_re_consume_union_unrev_from_ih_local
 Unrev semantic case for the inter combinator.
 -/
 theorem StrInReConsumeInternal.str_re_consume_inter_unrev_from_ih_local
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s c1 c2 fuel : Term)
     (hS : s ≠ Term.Stuck)
     (hFuel : fuel ≠ Term.Stuck)
@@ -4819,7 +4819,7 @@ theorem StrInReConsumeInternal.consume_mult_retry_residual_eq_local
 Value decomposition of `__re_rev_comp` on a `re_mult` chunk.
 -/
 theorem StrInReConsumeInternal.re_rev_comp_mult_decomp_local
-    (M : SmtModel) (hM : model_total_typed M) (r3 : Term)
+    (M : SmtModel) (hM : model_wf M) (r3 : Term)
     (headV : SmtRegLan)
     (hTy :
       __smtx_typeof
@@ -4898,7 +4898,7 @@ part consumes the ∀q/decomposition conclusions of the residual part,
 exactly as in the flat `hRecSemantic` (`no_prefix ∧ residual`).
 -/
 theorem StrInReConsumeInternal.str_re_consume_rec_unrev_semantic_local
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ s0 r0 fuel0,
       StrInReConsumeInternal.str_re_consume_rec_unrev_no_suffix_motive M s0 r0 fuel0 ∧
         StrInReConsumeInternal.str_re_consume_rec_unrev_residual_motive M s0 r0 fuel0 := by
@@ -6721,14 +6721,14 @@ theorem StrInReConsumeInternal.str_re_consume_rec_unrev_semantic_local
       hS hFuel hC2Ne ihRight ihLeft
 
 theorem StrInReConsumeInternal.str_re_consume_rec_unrev_no_suffix_local
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ s0 r0 fuel0,
       StrInReConsumeInternal.str_re_consume_rec_unrev_no_suffix_motive M s0 r0 fuel0 :=
   fun s0 r0 fuel0 =>
     (StrInReConsumeInternal.str_re_consume_rec_unrev_semantic_local M hM s0 r0 fuel0).1
 
 theorem StrInReConsumeInternal.str_re_consume_rec_unrev_residual_local
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ s0 r0 fuel0,
       StrInReConsumeInternal.str_re_consume_rec_unrev_residual_motive M s0 r0 fuel0 :=
   fun s0 r0 fuel0 =>
@@ -6756,7 +6756,7 @@ theorem StrInReConsumeInternal.consume_unrev_pair_eval_local
     model_str_in_re_unpack_eq_string_of_value_type ssA rvB hSsATy]
 
 theorem StrInReConsumeInternal.consume_unrev_str_eval_of_ne_stuck_local
-    (M : SmtModel) (hM : model_total_typed M) (s : Term)
+    (M : SmtModel) (hM : model_wf M) (s : Term)
     (hTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hNe : StrInReConsumeInternal.consume_unrev_str_local s ≠ Term.Stuck) :
     ∃ ss,
@@ -6780,7 +6780,7 @@ theorem StrInReConsumeInternal.consume_unrev_str_eval_of_ne_stuck_local
     hUnrevTy hEval
 
 theorem StrInReConsumeInternal.consume_unrev_str_value_type_of_eval_local
-    (M : SmtModel) (hM : model_total_typed M) (s : Term) (ss : SmtSeq)
+    (M : SmtModel) (hM : model_wf M) (s : Term) (ss : SmtSeq)
     (hTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hNe : StrInReConsumeInternal.consume_unrev_str_local s ≠ Term.Stuck)
     (hEval : __smtx_model_eval M
@@ -6960,7 +6960,7 @@ theorem StrInReConsumeInternal.consume_mult_retry_step_eq_local
     exact hAbsorb
 
 theorem StrInReConsumeInternal.str_re_consume_rec_unrev_model_rel_local
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ s0 r0 fuel0,
       StrInReConsumeInternal.str_re_consume_rec_unrev_model_rel_motive M s0 r0 fuel0 := by
   intro s0 r0 fuel0

@@ -238,7 +238,7 @@ private theorem smt_typeof_bvule_term_eq
   cases hM
   change __smtx_typeof (SmtTerm.bvule (__eo_to_smt t1) (__eo_to_smt s1)) =
     SmtType.Bool
-  rw [__smtx_typeof.eq_55]
+  rw [__smtx_typeof.eq_57]
   simp [__smtx_typeof_bv_op_2_ret, hT1SmtTy, hS1SmtTy, native_nateq,
     native_ite]
 
@@ -291,7 +291,7 @@ private theorem typed___eo_prog_uf_int2bv_bvule_equiv_impl
     (by rw [hBvuleTy]; decide)
 
 private theorem eval_bvule_matches_ubv_leq
-    (M : SmtModel) (hM : model_total_typed M) (t1 s1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t1 s1 : Term) :
     RuleProofs.eo_has_smt_translation t1 ->
     RuleProofs.eo_has_smt_translation s1 ->
     __eo_typeof (__eo_prog_uf_int2bv_bvule_equiv t1 s1) = Term.Bool ->
@@ -325,7 +325,7 @@ private theorem eval_bvule_matches_ubv_leq
     __smtx_model_eval M
       (SmtTerm.leq (SmtTerm.ubv_to_int (__eo_to_smt t1))
         (SmtTerm.ubv_to_int (__eo_to_smt s1)))
-  rw [__smtx_model_eval.eq_55, smtx_eval_leq_term_eq,
+  rw [__smtx_model_eval.eq_57, smtx_eval_leq_term_eq,
     smtx_eval_ubv_to_int_term_eq, smtx_eval_ubv_to_int_term_eq, hEvalT,
     hEvalS]
   by_cases hLe : tPayload <= sPayload
@@ -359,7 +359,7 @@ private theorem eval_bvule_matches_ubv_leq
       hGt, hNotLt, hNeTS, hNeST, hLe]
 
 private theorem facts___eo_prog_uf_int2bv_bvule_equiv_impl
-    (M : SmtModel) (hM : model_total_typed M) (t1 s1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t1 s1 : Term) :
     RuleProofs.eo_has_smt_translation t1 ->
     RuleProofs.eo_has_smt_translation s1 ->
     __eo_typeof (__eo_prog_uf_int2bv_bvule_equiv t1 s1) = Term.Bool ->
@@ -382,7 +382,7 @@ private theorem facts___eo_prog_uf_int2bv_bvule_equiv_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_uf_int2bv_bvule_equiv_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.uf_int2bv_bvule_equiv args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

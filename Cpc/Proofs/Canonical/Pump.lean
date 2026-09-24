@@ -751,7 +751,7 @@ def list_typed_canonical : List SmtValue -> List SmtType -> Prop
   | [], [] => True
   | v :: vs, U :: Us =>
       (__smtx_typeof_value v = U ∧ U ≠ SmtType.None ∧
-        __smtx_value_canonical_bool v = true) ∧ list_typed_canonical vs Us
+        __smtx_value_canonical v = true) ∧ list_typed_canonical vs Us
   | _, _ => False
 
 theorem build_spine_typeof (Bt : SmtType) :
@@ -780,9 +780,9 @@ theorem build_spine_typeof (Bt : SmtType) :
 
 theorem build_spine_canonical :
     ∀ (Us : List SmtType) (vs : List SmtValue) (f : SmtValue),
-      __smtx_value_canonical_bool f = true ->
+      __smtx_value_canonical f = true ->
       list_typed_canonical vs Us ->
-      __smtx_value_canonical_bool (build_spine f vs) = true
+      __smtx_value_canonical (build_spine f vs) = true
   | [], [], f, hCan, _ => by
       simpa [build_spine] using hCan
   | [], v :: vs, f, _, hTyped => by
@@ -793,8 +793,8 @@ theorem build_spine_canonical :
       have hParts := hTyped
       simp only [list_typed_canonical] at hParts
       have hApplyCan :
-          __smtx_value_canonical_bool (SmtValue.Apply f v) = true := by
-        simp [__smtx_value_canonical_bool, native_and, hCan, hParts.1.2.2]
+          __smtx_value_canonical (SmtValue.Apply f v) = true := by
+        simp [__smtx_value_canonical, native_and, hCan, hParts.1.2.2]
       simpa [build_spine] using
         build_spine_canonical Us vs (SmtValue.Apply f v) hApplyCan hParts.2
 
@@ -883,7 +883,7 @@ private theorem type_default_typed_canonical_p
     (hInh : native_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
-      __smtx_value_canonical_bool (__smtx_type_default T) = true :=
+      __smtx_value_canonical (__smtx_type_default T) = true :=
   type_default_kernel T hInh hRec
 
 theorem ne_none_of_inh {T : SmtType}
@@ -976,7 +976,7 @@ private def LargeOracle (n : Nat) : Prop :=
     __smtx_is_finite_type (SmtType.Datatype s dd) = false →
     ∃ v : SmtValue,
       __smtx_typeof_value v = SmtType.Datatype s dd ∧
-        __smtx_value_canonical_bool v = true ∧ n ≤ sizeOf v
+        __smtx_value_canonical v = true ∧ n ≤ sizeOf v
 
 -- === finiteness/unit unfolding on containers (local copies) ===
 
@@ -1006,11 +1006,11 @@ private theorem is_unit_bitvec_eq_p (w : Nat) :
 private theorem int_large_witness_p (minSize : Nat) :
     ∃ i : SmtValue,
       __smtx_typeof_value i = SmtType.Int ∧
-        __smtx_value_canonical_bool i = true ∧
+        __smtx_value_canonical i = true ∧
           minSize ≤ sizeOf i := by
   refine ⟨SmtValue.Numeral (Int.ofNat minSize), ?_, ?_, ?_⟩
   · simp [__smtx_typeof_value]
-  · simp [__smtx_value_canonical_bool]
+  · simp [__smtx_value_canonical]
   · rw [show sizeOf (SmtValue.Numeral (Int.ofNat minSize)) =
         1 + sizeOf (Int.ofNat minSize) by rfl]
     rw [show sizeOf (Int.ofNat minSize) = 1 + minSize by rfl]
@@ -1019,11 +1019,11 @@ private theorem int_large_witness_p (minSize : Nat) :
 private theorem real_large_witness_p (minSize : Nat) :
     ∃ i : SmtValue,
       __smtx_typeof_value i = SmtType.Real ∧
-        __smtx_value_canonical_bool i = true ∧
+        __smtx_value_canonical i = true ∧
           minSize ≤ sizeOf i := by
   refine ⟨SmtValue.Rational (Int.ofNat minSize : native_Rat), ?_, ?_, ?_⟩
   · simp [__smtx_typeof_value]
-  · simp [__smtx_value_canonical_bool]
+  · simp [__smtx_value_canonical]
   · rw [show sizeOf (SmtValue.Rational (Int.ofNat minSize : native_Rat)) =
         1 + sizeOf (Int.ofNat minSize : native_Rat) by rfl]
     rw [show sizeOf (Int.ofNat minSize : native_Rat) =
@@ -1035,11 +1035,11 @@ private theorem real_large_witness_p (minSize : Nat) :
 private theorem usort_large_witness_p (u : native_Nat) (minSize : Nat) :
     ∃ i : SmtValue,
       __smtx_typeof_value i = SmtType.USort u ∧
-        __smtx_value_canonical_bool i = true ∧
+        __smtx_value_canonical i = true ∧
           minSize ≤ sizeOf i := by
   refine ⟨SmtValue.UValue u minSize, ?_, ?_, ?_⟩
   · simp [__smtx_typeof_value]
-  · simp [__smtx_value_canonical_bool]
+  · simp [__smtx_value_canonical]
   · rw [show sizeOf (SmtValue.UValue u minSize) =
         1 + sizeOf u + sizeOf minSize by rfl]
     simp [sizeOf]
@@ -1061,7 +1061,7 @@ private theorem smt_seq_repeat_typeof_p
         smt_seq_repeat_typeof_p T x hx n, hx, native_ite, native_Teq]
 
 private theorem smt_seq_repeat_canonical_p
-    (T : SmtType) (x : SmtValue) (hx : __smtx_value_canonical_bool x = true) :
+    (T : SmtType) (x : SmtValue) (hx : __smtx_value_canonical x = true) :
     ∀ n : Nat,
       __smtx_seq_canonical (smt_seq_repeat_p T x n) = true
   | 0 => by
@@ -1089,7 +1089,7 @@ private theorem seq_large_witness_p
     (minSize : Nat) :
     ∃ i : SmtValue,
       __smtx_typeof_value i = SmtType.Seq T ∧
-        __smtx_value_canonical_bool i = true ∧
+        __smtx_value_canonical i = true ∧
           minSize ≤ sizeOf i := by
   have hDef := type_default_typed_canonical_p hInh hRec
   refine
@@ -1097,7 +1097,7 @@ private theorem seq_large_witness_p
       ?_, ?_, ?_⟩
   · simpa [__smtx_typeof_value] using
       smt_seq_repeat_typeof_p T (__smtx_type_default T) hDef.1 minSize
-  · simpa [__smtx_value_canonical_bool] using
+  · simpa [__smtx_value_canonical] using
       smt_seq_repeat_canonical_p T (__smtx_type_default T) hDef.2 minSize
   · rw [show
       sizeOf
@@ -1141,11 +1141,11 @@ private theorem bitvec_succ_one_typeof_p (w : Nat) :
   simp [__smtx_typeof_value, native_and, native_ite, hmod, hnonneg, htonat]
 
 private theorem bitvec_succ_one_canonical_p (w : Nat) :
-    __smtx_value_canonical_bool
+    __smtx_value_canonical
       (SmtValue.Binary (native_nat_to_int (Nat.succ w)) 1) = true := by
   have hmod := one_mod_pow2_succ_zeq_p w
   have hnonneg := bitvec_succ_nonneg_p w
-  simp [__smtx_value_canonical_bool, native_ite, hmod, hnonneg]
+  simp [__smtx_value_canonical, native_ite, hmod, hnonneg]
 
 private theorem bitvec_succ_one_ne_default_p (w : Nat) :
     native_veq
@@ -1582,12 +1582,12 @@ theorem nonunit_field_nonunit
 
 theorem vsm_apply_head_build_spine :
     ∀ (vs : List SmtValue) (f : SmtValue),
-      __vsm_apply_head (build_spine f vs) = __vsm_apply_head f
+      __smtx_apply_head_value (build_spine f vs) = __smtx_apply_head_value f
   | [], f => by
       simp [build_spine]
   | v :: vs, f => by
       have := vsm_apply_head_build_spine vs (SmtValue.Apply f v)
-      simpa [build_spine, __vsm_apply_head] using this
+      simpa [build_spine, __smtx_apply_head_value] using this
 
 theorem build_spine_inj :
     ∀ (vs ws : List SmtValue) (f g : SmtValue),
@@ -1760,8 +1760,8 @@ theorem resolve_ty_ground (dd : SmtDatatypeDecl)
 
 theorem apply_head_dt_cons (s : native_String)
     (dd : SmtDatatypeDecl) (k : Nat) :
-    __vsm_apply_head (SmtValue.DtCons s dd k) = SmtValue.DtCons s dd k := by
-  simp [__vsm_apply_head]
+    __smtx_apply_head_value (SmtValue.DtCons s dd k) = SmtValue.DtCons s dd k := by
+  simp [__smtx_apply_head_value]
 
 /-- Typed canonical constructor spine over given field values. -/
 theorem constructor_spine_typed
@@ -1771,9 +1771,9 @@ theorem constructor_spine_typed
     (hTyped : list_typed_canonical vs ((dtc_fields c).map (resolve_ty dd))) :
     __smtx_typeof_value (build_spine (SmtValue.DtCons s dd k) vs) =
         SmtType.Datatype s dd ∧
-      __smtx_value_canonical_bool (build_spine (SmtValue.DtCons s dd k) vs) =
+      __smtx_value_canonical (build_spine (SmtValue.DtCons s dd k) vs) =
         true ∧
-      __vsm_apply_head (build_spine (SmtValue.DtCons s dd k) vs) =
+      __smtx_apply_head_value (build_spine (SmtValue.DtCons s dd k) vs) =
         SmtValue.DtCons s dd k := by
   have hHeadTy :
       __smtx_typeof_value (SmtValue.DtCons s dd k) =
@@ -1791,8 +1791,8 @@ theorem constructor_spine_typed
         (dt_resolve_nth dd (__smtx_dd_lookup s dd) k c hnth),
       dtc_resolve_fields dd c]
   have hHeadCan :
-      __smtx_value_canonical_bool (SmtValue.DtCons s dd k) = true := by
-    simp [__smtx_value_canonical_bool]
+      __smtx_value_canonical (SmtValue.DtCons s dd k) = true := by
+    simp [__smtx_value_canonical]
   refine
     ⟨build_spine_typeof (SmtType.Datatype s dd) _ vs _ hHeadTy hTyped,
       build_spine_canonical _ vs _ hHeadCan hTyped,
@@ -1808,8 +1808,8 @@ theorem constructor_default_spine
     (hConsWf : __smtx_dt_cons_wf_rec dd c = true) :
     ∃ v : SmtValue,
       __smtx_typeof_value v = SmtType.Datatype s dd ∧
-        __smtx_value_canonical_bool v = true ∧
-        __vsm_apply_head v = SmtValue.DtCons s dd k := by
+        __smtx_value_canonical v = true ∧
+        __smtx_apply_head_value v = SmtValue.DtCons s dd k := by
   have hWfAll :
       ∀ U ∈ (dtc_fields c).map (resolve_ty dd),
         native_inhabited_type U = true ∧ __smtx_type_wf_rec U = true := by
@@ -1837,7 +1837,7 @@ private theorem dt_nondefault
     (hNonUnit : __smtx_is_unit_type (SmtType.Datatype s dd) = false) :
     ∃ e : SmtValue,
       __smtx_typeof_value e = SmtType.Datatype s dd ∧
-        __smtx_value_canonical_bool e = true ∧
+        __smtx_value_canonical e = true ∧
           native_veq e (__smtx_type_default (SmtType.Datatype s dd)) = false := by
   have hRecParts :
       __smtx_dd_has_dt s dd = true ∧ __smtx_decl_wf_rec dd dd = true := by
@@ -2006,7 +2006,7 @@ private theorem dt_nondefault
           have hEF :
               ∃ eF : SmtValue,
                 __smtx_typeof_value eF = resolve_ty dd F ∧
-                  __smtx_value_canonical_bool eF = true ∧
+                  __smtx_value_canonical eF = true ∧
                     native_veq eF
                       (__smtx_type_default (resolve_ty dd F)) = false := by
             by_cases hRef : ∃ t : native_String, F = SmtType.TypeRef t
@@ -2132,14 +2132,14 @@ private theorem ty_nondefault
     (_hNonUnit : __smtx_is_unit_type A = false) :
     ∃ e : SmtValue,
       __smtx_typeof_value e = A ∧
-        __smtx_value_canonical_bool e = true ∧
+        __smtx_value_canonical e = true ∧
           native_veq e (__smtx_type_default A) = false := by
   cases A with
   | None =>
       simp [__smtx_type_wf_rec] at _hRec
   | Bool =>
       refine ⟨SmtValue.Boolean true, ?_, ?_, ?_⟩ <;>
-        simp [__smtx_typeof_value, __smtx_value_canonical_bool,
+        simp [__smtx_typeof_value, __smtx_value_canonical,
           __smtx_type_default, native_veq]
   | Int =>
       simp [__smtx_is_finite_type, __smtx_type_bounded] at _hFinite
@@ -2192,9 +2192,9 @@ private theorem ty_nondefault
             (SmtMap.default T (__smtx_type_default U))), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, __smtx_typeof_map_value,
           hTDefault.1, heTy, hUDefault.1, native_ite, native_Teq]
-      · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+      · simp [__smtx_value_canonical, __smtx_map_canonical,
           __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-          __smtx_msm_get_default, hTDefault.2, heCan, hUDefault.1,
+          __smtx_map_get_default, hTDefault.2, heCan, hUDefault.1,
           hUDefault.2, heNeDefaultProp, native_and, native_ite, native_not,
           native_veq]
       · rw [show __smtx_type_default (SmtType.Map T U) =
@@ -2218,9 +2218,9 @@ private theorem ty_nondefault
             (SmtMap.default T (SmtValue.Boolean false))), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, __smtx_typeof_map_value,
           __smtx_map_to_set_type, hTDefault.1, native_ite, native_Teq]
-      · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+      · simp [__smtx_value_canonical, __smtx_map_canonical,
           __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-          __smtx_msm_get_default, hTDefault.2, native_and, native_ite,
+          __smtx_map_get_default, hTDefault.2, native_and, native_ite,
           native_not, native_veq, __smtx_typeof_value, __smtx_type_default]
       · simp [__smtx_type_default, native_veq]
   | Seq T =>
@@ -2228,7 +2228,7 @@ private theorem ty_nondefault
   | Char =>
       refine ⟨SmtValue.Char 1, ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, native_char_valid, native_ite]
-      · simp [__smtx_value_canonical_bool, native_char_valid]
+      · simp [__smtx_value_canonical, native_char_valid]
       · simp [__smtx_type_default, native_veq]
   | Datatype s2 dd2 =>
       exact dt_nondefault s2 dd2 _hInh _hRec _hFinite _hNonUnit
@@ -2268,7 +2268,7 @@ theorem finite_nonunit_datatype_nondefault_value
     (hNonUnit : __smtx_is_unit_type (SmtType.Datatype s dd) = false) :
     ∃ e : SmtValue,
       __smtx_typeof_value e = SmtType.Datatype s dd ∧
-        __smtx_value_canonical_bool e = true ∧
+        __smtx_value_canonical e = true ∧
           native_veq e (__smtx_type_default (SmtType.Datatype s dd)) = false :=
   dt_nondefault s dd hInh hRec hFinite hNonUnit
 
@@ -2284,7 +2284,7 @@ private theorem finite_nonunit_nondefault
     (_hNonUnit : __smtx_is_unit_type A = false) :
     ∃ e : SmtValue,
       __smtx_typeof_value e = A ∧
-        __smtx_value_canonical_bool e = true ∧
+        __smtx_value_canonical e = true ∧
           native_veq e (__smtx_type_default A) = false := by
   classical
   cases A with
@@ -2292,7 +2292,7 @@ private theorem finite_nonunit_nondefault
       simp [__smtx_type_wf_rec] at _hRec
   | Bool =>
       refine ⟨SmtValue.Boolean true, ?_, ?_, ?_⟩ <;>
-        simp [__smtx_typeof_value, __smtx_value_canonical_bool,
+        simp [__smtx_typeof_value, __smtx_value_canonical,
           __smtx_type_default, native_veq]
   | Int =>
       simp [__smtx_is_finite_type, __smtx_type_bounded] at _hFinite
@@ -2346,9 +2346,9 @@ private theorem finite_nonunit_nondefault
             (SmtMap.default T (__smtx_type_default U))), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, __smtx_typeof_map_value,
           hTDefault.1, heTy, hUDefault.1, native_ite, native_Teq]
-      · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+      · simp [__smtx_value_canonical, __smtx_map_canonical,
           __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-          __smtx_msm_get_default, hTDefault.2, heCan, hUDefault.1,
+          __smtx_map_get_default, hTDefault.2, heCan, hUDefault.1,
           hUDefault.2, heNeDefaultProp, native_and, native_ite, native_not,
           native_veq]
       · rw [show __smtx_type_default (SmtType.Map T U) =
@@ -2372,9 +2372,9 @@ private theorem finite_nonunit_nondefault
             (SmtMap.default T (SmtValue.Boolean false))), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, __smtx_typeof_map_value,
           __smtx_map_to_set_type, hTDefault.1, native_ite, native_Teq]
-      · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+      · simp [__smtx_value_canonical, __smtx_map_canonical,
           __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-          __smtx_msm_get_default, hTDefault.2, native_and, native_ite,
+          __smtx_map_get_default, hTDefault.2, native_and, native_ite,
           native_not, native_veq, __smtx_typeof_value, __smtx_type_default]
       · simp [__smtx_type_default, native_veq]
   | Seq T =>
@@ -2382,7 +2382,7 @@ private theorem finite_nonunit_nondefault
   | Char =>
       refine ⟨SmtValue.Char 1, ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, native_char_valid, native_ite]
-      · simp [__smtx_value_canonical_bool, native_char_valid]
+      · simp [__smtx_value_canonical, native_char_valid]
       · simp [__smtx_type_default, native_veq]
   | Datatype s dd =>
       exact finite_nonunit_datatype_nondefault_value
@@ -2406,7 +2406,7 @@ private theorem type_large
     __smtx_is_finite_type A = false →
     ∃ v : SmtValue,
       __smtx_typeof_value v = A ∧
-        __smtx_value_canonical_bool v = true ∧ n ≤ sizeOf v := by
+        __smtx_value_canonical v = true ∧ n ≤ sizeOf v := by
   cases A with
   | None =>
       intro _hInh hRec _hInf
@@ -2466,9 +2466,9 @@ private theorem type_large
                 subst e
                 rw [veq_refl_true] at hveq
                 cases hveq
-              simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+              simp [__smtx_value_canonical, __smtx_map_canonical,
                 __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-                __smtx_msm_get_default, hTDefault.2, heCan, hUDefault.1,
+                __smtx_map_get_default, hTDefault.2, heCan, hUDefault.1,
                 hUDefault.2, hNe, native_and, native_ite, native_not,
                 native_veq]
             · rw [show
@@ -2488,7 +2488,7 @@ private theorem type_large
               ⟨SmtValue.Map (SmtMap.default T (__smtx_type_default U)),
                 ?_, ?_, ?_⟩
             · simp [__smtx_typeof_value, __smtx_typeof_map_value, hUDefault.1]
-            · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+            · simp [__smtx_value_canonical, __smtx_map_canonical,
                 __smtx_map_default_canonical, hUDefault.1, hUDefault.2,
                 native_and, native_ite, native_veq]
             · rw [show
@@ -2521,9 +2521,9 @@ private theorem type_large
               (SmtMap.default T (__smtx_type_default U))), ?_, ?_, ?_⟩
         · simp [__smtx_typeof_value, __smtx_typeof_map_value,
             hkTy, heTy, hUDefault.1, native_ite, native_Teq]
-        · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+        · simp [__smtx_value_canonical, __smtx_map_canonical,
             __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-            __smtx_msm_get_default, hkCan, heCan, hUDefault.1, hUDefault.2,
+            __smtx_map_get_default, hkCan, heCan, hUDefault.1, hUDefault.2,
             heNeDefaultProp, native_and, native_ite, native_not, native_veq]
         · rw [show
             sizeOf
@@ -2552,9 +2552,9 @@ private theorem type_large
             (SmtMap.default T (SmtValue.Boolean false))), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, __smtx_typeof_map_value,
           __smtx_map_to_set_type, hxTy, native_ite, native_Teq]
-      · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+      · simp [__smtx_value_canonical, __smtx_map_canonical,
           __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-          __smtx_msm_get_default, hxCan, native_and, native_ite,
+          __smtx_map_get_default, hxCan, native_and, native_ite,
           native_not, native_veq, __smtx_typeof_value, __smtx_type_default]
       · rw [show
           sizeOf
@@ -2624,8 +2624,8 @@ private theorem oracle_succ (n : Nat) (hO : LargeOracle n) :
       (list_typed_canonical_defaults preU hPreWf)
       ⟨⟨hwTy, hXNone, hwCan⟩, list_typed_canonical_defaults postU hPostWf⟩
   have hHeadCan :
-      __smtx_value_canonical_bool (SmtValue.DtCons s dd k) = true := by
-    simp [__smtx_value_canonical_bool]
+      __smtx_value_canonical (SmtValue.DtCons s dd k) = true := by
+    simp [__smtx_value_canonical]
   refine
     ⟨build_spine (SmtValue.DtCons s dd k)
       (defaults_of preU ++ w :: defaults_of postU), ?_, ?_, ?_⟩
@@ -2655,7 +2655,7 @@ theorem infinite_datatype_large_witness
     (hInfinite : __smtx_is_finite_type (SmtType.Datatype s dd) = false) :
     ∃ v : SmtValue,
       __smtx_typeof_value v = SmtType.Datatype s dd ∧
-        __smtx_value_canonical_bool v = true ∧ minSize ≤ sizeOf v :=
+        __smtx_value_canonical v = true ∧ minSize ≤ sizeOf v :=
   oracle_all minSize s dd hInh hRec hInfinite
 
 end Smtm

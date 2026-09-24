@@ -113,7 +113,7 @@ end RuleProofs
 
 /-- Proves correctness of the EO program for `contra_impl`. -/
 theorem correct___eo_prog_contra_impl
-    (M : SmtModel) (_hM : model_total_typed M) (x1 x2 : Term) :
+    (M : SmtModel) (_hM : model_wf M) (x1 x2 : Term) :
   eo_interprets M x1 true ->
   eo_interprets M x2 true ->
   RuleProofs.eo_has_bool_type (__eo_prog_contra (Proof.pf x1) (Proof.pf x2)) ->
@@ -122,7 +122,7 @@ theorem correct___eo_prog_contra_impl
 
 /-- Derives the checker facts exposed by the EO program for `contra_impl`. -/
 theorem facts___eo_prog_contra_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 x2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 x2 : Term) :
   eo_interprets M x1 true ->
   eo_interprets M x2 true ->
   __eo_prog_contra (Proof.pf x1) (Proof.pf x2) ≠ Term.Stuck ->
@@ -137,7 +137,7 @@ theorem facts___eo_prog_contra_impl
   exact correct___eo_prog_contra_impl M hM x1 x2 hX1True hX2True hBool
 
 public theorem cmd_step_contra_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.contra args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

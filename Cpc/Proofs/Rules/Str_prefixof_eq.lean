@@ -210,7 +210,7 @@ private theorem typed___eo_prog_str_prefixof_eq_impl
   simpa [prefixEqConclusion, lhs, rhs] using hBoolEq
 
 private theorem facts___eo_prog_str_prefixof_eq_impl
-    (M : SmtModel) (hM : model_total_typed M) (s t P : Term)
+    (M : SmtModel) (hM : model_wf M) (s t P : Term)
     (hSTrans : RuleProofs.eo_has_smt_translation s)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hTy : ∃ T, __eo_typeof s = Term.Apply Term.Seq T ∧
@@ -288,7 +288,7 @@ private theorem facts___eo_prog_str_prefixof_eq_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_prefixof_eq_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_prefixof_eq args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

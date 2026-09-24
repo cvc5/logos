@@ -412,7 +412,7 @@ decreasing_by
     omega
 
 private theorem eo_interprets_and_left_false_intro
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     eo_interprets M A false ->
     RuleProofs.eo_has_bool_type B ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) false := by
@@ -430,11 +430,11 @@ private theorem eo_interprets_and_left_false_intro
         have hBTy : __smtx_typeof (__eo_to_smt B) = SmtType.Bool := by
           simpa [RuleProofs.eo_has_bool_type] using hBBool
         simp [hATy, hBTy, native_Teq, native_ite]
-      · rw [__smtx_model_eval.eq_8, hAEval, hBEval]
+      · rw [__smtx_model_eval.eq_9, hAEval, hBEval]
         cases b <;> simp [__smtx_model_eval_and, SmtEval.native_and]
 
 private theorem eo_interprets_and_right_false_intro
-    (M : SmtModel) (hM : model_total_typed M) (A B : Term) :
+    (M : SmtModel) (hM : model_wf M) (A B : Term) :
     RuleProofs.eo_has_bool_type A ->
     eo_interprets M B false ->
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) false := by
@@ -452,11 +452,11 @@ private theorem eo_interprets_and_right_false_intro
         have hATy : __smtx_typeof (__eo_to_smt A) = SmtType.Bool := by
           simpa [RuleProofs.eo_has_bool_type] using hABool
         simp [hATy, hBTy, native_Teq, native_ite]
-      · rw [__smtx_model_eval.eq_8, hAEval, hBEval]
+      · rw [__smtx_model_eval.eq_9, hAEval, hBEval]
         cases a <;> simp [__smtx_model_eval_and, SmtEval.native_and]
 
 private theorem absorbTree_or_true
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ {t : Term},
       AbsorbTree (Term.UOp UserOp.or) (Term.Boolean true) t ->
       RuleProofs.eo_has_bool_type t ->
@@ -482,7 +482,7 @@ private theorem absorbTree_or_true
       exact RuleProofs.eo_interprets_or_right_intro M hM a b hABool (ih hBBool)
 
 private theorem absorbTree_and_false
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ {t : Term},
       AbsorbTree (Term.UOp UserOp.and) (Term.Boolean false) t ->
       RuleProofs.eo_has_bool_type t ->
@@ -531,7 +531,7 @@ private theorem smt_value_rel_of_eo_interprets_bool_const
           simp [hEval, __smtx_model_eval_eq, native_veq]
 
 private theorem smt_eval_reglan_of_smt_type_reglan
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm) :
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm) :
     __smtx_typeof t = SmtType.RegLan ->
     ∃ r, __smtx_model_eval M t = SmtValue.RegLan r := by
   intro hTy
@@ -547,7 +547,7 @@ private theorem smt_eval_reglan_of_smt_type_reglan
   exact reglan_value_canonical hValTy
 
 private theorem smt_eval_binary_of_smt_type_bitvec
-    (M : SmtModel) (hM : model_total_typed M) (t : SmtTerm)
+    (M : SmtModel) (hM : model_wf M) (t : SmtTerm)
     (w : native_Nat) :
     __smtx_typeof t = SmtType.BitVec w ->
     ∃ n, __smtx_model_eval M t =
@@ -648,7 +648,7 @@ private theorem bvand_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_38]) hNN with
+        rw [__smtx_typeof.eq_40]) hNN with
     ⟨w', hyTy, hxTy⟩
   have hWidth : w' = w := by
     have hResult :
@@ -658,9 +658,9 @@ private theorem bvand_args_of_bitvec_type (y x : Term) (w : native_Nat) :
             __smtx_typeof_bv_op_2
               (__smtx_typeof (__eo_to_smt y))
               (__smtx_typeof (__eo_to_smt x)) by
-          rw [__smtx_typeof.eq_38]] at hTy'
+          rw [__smtx_typeof.eq_40]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite,
-        native_nateq, SmtEval.native_nateq] using hTy'
+        native_nateq, Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -687,7 +687,7 @@ private theorem bvor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_39]) hNN with
+        rw [__smtx_typeof.eq_41]) hNN with
     ⟨w', hyTy, hxTy⟩
   have hWidth : w' = w := by
     have hResult :
@@ -697,9 +697,9 @@ private theorem bvor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
             __smtx_typeof_bv_op_2
               (__smtx_typeof (__eo_to_smt y))
               (__smtx_typeof (__eo_to_smt x)) by
-          rw [__smtx_typeof.eq_39]] at hTy'
+          rw [__smtx_typeof.eq_41]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite,
-        native_nateq, SmtEval.native_nateq] using hTy'
+        native_nateq, Smtm.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -723,14 +723,14 @@ private theorem bvand_result_type_of_non_none (y x : Term) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_38]) hNN with
+        rw [__smtx_typeof.eq_40]) hNN with
     ⟨w, hyTy, hxTy⟩
   refine ⟨w, ?_, hyTy, hxTy⟩
   change __smtx_typeof (SmtTerm.bvand (__eo_to_smt y) (__eo_to_smt x)) =
     SmtType.BitVec w
-  rw [__smtx_typeof.eq_38]
+  rw [__smtx_typeof.eq_40]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-    SmtEval.native_nateq]
+    Smtm.native_nateq]
 
 private theorem bvor_result_type_of_non_none (y x : Term) :
     __smtx_typeof (__eo_to_smt (mkBvOr y x)) ≠ SmtType.None ->
@@ -750,14 +750,14 @@ private theorem bvor_result_type_of_non_none (y x : Term) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_39]) hNN with
+        rw [__smtx_typeof.eq_41]) hNN with
     ⟨w, hyTy, hxTy⟩
   refine ⟨w, ?_, hyTy, hxTy⟩
   change __smtx_typeof (SmtTerm.bvor (__eo_to_smt y) (__eo_to_smt x)) =
     SmtType.BitVec w
-  rw [__smtx_typeof.eq_39]
+  rw [__smtx_typeof.eq_41]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-    SmtEval.native_nateq]
+    Smtm.native_nateq]
 
 private theorem native_str_in_re_mk_union
     (str : native_String) (r s : SmtRegLan) :
@@ -815,10 +815,10 @@ private theorem native_binary_or_mod_eq_toNat
       ((BitVec.ofInt w n1 ||| BitVec.ofInt w n2).toNat : Int) := by
   cases w with
   | zero =>
-      simp [native_binary_or, native_pior, native_mod_total,
+      simp [native_binary_or, impl_native_pior, native_mod_total,
         native_int_pow2_nat]
   | succ w =>
-      simp [native_binary_or, native_pior, native_mod_total,
+      simp [native_binary_or, impl_native_pior, native_mod_total,
         native_nat_to_int, native_ite, native_zeq]
       exact bitvec_toInt_emod_pow (Nat.succ w)
         (BitVec.ofInt (Nat.succ w) n1 ||| BitVec.ofInt (Nat.succ w) n2)
@@ -1050,7 +1050,7 @@ private theorem reUnion_smt_value_rel_right_all_eval
   simp
 
 private theorem absorbTree_re_union_all
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ {t : Term},
       AbsorbTree (Term.UOp UserOp.re_union) (Term.UOp UserOp.re_all) t ->
       __smtx_typeof (__eo_to_smt t) = SmtType.RegLan ->
@@ -1082,7 +1082,7 @@ private theorem absorbTree_re_union_all
         haEval hbEval (ih hbTy)
 
 private theorem absorbTree_re_inter_none_eval
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ {t : Term},
       AbsorbTree (Term.UOp UserOp.re_inter) (Term.UOp UserOp.re_none) t ->
       __smtx_typeof (__eo_to_smt t) = SmtType.RegLan ->
@@ -1119,7 +1119,7 @@ private theorem absorbTree_re_inter_none_eval
       cases ra <;> rfl
 
 private theorem absorbTree_re_concat_none_eval
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ {t : Term},
       AbsorbTree (Term.UOp UserOp.re_concat) (Term.UOp UserOp.re_none) t ->
       __smtx_typeof (__eo_to_smt t) = SmtType.RegLan ->
@@ -1156,7 +1156,7 @@ private theorem absorbTree_re_concat_none_eval
       cases ra <;> rfl
 
 private theorem absorbTree_bvand_zero_eval
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ {t : Term} {w : native_Nat},
       AbsorbTree (Term.UOp UserOp.bvand)
         (Term.Binary (native_nat_to_int w) 0) t ->
@@ -1197,7 +1197,7 @@ private theorem absorbTree_bvand_zero_eval
       rw [native_binary_and_right_zero_mod_nat w na]
 
 private theorem absorbTree_bvor_allOnes_eval
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ {t : Term} {w : native_Nat},
       AbsorbTree (Term.UOp UserOp.bvor)
         (Term.Binary (native_nat_to_int w)
@@ -1313,7 +1313,7 @@ private theorem eo_prog_absorb_eq_input_of_type_bool (a1 : Term) :
           exact False.elim (eo_typeof_stuck_ne_bool hTy)
 
 private theorem eo_absorb_eq_interprets_true_of_guards
-    (M : SmtModel) (hM : model_total_typed M) (t zero : Term) :
+    (M : SmtModel) (hM : model_wf M) (t zero : Term) :
     RuleProofs.eo_has_bool_type
       (Term.Apply (Term.Apply (Term.UOp UserOp.eq) t) zero) ->
     __get_zero t = zero ->
@@ -1648,7 +1648,7 @@ private theorem eo_absorb_eq_interprets_true_of_guards
     simp [__is_absorb] at hAbs
 
 private theorem eo_prog_absorb_interprets_true
-    (M : SmtModel) (hM : model_total_typed M) (a1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
     RuleProofs.eo_has_smt_translation a1 ->
     __eo_typeof (__eo_prog_absorb a1) = Term.Bool ->
     eo_interprets M (__eo_prog_absorb a1) true := by
@@ -1687,7 +1687,7 @@ private theorem eo_prog_absorb_interprets_true
           exact False.elim (eo_typeof_stuck_ne_bool hResultTy)
 
 public theorem cmd_step_absorb_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.absorb args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -90,7 +90,7 @@ private theorem prog_mk_form (pat repl pfx suffix : Term)
     pat repl pfx suffix hp hr hpre hsuf
 
 private theorem seq_eval_of_type
-    (M : SmtModel) (hM : model_total_typed M) (x : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
     ∃ sx, __smtx_model_eval M (__eo_to_smt x) = SmtValue.Seq sx := by
   have hValTy :
@@ -117,7 +117,7 @@ private theorem replace_type
     native_ite, native_Teq]
 
 private theorem type_and_facts
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (pat repl pfx suffix U : Term)
     (hPrefixList : __eo_is_list op pfx = Term.Boolean true)
     (hSuffixList : __eo_is_list op suffix = Term.Boolean true)
@@ -308,7 +308,7 @@ private theorem type_and_facts
 end StrReplaceFindPreProof
 
 public theorem cmd_step_str_replace_find_pre_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_replace_find_pre args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

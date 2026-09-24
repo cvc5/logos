@@ -204,7 +204,7 @@ private theorem typed___eo_prog_array_store_overwrite_impl
     (by rw [hLhsTy, hRhsTy]) hLhsTrans
 
 private theorem facts___eo_prog_array_store_overwrite_impl
-    (M : SmtModel) (hM : model_total_typed M) (t1 i1 e1 f1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t1 i1 e1 f1 : Term) :
   RuleProofs.eo_has_smt_translation t1 ->
   RuleProofs.eo_has_smt_translation i1 ->
   RuleProofs.eo_has_smt_translation e1 ->
@@ -225,16 +225,16 @@ private theorem facts___eo_prog_array_store_overwrite_impl
   have hF1NotStuck : f1 ≠ Term.Stuck :=
     RuleProofs.term_ne_stuck_of_has_smt_translation f1 hF1Trans
   have hT1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt t1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt t1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t1 hT1Trans
   have hI1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt i1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt i1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM i1 hI1Trans
   have hE1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt e1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt e1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM e1 hE1Trans
   have hF1Can :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt f1)) :=
+      value_canonical (__smtx_model_eval M (__eo_to_smt f1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM f1 hF1Trans
   have hProgEq :=
     prog_array_store_overwrite_eq t1 i1 e1 f1
@@ -266,7 +266,7 @@ private theorem facts___eo_prog_array_store_overwrite_impl
           hT1Can hI1Can hE1Can hF1Can)
 
 public theorem cmd_step_array_store_overwrite_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.array_store_overwrite args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

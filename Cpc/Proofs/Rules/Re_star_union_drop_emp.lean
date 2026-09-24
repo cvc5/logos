@@ -87,7 +87,7 @@ private theorem smtx_typeof_re_mult_of_reglan (r : Term)
   simp [hr, native_ite, native_Teq]
 
 private theorem type_and_facts
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys : Term)
     (hXsList :
       __eo_is_list (Term.UOp UserOp.re_union) xs = Term.Boolean true)
@@ -193,7 +193,7 @@ private theorem type_and_facts
 end ReStarUnionDropEmpProof
 
 public theorem cmd_step_re_star_union_drop_emp_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_star_union_drop_emp args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

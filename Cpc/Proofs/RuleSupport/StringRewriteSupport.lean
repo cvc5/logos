@@ -266,7 +266,7 @@ theorem list_concat_rec_cons_right_is_not_nil
       __eo_eq, native_teq]
 
 theorem list_concat_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a z : Term) (T : SmtType) (sa sz : SmtSeq)
     (haList :
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true)
@@ -341,7 +341,7 @@ theorem listEvalPrefix_eq_nil_of_not_cons
         case str_concat => exact False.elim (hNotCons ⟨y, x, rfl⟩)
 
 theorem list_eval_prefix
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (a : Term) (T : SmtType),
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true →
       __smtx_typeof (__eo_to_smt a) = SmtType.Seq T →
@@ -404,7 +404,7 @@ theorem list_eval_prefix
         rfl
 
 theorem list_concat_eval_prefix
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (a z : Term) (T : SmtType) (sz : SmtSeq),
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true ->
       __eo_is_list (Term.UOp UserOp.str_concat) z = Term.Boolean true ->
@@ -494,7 +494,7 @@ theorem list_concat_eval_prefix
             ⟩
 
 theorem list_concat_eval_prefix_of_translation
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ (a z : Term) (sz : SmtSeq),
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true ->
       __eo_is_list (Term.UOp UserOp.str_concat) z = Term.Boolean true ->
@@ -579,7 +579,7 @@ theorem list_concat_eval_prefix_of_translation
                 cases op <;> simp [listEvalPrefix] at hNotShape ⊢
 
 theorem list_type_eval_of_translation
-    (M : SmtModel) (hM : model_total_typed M) (a : Term)
+    (M : SmtModel) (hM : model_wf M) (a : Term)
     (haList :
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true)
     (haTrans : RuleProofs.eo_has_smt_translation a) :
@@ -679,7 +679,7 @@ theorem singleton_elim_has_seq_type
   | _ => simpa [__eo_list_singleton_elim_2] using hcTy
 
 theorem singleton_elim_rel
-    (M : SmtModel) (hM : model_total_typed M) (c : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (c : Term) (T : SmtType)
     (hList :
       __eo_is_list (Term.UOp UserOp.str_concat) c = Term.Boolean true)
     (hcTy : __smtx_typeof (__eo_to_smt c) = SmtType.Seq T) :
@@ -731,7 +731,7 @@ theorem singleton_elim_rel
       RuleProofs.smt_value_rel_refl _
 
 theorem singleton_elim_eval
-    (M : SmtModel) (hM : model_total_typed M) (c : Term) (T : SmtType)
+    (M : SmtModel) (hM : model_wf M) (c : Term) (T : SmtType)
     (sc : SmtSeq)
     (hList :
       __eo_is_list (Term.UOp UserOp.str_concat) c = Term.Boolean true)
@@ -943,7 +943,7 @@ theorem prefix_pattern_source_eq_pattern_of_not_cons
     native_teq, __eo_requires, native_not, SmtEval.native_not]
 
 theorem prefix_pattern_source_type_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a pat z U : Term) (spat : SmtSeq)
     (haList :
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true)
@@ -1135,7 +1135,7 @@ theorem prefix_pattern_source_type_eval
       simp
 
 theorem prefix_list_source_type_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (a pat suffix z U : Term) (spat : SmtSeq)
     (haList :
       __eo_is_list (Term.UOp UserOp.str_concat) a = Term.Boolean true)

@@ -246,7 +246,7 @@ private theorem typed___eo_prog_sets_ext_impl
   simpa [__eo_prog_sets_ext, idx, lhs, rhs] using hNotBool
 
 private theorem facts___eo_prog_sets_ext_impl
-    (M : SmtModel) (hM : model_total_typed M) (a b : Term) :
+    (M : SmtModel) (hM : model_wf M) (a b : Term) :
   RuleProofs.eo_has_bool_type
     (Term.Apply Term.not (Term.Apply (Term.Apply Term.eq a) b)) ->
   __eo_typeof
@@ -299,33 +299,33 @@ private theorem facts___eo_prog_sets_ext_impl
       __smtx_typeof_map_value m2 =
         SmtType.Map (__eo_to_smt_type T) SmtType.Bool :=
     Smtm.set_map_value_typed (by simpa [hEvalB] using hEvalBTy)
-  have hACan : __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt a)) :=
+  have hACan : value_canonical (__smtx_model_eval M (__eo_to_smt a)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM a hATrans
-  have hBCan : __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt b)) :=
+  have hBCan : value_canonical (__smtx_model_eval M (__eo_to_smt b)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM b hBTrans
   have hm1Can : __smtx_map_canonical m1 = true := by
     have hParts := hACan
-    simp [hEvalA, __smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [hEvalA, value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
   have hm2Can : __smtx_map_canonical m2 = true := by
     have hParts := hBCan
-    simp [hEvalB, __smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [hEvalB, value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
   have hm1DefaultFalse :
-      __smtx_msm_get_default m1 = SmtValue.Boolean false := by
+      __smtx_map_get_default m1 = SmtValue.Boolean false := by
     have hParts := hACan
-    simp [hEvalA, __smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [hEvalA, value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact Smtm.eq_of_native_veq_true hParts.2
   have hm2DefaultFalse :
-      __smtx_msm_get_default m2 = SmtValue.Boolean false := by
+      __smtx_map_get_default m2 = SmtValue.Boolean false := by
     have hParts := hBCan
-    simp [hEvalB, __smtx_value_canonical, __smtx_value_canonical_bool,
+    simp [hEvalB, value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact Smtm.eq_of_native_veq_true hParts.2
-  have hDefaultsEq : __smtx_msm_get_default m1 = __smtx_msm_get_default m2 :=
+  have hDefaultsEq : __smtx_map_get_default m1 = __smtx_map_get_default m2 :=
     hm1DefaultFalse.trans hm2DefaultFalse.symm
   have hSetsEqFalse :
       __smtx_model_eval_eq (SmtValue.Set m1) (SmtValue.Set m2) =
@@ -337,8 +337,8 @@ private theorem facts___eo_prog_sets_ext_impl
     set_model_eval_eq_false_to_map_eq_false m1 m2 hSetsEqFalse
   have hSelectEqFalse :
       __smtx_model_eval_eq
-          (__smtx_msm_lookup m1 (native_eval_map_diff_msm m1 m2))
-          (__smtx_msm_lookup m2 (native_eval_map_diff_msm m1 m2)) =
+          (__smtx_map_lookup m1 (native_eval_map_diff m1 m2))
+          (__smtx_map_lookup m2 (native_eval_map_diff m1 m2)) =
         SmtValue.Boolean false :=
     RuleProofs.map_diff_selects_model_eval_eq_false_of_default_eq
       m1 m2 (__eo_to_smt_type T) SmtType.Bool
@@ -368,7 +368,7 @@ private theorem facts___eo_prog_sets_ext_impl
   simpa [__eo_prog_sets_ext, idx, lhs, rhs] using hNotTrue
 
 public theorem cmd_step_sets_ext_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.sets_ext args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

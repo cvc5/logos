@@ -1046,7 +1046,7 @@ theorem eo_bitvec_type_of_smt_type
   exact TranslationProofs.eo_to_smt_type_eq_bitvec hEoTy
 
 theorem bitvec_eval_nat_payload
-    (M : SmtModel) (hM : model_total_typed M) (t : Term) (w : Nat)
+    (M : SmtModel) (hM : model_wf M) (t : Term) (w : Nat)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.BitVec w) :
     ∃ n : Nat,
       __smtx_model_eval M (__eo_to_smt t) =

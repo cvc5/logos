@@ -2,7 +2,18 @@
 
 # Configure Lake to use host build tools when the tools bundled with Lean cannot
 # start on this machine. This is most commonly needed on older Linux systems,
-# where Lean itself runs but its bundled LLVM/Clang requires newer glibc symbols.
+# where Lean itself runs but its bundled LLVM/Clang requires newer glibc symbols:
+# a direct `lake build` there fails with errors such as `GLIBC_2.27 not found` or
+# `GLIBC_2.29 not found` from the toolchain's bin/clang.
+#
+# The fallback selects the host C compiler and archiver through LEAN_CC and
+# LEAN_AR while preserving the link-library paths of the Lean toolchain, so it
+# needs a working host toolchain: GCC or Clang plus `ar`.
+#
+# Where that is unavailable, use a newer container or build the pinned Lean
+# toolchain locally; do not replace the system libm.so.6 or glibc in place.
+# Official x86-64 Lean binaries require glibc 2.26 or newer, which
+# `getconf GNU_LIBC_VERSION` reports.
 #
 # This file is intended to be sourced by other scripts.
 

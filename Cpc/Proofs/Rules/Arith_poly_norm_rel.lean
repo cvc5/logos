@@ -262,7 +262,7 @@ theorem typed___eo_prog_arith_poly_norm_rel_impl
   exact RuleProofs.eo_typeof_bool_implies_has_bool_type a1 hA1Trans hA1Ty
 
 private theorem facts___eo_prog_arith_poly_norm_rel_impl_shape
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (r x1 x2 r2 y1 y2 cx x one cy y one2 : Term) :
   RuleProofs.eo_has_smt_translation
     (Term.Apply (Term.Apply (Term.UOp UserOp.eq)
@@ -511,7 +511,7 @@ private theorem facts___eo_prog_arith_poly_norm_rel_impl_shape
       hLtX hLeX hEqX hGtX hGeX hLtY hLeY hEqY hGtY hGeY)
 
 private theorem facts___eo_prog_arith_poly_norm_rel_impl
-    (M : SmtModel) (hM : model_total_typed M) (a1 prem : Term) :
+    (M : SmtModel) (hM : model_wf M) (a1 prem : Term) :
   RuleProofs.eo_has_smt_translation a1 ->
   RuleProofs.eo_has_bool_type prem ->
   eo_interprets M prem true ->
@@ -640,7 +640,7 @@ private theorem facts___eo_prog_arith_poly_norm_rel_impl
       exact False.elim (hProg (by rfl))
 
 public theorem cmd_step_arith_poly_norm_rel_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_poly_norm_rel args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

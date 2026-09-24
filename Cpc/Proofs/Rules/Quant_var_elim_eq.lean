@@ -110,7 +110,7 @@ private theorem singleton_subst_actuals_of_eq_bool
           (SubstActualsHaveSmtTypes.nil Term.__eo_List_nil)
 
 private theorem qsubst_eval_eq_push
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x t F body : Term)
     (hForallTrans :
       RuleProofs.eo_has_smt_translation (qforall (qsingle x) F))
@@ -150,7 +150,7 @@ private theorem qforall_single_has_bool_type_of_has_smt_translation
     (__eo_to_smt_exists (qsingle x) (SmtTerm.not (__eo_to_smt F))) hNN
 
 private theorem qeq_true_in_single_subst_model
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x t F : Term)
     (hForallTrans :
       RuleProofs.eo_has_smt_translation (qforall (qsingle x) F))
@@ -425,7 +425,7 @@ private theorem singleton_elim_or_facts (tail : Term)
     (hTailBool : RuleProofs.eo_has_bool_type tail) :
     RuleProofs.eo_has_bool_type
         (__eo_list_singleton_elim (Term.UOp UserOp.or) tail) ∧
-      ∀ (N : SmtModel), model_total_typed N ->
+      ∀ (N : SmtModel), model_wf N ->
         __smtx_model_eval N
             (__eo_to_smt (__eo_list_singleton_elim (Term.UOp UserOp.or) tail)) =
           __smtx_model_eval N (__eo_to_smt tail) := by
@@ -503,13 +503,13 @@ private theorem subst_term_facts_of_eq_bool
     using hTypes.1.symm
 
 private theorem eval_value_facts
-    (M : SmtModel) (hM : model_total_typed M) (t : Term)
+    (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTTrans : RuleProofs.eo_has_smt_translation t) :
     __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) ∧
-      __smtx_value_canonical_bool (__smtx_model_eval M (__eo_to_smt t)) = true := by
+      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt t)) = true := by
   rcases InstantiateRule.eo_to_smt_eval_typed_canonical M hM t hTTrans with ⟨h1, h2⟩
-  exact ⟨h1, by simpa [__smtx_value_canonical] using h2⟩
+  exact ⟨h1, by simpa [value_canonical] using h2⟩
 
 /-! ### Push-model facts -/
 
@@ -532,7 +532,7 @@ private theorem eval_t_after_push_eq
     (M : SmtModel) (s : native_String) (T t : Term) (v : SmtValue)
     (hTWf : __smtx_type_wf (__eo_to_smt_type T) = true)
     (hvTy : __smtx_typeof_value v = __eo_to_smt_type T)
-    (hvCanon : __smtx_value_canonical_bool v = true)
+    (hvCanon : __smtx_value_canonical v = true)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hNoFree :
       __contains_atomic_term_list_free_rec t
@@ -570,13 +570,13 @@ extensionally equal canonical regexes make the two models rel-related rather
 than equal — discharged by the rel-coincidence development
 (`RelCoincidenceSupport`). -/
 private theorem eval_true_push_of_rel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (ST : SmtType) (v w : SmtValue) (u : Term)
     (hSTWf : __smtx_type_wf ST = true)
     (hvTy : __smtx_typeof_value v = ST)
     (hwTy : __smtx_typeof_value w = ST)
-    (hvCanon : __smtx_value_canonical_bool v = true)
-    (hwCanon : __smtx_value_canonical_bool w = true)
+    (hvCanon : __smtx_value_canonical v = true)
+    (hwCanon : __smtx_value_canonical w = true)
     (hRel : __smtx_model_eval_eq v w = SmtValue.Boolean true)
     (hTrans : RuleProofs.eo_has_smt_translation u)
     (hBool : RuleProofs.eo_has_bool_type u)
@@ -687,7 +687,7 @@ private theorem quant_var_elim_eq_shape_of_not_stuck
 /-! ### The `diseq` case: `(forall x. ¬(x = t)) = false` -/
 
 private theorem quant_var_elim_eq_diseq_interprets
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T t : Term)
     (hTWf : __smtx_type_wf (__eo_to_smt_type T) = true)
     (hForallTrans :
@@ -751,7 +751,7 @@ private theorem quant_var_elim_eq_diseq_interprets
     simp [__smtx_model_eval_not, SmtEval.native_not]
   have hSat : ∃ v : SmtValue,
       __smtx_typeof_value v = __eo_to_smt_type T ∧
-      __smtx_value_canonical_bool v = true ∧
+      __smtx_value_canonical v = true ∧
       __smtx_model_eval_not
           (__smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
             (__eo_to_smt (qnot (qeq (Term.Var (Term.String s) T) t)))) =
@@ -806,7 +806,7 @@ private theorem quant_var_elim_eq_diseq_interprets
 /-! ### The `orTail` case: `(forall x. ¬(x = t) ∨ tail) = tail[x ↦ t]` -/
 
 private theorem quant_var_elim_eq_or_interprets
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T t tail : Term)
     (hTWf : __smtx_type_wf (__eo_to_smt_type T) = true)
     (hForallTrans :
@@ -850,11 +850,11 @@ private theorem quant_var_elim_eq_or_interprets
         __eo_to_smt_type T := by
     rw [hwTyRaw, hTy]
   have hPWTotal :
-      model_total_typed
+      model_wf
         (native_model_push M s (__eo_to_smt_type T)
           (__smtx_model_eval M (__eo_to_smt t))) :=
     model_total_typed_push hM s (__eo_to_smt_type T) _ hTWf hwTy
-      (by simpa [__smtx_value_canonical] using hwCanon)
+      (by simpa [value_canonical] using hwCanon)
   -- `singleton_elim` facts.
   rcases singleton_elim_or_facts tail hIsList hTailBool with ⟨hElimBool, hElimEval⟩
   have hElimTrans :
@@ -981,7 +981,7 @@ private theorem quant_var_elim_eq_or_interprets
       from rfl]
     have hNoSat : ∀ v : SmtValue,
         __smtx_typeof_value v = __eo_to_smt_type T →
-        __smtx_value_canonical_bool v = true →
+        __smtx_value_canonical v = true →
         ¬ __smtx_model_eval_not
             (__smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
               (__eo_to_smt
@@ -989,9 +989,9 @@ private theorem quant_var_elim_eq_or_interprets
           SmtValue.Boolean true := by
       intro v hvTy hvCanon hvBody
       have hPushTot :
-          model_total_typed (native_model_push M s (__eo_to_smt_type T) v) :=
+          model_wf (native_model_push M s (__eo_to_smt_type T) v) :=
         model_total_typed_push hM s (__eo_to_smt_type T) v hTWf hvTy
-          (by simpa [__smtx_value_canonical] using hvCanon)
+          (by simpa [value_canonical] using hvCanon)
       rcases smt_model_eval_bool_is_boolean _ hPushTot
           (__eo_to_smt (qor (qnot (qeq (Term.Var (Term.String s) T) t)) tail))
           hFBool with ⟨bF, hbF⟩
@@ -1189,7 +1189,7 @@ private theorem mk_quant_var_elim_eq_case_of_ne_stuck
   · exact mk_case_l1 _ _ _ _ hMk hG
 
 private theorem quant_var_elim_eq_formula_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x F G : Term) :
     RuleProofs.eo_has_smt_translation
         (quantVarElimEqFormula x F G) ->
@@ -1220,7 +1220,7 @@ private theorem quant_var_elim_eq_formula_true
 end QuantVarElimEqRule
 
 public theorem cmd_step_quant_var_elim_eq_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.quant_var_elim_eq args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

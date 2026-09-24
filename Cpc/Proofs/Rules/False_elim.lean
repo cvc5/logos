@@ -63,7 +63,7 @@ theorem typed___eo_prog_false_elim_impl (x1 : Term) :
 
 /-- Derives the checker facts exposed by the EO program for `false_elim`. -/
 theorem facts___eo_prog_false_elim_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 : Term) :
   eo_interprets M x1 true ->
   __eo_prog_false_elim (Proof.pf x1) ≠ Term.Stuck ->
   eo_interprets M (__eo_prog_false_elim (Proof.pf x1)) true := by
@@ -122,7 +122,7 @@ theorem facts___eo_prog_false_elim_impl
       simp [__eo_prog_false_elim] at hProg
 
 public theorem cmd_step_false_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.false_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

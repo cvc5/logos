@@ -24,6 +24,64 @@ jobs:
       - name: Reject proof escape hatches
         run: bash scripts/run-ci.sh proof-hygiene
 
+  proof_modularity:
+    name: proof-modularity
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      # Textual, so no Lean toolchain: that the two packages share one
+      # Checker.lean, that it names no rule and no operator, that the checker
+      # layer is all present and depends on `and` alone, and that no rule file
+      # imports another.
+      - name: Check checker-layer modularity
+        run: bash scripts/run-ci.sh proof-modularity
+
+  regeneration:
+    name: regeneration
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      # ethos-eoc is built here rather than downloaded; see
+      # install/get-eo-compiler.sh. cmake, a C++17 compiler and python3 are on
+      # the runner already, the GMP headers are not.
+      - name: Install the GMP development headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libgmp-dev
+
+      # Keyed on get-eo-compiler.sh, which is where the ethos commit is pinned,
+      # so moving the pin rebuilds and everything else reuses the build.
+      - name: Restore the Eunoia compiler
+        uses: actions/cache@v5
+        with:
+          path: install/deps
+          key: eoc-${{ runner.os }}-${{ hashFiles('install/get-eo-compiler.sh') }}
+
+      - name: Build the Eunoia compiler
+        run: |
+          if [ -x install/deps/ethos/build-eoc/ethos-eoc ]; then
+            echo "Reusing the compiler restored from the cache."
+          else
+            bash install/get-eo-compiler.sh
+          fi
+
+      # Compiles install/defs/Cpc.cached.eo, the copy of the signature this repository
+      # keeps, and fails if Cpc or CpcMini is not what comes out -- both, since
+      # both are checked in, which is what --all asks install-cpc.sh for.
+      # Nothing from cvc5 is fetched: the copy is the whole signature, in one
+      # file.
+      - name: Check the generated packages against the cached signature
+        run: bash scripts/run-ci.sh regeneration
+
   checks:
     name: ${{ matrix.group }}
     runs-on: ubuntu-latest
@@ -48,7 +106,12 @@ jobs:
           build: false
           test: false
           lint: false
+          # Each matrix group manages its own build cache below.
+          use-github-cache: false
 
+      # Save each successful commit's build so the cache follows source changes.
+      # Restore the latest cache for this group and build configuration, then
+      # let Lake rebuild changed targets.
       - name: Restore Lake build cache
         uses: actions/cache@v5
         with:
@@ -64,9 +127,13 @@ jobs:
 
   verify:
     if: ${{ always() }}
+    # Every job above belongs here. A job left out of `needs` is a check whose
+    # failure this gate cannot see, which is worse than not having written it.
     needs:
       - checks
       - proof_hygiene
+      - proof_modularity
+      - regeneration
     runs-on: ubuntu-latest
     permissions: {}
     steps:
@@ -74,6 +141,8 @@ jobs:
         env:
           CHECKS_RESULT: ${{ needs.checks.result }}
           PROOF_HYGIENE_RESULT: ${{ needs.proof_hygiene.result }}
+          PROOF_MODULARITY_RESULT: ${{ needs.proof_modularity.result }}
+          REGENERATION_RESULT: ${{ needs.regeneration.result }}
         run: |
           if [ "${CHECKS_RESULT}" != "success" ]; then
             echo "One or more CI groups did not pass: ${CHECKS_RESULT}" >&2
@@ -81,5 +150,13 @@ jobs:
           fi
           if [ "${PROOF_HYGIENE_RESULT}" != "success" ]; then
             echo "Proof hygiene did not pass: ${PROOF_HYGIENE_RESULT}" >&2
+            exit 1
+          fi
+          if [ "${PROOF_MODULARITY_RESULT}" != "success" ]; then
+            echo "The proof-modularity check did not pass: ${PROOF_MODULARITY_RESULT}" >&2
+            exit 1
+          fi
+          if [ "${REGENERATION_RESULT}" != "success" ]; then
+            echo "The regeneration check did not pass: ${REGENERATION_RESULT}" >&2
             exit 1
           fi

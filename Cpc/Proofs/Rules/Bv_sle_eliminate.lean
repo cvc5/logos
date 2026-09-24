@@ -204,7 +204,7 @@ private theorem eo_has_bool_type_bvsle_same
   cases hM
   unfold RuleProofs.eo_has_bool_type
   change __smtx_typeof (SmtTerm.bvsle (__eo_to_smt x1) (__eo_to_smt y1)) = SmtType.Bool
-  rw [__smtx_typeof.eq_59]
+  rw [__smtx_typeof.eq_61]
   simp [__smtx_typeof_bv_op_2_ret, hX1SmtTy, hY1SmtTy, native_nateq, native_ite]
 
 private theorem eo_has_bool_type_bvslt_swap
@@ -226,7 +226,7 @@ private theorem eo_has_bool_type_bvslt_swap
   cases hM
   unfold RuleProofs.eo_has_bool_type
   change __smtx_typeof (SmtTerm.bvslt (__eo_to_smt y1) (__eo_to_smt x1)) = SmtType.Bool
-  rw [__smtx_typeof.eq_58]
+  rw [__smtx_typeof.eq_60]
   simp [__smtx_typeof_bv_op_2_ret, hX1SmtTy, hY1SmtTy, native_nateq, native_ite]
 
 private theorem typed___eo_prog_bv_sle_eliminate_impl (x1 y1 : Term) :
@@ -290,7 +290,7 @@ private theorem smtx_model_eval_bvsle_not_bvslt_swap_binary
     simp [hxy, hyx, Int.ne_of_lt, Int.ne_of_gt] <;> grind
 
 private theorem eval_bvsle_matches_not_bvslt_swap
-    (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 y1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     RuleProofs.eo_has_smt_translation y1 ->
     __eo_typeof (__eo_prog_bv_sle_eliminate x1 y1) = Term.Bool ->
@@ -328,13 +328,13 @@ private theorem eval_bvsle_matches_not_bvslt_swap
   change __smtx_model_eval M (SmtTerm.bvsle (__eo_to_smt x1) (__eo_to_smt y1)) =
     __smtx_model_eval M
       (SmtTerm.not (SmtTerm.bvslt (__eo_to_smt y1) (__eo_to_smt x1)))
-  rw [__smtx_model_eval.eq_59, smtx_eval_not_term_eq, __smtx_model_eval.eq_58,
+  rw [__smtx_model_eval.eq_61, smtx_eval_not_term_eq, __smtx_model_eval.eq_60,
     hEvalX, hEvalY]
   exact smtx_model_eval_bvsle_not_bvslt_swap_binary
     (native_nat_to_int (native_int_to_nat n)) xPayload yPayload
 
 private theorem facts___eo_prog_bv_sle_eliminate_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 y1 : Term) :
     RuleProofs.eo_has_smt_translation x1 ->
     RuleProofs.eo_has_smt_translation y1 ->
     __eo_typeof (__eo_prog_bv_sle_eliminate x1 y1) = Term.Bool ->
@@ -362,7 +362,7 @@ private theorem facts___eo_prog_bv_sle_eliminate_impl
     exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_bv_sle_eliminate_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_sle_eliminate args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -24,7 +24,7 @@ binders, and the soundness obligation delegates to
 `SkolemizeRule.skolemize_sound`.
 -/
 public theorem cmd_step_skolemize_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.skolemize args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -102,7 +102,7 @@ private theorem typed___eo_prog_str_to_lower_len_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_str_to_lower_len_impl
-    (M : SmtModel) (hM : model_total_typed M) (x : Term)
+    (M : SmtModel) (hM : model_wf M) (x : Term)
     (hXTrans : RuleProofs.eo_has_smt_translation x)
     (hXTy : __eo_typeof x = Term.Apply Term.Seq (Term.UOp UserOp.Char)) :
     eo_interprets M (__eo_prog_str_to_lower_len x) true := by
@@ -154,7 +154,7 @@ private theorem facts___eo_prog_str_to_lower_len_impl
     exact RuleProofs.smt_value_rel_refl (__smtx_model_eval M (__eo_to_smt rhs))
 
 public theorem cmd_step_str_to_lower_len_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_to_lower_len args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -1,4 +1,4 @@
-; The s-expression form of examples/test-distinct-elim-simple.cpc.lean.
+; The s-expression form of test/regress/test-distinct-elim-simple.cpc.lean.
 (declare-const x Int)
 (declare-const y Int)
 (declare-const z Int)

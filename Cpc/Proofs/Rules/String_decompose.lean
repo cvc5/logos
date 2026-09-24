@@ -726,7 +726,7 @@ private theorem string_decompose_true_generated_eq_body
     pre,nil, sdAnd, sdEq, sdConcat, __eo_mk_apply]
 
 private theorem facts_string_decompose_false_body
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s n : Term) (T : SmtType)
     (hS : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (hN : __smtx_typeof (__eo_to_smt n) = SmtType.Int)
@@ -854,7 +854,7 @@ private theorem facts_string_decompose_false_body
       hEqTrue hTailTrue
 
 private theorem facts_string_decompose_true_body
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s n : Term) (T : SmtType)
     (hS : __smtx_typeof (__eo_to_smt s) = SmtType.Seq T)
     (hN : __smtx_typeof (__eo_to_smt n) = SmtType.Int)
@@ -987,7 +987,7 @@ private theorem facts_string_decompose_true_body
       hEqTrue hTailTrue
 
 public theorem cmd_step_string_decompose_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.string_decompose args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

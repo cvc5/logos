@@ -32,9 +32,9 @@ open StrReplaceReAllReduction
 
 @[simp] private theorem native_string_to_values_drop
     (s : native_String) (n : Nat) :
-    native_string_to_values (s.drop n) =
-      (native_string_to_values s).drop n := by
-  simp [native_string_to_values, List.map_drop]
+    impl_native_string_to_values (s.drop n) =
+      (impl_native_string_to_values s).drop n := by
+  simp [impl_native_string_to_values, List.map_drop]
 
 /-! ### Stable evaluation equations -/
 
@@ -186,7 +186,7 @@ private theorem eval_filtered_re
       SmtValue.RegLan (nonemptyRe r) := by
   simp [__smtx_model_eval, __smtx_model_eval_re_diff,
     __smtx_model_eval_str_to_re, hR, nonemptyRe,
-    native_str_to_re, native_re_of_list,
+    native_str_to_re, impl_native_re_of_list,
     StrLeqConcatSupport.native_unpack_string_pack_string]
 
 private theorem eval_source_len
@@ -232,9 +232,9 @@ private theorem extract_pack_string_zero_zero (s : native_String) :
 
 private theorem extract_values_pack_string_zero_one (s : native_String) :
     native_seq_extract (native_unpack_seq (native_pack_string s)) 0 1 =
-      native_string_to_values (s.take 1) := by
+      impl_native_string_to_values (s.take 1) := by
   rw [RuleProofs.native_unpack_seq_pack_string]
-  simp [native_seq_extract_zero_eq_take, native_string_to_values,
+  simp [native_seq_extract_zero_eq_take, impl_native_string_to_values,
     List.map_take]
 
 private theorem extract_values_pack_string_zero_zero (s : native_String) :
@@ -331,8 +331,8 @@ private theorem eval_replace_result
       SmtValue.Seq
         (native_pack_seq SmtType.Char
           (native_str_replace_re_all
-            (native_string_to_values (s.drop (reBound r s n))) r
-            (native_string_to_values repl))) := by
+            (impl_native_string_to_values (s.drop (reBound r s n))) r
+            (impl_native_string_to_values repl))) := by
   have hOi := eval_occur_index_re M S R w s r n hS hR hW hn
   have hLen := eval_source_len M S s hS
   have hSub := eval_substr_packed M S
@@ -384,7 +384,7 @@ private theorem eval_forall_encoding_true
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T →
-        __smtx_value_canonical_bool v = true →
+        __smtx_value_canonical v = true →
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval M
@@ -394,7 +394,7 @@ private theorem eval_forall_encoding_true
   have hNoSat :
       ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v)
             (SmtTerm.not body) = SmtValue.Boolean true := by
     rintro ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -402,19 +402,19 @@ private theorem eval_forall_encoding_true
     simp [__smtx_model_eval, __smtx_model_eval_not, native_not,
       hvBody] at hvNot
   have hExistsEval :
-      native_eval_texists M s T (SmtTerm.not body) =
+      native_eval_exists M s T (SmtTerm.not body) =
         SmtValue.Boolean false := by
     change (if _h :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-          __smtx_value_canonical_bool v = true ∧
+          __smtx_value_canonical v = true ∧
           __smtx_model_eval (native_model_push M s T v)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean false
     rw [dif_neg hNoSat]
   change __smtx_model_eval_not
-      (native_eval_texists M s T (SmtTerm.not body)) =
+      (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean true
   rw [hExistsEval]
   rfl
@@ -429,7 +429,7 @@ private theorem eval_exists_is_boolean
     (if _h :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true then
       SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -437,7 +437,7 @@ private theorem eval_exists_is_boolean
   by_cases h :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true
   · exact ⟨true, dif_pos h⟩
@@ -468,9 +468,9 @@ private theorem agrees_push_push
       (native_model_push (native_model_push M s₁ T₁ v₁) s₂ T₂ v₂) := by
   refine ⟨?_, ?_⟩
   · intro s' T'
-    simp [native_model_lookup, native_model_key, native_model_push]
+    simp [native_model_lookup, model_key, native_model_push]
   · intro fid A B
-    simp [native_model_fun_lookup, native_model_key, native_model_push]
+    simp [model_fun_lookup, model_key, native_model_push]
 
 /-- The inner generated quantifier says that no positive proper prefix of
 the selected match is accepted by the original regex. -/
@@ -598,7 +598,7 @@ private theorem eval_shortest_part_true
 set_option maxHeartbeats 40000000 in
 /-- The `str_replace_re_all` case of `string_reduction_pred_true`. -/
 theorem str_replace_re_all_reduction_pred_true
-    (M : SmtModel) (hM : model_total_typed M) (z y x : Term)
+    (M : SmtModel) (hM : model_wf M) (z y x : Term)
     (hTrans : RuleProofs.eo_has_smt_translation
       (Term.Apply
         (Term.Apply
@@ -969,8 +969,8 @@ theorem str_replace_re_all_reduction_pred_true
           SmtValue.Seq
             (native_pack_seq SmtType.Char
               (native_str_replace_re_all
-                (native_string_to_values source) regex
-                (native_string_to_values replacement))) := by
+                (impl_native_string_to_values source) regex
+                (impl_native_string_to_values replacement))) := by
       simp only [result]
       rw [eval_purify_term_eq, eval_str_replace_re_all_term_eq,
         hZEvalString, hYEval, hXEvalString]
@@ -1000,7 +1000,7 @@ theorem str_replace_re_all_reduction_pred_true
           regex source replacement hSourceValid hNo
       rw [smtx_eval_eq_term_eq, hResultEval, hZEvalString, hReplaceSelf]
       simp [__smtx_model_eval_eq, veq_refl_true,
-        native_pack_string, native_string_to_values]
+        native_pack_string, impl_native_string_to_values]
     · have hNoMatchEval :
           __smtx_model_eval M noMatch = SmtValue.Boolean false := by
         simp only [noMatch]
@@ -1054,8 +1054,8 @@ theorem str_replace_re_all_reduction_pred_true
             SmtValue.Seq
               (native_pack_seq SmtType.Char
                 (native_str_replace_re_all
-                  (native_string_to_values source) regex
-                  (native_string_to_values replacement))) := by
+                  (impl_native_string_to_values source) regex
+                  (impl_native_string_to_values replacement))) := by
         have h :=
           eval_replace_result M tz ty tx (SmtTerm.Numeral 0)
             source replacement regex 0 hZEvalString hYEval
@@ -1082,10 +1082,10 @@ theorem str_replace_re_all_reduction_pred_true
             SmtValue.Seq
               (native_pack_seq SmtType.Char
                 (native_str_replace_re_all
-                  (native_string_to_values
+                  (impl_native_string_to_values
                     (source.drop
                       (reBound regex source (reEnds regex source).length)))
-                  regex (native_string_to_values replacement))) := by
+                  regex (impl_native_string_to_values replacement))) := by
         have h :=
           eval_replace_result M tz ty tx numOcc source replacement regex
             (reEnds regex source).length hZEvalString hYEval
@@ -1117,7 +1117,7 @@ theorem str_replace_re_all_reduction_pred_true
           replace_all_at_final_reBound_eq_self
             regex source replacement hSourceValid]
         simp [__smtx_model_eval_eq, veq_refl_true,
-          native_pack_string, native_string_to_values]
+          native_pack_string, impl_native_string_to_values]
       have hOiZeroEval :
           __smtx_model_eval M (oi (SmtTerm.Numeral 0)) =
             SmtValue.Numeral 0 := by
@@ -1159,7 +1159,7 @@ theorem str_replace_re_all_reduction_pred_true
         rcases int_value_canonical hvTy with ⟨m, rfl⟩
         let N :=
           native_model_push M idxName SmtType.Int (SmtValue.Numeral m)
-        have hNTotal : model_total_typed N := by
+        have hNTotal : model_wf N := by
           apply model_total_typed_push hM idxName SmtType.Int
             (SmtValue.Numeral m)
           · simp [__smtx_type_wf, __smtx_type_wf_component,
@@ -1285,9 +1285,9 @@ theorem str_replace_re_all_reduction_pred_true
                   SmtValue.Seq
                     (native_pack_seq SmtType.Char
                       (native_str_replace_re_all
-                        (native_string_to_values
+                        (impl_native_string_to_values
                           (source.drop (reBound regex source n)))
-                        regex (native_string_to_values replacement))) := by
+                        regex (impl_native_string_to_values replacement))) := by
               have h :=
                 eval_replace_result N tz ty tx idx source replacement
                   regex n hZN hYN hXN hSourceValid hIdxNat
@@ -1298,9 +1298,9 @@ theorem str_replace_re_all_reduction_pred_true
                   SmtValue.Seq
                     (native_pack_seq SmtType.Char
                       (native_str_replace_re_all
-                        (native_string_to_values
+                        (impl_native_string_to_values
                           (source.drop (reBound regex source (n + 1))))
-                        regex (native_string_to_values replacement))) := by
+                        regex (impl_native_string_to_values replacement))) := by
               have h :=
                 eval_replace_result N tz ty tx iNext source replacement
                   regex (n + 1) hZN hYN hXN hSourceValid hINextN
@@ -1345,24 +1345,24 @@ theorem str_replace_re_all_reduction_pred_true
                   SmtValue.Seq
                     (native_pack_seq SmtType.Char
                       (native_str_replace_re_all
-                          (native_string_to_values
+                          (impl_native_string_to_values
                             (source.drop
                               (reBound regex source (n + 1))))
-                          regex (native_string_to_values replacement) ++
+                          regex (impl_native_string_to_values replacement) ++
                         [])) := by
               exact eval_concat_packed_values N (rarT iNext)
                 (SmtTerm.String [])
                 (native_str_replace_re_all
-                  (native_string_to_values
+                  (impl_native_string_to_values
                     (source.drop (reBound regex source (n + 1))))
-                  regex (native_string_to_values replacement)) []
+                  regex (impl_native_string_to_values replacement)) []
                 hRarNextN hEmptyValues
             have hReplacementValues :
                 __smtx_model_eval N tx =
                   SmtValue.Seq
                     (native_pack_seq SmtType.Char
-                      (native_string_to_values replacement)) := by
-              simpa [native_pack_string, native_string_to_values] using hXN
+                      (impl_native_string_to_values replacement)) := by
+              simpa [native_pack_string, impl_native_string_to_values] using hXN
             have hReplacementConcatN :
                 __smtx_model_eval N
                     (SmtTerm.str_concat tx
@@ -1370,20 +1370,20 @@ theorem str_replace_re_all_reduction_pred_true
                         (SmtTerm.String []))) =
                   SmtValue.Seq
                     (native_pack_seq SmtType.Char
-                      (native_string_to_values replacement ++
+                      (impl_native_string_to_values replacement ++
                         (native_str_replace_re_all
-                            (native_string_to_values
+                            (impl_native_string_to_values
                               (source.drop
                                 (reBound regex source (n + 1))))
-                            regex (native_string_to_values replacement) ++
+                            regex (impl_native_string_to_values replacement) ++
                           []))) := by
               exact eval_concat_packed_values N tx
                 (SmtTerm.str_concat (rarT iNext) (SmtTerm.String []))
-                (native_string_to_values replacement)
+                (impl_native_string_to_values replacement)
                 (native_str_replace_re_all
-                    (native_string_to_values
+                    (impl_native_string_to_values
                       (source.drop (reBound regex source (n + 1))))
-                    regex (native_string_to_values replacement) ++ [])
+                    regex (impl_native_string_to_values replacement) ++ [])
                 hReplacementValues hTailConcatN
             have hGapValues :
                 __smtx_model_eval N
@@ -1391,12 +1391,12 @@ theorem str_replace_re_all_reduction_pred_true
                       (SmtTerm.neg startI (oi idx))) =
                   SmtValue.Seq
                     (native_pack_seq SmtType.Char
-                      (native_string_to_values
+                      (impl_native_string_to_values
                         (native_str_substr source
                           (Int.ofNat (reBound regex source n))
                           (Int.ofNat
                             (start - reBound regex source n))))) := by
-              simpa [native_pack_string, native_string_to_values] using hGapN
+              simpa [native_pack_string, impl_native_string_to_values] using hGapN
             have hRecRhsN :
                 __smtx_model_eval N
                     (SmtTerm.str_concat
@@ -1407,48 +1407,48 @@ theorem str_replace_re_all_reduction_pred_true
                           (SmtTerm.String [])))) =
                   SmtValue.Seq
                     (native_pack_seq SmtType.Char
-                      (native_string_to_values
+                      (impl_native_string_to_values
                           (native_str_substr source
                             (Int.ofNat (reBound regex source n))
                             (Int.ofNat
                               (start - reBound regex source n))) ++
-                        (native_string_to_values replacement ++
+                        (impl_native_string_to_values replacement ++
                           (native_str_replace_re_all
-                              (native_string_to_values
+                              (impl_native_string_to_values
                                 (source.drop
                                   (reBound regex source (n + 1))))
-                              regex (native_string_to_values replacement) ++
+                              regex (impl_native_string_to_values replacement) ++
                             [])))) := by
               exact eval_concat_packed_values N
                 (SmtTerm.str_substr tz (oi idx)
                   (SmtTerm.neg startI (oi idx)))
                 (SmtTerm.str_concat tx
                   (SmtTerm.str_concat (rarT iNext) (SmtTerm.String [])))
-                (native_string_to_values
+                (impl_native_string_to_values
                   (native_str_substr source
                     (Int.ofNat (reBound regex source n))
                     (Int.ofNat (start - reBound regex source n))))
-                (native_string_to_values replacement ++
+                (impl_native_string_to_values replacement ++
                   (native_str_replace_re_all
-                      (native_string_to_values
+                      (impl_native_string_to_values
                         (source.drop (reBound regex source (n + 1))))
-                      regex (native_string_to_values replacement) ++ []))
+                      regex (impl_native_string_to_values replacement) ++ []))
                 hGapValues hReplacementConcatN
             have hNativeRec :
                 native_str_replace_re_all
-                    (native_string_to_values
+                    (impl_native_string_to_values
                       (source.drop (reBound regex source n)))
-                    regex (native_string_to_values replacement) =
-                  native_string_to_values
+                    regex (impl_native_string_to_values replacement) =
+                  impl_native_string_to_values
                       (native_str_substr source
                         (Int.ofNat (reBound regex source n))
                         (Int.ofNat (start - reBound regex source n))) ++
-                    (native_string_to_values replacement ++
+                    (impl_native_string_to_values replacement ++
                       (native_str_replace_re_all
-                          (native_string_to_values
+                          (impl_native_string_to_values
                             (source.drop
                               (reBound regex source (n + 1))))
-                          regex (native_string_to_values replacement) ++
+                          regex (impl_native_string_to_values replacement) ++
                         [])) := by
               simpa only [List.append_nil, List.append_assoc,
                 native_string_to_values_drop] using

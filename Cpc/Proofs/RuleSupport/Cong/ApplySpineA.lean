@@ -17,7 +17,7 @@ namespace CongSupport
 attribute [local simp] native_streq native_and native_ite
 
 theorem smt_app_spine_type_eq_and_rel_of_listRel_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     {F G : SmtTerm}
     (hFType : __smtx_typeof F = __smtx_typeof G)
     (hFRel :
@@ -103,7 +103,7 @@ theorem smt_app_spine_type_eq_and_rel_of_listRel_true
         by simpa [LF, RG, X, Y, mkSmtAppSpineRev] using hRel⟩
 
 private theorem smt_app_spine_type_eq_and_rel_of_listRel_true_dt_sel
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (d : DatatypeDecl) (i j : native_Nat) :
     let F := __eo_to_smt (Term.DtSel s d i j)
     ∀ {xs ys : List Term},
@@ -242,7 +242,7 @@ private theorem smt_app_spine_type_eq_and_rel_of_listRel_true_dt_sel
             by simpa [LF, RG, X, Y, mkSmtAppSpineRev] using hRel⟩
 
 theorem congTrueSpine_appSpineRev_var_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T t rhs : Term)
     (hHead : (appSpineRev t).1 = Term.Var (Term.String s) T)
     (hEqBool : RuleProofs.eo_has_bool_type (mkEq t rhs))
@@ -273,7 +273,7 @@ theorem congTrueSpine_appSpineRev_var_eq_true
       hArgs hLeftNN).2
 
 theorem congTrueSpine_appSpineRev_uconst_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (i : native_Nat) (T t rhs : Term)
     (hHead : (appSpineRev t).1 = Term.UConst i T)
     (hEqBool : RuleProofs.eo_has_bool_type (mkEq t rhs))
@@ -305,7 +305,7 @@ theorem congTrueSpine_appSpineRev_uconst_eq_true
       hArgs hLeftNN).2
 
 theorem congTrueSpine_appSpineRev_dtcons_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (d : DatatypeDecl) (i : native_Nat) (t rhs : Term)
     (hHead : (appSpineRev t).1 = Term.DtCons s d i)
     (hEqBool : RuleProofs.eo_has_bool_type (mkEq t rhs))
@@ -336,7 +336,7 @@ theorem congTrueSpine_appSpineRev_dtcons_eq_true
       hArgs hLeftNN).2
 
 theorem congTrueSpine_appSpineRev_dt_sel_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (d : DatatypeDecl) (i j : native_Nat) (t rhs : Term)
     (hHead : (appSpineRev t).1 = Term.DtSel s d i j)
     (hEqBool : RuleProofs.eo_has_bool_type (mkEq t rhs))
@@ -1659,7 +1659,7 @@ theorem congTypeSpine_uconst_apply_apply_apply_apply_apply_apply_eq_has_bool_typ
     hAppTy hTrans
 
 theorem congTrueSpine_var_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T x rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Var (Term.String s) T) x) rhs) ->
@@ -1709,7 +1709,7 @@ theorem congTrueSpine_var_apply_eq_true
       hAppNN rfl hArgTy (RuleProofs.smt_value_rel_refl _) hArgRel
 
 theorem congTrueSpine_uconst_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (i : native_Nat) (T x rhs : Term) :
     RuleProofs.eo_has_bool_type (mkEq (Term.Apply (Term.UConst i T) x) rhs) ->
     CongTrueSpine M (Term.Apply (Term.UConst i T) x) rhs ->
@@ -1763,7 +1763,7 @@ theorem congTrueSpine_uconst_apply_eq_true
       hAppNN rfl hArgTy (RuleProofs.smt_value_rel_refl _) hArgRel
 
 theorem congTrueSpine_var_apply_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T x₁ x₂ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Apply (Term.Var (Term.String s) T) x₁) x₂)
@@ -1841,7 +1841,7 @@ theorem congTrueSpine_var_apply_apply_eq_true
         hOuterAppNN hInnerTy hArgTy₂ hInnerRel hArgRel₂
 
 theorem congTrueSpine_uconst_apply_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (i : native_Nat) (T x₁ x₂ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Apply (Term.UConst i T) x₁) x₂) rhs) ->
@@ -1916,7 +1916,7 @@ theorem congTrueSpine_uconst_apply_apply_eq_true
         hOuterAppNN hInnerTy hArgTy₂ hInnerRel hArgRel₂
 
 theorem congTrueSpine_var_apply_apply_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T x₁ x₂ x₃ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq
@@ -2039,7 +2039,7 @@ theorem congTrueSpine_var_apply_apply_apply_eq_true
         hOuterAppNN hMidTy hArgTy₃ hMidRel hArgRel₃
 
 theorem congTrueSpine_uconst_apply_apply_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (i : native_Nat) (T x₁ x₂ x₃ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq
@@ -2157,7 +2157,7 @@ theorem congTrueSpine_uconst_apply_apply_apply_eq_true
         hOuterAppNN hMidTy hArgTy₃ hMidRel hArgRel₃
 
 theorem congTrueSpine_var_apply_apply_apply_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T x₁ x₂ x₃ x₄ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq
@@ -2328,7 +2328,7 @@ theorem congTrueSpine_var_apply_apply_apply_apply_eq_true
         X₄ Y₄ hOuterAppNN hMid3Ty hArgTy₄ hMid3Rel hArgRel₄
 
 theorem congTrueSpine_uconst_apply_apply_apply_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (i : native_Nat) (T x₁ x₂ x₃ x₄ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq
@@ -2495,7 +2495,7 @@ theorem congTrueSpine_uconst_apply_apply_apply_apply_eq_true
         X₄ Y₄ hOuterAppNN hMid3Ty hArgTy₄ hMid3Rel hArgRel₄
 
 theorem congTrueSpine_var_apply_apply_apply_apply_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T x₁ x₂ x₃ x₄ x₅ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq
@@ -2570,7 +2570,7 @@ theorem congTrueSpine_var_apply_apply_apply_apply_apply_eq_true
         hLeftNN).2
 
 theorem congTrueSpine_uconst_apply_apply_apply_apply_apply_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (i : native_Nat) (T x₁ x₂ x₃ x₄ x₅ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq

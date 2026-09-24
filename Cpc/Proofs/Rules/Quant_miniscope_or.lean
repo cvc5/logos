@@ -228,7 +228,7 @@ private theorem smtx_eval_exists_term_eq
     (M : SmtModel) (s : native_String) (T : SmtType)
     (body : SmtTerm) :
     __smtx_model_eval M (SmtTerm.exists s T body) =
-      native_eval_texists M s T body := by
+      native_eval_exists M s T body := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem smtx_model_eval_not_eq_of_arg_eq_same
@@ -251,22 +251,22 @@ private theorem native_eval_texists_eq_of_body_eval_eq_same_typed
     {body body' : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical_bool v = true ->
+      __smtx_value_canonical v = true ->
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push M s T v) body') :
-    native_eval_texists M s T body =
-      native_eval_texists M s T body' := by
+    native_eval_exists M s T body =
+      native_eval_exists M s T body' := by
   classical
   let P : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body' =
           SmtValue.Boolean true
   change (if _ : P then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -297,11 +297,11 @@ private theorem smt_model_eval_eo_to_smt_exists_eq_of_body_eval_eq_same_mapped_t
         __smtx_type_wf (__eo_to_smt_type T) = true)
     (hSub :
       ∀ key, key ∈ binderVars.map EoVarKey.toSmt -> key ∈ exceptVars)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (hAgree : model_agrees_except_on_env exceptVars [] M N)
     (hBody :
       ∀ {M' : SmtModel},
-        model_total_typed M' ->
+        model_wf M' ->
         model_agrees_except_on_env exceptVars [] M' N ->
           __smtx_model_eval M' body =
             __smtx_model_eval M' body') :
@@ -326,7 +326,7 @@ private theorem smt_model_eval_eo_to_smt_exists_eq_of_body_eval_eq_same_mapped_t
           __smtx_type_wf (__eo_to_smt_type T) = true :=
         hWF s T (by simp)
       have hPush :
-          model_total_typed
+          model_wf
             (native_model_push M s (__eo_to_smt_type T) v) :=
         model_total_typed_push hM s (__eo_to_smt_type T) v hHeadWF
           hv (by
@@ -360,11 +360,11 @@ private theorem smt_model_eval_smtForall_eq_of_body_eval_eq_same_mapped_typed
         __smtx_type_wf (__eo_to_smt_type T) = true)
     (hSub :
       ∀ key, key ∈ binderVars.map EoVarKey.toSmt -> key ∈ exceptVars)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (hAgree : model_agrees_except_on_env exceptVars [] M N)
     (hBody :
       ∀ {M' : SmtModel},
-        model_total_typed M' ->
+        model_wf M' ->
         model_agrees_except_on_env exceptVars [] M' N ->
           __smtx_model_eval M' body =
             __smtx_model_eval M' body') :
@@ -403,7 +403,7 @@ private theorem smtx_model_eval_exists_not_true_false_of_env :
       let P : Prop :=
         ∃ v : SmtValue,
           __smtx_typeof_value v = __eo_to_smt_type T ∧
-            __smtx_value_canonical_bool v = true ∧
+            __smtx_value_canonical v = true ∧
             __smtx_model_eval
                 (native_model_push M s (__eo_to_smt_type T) v)
                 (__eo_to_smt_exists env
@@ -545,7 +545,7 @@ private theorem smtx_type_wf_of_smtForall_env_bool
             hTail hTailForallTy s' T' hTailMem
 
 private theorem smtx_model_eval_not_not_eq_self_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (body : SmtTerm)
+    (M : SmtModel) (hM : model_wf M) (body : SmtTerm)
     (hBodyTy : __smtx_typeof body = SmtType.Bool) :
   __smtx_model_eval M (SmtTerm.not (SmtTerm.not body)) =
     __smtx_model_eval M body := by
@@ -557,7 +557,7 @@ private theorem smtx_model_eval_not_not_eq_self_of_bool
       SmtEval.native_not]
 
 private theorem smtx_model_eval_smtForall_nil_eq_body
-    (M : SmtModel) (hM : model_total_typed M) (body : SmtTerm)
+    (M : SmtModel) (hM : model_wf M) (body : SmtTerm)
     (hBodyTy : __smtx_typeof body = SmtType.Bool) :
     __smtx_model_eval M (smtForall Term.__eo_List_nil body) =
       __smtx_model_eval M body := by
@@ -566,7 +566,7 @@ private theorem smtx_model_eval_smtForall_nil_eq_body
     smtx_model_eval_not_not_eq_self_of_bool M hM body hBodyTy
 
 private theorem smtx_model_eval_smtForall_cons_split
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T xs : Term) (body : SmtTerm)
     (hHeadWF : __smtx_type_wf (__eo_to_smt_type T) = true)
     (hTailTy :
@@ -597,7 +597,7 @@ private theorem smtx_model_eval_smtForall_cons_split
   apply native_eval_texists_eq_of_body_eval_eq_same_typed
   intro v hv hCan
   have hPush :
-      model_total_typed
+      model_wf
         (native_model_push M s (__eo_to_smt_type T) v) :=
     model_total_typed_push hM s (__eo_to_smt_type T) v hHeadWF
       hv (by
@@ -609,7 +609,7 @@ private theorem smtx_model_eval_smtForall_cons_split
       (__eo_to_smt_exists xs (SmtTerm.not body)) hTailTy).symm
 
 private theorem smtx_model_eval_smtForall_or_left_invariant
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     {xs : Term} {vars : List EoVarKey}
     (hEnv : EoVarEnv xs vars)
     (hWF :
@@ -620,7 +620,7 @@ private theorem smtx_model_eval_smtForall_or_left_invariant
     (hBTy : __smtx_typeof B = SmtType.Bool)
     (hAInv :
       ∀ {N : SmtModel},
-        model_total_typed N ->
+        model_wf N ->
         model_agrees_except_on_env (vars.map EoVarKey.toSmt) [] N M ->
           __smtx_model_eval N A = __smtx_model_eval M A) :
     __smtx_model_eval M (smtForall xs (SmtTerm.or A B)) =
@@ -671,7 +671,7 @@ private theorem smtx_model_eval_smtForall_or_left_invariant
       cases bForall <;> simp [__smtx_model_eval_or, SmtEval.native_or]
 
 private theorem smtx_model_eval_smtForall_or_right_invariant
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     {xs : Term} {vars : List EoVarKey}
     (hEnv : EoVarEnv xs vars)
     (hWF :
@@ -682,7 +682,7 @@ private theorem smtx_model_eval_smtForall_or_right_invariant
     (hBTy : __smtx_typeof B = SmtType.Bool)
     (hBInv :
       ∀ {N : SmtModel},
-        model_total_typed N ->
+        model_wf N ->
         model_agrees_except_on_env (vars.map EoVarKey.toSmt) [] N M ->
           __smtx_model_eval N B = __smtx_model_eval M B) :
     __smtx_model_eval M (smtForall xs (SmtTerm.or A B)) =
@@ -871,8 +871,8 @@ private theorem miniToSmt_eval_eq_of_contains_atomic_term_list_free_rec_false_ma
     (n : Nat) {t except : Term} {exceptVars : List EoVarKey}
     {M N : SmtModel}
     (hLt : sizeOf t < n)
-    (hM : model_total_typed M)
-    (hN : model_total_typed N)
+    (hM : model_wf M)
+    (hN : model_wf N)
     (hExcept : EoVarEnvPerm except exceptVars)
     (hTy : __smtx_typeof (miniToSmt t) = SmtType.Bool)
     (hNoFree :
@@ -891,8 +891,8 @@ private theorem miniToSmt_eval_eq_of_contains_atomic_term_list_free_rec_false_ma
           ∀ {u except' : Term} {exceptVars' : List EoVarKey}
             {M' N' : SmtModel},
             sizeOf u < sizeOf t ->
-              model_total_typed M' ->
-              model_total_typed N' ->
+              model_wf M' ->
+              model_wf N' ->
               EoVarEnvPerm except' exceptVars' ->
               __smtx_typeof (miniToSmt u) = SmtType.Bool ->
               __contains_atomic_term_list_free_rec u except'
@@ -1042,8 +1042,8 @@ decreasing_by
 private theorem miniToSmt_eval_eq_of_contains_atomic_term_list_free_rec_false_mapped
     {t except : Term} {exceptVars : List EoVarKey}
     {M N : SmtModel}
-    (hM : model_total_typed M)
-    (hN : model_total_typed N)
+    (hM : model_wf M)
+    (hN : model_wf N)
     (hExcept : EoVarEnvPerm except exceptVars)
     (hTy : __smtx_typeof (miniToSmt t) = SmtType.Bool)
     (hNoFree :
@@ -1354,12 +1354,12 @@ private theorem mini_or_of_is_true
     exact ihL2 hL2
 
 private theorem mini_or_eval_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (hMiniInv :
       ∀ {t except : Term} {exceptVars : List EoVarKey}
         {M N : SmtModel},
-        model_total_typed M ->
-        model_total_typed N ->
+        model_wf M ->
+        model_wf N ->
         EoVarEnvPerm except exceptVars ->
         __smtx_typeof (miniToSmt t) = SmtType.Bool ->
         __contains_atomic_term_list_free_rec t except Term.__eo_List_nil =
@@ -1420,7 +1420,7 @@ private theorem mini_or_eval_eq
         ih M hM hEnv hWF hTailLeftTy hGsTy
       have hInv :
           ∀ {N : SmtModel},
-            model_total_typed N ->
+            model_wf N ->
             model_agrees_except_on_env (vars.map EoVarKey.toSmt) [] N M ->
               __smtx_model_eval N (__eo_to_smt f) =
                 __smtx_model_eval M (__eo_to_smt f) := by
@@ -1488,7 +1488,7 @@ private theorem mini_or_eval_eq
         ih M hM hEnv hWF hTailLeftTy hGsTy
       have hInv :
           ∀ {N : SmtModel},
-            model_total_typed N ->
+            model_wf N ->
             model_agrees_except_on_env (vars.map EoVarKey.toSmt) [] N M ->
               __smtx_model_eval N (__eo_to_smt f) =
                 __smtx_model_eval M (__eo_to_smt f) := by
@@ -1671,7 +1671,7 @@ private theorem mini_or_eval_eq
               hYsForallTy hGsTy
           have hGsInv :
               ∀ {N : SmtModel},
-                model_total_typed N ->
+                model_wf N ->
                 model_agrees_except_on_env
                     ([(s, T)].map EoVarKey.toSmt) [] N M ->
                   __smtx_model_eval N (miniToSmt gs) =
@@ -1832,7 +1832,7 @@ private theorem quant_miniscope_or_shape_of_not_stuck
       simp [__eo_prog_quant_miniscope_or] at hProg
 
 private theorem quant_miniscope_or_formula_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (x F G : Term) :
     RuleProofs.eo_has_smt_translation
         (quantMiniscopeOrFormula x F G) ->
@@ -1908,7 +1908,7 @@ private theorem quant_miniscope_or_formula_true
     (__smtx_model_eval M (__eo_to_smt G))
 
 public theorem cmd_step_quant_miniscope_or_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.quant_miniscope_or args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

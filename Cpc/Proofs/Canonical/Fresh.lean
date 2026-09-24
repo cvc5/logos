@@ -52,7 +52,7 @@ private theorem type_default_typed_canonical
     (hInh : native_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
-      __smtx_value_canonical_bool (__smtx_type_default T) = true :=
+      __smtx_value_canonical (__smtx_type_default T) = true :=
   type_default_kernel T hInh hRec
 
 private theorem ne_none_of_native_inhabited {T : SmtType}
@@ -278,7 +278,7 @@ private theorem smt_seq_repeat_typeof
         smt_seq_repeat_typeof T x hx n, hx, native_ite, native_Teq]
 
 private theorem smt_seq_repeat_canonical
-    (T : SmtType) (x : SmtValue) (hx : __smtx_value_canonical_bool x = true) :
+    (T : SmtType) (x : SmtValue) (hx : __smtx_value_canonical x = true) :
     ∀ n : Nat,
       __smtx_seq_canonical (smt_seq_repeat T x n) = true
   | 0 => by
@@ -310,7 +310,7 @@ private theorem seq_inhabited_large_witness
     (minSize : Nat) :
     ∃ i : SmtValue,
       __smtx_typeof_value i = SmtType.Seq T ∧
-        __smtx_value_canonical_bool i = true ∧
+        __smtx_value_canonical i = true ∧
           minSize ≤ sizeOf i := by
   have hDef := type_default_typed_canonical hInh hRec
   refine
@@ -318,7 +318,7 @@ private theorem seq_inhabited_large_witness
       ?_, ?_, ?_⟩
   · simpa [__smtx_typeof_value] using
       smt_seq_repeat_typeof T (__smtx_type_default T) hDef.1 minSize
-  · simpa [__smtx_value_canonical_bool] using
+  · simpa [__smtx_value_canonical] using
       smt_seq_repeat_canonical T (__smtx_type_default T) hDef.2 minSize
   · rw [show
       sizeOf
@@ -454,11 +454,11 @@ private theorem bitvec_succ_one_typeof (w : Nat) :
   simp [__smtx_typeof_value, native_and, native_ite, hmod, hnonneg, htonat]
 
 private theorem bitvec_succ_one_canonical (w : Nat) :
-    __smtx_value_canonical_bool
+    __smtx_value_canonical
       (SmtValue.Binary (native_nat_to_int (Nat.succ w)) 1) = true := by
   have hmod := one_mod_pow2_succ_zeq w
   have hnonneg := bitvec_succ_nonneg w
-  simp [__smtx_value_canonical_bool, native_ite, hmod, hnonneg]
+  simp [__smtx_value_canonical, native_ite, hmod, hnonneg]
 
 private theorem bitvec_succ_one_ne_default (w : Nat) :
     native_veq
@@ -476,7 +476,7 @@ private theorem infinite_datatype_fresh_value
     (avoid : List SmtValue) :
     ∃ i : SmtValue,
       __smtx_typeof_value i = SmtType.Datatype s dd ∧
-        __smtx_value_canonical_bool i = true ∧
+        __smtx_value_canonical i = true ∧
           ∀ j : SmtValue, j ∈ avoid -> native_veq j i = false := by
   rcases infinite_datatype_large_witness (smt_value_size_bound avoid) s dd
       hInh hRec hInfinite with ⟨v, hvTy, hvCan, hvSize⟩
@@ -497,7 +497,7 @@ theorem nonunit_typed_canonical_nondefault_value
     (_hNonUnit : __smtx_is_unit_type A = false) :
     ∃ e : SmtValue,
       __smtx_typeof_value e = A ∧
-        __smtx_value_canonical_bool e = true ∧
+        __smtx_value_canonical e = true ∧
           native_veq e (__smtx_type_default A) = false := by
   classical
   cases A with
@@ -505,16 +505,16 @@ theorem nonunit_typed_canonical_nondefault_value
       simp [__smtx_type_wf_rec] at _hRec
   | Bool =>
       refine ⟨SmtValue.Boolean true, ?_, ?_, ?_⟩ <;>
-        simp [__smtx_typeof_value, __smtx_value_canonical_bool,
+        simp [__smtx_typeof_value, __smtx_value_canonical,
           __smtx_type_default, native_veq]
   | Int =>
       refine ⟨SmtValue.Numeral 1, ?_, ?_, ?_⟩ <;>
-        simp [__smtx_typeof_value, __smtx_value_canonical_bool,
+        simp [__smtx_typeof_value, __smtx_value_canonical,
           __smtx_type_default, native_veq]
   | Real =>
       refine ⟨SmtValue.Rational (1 : native_Rat), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value]
-      · simp [__smtx_value_canonical_bool]
+      · simp [__smtx_value_canonical]
       · exact native_veq_eq_false_of_ne (by
           simp [__smtx_type_default, native_mk_rational]
           native_decide)
@@ -562,9 +562,9 @@ theorem nonunit_typed_canonical_nondefault_value
             (SmtMap.default T (__smtx_type_default U))), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, __smtx_typeof_map_value,
           hTDefault.1, heTy, hUDefault.1, native_ite, native_Teq]
-      · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+      · simp [__smtx_value_canonical, __smtx_map_canonical,
           __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-          __smtx_msm_get_default, hTDefault.2, heCan, hUDefault.1,
+          __smtx_map_get_default, hTDefault.2, heCan, hUDefault.1,
           hUDefault.2, heNeDefaultProp, native_and, native_ite, native_not,
           native_veq]
       · rw [show __smtx_type_default (SmtType.Map T U) =
@@ -588,9 +588,9 @@ theorem nonunit_typed_canonical_nondefault_value
             (SmtMap.default T (SmtValue.Boolean false))), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, __smtx_typeof_map_value,
           __smtx_map_to_set_type, hTDefault.1, native_ite, native_Teq]
-      · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+      · simp [__smtx_value_canonical, __smtx_map_canonical,
           __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-          __smtx_msm_get_default, hTDefault.2, native_and, native_ite,
+          __smtx_map_get_default, hTDefault.2, native_and, native_ite,
           native_not, native_veq, __smtx_typeof_value, __smtx_type_default]
       · simp [__smtx_type_default, native_veq]
   | Seq T =>
@@ -607,13 +607,13 @@ theorem nonunit_typed_canonical_nondefault_value
           ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, __smtx_typeof_seq_value,
           hTDefault.1, native_ite, native_Teq]
-      · simp [__smtx_value_canonical_bool, __smtx_seq_canonical,
+      · simp [__smtx_value_canonical, __smtx_seq_canonical,
           hTDefault.2, native_and]
       · simp [__smtx_type_default, native_veq]
   | Char =>
       refine ⟨SmtValue.Char 1, ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, native_char_valid, native_ite]
-      · simp [__smtx_value_canonical_bool, native_char_valid]
+      · simp [__smtx_value_canonical, native_char_valid]
       · simp [__smtx_type_default, native_veq]
   | Datatype s dd =>
       by_cases hFinite :
@@ -635,7 +635,7 @@ theorem nonunit_typed_canonical_nondefault_value
       simp [__smtx_type_wf_rec] at _hRec
   | USort u =>
       refine ⟨SmtValue.UValue u 1, ?_, ?_, ?_⟩ <;>
-        simp [__smtx_typeof_value, __smtx_value_canonical_bool,
+        simp [__smtx_typeof_value, __smtx_value_canonical,
           __smtx_type_default, native_veq]
   | FunType T U =>
       simp [__smtx_type_wf_rec] at _hRec
@@ -657,7 +657,7 @@ theorem fresh_typed_canonical_value_for_infinite_type
     (avoid : List SmtValue) :
     ∃ i : SmtValue,
       __smtx_typeof_value i = A ∧
-        __smtx_value_canonical_bool i = true ∧
+        __smtx_value_canonical i = true ∧
           ∀ j : SmtValue, j ∈ avoid -> native_veq j i = false := by
   classical
   cases A with
@@ -669,12 +669,12 @@ theorem fresh_typed_canonical_value_for_infinite_type
   | Int =>
       refine ⟨SmtValue.Numeral (Int.ofNat (fresh_numeral_index avoid)), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value]
-      · simp [__smtx_value_canonical_bool]
+      · simp [__smtx_value_canonical]
       · exact fresh_numeral_veq_false_of_mem avoid
   | Real =>
       refine ⟨SmtValue.Rational (Int.ofNat (fresh_rational_index avoid)), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value]
-      · simp [__smtx_value_canonical_bool]
+      · simp [__smtx_value_canonical]
       · exact fresh_rational_veq_false_of_mem avoid
   | RegLan =>
       simp [__smtx_type_wf_rec] at _hRec
@@ -716,9 +716,9 @@ theorem fresh_typed_canonical_value_for_infinite_type
               (SmtMap.default T (__smtx_type_default U))), ?_, ?_, ?_⟩
         · simp [__smtx_typeof_value, __smtx_typeof_map_value,
             hTDefault.1, hUDefault.1, heTy, native_ite, native_Teq]
-        · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+        · simp [__smtx_value_canonical, __smtx_map_canonical,
             __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-            __smtx_msm_get_default, hTDefault.2, hUDefault.1, hUDefault.2,
+            __smtx_map_get_default, hTDefault.2, hUDefault.1, hUDefault.2,
             heCan, hEntryNeProp, native_and, native_ite, native_not,
             native_veq]
         · intro j hj
@@ -757,9 +757,9 @@ theorem fresh_typed_canonical_value_for_infinite_type
               (SmtMap.default T (__smtx_type_default U))), ?_, ?_, ?_⟩
         · simp [__smtx_typeof_value, __smtx_typeof_map_value,
             hkTy, heTy, hUDefault.1, native_ite, native_Teq]
-        · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+        · simp [__smtx_value_canonical, __smtx_map_canonical,
             __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-            __smtx_msm_get_default, hkCan, heCan, hUDefault.1, hUDefault.2,
+            __smtx_map_get_default, hkCan, heCan, hUDefault.1, hUDefault.2,
             heNeDefaultProp, native_and, native_ite, native_not, native_veq]
         · intro j hj
           exact native_veq_eq_false_of_ne (by
@@ -789,9 +789,9 @@ theorem fresh_typed_canonical_value_for_infinite_type
             (SmtMap.default T (SmtValue.Boolean false))), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value, __smtx_typeof_map_value,
           __smtx_map_to_set_type, hxTy, native_ite, native_Teq]
-      · simp [__smtx_value_canonical_bool, __smtx_map_canonical,
+      · simp [__smtx_value_canonical, __smtx_map_canonical,
           __smtx_map_default_canonical, __smtx_map_entries_ordered_after,
-          __smtx_msm_get_default, hxCan, native_and, native_ite,
+          __smtx_map_get_default, hxCan, native_and, native_ite,
           native_not, native_veq, __smtx_typeof_value, __smtx_type_default]
       · intro j hj
         exact native_veq_eq_false_of_ne (by
@@ -822,7 +822,7 @@ theorem fresh_typed_canonical_value_for_infinite_type
   | USort u =>
       refine ⟨SmtValue.UValue u (fresh_usort_index u avoid), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value]
-      · simp [__smtx_value_canonical_bool]
+      · simp [__smtx_value_canonical]
       · exact fresh_usort_veq_false_of_mem u avoid
   | FunType T U =>
       simp [__smtx_type_wf_rec] at _hRec
@@ -835,9 +835,9 @@ termination_by sizeOf A
 private theorem msm_lookup_eq_default_of_fresh_keys :
     ∀ (m : SmtMap) (i : SmtValue),
       (∀ j : SmtValue, j ∈ smt_map_keys m -> native_veq j i = false) ->
-        __smtx_msm_lookup m i = __smtx_msm_get_default m
+        __smtx_map_lookup m i = __smtx_map_get_default m
   | SmtMap.default T e, i, _hFresh => by
-      simp [__smtx_msm_lookup, __smtx_msm_get_default]
+      simp [__smtx_map_lookup, __smtx_map_get_default]
   | SmtMap.cons j e m, i, hFresh => by
       have hj : native_veq j i = false := hFresh j (by simp [smt_map_keys])
       have hmFresh :
@@ -845,9 +845,9 @@ private theorem msm_lookup_eq_default_of_fresh_keys :
         intro k hk
         exact hFresh k (by simp [smt_map_keys, hk])
       have hmLookup :
-          __smtx_msm_lookup m i = __smtx_msm_get_default m :=
+          __smtx_map_lookup m i = __smtx_map_get_default m :=
         msm_lookup_eq_default_of_fresh_keys m i hmFresh
-      simpa [smt_map_keys, __smtx_msm_lookup, __smtx_msm_get_default,
+      simpa [smt_map_keys, __smtx_map_lookup, __smtx_map_get_default,
         native_ite, hj] using hmLookup
 
 /--
@@ -869,9 +869,9 @@ theorem fresh_default_lookup_for_infinite_map_domain
     (_hInfinite : __smtx_is_finite_type A = false) :
     ∃ i : SmtValue,
       __smtx_typeof_value i = A ∧
-        __smtx_value_canonical_bool i = true ∧
-          __smtx_msm_lookup m1 i = __smtx_msm_get_default m1 ∧
-            __smtx_msm_lookup m2 i = __smtx_msm_get_default m2 := by
+        __smtx_value_canonical i = true ∧
+          __smtx_map_lookup m1 i = __smtx_map_get_default m1 ∧
+            __smtx_map_lookup m2 i = __smtx_map_get_default m2 := by
   rcases fresh_typed_canonical_value_for_infinite_type
       A hAInh hARec _hInfinite (smt_map_keys m1 ++ smt_map_keys m2) with
     ⟨i, hiTy, hiCan, hiFresh⟩

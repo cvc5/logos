@@ -5654,14 +5654,14 @@ by
     apply_dt_sel_arg_has_smt_translation_of_has_smt_translation hTrans
   have hXEval := ih hXLt hExcept hBound hXTrans hXNoFree hAgree
   dsimp only [__eo_to_smt]
-  cases hReserved : native_reserved_datatype_name s
+  cases hReserved : __eo_to_smt_reserved_datatype_name s
   · simp [native_ite, __smtx_model_eval, hXEval,
       smtx_model_eval_dt_sel_eq_of_globals hAgree.globals]
   · exfalso
     change
         __smtx_typeof
             (SmtTerm.Apply
-              (native_ite (native_reserved_datatype_name s) SmtTerm.None
+              (native_ite (__eo_to_smt_reserved_datatype_name s) SmtTerm.None
                 (SmtTerm.DtSel s (__eo_to_smt_datatype_decl d) i j))
               (__eo_to_smt x)) ≠
           SmtType.None at hTrans
@@ -6030,22 +6030,6 @@ by
           exact
             apply_apply_apply_uop_args_have_smt_translation_of_smt_triop_non_none
               (by rfl) str_indexof_re_args_have_smt_translation_of_non_none h)
-        hNoFree hAgree
-        (by
-          intro hc hx hy
-          dsimp only [__eo_to_smt]
-          simp [__smtx_model_eval, hc, hx, hy])
-        ih
-  case str_indexof_re_split =>
-    exact
-      smt_model_eval_apply_apply_apply_uop_ternary_eq_of_contains_atomic_term_list_free_rec_false_mapped
-        root hCLt hXLt hYLt hExcept hBound hTrans
-        (by
-          intro h
-          exact
-            apply_apply_apply_uop_args_have_smt_translation_of_smt_triop_non_none
-              (by rfl)
-              str_indexof_re_split_args_have_smt_translation_of_non_none h)
         hNoFree hAgree
         (by
           intro hc hx hy

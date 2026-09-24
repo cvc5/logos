@@ -3800,7 +3800,7 @@ theorem StrInReConsumeInternal.str_re_consume_nonempty_decomp_of_stuck_local
     simp [__str_membership_str]
 
 theorem StrInReConsumeInternal.str_re_consume_rec_nonempty_decomp_local
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ s0 r0 fuel0,
       StrInReConsumeInternal.str_re_consume_rec_nonempty_decomp_motive M s0 r0 fuel0 := by
   intro s0 r0 fuel0
@@ -4530,7 +4530,7 @@ theorem StrInReConsumeInternal.str_re_consume_rec_nonempty_decomp_local
           side hFb hSTy).2 hMemNe
 
 theorem StrInReConsumeInternal.str_re_consume_rec_false_nonempty_local
-    (M : SmtModel) (hM : model_total_typed M) :
+    (M : SmtModel) (hM : model_wf M) :
     ∀ s0 r0 fuel0,
       StrInReConsumeInternal.str_re_consume_rec_false_nonempty_motive M s0 r0 fuel0 := by
   intro s0 r0 fuel0 side hSTy hRTy hSide hFalse ssF hEval
@@ -4640,7 +4640,7 @@ theorem StrInReConsumeInternal.eo_eq_eq_of_ne_stuck_consume_local
   · rfl
 
 theorem StrInReConsumeInternal.consume_seq_valid_of_eval_typeof_local
-    (M : SmtModel) (hM : model_total_typed M) (T : SmtTerm) (ss : SmtSeq)
+    (M : SmtModel) (hM : model_wf M) (T : SmtTerm) (ss : SmtSeq)
     (hEval : __smtx_model_eval M T = SmtValue.Seq ss)
     (hTy : __smtx_typeof T = SmtType.Seq SmtType.Char) :
     native_string_valid (native_unpack_string ss) = true := by

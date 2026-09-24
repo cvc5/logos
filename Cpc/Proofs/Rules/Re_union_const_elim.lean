@@ -261,7 +261,7 @@ private theorem smt_value_rel_union_const_elim
   · simp [hRv]
 
 private theorem facts
-    (M : SmtModel) (hM : model_total_typed M) (r s : Term)
+    (M : SmtModel) (hM : model_wf M) (r s : Term)
     (hRTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan)
     (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
     (hPrem : eo_interprets M (prem s r) true) :
@@ -318,7 +318,7 @@ private theorem facts
 end ReUnionConstElimProof
 
 public theorem cmd_step_re_union_const_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.re_union_const_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

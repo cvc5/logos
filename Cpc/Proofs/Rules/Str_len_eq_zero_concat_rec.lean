@@ -416,7 +416,7 @@ private theorem typed___eo_prog_str_len_eq_zero_concat_rec_impl
   exact hBoolEq
 
 private theorem facts___eo_prog_str_len_eq_zero_concat_rec_impl
-    (M : SmtModel) (hM : model_total_typed M) (s1 s2 s3 T : Term)
+    (M : SmtModel) (hM : model_wf M) (s1 s2 s3 T : Term)
     (hS1Trans : RuleProofs.eo_has_smt_translation s1)
     (hS2Trans : RuleProofs.eo_has_smt_translation s2)
     (hS3Trans : RuleProofs.eo_has_smt_translation s3)
@@ -663,7 +663,7 @@ private theorem typeof_args_of_prog_bool
   exact ⟨T, rfl, hS1TyT, hInner.1, hInner.2, hElim⟩
 
 public theorem cmd_step_str_len_eq_zero_concat_rec_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_len_eq_zero_concat_rec args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

@@ -89,7 +89,7 @@ private theorem typed___eo_prog_arith_int_div_total_zero_impl
       rw [__smtx_typeof.eq_2]) hLhsTrans
 
 private theorem facts___eo_prog_arith_int_div_total_zero_impl
-    (M : SmtModel) (hM : model_total_typed M) (t1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (t1 : Term) :
   RuleProofs.eo_has_smt_translation t1 ->
   __eo_typeof (__eo_prog_arith_int_div_total_zero t1) = Term.Bool ->
   eo_interprets M (__eo_prog_arith_int_div_total_zero t1) true := by
@@ -124,7 +124,7 @@ private theorem facts___eo_prog_arith_int_div_total_zero_impl
           (__eo_to_smt (Term.Apply (Term.Apply Term.div_total t1) (Term.Numeral 0))) =
         SmtValue.Numeral 0 := by
     rw [eo_to_smt_div_total_eq]
-    rw [__smtx_model_eval.eq_29]
+    rw [__smtx_model_eval.eq_31]
     rw [hEvalT1, hEval0]
     simp [__smtx_model_eval_div_total]
     simp [SmtEval.native_div_total]
@@ -136,7 +136,7 @@ private theorem facts___eo_prog_arith_int_div_total_zero_impl
       exact RuleProofs.smt_value_rel_refl (SmtValue.Numeral 0)
 
 public theorem cmd_step_arith_int_div_total_zero_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arith_int_div_total_zero args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

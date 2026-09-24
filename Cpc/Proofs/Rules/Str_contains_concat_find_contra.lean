@@ -98,7 +98,7 @@ private theorem prog_str_contains_concat_find_contra_info
         raw_contains_concat_find_contra_conclusion_eq Outer whole hRawNe
 
 public theorem cmd_step_str_contains_concat_find_contra_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.str_contains_concat_find_contra args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

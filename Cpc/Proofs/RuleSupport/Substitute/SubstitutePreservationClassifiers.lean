@@ -119,7 +119,6 @@ def applyApplyApplyUOpNeedsSpecialTranslation : UserOp -> Prop
   | UserOp.str_replace_re => True
   | UserOp.str_replace_re_all => True
   | UserOp.str_indexof_re => True
-  | UserOp.str_indexof_re_split => True
   | UserOp._at_strings_occur_index => True
   | UserOp._at_strings_occur_index_re => True
   | _ => False
@@ -234,8 +233,6 @@ structure ApplyApplyApplyUOpBranchExclusions (g : Term) : Prop where
     ¬ ∃ s, g = Term.Apply (Term.UOp UserOp.str_replace_re_all) s
   notStrIndexofRe :
     ¬ ∃ s, g = Term.Apply (Term.UOp UserOp.str_indexof_re) s
-  notStrIndexofReSplit :
-    ¬ ∃ s, g = Term.Apply (Term.UOp UserOp.str_indexof_re_split) s
   notStringsOccurIndex :
     ¬ ∃ s, g = Term.Apply (Term.UOp UserOp._at_strings_occur_index) s
   notStringsOccurIndexRe :
@@ -356,7 +353,6 @@ theorem eo_to_smt_apply_apply_generic_of_branch_exclusions
           | exact hApplyUOp.notStrReplaceRe ⟨y, rfl⟩
           | exact hApplyUOp.notStrReplaceReAll ⟨y, rfl⟩
           | exact hApplyUOp.notStrIndexofRe ⟨y, rfl⟩
-          | exact hApplyUOp.notStrIndexofReSplit ⟨y, rfl⟩
           | exact hApplyUOp.notStringsOccurIndex ⟨y, rfl⟩
           | exact hApplyUOp.notStringsOccurIndexRe ⟨y, rfl⟩
           | contradiction)

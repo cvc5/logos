@@ -125,7 +125,7 @@ theorem typeof_value_model_eval_bv_unop
     exact bitvec_width_nonneg (by simpa [hArg, hv] using hpres)
   have hMod : native_zeq n (native_mod_total n (native_int_pow2 (native_nat_to_int w))) = true := by
     exact bitvec_payload_canonical (by simpa [hArg, hv] using hpres)
-  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat] using hEvalTy (native_nat_to_int w) n hWidth hMod
 
 /-- Shows that evaluating `bv_unop_ret` terms produces values of the expected type. -/
@@ -158,7 +158,7 @@ theorem typeof_value_model_eval_bv_unop_ret
     exact bitvec_width_nonneg (by simpa [hArg, hv] using hpres)
   have hMod : native_zeq n (native_mod_total n (native_int_pow2 (native_nat_to_int w))) = true := by
     exact bitvec_payload_canonical (by simpa [hArg, hv] using hpres)
-  simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+  simpa [native_nat_to_int, Smtm.native_nat_to_int] using
     hEvalTy (native_nat_to_int w) n hWidth hMod
 
 /-- Shows that evaluating `bv_binop` terms produces values of the expected type. -/
@@ -187,7 +187,7 @@ theorem typeof_value_model_eval_bv_binop
   rcases bv_binop_args_of_non_none hTy ht with ⟨w, h1, h2⟩
   rw [hEvalTerm]
   rw [show __smtx_typeof (op t1 t2) = SmtType.BitVec w by
-    simp [hTy, __smtx_typeof_bv_op_2, native_ite, native_nateq, SmtEval.native_nateq, h1, h2]]
+    simp [hTy, __smtx_typeof_bv_op_2, native_ite, native_nateq, Smtm.native_nateq, h1, h2]]
   rcases bitvec_value_canonical (by simpa [h1] using hpres1) with ⟨n1, hv1⟩
   rcases bitvec_value_canonical (by simpa [h2] using hpres2) with ⟨n2, hv2⟩
   rw [hv1, hv2]
@@ -197,7 +197,7 @@ theorem typeof_value_model_eval_bv_binop
     exact bitvec_payload_canonical (by simpa [h1, hv1] using hpres1)
   have hMod2 : native_zeq n2 (native_mod_total n2 (native_int_pow2 (native_nat_to_int w))) = true := by
     exact bitvec_payload_canonical (by simpa [h2, hv2] using hpres2)
-  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat] using hEvalTy (native_nat_to_int w) n1 n2 hWidth hMod1 hMod2
 
 /-- Shows that evaluating `bv_binop_ret` terms produces values of the expected type. -/
@@ -226,7 +226,7 @@ theorem typeof_value_model_eval_bv_binop_ret
   rcases bv_binop_ret_args_of_non_none hTy ht with ⟨w, h1, h2⟩
   rw [hEvalTerm]
   rw [show __smtx_typeof (op t1 t2) = ret by
-    simp [hTy, __smtx_typeof_bv_op_2_ret, native_ite, native_nateq, SmtEval.native_nateq, h1, h2]]
+    simp [hTy, __smtx_typeof_bv_op_2_ret, native_ite, native_nateq, Smtm.native_nateq, h1, h2]]
   rcases bitvec_value_canonical (by simpa [h1] using hpres1) with ⟨n1, hv1⟩
   rcases bitvec_value_canonical (by simpa [h2] using hpres2) with ⟨n2, hv2⟩
   rw [hv1, hv2]
@@ -236,7 +236,7 @@ theorem typeof_value_model_eval_bv_binop_ret
     exact bitvec_payload_canonical (by simpa [h1, hv1] using hpres1)
   have hMod2 : native_zeq n2 (native_mod_total n2 (native_int_pow2 (native_nat_to_int w))) = true := by
     exact bitvec_payload_canonical (by simpa [h2, hv2] using hpres2)
-  simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
+  simpa [native_nat_to_int, Smtm.native_nat_to_int] using
     hEvalTy (native_nat_to_int w) n1 n2 hWidth hMod1 hMod2
 
 /-- Shows that evaluating `bvcomp_value` terms produces values of the expected type. -/
@@ -408,7 +408,7 @@ theorem typeof_value_model_eval_bvnot_of_bitvec
     (hv : __smtx_typeof_value v = SmtType.BitVec w) :
     __smtx_typeof_value (__smtx_model_eval_bvnot v) = SmtType.BitVec w := by
   rcases bitvec_value_canonical hv with ⟨n, rfl⟩
-  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat] using
       typeof_value_model_eval_bvnot_value (native_nat_to_int w) n (bitvec_width_nonneg hv)
 
@@ -419,7 +419,7 @@ theorem typeof_value_model_eval_bvneg_of_bitvec
     (hv : __smtx_typeof_value v = SmtType.BitVec w) :
     __smtx_typeof_value (__smtx_model_eval_bvneg v) = SmtType.BitVec w := by
   rcases bitvec_value_canonical hv with ⟨n, rfl⟩
-  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat] using
       typeof_value_model_eval_bvneg_value (native_nat_to_int w) n (bitvec_width_nonneg hv)
 
@@ -435,7 +435,7 @@ theorem typeof_value_model_eval_bvadd_of_bitvec
   have hWidth : native_zleq 0 (native_nat_to_int w) = true := by
     exact bitvec_width_nonneg (by simpa [hv1] using h1)
   rw [hv1, hv2]
-  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat] using
       typeof_value_model_eval_bvadd_value (native_nat_to_int w) n1 n2 hWidth
 
@@ -451,7 +451,7 @@ theorem typeof_value_model_eval_bvudiv_of_bitvec
   have hWidth : native_zleq 0 (native_nat_to_int w) = true := by
     exact bitvec_width_nonneg (by simpa [hv1] using h1)
   rw [hv1, hv2]
-  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat] using
       typeof_value_model_eval_bvudiv_value (native_nat_to_int w) n1 n2 hWidth
 
@@ -467,7 +467,7 @@ theorem typeof_value_model_eval_bvurem_of_bitvec
   have hWidth : native_zleq 0 (native_nat_to_int w) = true := by
     exact bitvec_width_nonneg (by simpa [hv1] using h1)
   rw [hv1, hv2]
-  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat] using
       typeof_value_model_eval_bvurem_value (native_nat_to_int w) n1 n2 hWidth
 
@@ -483,7 +483,7 @@ theorem typeof_value_model_eval_bvlshr_of_bitvec
   have hWidth : native_zleq 0 (native_nat_to_int w) = true := by
     exact bitvec_width_nonneg (by simpa [hv1] using h1)
   rw [hv1, hv2]
-  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
     SmtEval.native_int_to_nat] using
       typeof_value_model_eval_bvlshr_value (native_nat_to_int w) n1 n2 hWidth
 

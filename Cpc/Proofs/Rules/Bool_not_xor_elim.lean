@@ -85,7 +85,7 @@ private theorem typed___eo_prog_bool_not_xor_elim_impl (x1 y1 : Term) :
       decide)
 
 private theorem facts___eo_prog_bool_not_xor_elim_impl
-    (M : SmtModel) (hM : model_total_typed M) (x1 y1 : Term) :
+    (M : SmtModel) (hM : model_wf M) (x1 y1 : Term) :
   RuleProofs.eo_has_smt_translation x1 ->
   RuleProofs.eo_has_smt_translation y1 ->
   __eo_typeof (__eo_prog_bool_not_xor_elim x1 y1) = Term.Bool ->
@@ -120,14 +120,14 @@ private theorem facts___eo_prog_bool_not_xor_elim_impl
     rw [show __eo_to_smt (Term.Apply (Term.Apply Term.eq x1) y1) =
       SmtTerm.eq (__eo_to_smt x1) (__eo_to_smt y1) by
       rfl]
-    rw [__smtx_model_eval.eq_6, __smtx_model_eval.eq_10,
+    rw [__smtx_model_eval.eq_7, __smtx_model_eval.eq_11,
       smtx_eval_eq_term_eq, hEvalX1, hEvalY1]
     cases bx <;> cases bY <;> simp [RuleProofs.smt_value_rel, __smtx_model_eval_eq,
       __smtx_model_eval_xor, __smtx_model_eval_not, native_veq,
       SmtEval.native_not]
 
 public theorem cmd_step_bool_not_xor_elim_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bool_not_xor_elim args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

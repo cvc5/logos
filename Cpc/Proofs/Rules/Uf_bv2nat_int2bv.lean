@@ -292,7 +292,7 @@ private theorem width_nat_to_int_eq
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hnNonneg
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 /-- SMT typing of the left side `int_to_bv w (ubv_to_int t)` matches the BitVec
@@ -316,7 +316,7 @@ private theorem smt_typeof_lhs_eq
 /-- The two sides of the conclusion evaluate to the same value: the round-trip
     `int_to_bv w (ubv_to_int t)` collapses to `t` by bitvector canonicity. -/
 private theorem eval_lhs_matches_t
-    (M : SmtModel) (hM : model_total_typed M) (n : native_Int) (t : Term) :
+    (M : SmtModel) (hM : model_wf M) (n : native_Int) (t : Term) :
     RuleProofs.eo_has_smt_translation t ->
     native_zleq 0 n = true ->
     __smtx_typeof (__eo_to_smt t) = SmtType.BitVec (native_int_to_nat n) ->
@@ -378,7 +378,7 @@ private theorem typed_conclusion_impl
   cases hC
 
 private theorem facts_conclusion_impl
-    (M : SmtModel) (hM : model_total_typed M) (w t : Term) :
+    (M : SmtModel) (hM : model_wf M) (w t : Term) :
     RuleProofs.eo_has_smt_translation t ->
     __eo_typeof (ufBv2natInt2bvConclusion w t) = Term.Bool ->
     eo_interprets M (ufBv2natInt2bvConclusion w t) true := by
@@ -402,7 +402,7 @@ private theorem facts_conclusion_impl
   exact RuleProofs.smt_value_rel_refl _
 
 public theorem cmd_step_uf_bv2nat_int2bv_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.uf_bv2nat_int2bv args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

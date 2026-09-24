@@ -118,13 +118,13 @@ private theorem smtExistsOfBinders_cons_congr
   let P : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) t =
           SmtValue.Boolean true
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) u =
           SmtValue.Boolean true
   have hPQ : P ↔ Q := by
@@ -152,10 +152,10 @@ private theorem smtExistsOfBinders_swap
   let P : Prop :=
     ∃ v1 : SmtValue,
       __smtx_typeof_value v1 = T1 ∧
-        __smtx_value_canonical_bool v1 = true ∧
+        __smtx_value_canonical v1 = true ∧
         ∃ v2 : SmtValue,
           __smtx_typeof_value v2 = T2 ∧
-            __smtx_value_canonical_bool v2 = true ∧
+            __smtx_value_canonical v2 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s1 T1 v1) s2 T2 v2)
                 rest =
@@ -163,10 +163,10 @@ private theorem smtExistsOfBinders_swap
   let Q : Prop :=
     ∃ v2 : SmtValue,
       __smtx_typeof_value v2 = T2 ∧
-        __smtx_value_canonical_bool v2 = true ∧
+        __smtx_value_canonical v2 = true ∧
         ∃ v1 : SmtValue,
           __smtx_typeof_value v1 = T1 ∧
-            __smtx_value_canonical_bool v1 = true ∧
+            __smtx_value_canonical v1 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s2 T2 v2) s1 T1 v1)
                 rest =
@@ -230,10 +230,10 @@ private theorem smtExistsOfBinders_dup
   let P : Prop :=
     ∃ v1 : SmtValue,
       __smtx_typeof_value v1 = T ∧
-        __smtx_value_canonical_bool v1 = true ∧
+        __smtx_value_canonical v1 = true ∧
         ∃ v2 : SmtValue,
           __smtx_typeof_value v2 = T ∧
-            __smtx_value_canonical_bool v2 = true ∧
+            __smtx_value_canonical v2 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s T v1) s T v2)
                 rest =
@@ -241,7 +241,7 @@ private theorem smtExistsOfBinders_dup
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical_bool v = true ∧
+        __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) rest =
           SmtValue.Boolean true
   have hPQ : P ↔ Q := by
@@ -2021,14 +2021,14 @@ by
             (EoVarEnv.cons (s := s) (T := T) hTail) hExistsTy
 
 private theorem smtx_model_eval_exists_eq_body_of_body_eval_eq
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : native_String) (T : SmtType) (body : SmtTerm)
     (hWF : __smtx_type_wf T = true)
     (hBodyTy : __smtx_typeof body = SmtType.Bool)
     (hBody :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T ->
-          __smtx_value_canonical_bool v = true ->
+          __smtx_value_canonical v = true ->
             __smtx_model_eval (native_model_push M s T v) body =
               __smtx_model_eval M body) :
   __smtx_model_eval M (SmtTerm.exists s T body) =
@@ -2039,14 +2039,14 @@ by
     ⟨b, hEvalBody⟩
   rcases canonical_type_inhabited_of_type_wf T hWF with
     ⟨w, hwTy, hwCan⟩
-  have hwCanBool : __smtx_value_canonical_bool w = true := by
-    simpa [__smtx_value_canonical] using hwCan
+  have hwCanBool : __smtx_value_canonical w = true := by
+    simpa [value_canonical] using hwCan
   cases b
   · rw [hEvalBody]
     by_cases hSat :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical_bool v = true ∧
+            __smtx_value_canonical v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true
     · rcases hSat with ⟨v, hvTy, hvCan, hvEval⟩
@@ -2059,7 +2059,7 @@ by
     have hSat :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical_bool v = true ∧
+            __smtx_value_canonical v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true := by
       refine ⟨w, hwTy, hwCanBool, ?_⟩
@@ -2103,12 +2103,12 @@ private theorem smtx_model_eval_eo_to_smt_exists_eq_base_of_body_eval_eq
     (hBodyTy : __smtx_typeof body = SmtType.Bool)
     (hBodyInvariant :
       ∀ {N : SmtModel},
-        model_total_typed N ->
+        model_wf N ->
           model_agrees_except_on_env except [] N M ->
             __smtx_model_eval N body =
               __smtx_model_eval M body) :
   ∀ {N : SmtModel},
-    model_total_typed N ->
+    model_wf N ->
             model_agrees_except_on_env except [] N M ->
         __smtx_model_eval N (__eo_to_smt_exists xs body) =
           __smtx_model_eval M body :=
@@ -2145,16 +2145,16 @@ by
       have hTailConst :
           ∀ v : SmtValue,
             __smtx_typeof_value v = ST ->
-              __smtx_value_canonical_bool v = true ->
+              __smtx_value_canonical v = true ->
                 __smtx_model_eval
                     (native_model_push N s ST v)
                     (__eo_to_smt_exists env body) =
                   __smtx_model_eval N (__eo_to_smt_exists env body) := by
         intro v hvTy hvCan
         have hPushTotal :
-            model_total_typed (native_model_push N s ST v) :=
+            model_wf (native_model_push N s ST v) :=
           model_total_typed_push hN s ST v hHeadWf hvTy
-            (by simpa [__smtx_value_canonical] using hvCan)
+            (by simpa [value_canonical] using hvCan)
         have hPushAgree :
             model_agrees_except_on_env except []
               (native_model_push N s ST v) M :=
@@ -2184,7 +2184,7 @@ by
       exact hDrop.trans hNTail
 
 private theorem smtx_model_eval_not_not_eq_self_of_bool
-    (M : SmtModel) (hM : model_total_typed M) (body : SmtTerm)
+    (M : SmtModel) (hM : model_wf M) (body : SmtTerm)
     (hBodyTy : __smtx_typeof body = SmtType.Bool) :
   __smtx_model_eval M (SmtTerm.not (SmtTerm.not body)) =
     __smtx_model_eval M body :=
@@ -2241,7 +2241,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
             let P : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a
@@ -2250,7 +2250,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
             let Q : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a body) =
@@ -2290,7 +2290,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
     simp [__eo_to_smt_exists, __smtx_model_eval]
 
 private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs : Term) (body : SmtTerm)
     (hBody : __smtx_typeof body = SmtType.Bool) :
     __smtx_model_eval M
@@ -2320,7 +2320,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
             let P : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a
@@ -2329,7 +2329,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
             let Q : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical_bool v = true ∧
+                  __smtx_value_canonical v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a body) =
@@ -2372,7 +2372,7 @@ private theorem smtx_model_eval_eo_to_smt_forall_encoding_eq_base_of_body_eval_e
     {xs : Term} {vars : List EoVarKey} {except : List SmtVarKey}
     {M : SmtModel} {body : SmtTerm}
     (hEnv : EoVarEnv xs vars)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (hWf :
       ∀ s T, (s, T) ∈ vars ->
         __smtx_type_wf (__eo_to_smt_type T) = true)
@@ -2382,12 +2382,12 @@ private theorem smtx_model_eval_eo_to_smt_forall_encoding_eq_base_of_body_eval_e
     (hBodyTy : __smtx_typeof body = SmtType.Bool)
     (hBodyInvariant :
       ∀ {N : SmtModel},
-        model_total_typed N ->
+        model_wf N ->
           model_agrees_except_on_env except [] N M ->
             __smtx_model_eval N body =
               __smtx_model_eval M body) :
   ∀ {N : SmtModel},
-    model_total_typed N ->
+    model_wf N ->
       model_agrees_except_on_env except [] N M ->
         __smtx_model_eval N
             (SmtTerm.not (__eo_to_smt_exists xs (SmtTerm.not body))) =
@@ -2402,7 +2402,7 @@ by
         simp [native_ite, native_Teq])
   have hNotInvariant :
       ∀ {N' : SmtModel},
-        model_total_typed N' ->
+        model_wf N' ->
           model_agrees_except_on_env except [] N' M ->
             __smtx_model_eval N' (SmtTerm.not body) =
               __smtx_model_eval M (SmtTerm.not body) := by
@@ -2429,18 +2429,18 @@ private theorem smtx_model_eval_qterm_eq_body_of_body_eval_eq
     (hQ : Q = Term.UOp UserOp.forall ∨ Q = Term.UOp UserOp.exists)
     (hTrans : RuleProofs.eo_has_smt_translation (qterm Q x F))
     (hEnv : EoVarEnv x vars)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (hInExcept :
       ∀ s T, (s, T) ∈ vars ->
         (s, __eo_to_smt_type T) ∈ except)
     (hBodyInvariant :
       ∀ {N : SmtModel},
-        model_total_typed N ->
+        model_wf N ->
           model_agrees_except_on_env except [] N M ->
             __smtx_model_eval N (__eo_to_smt F) =
               __smtx_model_eval M (__eo_to_smt F)) :
   ∀ {N : SmtModel},
-    model_total_typed N ->
+    model_wf N ->
       model_agrees_except_on_env except [] N M ->
         __smtx_model_eval N (__eo_to_smt (qterm Q x F)) =
           __smtx_model_eval M (__eo_to_smt F) :=
@@ -2503,7 +2503,7 @@ private theorem smtx_model_eval_qterm_eq_body_of_body_eval_eq_typed
     (hQ : Q = Term.UOp UserOp.forall ∨ Q = Term.UOp UserOp.exists)
     (hEnv : EoVarEnv x vars)
     (hNonNil : x ≠ Term.__eo_List_nil)
-    (hM : model_total_typed M)
+    (hM : model_wf M)
     (hWf :
       ∀ s T, (s, T) ∈ vars ->
         __smtx_type_wf (__eo_to_smt_type T) = true)
@@ -2513,12 +2513,12 @@ private theorem smtx_model_eval_qterm_eq_body_of_body_eval_eq_typed
     (hBodyTy : __smtx_typeof (__eo_to_smt B) = SmtType.Bool)
     (hBodyInvariant :
       ∀ {N : SmtModel},
-        model_total_typed N ->
+        model_wf N ->
           model_agrees_except_on_env except [] N M ->
             __smtx_model_eval N (__eo_to_smt B) =
               __smtx_model_eval M (__eo_to_smt B)) :
   ∀ {N : SmtModel},
-    model_total_typed N ->
+    model_wf N ->
       model_agrees_except_on_env except [] N M ->
         __smtx_model_eval N (__eo_to_smt (qterm Q x B)) =
           __smtx_model_eval M (__eo_to_smt B) :=
@@ -2563,7 +2563,7 @@ by
             hBodyInvariant hN hAgree
 
 private theorem smtx_model_eval_qterm_nested_of_subset
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     {Q x y F : Term} {xVars yVars : List EoVarKey}
     (hQ : Q = Term.UOp UserOp.forall ∨ Q = Term.UOp UserOp.exists)
     (hXEnv : EoVarEnv x xVars)
@@ -2735,7 +2735,7 @@ private theorem quant_unused_vars_shape_of_not_stuck
       simp [__eo_prog_quant_unused_vars] at hProg
 
 private theorem quant_unused_vars_eval
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (Q x F G : Term)
     (hQ : Q = Term.UOp UserOp.forall ∨ Q = Term.UOp UserOp.exists)
     (hBool : RuleProofs.eo_has_bool_type (qeq (qterm Q x F) G))
@@ -2796,7 +2796,7 @@ by
       simpa [hGet] using hNoFree
     have hBodyInvariant :
         ∀ {N : SmtModel},
-          model_total_typed N ->
+          model_wf N ->
             model_agrees_except_on_env
                 (exceptVars.map EoVarKey.toSmt) [] N M ->
               __smtx_model_eval N (__eo_to_smt F) =
@@ -2931,7 +2931,7 @@ by
           (EoVarEnv.concat hYEnv EoVarEnv.nil)
     have hRightInvariant :
         ∀ {N : SmtModel},
-          model_total_typed N ->
+          model_wf N ->
             model_agrees_except_on_env
                 (setVars.map EoVarKey.toSmt) [] N M ->
               __smtx_model_eval N (__eo_to_smt (qterm Q y F)) =
@@ -3026,7 +3026,7 @@ by
     exact hNested.symm.trans hDropOuter
 
 public theorem cmd_step_quant_unused_vars_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.quant_unused_vars args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

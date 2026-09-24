@@ -70,39 +70,39 @@ private theorem native_veq_false_of_model_eval_eq_false
 private theorem map_lookup_update_aux_other_any :
     ∀ (m : SmtMap) {i j e : SmtValue},
       native_veq i j = false ->
-        __smtx_msm_lookup
-          (__smtx_msm_update_aux (__smtx_msm_get_default m) m i e) j =
-            __smtx_msm_lookup m j
+        __smtx_map_lookup
+          (__smtx_map_update_aux (__smtx_map_get_default m) m i e) j =
+            __smtx_map_lookup m j
   | SmtMap.default T d, i, j, e, hij => by
       exact Smtm.map_lookup_update_aux_no_default_other
-        (__smtx_msm_get_default (SmtMap.default T d)) (SmtMap.default T d)
+        (__smtx_map_get_default (SmtMap.default T d)) (SmtMap.default T d)
         (i := i) (j := j) (e := e) hij
   | SmtMap.cons k v m, i, j, e, hij => by
       cases hki : native_veq k i
       · cases hcmp : native_vcmp k i
         · have hRec :
-              __smtx_msm_lookup
-                  (__smtx_msm_update_aux (__smtx_msm_get_default m) m i e) j =
-                __smtx_msm_lookup m j :=
+              __smtx_map_lookup
+                  (__smtx_map_update_aux (__smtx_map_get_default m) m i e) j =
+                __smtx_map_lookup m j :=
             map_lookup_update_aux_other_any m (i := i) (j := j) (e := e) hij
           cases hkj : native_veq k j <;>
-            simp [__smtx_msm_update_aux, __smtx_msm_lookup, native_ite,
-              hki, hcmp, hkj, hRec, __smtx_msm_get_default]
-        · simpa [__smtx_msm_update_aux, native_ite, hki, hcmp] using
+            simp [__smtx_map_update_aux, __smtx_map_lookup, native_ite,
+              hki, hcmp, hkj, hRec, __smtx_map_get_default]
+        · simpa [__smtx_map_update_aux, native_ite, hki, hcmp] using
             Smtm.map_lookup_update_aux_no_default_other
-              (__smtx_msm_get_default (SmtMap.cons k v m)) (SmtMap.cons k v m)
+              (__smtx_map_get_default (SmtMap.cons k v m)) (SmtMap.cons k v m)
               (i := i) (j := j) (e := e) hij
       · have hkiEq : k = i := Smtm.eq_of_native_veq_true hki
         subst i
         have hkj : native_veq k j = false := hij
         have hNoDefault :
-            __smtx_msm_lookup
-                (__smtx_msm_update_aux_no_default (__smtx_msm_get_default m) m k e) j =
-              __smtx_msm_lookup m j :=
+            __smtx_map_lookup
+                (__smtx_map_update_aux_no_default (__smtx_map_get_default m) m k e) j =
+              __smtx_map_lookup m j :=
           Smtm.map_lookup_update_aux_no_default_other
-            (__smtx_msm_get_default m) m (i := k) (j := j) (e := e) hkj
-        simpa [__smtx_msm_update_aux, __smtx_msm_lookup, native_ite,
-          hki, hkj, __smtx_msm_get_default] using hNoDefault
+            (__smtx_map_get_default m) m (i := k) (j := j) (e := e) hkj
+        simpa [__smtx_map_update_aux, __smtx_map_lookup, native_ite,
+          hki, hkj, __smtx_map_get_default] using hNoDefault
 
 private theorem smt_value_rel_select_store_other_of_native_veq_false
     (v i j e : SmtValue)
@@ -429,7 +429,7 @@ private theorem typed___eo_prog_arrays_read_over_write_impl
       exact hBNonNone)
 
 private theorem facts___eo_prog_arrays_read_over_write_impl
-    (M : SmtModel) (hM : model_total_typed M) (a i e j i2 j2 : Term) :
+    (M : SmtModel) (hM : model_wf M) (a i e j i2 j2 : Term) :
   RuleProofs.eo_has_smt_translation
     (Term.Apply
       (Term.Apply Term.select
@@ -516,7 +516,7 @@ private theorem facts___eo_prog_arrays_read_over_write_impl
         (__smtx_model_eval M (__eo_to_smt e)) hij)
 
 public theorem cmd_step_arrays_read_over_write_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.arrays_read_over_write args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

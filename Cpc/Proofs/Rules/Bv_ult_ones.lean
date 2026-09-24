@@ -75,7 +75,7 @@ private theorem eo_typeof_ne_stuck_of_translation
   exact hTrans hTypeMatch
 
 public theorem cmd_step_bv_ult_ones_properties
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
   cmdTranslationOk (CCmd.step CRule.bv_ult_ones args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->

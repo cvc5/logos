@@ -390,15 +390,15 @@ private theorem native_re_prefix_match_len_go_congr_valid :
       (∀ ys : List native_Char,
         native_string_valid ys = true ->
           native_list_in_re ys r = native_list_in_re ys r') ->
-      native_re_prefix_match_len?.go r (native_string_to_values xs) n =
-        native_re_prefix_match_len?.go r' (native_string_to_values xs) n := by
+      impl_native_re_prefix_match_len_go r (impl_native_string_to_values xs) n =
+        impl_native_re_prefix_match_len_go r' (impl_native_string_to_values xs) n := by
   intro xs
   induction xs with
   | nil =>
       intro r r' n _hValid hExt
       have hNull : native_re_nullable r = native_re_nullable r' := by
         exact hExt [] (by simp [native_string_valid])
-      simp [native_string_to_values, native_re_prefix_match_len?.go, hNull]
+      simp [impl_native_string_to_values, impl_native_re_prefix_match_len_go, hNull]
   | cons c cs ih =>
       intro r r' n hValid hExt
       have hc : native_char_valid c = true :=
@@ -410,14 +410,14 @@ private theorem native_re_prefix_match_len_go_congr_valid :
       by_cases hR : native_re_nullable r = true
       · have hRp : native_re_nullable r' = true := by
           simpa [← hNull] using hR
-        simp [native_string_to_values, native_re_prefix_match_len?.go, hR, hRp]
+        simp [impl_native_string_to_values, impl_native_re_prefix_match_len_go, hR, hRp]
       · have hRfalse : native_re_nullable r = false := by
           cases hVal : native_re_nullable r with
           | false => rfl
           | true => exact False.elim (hR hVal)
         have hRpfalse : native_re_nullable r' = false := by
           simpa [← hNull] using hRfalse
-        simp [native_string_to_values, native_re_prefix_match_len?.go,
+        simp [impl_native_string_to_values, impl_native_re_prefix_match_len_go,
           hRfalse, hRpfalse]
         exact ih (native_re_deriv c r) (native_re_deriv c r') (n + 1)
           hcs (native_list_in_re_deriv_congr_valid c r r' hc hExt)
@@ -429,8 +429,8 @@ private theorem native_re_prefix_match_len_congr_valid
       ∀ ys : List native_Char,
         native_string_valid ys = true ->
           native_list_in_re ys r = native_list_in_re ys r') :
-    native_re_prefix_match_len? r (native_string_to_values xs) =
-      native_re_prefix_match_len? r' (native_string_to_values xs) := by
+    native_re_prefix_match_len? r (impl_native_string_to_values xs) =
+      native_re_prefix_match_len? r' (impl_native_string_to_values xs) := by
   unfold native_re_prefix_match_len?
   exact native_re_prefix_match_len_go_congr_valid xs r r' 0 hValid hExt
 
@@ -441,8 +441,8 @@ private theorem native_re_positive_prefix_match_len_congr_valid
       ∀ ys : List native_Char,
         native_string_valid ys = true ->
           native_list_in_re ys r = native_list_in_re ys r') :
-    native_re_positive_prefix_match_len? r (native_string_to_values xs) =
-      native_re_positive_prefix_match_len? r' (native_string_to_values xs) := by
+    native_re_positive_prefix_match_len? r (impl_native_string_to_values xs) =
+      native_re_positive_prefix_match_len? r' (impl_native_string_to_values xs) := by
   cases xs with
   | nil =>
       rfl
@@ -459,8 +459,8 @@ private theorem native_re_positive_prefix_match_len_congr_valid
               (List.map SmtValue.Char cs) =
             native_re_prefix_match_len? (native_re_deriv c r')
               (List.map SmtValue.Char cs) := by
-        simpa [native_string_to_values] using hPref
-      simp only [native_string_to_values, List.map,
+        simpa [impl_native_string_to_values] using hPref
+      simp only [impl_native_string_to_values, List.map,
         native_re_positive_prefix_match_len?]
       rw [hPref']
 
@@ -470,31 +470,31 @@ private theorem native_re_find_idx_aux_congr_valid :
       (∀ ys : List native_Char,
         native_string_valid ys = true ->
           native_list_in_re ys r = native_list_in_re ys r') ->
-      native_re_find_idx_aux r (native_string_to_values xs) idx =
-        native_re_find_idx_aux r' (native_string_to_values xs) idx := by
+      impl_native_re_find_idx_aux r (impl_native_string_to_values xs) idx =
+        impl_native_re_find_idx_aux r' (impl_native_string_to_values xs) idx := by
   intro xs
   induction xs with
   | nil =>
       intro idx r r' hValid hExt
-      simp only [native_string_to_values, List.map]
+      simp only [impl_native_string_to_values, List.map]
       have hPref :
           native_re_prefix_match_len? r [] =
             native_re_prefix_match_len? r' [] := by
-        simpa [native_string_to_values] using
+        simpa [impl_native_string_to_values] using
           native_re_prefix_match_len_congr_valid r r' [] hValid hExt
-      rw [native_re_find_idx_aux.eq_def, native_re_find_idx_aux.eq_def, hPref]
+      rw [impl_native_re_find_idx_aux.eq_def, impl_native_re_find_idx_aux.eq_def, hPref]
   | cons c cs ih =>
       intro idx r r' hValid hExt
       have hcs : native_string_valid cs = true :=
         (native_string_valid_cons_parts hValid).2
-      simp only [native_string_to_values, List.map]
+      simp only [impl_native_string_to_values, List.map]
       have hPref :
           native_re_prefix_match_len? r (SmtValue.Char c :: List.map SmtValue.Char cs) =
             native_re_prefix_match_len? r'
               (SmtValue.Char c :: List.map SmtValue.Char cs) := by
-        simpa [native_string_to_values] using
+        simpa [impl_native_string_to_values] using
           native_re_prefix_match_len_congr_valid r r' (c :: cs) hValid hExt
-      rw [native_re_find_idx_aux.eq_def, native_re_find_idx_aux.eq_def, hPref]
+      rw [impl_native_re_find_idx_aux.eq_def, impl_native_re_find_idx_aux.eq_def, hPref]
       cases native_re_prefix_match_len? r'
           (SmtValue.Char c :: List.map SmtValue.Char cs) with
       | none => exact ih (idx + 1) r r' hcs hExt
@@ -507,9 +507,9 @@ private theorem native_re_find_idx_from_congr_valid
       ∀ ys : List native_Char,
         native_string_valid ys = true ->
           native_list_in_re ys r = native_list_in_re ys r') :
-    native_re_find_idx_from r (native_string_to_values xs) start =
-      native_re_find_idx_from r' (native_string_to_values xs) start := by
-  simpa [native_re_find_idx_from, native_string_to_values] using
+    native_re_find_idx_from r (impl_native_string_to_values xs) start =
+      native_re_find_idx_from r' (impl_native_string_to_values xs) start := by
+  simpa [native_re_find_idx_from, impl_native_string_to_values] using
     native_re_find_idx_aux_congr_valid (xs.drop start) start r r'
       (native_string_valid_drop xs start hValid) hExt
 
@@ -519,10 +519,10 @@ private theorem native_re_replace_all_nonempty_list_aux_congr_valid :
       (∀ ys : List native_Char,
         native_string_valid ys = true ->
           native_list_in_re ys r = native_list_in_re ys r') ->
-      native_re_replace_all_nonempty_list_aux fuel r
-          (native_string_to_values replacement) (native_string_to_values xs) =
-        native_re_replace_all_nonempty_list_aux fuel r'
-          (native_string_to_values replacement) (native_string_to_values xs) := by
+      impl_native_re_replace_all_nonempty_list_aux fuel r
+          (impl_native_string_to_values replacement) (impl_native_string_to_values xs) =
+        impl_native_re_replace_all_nonempty_list_aux fuel r'
+          (impl_native_string_to_values replacement) (impl_native_string_to_values xs) := by
   intro fuel
   induction fuel with
   | zero =>
@@ -532,15 +532,15 @@ private theorem native_re_replace_all_nonempty_list_aux_congr_valid :
       intro xs replacement r r' hValid hExt
       cases xs with
       | nil =>
-          simp only [native_string_to_values, List.map]
+          simp only [impl_native_string_to_values, List.map]
           have hPref :
               native_re_positive_prefix_match_len? r [] =
                 native_re_positive_prefix_match_len? r' [] := by
-            simpa [native_string_to_values] using
+            simpa [impl_native_string_to_values] using
               native_re_positive_prefix_match_len_congr_valid r r' []
                 (by simp [native_string_valid]) hExt
-          rw [native_re_replace_all_nonempty_list_aux.eq_2,
-            native_re_replace_all_nonempty_list_aux.eq_2, hPref]
+          rw [impl_native_re_replace_all_nonempty_list_aux.eq_2,
+            impl_native_re_replace_all_nonempty_list_aux.eq_2, hPref]
           cases native_re_positive_prefix_match_len? r' [] with
           | none => rfl
           | some n =>
@@ -552,34 +552,34 @@ private theorem native_re_replace_all_nonempty_list_aux_congr_valid :
       | cons c cs =>
           have hcs : native_string_valid cs = true :=
             (native_string_valid_cons_parts hValid).2
-          simp only [native_string_to_values, List.map]
+          simp only [impl_native_string_to_values, List.map]
           have hPref :
               native_re_positive_prefix_match_len? r
                   (SmtValue.Char c :: List.map SmtValue.Char cs) =
                 native_re_positive_prefix_match_len? r'
                   (SmtValue.Char c :: List.map SmtValue.Char cs) := by
-            simpa [native_string_to_values] using
+            simpa [impl_native_string_to_values] using
               native_re_positive_prefix_match_len_congr_valid r r'
                 (c :: cs) hValid hExt
-          rw [native_re_replace_all_nonempty_list_aux.eq_3,
-            native_re_replace_all_nonempty_list_aux.eq_3, hPref]
+          rw [impl_native_re_replace_all_nonempty_list_aux.eq_3,
+            impl_native_re_replace_all_nonempty_list_aux.eq_3, hPref]
           cases native_re_positive_prefix_match_len? r'
               (SmtValue.Char c :: List.map SmtValue.Char cs) with
           | none =>
               simp only [List.cons.injEq, true_and]
               have hIH := ih cs replacement r r' hcs hExt
-              simpa [native_string_to_values] using
+              simpa [impl_native_string_to_values] using
                 congrArg (fun tail => SmtValue.Char c :: tail) hIH
           | some n =>
               cases n with
               | zero =>
                   simp only [List.cons.injEq, true_and]
                   have hIH := ih cs replacement r r' hcs hExt
-                  simpa [native_string_to_values] using
+                  simpa [impl_native_string_to_values] using
                     congrArg (fun tail => SmtValue.Char c :: tail) hIH
               | succ n =>
                   simp
-                  simpa [native_string_to_values] using
+                  simpa [impl_native_string_to_values] using
                     ih (List.drop n cs) replacement r r'
                       (native_string_valid_drop cs n hcs) hExt
 
@@ -590,11 +590,11 @@ private theorem native_re_replace_all_nonempty_list_congr_valid
       ∀ ys : List native_Char,
         native_string_valid ys = true ->
           native_list_in_re ys r = native_list_in_re ys r') :
-    native_re_replace_all_nonempty_list r (native_string_to_values replacement)
-        (native_string_to_values xs) =
-      native_re_replace_all_nonempty_list r' (native_string_to_values replacement)
-        (native_string_to_values xs) := by
-  simpa [native_re_replace_all_nonempty_list, native_string_to_values] using
+    impl_native_re_replace_all_nonempty_list r (impl_native_string_to_values replacement)
+        (impl_native_string_to_values xs) =
+      impl_native_re_replace_all_nonempty_list r' (impl_native_string_to_values replacement)
+        (impl_native_string_to_values xs) := by
+  simpa [impl_native_re_replace_all_nonempty_list, impl_native_string_to_values] using
     native_re_replace_all_nonempty_list_aux_congr_valid
       (xs.length + 1) xs replacement r r' hValid hExt
 
@@ -626,8 +626,8 @@ theorem native_re_prefix_match_len_go_congr_valid_ext_of_str_ext
       ∀ ys : native_String,
         native_string_valid ys = true ->
           native_str_in_re ys r = native_str_in_re ys r') :
-    native_re_prefix_match_len?.go r (native_string_to_values xs) n =
-      native_re_prefix_match_len?.go r' (native_string_to_values xs) n :=
+    impl_native_re_prefix_match_len_go r (impl_native_string_to_values xs) n =
+      impl_native_re_prefix_match_len_go r' (impl_native_string_to_values xs) n :=
   native_re_prefix_match_len_go_congr_valid xs r r' n hValid
     (native_str_ext_to_list_ext r r' hExt)
 
@@ -668,24 +668,24 @@ theorem native_str_indexof_re_congr
       ∀ str : native_String,
         native_string_valid str = true ->
           native_str_in_re str r = native_str_in_re str r') :
-    native_str_indexof_re (native_string_to_values s) r i =
-      native_str_indexof_re (native_string_to_values s) r' i := by
+    native_str_indexof_re (impl_native_string_to_values s) r i =
+      native_str_indexof_re (impl_native_string_to_values s) r' i := by
   have hExtList := native_str_ext_to_list_ext r r' hExt
   by_cases hLt : i < 0
   · simp [native_str_indexof_re, hLt]
   · by_cases hStart : Int.toNat i ≤ s.length
-    · have hStart' : Int.toNat i ≤ (native_string_to_values s).length := by
-        simpa [native_string_to_values] using hStart
+    · have hStart' : Int.toNat i ≤ (impl_native_string_to_values s).length := by
+        simpa [impl_native_string_to_values] using hStart
       simp only [native_str_indexof_re, if_neg hLt, if_pos hStart']
       rw [native_re_find_idx_from_congr_valid r r' s (Int.toNat i)
         hValid hExtList]
-    · simp [native_str_indexof_re, native_string_to_values, hLt, hStart]
+    · simp [native_str_indexof_re, impl_native_string_to_values, hLt, hStart]
 
 private theorem native_model_str_in_re_congr
     (str : native_String) (r r' : SmtRegLan)
     (hExt : native_str_in_re str r = native_str_in_re str r') :
-    Smtm.native_str_in_re (native_string_to_values str) r =
-      Smtm.native_str_in_re (native_string_to_values str) r' := by
+    Smtm.native_str_in_re (impl_native_string_to_values str) r =
+      Smtm.native_str_in_re (impl_native_string_to_values str) r' := by
   rw [← RuleProofs.native_str_in_re_eq_model str r,
     ← RuleProofs.native_str_in_re_eq_model str r']
   simpa [native_str_in_re, RuleProofs.native_str_in_re] using hExt
@@ -699,15 +699,15 @@ private theorem native_str_indexof_re_split_aux_congr
       ∀ str : native_String,
         native_str_in_re str r2 = native_str_in_re str r2') :
     ∀ (pre suf : native_String) i,
-      native_str_indexof_re_split_aux r1 r2
-          (native_string_to_values pre) (native_string_to_values suf) i =
-        native_str_indexof_re_split_aux r1' r2'
-          (native_string_to_values pre) (native_string_to_values suf) i := by
+      impl_native_str_indexof_re_split_aux r1 r2
+          (impl_native_string_to_values pre) (impl_native_string_to_values suf) i =
+        impl_native_str_indexof_re_split_aux r1' r2'
+          (impl_native_string_to_values pre) (impl_native_string_to_values suf) i := by
   intro pre suf
   induction suf generalizing pre with
   | nil =>
       intro i
-      simp only [native_string_to_values, List.map]
+      simp only [impl_native_string_to_values, List.map]
       change
         (if (Smtm.native_str_in_re (List.map SmtValue.Char pre) r1 &&
               Smtm.native_str_in_re [] r2) = true then Int.ofNat i else -1) =
@@ -716,48 +716,48 @@ private theorem native_str_indexof_re_split_aux_congr
       have hPre :
           Smtm.native_str_in_re (List.map SmtValue.Char pre) r1 =
             Smtm.native_str_in_re (List.map SmtValue.Char pre) r1' := by
-        simpa [native_string_to_values] using
+        simpa [impl_native_string_to_values] using
           native_model_str_in_re_congr pre r1 r1' (hExt1 pre)
       have hNil :
           Smtm.native_str_in_re [] r2 =
             Smtm.native_str_in_re [] r2' := by
-        simpa [native_string_to_values] using
+        simpa [impl_native_string_to_values] using
           native_model_str_in_re_congr [] r2 r2' (hExt2 [])
       rw [hPre, hNil]
   | cons c cs ih =>
       intro i
-      simp only [native_string_to_values, List.map]
+      simp only [impl_native_string_to_values, List.map]
       change
         (if (Smtm.native_str_in_re (List.map SmtValue.Char pre) r1 &&
               Smtm.native_str_in_re
                 (SmtValue.Char c :: List.map SmtValue.Char cs) r2) = true then
             Int.ofNat i
-          else native_str_indexof_re_split_aux r1 r2
+          else impl_native_str_indexof_re_split_aux r1 r2
             (List.map SmtValue.Char pre ++ [SmtValue.Char c])
             (List.map SmtValue.Char cs) (i + 1)) =
           (if (Smtm.native_str_in_re (List.map SmtValue.Char pre) r1' &&
                 Smtm.native_str_in_re
                   (SmtValue.Char c :: List.map SmtValue.Char cs) r2') = true then
               Int.ofNat i
-            else native_str_indexof_re_split_aux r1' r2'
+            else impl_native_str_indexof_re_split_aux r1' r2'
               (List.map SmtValue.Char pre ++ [SmtValue.Char c])
               (List.map SmtValue.Char cs) (i + 1))
       have hPre :
           Smtm.native_str_in_re (List.map SmtValue.Char pre) r1 =
             Smtm.native_str_in_re (List.map SmtValue.Char pre) r1' := by
-        simpa [native_string_to_values] using
+        simpa [impl_native_string_to_values] using
           native_model_str_in_re_congr pre r1 r1' (hExt1 pre)
       have hSuf :
           Smtm.native_str_in_re
               (SmtValue.Char c :: List.map SmtValue.Char cs) r2 =
             Smtm.native_str_in_re
               (SmtValue.Char c :: List.map SmtValue.Char cs) r2' := by
-        simpa [native_string_to_values] using
+        simpa [impl_native_string_to_values] using
           native_model_str_in_re_congr (c :: cs) r2 r2' (hExt2 (c :: cs))
       rw [hPre, hSuf]
       split
       · rfl
-      · simpa [native_string_to_values, List.map_append] using
+      · simpa [impl_native_string_to_values, List.map_append] using
           ih (pre ++ [c]) (i + 1)
 
 theorem native_str_indexof_re_split_congr
@@ -770,15 +770,15 @@ theorem native_str_indexof_re_split_congr
       ∀ str : native_String,
         native_string_valid str = true ->
           native_str_in_re str r2 = native_str_in_re str r2') :
-    native_str_indexof_re_split (native_string_to_values s) r1 r2 =
-      native_str_indexof_re_split (native_string_to_values s) r1' r2' := by
+    native_str_indexof_re_split (impl_native_string_to_values s) r1 r2 =
+      native_str_indexof_re_split (impl_native_string_to_values s) r1' r2' := by
   have hExt1All := native_str_in_re_ext_of_valid_ext hExt1
   have hExt2All := native_str_in_re_ext_of_valid_ext hExt2
   simp only [native_str_indexof_re_split]
   rw [RuleProofs.native_re_str_valid_string]
   cases hValid : native_string_valid s
   · rfl
-  · simpa [native_string_to_values] using
+  · simpa [impl_native_string_to_values] using
       native_str_indexof_re_split_aux_congr r1 r1' r2 r2'
         hExt1All hExt2All [] s 0
 
@@ -789,10 +789,10 @@ theorem native_str_replace_re_congr
       ∀ str : native_String,
         native_string_valid str = true ->
           native_str_in_re str r = native_str_in_re str r') :
-    native_str_replace_re (native_string_to_values s) r
-        (native_string_to_values replacement) =
-      native_str_replace_re (native_string_to_values s) r'
-        (native_string_to_values replacement) := by
+    native_str_replace_re (impl_native_string_to_values s) r
+        (impl_native_string_to_values replacement) =
+      native_str_replace_re (impl_native_string_to_values s) r'
+        (impl_native_string_to_values replacement) := by
   have hExtList := native_str_ext_to_list_ext r r' hExt
   simp only [native_str_replace_re]
   rw [native_re_find_idx_from_congr_valid r r' s 0 hValid hExtList]
@@ -803,35 +803,35 @@ private theorem native_re_find_nonempty_idx_aux_congr_valid :
       (∀ ys : List native_Char,
         native_string_valid ys = true ->
           native_list_in_re ys r = native_list_in_re ys r') ->
-      native_re_find_nonempty_idx_aux r (native_string_to_values xs) idx =
-        native_re_find_nonempty_idx_aux r' (native_string_to_values xs) idx := by
+      impl_native_re_find_nonempty_idx_aux r (impl_native_string_to_values xs) idx =
+        impl_native_re_find_nonempty_idx_aux r' (impl_native_string_to_values xs) idx := by
   intro xs
   induction xs with
   | nil =>
       intro idx r r' hValid hExt
-      simp only [native_string_to_values, List.map]
+      simp only [impl_native_string_to_values, List.map]
       have hPref :
           native_re_positive_prefix_match_len? r [] =
             native_re_positive_prefix_match_len? r' [] := by
-        simpa [native_string_to_values] using
+        simpa [impl_native_string_to_values] using
           native_re_positive_prefix_match_len_congr_valid r r' [] hValid hExt
-      rw [native_re_find_nonempty_idx_aux.eq_def,
-        native_re_find_nonempty_idx_aux.eq_def, hPref]
+      rw [impl_native_re_find_nonempty_idx_aux.eq_def,
+        impl_native_re_find_nonempty_idx_aux.eq_def, hPref]
   | cons c cs ih =>
       intro idx r r' hValid hExt
       have hcs : native_string_valid cs = true :=
         (native_string_valid_cons_parts hValid).2
-      simp only [native_string_to_values, List.map]
+      simp only [impl_native_string_to_values, List.map]
       have hPref :
           native_re_positive_prefix_match_len? r
               (SmtValue.Char c :: List.map SmtValue.Char cs) =
             native_re_positive_prefix_match_len? r'
               (SmtValue.Char c :: List.map SmtValue.Char cs) := by
-        simpa [native_string_to_values] using
+        simpa [impl_native_string_to_values] using
           native_re_positive_prefix_match_len_congr_valid r r' (c :: cs)
             hValid hExt
-      rw [native_re_find_nonempty_idx_aux.eq_def,
-        native_re_find_nonempty_idx_aux.eq_def, hPref]
+      rw [impl_native_re_find_nonempty_idx_aux.eq_def,
+        impl_native_re_find_nonempty_idx_aux.eq_def, hPref]
       cases hRes : native_re_positive_prefix_match_len? r'
           (SmtValue.Char c :: List.map SmtValue.Char cs) with
       | none => exact ih (idx + 1) r r' hcs hExt
@@ -847,9 +847,9 @@ private theorem native_re_find_nonempty_idx_from_congr_valid
       ∀ ys : List native_Char,
         native_string_valid ys = true ->
           native_list_in_re ys r = native_list_in_re ys r') :
-    native_re_find_nonempty_idx_from r (native_string_to_values xs) start =
-      native_re_find_nonempty_idx_from r' (native_string_to_values xs) start := by
-  simpa [native_re_find_nonempty_idx_from, native_string_to_values] using
+    impl_native_re_find_nonempty_idx_from r (impl_native_string_to_values xs) start =
+      impl_native_re_find_nonempty_idx_from r' (impl_native_string_to_values xs) start := by
+  simpa [impl_native_re_find_nonempty_idx_from, impl_native_string_to_values] using
     native_re_find_nonempty_idx_aux_congr_valid (xs.drop start) start r r'
       (native_string_valid_drop xs start hValid) hExt
 
@@ -859,8 +859,8 @@ private theorem native_re_scan_ends_aux_congr_valid :
       (∀ ys : List native_Char,
         native_string_valid ys = true ->
           native_list_in_re ys r = native_list_in_re ys r') ->
-      native_re_scan_ends_aux fuel r (native_string_to_values s) pos =
-        native_re_scan_ends_aux fuel r' (native_string_to_values s) pos := by
+      impl_native_re_scan_ends_aux fuel r (impl_native_string_to_values s) pos =
+        impl_native_re_scan_ends_aux fuel r' (impl_native_string_to_values s) pos := by
   intro fuel
   induction fuel with
   | zero =>
@@ -868,10 +868,10 @@ private theorem native_re_scan_ends_aux_congr_valid :
       rfl
   | succ fuel ih =>
       intro s pos r r' hValid hExt
-      rw [native_re_scan_ends_aux, native_re_scan_ends_aux,
+      rw [impl_native_re_scan_ends_aux, impl_native_re_scan_ends_aux,
         native_re_find_nonempty_idx_from_congr_valid r r' s pos hValid hExt]
-      cases native_re_find_nonempty_idx_from r'
-          (native_string_to_values s) pos with
+      cases impl_native_re_find_nonempty_idx_from r'
+          (impl_native_string_to_values s) pos with
       | none => rfl
       | some p =>
           obtain ⟨idx, len⟩ := p
@@ -887,11 +887,11 @@ theorem native_str_occur_index_re_congr
       ∀ str : native_String,
         native_string_valid str = true ->
           native_str_in_re str r = native_str_in_re str r') :
-    native_str_occur_index_re (native_string_to_values s) r n =
-      native_str_occur_index_re (native_string_to_values s) r' n := by
+    native_str_occur_index_re (impl_native_string_to_values s) r n =
+      native_str_occur_index_re (impl_native_string_to_values s) r' n := by
   have hExtList := native_str_ext_to_list_ext r r' hExt
-  have hLength : (native_string_to_values s).length = s.length := by
-    simp [native_string_to_values]
+  have hLength : (impl_native_string_to_values s).length = s.length := by
+    simp [impl_native_string_to_values]
   simp only [native_str_occur_index_re]
   rw [hLength,
     native_re_scan_ends_aux_congr_valid (s.length + 1) s 0 r r' hValid
@@ -904,10 +904,10 @@ theorem native_str_replace_re_all_congr
       ∀ str : native_String,
         native_string_valid str = true ->
           native_str_in_re str r = native_str_in_re str r') :
-    native_str_replace_re_all (native_string_to_values s) r
-        (native_string_to_values replacement) =
-      native_str_replace_re_all (native_string_to_values s) r'
-        (native_string_to_values replacement) := by
+    native_str_replace_re_all (impl_native_string_to_values s) r
+        (impl_native_string_to_values replacement) =
+      native_str_replace_re_all (impl_native_string_to_values s) r'
+        (impl_native_string_to_values replacement) := by
   have hExtList := native_str_ext_to_list_ext r r' hExt
   simpa [native_str_replace_re_all] using
     native_re_replace_all_nonempty_list_congr_valid r r' replacement s hValid
@@ -965,7 +965,7 @@ theorem smt_value_rel_eq_congr
   smt_value_rel_model_eval_eq_congr a b c d
 
 theorem congTrueSpine_eq_eq_true
-    (M : SmtModel) (_hM : model_total_typed M) (x₁ x₂ rhs : Term) :
+    (M : SmtModel) (_hM : model_wf M) (x₁ x₂ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x₁) x₂) rhs) ->
     CongTrueSpine M
@@ -993,7 +993,7 @@ theorem congTrueSpine_eq_eq_true
       (smt_value_rel_of_eq_true_or_same M x₂ y₂ hArg₂)
 
 theorem congTrueSpine_and_eq_true
-    (M : SmtModel) (hM : model_total_typed M) (x₁ x₂ rhs : Term) :
+    (M : SmtModel) (hM : model_wf M) (x₁ x₂ rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Apply (Term.UOp UserOp.and) x₁) x₂) rhs) ->
     CongTrueSpine M
@@ -1040,7 +1040,7 @@ theorem congTrueSpine_and_eq_true
       (__smtx_model_eval M
         (SmtTerm.and (__eo_to_smt y₁) (__eo_to_smt y₂))) =
         SmtValue.Boolean true
-    rw [__smtx_model_eval.eq_8, __smtx_model_eval.eq_8]
+    rw [__smtx_model_eval.eq_9, __smtx_model_eval.eq_9]
     rw [hEval₁, hEval₂]
     exact (RuleProofs.smt_value_rel_iff_model_eval_eq_true _ _).mp
       (RuleProofs.smt_value_rel_refl _)
@@ -1108,7 +1108,7 @@ theorem congTypeSpine_and_eq_has_bool_type
     (by rw [hxAndTy]; simp)
 
 theorem congTrueSpine_bool_binop_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (eoOp : UserOp) (smtOp : SmtTerm -> SmtTerm -> SmtTerm)
     (evalOp : SmtValue -> SmtValue -> SmtValue)
     (hToSmt :
@@ -1228,7 +1228,7 @@ theorem congTypeSpine_bool_binop_eq_has_bool_type
     (by rw [hxOpTy]; simp)
 
 theorem congTrueSpine_non_reg_unop_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (eoOp : UserOp) (smtOp : SmtTerm -> SmtTerm)
     (evalOp : SmtValue -> SmtValue)
     (hToSmt :
@@ -1282,7 +1282,7 @@ theorem congTrueSpine_non_reg_unop_eq_true
       (RuleProofs.smt_value_rel_refl _)
 
 theorem congTrueSpine_non_reg_unop_eq_true_of_eval_congr
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (eoOp : UserOp) (smtOp : SmtTerm -> SmtTerm)
     (hToSmt :
       ∀ a,
@@ -1450,7 +1450,7 @@ theorem congTypeSpine_typecongr_eotype_unop_eq_has_bool_type
     hTrans
 
 theorem congTrueSpine_eotype_non_reg_unop_eq_true_of_eval_congr
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (eoOp : UserOp)
     (hArgOfNN :
       ∀ a,
@@ -1513,7 +1513,7 @@ theorem congTrueSpine_eotype_non_reg_unop_eq_true_of_eval_congr
       (RuleProofs.smt_value_rel_refl _)
 
 theorem congTrueSpine_non_reg_indexed_unop_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (eoOp : UserOp1) (idx : Term)
     (smtOp : SmtTerm -> SmtTerm)
     (evalOp : SmtValue -> SmtValue)
@@ -1756,7 +1756,7 @@ private theorem tuple_select_eval_congr
     (__eo_to_smt x) (__eo_to_smt y) hEval
 
 theorem congTrueSpine_tuple_select_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (idx x rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.UOp1 UserOp1.tuple_select idx) x) rhs) ->
@@ -1804,7 +1804,7 @@ theorem congTrueSpine_tuple_select_eq_true
     exact RuleProofs.smt_value_rel_refl _
 
 theorem congTrueSpine_non_reg_indexed2_unop_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (eoOp : UserOp2) (idx₁ idx₂ : Term)
     (smtOp : SmtTerm -> SmtTerm)
     (evalOp : SmtValue -> SmtValue)
@@ -1946,7 +1946,7 @@ theorem congTypeSpine_typecongr_indexed_binary_uop1_eq_has_bool_type
     hTrans
 
 theorem congTrueSpine_non_reg_binop_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (eoOp : UserOp) (smtOp : SmtTerm -> SmtTerm -> SmtTerm)
     (evalOp : SmtValue -> SmtValue -> SmtValue)
     (hToSmt :
@@ -2012,7 +2012,7 @@ theorem congTrueSpine_non_reg_binop_eq_true
       (RuleProofs.smt_value_rel_refl _)
 
 theorem congTrueSpine_non_reg_binop_eq_true_of_eval_congr
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (eoOp : UserOp) (smtOp : SmtTerm -> SmtTerm -> SmtTerm)
     (hToSmt :
       ∀ a b,
@@ -2148,7 +2148,7 @@ theorem congTypeSpine_eq_eq_has_bool_type
     x₁ x₂ rhs
 
 theorem congTrueSpine_non_reg_ternop_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (eoOp : UserOp) (smtOp : SmtTerm -> SmtTerm -> SmtTerm -> SmtTerm)
     (evalOp : SmtValue -> SmtValue -> SmtValue -> SmtValue)
     (hToSmt :
@@ -2373,7 +2373,7 @@ theorem congTypeSpine_typecongr_quadop_eq_has_bool_type
     hTrans
 
 theorem congTrueSpine_ite_eq_true
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (c t e rhs : Term) :
     RuleProofs.eo_has_bool_type
       (mkEq (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.ite) c) t) e)
@@ -2482,7 +2482,7 @@ theorem smt_type_ne_reglan_of_apply_head
     simp
 
 theorem smt_value_rel_model_eval_apply_of_rel_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (f g x y : SmtTerm)
     (hAppNN : __smtx_typeof_apply (__smtx_typeof f) (__smtx_typeof x) ≠ SmtType.None)
     (hFy : __smtx_typeof f = __smtx_typeof g)

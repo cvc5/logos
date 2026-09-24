@@ -1034,7 +1034,7 @@ private theorem native_width_roundtrip (W : native_Int) :
     simpa [SmtEval.native_zleq] using hW
   have hInt : (Int.ofNat (Int.toNat W) : Int) = W :=
     Int.toNat_of_nonneg hNonneg
-  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem andTerm1_congr_lists
@@ -1266,7 +1266,7 @@ theorem typed_term2_of_type_or_nil
         hW hW0 (listIdentity_is_list width) (listIdentity_is_list width) hZsList
 
 private theorem eval_lhs
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys zs first second : Term) (width : Nat) :
     __smtx_typeof (__eo_to_smt xs) = SmtType.BitVec width ->
     __smtx_typeof (__eo_to_smt ys) = SmtType.BitVec width ->
@@ -1375,7 +1375,7 @@ private theorem eval_zeroConst
   rw [hWidth]
 
 private theorem facts_term1_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys zs x w : Term) (W : native_Int) :
     __smtx_typeof (__eo_to_smt xs) =
       SmtType.BitVec (native_int_to_nat W) ->
@@ -1436,7 +1436,7 @@ private theorem facts_term1_core
     exact RuleProofs.smt_value_rel_refl _
 
 private theorem facts_term2_core
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys zs x w : Term) (W : native_Int) :
     __smtx_typeof (__eo_to_smt xs) =
       SmtType.BitVec (native_int_to_nat W) ->
@@ -1497,7 +1497,7 @@ private theorem facts_term2_core
     exact RuleProofs.smt_value_rel_refl _
 
 theorem facts_term1_of_type_or_nil
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys zs x w : Term) (W : native_Int) :
     ListTypeOrNil xs (native_int_to_nat W) ->
     ListTypeOrNil ys (native_int_to_nat W) ->
@@ -1536,7 +1536,7 @@ theorem facts_term1_of_type_or_nil
         hW hW0 (listIdentity_is_list width) (listIdentity_is_list width) hZsList
 
 theorem facts_term2_of_type_or_nil
-    (M : SmtModel) (hM : model_total_typed M)
+    (M : SmtModel) (hM : model_wf M)
     (xs ys zs x w : Term) (W : native_Int) :
     ListTypeOrNil xs (native_int_to_nat W) ->
     ListTypeOrNil ys (native_int_to_nat W) ->
