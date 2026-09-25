@@ -4,20 +4,16 @@ import Cpc.Proofs.TypePreservation.Helpers
 
 open Eo SmtEval Smtm
 /-!
-Counterexample to the `quant_var_elim_ineq` rule introduced on this branch.
+Regression test for the polynomial occurrence check in `quant_var_elim_ineq`.
 
-The rule accepts `(= (forall ((x Int)) (<= x (abs x))) false)`, although
-`x <= abs x` holds for every integer. The normalized difference is `x - abs x`.
-`__arith_linear_dir` finds the monomial `x`, then checks the polynomial tail
-with `__contains_atomic_term_list_free_rec`. That check mistakes the monomial
-`(@mon [abs x] -1)` for a binder and skips its variable list, hiding `x`.
+The original rule accepted `(= (forall ((x Int)) (<= x (abs x))) false)`.
+The generic occurrence check mistakes the monomial `(@mon [abs x] -1)` for
+a binder and skips its variable list. The dedicated polynomial occurrence
+check must find `x` and reject this invalid equivalence.
 
 Run:
   lake build Cpc.Proofs.Assumptions Cpc.Proofs.TypePreservation.Helpers
   lake env lean test/QuantVarElimIneqCounterexample.lean
-
-This file intentionally records acceptance of an unsound rule. Once the rule
-is repaired, replace the acceptance check with a rejection regression test.
 -/
 namespace QuantVarElimIneqCounterexample
 set_option maxRecDepth 100000
@@ -42,8 +38,15 @@ theorem polynomial_hides_x :
       xs Term.__eo_List_nil = Term.Boolean false := by
   native_decide
 
-/-- The checker accepts the invalid equivalence without premises. -/
-theorem accepted : __eo_prog_quant_var_elim_ineq formula = formula := by
+/-- The dedicated polynomial occurrence check finds the hidden occurrence. -/
+theorem polynomial_contains_x :
+    __poly_contains_atomic_term_free
+      (__poly_neg (__get_arith_poly_norm ((Term.UOp UserOp.abs).Apply x))) x =
+      Term.Boolean true := by
+  native_decide
+
+/-- The corrected checker rejects the invalid equivalence. -/
+theorem rejected : __eo_prog_quant_var_elim_ineq formula = Term.Stuck := by
   native_decide
 
 theorem result_type : __eo_typeof formula = Term.Bool := by
@@ -59,15 +62,9 @@ theorem command_translation_ok :
   change (__smtx_typeof (__eo_to_smt formula) ≠ SmtType.None) ∧ True
   simp [translation_type]
 
-theorem command_accepted (s : CState) :
-    __eo_cmd_step_proven s CRule.quant_var_elim_ineq args CIndexList.nil = formula := by
-  exact accepted
-
-theorem command_result_type (s : CState) :
-    __eo_typeof (__eo_cmd_step_proven s CRule.quant_var_elim_ineq args CIndexList.nil) =
-      Term.Bool := by
-  rw [command_accepted]
-  exact result_type
+theorem command_rejected (s : CState) :
+    __eo_cmd_step_proven s CRule.quant_var_elim_ineq args CIndexList.nil = Term.Stuck := by
+  exact rejected
 
 def sx : SmtTerm := SmtTerm.Var (native_string_lit "x") SmtType.Int
 def sbody : SmtTerm := SmtTerm.leq sx (SmtTerm.abs sx)
@@ -112,7 +109,7 @@ theorem lhs_true (M : SmtModel) :
 theorem translation : __eo_to_smt formula = SmtTerm.eq slhs (SmtTerm.Boolean false) := by
   native_decide
 
-/-- The accepted conclusion is false in every model, including every well-formed model. -/
+/-- The rejected conclusion is false in every model, including every well-formed model. -/
 theorem conclusion_false (M : SmtModel) :
     __smtx_model_eval M (__eo_to_smt formula) = SmtValue.Boolean false := by
   rw [translation, __smtx_model_eval.eq_def]
