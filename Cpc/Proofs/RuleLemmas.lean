@@ -100,6 +100,7 @@ import Cpc.Proofs.Rules.Bv_bitwise_slicing
 import Cpc.Proofs.Rules.Bv_bitblast_step
 import Cpc.Proofs.Rules.Bv_poly_norm
 import Cpc.Proofs.Rules.Bv_poly_norm_eq
+import Cpc.Proofs.Rules.Bv_abstraction
 import Cpc.Proofs.Rules.String_length_pos
 import Cpc.Proofs.Rules.String_length_non_empty
 import Cpc.Proofs.Rules.Concat_eq
@@ -1096,6 +1097,11 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_bv_poly_norm_eq_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | bv_abstraction =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_bv_abstraction_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | string_length_pos =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by

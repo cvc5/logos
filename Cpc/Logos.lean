@@ -2168,6 +2168,730 @@ def __bv_mk_bitblast_step : Term -> Term
     (__eo_ite (__eo_is_bin a1) (__bv_const_to_bitlist_rec a1 (__eo_requires (__eo_is_neg _v1) (Term.Boolean false) (__iota_rec (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons) (Term.Numeral 0) _v1) (Term.Numeral 0)))) (__bv_mk_bitblast_step_var_rec a1 (__eo_requires (__eo_is_neg _v0) (Term.Boolean false) (__iota_rec (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons) (Term.Numeral 0) _v0) (Term.Numeral 0)))))
 
 
+def __eo_l_19___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, l => (Term.Boolean false)
+
+
+def __eo_l_18___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) ln1)))))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_l_19___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) ln1))))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_19___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_17___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_s_2) ln1))) ln2)))) => (__eo_ite (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0))))) (__eo_l_18___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_s_2) ln1))) ln2))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_18___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_16___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_x_2) __eo_lv_t_2))) ln1)))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq s __eo_lv_s_3)) (__eo_eq x __eo_lv_x_2)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0)))) (__eo_l_17___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_x_2) __eo_lv_t_2))) ln1))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_17___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_15___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_t_2) __eo_lv_x_2))))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq s __eo_lv_s_3)) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_16___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_t_2) __eo_lv_x_2)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_16___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_14___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_t_2) __eo_lv_x_2))) ln1)))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq s __eo_lv_s_3)) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0)))) (__eo_l_15___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_t_2) __eo_lv_x_2))) ln1))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_15___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_13___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_s_2) __eo_lv_t_2))))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_14___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_s_2) __eo_lv_t_2)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_14___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_12___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) ln1)))) cone))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1)))) (__eo_l_13___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) ln1)))) cone)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_13___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_11___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvnot) cone)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) ln1))) ln2)))) => (__eo_ite (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0))))) (__eo_l_12___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvnot) cone)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) ln1))) ln2))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_12___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_10___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) ln1)))) ln2)))) => (__eo_ite (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0))))) (__eo_l_11___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) ln1)))) ln2))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_11___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_9___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_t_2) ln1)))) ln2)))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0))))) (__eo_l_10___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_t_2) ln1)))) ln2))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_10___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_8___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_s_2) ln1))) __eo_lv_cone_2)) ln2))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln2))
+    let _v1 := (__bv_bitwidth (__eo_typeof ln1))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq cone __eo_lv_cone_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_and (__eo_eq ln1 (__eo_to_bin _v1 (__eo_add (__eo_ite (__eo_is_z _v1) (__eo_ite (__eo_is_neg _v1) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v1)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v1)) (Term.Numeral (-1 : native_Int))))) (__eo_eq ln2 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))))) (__eo_l_9___bv_abstraction_lemma_mul x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_s_2) ln1))) __eo_lv_cone_2)) ln2)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_9___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_7___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) cone) __eo_lv_t_2)) ln1)))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln1))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq s __eo_lv_s_3)) (__eo_eq x __eo_lv_x_2)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln1 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int)))))) (__eo_l_8___bv_abstraction_lemma_mul x s t (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) cone) __eo_lv_t_2)) ln1))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_8___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_6___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) cone) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_3) __eo_lv_x_2)))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_3)) (__eo_eq x __eo_lv_x_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0)))) (__eo_l_7___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) cone) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_3) __eo_lv_x_2))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_7___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_5___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_2) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvnot) __eo_lv_t_3)) ln2)))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln1))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_3)) (__eo_and (__eo_eq ln1 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))) (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0)))) (__eo_l_6___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_2) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvnot) __eo_lv_t_3)) ln2))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_6___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_4___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_3) ln1))) ln2))) ln3))))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln2))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_3)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_and (__eo_eq ln2 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))) (__eo_eq ln3 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln3)) (Term.Numeral 0)))))) (__eo_l_5___bv_abstraction_lemma_mul x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_3) ln1))) ln2))) ln3)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_5___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_3___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp2 UserOp2.extract (Term.Numeral 0) (Term.Numeral 0)) __eo_lv_t_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp2 UserOp2.extract (Term.Numeral 0) (Term.Numeral 0)) __eo_lv_x_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp2 UserOp2.extract (Term.Numeral 0) (Term.Numeral 0)) __eo_lv_s_2)) ln1))) =>
+    let _v0 := (Term.UOp2 UserOp2.extract (Term.Numeral 0) (Term.Numeral 0))
+    let _v1 := (__bv_bitwidth (__eo_typeof ln1))
+    (__eo_ite (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq ln1 (__eo_to_bin _v1 (__eo_add (__eo_ite (__eo_is_z _v1) (__eo_ite (__eo_is_neg _v1) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v1)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v1)) (Term.Numeral (-1 : native_Int))))) (__eo_l_4___bv_abstraction_lemma_mul x s t (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply _v0 __eo_lv_t_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply _v0 __eo_lv_x_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply _v0 __eo_lv_s_2)) ln1)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_4___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_2___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_3) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_2) ln2))) __eo_lv_t_3) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln2))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq s __eo_lv_s_3)) (__eo_eq t __eo_lv_t_2)) (__eo_eq t __eo_lv_t_3)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_eq ln2 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int)))))) (__eo_l_3___bv_abstraction_lemma_mul x s t (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_3) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_2) ln2))) __eo_lv_t_3)))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_3___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_1___bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) c)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) d))) =>
+    let _v0 := (__eo_to_z d)
+    let _v1 := (__bv_bitwidth (__eo_typeof x))
+    (__eo_ite (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq (__eo_to_z c) (__eo_add (__eo_ite (__eo_is_z _v1) (__eo_ite (__eo_is_neg _v1) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v1)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v1)) (__eo_neg (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0))))) (__eo_l_2___bv_abstraction_lemma_mul x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) c)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) d)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_2___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __bv_abstraction_lemma_mul : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) c)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_2) d))) =>
+    let _v0 := (__eo_to_z d)
+    (__eo_ite (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq (__eo_to_z c) (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0))) (__eo_l_1___bv_abstraction_lemma_mul x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) c)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_2) d)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_1___bv_abstraction_lemma_mul __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_37___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, l => (Term.Boolean false)
+
+
+def __eo_l_36___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_x_4) __eo_lv_t_2))))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq x __eo_lv_x_3)) (__eo_eq x __eo_lv_x_4)) (__eo_eq t __eo_lv_t_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_37___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_x_4) __eo_lv_t_2)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_37___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_35___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_s_2) cone)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) __eo_lv_t_2)) => (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_36___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_s_2) cone)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) __eo_lv_t_2))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_36___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_34___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_s_2) cone))) => (__eo_ite (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_35___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_s_2) cone)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_35___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_33___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) ln1))) ln2))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_t_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) cone) ln3))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq t __eo_lv_t_3)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_and (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0))) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln3 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln3)) (Term.Numeral 0)))))) (__eo_l_34___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) ln1))) ln2))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_t_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) cone) ln3)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_34___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_32___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) ln1))) ln2))) ln3)))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq t __eo_lv_t_3)) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_2)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_and (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0))) (__eo_eq ln3 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln3)) (Term.Numeral 0))))) (__eo_l_33___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) ln1))) ln2))) ln3))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_33___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_31___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) ln1))) __eo_lv_t_3)) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq t __eo_lv_t_3)) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_l_32___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) ln1))) __eo_lv_t_3))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_32___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_30___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_cone_2) __eo_lv_x_3)) ln1))) ln2)))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq cone __eo_lv_cone_2)) (__eo_eq x __eo_lv_x_3)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0))))) (__eo_l_31___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_cone_2) __eo_lv_x_3)) ln1))) ln2))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_31___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_29___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_s_3) ln1))) ln2))) ln3)))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_3)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_and (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0))) (__eo_eq ln3 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln3)) (Term.Numeral 0))))) (__eo_l_30___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_s_3) ln1))) ln2))) ln3))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_30___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_28___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) ln1))))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_2)) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_l_29___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) ln1)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_29___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_27___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_t_2) ln1))))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq s __eo_lv_s_2)) (__eo_eq x __eo_lv_x_3)) (__eo_eq t __eo_lv_t_2)) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_l_28___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_t_2) ln1)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_28___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_26___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_t_2) cone))) ln1))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq s __eo_lv_s_2)) (__eo_eq s __eo_lv_s_3)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0)))) (__eo_l_27___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_t_2) cone))) ln1)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_27___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_25___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_t_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_s_2) cone))) ln1))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq t __eo_lv_t_3)) (__eo_eq s __eo_lv_s_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0)))) (__eo_l_26___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_t_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_s_2) cone))) ln1)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_26___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_24___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) ln1))))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_2)) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_l_25___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) ln1)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_25___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_23___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) ln1))))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq s __eo_lv_s_2)) (__eo_eq x __eo_lv_x_3)) (__eo_eq t __eo_lv_t_2)) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_l_24___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) ln1)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_24___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_22___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_2) cone)) __eo_lv_s_2)) => (__eo_ite (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_23___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_x_2) cone)) __eo_lv_s_2))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_23___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_21___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_2) cone)) ln1))))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln1))
+    (__eo_ite (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq x __eo_lv_x_3)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln1 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int)))))) (__eo_l_22___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_2) cone)) ln1)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_22___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_20___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_t_2) cone))))) => (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq s __eo_lv_s_3)) (__eo_eq t __eo_lv_t_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_21___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_s_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_t_2) cone)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_21___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_19___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) __eo_lv_t_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_3) ln1)))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_3)) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_l_20___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) __eo_lv_t_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_3) ln1))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_20___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_18___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_2) cone)) ln2))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln2))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln2 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))))) (__eo_l_19___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_2) cone)) ln2)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_19___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_17___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_2) cone)) ln2))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln2))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq x __eo_lv_x_3)) (__eo_eq t __eo_lv_t_2)) (__eo_eq s __eo_lv_s_2)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln2 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))))) (__eo_l_18___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_2) cone)) ln2)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_18___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_16___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) __eo_lv_s_2)) cone)) => (__eo_ite (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_17___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) __eo_lv_s_2)) cone))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_17___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_15___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_2) cone)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_3) __eo_lv_s_2))) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq t __eo_lv_t_3)) (__eo_eq s __eo_lv_s_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_16___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_2) cone)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_t_3) __eo_lv_s_2)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_16___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_14___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_3) __eo_lv_t_2))) cone)) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq s __eo_lv_s_2)) (__eo_eq s __eo_lv_s_3)) (__eo_eq t __eo_lv_t_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_15___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvshl) __eo_lv_s_3) __eo_lv_t_2))) cone))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_15___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_13___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) __eo_lv_t_2)) => (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq t __eo_lv_t_2)) (Term.Boolean true) (__eo_l_14___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) __eo_lv_t_2))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_14___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_12___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_t_2)) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_3) ln2))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln2))
+    let _v1 := (__bv_bitwidth (__eo_typeof ln1))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_3)) (__eo_and (__eo_eq ln1 (__eo_to_bin _v1 (__eo_add (__eo_ite (__eo_is_z _v1) (__eo_ite (__eo_is_neg _v1) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v1)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v1)) (Term.Numeral (-1 : native_Int))))) (__eo_eq ln2 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int)))))) (__eo_l_13___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_t_2)) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_3) ln2)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_13___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_11___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) cone) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvnot) __eo_lv_t_2)) ln2)))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln2))
+    (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_eq ln2 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))))) (__eo_l_12___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) cone) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvnot) __eo_lv_t_2)) ln2))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_12___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_10___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvnot) cone)) ln2)))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln2))
+    (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_2)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln2 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))))) (__eo_l_11___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) ln1))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvnot) cone)) ln2))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_11___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_9___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.UOp UserOp.bvneg) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvnot) __eo_lv_x_2)) ln1))))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln1))
+    (__eo_ite (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq s __eo_lv_s_2)) (__eo_eq x __eo_lv_x_2)) (__eo_eq ln1 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))) (__eo_l_10___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.UOp UserOp.bvneg) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvnot) __eo_lv_x_2)) ln1)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_10___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_8___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.UOp UserOp.bvneg) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) cone) ln1)))) __eo_lv_t_2) => (__eo_ite (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0)))) (__eo_l_9___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.UOp UserOp.bvneg) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) cone) ln1)))) __eo_lv_t_2)))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_9___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_7___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.UOp UserOp.bvneg) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_t_2)) ln1)))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln1))
+    (__eo_ite (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq ln1 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))) (__eo_l_8___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.UOp UserOp.bvneg) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_t_2)) ln1))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_8___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_6___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) cones)) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) __eo_lv_cones_2))) (Term.Boolean true)))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) czero)) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof cones))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq cones __eo_lv_cones_2)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq cones (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))) (__eo_eq czero (__eo_to_bin (__bv_bitwidth (__eo_typeof czero)) (Term.Numeral 0)))) (__eo_l_7___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) cones)) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) __eo_lv_cones_2))) (Term.Boolean true)))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) czero))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_7___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_5___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) czero))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvule) __eo_lv_t_2) __eo_lv_x_2)) => (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_2)) (__eo_eq czero (__eo_to_bin (__bv_bitwidth (__eo_typeof czero)) (Term.Numeral 0))) (__eo_l_6___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) czero))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvule) __eo_lv_t_2) __eo_lv_x_2))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_6___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_4___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) czero)) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) __eo_lv_czero_2))) (Term.Boolean true)))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) __eo_lv_czero_3)) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq s __eo_lv_s_2)) (__eo_eq czero __eo_lv_czero_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq czero __eo_lv_czero_3)) (__eo_eq czero (__eo_to_bin (__bv_bitwidth (__eo_typeof czero)) (Term.Numeral 0))) (__eo_l_5___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) czero)) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) __eo_lv_czero_2))) (Term.Boolean true)))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) __eo_lv_czero_3))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_5___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_3___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) czero)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) cones)) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof cones))
+    (__eo_ite (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq czero (__eo_to_bin (__bv_bitwidth (__eo_typeof czero)) (Term.Numeral 0))) (__eo_eq cones (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int)))))) (__eo_l_4___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) czero)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) cones))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_4___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_2___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) __eo_lv_x_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_3) czero))) (Term.Boolean true)))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) cone)) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_3)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq czero (__eo_to_bin (__bv_bitwidth (__eo_typeof czero)) (Term.Numeral 0))) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1)))) (__eo_l_3___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) __eo_lv_x_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_3) czero))) (Term.Boolean true)))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) cone))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_3___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_1___bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) cone)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) __eo_lv_x_2)) => (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_2)) (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_l_2___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) cone)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) __eo_lv_x_2))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_2___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __bv_abstraction_lemma_udiv : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) c)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) d))) =>
+    let _v0 := (__eo_to_z d)
+    (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_2)) (__eo_eq (__eo_to_z c) (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0))) (__eo_l_1___bv_abstraction_lemma_udiv x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) c)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvlshr) __eo_lv_x_2) d)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_1___bv_abstraction_lemma_udiv __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_15___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, l => (Term.Boolean false)
+
+
+def __eo_l_14___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) cone)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) czero)) => (__eo_ite (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq czero (__eo_to_bin (__bv_bitwidth (__eo_typeof czero)) (Term.Numeral 0)))) (__eo_l_15___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) cone)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) czero))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_15___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_13___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_3) ln1))) ln2))) __eo_lv_t_2) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_3)) (__eo_eq t __eo_lv_t_2)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0)))) (__eo_l_14___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_3) ln1))) ln2))) __eo_lv_t_2)))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_14___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_12___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) ln1))) __eo_lv_t_2) => (__eo_ite (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_l_13___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvadd) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) ln1))) __eo_lv_t_2)))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_13___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_11___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_x_3)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvneg) (Term.Apply (Term.UOp UserOp.bvnot) __eo_lv_t_2))) ln1)))) => (__eo_ite (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq x __eo_lv_x_3)) (__eo_eq t __eo_lv_t_2)) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_l_12___bv_abstraction_lemma_urem x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_x_3)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvneg) (Term.Apply (Term.UOp UserOp.bvnot) __eo_lv_t_2))) ln1))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_12___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_10___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) ln1))) ln2))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) cone) ln3))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln3))
+    let _v1 := (__bv_bitwidth (__eo_typeof ln2))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_3)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_and (__eo_eq ln2 (__eo_to_bin _v1 (__eo_add (__eo_ite (__eo_is_z _v1) (__eo_ite (__eo_is_neg _v1) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v1)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v1)) (Term.Numeral (-1 : native_Int))))) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_eq ln3 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int)))))))) (__eo_l_11___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) ln1))) ln2))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) cone) ln3)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_11___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_9___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvnot) __eo_lv_x_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) ln1)))) => (__eo_ite (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_l_10___bv_abstraction_lemma_urem x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvnot) __eo_lv_x_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_2)) ln1))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_10___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_8___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) ln1)))) ln2)))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln2))
+    (__eo_ite (__eo_and (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq s __eo_lv_s_2)) (__eo_and (__eo_eq cone (__eo_to_bin (__bv_bitwidth (__eo_typeof cone)) (Term.Numeral 1))) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_eq ln2 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))))) (__eo_l_9___bv_abstraction_lemma_urem x s t (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) cone) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.UOp UserOp.bvnot) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) ln1)))) ln2))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_9___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_7___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_s_2) ln1))) ln2))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln1))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_2)) (__eo_and (__eo_eq ln1 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))) (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0)))) (__eo_l_8___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.bvuge) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_s_2) ln1))) ln2)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_8___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_6___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_3)) ln1))) ln2))) ln3))) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof ln3))
+    (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq x __eo_lv_x_3)) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq s __eo_lv_s_3)) (__eo_and (__eo_eq ln1 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln1)) (Term.Numeral 0))) (__eo_and (__eo_eq ln2 (__eo_to_bin (__bv_bitwidth (__eo_typeof ln2)) (Term.Numeral 0))) (__eo_eq ln3 (__eo_to_bin _v0 (__eo_add (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)) (Term.Numeral (-1 : native_Int))))))) (__eo_l_7___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) __eo_lv_x_3) (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_s_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) (Term.Apply (Term.UOp UserOp.bvneg) __eo_lv_s_3)) ln1))) ln2))) ln3)))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_7___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_5___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.bvult) __eo_lv_x_2) __eo_lv_s_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) __eo_lv_x_3)) => (__eo_ite (__eo_and (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq s __eo_lv_s_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_3)) (Term.Boolean true) (__eo_l_6___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.bvult) __eo_lv_x_2) __eo_lv_s_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) __eo_lv_x_3))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_6___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_4___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) __eo_lv_x_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) czero)) => (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq x __eo_lv_x_2)) (__eo_eq t __eo_lv_t_2)) (__eo_eq czero (__eo_to_bin (__bv_bitwidth (__eo_typeof czero)) (Term.Numeral 0))) (__eo_l_5___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) __eo_lv_x_2)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) czero))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_5___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_3___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) czero)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) __eo_lv_x_2)) => (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_2)) (__eo_eq czero (__eo_to_bin (__bv_bitwidth (__eo_typeof czero)) (Term.Numeral 0))) (__eo_l_4___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) czero)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) __eo_lv_x_2))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_4___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_2___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) czero)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) __eo_lv_czero_2)) => (__eo_ite (__eo_and (__eo_and (__eo_eq x __eo_lv_x_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq czero __eo_lv_czero_2)) (__eo_eq czero (__eo_to_bin (__bv_bitwidth (__eo_typeof czero)) (Term.Numeral 0))) (__eo_l_3___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) czero)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) __eo_lv_czero_2))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_3___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __eo_l_1___bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) czero))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvult) __eo_lv_t_2) __eo_lv_s_3)) => (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq s __eo_lv_s_3)) (__eo_eq czero (__eo_to_bin (__bv_bitwidth (__eo_typeof czero)) (Term.Numeral 0))) (__eo_l_2___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) czero))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvult) __eo_lv_t_2) __eo_lv_s_3))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_2___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __bv_abstraction_lemma_urem : Term -> Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , _ , Term.Stuck  => Term.Stuck
+  | x, s, t, (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) c)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.concat) z) (Term.Apply (Term.Apply (Term.UOp UserOp.concat) (Term.Apply (Term.UOp2 UserOp2.extract h (Term.Numeral 0)) __eo_lv_x_2)) (Term.Binary 0 0))))) =>
+    let _v0 := (__eo_add h (Term.Numeral 1))
+    (__eo_ite (__eo_and (__eo_and (__eo_eq s __eo_lv_s_2) (__eo_eq t __eo_lv_t_2)) (__eo_eq x __eo_lv_x_2)) (__eo_and (__eo_eq z (__eo_to_bin (__bv_bitwidth (__eo_typeof z)) (Term.Numeral 0))) (__eo_eq (__eo_to_z c) (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)))) (__eo_l_1___bv_abstraction_lemma_urem x s t (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_s_2) c)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_t_2) (Term.Apply (Term.Apply (Term.UOp UserOp.concat) z) (Term.Apply (Term.Apply (Term.UOp UserOp.concat) (Term.Apply (Term.UOp2 UserOp2.extract h (Term.Numeral 0)) __eo_lv_x_2)) (Term.Binary 0 0)))))))
+  | __eo_dv_1, __eo_dv_2, __eo_dv_3, __eo_dv_4 => (__eo_l_1___bv_abstraction_lemma_urem __eo_dv_1 __eo_dv_2 __eo_dv_3 __eo_dv_4)
+
+
+def __bv_abstraction_lemma : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) x) (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) s) ns))) t)) l) => (__eo_and (__eo_gt (__bv_bitwidth (__eo_typeof x)) (Term.Numeral 2)) (__eo_and (__eo_eq ns (__eo_to_bin (__bv_bitwidth (__eo_typeof ns)) (Term.Numeral 1))) (__bv_abstraction_lemma_mul x s t l)))
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvudiv) x) s)) t)) l) => (__eo_and (__eo_gt (__bv_bitwidth (__eo_typeof x)) (Term.Numeral 2)) (__bv_abstraction_lemma_udiv x s t l))
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.imp) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvurem) x) s)) t)) l) => (__eo_and (__eo_gt (__bv_bitwidth (__eo_typeof x)) (Term.Numeral 2)) (__bv_abstraction_lemma_urem x s t l))
+  | l => (Term.Boolean false)
+
+
 def __eo_prog_bv_repeat_elim : Term -> Term
   | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp1 UserOp1.repeat n) a)) b) =>
     let _v0 := (Term.Apply (Term.UOp1 UserOp1.repeat n) a)
@@ -2291,6 +3015,11 @@ def __eo_prog_bv_poly_norm : Term -> Term
 def __eo_prog_bv_poly_norm_eq : Term -> Proof -> Term
   | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) xb1) xb2)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) yb1) yb2)), (Proof.pf (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) cx) (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_xb1_2) __eo_lv_xb2_2)) one))) (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) cy) (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) (Term.Apply (Term.Apply (Term.UOp UserOp.bvsub) __eo_lv_yb1_2) __eo_lv_yb2_2)) __eo_lv_one_2)))) => (__eo_requires (__eo_and (__eo_and (__eo_and (__eo_and (__eo_eq xb1 __eo_lv_xb1_2) (__eo_eq xb2 __eo_lv_xb2_2)) (__eo_eq yb1 __eo_lv_yb1_2)) (__eo_eq yb2 __eo_lv_yb2_2)) (__eo_eq one __eo_lv_one_2)) (Term.Boolean true) (__eo_requires (__eo_to_z one) (Term.Numeral 1) (__eo_requires (__eo_zmod (__eo_to_z cx) (Term.Numeral 2)) (Term.Numeral 1) (__eo_requires (__eo_zmod (__eo_to_z cy) (Term.Numeral 2)) (Term.Numeral 1) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) xb1) xb2)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) yb1) yb2))))))
   | _, _ => Term.Stuck
+
+
+def __eo_prog_bv_abstraction : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | F => (__eo_requires (__bv_abstraction_lemma F) (Term.Boolean true) F)
 
 
 def __get_var_type : Term -> Term
@@ -9412,6 +10141,7 @@ inductive CRule : Type where
   | bv_bitblast_step : CRule
   | bv_poly_norm : CRule
   | bv_poly_norm_eq : CRule
+  | bv_abstraction : CRule
   | string_length_pos : CRule
   | string_length_non_empty : CRule
   | concat_eq : CRule
@@ -10086,6 +10816,7 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.bv_bitblast_step, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_bv_bitblast_step a1)
   | CRule.bv_poly_norm, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_bv_poly_norm a1)
   | CRule.bv_poly_norm_eq, (CArgList.cons a1 CArgList.nil), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_bv_poly_norm_eq a1 (Proof.pf (__eo_state_proven_nth S n1)))
+  | CRule.bv_abstraction, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_bv_abstraction a1)
   | CRule.string_length_pos, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_string_length_pos a1)
   | CRule.string_length_non_empty, CArgList.nil, (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_string_length_non_empty (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.concat_eq, (CArgList.cons a1 CArgList.nil), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_concat_eq a1 (Proof.pf (__eo_state_proven_nth S n1)))
