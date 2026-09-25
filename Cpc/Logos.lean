@@ -3989,6 +3989,59 @@ def __eo_prog_quant_var_elim_eq : Term -> Term
   | _ => Term.Stuck
 
 
+def __eo_l_1___arith_linear_dir : Term -> Term -> Term
+  | Term.Stuck , _  => Term.Stuck
+  | x, (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) a) c)) p) => (__eo_requires (__contains_atomic_term_list_free_rec a (Term.Apply (Term.Apply Term.__eo_List_cons x) Term.__eo_List_nil) Term.__eo_List_nil) (Term.Boolean false) (__arith_linear_dir x p))
+  | _, _ => Term.Stuck
+
+
+def __arith_linear_dir : Term -> Term -> Term
+  | Term.Stuck , _  => Term.Stuck
+  | _ , Term.Stuck  => Term.Stuck
+  | x, (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) (Term.Apply (Term.Apply Term.__eo_List_cons __eo_lv_x_2) Term.__eo_List_nil)) c)) p) => (__eo_ite (__eo_eq x __eo_lv_x_2) (__eo_requires (__contains_atomic_term_list_free_rec p (Term.Apply (Term.Apply Term.__eo_List_cons x) Term.__eo_List_nil) Term.__eo_List_nil) (Term.Boolean false) (__eo_ite (__eo_is_neg c) (Term.Numeral (-1 : native_Int)) (Term.Numeral 1))) (__eo_l_1___arith_linear_dir x (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) (Term.Apply (Term.Apply Term.__eo_List_cons __eo_lv_x_2) Term.__eo_List_nil)) c)) p)))
+  | __eo_dv_1, __eo_dv_2 => (__eo_l_1___arith_linear_dir __eo_dv_1 __eo_dv_2)
+
+
+def __get_quant_var_elim_ineq_dir : Term -> Term -> Term
+  | Term.Stuck , _  => Term.Stuck
+  | x, (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) => (__eo_mul (Term.Numeral 0) (__arith_linear_dir x (__poly_add (__get_arith_poly_norm a) (__poly_neg (__get_arith_poly_norm b)))))
+  | x, (Term.Apply (Term.Apply (Term.UOp UserOp.geq) a) b) => (__arith_linear_dir x (__poly_add (__get_arith_poly_norm b) (__poly_neg (__get_arith_poly_norm a))))
+  | x, (Term.Apply (Term.Apply (Term.UOp UserOp.gt) a) b) => (__arith_linear_dir x (__poly_add (__get_arith_poly_norm b) (__poly_neg (__get_arith_poly_norm a))))
+  | x, (Term.Apply (Term.Apply (Term.UOp UserOp.leq) a) b) => (__arith_linear_dir x (__poly_add (__get_arith_poly_norm a) (__poly_neg (__get_arith_poly_norm b))))
+  | x, (Term.Apply (Term.Apply (Term.UOp UserOp.lt) a) b) => (__arith_linear_dir x (__poly_add (__get_arith_poly_norm a) (__poly_neg (__get_arith_poly_norm b))))
+  | x, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.geq) a) b)) => (__arith_linear_dir x (__poly_add (__get_arith_poly_norm a) (__poly_neg (__get_arith_poly_norm b))))
+  | x, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.gt) a) b)) => (__arith_linear_dir x (__poly_add (__get_arith_poly_norm a) (__poly_neg (__get_arith_poly_norm b))))
+  | x, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.leq) a) b)) => (__arith_linear_dir x (__poly_add (__get_arith_poly_norm b) (__poly_neg (__get_arith_poly_norm a))))
+  | x, (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.lt) a) b)) => (__arith_linear_dir x (__poly_add (__get_arith_poly_norm b) (__poly_neg (__get_arith_poly_norm a))))
+  | _, _ => Term.Stuck
+
+
+def __mk_quant_var_elim_ineq : Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _  => Term.Stuck
+  | _ , _ , Term.Stuck  => Term.Stuck
+  | x, (Term.Apply (Term.Apply (Term.UOp UserOp.or) f) fs), d =>
+    let _v0 := (__get_quant_var_elim_ineq_dir x f)
+    (__eo_ite (__contains_atomic_term_list_free_rec f (Term.Apply (Term.Apply Term.__eo_List_cons x) Term.__eo_List_nil) Term.__eo_List_nil) (__eo_requires (__eo_eq (__eo_mul d _v0) (Term.Numeral (-1 : native_Int))) (Term.Boolean false) (__mk_quant_var_elim_ineq x fs (__eo_ite (__eo_eq _v0 (Term.Numeral 0)) d _v0))) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.or) f) (__mk_quant_var_elim_ineq x fs d)))
+  | x, (Term.Boolean false), d => (Term.Boolean false)
+  | _, _, _ => Term.Stuck
+
+
+def __is_quant_var_elim_ineq : Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply Term.__eo_List_cons x) Term.__eo_List_nil), F, G => (__eo_requires (__is_arith_type (__eo_typeof x)) (Term.Boolean true) (__eo_eq (__eo_list_singleton_elim (Term.UOp UserOp.or) (__mk_quant_var_elim_ineq x (__eo_list_singleton_intro (Term.UOp UserOp.or) F) (Term.Numeral 0))) G))
+  | xs, F, (Term.Apply (Term.Apply (Term.UOp UserOp.forall) ys) G) =>
+    let _v0 := (__eo_list_nth Term.__eo_List_cons (__eo_list_diff Term.__eo_List_cons xs ys) (Term.Numeral 0))
+    (__eo_requires (__eo_list_erase Term.__eo_List_cons xs _v0) ys (__is_quant_var_elim_ineq (__eo_mk_apply (__eo_mk_apply Term.__eo_List_cons _v0) Term.__eo_List_nil) F G))
+  | _, _, _ => Term.Stuck
+
+
+def __eo_prog_quant_var_elim_ineq : Term -> Term
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.forall) xs) F)) G) => (__eo_requires (__is_quant_var_elim_ineq xs F G) (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.forall) xs) F)) G))
+  | _ => Term.Stuck
+
+
 def __eo_l_1___is_quant_dt_split_conj : Term -> Term -> Term -> Term -> Term -> Term
   | Term.Stuck , _ , _ , _ , _  => Term.Stuck
   | _ , Term.Stuck , _ , _ , _  => Term.Stuck
@@ -9470,6 +9523,7 @@ inductive CRule : Type where
   | quant_miniscope_or : CRule
   | quant_miniscope_ite : CRule
   | quant_var_elim_eq : CRule
+  | quant_var_elim_ineq : CRule
   | quant_dt_split : CRule
   | dt_split : CRule
   | dt_inst : CRule
@@ -10144,6 +10198,7 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.quant_miniscope_or, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_quant_miniscope_or a1)
   | CRule.quant_miniscope_ite, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_quant_miniscope_ite a1)
   | CRule.quant_var_elim_eq, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_quant_var_elim_eq a1)
+  | CRule.quant_var_elim_ineq, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_quant_var_elim_ineq a1)
   | CRule.quant_dt_split, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_quant_dt_split a1)
   | CRule.dt_split, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_dt_split a1)
   | CRule.dt_inst, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_dt_inst a1)

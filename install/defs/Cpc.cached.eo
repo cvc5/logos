@@ -4006,6 +4006,8 @@
 ; (programs/Quantifiers.eo is included above)
 ; (programs/Datatypes.eo is included above)
 ; (theories/Quantifiers.eo is included above)
+; (theories/Arith.eo is included above)
+; (programs/PolyNorm.eo is included above)
 (program $is_instantiation
   ((T Type) (xs @List :list) (ts @List :list) (t T) (s String))
   :signature (@List @List) Bool
@@ -4147,6 +4149,58 @@
   :args ((= (forall (@list x) F) G))
   :requires ((($mk_quant_var_elim_eq x F) G))
   :conclusion (= (forall (@list x) F) G)
+)
+(program $arith_linear_dir ((T Type) (x T) (c Real) (a eo::List) (p @Polynomial :list))
+  :signature (T @Polynomial) Int
+  (
+  (($arith_linear_dir x (@poly (@mon (eo::List::cons x) c) p))  (eo::requires ($contains_atomic_term_free p x) false
+                                                                  (eo::ite (eo::is_neg c) -1 1)))
+  (($arith_linear_dir x (@poly (@mon a c) p))                   (eo::requires ($contains_atomic_term_free a x) false
+                                                                  ($arith_linear_dir x p)))
+  )
+)
+(define $arith_diff_dir ((T Type :implicit) (U Type :implicit) (V Type :implicit) (x T) (a U) (b V))
+  ($arith_linear_dir x ($poly_add ($get_arith_poly_norm a) ($poly_neg ($get_arith_poly_norm b)))))
+(program $get_quant_var_elim_ineq_dir ((T Type) (U Type) (V Type) (x T) (a U) (b V))
+  :signature (T Bool) Int
+  (
+  (($get_quant_var_elim_ineq_dir x (= a b))         (eo::mul 0 ($arith_diff_dir x a b)))
+  (($get_quant_var_elim_ineq_dir x (>= a b))        ($arith_diff_dir x b a))
+  (($get_quant_var_elim_ineq_dir x (> a b))         ($arith_diff_dir x b a))
+  (($get_quant_var_elim_ineq_dir x (<= a b))        ($arith_diff_dir x a b))
+  (($get_quant_var_elim_ineq_dir x (< a b))         ($arith_diff_dir x a b))
+  (($get_quant_var_elim_ineq_dir x (not (>= a b)))  ($arith_diff_dir x a b))
+  (($get_quant_var_elim_ineq_dir x (not (> a b)))   ($arith_diff_dir x a b))
+  (($get_quant_var_elim_ineq_dir x (not (<= a b)))  ($arith_diff_dir x b a))
+  (($get_quant_var_elim_ineq_dir x (not (< a b)))   ($arith_diff_dir x b a))
+  )
+)
+(program $mk_quant_var_elim_ineq ((T Type) (x T) (f Bool) (fs Bool :list) (d Int))
+  :signature (T Bool Int) Bool
+  (
+  (($mk_quant_var_elim_ineq x (or f fs) d)  (eo::ite ($contains_atomic_term_free f x)
+                                              (eo::define ((e ($get_quant_var_elim_ineq_dir x f)))
+                                              (eo::requires (eo::eq (eo::mul d e) -1) false
+                                                ($mk_quant_var_elim_ineq x fs (eo::ite (eo::eq e 0) d e))))
+                                              (_ or f ($mk_quant_var_elim_ineq x fs d))))
+  (($mk_quant_var_elim_ineq x false d)      false)
+  )
+)
+(program $is_quant_var_elim_ineq ((T Type) (x T) (xs @List) (ys @List) (F Bool) (G Bool))
+  :signature (@List Bool Bool) Bool
+  (
+  (($is_quant_var_elim_ineq (@list x) F G)      (eo::requires ($is_arith_type (eo::typeof x)) true
+                                                  (eo::eq (eo::list_singleton_elim or
+                                                    ($mk_quant_var_elim_ineq x (eo::list_singleton_intro or F) 0)) G)))
+  (($is_quant_var_elim_ineq xs F (forall ys G)) (eo::define ((y (eo::list_nth @list (eo::list_diff @list xs ys) 0)))
+                                                (eo::requires (eo::list_erase @list xs y) ys
+                                                  ($is_quant_var_elim_ineq (@list y) F G))))
+  )
+)
+(declare-rule quant-var-elim-ineq ((xs @List) (F Bool) (G Bool))
+  :args ((= (forall xs F) G))
+  :requires ((($is_quant_var_elim_ineq xs F G) true))
+  :conclusion (= (forall xs F) G)
 )
 (define $is_quant_dt_split_conj_subs ((T Type :implicit) (x T) (c T) (F Bool) (G Bool))
   (eo::requires (eo::typeof c) (eo::typeof x) (eo::eq ($substitute x c F) G)))
