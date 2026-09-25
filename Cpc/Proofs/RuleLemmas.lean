@@ -158,6 +158,7 @@ import Cpc.Proofs.Rules.Quant_miniscope_and
 import Cpc.Proofs.Rules.Quant_miniscope_or
 import Cpc.Proofs.Rules.Quant_miniscope_ite
 import Cpc.Proofs.Rules.Quant_var_elim_eq
+import Cpc.Proofs.Rules.Quant_var_elim_ineq
 import Cpc.Proofs.Rules.Quant_dt_split
 import Cpc.Proofs.Rules.Dt_split
 import Cpc.Proofs.Rules.Dt_inst
@@ -1386,6 +1387,11 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_quant_var_elim_eq_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | quant_var_elim_ineq =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_quant_var_elim_ineq_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | quant_dt_split =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by

@@ -222,18 +222,18 @@ noncomputable def arith_poly_denote_real (M : SmtModel) : Term -> SmtValue
       __smtx_model_eval_plus (arith_mon_denote_real M m) (arith_poly_denote_real M p)
   | _ => SmtValue.NotValue
 
-private inductive arith_mvar_wf : Term -> Prop where
+inductive arith_mvar_wf : Term -> Prop where
   | nil : arith_mvar_wf Term.__eo_List_nil
   | cons (a rest : Term) :
       arith_mvar_wf rest ->
       arith_mvar_wf (Term.Apply (Term.Apply Term.__eo_List_cons a) rest)
 
-private inductive arith_mon_wf : Term -> Prop where
+inductive arith_mon_wf : Term -> Prop where
   | mk (vars : Term) (c : native_Rat) :
       arith_mvar_wf vars ->
       arith_mon_wf (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) vars) (Term.Rational c))
 
-private inductive arith_poly_wf : Term -> Prop where
+inductive arith_poly_wf : Term -> Prop where
   | zero : arith_poly_wf (Term.UOp UserOp._at__at_poly_zero)
   | cons (m p : Term) :
       arith_mon_wf m ->
@@ -298,20 +298,23 @@ theorem arith_poly_norm_atom_denote_real_rational_of_smt_arith_type
     rcases real_value_canonical hEvalReal with ⟨q, hEval⟩
     exact ⟨q, by simp [arith_poly_norm_atom_denote_real, hEval, __smtx_to_real_coerce]⟩
 
-private inductive arith_mvar_rational (M : SmtModel) : Term -> Prop where
+/-- Rational polynomial support also retains atom translatability, so free-variable
+checks can be used to compare evaluations under different models. -/
+inductive arith_mvar_rational (M : SmtModel) : Term -> Prop where
   | nil : arith_mvar_rational M Term.__eo_List_nil
   | cons (a rest : Term) :
-      (∃ q, arith_poly_norm_atom_denote_real M a = SmtValue.Rational q) ->
+      (RuleProofs.eo_has_smt_translation a ∧
+        ∃ q, arith_poly_norm_atom_denote_real M a = SmtValue.Rational q) ->
       arith_mvar_rational M rest ->
       arith_mvar_rational M (Term.Apply (Term.Apply Term.__eo_List_cons a) rest)
 
-private inductive arith_mon_rational (M : SmtModel) : Term -> Prop where
+inductive arith_mon_rational (M : SmtModel) : Term -> Prop where
   | mk (vars : Term) (c : native_Rat) :
       arith_mvar_rational M vars ->
       arith_mon_rational M
         (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) vars) (Term.Rational c))
 
-private inductive arith_poly_rational (M : SmtModel) : Term -> Prop where
+inductive arith_poly_rational (M : SmtModel) : Term -> Prop where
   | zero : arith_poly_rational M (Term.UOp UserOp._at__at_poly_zero)
   | cons (m p : Term) :
       arith_mon_rational M m ->
@@ -375,7 +378,7 @@ private theorem arith_mvar_denote_real_rational_of_rational_support
   | nil =>
       exact ⟨native_mk_rational 1 1, rfl⟩
   | cons a rest hA hRest ih =>
-      rcases hA with ⟨qa, hA⟩
+      rcases hA.2 with ⟨qa, hA⟩
       rcases ih with ⟨qr, hRest⟩
       refine ⟨native_qmult qa qr, ?_⟩
       simp [arith_mvar_denote_real, hA, hRest, __smtx_model_eval_mult, native_qmult]
@@ -714,9 +717,9 @@ private theorem arith_mvar_rational_of_mvar_mul_mvar
           exact arith_mvar_rational.cons (M := M) a1 rest1 hA1 hRest1
       | cons c1 rest2 hC1 hRest2 =>
           have hA1NotStuck : a1 ≠ Term.Stuck :=
-            arith_atom_ne_stuck_of_rational_support hA1
+            arith_atom_ne_stuck_of_rational_support hA1.2
           have hC1NotStuck : c1 ≠ Term.Stuck :=
-            arith_atom_ne_stuck_of_rational_support hC1
+            arith_atom_ne_stuck_of_rational_support hC1.2
           by_cases hCmp : native_tcmp c1 a1 = true
           · have hTail :
                 __mvar_mul_mvar rest1
@@ -1134,9 +1137,9 @@ private theorem arith_mvar_denote_real_of_mvar_mul_mvar_rational
             arith_mvar_denote_real_rational_of_rational_support M
               (arith_mvar_rational.cons (M := M) c1 rest2 hC1 hRest2)
           have hA1NotStuck : a1 ≠ Term.Stuck :=
-            arith_atom_ne_stuck_of_rational_support hA1
+            arith_atom_ne_stuck_of_rational_support hA1.2
           have hC1NotStuck : c1 ≠ Term.Stuck :=
-            arith_atom_ne_stuck_of_rational_support hC1
+            arith_atom_ne_stuck_of_rational_support hC1.2
           by_cases hCmp : native_tcmp c1 a1 = true
           · have hRec :
                 arith_mvar_denote_real M (__mvar_mul_mvar rest1 vars2') =
@@ -1164,7 +1167,7 @@ private theorem arith_mvar_denote_real_of_mvar_mul_mvar_rational
                   (arith_mvar_denote_real M vars2') := by
                   exact
                     (smtx_model_eval_mult_assoc_of_rational_or_notValue
-                      (Or.inl hA1) (Or.inl hRest1Val) (Or.inl hVars2Val)).symm
+                      (Or.inl hA1.2) (Or.inl hRest1Val) (Or.inl hVars2Val)).symm
               _ =
                 __smtx_model_eval_mult (arith_mvar_denote_real M vars1')
                   (arith_mvar_denote_real M vars2') := by
@@ -1202,21 +1205,21 @@ private theorem arith_mvar_denote_real_of_mvar_mul_mvar_rational
                   (arith_mvar_denote_real M rest2) := by
                   exact
                     (smtx_model_eval_mult_assoc_of_rational_or_notValue
-                      (Or.inl hC1) (Or.inl hVars1Val) (Or.inl hRest2Val)).symm
+                      (Or.inl hC1.2) (Or.inl hVars1Val) (Or.inl hRest2Val)).symm
               _ =
                 __smtx_model_eval_mult
                   (__smtx_model_eval_mult (arith_mvar_denote_real M vars1')
                     (arith_poly_norm_atom_denote_real M c1))
                   (arith_mvar_denote_real M rest2) := by
                   rw [smtx_model_eval_mult_comm_of_rational_or_notValue
-                    (Or.inl hC1) (Or.inl hVars1Val)]
+                    (Or.inl hC1.2) (Or.inl hVars1Val)]
               _ =
                 __smtx_model_eval_mult (arith_mvar_denote_real M vars1')
                   (__smtx_model_eval_mult (arith_poly_norm_atom_denote_real M c1)
                     (arith_mvar_denote_real M rest2)) := by
                   exact
                     smtx_model_eval_mult_assoc_of_rational_or_notValue
-                      (Or.inl hVars1Val) (Or.inl hC1) (Or.inl hRest2Val)
+                      (Or.inl hVars1Val) (Or.inl hC1.2) (Or.inl hRest2Val)
               _ =
                 __smtx_model_eval_mult (arith_mvar_denote_real M vars1')
                   (arith_mvar_denote_real M vars2') := by
@@ -2591,12 +2594,14 @@ private theorem arith_atomic_poly_injective
 
 private theorem arith_mvar_rational_singleton
     (M : SmtModel) (t : Term)
+    (hTrans : RuleProofs.eo_has_smt_translation t)
     (hRat : ∃ q, arith_poly_norm_atom_denote_real M t = SmtValue.Rational q) :
   arith_mvar_rational M (Term.Apply (Term.Apply Term.__eo_List_cons t) Term.__eo_List_nil) := by
-  exact arith_mvar_rational.cons t Term.__eo_List_nil hRat (arith_mvar_rational.nil (M := M))
+  exact arith_mvar_rational.cons t Term.__eo_List_nil ⟨hTrans, hRat⟩ (arith_mvar_rational.nil (M := M))
 
 private theorem arith_poly_rational_of_arith_atomic_poly
     (M : SmtModel) (t : Term)
+    (hTrans : RuleProofs.eo_has_smt_translation t)
     (hRat : ∃ q, arith_poly_norm_atom_denote_real M t = SmtValue.Rational q) :
   arith_poly_rational M (arith_atomic_poly t) := by
   unfold arith_atomic_poly
@@ -2611,7 +2616,7 @@ private theorem arith_poly_rational_of_arith_atomic_poly
       (M := M)
       (Term.Apply (Term.Apply Term.__eo_List_cons t) Term.__eo_List_nil)
       (native_mk_rational 1 1)
-      (arith_mvar_rational_singleton M t hRat))
+      (arith_mvar_rational_singleton M t hTrans hRat))
     (arith_poly_rational.zero (M := M))
 
 private theorem arith_poly_denote_real_of_arith_atomic_poly
@@ -2915,7 +2920,7 @@ private theorem arith_poly_rational_of_get_arith_poly_norm_eq_atomic_of_smt_arit
     (hNorm : __get_arith_poly_norm t = arith_atomic_poly t) :
   arith_poly_rational M (__get_arith_poly_norm t) := by
   rw [hNorm]
-  exact arith_poly_rational_of_arith_atomic_poly M t
+  exact arith_poly_rational_of_arith_atomic_poly M t (non_none_of_smt_arith_type hTy)
     (arith_poly_norm_atom_denote_real_rational_of_smt_arith_type M hM t hTy)
 
 private theorem arith_poly_denote_real_of_get_arith_poly_norm_rational
@@ -3438,12 +3443,14 @@ private theorem arith_poly_denote_real_of_get_arith_poly_norm_qdiv_total_of_nume
       arith_atomic_poly]
   exact arith_poly_denote_real_eq_arith_poly_norm_atom_denote_real_of_norm_eq_atomic M _ hNorm
 
-theorem arith_poly_denote_real_of_get_arith_poly_norm_of_smt_arith_type
+theorem arith_poly_norm_facts_of_smt_arith_type
     (M : SmtModel) (hM : model_wf M) :
     (t : Term) ->
     (__smtx_typeof (__eo_to_smt t) = SmtType.Int ∨
       __smtx_typeof (__eo_to_smt t) = SmtType.Real) ->
-    arith_poly_denote_real M (__get_arith_poly_norm t) = arith_poly_norm_atom_denote_real M t := by
+    arith_poly_rational M (__get_arith_poly_norm t) ∧
+      arith_poly_wf (__get_arith_poly_norm t) ∧
+      arith_poly_denote_real M (__get_arith_poly_norm t) = arith_poly_norm_atom_denote_real M t := by
   intro t hTy
   let finishAtomic :
       (t : Term) ->
@@ -3803,7 +3810,14 @@ theorem arith_poly_denote_real_of_get_arith_poly_norm_of_smt_arith_type
             __eo_is_q_internal, __eo_ite, native_ite, native_teq,
             SmtEval.native_and, SmtEval.native_not]
         simpa [hEq] using finishAtomic t hTy' hNorm
-  exact (go t hTy).2.2
+  exact go t hTy
+
+theorem arith_poly_denote_real_of_get_arith_poly_norm_of_smt_arith_type
+    (M : SmtModel) (hM : model_wf M) (t : Term)
+    (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Int ∨
+      __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
+    arith_poly_denote_real M (__get_arith_poly_norm t) = arith_poly_norm_atom_denote_real M t :=
+  (arith_poly_norm_facts_of_smt_arith_type M hM t hTy).2.2
 
 private theorem smt_value_rel_of_eq_arith_poly_norm_atom_denote_real_of_smt_arith_type
     (M : SmtModel) (hM : model_wf M)

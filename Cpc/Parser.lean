@@ -1537,6 +1537,7 @@ private def parserRules : List (String × CRule) := [
   ("quant-miniscope-or", .quant_miniscope_or),
   ("quant-miniscope-ite", .quant_miniscope_ite),
   ("quant-var-elim-eq", .quant_var_elim_eq),
+  ("quant-var-elim-ineq", .quant_var_elim_ineq),
   ("quant-dt-split", .quant_dt_split),
   ("dt_split", .dt_split),
   ("dt-inst", .dt_inst),
