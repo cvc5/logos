@@ -4150,10 +4150,18 @@
   :requires ((($mk_quant_var_elim_eq x F) G))
   :conclusion (= (forall (@list x) F) G)
 )
+(program $poly_contains_atomic_term_free ((T Type) (x T) (c Real) (a eo::List) (p @Polynomial :list))
+  :signature (@Polynomial T) Bool
+  (
+  (($poly_contains_atomic_term_free (@poly (@mon a c) p) x)
+    (eo::ite ($contains_atomic_term_free a x) true ($poly_contains_atomic_term_free p x)))
+  (($poly_contains_atomic_term_free @poly.zero x) false)
+  )
+)
 (program $arith_linear_dir ((T Type) (x T) (c Real) (a eo::List) (p @Polynomial :list))
   :signature (T @Polynomial) Int
   (
-  (($arith_linear_dir x (@poly (@mon (eo::List::cons x) c) p))  (eo::requires ($contains_atomic_term_free p x) false
+  (($arith_linear_dir x (@poly (@mon (eo::List::cons x) c) p))  (eo::requires ($poly_contains_atomic_term_free p x) false
                                                                   (eo::ite (eo::is_neg c) -1 1)))
   (($arith_linear_dir x (@poly (@mon a c) p))                   (eo::requires ($contains_atomic_term_free a x) false
                                                                   ($arith_linear_dir x p)))

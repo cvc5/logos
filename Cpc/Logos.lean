@@ -3989,6 +3989,13 @@ def __eo_prog_quant_var_elim_eq : Term -> Term
   | _ => Term.Stuck
 
 
+def __poly_contains_atomic_term_free : Term -> Term -> Term
+  | _ , Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) a) c)) p), x => (__eo_ite (__contains_atomic_term_list_free_rec a (Term.Apply (Term.Apply Term.__eo_List_cons x) Term.__eo_List_nil) Term.__eo_List_nil) (Term.Boolean true) (__poly_contains_atomic_term_free p x))
+  | (Term.UOp UserOp._at__at_poly_zero), x => (Term.Boolean false)
+  | _, _ => Term.Stuck
+
+
 def __eo_l_1___arith_linear_dir : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | x, (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) a) c)) p) => (__eo_requires (__contains_atomic_term_list_free_rec a (Term.Apply (Term.Apply Term.__eo_List_cons x) Term.__eo_List_nil) Term.__eo_List_nil) (Term.Boolean false) (__arith_linear_dir x p))
@@ -3998,7 +4005,7 @@ def __eo_l_1___arith_linear_dir : Term -> Term -> Term
 def __arith_linear_dir : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | _ , Term.Stuck  => Term.Stuck
-  | x, (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) (Term.Apply (Term.Apply Term.__eo_List_cons __eo_lv_x_2) Term.__eo_List_nil)) c)) p) => (__eo_ite (__eo_eq x __eo_lv_x_2) (__eo_requires (__contains_atomic_term_list_free_rec p (Term.Apply (Term.Apply Term.__eo_List_cons x) Term.__eo_List_nil) Term.__eo_List_nil) (Term.Boolean false) (__eo_ite (__eo_is_neg c) (Term.Numeral (-1 : native_Int)) (Term.Numeral 1))) (__eo_l_1___arith_linear_dir x (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) (Term.Apply (Term.Apply Term.__eo_List_cons __eo_lv_x_2) Term.__eo_List_nil)) c)) p)))
+  | x, (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) (Term.Apply (Term.Apply Term.__eo_List_cons __eo_lv_x_2) Term.__eo_List_nil)) c)) p) => (__eo_ite (__eo_eq x __eo_lv_x_2) (__eo_requires (__poly_contains_atomic_term_free p x) (Term.Boolean false) (__eo_ite (__eo_is_neg c) (Term.Numeral (-1 : native_Int)) (Term.Numeral 1))) (__eo_l_1___arith_linear_dir x (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) (Term.Apply (Term.Apply Term.__eo_List_cons __eo_lv_x_2) Term.__eo_List_nil)) c)) p)))
   | __eo_dv_1, __eo_dv_2 => (__eo_l_1___arith_linear_dir __eo_dv_1 __eo_dv_2)
 
 
