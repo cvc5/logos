@@ -36,7 +36,7 @@ private theorem ofInt_toNat_canonical (w : Nat) (c : Int) (h0 : 0 ≤ c) (h1 : c
 private theorem natpow2_eq (w : Nat) : native_int_pow2 (↑w : Int) = (2:Int)^w := by
   have hwnn : ¬ ((↑w:Int) < 0) := by omega
   unfold native_int_pow2 native_zexp_total
-  rw [if_neg hwnn, Int.toNat_natCast]
+  rw [ite_eq_right hwnn, Int.toNat_natCast]
 
 private theorem int_canon_bounds {n : Int} {W : Nat}
     (h : native_zeq n (native_mod_total n (native_int_pow2 (↑W:Int))) = true) :
@@ -1073,9 +1073,9 @@ private theorem extract_bin_ne_stuck (W cn i : Int) :
     unfold native_zleq; exact decide_eq_true h
   unfold __eo_extract
   cases hc : native_or (native_zlt i 0) (native_zlt (native_zplus i (native_zneg i)) 0)
-  · simp only [native_ite, hc, Bool.false_eq_true, if_false, __eo_mk_binary, hz, if_true]
+  · simp only [native_ite, hc, Bool.false_eq_true, ite_false, __eo_mk_binary, hz, ite_true]
     intro h; cases h
-  · simp only [native_ite, hc, if_true]; intro h; cases h
+  · simp only [native_ite, hc, ite_true]; intro h; cases h
 
 -- The bit list built from a constant `Binary W cn` over an index list `xs` is an `FB` list.
 private theorem const_to_bitlist_FB (W cn : Int) :

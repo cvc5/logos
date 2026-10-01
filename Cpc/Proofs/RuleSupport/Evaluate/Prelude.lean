@@ -1441,17 +1441,17 @@ theorem EvaluateProofInternal.eo_str_from_int_digit_term_nat (n : Nat) :
     simpa [r] using hDigit
   -- `native_zleq`/`native_zlt` unfold to `decide (_ < 196608)`, which simp then
   -- tries to evaluate by unary `Nat.rec` and blows the recursion limit.  Leave
-  -- them folded; the `rw [if_pos ..]` steps below discharge the guards.
+  -- them folded; the `rw [ite_eq_left ..]` steps below discharge the guards.
   simp [__eo_zmod, __eo_add, __eo_to_str, native_ite, native_zeq,
     native_zplus, native_mod_total, native_and, native_str_from_code]
   -- both guards are folded `Bool` conjunctions `native_and _ _ = true`, not
   -- `And`s, so an anonymous constructor mis-elaborates; discharge them with the
   -- component facts instead (which also keeps the `196608` literal from being
   -- evaluated unarily)
-  rw [if_pos (by
+  rw [ite_eq_left (by
     simp [native_and, native_zleq, native_zlt]
     exact ⟨hCodeNonnegRaw, hCodeLtRaw⟩)]
-  rw [if_pos (by
+  rw [ite_eq_left (by
     try simp [native_and, native_zleq]
     exact ⟨hCodeNonnegRaw, hCodeValidRaw⟩)]
   change
@@ -1515,7 +1515,7 @@ theorem EvaluateProofInternal.eo_str_from_int_eval_rec_iota_toDigits :
                   Nat.toDigits 10 (n + 1) =
                     [Nat.digitChar ((n + 1) % 10)] := by
                 rw [Nat.toDigits_eq_if (by decide : 1 < 10)]
-                rw [if_pos hLt]
+                rw [ite_eq_left hLt]
                 rw [Nat.mod_eq_of_lt hLt]
               rw [hDigits]
               change
@@ -1541,7 +1541,7 @@ theorem EvaluateProofInternal.eo_str_from_int_eval_rec_iota_toDigits :
                     Nat.toDigits 10 ((n + 1) / 10) ++
                       [Nat.digitChar ((n + 1) % 10)] := by
                 rw [Nat.toDigits_eq_if (by decide : 1 < 10)]
-                rw [if_neg hNotLt]
+                rw [ite_eq_right hNotLt]
               have hTailLen :
                   (Nat.toDigits 10 ((n + 1) / 10)).length ≤ fuel := by
                 rw [hDigits] at hLen
@@ -1570,7 +1570,7 @@ theorem EvaluateProofInternal.native_str_from_int_pos_toDigits
   have hNonneg : 0 ≤ n := Int.le_of_lt hPos
   have hNotNeg : ¬ n < 0 := Int.not_lt_of_ge hNonneg
   unfold native_str_from_int
-  rw [if_neg hNotNeg]
+  rw [ite_eq_right hNotNeg]
   unfold native_string_lit
   have hCast : Int.ofNat (Int.toNat n) = n := Int.toNat_of_nonneg hNonneg
   rw [← hCast]
@@ -1591,9 +1591,9 @@ theorem EvaluateProofInternal.native_int_log_rec10_pow_bound :
   | fuel + 1, remaining, hLe, hPos => by
       rw [impl_native_int_log_rec]
       by_cases hLt : remaining < 10
-      · rw [if_pos hLt]
+      · rw [ite_eq_left hLt]
         simpa using hLt
-      · rw [if_neg hLt]
+      · rw [ite_eq_right hLt]
         let q := remaining / 10
         let r := remaining % 10
         have hTenLe : 10 ≤ remaining := Nat.le_of_not_gt hLt
@@ -1666,7 +1666,7 @@ theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_neg
     exact decide_eq_true hNeg
   have hNative : native_str_from_int n = [] := by
     unfold native_str_from_int
-    rw [if_pos hNeg]
+    rw [ite_eq_left hNeg]
     simp [native_string_lit]
   dsimp [EvaluateProofInternal.eo_eval_str_from_int_rhs]
   rw [hRun]
@@ -1699,9 +1699,9 @@ theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_pos
       unfold native_int_log
       by_cases hCond :
           (decide (Int.toNat 10 ≤ 1) || Int.toNat n == 0) = true
-      · rw [if_pos hCond]
+      · rw [ite_eq_left hCond]
         decide
-      · rw [if_neg hCond]
+      · rw [ite_eq_right hCond]
         exact Int.natCast_nonneg _
     have hFuelNonneg :
         ¬ native_zplus (native_int_log 10 n) 1 < 0 := by
@@ -9558,7 +9558,7 @@ theorem EvaluateProofInternal.native_seq_indexof_rec_offset_local
   | i, off, fuel + 1 => by
       by_cases hPrefix : native_seq_prefix_eq pat xs = true
       · unfold native_seq_indexof_rec
-        rw [if_pos hPrefix, if_pos hPrefix]
+        rw [ite_eq_left hPrefix, ite_eq_left hPrefix]
         have hne : (Int.ofNat i : native_Int) ≠ -1 := by
           intro h
           have hNonneg : (0 : native_Int) ≤ Int.ofNat i :=
@@ -9568,10 +9568,10 @@ theorem EvaluateProofInternal.native_seq_indexof_rec_offset_local
             rw [← h]
             exact hNonneg
           exact hNeg hBad
-        rw [if_neg hne]
+        rw [ite_eq_right hne]
         simp
       · unfold native_seq_indexof_rec
-        rw [if_neg hPrefix, if_neg hPrefix]
+        rw [ite_eq_right hPrefix, ite_eq_right hPrefix]
         cases xs with
         | nil =>
             simp
@@ -9762,8 +9762,8 @@ theorem EvaluateProofInternal.native_seq_indexof_map_char
           Int.toNat i + Int.toNat (native_str_len t) ≤
             Int.toNat (native_str_len s) := by
         simpa [start, native_str_len] using hBound
-      rw [if_pos hBoundLeft]
-      rw [if_pos hBound']
+      rw [ite_eq_left hBoundLeft]
+      rw [ite_eq_left hBound']
       have hDropMap :
           (s.map SmtValue.Char).drop start =
             (s.drop start).map SmtValue.Char := by
@@ -9784,8 +9784,8 @@ theorem EvaluateProofInternal.native_seq_indexof_map_char
           ¬ Int.toNat i + Int.toNat (native_str_len t) ≤
             Int.toNat (native_str_len s) := by
         simpa [start, native_str_len] using hBound
-      rw [if_neg hBoundLeft]
-      rw [if_neg hBound']
+      rw [ite_eq_right hBoundLeft]
+      rw [ite_eq_right hBound']
 
 theorem EvaluateProofInternal.native_seq_indexof_pack_string
     (s t : native_String) (i : native_Int) :
@@ -9838,9 +9838,9 @@ theorem EvaluateProofInternal.native_str_indexof_gt_len
       simp [native_str_len]
     rw [hLenEq] at h
     omega
-  rw [if_neg hNotNeg]
+  rw [ite_eq_right hNotNeg]
   dsimp
-  rw [if_neg hBound]
+  rw [ite_eq_right hBound]
 
 theorem EvaluateProofInternal.native_seq_indexof_neg_local
     (xs pat : List SmtValue) {i : native_Int}
@@ -9864,9 +9864,9 @@ theorem EvaluateProofInternal.native_seq_indexof_gt_len_local
   have hBound : ¬ Int.toNat i + pat.length ≤ xs.length := by
     intro h
     omega
-  rw [if_neg hNotNeg]
+  rw [ite_eq_right hNotNeg]
   dsimp
-  rw [if_neg hBound]
+  rw [ite_eq_right hBound]
 
 theorem EvaluateProofInternal.native_str_indexof_zero_of_prefix
     (s pat : native_String)
@@ -10160,7 +10160,7 @@ theorem EvaluateProofInternal.str_indexof_result_strings
         have hSuffix :=
           EvaluateProofInternal.native_str_indexof_suffix_offset s pat i hiNonneg hLe
         dsimp [suffix] at hSuffix
-        rw [if_neg hFoundNe] at hSuffix
+        rw [ite_eq_right hFoundNe] at hSuffix
         change
           Term.Numeral (i + native_str_indexof suffix pat 0) =
             Term.Numeral (native_str_indexof s pat i)
@@ -10283,7 +10283,7 @@ theorem EvaluateProofInternal.str_replace_result_strings
             (Int.ofNat s.length - Int.ofNat (n + pat.length) + 1) =
           s.drop (n + pat.length)
       exact EvaluateProofInternal.native_str_substr_suffix_drop_local s (n + pat.length)]
-    rw [if_neg (by simpa [idx] using hNeg)]
+    rw [ite_eq_right (by simpa [idx] using hNeg)]
     simp [n, idx, native_str_concat, List.append_assoc]
 
 def EvaluateProofInternal.native_str_replace_all_eval_aux
@@ -10539,7 +10539,7 @@ theorem EvaluateProofInternal.native_str_replace_all_eval_aux_eq_chain_of_fuel
                               EvaluateProofInternal.native_str_replace_all_chain (p :: ps) repl 0
                                 (c :: cs)
                           rw [hParentIdx]
-                          rw [if_neg hR1NotNeg]
+                          rw [ite_eq_right hR1NotNeg]
                           rw [hToNatR1]
                           rw [hParentDrop]
                           rw [hParentSuffix]
@@ -10589,7 +10589,7 @@ theorem EvaluateProofInternal.native_re_replace_all_nonempty_list_aux_map_char
                 (p :: ps) (c :: cs)]
           by_cases hPrefix :
               native_string_prefix_eq (p :: ps) (c :: cs) = true
-          · rw [if_pos hPrefix]
+          · rw [ite_eq_left hPrefix]
             simp only [List.length_cons, List.length_map]
             have hPatLe : (p :: ps).length ≤ (c :: cs).length :=
               EvaluateProofInternal.native_string_prefix_eq_length_le
@@ -10609,7 +10609,7 @@ theorem EvaluateProofInternal.native_re_replace_all_nonempty_list_aux_map_char
             simp [EvaluateProofInternal.native_str_replace_all_chain, hPrefix,
               EvaluateProofInternal.native_str_replace_all_chain_skip_eq_drop,
               List.map_append]
-          · rw [if_neg hPrefix]
+          · rw [ite_eq_right hPrefix]
             simp only [List.length_cons, List.length_map]
             have hCsFuel : cs.length < fuel := by
               simp only [List.length_cons] at hFuel
@@ -10701,9 +10701,9 @@ theorem EvaluateProofInternal.native_string_valid_seq_update_string_result
   unfold EvaluateProofInternal.native_seq_update_string_result
   by_cases hGuard :
       (decide (i < 0) || decide (Int.ofNat s.length ≤ i)) = true
-  · rw [if_pos hGuard]
+  · rw [ite_eq_left hGuard]
     exact hs
-  · rw [if_neg hGuard]
+  · rw [ite_eq_right hGuard]
     exact native_string_valid_append
       (native_string_valid_append
         (native_string_valid_take (Int.toNat i) hs)
@@ -10727,9 +10727,9 @@ theorem EvaluateProofInternal.native_seq_update_pack_string
   simp only [List.length_map]
   by_cases hGuard :
       (decide (i < 0) || decide (Int.ofNat s.length ≤ i)) = true
-  · rw [if_pos hGuard, if_pos hGuard]
+  · rw [ite_eq_left hGuard, ite_eq_left hGuard]
     simp [native_pack_string]
-  · rw [if_neg hGuard, if_neg hGuard]
+  · rw [ite_eq_right hGuard, ite_eq_right hGuard]
     simp [native_pack_string, List.map_append]
 
 theorem EvaluateProofInternal.smtx_model_eval_str_update_pack_string
@@ -10760,7 +10760,7 @@ theorem EvaluateProofInternal.native_seq_update_eq_self_of_neg
           List.take (xs.length - Int.toNat i) ys ++
             List.drop (Int.toNat i + ys.length) xs) =
       xs
-  rw [if_pos (by rw [hDecNeg]; simp)]
+  rw [ite_eq_left (by rw [hDecNeg]; simp)]
 
 theorem EvaluateProofInternal.native_seq_update_eq_self_of_len_le
     (xs ys : List SmtValue) (i : native_Int)
@@ -10777,7 +10777,7 @@ theorem EvaluateProofInternal.native_seq_update_eq_self_of_len_le
           List.take (xs.length - Int.toNat i) ys ++
             List.drop (Int.toNat i + ys.length) xs) =
       xs
-  rw [if_pos (by rw [hDecLen]; simp)]
+  rw [ite_eq_left (by rw [hDecLen]; simp)]
 
 theorem EvaluateProofInternal.smt_typeof_str_update_eq_typeof_string_of_arg_types
     (s n repl : Term) (result : native_String)
@@ -10978,7 +10978,7 @@ theorem EvaluateProofInternal.str_update_result_strings
             rw [show decide (Int.ofNat s.length ≤ i) = true by
               exact decide_eq_true hLenLe]
             rfl
-          rw [if_pos hGuard]
+          rw [ite_eq_left hGuard]
         simp [hResultEq, __eo_len, __eo_gt, __eo_or, __eo_ite,
           native_or, native_ite, native_teq, hLt, hGt]
       · have hiEq : i = Int.ofNat s.length := by
@@ -11060,12 +11060,12 @@ theorem EvaluateProofInternal.str_update_result_strings
       · exact False.elim (hIdxNonneg hNegIdx)
       · have hLenLeIdxFalse : ¬s.length ≤ idx :=
           Nat.not_le_of_gt hIdxLt
-        rw [if_neg hNegIdx]
+        rw [ite_eq_right hNegIdx]
         rw [show
             (if (Int.ofNat idx : native_Int) < 0 ∨ s.length ≤ idx then
               s
             else body) = body by
-          rw [if_neg]
+          rw [ite_eq_right]
           intro hGuard
           cases hGuard with
           | inl hBad => exact hNegIdx hBad

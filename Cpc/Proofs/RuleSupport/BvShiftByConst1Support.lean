@@ -742,7 +742,7 @@ private theorem int_lt_native_int_pow2_of_nonneg_lt
       (Int.toNat W : Int) < ((2 ^ Int.toNat W : Nat) : Int) := by
     exact_mod_cast hNat
   have hWPow : W < native_int_pow2 W := by
-    rw [native_int_pow2, native_zexp_total, if_neg hWNotNeg]
+    rw [native_int_pow2, native_zexp_total, ite_eq_right hWNotNeg]
     rw [← hWCast]
     exact_mod_cast hNat
   exact Int.lt_trans hAW hWPow
@@ -1910,7 +1910,7 @@ private theorem bvashr_decomp_local1
   by_cases hLow : i < W - A
   · have hAI : A + i < W := by omega
     simp only [hLow]
-    rw [dif_pos hAI, BitVec.getLsbD_eq_getElem hAI]
+    rw [dite_eq_left hAI, BitVec.getLsbD_eq_getElem hAI]
     simp
   · have hHigh : W - A ≤ i := Nat.le_of_not_gt hLow
     simp [hLow]

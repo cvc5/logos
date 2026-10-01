@@ -473,7 +473,7 @@ theorem forall_encoding_true_of_all_inst
                   SmtValue.Boolean true)
           then SmtValue.Boolean true else SmtValue.Boolean false) =
           SmtValue.Boolean false
-        rw [dif_neg hnP]
+        rw [dite_eq_right hnP]
       rw [smtx_model_eval_not_unfold, hExFalse]
       rfl
 
@@ -523,7 +523,7 @@ theorem eo_requires_boolean_true_elim {a b c : Term}
   rw [__eo_requires] at h
   by_cases hab : native_teq a b = true
   · rw [hab] at h
-    simp only [native_ite, if_true] at h
+    simp only [native_ite, ite_true] at h
     by_cases hStuck : native_teq a Term.Stuck = true
     · rw [hStuck] at h
       simp [native_not] at h
@@ -532,7 +532,7 @@ theorem eo_requires_boolean_true_elim {a b c : Term}
         · rfl
         · exact absurd hv hStuck
       rw [this] at h
-      simp only [native_not, Bool.not_false, native_ite, if_true] at h
+      simp only [native_not, Bool.not_false, native_ite, ite_true] at h
       refine ⟨by simpa [native_teq] using hab, ?_, h⟩
       intro hEq
       rw [hEq] at this
@@ -542,7 +542,7 @@ theorem eo_requires_boolean_true_elim {a b c : Term}
       · rfl
       · exact absurd hv hab
     rw [this] at h
-    simp only [native_ite, if_false] at h
+    simp only [native_ite, ite_false] at h
     cases h
 
 theorem eo_ite_boolean_true_elim {c t e : Term}
@@ -560,7 +560,7 @@ theorem eo_ite_boolean_true_elim {c t e : Term}
       · rfl
       · exact absurd hv hc
     rw [hcf] at h
-    simp only [native_ite, if_false] at h
+    simp only [native_ite, ite_false] at h
     by_cases hc2 : native_teq c (Term.Boolean false) = true
     · right
       refine ⟨by simpa [native_teq] using hc2, ?_⟩
@@ -1079,11 +1079,11 @@ theorem native_model_push_comm
   congr 1
   funext k
   by_cases h2 : k = ({ isVar := true, name := s2, ty := T2 } : SmtModelKey)
-  · rw [if_pos h2, if_neg (by rw [h2]; exact fun hc => h hc.symm), if_pos h2]
-  · rw [if_neg h2]
+  · rw [ite_eq_left h2, ite_eq_right (by rw [h2]; exact fun hc => h hc.symm), ite_eq_left h2]
+  · rw [ite_eq_right h2]
     by_cases h1 : k = ({ isVar := true, name := s1, ty := T1 } : SmtModelKey)
-    · rw [if_pos h1, if_pos h1]
-    · rw [if_neg h1, if_neg h1, if_neg h2]
+    · rw [ite_eq_left h1, ite_eq_left h1]
+    · rw [ite_eq_right h1, ite_eq_right h1, ite_eq_right h2]
 
 theorem native_model_push_shadow
     (M : SmtModel) (s : native_String) (T : SmtType) (v w : SmtValue) :
@@ -1093,8 +1093,8 @@ theorem native_model_push_shadow
   congr 1
   funext k
   by_cases hk : k = ({ isVar := true, name := s, ty := T } : SmtModelKey)
-  · rw [if_pos hk, if_pos hk]
-  · rw [if_neg hk, if_neg hk, if_neg hk]
+  · rw [ite_eq_left hk, ite_eq_left hk]
+  · rw [ite_eq_right hk, ite_eq_right hk, ite_eq_right hk]
 
 /-- Two pushes at the same key collapse regardless of the first value. -/
 theorem native_model_push_shadow_of_key_eq
@@ -1144,7 +1144,7 @@ theorem forall_encoding_step_iff
                   SmtValue.Boolean true)
           then SmtValue.Boolean true else SmtValue.Boolean false) =
           SmtValue.Boolean true
-        rw [dif_pos hSat]
+        rw [dite_eq_left hSat]
       rw [hExFalse] at this
       exact absurd this (by decide)
     have hPushTotal : model_wf (native_model_push M s T v) :=
@@ -1176,7 +1176,7 @@ theorem forall_encoding_step_iff
                 SmtValue.Boolean true)
         then SmtValue.Boolean true else SmtValue.Boolean false) =
         SmtValue.Boolean false
-      rw [dif_neg hNoSat]
+      rw [dite_eq_right hNoSat]
     rw [smtx_model_eval_not_unfold, hExFalse]
     rfl
 
@@ -1277,7 +1277,7 @@ theorem eval_push_not_free_eq
           rw [hc]
           exact List.mem_singleton.2 rfl)
       simp only [native_model_var_lookup, native_model_push]
-      rw [if_neg (by
+      rw [ite_eq_right (by
         intro hc
         apply hne
         injection hc with h1 h2 h3
@@ -1468,7 +1468,7 @@ theorem smtx_typeof_exists_bool_inv
   by_cases ht : native_Teq (__smtx_typeof tail) SmtType.Bool = true
   · refine ⟨by simpa [native_Teq] using ht, ?_⟩
     rw [ht] at h
-    simp only [native_ite, if_true] at h
+    simp only [native_ite, ite_true] at h
     rw [__smtx_typeof_guard_wf] at h
     by_cases hw : __smtx_type_wf T = true
     · exact hw
@@ -2659,7 +2659,7 @@ private theorem smtx_typeof_and_bool_inv_early
   by_cases ha : native_Teq (__smtx_typeof a) SmtType.Bool = true
   · refine ⟨by simpa [native_Teq] using ha, ?_⟩
     rw [ha] at h
-    simp only [native_ite, if_true] at h
+    simp only [native_ite, ite_true] at h
     by_cases hb : native_Teq (__smtx_typeof b) SmtType.Bool = true
     · simpa [native_Teq] using hb
     · have hbf : native_Teq (__smtx_typeof b) SmtType.Bool = false := by
@@ -2719,7 +2719,7 @@ theorem smtx_typeof_and_bool_inv
   by_cases ha : native_Teq (__smtx_typeof a) SmtType.Bool = true
   · refine ⟨by simpa [native_Teq] using ha, ?_⟩
     rw [ha] at h
-    simp only [native_ite, if_true] at h
+    simp only [native_ite, ite_true] at h
     by_cases hb : native_Teq (__smtx_typeof b) SmtType.Bool = true
     · simpa [native_Teq] using hb
     · exfalso

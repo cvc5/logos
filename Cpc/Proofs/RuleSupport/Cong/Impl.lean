@@ -1901,7 +1901,7 @@ private theorem reglan_rel_model_ext {r r' : SmtRegLan}
       Smtm.native_str_in_re (impl_native_string_to_values str) r =
         Smtm.native_str_in_re (impl_native_string_to_values str) r'
   · exact hAll s hs
-  · rw [dif_neg hAll] at hb
+  · rw [dite_eq_right hAll] at hb
     cases hb
 
 private theorem reglan_rel_of_model_ext {r r' : SmtRegLan}
@@ -1910,7 +1910,7 @@ private theorem reglan_rel_of_model_ext {r r' : SmtRegLan}
         Smtm.native_str_in_re (impl_native_string_to_values s) r') :
     RuleProofs.smt_value_rel (SmtValue.RegLan r) (SmtValue.RegLan r') := by
   show SmtValue.Boolean (native_re_ext_eq r r') = SmtValue.Boolean true
-  rw [dif_pos h]
+  rw [dite_eq_left h]
 
 end Smtm
 

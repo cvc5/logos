@@ -15249,7 +15249,7 @@ private theorem reConcat_smt_value_rel_assoc_eval
   simp only [__smtx_model_eval, __smtx_model_eval_re_concat, hxEval, hyEval,
     hzEval]
   simp [__smtx_model_eval_eq, native_re_concat]
-  apply if_pos
+  apply ite_eq_left
   intro str hValid
   exact native_str_in_re_mk_concat_assoc str rx ry rz
 
@@ -15293,7 +15293,7 @@ private theorem reConcat_smt_value_rel_congr_eval
   simp only [__smtx_model_eval, __smtx_model_eval_re_concat, hxEval, hyEval,
     hxEval', hyEval']
   simp [__smtx_model_eval_eq, native_re_concat]
-  apply if_pos
+  apply ite_eq_left
   intro str hValid
   exact native_str_in_re_mk_concat_congr str rx rx' ry ry' hxExt hyExt
 

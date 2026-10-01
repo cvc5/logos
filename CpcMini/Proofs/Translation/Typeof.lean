@@ -372,12 +372,12 @@ private theorem eo_type_lift_preserves_valid (s0 : native_String) (d0 : Datatype
       rcases hValid with ⟨hRes, hD⟩
       simp only [__eo_type_lift]
       by_cases hteq : native_teq (Term.DatatypeType s0 d0) (Term.DatatypeType s2 d2) = true
-      · rw [native_ite, if_pos hteq]
+      · rw [native_ite, ite_eq_left hteq]
         have hEq : Term.DatatypeType s0 d0 = Term.DatatypeType s2 d2 := of_decide_eq_true hteq
         injection hEq with hs hd
         subst hs
         exact ⟨hRes, hMem⟩
-      · rw [native_ite, if_neg hteq]
+      · rw [native_ite, ite_eq_right hteq]
         exact ⟨hRes, eo_datatype_lift_preserves_valid s0 d0 (List.mem_cons_of_mem _ hMem) hD⟩
   | _ => exact hValid
 

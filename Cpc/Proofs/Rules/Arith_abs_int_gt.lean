@@ -356,11 +356,11 @@ private theorem eval_rel (M : SmtModel) (hM : model_wf M) (x1 y1 : Term)
           (if 0 ≤ b then native_zlt b (-a) else native_zlt (-b) (-a))) := by
     by_cases hA : 0 ≤ a
     · by_cases hB : 0 ≤ b
-      · rw [if_pos hA, if_pos hB, if_neg (Int.not_lt.mpr hA), if_neg (Int.not_lt.mpr hB)]
-      · rw [if_pos hA, if_neg hB, if_neg (Int.not_lt.mpr hA), if_pos (Int.not_le.mp hB)]
+      · rw [ite_eq_left hA, ite_eq_left hB, ite_eq_right (Int.not_lt.mpr hA), ite_eq_right (Int.not_lt.mpr hB)]
+      · rw [ite_eq_left hA, ite_eq_right hB, ite_eq_right (Int.not_lt.mpr hA), ite_eq_left (Int.not_le.mp hB)]
     · by_cases hB : 0 ≤ b
-      · rw [if_neg hA, if_pos hB, if_pos (Int.not_le.mp hA), if_neg (Int.not_lt.mpr hB)]
-      · rw [if_neg hA, if_neg hB, if_pos (Int.not_le.mp hA), if_pos (Int.not_le.mp hB)]
+      · rw [ite_eq_right hA, ite_eq_left hB, ite_eq_left (Int.not_le.mp hA), ite_eq_right (Int.not_lt.mpr hB)]
+      · rw [ite_eq_right hA, ite_eq_right hB, ite_eq_left (Int.not_le.mp hA), ite_eq_left (Int.not_le.mp hB)]
   rw [hEq]
   exact RuleProofs.smtx_model_eval_eq_refl _
 

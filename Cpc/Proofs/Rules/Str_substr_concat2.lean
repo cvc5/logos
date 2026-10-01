@@ -22,7 +22,7 @@ private theorem native_seq_extract_eq_drop_take_local
       (xs.drop (Int.toNat i)).take (Int.toNat n) := by
   unfold native_seq_extract
   by_cases hOob : Int.ofNat xs.length ≤ i
-  · rw [if_pos (by
+  · rw [ite_eq_left (by
       simp only [Bool.or_eq_true, decide_eq_true_eq]
       exact Or.inr hOob)]
     have hDrop : xs.drop (Int.toNat i) = [] := by
@@ -33,7 +33,7 @@ private theorem native_seq_extract_eq_drop_take_local
     rw [hDrop]
     simp
   · have hiLt : i < Int.ofNat xs.length := Int.lt_of_not_ge hOob
-    rw [if_neg (by
+    rw [ite_eq_right (by
       intro hGuard
       simp only [Bool.or_eq_true, decide_eq_true_eq] at hGuard
       rcases hGuard with (hneg | hnLe) | hLenLe

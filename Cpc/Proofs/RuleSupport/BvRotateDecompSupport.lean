@@ -118,10 +118,10 @@ private theorem rotate_left_append_extract
   rw [BitVec.getElem_rotateLeft hi]
   simp only [Nat.mod_eq_of_lt hR]
   by_cases hiR : i < R
-  · simp only [hiR, dif_pos]
+  · simp only [hiR, dite_eq_left]
     rw [BitVec.getLsbD_eq_getElem (by omega)]
   · have hRi : R ≤ i := Nat.le_of_not_gt hiR
-    simp only [hiR, dif_neg, if_false, Nat.zero_add]
+    simp only [hiR, dite_eq_right, ite_false, Nat.zero_add]
     rw [BitVec.getLsbD_eq_getElem
       (Nat.lt_of_le_of_lt (Nat.sub_le i R) hi)]
     simp
@@ -138,11 +138,11 @@ private theorem rotate_right_append_extract
   rw [BitVec.getElem_rotateRight hi]
   simp only [Nat.mod_eq_of_lt hR]
   by_cases hLow : i < W - R
-  · simp only [hLow, dif_pos]
+  · simp only [hLow, dite_eq_left]
     have hSplit : W - R + R = W := Nat.sub_add_cancel (Nat.le_of_lt hR)
     rw [BitVec.getLsbD_eq_getElem (by omega)]
   · have hHigh : W - R ≤ i := Nat.le_of_not_gt hLow
-    simp only [hLow, dif_neg, if_false, Nat.zero_add]
+    simp only [hLow, dite_eq_right, ite_false, Nat.zero_add]
     rw [BitVec.getLsbD_eq_getElem
       (Nat.lt_of_le_of_lt (Nat.sub_le i (W - R)) hi)]
     simp

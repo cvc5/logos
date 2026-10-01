@@ -722,10 +722,10 @@ theorem texists_true_push_tchoice
             SmtValue.Boolean true
   · have hChoice :
         native_eval_choice N s T body = Classical.choose hSat := by
-      rw [dif_pos hSat]
+      rw [dite_eq_left hSat]
     rw [hChoice]
     exact (Classical.choose_spec hSat).2.2
-  · rw [dif_neg hSat] at hEx
+  · rw [dite_eq_right hSat] at hEx
     cases hEx
 
 /-- The choice value at a well-formed type is always typed and canonical. -/
@@ -741,13 +741,13 @@ theorem tchoice_typed_canonical_of_wf
           __smtx_value_canonical v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true
-  · rw [dif_pos hSat]
+  · rw [dite_eq_left hSat]
     exact ⟨(Classical.choose_spec hSat).1, (Classical.choose_spec hSat).2.1⟩
   · have hTy : ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧ __smtx_value_canonical v := by
       rcases canonical_type_inhabited_of_type_wf T hWf with ⟨v, hvTy, hvCan⟩
       exact ⟨v, hvTy, by simpa using canonical_bool_of_canonical hvCan⟩
-    rw [dif_neg hSat, dif_pos hTy]
+    rw [dite_eq_right hSat, dite_eq_left hTy]
     refine ⟨(Classical.choose_spec hTy).1, ?_⟩
     simpa using (Classical.choose_spec hTy).2
 

@@ -533,8 +533,8 @@ theorem typeof_value_model_eval_forall
         __smtx_typeof_value v = T ->
           __smtx_value_canonical v = true ->
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
-  · simp [dif_pos h, __smtx_typeof_value]
-  · simp [dif_neg h, __smtx_typeof_value]
+  · simp [dite_eq_left h, __smtx_typeof_value]
+  · simp [dite_eq_right h, __smtx_typeof_value]
 
 /-- Provides a witness for a `choice` term whose typing is non-`None`. -/
 theorem choice_term_has_witness

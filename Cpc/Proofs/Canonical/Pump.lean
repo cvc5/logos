@@ -140,10 +140,10 @@ private theorem step_grows (u : native_Bool) :
       by_cases hCond :
           (native_and (native_not (__smtx_dd_has_dt sF B))
             (__smtx_datatype_bounded u dF B)) = true
-      · rw [native_ite, if_pos hCond]
+      · rw [native_ite, ite_eq_left hCond]
         exact step_grows u ddR (SmtDatatypeDecl.cons sF dF B) t
           (subdd_cons sF dF B t h)
-      · rw [native_ite, if_neg hCond]
+      · rw [native_ite, ite_eq_right hCond]
         exact step_grows u ddR B t h
 
 private theorem step_names (u : native_Bool) :
@@ -158,7 +158,7 @@ private theorem step_names (u : native_Bool) :
       by_cases hCond :
           (native_and (native_not (__smtx_dd_has_dt sF B))
             (__smtx_datatype_bounded u dF B)) = true
-      · rw [native_ite, if_pos hCond] at h
+      · rw [native_ite, ite_eq_left hCond] at h
         rcases step_names u ddR (SmtDatatypeDecl.cons sF dF B) t h with hIn | hTail
         · simp [__smtx_dd_has_dt, native_or] at hIn
           rcases hIn with hEq | hB
@@ -168,7 +168,7 @@ private theorem step_names (u : native_Bool) :
             exact hB
         · right
           simp [__smtx_dd_has_dt, native_or, hTail]
-      · rw [native_ite, if_neg hCond] at h
+      · rw [native_ite, ite_eq_right hCond] at h
         rcases step_names u ddR B t h with hB | hTail
         · left
           exact hB
@@ -193,12 +193,12 @@ private theorem step_congr (u : native_Bool) :
       by_cases hCond :
           (native_and (native_not (__smtx_dd_has_dt sF B))
             (__smtx_datatype_bounded u dF B)) = true
-      · rw [native_ite, if_pos hCond, native_ite, if_pos (hCondEq ▸ hCond)]
+      · rw [native_ite, ite_eq_left hCond, native_ite, ite_eq_left (hCondEq ▸ hCond)]
         exact step_congr u ddR _ _ (by
           intro t
           simp [__smtx_dd_has_dt, native_or, hEq t])
-      · rw [native_ite, if_neg hCond, native_ite,
-          if_neg (fun h => hCond (hCondEq ▸ h))]
+      · rw [native_ite, ite_eq_right hCond, native_ite,
+          ite_eq_right (fun h => hCond (hCondEq ▸ h))]
         exact step_congr u ddR B B' hEq
 
 /--
@@ -229,10 +229,10 @@ private theorem step_adds (u : native_Bool) (t : native_String) :
           by_cases hCond :
               (native_and (native_not (__smtx_dd_has_dt sF B))
                 (__smtx_datatype_bounded u dF B)) = true
-          · rw [native_ite, if_pos hCond]
+          · rw [native_ite, ite_eq_left hCond]
             exact step_grows u ddR (SmtDatatypeDecl.cons sF dF B) t
               (subdd_cons sF dF B t hInT)
-          · rw [native_ite, if_neg hCond]
+          · rw [native_ite, ite_eq_right hCond]
             exact step_grows u ddR B t hInT
         · -- newly added by this entry
           have hCond :
@@ -241,7 +241,7 @@ private theorem step_adds (u : native_Bool) (t : native_String) :
             have hInF : __smtx_dd_has_dt sF B = false := by
               cases h : __smtx_dd_has_dt sF B <;> simp [h] at hIn ⊢
             simp [native_and, native_not, hInF, hBnd]
-          rw [native_ite, if_pos hCond]
+          rw [native_ite, ite_eq_left hCond]
           have hInCons :
               __smtx_dd_has_dt t (SmtDatatypeDecl.cons sF dF B) = true := by
             simp [__smtx_dd_has_dt, native_or, hs]
@@ -257,10 +257,10 @@ private theorem step_adds (u : native_Bool) (t : native_String) :
         by_cases hCond :
             (native_and (native_not (__smtx_dd_has_dt sF B))
               (__smtx_datatype_bounded u dF B)) = true
-        · rw [native_ite, if_pos hCond]
+        · rw [native_ite, ite_eq_left hCond]
           exact step_adds u t ddR (SmtDatatypeDecl.cons sF dF B) hMemTail
             (datatype_bounded_mono u (subdd_cons sF dF B) _ hBnd)
-        · rw [native_ite, if_neg hCond]
+        · rw [native_ite, ite_eq_right hCond]
           exact step_adds u t ddR B hMemTail hBnd
 
 -- === counting names for saturation ===
@@ -1282,7 +1282,7 @@ theorem decl_default_has_dt_of_ne_notValue
       by_cases hs : native_streq t sF = true
       · simp [__smtx_dd_has_dt, native_or, hs]
       · simp only [__smtx_datatype_decl_default, native_ite, hs,
-          if_neg] at h
+          ite_eq_right] at h
         have := decl_default_has_dt_of_ne_notValue t dd rest (by
           intro hEq
           exact h (by simpa [native_ite, hs] using hEq))
@@ -1405,7 +1405,7 @@ private theorem step_partial_sound (u : native_Bool) (dd : SmtDatatypeDecl)
       by_cases hCond :
           (native_and (native_not (__smtx_dd_has_dt sF B))
             (__smtx_datatype_bounded u dF B)) = true
-      · rw [native_ite, if_pos hCond] at hMem ⊢
+      · rw [native_ite, ite_eq_left hCond] at hMem ⊢
         refine step_partial_sound u dd hUniq rest
           (SmtDatatypeDecl.cons sF dF B) (suffixOf_cons_inner hSuf) ?_ t hMem
         intro t' hMem'
@@ -1422,7 +1422,7 @@ private theorem step_partial_sound (u : native_Bool) (dd : SmtDatatypeDecl)
         · have hMem'' : __smtx_dd_has_dt t' B = true := by
             simpa [__smtx_dd_has_dt, native_or, hts] using hMem'
           exact datatype_bounded_mono u hSub _ (hInv t' hMem'')
-      · rw [native_ite, if_neg hCond] at hMem ⊢
+      · rw [native_ite, ite_eq_right hCond] at hMem ⊢
         exact step_partial_sound u dd hUniq rest B
           (suffixOf_cons_inner hSuf) hInv t hMem
 
@@ -1487,7 +1487,7 @@ theorem step_payload (u : native_Bool) (dd : SmtDatatypeDecl)
       by_cases hCond :
           (native_and (native_not (__smtx_dd_has_dt sF B))
             (__smtx_datatype_bounded u dF B)) = true
-      · rw [native_ite, if_pos hCond] at hMem
+      · rw [native_ite, ite_eq_left hCond] at hMem
         refine step_payload u dd hUniq P hStep rest
           (SmtDatatypeDecl.cons sF dF B) (suffixOf_cons_inner hSuf) ?_ t hMem
         intro t' hMem'
@@ -1504,7 +1504,7 @@ theorem step_payload (u : native_Bool) (dd : SmtDatatypeDecl)
         · have hMem'' : __smtx_dd_has_dt t' B = true := by
             simpa [__smtx_dd_has_dt, native_or, hts] using hMem'
           exact hInv t' hMem''
-      · rw [native_ite, if_neg hCond] at hMem
+      · rw [native_ite, ite_eq_right hCond] at hMem
         exact step_payload u dd hUniq P hStep rest B
           (suffixOf_cons_inner hSuf) hInv t hMem
 
@@ -1639,9 +1639,9 @@ theorem cons_default_spine (dd ddF : SmtDatatypeDecl) :
       by_cases hv :
           native_veq (__smtx_field_type_default dd T ddF)
             SmtValue.NotValue = true
-      · rw [native_ite, if_pos hv] at hNe
+      · rw [native_ite, ite_eq_left hv] at hNe
         exact absurd rfl hNe
-      · rw [native_ite, if_neg hv] at hNe ⊢
+      · rw [native_ite, ite_eq_right hv] at hNe ⊢
         have hSlotNe : __smtx_field_type_default dd T ddF ≠ SmtValue.NotValue := by
           intro hEq
           rw [hEq, veq_refl_true] at hv
