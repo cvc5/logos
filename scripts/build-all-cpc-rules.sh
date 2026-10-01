@@ -18,7 +18,7 @@ maximum-parallelism behavior and can require a large amount of RAM.
 
 Options:
   -bN, --batch-size N  Rule targets per Lake invocation (default: 1).
-  -jN, --jobs N        Lean/Lake runtime threads per invocation (default: 1).
+  -jN, --jobs N        Lake runtime threads per invocation (default: 1).
   --all-at-once        Build every rule in one Lake invocation (high memory).
   --dry-run            Print the planned Lake commands without running them.
   --clean              Run `lake clean` before building all rules.

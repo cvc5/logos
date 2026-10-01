@@ -974,7 +974,7 @@ private theorem sr_decimal_toDigits (n : Nat) :
     impl_native_decimal_digits_to_nat ((Nat.toDigits 10 n).map Char.toNat) = n := by
   induction n using Nat.strongRecOn with
   | ind n ih =>
-      rw [Nat.toDigits_eq_if (by omega)]
+      rw [Nat.toDigits_eq_ite (by omega)]
       split
       · rename_i hn
         simp only [List.map_cons, List.map_nil, impl_native_decimal_digits_to_nat,
@@ -1002,7 +1002,7 @@ private theorem sr_toDigits_head_nonzero (n : Nat) (hn : 0 < n) :
         49 ≤ c ∧ c ≤ 57 := by
   induction n using Nat.strongRecOn with
   | ind n ih =>
-      rw [Nat.toDigits_eq_if (by omega)]
+      rw [Nat.toDigits_eq_ite (by omega)]
       split
       · rename_i hlt
         refine ⟨Char.toNat (Nat.digitChar n), [], rfl, ?_⟩
