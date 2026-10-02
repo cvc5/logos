@@ -171,12 +171,6 @@ def __eo_to_smt_tuple_prepend_of_type : SmtType -> SmtTerm -> SmtType -> SmtTerm
 def __eo_to_smt_tuple_prepend (h : SmtTerm) (hT : SmtType) (tail : SmtTerm) : SmtTerm :=
   (__eo_to_smt_tuple_prepend_of_type (__smtx_typeof tail) h hT tail)
 
-def __eo_to_smt_set_insert : Term -> SmtTerm -> SmtTerm
-  | (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) t1) t2), t3 => (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt t1)) (__eo_to_smt_set_insert t2 t3))
-  | (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) T), t3 => (native_ite (native_Teq (__smtx_typeof t3) (SmtType.Set (__eo_to_smt_type T))) t3 SmtTerm.None)
-  | t2, t3 => SmtTerm.None
-
-
 def __eo_to_smt_exists : Term -> SmtTerm -> SmtTerm
   | Term.__eo_List_nil, F => F
   | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs), F => (SmtTerm.exists s (__eo_to_smt_type T) (__eo_to_smt_exists vs F))
@@ -439,7 +433,7 @@ def __eo_to_smt : Term -> SmtTerm
   | (Term.Apply (Term.UOp UserOp.set_is_singleton) x1) =>
     let _v0 := (__eo_to_smt x1)
     (SmtTerm.eq _v0 (SmtTerm.set_singleton (SmtTerm.map_diff _v0 (SmtTerm.set_empty (__eo_to_smt_set_elem_type (__smtx_typeof _v0))))))
-  | (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) x1) x2) => (__eo_to_smt_set_insert x1 (__eo_to_smt x2))
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) x1) x2) => (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt x1)) (__eo_to_smt x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp._at_sets_deq_diff) x1) x2) =>
     let _v0 := (__eo_to_smt x2)
     let _v1 := (__eo_to_smt x1)
