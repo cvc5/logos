@@ -35,10 +35,10 @@ private theorem nativeReExtEq_eq_true_iff (r1 r2 : SmtRegLan) :
           native_str_in_re (impl_native_string_to_values s) r1 =
             native_str_in_re (impl_native_string_to_values s) r2
     · exact hP
-    · rw [dif_neg hP] at h
+    · rw [dite_eq_right hP] at h
       exact absurd h (by decide)
   · intro hP
-    exact dif_pos hP
+    exact dite_eq_left hP
 
 namespace RuleProofs
 
@@ -475,7 +475,7 @@ private theorem re_eq_elim_smt_value_rel
     · -- a witness exists: the formula is false, and so is `native_re_ext_eq`
       -- `rw` would have to match the goal's `Decidable` instance syntactically;
       -- routing through `congrArg` lets `refine` unify it up to defeq instead
-      refine Eq.trans (congrArg __smtx_model_eval_not (dif_pos hEx)) ?_
+      refine Eq.trans (congrArg __smtx_model_eval_not (dite_eq_left hEx)) ?_
       have hNotHp :
           ¬ (∀ s : native_String, native_string_valid s = true →
               native_str_in_re s R1 = native_str_in_re s R2) := by
@@ -496,7 +496,7 @@ private theorem re_eq_elim_smt_value_rel
       rw [hFalse]
       rfl
     · -- no witness: the formula is true, and so is `native_re_ext_eq`
-      refine Eq.trans (congrArg __smtx_model_eval_not (dif_neg hEx)) ?_
+      refine Eq.trans (congrArg __smtx_model_eval_not (dite_eq_right hEx)) ?_
       have hHp : ∀ s : native_String, native_string_valid s = true →
           native_str_in_re s R1 = native_str_in_re s R2 := by
         intro s hs

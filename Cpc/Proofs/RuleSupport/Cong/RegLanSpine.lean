@@ -2639,7 +2639,7 @@ private theorem regl_tchoice_congr_bodies
             __smtx_model_eval (native_model_push M s T v) b₁ =
               SmtValue.Boolean true) from hPredEq.symm]
       exact hSat₁
-    rw [dif_pos hSat₁, dif_pos hSat₂]
+    rw [dite_eq_left hSat₁, dite_eq_left hSat₂]
     exact regl_choose_eq_of_pred_eq hSat₁ hSat₂ hPredEq
   · have hSat₂ : ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
@@ -2658,7 +2658,7 @@ private theorem regl_tchoice_congr_bodies
             __smtx_model_eval (native_model_push M s T v) b₂ =
               SmtValue.Boolean true) from hPredEq]
       exact hSat₂
-    rw [dif_neg hSat₁, dif_neg hSat₂]
+    rw [dite_eq_right hSat₁, dite_eq_right hSat₂]
 
 private theorem regl_typeof_occur_index_eq (a b c : SmtTerm) :
     __smtx_typeof (SmtTerm._at_strings_occur_index a b c) =
@@ -2729,9 +2729,9 @@ private theorem regl_and_parts_of_bool {A B : SmtTerm}
   by_cases h₁ : native_Teq (__smtx_typeof A) SmtType.Bool
   · by_cases h₂ : native_Teq (__smtx_typeof B) SmtType.Bool
     · exact ⟨by simpa [native_Teq] using h₁, by simpa [native_Teq] using h₂⟩
-    · rw [native_ite, if_pos h₁, native_ite, if_neg h₂] at h
+    · rw [native_ite, ite_eq_left h₁, native_ite, ite_eq_right h₂] at h
       cases h
-  · rw [native_ite, if_neg h₁] at h
+  · rw [native_ite, ite_eq_right h₁] at h
     cases h
 
 private theorem regl_eq_parts_of_bool {A B : SmtTerm}
@@ -2740,13 +2740,13 @@ private theorem regl_eq_parts_of_bool {A B : SmtTerm}
       __smtx_typeof A ≠ SmtType.None := by
   rw [typeof_eq_eq] at h
   by_cases hTN : native_Teq (__smtx_typeof A) SmtType.None
-  · rw [__smtx_typeof_eq, __smtx_typeof_guard, native_ite, if_pos hTN] at h
+  · rw [__smtx_typeof_eq, __smtx_typeof_guard, native_ite, ite_eq_left hTN] at h
     cases h
   · by_cases hTU : native_Teq (__smtx_typeof A) (__smtx_typeof B)
     · exact ⟨by simpa [native_Teq] using hTU,
         by simpa [native_Teq] using hTN⟩
-    · rw [__smtx_typeof_eq, __smtx_typeof_guard, native_ite, if_neg hTN,
-        native_ite, if_neg hTU] at h
+    · rw [__smtx_typeof_eq, __smtx_typeof_guard, native_ite, ite_eq_right hTN,
+        native_ite, ite_eq_right hTU] at h
       cases h
 
 private theorem regl_choice_body_bool_of_non_none
@@ -2758,7 +2758,7 @@ private theorem regl_choice_body_bool_of_non_none
   · simpa [native_Teq] using hb
   · exfalso
     apply h
-    rw [native_ite, if_neg hb]
+    rw [native_ite, ite_eq_right hb]
 
 /-- The `@strings_num_occur` translation has non-`RegLan` sequence arguments
 and an arithmetic (non-`RegLan`) result whenever it is typed at all. -/
@@ -3025,9 +3025,9 @@ theorem congTrueSpine_strings_num_occur_re_eq_true
       native_veq, Smtm.native_unpack_pack_seq, hSxUnpack,
       native_seq_extract, impl_native_string_to_values]
     by_cases hEmpty : native_unpack_string sx = []
-    · simp only [if_pos hEmpty]
+    · simp only [ite_eq_left hEmpty]
       rw [hRAZero]
-    · simp only [if_neg hEmpty]
+    · simp only [ite_eq_right hEmpty]
       rw [← List.map_take]
       have hRAOne := hRACongr
         (List.take

@@ -92,9 +92,9 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
     rw [__smtx_type_default]
     by_cases hv :
         native_veq (__smtx_type_default U) SmtValue.NotValue = true
-    · rw [native_ite, if_pos hv]
+    · rw [native_ite, ite_eq_left hv]
       simp [__smtx_value_canonical]
-    · rw [native_ite, if_neg hv]
+    · rw [native_ite, ite_eq_right hv]
       simp [__smtx_value_canonical, __smtx_map_canonical,
         __smtx_map_default_canonical, hFieldTy, hFieldCan, native_ite,
         native_veq, native_and]
@@ -180,9 +180,9 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
         SmtValue.NotValue
         (__smtx_datatype_cons_default (SmtValue.Apply v field) dd c ddF)) = true
     by_cases hv : native_veq field SmtValue.NotValue = true
-    · rw [native_ite, if_pos hv]
+    · rw [native_ite, ite_eq_left hv]
       simp [__smtx_value_canonical]
-    · rw [native_ite, if_neg hv]
+    · rw [native_ite, ite_eq_right hv]
       apply ihTail hTailWf hDecl
       simp [__smtx_value_canonical, hCan, hFieldCan, native_and]
   · intro dd s ddF ih hDecl _hField

@@ -154,11 +154,11 @@ private theorem apply_value_inversion {X Y Z : SmtType}
   | DtcAppType T U =>
       simp only [__smtx_typeof_apply_value, __smtx_typeof_guard] at h
       by_cases hTN : native_Teq T SmtType.None = true
-      · rw [native_ite, if_pos hTN] at h
+      · rw [native_ite, ite_eq_left hTN] at h
         exact absurd h.symm (by simpa using hZ)
-      · rw [native_ite, if_neg hTN] at h
+      · rw [native_ite, ite_eq_right hTN] at h
         by_cases hTV : native_Teq T Y = true
-        · rw [native_ite, if_pos hTV] at h
+        · rw [native_ite, ite_eq_left hTV] at h
           have hTY : T = Y := by simpa [native_Teq] using hTV
           subst T
           subst Z
@@ -166,7 +166,7 @@ private theorem apply_value_inversion {X Y Z : SmtType}
           intro hYN
           subst Y
           simp [native_Teq] at hTN
-        · rw [native_ite, if_neg hTV] at h
+        · rw [native_ite, ite_eq_right hTV] at h
           exact absurd h.symm (by simpa using hZ)
   | _ =>
       simp [__smtx_typeof_apply_value] at h
@@ -1246,7 +1246,7 @@ private theorem map_default_forced :
       have hDef : __smtx_map_default_canonical T' e = true := by
         simp only [__smtx_map_canonical, native_and, Bool.and_eq_true] at hCan
         exact hCan.1
-      rw [__smtx_map_default_canonical, native_ite, if_pos hFin] at hDef
+      rw [__smtx_map_default_canonical, native_ite, ite_eq_left hFin] at hDef
       have := veq_eq_of_true hDef
       rw [he] at this
       simpa [__smtx_map_get_default] using this

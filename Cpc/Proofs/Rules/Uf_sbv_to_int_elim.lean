@@ -940,7 +940,7 @@ private theorem smt_typeof_rhs_int
     have hNatOne : native_int_to_nat (1 : native_Int) = 1 := by
       native_decide
     simpa only [__smtx_typeof_extract, native_ite, hge0, hle, hlt, hwidthPos,
-      if_true, hwidth]
+      ite_true, hwidth]
       using hNatOne
   have hBvTy :
       __smtx_typeof

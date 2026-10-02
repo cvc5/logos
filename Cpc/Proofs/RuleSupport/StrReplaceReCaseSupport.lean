@@ -442,7 +442,7 @@ private theorem substr_middle
     simp only [Int.ofNat_eq_natCast]
     omega
   unfold native_str_substr native_str_len
-  rw [if_neg]
+  rw [ite_eq_right]
   · rw [hMin]
     simp only [Int.ofNat_eq_natCast, Int.toNat_natCast]
   · simp only [Bool.or_eq_true, decide_eq_true_eq]
@@ -469,7 +469,7 @@ private theorem substr_suffix_drop
         ¬ (Int.ofNat start : Int) ≥ Int.ofNat s.length := by
       simpa [Int.ofNat_eq_natCast] using hLt
     unfold native_str_substr native_str_len
-    rw [if_neg (by
+    rw [ite_eq_right (by
       intro hBad
       simp only [Bool.or_eq_true, decide_eq_true_eq] at hBad
       exact hBad.elim
@@ -577,7 +577,7 @@ private theorem eval_forall_encoding_true
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean false
-    rw [dif_neg hNoSat]
+    rw [dite_eq_right hNoSat]
   change __smtx_model_eval_not
       (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean true
@@ -695,7 +695,7 @@ private theorem extract_pack_string
     · exact False.elim ((Int.not_lt_of_ge hi0) hi)
     · exact False.elim ((Int.not_le_of_gt hn0) hn)
     · exact False.elim ((Int.not_le_of_gt hilt) hlen)
-  rw [if_neg hbadFalse]
+  rw [ite_eq_right hbadFalse]
   simp [List.map_take, List.map_drop]
 
 private theorem unpack_extract_pack_string

@@ -1119,7 +1119,7 @@ private theorem qforall_idx_eval_true_of_forall_values
     simp [__smtx_model_eval_not, hEval, SmtEval.native_not] at hEvalNot
   · -- `rw` would have to match the goal's `Decidable` instance syntactically;
     -- routing through `congrArg` lets `refine` unify it up to defeq instead
-    refine Eq.trans (congrArg __smtx_model_eval_not (dif_neg hEx)) ?_
+    refine Eq.trans (congrArg __smtx_model_eval_not (dite_eq_right hEx)) ?_
     simp [__smtx_model_eval_not, SmtEval.native_not]
 
 private theorem re_unfold_neg_star_body_eval_true

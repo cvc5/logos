@@ -4139,7 +4139,7 @@ private theorem smtx_cons_wf_head_wf_rec
   by_cases hcond :
       native_and (native_inhabited_type UF) (__smtx_type_wf_rec UF U) = true
   · simp only [native_and, Bool.and_eq_true] at hcond; exact hcond.2
-  · rw [native_ite, if_neg (by simpa using hcond)] at h
+  · rw [native_ite, ite_eq_right (by simpa using hcond)] at h
     exact absurd h (by simp)
 
 /-- Substituting a field type preserves "not `RegLan`, and no fun-like `RegLan` domain": the
@@ -4198,9 +4198,9 @@ private theorem smtx_typeof_dt_cons_rec_no_reglan_of_substitute_wf
           have hParts : __smtx_dt_cons_wf_rec cF c = true ∧ __smtx_dt_wf_rec dFtl dtl = true := by
             by_cases hc : __smtx_dt_cons_wf_rec cF c = true
             · refine ⟨hc, ?_⟩
-              simp only [__smtx_dt_wf_rec, native_ite, if_pos hc] at hWf
+              simp only [__smtx_dt_wf_rec, native_ite, ite_eq_left hc] at hWf
               exact hWf
-            · rw [__smtx_dt_wf_rec, native_ite, if_neg (by simpa using hc)] at hWf
+            · rw [__smtx_dt_wf_rec, native_ite, ite_eq_right (by simpa using hc)] at hWf
               exact absurd hWf (by simp)
           cases c with
           | unit =>
@@ -4221,7 +4221,7 @@ private theorem smtx_typeof_dt_cons_rec_no_reglan_of_substitute_wf
                     smtx_dt_cons_wf_rec_tail_of_true hParts.1
                   have hTailWf :
                       __smtx_dt_wf_rec (SmtDatatype.sum cFtl' dFtl) (SmtDatatype.sum c' dtl) = true := by
-                    simp only [__smtx_dt_wf_rec, native_ite, if_pos hTailCons]
+                    simp only [__smtx_dt_wf_rec, native_ite, ite_eq_left hTailCons]
                     exact hParts.2
                   have hTail :=
                     smtx_typeof_dt_cons_rec_no_reglan_of_substitute_wf s base
@@ -4240,8 +4240,8 @@ private theorem smtx_typeof_dt_cons_rec_no_reglan_of_substitute_wf
       | sum cF dFtl =>
           have hDtlWf : __smtx_dt_wf_rec dFtl dtl = true := by
             by_cases hc : __smtx_dt_cons_wf_rec cF c = true
-            · simp only [__smtx_dt_wf_rec, native_ite, if_pos hc] at hWf; exact hWf
-            · rw [__smtx_dt_wf_rec, native_ite, if_neg (by simpa using hc)] at hWf
+            · simp only [__smtx_dt_wf_rec, native_ite, ite_eq_left hc] at hWf; exact hWf
+            · rw [__smtx_dt_wf_rec, native_ite, ite_eq_right (by simpa using hc)] at hWf
               exact absurd hWf (by simp)
           have hRec :=
             smtx_typeof_dt_cons_rec_no_reglan_of_substitute_wf s base dtl dFtl d0 n refs hDtlWf
@@ -6466,7 +6466,7 @@ theorem smt_strings_occur_index_args_of_non_none
         exact ⟨x1, h1, h2, h3⟩
       · exfalso
         apply hNonNone
-        rw [native_ite, if_neg hEq]
+        rw [native_ite, ite_eq_right hEq]
     · exact absurd rfl hNonNone
   rcases hArgs with ⟨T, h1, h2, h3⟩
   refine ⟨T, h1, h2, h3, ?_⟩

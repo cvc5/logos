@@ -2106,7 +2106,7 @@ private theorem native_str_from_int_len_pos_of_nonneg
   | ofNat n =>
       have hlt : ¬ ((Int.ofNat n : Int) < 0) :=
         Int.not_lt.mpr (Int.natCast_nonneg n)
-      rw [native_str_from_int, if_neg hlt,
+      rw [native_str_from_int, ite_eq_right hlt,
         native_string_lit_toString_ofNat_length]
       exact Int.ofNat_lt.mpr (nat_toString_len_pos n)
   | negSucc n =>
@@ -2122,7 +2122,7 @@ private theorem native_str_from_int_len_le_succ
   | ofNat n =>
       have hlt : ¬ ((Int.ofNat n : Int) < 0) :=
         Int.not_lt.mpr (Int.natCast_nonneg n)
-      rw [native_str_from_int, if_neg hlt,
+      rw [native_str_from_int, ite_eq_right hlt,
         native_string_lit_toString_ofNat_length]
       exact Int.ofNat_le.mpr (nat_toString_len_le_succ n)
   | negSucc n =>
@@ -2140,7 +2140,7 @@ private theorem native_str_from_int_len_le_self_of_pos
         exact Int.ofNat_lt.mp hz
       have hlt : ¬ ((Int.ofNat n : Int) < 0) :=
         Int.not_lt.mpr (Int.natCast_nonneg n)
-      rw [native_str_from_int, if_neg hlt,
+      rw [native_str_from_int, ite_eq_right hlt,
         native_string_lit_toString_ofNat_length]
       exact Int.ofNat_le.mpr (nat_toString_len_le_self_of_pos n hn)
     | negSucc n =>

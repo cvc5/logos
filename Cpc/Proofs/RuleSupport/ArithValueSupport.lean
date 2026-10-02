@@ -376,7 +376,7 @@ theorem greater_mul (a b c d : ArithProduct)
                   rcases hCD with ⟨hCDK, hCD⟩
                   by_cases hAC : a.kind = c.kind
                   · have hBD : b.kind = d.kind := hABK.symm.trans hAC |>.trans hCDK
-                    simp only [mul, hAC, hBD, if_pos, Greater]
+                    simp only [mul, hAC, hBD, ite_eq_left, Greater]
                     exact ⟨(ArithValue.kind_mul_of_same_kind hAC).trans
                         (hABK.trans (ArithValue.kind_mul_of_same_kind hBD).symm),
                       ArithValue.magnitude_mul_lt_mul_of_lt_lt
@@ -405,7 +405,7 @@ theorem equalMagnitude_mul (a b c d : ArithProduct)
                   rcases hCD with ⟨hCDK, hCD⟩
                   by_cases hAC : a.kind = c.kind
                   · have hBD : b.kind = d.kind := hABK.symm.trans hAC |>.trans hCDK
-                    simp only [mul, hAC, hBD, if_pos, EqualMagnitude]
+                    simp only [mul, hAC, hBD, ite_eq_left, EqualMagnitude]
                     exact ⟨(ArithValue.kind_mul_of_same_kind hAC).trans
                         (hABK.trans (ArithValue.kind_mul_of_same_kind hBD).symm),
                       ArithValue.magnitude_mul_eq_of_eq_eq
@@ -434,7 +434,7 @@ theorem greater_mul_equalMagnitude (a b c d : ArithProduct)
                   rcases hCD with ⟨hCDK, hCD⟩
                   by_cases hAC : a.kind = c.kind
                   · have hBD : b.kind = d.kind := hABK.symm.trans hAC |>.trans hCDK
-                    simp only [mul, hAC, hBD, if_pos, Greater]
+                    simp only [mul, hAC, hBD, ite_eq_left, Greater]
                     exact ⟨(ArithValue.kind_mul_of_same_kind hAC).trans
                         (hABK.trans (ArithValue.kind_mul_of_same_kind hBD).symm),
                       ArithValue.magnitude_mul_lt_mul_of_lt_eq_pos
@@ -577,7 +577,7 @@ theorem greater_append (a b c d : ArithProduct)
                   rcases hCD with ⟨hCDK, hCD⟩
                   by_cases hAC : a.kind = c.kind
                   · have hBD : b.kind = d.kind := hABK.symm.trans hAC |>.trans hCDK
-                    simp only [append, hAC, hBD, if_pos, Greater]
+                    simp only [append, hAC, hBD, ite_eq_left, Greater]
                     exact ⟨(ArithValue.kind_mul_of_same_kind hAC).trans
                         (hABK.trans (ArithValue.kind_mul_of_same_kind hBD).symm),
                       ArithValue.magnitude_mul_lt_mul_of_lt_lt
@@ -610,7 +610,7 @@ theorem equalMagnitude_append (a b c d : ArithProduct)
                   rcases hCD with ⟨hCDK, hCD⟩
                   by_cases hAC : a.kind = c.kind
                   · have hBD : b.kind = d.kind := hABK.symm.trans hAC |>.trans hCDK
-                    simp only [append, hAC, hBD, if_pos, EqualMagnitude]
+                    simp only [append, hAC, hBD, ite_eq_left, EqualMagnitude]
                     exact ⟨(ArithValue.kind_mul_of_same_kind hAC).trans
                         (hABK.trans (ArithValue.kind_mul_of_same_kind hBD).symm),
                       ArithValue.magnitude_mul_eq_of_eq_eq
@@ -643,7 +643,7 @@ theorem greater_append_equalMagnitude (a b c d : ArithProduct)
                   rcases hCD with ⟨hCDK, hCD⟩
                   by_cases hAC : a.kind = c.kind
                   · have hBD : b.kind = d.kind := hABK.symm.trans hAC |>.trans hCDK
-                    simp only [append, hAC, hBD, if_pos, Greater]
+                    simp only [append, hAC, hBD, ite_eq_left, Greater]
                     exact ⟨(ArithValue.kind_mul_of_same_kind hAC).trans
                         (hABK.trans (ArithValue.kind_mul_of_same_kind hBD).symm),
                       ArithValue.magnitude_mul_lt_mul_of_lt_eq_pos

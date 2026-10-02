@@ -1248,9 +1248,9 @@ theorem list_typed_extract
   dsimp
   by_cases h :
       (decide (i < 0) || decide (n <= 0) || decide (i >= (↑xs.length : Int))) = true
-  · rw [if_pos h]
+  · rw [ite_eq_left h]
     simp [list_typed]
-  · rw [if_neg h]
+  · rw [ite_eq_right h]
     exact
       list_typed_take (Int.toNat (min n (Int.ofNat xs.length - i)))
         (list_typed_drop (Int.toNat i) hxs)
@@ -1350,9 +1350,9 @@ theorem list_typed_update
   unfold native_seq_update
   dsimp
   by_cases h : (decide (i < 0) || decide ((↑xs.length : Int) <= i)) = true
-  · rw [if_pos h]
+  · rw [ite_eq_left h]
     exact hxs
-  · rw [if_neg h]
+  · rw [ite_eq_right h]
     simpa [List.append_assoc] using
       (list_typed_append
         (list_typed_append (list_typed_take (Int.toNat i) hxs)
@@ -1647,10 +1647,10 @@ theorem native_string_valid_toDigitsCore :
   | fuel + 1, n, ds, hds => by
       rw [Nat.toDigitsCore.eq_2]
       by_cases hDiv : n / 10 = 0
-      · rw [if_pos hDiv]
+      · rw [ite_eq_left hDiv]
         exact native_string_valid_char_toNat_cons
           (native_char_valid_digitChar (n % 10)) hds
-      · rw [if_neg hDiv]
+      · rw [ite_eq_right hDiv]
         exact native_string_valid_toDigitsCore fuel (n / 10)
           ((Nat.digitChar (n % 10)) :: ds)
           (native_string_valid_char_toNat_cons
@@ -1689,14 +1689,14 @@ theorem native_str_from_int_valid
       unfold native_str_from_int
       have hNot : ¬ ((Int.ofNat n) < 0) := by
         exact Int.not_lt_of_ge (Int.natCast_nonneg n)
-      rw [if_neg hNot]
+      rw [ite_eq_right hNot]
       simpa [Int.toString_eq_repr, Int.repr, Nat.toString_eq_repr] using
         native_string_valid_nat_toString n
   | negSucc n =>
       unfold native_str_from_int
       have hNeg : (Int.negSucc n) < 0 := by
         exact Int.negSucc_lt_zero n
-      rw [if_pos hNeg]
+      rw [ite_eq_left hNeg]
       simp [native_string_lit, native_string_valid]
 
 /-- Lemma about `char_value_list_typed`. -/

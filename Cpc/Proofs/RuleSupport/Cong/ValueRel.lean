@@ -676,7 +676,7 @@ theorem native_str_indexof_re_congr
   · by_cases hStart : Int.toNat i ≤ s.length
     · have hStart' : Int.toNat i ≤ (impl_native_string_to_values s).length := by
         simpa [impl_native_string_to_values] using hStart
-      simp only [native_str_indexof_re, if_neg hLt, if_pos hStart']
+      simp only [native_str_indexof_re, ite_eq_right hLt, ite_eq_left hStart']
       rw [native_re_find_idx_from_congr_valid r r' s (Int.toNat i)
         hValid hExtList]
     · simp [native_str_indexof_re, impl_native_string_to_values, hLt, hStart]

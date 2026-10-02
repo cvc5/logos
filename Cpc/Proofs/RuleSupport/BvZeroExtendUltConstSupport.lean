@@ -4597,7 +4597,7 @@ private theorem native_int_pow2_nat_cast_sign_ult (n : Nat) :
   have hn : ¬ (Int.ofNat n : Int) < 0 :=
     Int.not_lt_of_ge (Int.natCast_nonneg n)
   unfold SmtEval.native_int_pow2 SmtEval.native_zexp_total
-  rw [if_neg hn]
+  rw [ite_eq_right hn]
   simp
 
 private theorem sign_ult_amount_lt_pow (W A : Nat) (hW : 0 < W) :

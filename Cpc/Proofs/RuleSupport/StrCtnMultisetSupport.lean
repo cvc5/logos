@@ -89,9 +89,9 @@ theorem valueCount_extract_le (v : SmtValue) (xs : List SmtValue) (i n : native_
   dsimp only
   by_cases hCond :
       (decide (i < 0) || decide (n ≤ 0) || decide (i ≥ Int.ofNat xs.length)) = true
-  · rw [if_pos hCond]
+  · rw [ite_eq_left hCond]
     simp [valueCount]
-  · rw [if_neg hCond]
+  · rw [ite_eq_right hCond]
     exact Nat.le_trans (valueCount_take_le v (xs.drop i.toNat) _)
       (valueCount_drop_le v xs i.toNat)
 

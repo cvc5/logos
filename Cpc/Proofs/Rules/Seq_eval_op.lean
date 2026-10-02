@@ -533,7 +533,7 @@ private theorem native_seq_extract_empty_of_end_nonpos
           true := by
       simp only [Bool.or_eq_true, decide_eq_true_eq]
       exact Or.inl (Or.inl hi)
-    rw [if_pos hGuard]
+    rw [ite_eq_left hGuard]
   · have hiNonneg : 0 <= i := Int.le_of_not_gt hi
     have hn : n <= 0 := by
       by_cases hn : n <= 0
@@ -548,7 +548,7 @@ private theorem native_seq_extract_empty_of_end_nonpos
           true := by
       simp only [Bool.or_eq_true, decide_eq_true_eq]
       exact Or.inl (Or.inr hn)
-    rw [if_pos hGuard]
+    rw [ite_eq_left hGuard]
 
 private theorem native_seq_extract_empty_of_end_neg
     (xs : List SmtValue) (i n : native_Int)
@@ -644,7 +644,7 @@ private theorem native_seq_extract_cons_pos_nat
           true := by
       simp only [Bool.or_eq_true, decide_eq_true_eq]
       exact Or.inl (Or.inr hn)
-    rw [if_pos hLeftGuard, if_pos hRightGuard]
+    rw [ite_eq_left hLeftGuard, ite_eq_left hRightGuard]
   · by_cases hOut :
         (Int.ofNat (Nat.succ k) : Int) >=
           Int.ofNat (x :: xs).length
@@ -671,7 +671,7 @@ private theorem native_seq_extract_cons_pos_nat
             true := by
         simp only [Bool.or_eq_true, decide_eq_true_eq]
         exact Or.inr hRightOut
-      rw [if_pos hLeftGuard, if_pos hRightGuard]
+      rw [ite_eq_left hLeftGuard, ite_eq_left hRightGuard]
     · have hRightIn :
           ¬ ((Int.ofNat k : Int) >= Int.ofNat xs.length) := by
         intro hRightOut
@@ -716,7 +716,7 @@ private theorem native_seq_extract_cons_pos_nat
               List.take
                 (Int.toNat (min n (Int.ofNat xs.length - Int.ofNat k)))
                 (List.drop k xs))
-      rw [if_neg hSuccIdxNonneg, if_neg hIdxNonneg, hLen]
+      rw [ite_eq_right hSuccIdxNonneg, ite_eq_right hIdxNonneg, hLen]
 
 private theorem native_seq_extract_cons_nonzero
     (x : SmtValue) (xs : List SmtValue) (i n : native_Int)
@@ -739,7 +739,7 @@ private theorem native_seq_extract_cons_nonzero
           true := by
       simp only [Bool.or_eq_true, decide_eq_true_eq]
       exact Or.inl (Or.inl hPredNeg)
-    rw [if_pos hLeftGuard, if_pos hRightGuard]
+    rw [ite_eq_left hLeftGuard, ite_eq_left hRightGuard]
   · have hiNonneg : 0 <= i := Int.le_of_not_gt hiNeg
     have hiPos : 0 < i := by
       apply Int.lt_of_not_ge
@@ -2976,7 +2976,7 @@ private theorem native_seq_indexof_rec_empty_succ
     (xs : List SmtValue) (i fuel : Nat) :
     native_seq_indexof_rec xs [] i (fuel + 1) = Int.ofNat i := by
   unfold native_seq_indexof_rec
-  rw [if_pos (native_seq_prefix_eq_nil_left xs)]
+  rw [ite_eq_left (native_seq_prefix_eq_nil_left xs)]
 
 private theorem native_seq_indexof_empty_zero (xs : List SmtValue) :
     native_seq_indexof xs [] 0 = 0 := by
@@ -3079,7 +3079,7 @@ private theorem native_seq_replace_eq_extracts_of_indexof_nonneg
                 (Int.ofNat j + (Int.ofNat ps.length + 1))
                 (Int.ofNat xs.length -
                   (Int.ofNat j + (Int.ofNat ps.length + 1))))
-      rw [if_neg hNatNotNeg]
+      rw [ite_eq_right hNatNotNeg]
       rw [← hPre']
       rw [← hSuf']
 
@@ -3223,7 +3223,7 @@ private theorem native_seq_extract_suffix_nat_suffix_local
             true := by
         simp only [Bool.or_eq_true, decide_eq_true_eq]
         exact Or.inl (Or.inl hStartNeg)
-      rw [if_pos hGuard]
+      rw [ite_eq_left hGuard]
     rw [hExtract]
     simp
 
@@ -3383,7 +3383,7 @@ private theorem native_seq_indexof_cons_not_prefix
   by_cases hTail : pat.length ≤ xs.length
   · have hCons : pat.length ≤ (x :: xs).length := by
       simpa using Nat.le_trans hTail (Nat.le_succ xs.length)
-    rw [dif_pos hCons, dif_pos hTail]
+    rw [dite_eq_left hCons, dite_eq_left hTail]
     have hStep :
         native_seq_indexof_rec (x :: xs) pat 0
             ((x :: xs).length - pat.length + 1) =
@@ -3400,9 +3400,9 @@ private theorem native_seq_indexof_cons_not_prefix
     exact
       RuleProofs.native_seq_indexof_rec_offset xs pat 0 1
         (xs.length - pat.length + 1)
-  · rw [dif_neg hTail]
+  · rw [dite_eq_right hTail]
     by_cases hCons : pat.length ≤ (x :: xs).length
-    · rw [dif_pos hCons]
+    · rw [dite_eq_left hCons]
       have hPatLen : pat.length = (x :: xs).length := by
         have hGt : xs.length < pat.length := Nat.lt_of_not_ge hTail
         have hLe : pat.length ≤ xs.length + 1 := by
@@ -3414,7 +3414,7 @@ private theorem native_seq_indexof_cons_not_prefix
         simp
       rw [hFuel]
       simp [native_seq_indexof_rec, hPrefNot]
-    · rw [dif_neg hCons]
+    · rw [dite_eq_right hCons]
       simp
 
 private theorem native_seq_indexof_nil_zero (pat : List SmtValue) :
@@ -3437,14 +3437,14 @@ private theorem native_seq_indexof_eq_neg_one_of_gt_len
   have hiPos : 0 < i := Int.lt_of_le_of_lt hLenNonneg hGt
   have hiNonnegLe : 0 ≤ i := Int.le_of_lt hiPos
   have hiNotNeg : ¬ i < 0 := Int.not_lt.mpr hiNonnegLe
-  rw [if_neg hiNotNeg]
+  rw [ite_eq_right hiNotNeg]
   have hCast : (Int.toNat i : Int) = i :=
     Int.toNat_of_nonneg hiNonnegLe
   have hStartGt : xs.length < Int.toNat i := by
     exact Int.ofNat_lt.mp (by simpa [hCast] using hGt)
   have hNoFit : ¬ Int.toNat i + pat.length ≤ xs.length := by
     omega
-  rw [dif_neg hNoFit]
+  rw [dite_eq_right hNoFit]
 
 private theorem native_seq_indexof_zero_of_prefix
     (xs pat : List SmtValue)
@@ -3458,13 +3458,13 @@ private theorem native_seq_indexof_zero_of_prefix
   rw [native_seq_indexof_eq_rec]
   simp only [Int.reduceLT, ↓reduceIte, Int.toNat_zero, Nat.zero_add,
     List.drop_zero]
-  rw [dif_pos (by simpa using hLen)]
+  rw [dite_eq_left (by simpa using hLen)]
   have hFuel :
       xs.length - pat.length + 1 = (xs.length - pat.length) + 1 := by
     omega
   rw [hFuel]
   unfold native_seq_indexof_rec
-  rw [if_pos hPref]
+  rw [ite_eq_left hPref]
   simp
 
 private def native_seq_indexof_offset
@@ -3490,7 +3490,7 @@ private theorem native_seq_indexof_offset_drop_eq
   rw [native_seq_indexof_eq_rec]
   have hOffNotNeg : ¬ (Int.ofNat off : Int) < 0 :=
     Int.not_lt.mpr (Int.natCast_nonneg off)
-  rw [if_neg hOffNotNeg]
+  rw [ite_eq_right hOffNotNeg]
   change
     (let r :=
       if h : pat.length ≤ (xs.drop off).length then
@@ -3509,7 +3509,7 @@ private theorem native_seq_indexof_offset_drop_eq
   · have hFullFit : off + pat.length ≤ xs.length := by
       rw [List.length_drop] at hTailFit
       omega
-    rw [dif_pos hTailFit, dif_pos hFullFit]
+    rw [dite_eq_left hTailFit, dite_eq_left hFullFit]
     have hFuel :
         (xs.drop off).length - pat.length + 1 =
           xs.length - (off + pat.length) + 1 := by
@@ -3524,7 +3524,7 @@ private theorem native_seq_indexof_offset_drop_eq
       apply hTailFit
       rw [List.length_drop]
       omega
-    rw [dif_neg hTailFit, dif_neg hFullNot]
+    rw [dite_eq_right hTailFit, dite_eq_right hFullNot]
     simp
 
 private theorem native_seq_indexof_offset_of_prefix
@@ -3850,7 +3850,7 @@ private theorem native_seq_replace_all_aux_eq_chain_of_fuel
                               native_seq_replace_all_chain (p :: ps) repl 0
                                 (x :: xs)
                           rw [hParentIdx]
-                          rw [if_neg hR1NotNeg]
+                          rw [ite_eq_right hR1NotNeg]
                           rw [hToNatR1]
                           rw [hParentDrop]
                           rw [hParentSuffix]
