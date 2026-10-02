@@ -50,7 +50,7 @@ theorem smt_set_singleton_non_none_of_has_smt_translation_type_eq
       __smtx_typeof (__eo_to_smt X) =
         __smtx_typeof (__eo_to_smt A) := by
     rw [hXMatch, hAMatch, hXTyEq]
-  simpa [typeof_set_singleton_eq_closed, hSmtTy] using hOrig
+  simpa [smtx_typeof_set_singleton_term_eq_closed, hSmtTy] using hOrig
 
 theorem eo_typeof_set_union_arg_types_of_ne_stuck
     {A B : Term}
@@ -110,76 +110,55 @@ theorem smt_set_binop_non_none_of_eo_typeof_set_union_ne_stuck
   rw [hSmtType, hXSmt, hYSmt]
   simp [__smtx_typeof_sets_op_2, native_ite, native_Teq]
 
-theorem smt_set_insert_type_eq_of_base_set_and_elem_type
-    (xs : Term) (base : SmtTerm) (A : SmtType)
-    (hBase : __smtx_typeof base = SmtType.Set A)
-    (hElem : __eo_to_smt_typed_list_elem_type xs = A)
-    (hANN : A ≠ SmtType.None) :
-    __smtx_typeof (__eo_to_smt_set_insert xs base) = SmtType.Set A := by
-  have hElemNN : __eo_to_smt_typed_list_elem_type xs ≠ SmtType.None := by
-    rw [hElem]
-    exact hANN
-  have hShape :=
-    TypedListSubstitutionSupport.typed_list_shape_of_elem_type_non_none
-      xs hElemNN
-  induction hShape generalizing base A with
-  | nil T =>
-      have hNilNN :
-          __eo_to_smt_typed_list_elem_type
-              (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) T) ≠
-            SmtType.None := by
-        rw [hElem]
-        exact hANN
-      have hNilElem :=
-        TypedListSubstitutionSupport.typed_list_nil_elem_type_eq_of_non_none
-          T hNilNN
-      have hTy : __eo_to_smt_type T = A := hNilElem.symm.trans hElem
-      change
-        __smtx_typeof
-            (native_ite
-              (native_Teq (__smtx_typeof base)
-                (SmtType.Set (__eo_to_smt_type T)))
-              base SmtTerm.None) =
-          SmtType.Set A
-      simp [native_ite, native_Teq, hBase, hTy]
-  | cons head tail _ ih =>
-      have hConsNN :
-          __eo_to_smt_typed_list_elem_type
-              (Term.Apply
-                (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) head)
-                tail) ≠
-            SmtType.None := by
-        rw [hElem]
-        exact hANN
-      rcases
-          TypedListSubstitutionSupport.typed_list_cons_elem_type_parts
-            head tail hConsNN with
-        ⟨hHeadTail, _hHeadNN, hTailNN, hConsElem⟩
-      have hHeadTy : __smtx_typeof (__eo_to_smt head) = A :=
-        hConsElem.symm.trans hElem
-      have hTailTy : __eo_to_smt_typed_list_elem_type tail = A :=
-        hHeadTail.symm.trans hHeadTy
-      have hBaseNN : term_has_non_none_type base := by
-        unfold term_has_non_none_type
-        rw [hBase]
-        simp
-      have hSetWf :
-          __smtx_type_wf (SmtType.Set A) = true :=
-        Smtm.smt_term_set_type_wf_of_non_none base hBaseNN hBase
-      have hTailSet :
-          __smtx_typeof (__eo_to_smt_set_insert tail base) =
-            SmtType.Set A :=
-        ih base A hBase hTailTy hANN hTailNN
-      change
-        __smtx_typeof
-            (SmtTerm.set_union
-              (SmtTerm.set_singleton (__eo_to_smt head))
-              (__eo_to_smt_set_insert tail base)) =
-          SmtType.Set A
-      rw [typeof_set_union_eq, typeof_set_singleton_eq_closed, hHeadTy,
-        hTailSet]
-      simp [__smtx_typeof_guard_wf, __smtx_typeof_sets_op_2, hSetWf,
-        native_ite, native_Teq]
+theorem eo_typeof_set_insert_arg_types_of_ne_stuck
+    {A B : Term}
+    (h : __eo_typeof_set_insert A B ≠ Term.Stuck) :
+    ∃ T, A = T ∧ B = Term.Apply (Term.UOp UserOp.Set) T := by
+  by_cases hA : A = Term.Stuck
+  · subst A
+    simp [__eo_typeof_set_insert] at h
+  · cases B <;> simp [__eo_typeof_set_insert, hA] at h ⊢
+    rename_i f T
+    cases f <;> simp [__eo_typeof_set_insert, hA] at h ⊢
+    rename_i op
+    cases op <;> simp [__eo_typeof_set_insert, hA] at h ⊢
+    have hReq :
+        __eo_requires (__eo_eq A T) (Term.Boolean true) (Term.Apply (Term.UOp UserOp.Set) A) ≠
+          Term.Stuck := by
+      simpa [__eo_typeof_set_insert, hA] using h
+    have hT : T = A :=
+      support_eq_of_eo_eq_true A T
+        (support_eo_requires_cond_eq_of_non_stuck hReq)
+    exact hT
+
+theorem eo_typeof_set_insert_args_not_stuck_of_ne_stuck
+    {A B : Term}
+    (h : __eo_typeof_set_insert A B ≠ Term.Stuck) :
+    A ≠ Term.Stuck ∧ B ≠ Term.Stuck := by
+  by_cases hAStuck : A = Term.Stuck
+  · subst A
+    simp [__eo_typeof_set_insert] at h
+  · rcases eo_typeof_set_insert_arg_types_of_ne_stuck h with
+      ⟨T, hA, hB⟩
+    constructor
+    · exact hAStuck
+    · intro hStuck
+      rw [hB] at hStuck
+      cases hStuck
+
+theorem smt_set_insert_non_none_of_eo_typeof_set_insert_ne_stuck
+    (X Y : Term)
+    (hXTrans : RuleProofs.eo_has_smt_translation X)
+    (hYTrans : RuleProofs.eo_has_smt_translation Y)
+    (hApp : __eo_typeof_set_insert (__eo_typeof X) (__eo_typeof Y) ≠ Term.Stuck) :
+    __smtx_typeof (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt X))
+      (__eo_to_smt Y)) ≠ SmtType.None := by
+  rcases eo_typeof_set_insert_arg_types_of_ne_stuck hApp with ⟨T, hXTy, hYTy⟩
+  have hXSmt := TranslationProofs.eo_to_smt_typeof_matches_translation X hXTrans
+  have hYSmt := smt_typeof_eo_to_smt_set_of_typeof_set hYTrans hYTy
+  have hWf := Smtm.smt_term_set_type_wf_of_non_none (__eo_to_smt Y) hYTrans hYSmt
+  rw [typeof_set_union_eq, smtx_typeof_set_singleton_term_eq, hXSmt, hXTy, hYSmt]
+  simp [__smtx_typeof_guard_wf, hWf, native_ite, __smtx_typeof_sets_op_2, native_Teq]
 
 theorem eo_typeof_set_member_arg_types_of_ne_stuck
     {A B : Term}
