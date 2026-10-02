@@ -17,7 +17,7 @@ essentially as-is.
 | layer | files | Cpc | CpcMini | reusable? |
 | --- | --- | ---: | ---: | --- |
 | checker | `Proofs/{Checker,CheckerState,CheckerCore}.lean`, `Proofs/Invariants/Stability.lean`, `Proofs/RuleSupport/Contract.lean`, `Proofs/Assumptions.lean` | 4K | 4K | yes, except `Assumptions.lean` |
-| common | `Proofs/{Common,CommonBoolOps,TermCompat}.lean` | 1K | 1K | mostly |
+| common | `Proofs/{ModelEval,Common,CommonBoolOps,TermCompat}.lean` | 1K | 1K | mostly |
 | translation | `Proofs/Translation*` | 33K | 5K | no — signature-specific |
 | type preservation | `Proofs/TypePreservation*` | 18K | 6K | no — signature-specific |
 | canonical models | `Proofs/Canonical*` | 10K | <1K | no — signature-specific |
@@ -36,6 +36,10 @@ shape, and what a second checker would actually pay for is the *semantics*
 layer.
 
 ### Module order
+
+`Proofs/ModelEval.lean` sits directly above `SmtModel.lean`, before the
+type-preservation and other proof modules. Its Boolean evaluation lemma also
+generates the exposed evaluator's unfolding theorem once for those imports.
 
 ```
 Proofs/Common.lean            core semantics predicates (eo_interprets, eo_has_bool_type)
@@ -83,10 +87,10 @@ rewrite or, in the bad case, rewrites with the *wrong* arm. That is what made
 package wrote the proof against its own numbering, and the two texts stopped
 being one text.
 
-The fix is one line of discipline. The arms this layer needs are given names in
-`Proofs/Common.lean` — `typeof_boolean_eq`, `typeof_none_eq`,
-`model_eval_boolean_eq`, `model_eval_and_eq` — each proved by `rfl`, and the
-numbers are used nowhere in the layer. A new checker should adopt the same rule
+The arms this layer needs are given names: `model_eval_boolean_eq` in
+`Proofs/ModelEval.lean`, and `typeof_boolean_eq`, `typeof_none_eq`, and
+`model_eval_and_eq` in `Proofs/Common.lean`. The numbers are used nowhere in
+the layer. A new checker should adopt the same rule
 before its first proof, not after its second package.
 
 ## What a new checker supplies
