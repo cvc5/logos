@@ -10,7 +10,7 @@ module
 public import Cpc.SmtValueOrder
 import all Cpc.SmtValueOrder
 
-public section
+@[expose] public section
 
 set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
@@ -1984,7 +1984,7 @@ macro_rules
             else
               SmtValue.NotValue)
 
-@[expose] noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
+noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.Boolean b1) => (SmtValue.Boolean b1)
   | (SmtTerm.Numeral i1) => (SmtValue.Numeral i1)
   | (SmtTerm.Rational r1) => (SmtValue.Rational r1)
