@@ -851,7 +851,7 @@ private def parserOps : List (Logos.Parser.OpDecl Term) := [
       | _ => none },
   { name := "re.diff"
     indexArity := 0
-    arity := .exact 2
+    arity := .leftAssoc
     build := fun
       | [] => some (Term.UOp UserOp.re_diff)
       | _ => none },
@@ -1067,7 +1067,7 @@ private def parserOps : List (Logos.Parser.OpDecl Term) := [
       | _ => none },
   { name := "set.insert"
     indexArity := 0
-    arity := .exact 2
+    arity := .rightAssoc
     build := fun
       | [] => some (Term.UOp UserOp.set_insert)
       | _ => none },
@@ -1522,7 +1522,6 @@ private def parserRules : List (String × CRule) := [
   ("sets_singleton_inj", .sets_singleton_inj),
   ("sets_ext", .sets_ext),
   ("sets-eval-op", .sets_eval_op),
-  ("sets-insert-elim", .sets_insert_elim),
   ("ubv-to-int-elim", .ubv_to_int_elim),
   ("int-to-bv-elim", .int_to_bv_elim),
   ("instantiate", .instantiate),
@@ -1777,6 +1776,7 @@ private def parserRules : List (String × CRule) := [
   ("sets-member-singleton", .sets_member_singleton),
   ("sets-member-emp", .sets_member_emp),
   ("sets-subset-elim", .sets_subset_elim),
+  ("sets-insert-elim", .sets_insert_elim),
   ("sets-union-comm", .sets_union_comm),
   ("sets-inter-comm", .sets_inter_comm),
   ("sets-inter-emp1", .sets_inter_emp1),
