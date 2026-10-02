@@ -50,7 +50,7 @@ theorem smt_set_singleton_non_none_of_has_smt_translation_type_eq
       __smtx_typeof (__eo_to_smt X) =
         __smtx_typeof (__eo_to_smt A) := by
     rw [hXMatch, hAMatch, hXTyEq]
-  simpa [typeof_set_singleton_eq_closed, hSmtTy] using hOrig
+  simpa [smtx_typeof_set_singleton_term_eq_closed, hSmtTy] using hOrig
 
 theorem eo_typeof_set_union_arg_types_of_ne_stuck
     {A B : Term}
@@ -157,7 +157,7 @@ theorem smt_set_insert_non_none_of_eo_typeof_set_insert_ne_stuck
   have hXSmt := TranslationProofs.eo_to_smt_typeof_matches_translation X hXTrans
   have hYSmt := smt_typeof_eo_to_smt_set_of_typeof_set hYTrans hYTy
   have hWf := Smtm.smt_term_set_type_wf_of_non_none (__eo_to_smt Y) hYTrans hYSmt
-  rw [typeof_set_union_eq, typeof_set_singleton_eq, hXSmt, hXTy, hYSmt]
+  rw [typeof_set_union_eq, smtx_typeof_set_singleton_term_eq, hXSmt, hXTy, hYSmt]
   simp [__smtx_typeof_guard_wf, hWf, native_ite, __smtx_typeof_sets_op_2, native_Teq]
 
 theorem eo_typeof_set_member_arg_types_of_ne_stuck

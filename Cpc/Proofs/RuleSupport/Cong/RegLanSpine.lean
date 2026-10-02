@@ -1953,7 +1953,7 @@ theorem congTypeSpine_set_insert_eq_has_bool_type
     (by
       intro a b a' b' ha hb
       rw [typeof_set_union_eq, typeof_set_union_eq,
-        typeof_set_singleton_eq, typeof_set_singleton_eq, ha, hb]) xs x rhs
+        smtx_typeof_set_singleton_term_eq, smtx_typeof_set_singleton_term_eq, ha, hb]) xs x rhs
 
 theorem congTrueSpine_set_insert_eq_true
     (M : SmtModel) (hM : model_wf M) (xs x rhs : Term) :

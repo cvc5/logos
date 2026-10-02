@@ -6637,7 +6637,10 @@ theorem typeof_apply_set_insert_raw_base_eq_none_closed
     (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt xs))
       (__eo_to_smt (Term.Apply (Term.Apply Term.__eo_List_cons v) vs)))
     (__eo_to_smt z)) = SmtType.None
-  rw [__smtx_typeof.eq_def]
+  change __smtx_typeof_apply
+    (__smtx_typeof (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt xs))
+      (__eo_to_smt (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))))
+    (__smtx_typeof (__eo_to_smt z)) = SmtType.None
   rw [typeof_set_union_eq, hBase]
   cases __smtx_typeof (SmtTerm.set_singleton (__eo_to_smt xs)) <;>
     simp [__smtx_typeof_sets_op_2, __smtx_typeof_apply]

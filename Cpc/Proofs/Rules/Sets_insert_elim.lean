@@ -1,7 +1,7 @@
 module
 
-public import Cpc.Proofs.RuleSupport.SetsBasicRewritesSupport
-import all Cpc.Proofs.RuleSupport.SetsBasicRewritesSupport
+public import Cpc.Proofs.RuleSupport.Support
+import all Cpc.Proofs.RuleSupport.Support
 
 open Eo SmtEval Smtm
 
@@ -40,9 +40,15 @@ private theorem typed_insert_eq (x s : Term)
     (hs : RuleProofs.eo_has_smt_translation s)
     (hTy : __eo_typeof (eqTerm x s) = Term.Bool) :
     RuleProofs.eo_has_bool_type (eqTerm x s) := by
+  have hEqTy : __eo_typeof_eq
+      (__eo_typeof (insertTerm x s)) (__eo_typeof (unionTerm x s)) = Term.Bool := hTy
   have hInsertNS : __eo_typeof_set_insert (__eo_typeof x) (__eo_typeof s) ≠
-      Term.Stuck :=
-    (RuleProofs.eo_typeof_eq_bool_operands_not_stuck _ _ hTy).1
+      Term.Stuck := by
+    intro h
+    change __eo_typeof_eq
+      (__eo_typeof_set_insert (__eo_typeof x) (__eo_typeof s)) _ = Term.Bool at hEqTy
+    rw [h] at hEqTy
+    simp [__eo_typeof_eq] at hEqTy
   rcases insert_arg_types hInsertNS with ⟨T, hxTy, hsTy⟩
   have hxSmt := TranslationProofs.eo_to_smt_typeof_matches_translation x hx
   have hsSmt := TranslationProofs.eo_to_smt_typeof_matches_translation s hs
@@ -50,7 +56,11 @@ private theorem typed_insert_eq (x s : Term)
       SmtType.None := by
     rw [← hsTy, ← hsSmt]
     exact hs
-  have hSetTy := SetsBasicRewritesSupport.eo_to_smt_type_set_of_non_none T hSetNN
+  have hSetTy : __eo_to_smt_type (Term.Apply (Term.UOp UserOp.Set) T) =
+      SmtType.Set (__eo_to_smt_type T) := by
+    cases hT : __eo_to_smt_type T <;>
+      simp [TranslationProofs.eo_to_smt_type_set, __smtx_typeof_guard,
+        native_ite, native_Teq, hT] at hSetNN ⊢
   have hsSet : __smtx_typeof (__eo_to_smt s) = SmtType.Set (__eo_to_smt_type T) := by
     rw [hsSmt, hsTy, hSetTy]
   have hWf := smt_term_set_type_wf_of_non_none (__eo_to_smt s) hs hsSet
@@ -58,7 +68,7 @@ private theorem typed_insert_eq (x s : Term)
     change __smtx_typeof
       (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt x)) (__eo_to_smt s)) ≠
         SmtType.None
-    rw [typeof_set_union_eq, typeof_set_singleton_eq, hxSmt, hxTy, hsSet]
+    rw [typeof_set_union_eq, smtx_typeof_set_singleton_term_eq, hxSmt, hxTy, hsSet]
     simp [__smtx_typeof_guard_wf, hWf, native_ite, __smtx_typeof_sets_op_2, native_Teq]
   exact RuleProofs.eo_has_bool_type_eq_of_same_smt_type
     (insertTerm x s) (unionTerm x s) rfl hInsertTrans
