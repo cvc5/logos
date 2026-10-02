@@ -678,7 +678,7 @@ macro_rules
             else
               SmtValue.NotValue)
 
-noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
+@[expose] noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.Boolean b1) => (SmtValue.Boolean b1)
   | (SmtTerm.Numeral i1) => (SmtValue.Numeral i1)
   | (SmtTerm.Rational r1) => (SmtValue.Rational r1)
@@ -702,11 +702,6 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.UConst s T) => (native_model_lookup M s T)
   | x1 => SmtValue.NotValue
 termination_by structural t => t
-
-private theorem __smtx_model_eval_eqns_cache (M : SmtModel) (b : Bool) :
-    __smtx_model_eval M (SmtTerm.Boolean b) = SmtValue.Boolean b := by
-  unfold __smtx_model_eval
-  rfl
 
 
 

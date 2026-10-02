@@ -58,13 +58,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y libgmp-dev
 
-      # Keyed on get-eo-compiler.sh, which is where the ethos commit is pinned,
-      # so moving the pin rebuilds and everything else reuses the build.
+      # Rebuild when the pinned compiler or its local patches change.
       - name: Restore the Eunoia compiler
         uses: actions/cache@v5
         with:
           path: install/deps
-          key: eoc-${{ runner.os }}-${{ hashFiles('install/get-eo-compiler.sh') }}
+          key: eoc-${{ runner.os }}-${{ hashFiles('install/get-eo-compiler.sh', 'install/patches/*.patch') }}
 
       - name: Build the Eunoia compiler
         run: |
