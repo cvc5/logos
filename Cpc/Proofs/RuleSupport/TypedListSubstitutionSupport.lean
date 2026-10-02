@@ -18,8 +18,8 @@ set_option maxRecDepth 2000
 
 This module collects typed-list facts needed by substitution preservation
 lemmas whose SMT translation is not obtained by translating the typed-list term
-as an ordinary EO subterm. The motivating examples are `distinct` and
-`set_insert`: their arguments are inspected through
+as an ordinary EO subterm. The `distinct` operator, for example, inspects its
+argument through
 `__eo_to_smt_typed_list_elem_type`.
 -/
 
@@ -535,30 +535,6 @@ theorem eo_typeof_distinct_arg_typed_list_of_ne_stuck
       apply hTy
       rw [hXsTy]
       rfl
-
-theorem eo_typeof_set_insert_left_typed_list_of_ne_stuck
-    (L B : Term)
-    (hTy : __eo_typeof_set_insert L B ≠ Term.Stuck) :
-    ∃ T, L = Term.Apply (Term.UOp UserOp._at__at_TypedList) T := by
-  cases L with
-  | Apply f T =>
-      cases f with
-      | UOp op =>
-          cases op
-          case _at__at_TypedList =>
-            exact ⟨T, rfl⟩
-          all_goals
-            exfalso
-            apply hTy
-            cases B <;> rfl
-      | _ =>
-          exfalso
-          apply hTy
-          cases B <;> rfl
-  | _ =>
-      exfalso
-      apply hTy
-      cases B <;> rfl
 
 private theorem eo_typeof_typed_list_cons_head_ne_stuck_of_typed
     (head tail T : Term)
