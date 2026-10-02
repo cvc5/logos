@@ -3729,6 +3729,11 @@ def __eo_prog_sets_ext : Proof -> Term
   | _ => Term.Stuck
 
 
+def __eo_prog_sets_choose_member : Term -> Term
+  | (Term.Apply (Term.UOp UserOp.set_choose) a) => (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.or) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.eq) a) (Term.UOp1 UserOp1.set_empty (__eo_typeof a)))) (Term.Apply (Term.Apply (Term.UOp UserOp.or) (Term.Apply (Term.Apply (Term.UOp UserOp.set_member) (Term.Apply (Term.UOp UserOp.set_choose) a)) a)) (Term.Boolean false)))
+  | _ => Term.Stuck
+
+
 def __set_union_to_list : Term -> Term
   | (Term.Apply (Term.Apply (Term.UOp UserOp.set_union) (Term.Apply (Term.UOp UserOp.set_singleton) e)) t) => (__eo_mk_apply (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) e) (__set_union_to_list t))
   | (Term.UOp1 UserOp1.set_empty (Term.Apply (Term.UOp UserOp.Set) T)) => (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) T)
@@ -9454,6 +9459,7 @@ inductive CRule : Type where
   | seq_eval_op : CRule
   | sets_singleton_inj : CRule
   | sets_ext : CRule
+  | sets_choose_member : CRule
   | sets_eval_op : CRule
   | sets_insert_elim : CRule
   | ubv_to_int_elim : CRule
@@ -10128,6 +10134,7 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.seq_eval_op, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_seq_eval_op a1)
   | CRule.sets_singleton_inj, CArgList.nil, (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_sets_singleton_inj (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.sets_ext, CArgList.nil, (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_sets_ext (Proof.pf (__eo_state_proven_nth S n1)))
+  | CRule.sets_choose_member, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_choose_member a1)
   | CRule.sets_eval_op, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_eval_op a1)
   | CRule.sets_insert_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_insert_elim a1)
   | CRule.ubv_to_int_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_ubv_to_int_elim a1)
