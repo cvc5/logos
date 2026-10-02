@@ -7,9 +7,8 @@ usage() {
 Usage: install/get-eo-compiler.sh [OPTION]...
 
 Download and build the Eunoia compiler that install/install-cpc.sh runs: the
-ethos source tree, pinned to the commit recorded in ETHOS_VERSION below, with
-the patches in install/patches/, and ethos-eoc built from the standalone
-project in its plugins/ directory.
+ethos source tree, pinned to the commit recorded in ETHOS_VERSION below, and
+ethos-eoc built from the standalone project in its plugins/ directory.
 
 Both are placed under install/deps/ (see --deps-dir) and the resulting paths
 and version are recorded in install/deps/eoc-env.sh, which install-cpc.sh reads
@@ -34,7 +33,7 @@ Options:
   --keep-tmp           keep the downloaded archive instead of deleting it
   -h, --help           show this message
 
-Requires cmake >= 3.12, a C++17 compiler, the GMP development headers, tar, patch, and
+Requires cmake >= 3.12, a C++17 compiler, the GMP development headers, tar, and
 either wget or curl. On Debian and Ubuntu the GMP headers are libgmp-dev; on
 macOS with Homebrew they are gmp.
 
@@ -104,7 +103,7 @@ download() {
   fi
 }
 
-for tool in cmake tar patch; do
+for tool in cmake tar; do
   command -v "${tool}" >/dev/null 2>&1 || {
     echo "${tool} is required but was not found on PATH." >&2
     exit 1
@@ -124,14 +123,6 @@ mkdir -p "${ETHOS_DIR}"
 # --strip-components drops the leading directory a GitHub archive wraps
 # everything in.
 tar --strip-components 1 -xzf "${TMP_DIR}/ethos.tgz" -C "${ETHOS_DIR}"
-
-# Keep generated definitions in sync until these changes reach the pinned
-# upstream compiler. Remove each patch when advancing to a commit containing it.
-for compiler_patch in "${script_dir}"/patches/*.patch; do
-  [ -f "${compiler_patch}" ] || continue
-  echo "==> Applying $(basename "${compiler_patch}")"
-  patch --batch --forward -d "${ETHOS_DIR}" -p1 < "${compiler_patch}"
-done
 
 DRIVER="${ETHOS_DIR}/tools/eoc/driver.py"
 if [ ! -f "${DRIVER}" ]; then

@@ -135,12 +135,6 @@ The core SMT-LIB semantics it is written against live with the eoc compiler
 rather than here: `tools/eoc/semantics/smt.eos` in
 [cvc5/ethos](https://github.com/cvc5/ethos).
 
-`get-eo-compiler.sh` applies the patches in `install/patches/` before building
-the pinned compiler. The model-evaluation patch exposes the evaluator's body
-and leaves its unfolding lemma to `Proofs/ModelEval.lean`, so generated model
-definitions contain no cache theorem. Remove the patch when the compiler pin
-advances to a commit containing the change.
-
 `Spec.lean` and the `SmtModel` modules are what the two compile to, so changing
 what CPC means changes what satisfiability means in Logos.
 
