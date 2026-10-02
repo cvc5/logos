@@ -3,8 +3,8 @@ module
 public import Cpc.Proofs.RuleSupport.Support
 import all Cpc.Proofs.RuleSupport.Support
 
-public import Cpc.Proofs.RuleSupport.SetsEvalOpSupport
-import all Cpc.Proofs.RuleSupport.SetsEvalOpSupport
+public import Cpc.Proofs.RuleSupport.SetsMemberSupport
+import all Cpc.Proofs.RuleSupport.SetsMemberSupport
 public import Cpc.Proofs.RuleSupport.ArraySupport
 import all Cpc.Proofs.RuleSupport.ArraySupport
 
@@ -95,8 +95,19 @@ private theorem choose_member_properties
   intro _
   apply smt_interprets.intro_true M _ hBool
   rw [hP]
-  rcases SetsEvalOpSupport.set_value_facts M hM a A haTrans hSetTy with
-    ⟨m, hm, hmCan, hmTy, hmDef⟩
+  have hValTy : __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt a)) =
+      SmtType.Set A := by
+    simpa [hSetTy] using smt_model_eval_preserves_type_of_non_none M hM
+      (__eo_to_smt a) haTrans
+  rcases set_value_canonical hValTy with ⟨m, hm⟩
+  have hmTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool :=
+    set_map_value_typed (by simpa [hm] using hValTy)
+  have hCan := RuleProofs.model_eval_eo_to_smt_canonical M hM a haTrans
+  have hParts : __smtx_map_canonical m = true ∧
+      native_veq (__smtx_map_get_default m) (SmtValue.Boolean false) = true := by
+    simpa [hm, value_canonical, __smtx_value_canonical, SmtEval.native_and] using hCan
+  have hmCan := hParts.1
+  have hmDef := eq_of_native_veq_true hParts.2
   have hEvalEmpty : __smtx_model_eval M (SmtTerm.set_empty A) =
       SmtValue.Set (SmtMap.default A (SmtValue.Boolean false)) := by
     rw [__smtx_model_eval.eq_def]
