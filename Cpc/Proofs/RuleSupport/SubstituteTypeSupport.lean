@@ -2012,10 +2012,6 @@ theorem eo_typeof_bvult_stuck_right (X : Term) :
 
 theorem eo_typeof_set_insert_stuck_right (X : Term) :
     __eo_typeof_set_insert X Term.Stuck = Term.Stuck := by
-  cases X <;> try rfl
-  case Apply f a =>
-    cases f <;> try rfl
-    case UOp op =>
-      cases op <;> rfl
+  cases X <;> rfl
 
 end SubstituteSupport
