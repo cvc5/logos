@@ -1039,10 +1039,8 @@ theorem congTypeSpine_eq_has_bool_type (t rhs : Term) :
           (Term.Apply (Term.UOp UserOp.exists) Term.__eo_List_nil) x)
           (by rfl) hTrans)
   | Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) Term.__eo_List_nil) x =>
-      exact False.elim
-        (no_translation_of_eo_to_smt_none (t := Term.Apply
-          (Term.Apply (Term.UOp UserOp.set_insert) Term.__eo_List_nil) x)
-          (by rfl) hTrans)
+      exact congTypeSpine_set_insert_eq_has_bool_type
+        Term.__eo_List_nil x rhs hTrans hSpine
   | lhs =>
       match hHead : (appSpineRev lhs).1 with
       | Term.Var (Term.String s) T =>

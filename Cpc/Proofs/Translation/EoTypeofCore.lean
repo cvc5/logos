@@ -2898,40 +2898,6 @@ private theorem eo_to_smt_exists_ne_numeral_of_not_nil
         case Var name T =>
           cases name <;> cases h
 
-private theorem eo_to_smt_apply_set_insert_ne_numeral
-    (xs x : Term) (n : native_Int) :
-    __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) x) ≠
-      SmtTerm.Numeral n := by
-  intro h
-  cases xs <;> try cases h
-  case Apply f a =>
-    cases f <;> try cases h
-    case UOp op =>
-      cases op <;> try cases h
-      case _at__at_TypedList_nil =>
-        cases hTy :
-            native_Teq (__smtx_typeof (__eo_to_smt x))
-              (SmtType.Set (__eo_to_smt_type a))
-        · change
-            __eo_to_smt_set_insert
-                (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) a)
-                (__eo_to_smt x) =
-              SmtTerm.Numeral n at h
-          simp [__eo_to_smt_set_insert, hTy, native_ite] at h
-        · change
-            __eo_to_smt_set_insert
-                (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) a)
-                (__eo_to_smt x) =
-              SmtTerm.Numeral n at h
-          simp [__eo_to_smt_set_insert, hTy, native_ite] at h
-          change __eo_to_smt x = SmtTerm.Numeral n at h
-          rw [h] at hTy
-          simp [__smtx_typeof, native_Teq] at hTy
-    case Apply g head =>
-      cases g <;> try cases h
-      case UOp op =>
-        cases op <;> cases h
-
 private theorem eo_to_smt_apply_forall_ne_numeral
     (xs body : Term) (n : native_Int) :
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.forall) xs) body) ≠
@@ -2992,8 +2958,6 @@ private theorem eo_to_smt_apply_ne_numeral
     cases g <;> try cases h
     case UOp op =>
       cases op <;> try cases h
-      case set_insert =>
-        exact False.elim (eo_to_smt_apply_set_insert_ne_numeral y x n h)
       case «forall» =>
         exact False.elim (eo_to_smt_apply_forall_ne_numeral y x n h)
       case «exists» =>

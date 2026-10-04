@@ -610,6 +610,15 @@ private theorem false_of_requires_eq_dtcapp_of_payload_ne_full
     | exact hU hReq
     | cases hReq
 
+private theorem false_of_typeof_set_insert_eq_dtcapp_full
+    {X Y A B : Term}
+    (hTy : __eo_typeof_set_insert X Y = Term.DtcAppType A B) : False := by
+  unfold __eo_typeof_set_insert at hTy
+  repeat (first | split at hTy)
+  all_goals first
+    | exact false_of_requires_eq_dtcapp_of_payload_ne_full (by intro h; cases h) hTy
+    | cases hTy
+
 private theorem false_of_typeof_store_eq_dtcapp_full
     {z y x A B : Term}
     (hTy :
@@ -3403,6 +3412,8 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                   exact False.elim (false_of_typeof_lt_eq_dtcapp_full hTy)
                 case geq =>
                   exact False.elim (false_of_typeof_lt_eq_dtcapp_full hTy)
+                case set_insert =>
+                  exact False.elim (false_of_typeof_set_insert_eq_dtcapp_full hTy)
                 case set_member =>
                   exact False.elim (false_of_typeof_set_member_eq_dtcapp_full hTy)
                 case qdiv =>
@@ -3483,7 +3494,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                         __eo_typeof_re_concat, __eo_typeof_str_in_re,
                         __eo_typeof__at_strings_deq_diff, __eo_typeof_tuple,
                         __eo_typeof_set_union,
-                        __eo_typeof_set_subset, __eo_typeof_set_insert,
+                        __eo_typeof_set_subset,
                         __eo_typeof_forall,
                         
                         __eo_is_list,
@@ -3528,7 +3539,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                        __eo_typeof_str_in_re, __eo_typeof__at_strings_deq_diff,
                        __eo_typeof_tuple, __eo_typeof_set_union,
                        __eo_typeof_set_member, __eo_typeof_set_subset,
-                       __eo_typeof_set_insert, __eo_typeof_qdiv,
+                       __eo_typeof_qdiv,
                        __eo_typeof_forall, __eo_is_list, __eo_get_nil_rec,
                        __eo_is_list_nil, __eo_is_ok, __eo_list_len, __is_arith_type,
                        __eo_eq, __eo_and, __eo_mk_apply, __eo_add, native_ite,
