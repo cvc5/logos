@@ -4450,6 +4450,11 @@
       (= (set.member (@sets_deq_diff a b) a)
         (set.member (@sets_deq_diff a b) b)))
 )
+(declare-rule sets_choose_member ((T Type) (a (Set T)))
+  :args ((set.choose a))
+  :conclusion
+    (or (= a (as set.empty (eo::typeof a))) (set.member (set.choose a) a))
+)
 (program $set_union_to_list ((T Type) (t (Set T)) (e T))
   :signature ((Set T)) (@TList T)
   (

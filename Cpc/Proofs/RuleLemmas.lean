@@ -142,6 +142,7 @@ import Cpc.Proofs.Rules.Str_replace_re_all_eval
 import Cpc.Proofs.Rules.Seq_eval_op
 import Cpc.Proofs.Rules.Sets_singleton_inj
 import Cpc.Proofs.Rules.Sets_ext
+import Cpc.Proofs.Rules.Sets_choose_member
 import Cpc.Proofs.Rules.Sets_eval_op
 import Cpc.Proofs.Rules.Ubv_to_int_elim
 import Cpc.Proofs.Rules.Int_to_bv_elim
@@ -1306,6 +1307,11 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_sets_ext_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | sets_choose_member =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_sets_choose_member_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | sets_eval_op =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by

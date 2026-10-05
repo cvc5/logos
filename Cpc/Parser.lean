@@ -1521,6 +1521,7 @@ private def parserRules : List (String × CRule) := [
   ("seq-eval-op", .seq_eval_op),
   ("sets_singleton_inj", .sets_singleton_inj),
   ("sets_ext", .sets_ext),
+  ("sets_choose_member", .sets_choose_member),
   ("sets-eval-op", .sets_eval_op),
   ("ubv-to-int-elim", .ubv_to_int_elim),
   ("int-to-bv-elim", .int_to_bv_elim),
