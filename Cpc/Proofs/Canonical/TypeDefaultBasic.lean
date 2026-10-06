@@ -1,7 +1,7 @@
 module
 
-public import Cpc.SmtModel
-import all Cpc.SmtModel
+public import Cpc.Proofs.ModelEval
+import all Cpc.Proofs.ModelEval
 
 public section
 

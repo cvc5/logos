@@ -10,7 +10,7 @@ module
 public import CpcMini.SmtValueOrder
 import all CpcMini.SmtValueOrder
 
-public section
+@[expose] public section
 
 set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
@@ -702,11 +702,6 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.UConst s T) => (native_model_lookup M s T)
   | x1 => SmtValue.NotValue
 termination_by structural t => t
-
-private theorem __smtx_model_eval_eqns_cache (M : SmtModel) (b : Bool) :
-    __smtx_model_eval M (SmtTerm.Boolean b) = SmtValue.Boolean b := by
-  unfold __smtx_model_eval
-  rfl
 
 
 

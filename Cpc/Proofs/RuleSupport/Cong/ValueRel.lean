@@ -4,7 +4,7 @@ public import Cpc.Proofs.RuleSupport.Cong.Core
 import all Cpc.Proofs.RuleSupport.Cong.Core
 public import Cpc.Proofs.Translation.Apply
 import all Cpc.Proofs.Translation.Apply
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 
 public section
 

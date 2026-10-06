@@ -4,8 +4,8 @@ public import CpcMini.Spec
 import all CpcMini.Spec
 public import CpcMini.Logos
 import all CpcMini.Logos
-public import CpcMini.SmtModel
-import all CpcMini.SmtModel
+public import CpcMini.Proofs.ModelEval
+import all CpcMini.Proofs.ModelEval
 
 @[expose] public section
 

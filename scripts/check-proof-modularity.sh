@@ -23,6 +23,7 @@ bad()  { printf '  FAIL: %s\n' "$*" >&2; fail=1; }
 core_files() {
   local pkg="$1"
   printf '%s\n' \
+    "${pkg}/Proofs/ModelEval.lean" \
     "${pkg}/Proofs/Common.lean" \
     "${pkg}/Proofs/Assumptions.lean" \
     "${pkg}/Proofs/RuleSupport/Contract.lean" \
@@ -52,6 +53,7 @@ core_files() {
 #                                          inherit is measured rather than
 #                                          assumed.
 SHARED_FILES=(
+  "Proofs/ModelEval.lean"
   "Proofs/Checker.lean"
   "Proofs/CheckerState.lean"
   "Proofs/TypePreservation/Datatypes.lean"
