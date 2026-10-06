@@ -2918,32 +2918,13 @@ theorem smt_str_indexof_re_split_type_none_of_third_arg_none
     rw [hc] at hArgs
     cases hArgs.2.2
 
-theorem eo_to_smt_set_insert_type_none_of_arg_none :
-    ∀ xs a,
-      __smtx_typeof a = SmtType.None ->
-      __smtx_typeof (__eo_to_smt_set_insert xs a) = SmtType.None := by
-  intro xs a ha
-  cases xs <;> try simp [__eo_to_smt_set_insert]
-  case Apply f tail =>
-    cases f <;> try simp [__eo_to_smt_set_insert]
-    case UOp op =>
-      cases op <;> simp [__eo_to_smt_set_insert, ha, native_ite, native_Teq]
-    case Apply f' head =>
-      cases f' <;> try simp [__eo_to_smt_set_insert]
-      case UOp op =>
-        cases op <;> try simp [__eo_to_smt_set_insert]
-        have hTail :
-            __smtx_typeof (__eo_to_smt_set_insert tail a) =
-              SmtType.None :=
-          eo_to_smt_set_insert_type_none_of_arg_none tail a ha
-        change
-          __smtx_typeof
-              (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt head))
-                (__eo_to_smt_set_insert tail a)) = SmtType.None
-        rw [typeof_set_union_eq, hTail]
-        cases __smtx_typeof (SmtTerm.set_singleton (__eo_to_smt head)) <;>
-          simp [__smtx_typeof_sets_op_2]
-termination_by xs a _ => xs
+theorem eo_to_smt_set_insert_type_none_of_arg_none
+    (xs : Term) (a : SmtTerm) (ha : __smtx_typeof a = SmtType.None) :
+    __smtx_typeof (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt xs)) a) =
+      SmtType.None := by
+  rw [typeof_set_union_eq, ha]
+  cases __smtx_typeof (SmtTerm.set_singleton (__eo_to_smt xs)) <;>
+    simp [__smtx_typeof_sets_op_2]
 
 theorem eo_to_smt_exists_type_none_of_body_none :
     ∀ xs body,

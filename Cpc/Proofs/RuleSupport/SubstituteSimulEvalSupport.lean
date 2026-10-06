@@ -2006,318 +2006,6 @@ theorem substFalse_eval_distinct
       hElemNN (by simpa [aSub] using hSubstElemNN)
       hRecArg
 
-theorem substFalse_eval_eo_to_smt_set_insert_cross
-    (root : Term) (baseSub baseOrig : SmtTerm)
-    (tl xs ss bvs : Term) {M N : SmtModel}
-    {xsVars bvsVars : List EoVarKey}
-    (hLt : sizeOf tl < sizeOf root)
-    (hTlSubterm : IsNonbinderSubterm tl root)
-    (hXsEnv : EoVarEnvPerm xs xsVars)
-    (hBvsEnv : EoVarEnvPerm bvs bvsVars)
-    (hSsTrans : EoListAllHaveSmtTranslation ss)
-    (hisr : (Term.Boolean isRename : Term) ≠ Term.Stuck)
-    (hxs : xs ≠ Term.Stuck) (hss : ss ≠ Term.Stuck) (hbvs : bvs ≠ Term.Stuck)
-    (hElemNN : __eo_to_smt_typed_list_elem_type tl ≠ SmtType.None)
-    (hSubstElemNN :
-      __eo_to_smt_typed_list_elem_type
-          (__substitute_simul_rec (Term.Boolean isRename) tl xs ss bvs) ≠
-        SmtType.None)
-    (hBaseSubTy :
-      __smtx_typeof baseSub =
-        SmtType.Set
-          (__eo_to_smt_typed_list_elem_type
-            (__substitute_simul_rec (Term.Boolean isRename) tl xs ss bvs)))
-    (hBaseOrigTy :
-      __smtx_typeof baseOrig =
-        SmtType.Set (__eo_to_smt_typed_list_elem_type tl))
-    (hBaseEval :
-      __smtx_model_eval M baseSub =
-        __smtx_model_eval N baseOrig)
-    (hRec :
-      ∀ {b : Term},
-        IsNonbinderSubterm b root ->
-        sizeOf b < sizeOf root ->
-        eoHasSmtTranslation b ->
-        eoHasSmtTranslation
-          (__substitute_simul_rec (Term.Boolean isRename) b xs ss bvs) ->
-        __smtx_model_eval M
-            (__eo_to_smt
-              (__substitute_simul_rec (Term.Boolean isRename) b xs ss bvs)) =
-          __smtx_model_eval N (__eo_to_smt b)) :
-    __smtx_model_eval M
-        (__eo_to_smt_set_insert
-          (__substitute_simul_rec (Term.Boolean isRename) tl xs ss bvs)
-          baseSub) =
-      __smtx_model_eval N (__eo_to_smt_set_insert tl baseOrig) := by
-  cases tl with
-  | Apply f tail =>
-      cases f with
-      | UOp op =>
-          cases op with
-          | _at__at_TypedList_nil =>
-              let TSub :=
-                __substitute_simul_rec (Term.Boolean isRename) tail xs ss bvs
-              have hHeadSub :
-                  __substitute_simul_rec (Term.Boolean isRename)
-                      (Term.UOp UserOp._at__at_TypedList_nil) xs ss bvs =
-                    Term.UOp UserOp._at__at_TypedList_nil :=
-                substitute_simul_rec_uop_eq_self
-                  UserOp._at__at_TypedList_nil xs ss bvs hXsEnv hBvsEnv hSsTrans
-              have hSubstEq :
-                  __substitute_simul_rec (Term.Boolean isRename)
-                      (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) tail)
-                      xs ss bvs =
-                    __eo_mk_apply (Term.UOp UserOp._at__at_TypedList_nil) TSub := by
-                have hApplyEq :=
-                  SubstituteSupport.substitute_simul_rec_apply
-                    (Term.Boolean isRename)
-                    (Term.UOp UserOp._at__at_TypedList_nil) tail xs ss bvs
-                    hisr hxs hss hbvs
-                    (by intro q v vs hEq; cases hEq)
-                simpa [TSub, hHeadSub] using hApplyEq
-              have hMk :
-                  __eo_mk_apply (Term.UOp UserOp._at__at_TypedList_nil) TSub =
-                    Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) TSub :=
-                instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ (by
-                  rw [← hSubstEq]
-                  exact TypedListSubstitutionSupport.typed_list_elem_type_non_none_not_stuck
-                    hSubstElemNN)
-              have hBaseSubTy' :
-                  __smtx_typeof baseSub =
-                    SmtType.Set
-                      (__eo_to_smt_typed_list_elem_type
-                        (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil)
-                          TSub)) := by
-                simpa [TSub, hSubstEq, hMk] using hBaseSubTy
-              have hSubstElemNN' :
-                  __eo_to_smt_typed_list_elem_type
-                      (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil)
-                        TSub) ≠
-                    SmtType.None := by
-                simpa [TSub, hSubstEq, hMk] using hSubstElemNN
-              have hSubElemEq :=
-                TypedListSubstitutionSupport.typed_list_nil_elem_type_eq_of_non_none
-                  TSub hSubstElemNN'
-              have hOrigElemEq :=
-                TypedListSubstitutionSupport.typed_list_nil_elem_type_eq_of_non_none
-                  tail hElemNN
-              have hSubGuard :
-                  native_Teq (__smtx_typeof baseSub)
-                      (SmtType.Set (__eo_to_smt_type TSub)) =
-                    true := by
-                rw [hBaseSubTy', hSubElemEq]
-                simp [native_Teq]
-              have hOrigGuard :
-                  native_Teq (__smtx_typeof baseOrig)
-                      (SmtType.Set (__eo_to_smt_type tail)) =
-                    true := by
-                rw [hBaseOrigTy, hOrigElemEq]
-                simp [native_Teq]
-              rw [hSubstEq, hMk]
-              change
-                __smtx_model_eval M
-                    (native_ite
-                      (native_Teq (__smtx_typeof baseSub)
-                        (SmtType.Set (__eo_to_smt_type TSub)))
-                      baseSub SmtTerm.None) =
-                  __smtx_model_eval N
-                    (native_ite
-                      (native_Teq (__smtx_typeof baseOrig)
-                        (SmtType.Set (__eo_to_smt_type tail)))
-                      baseOrig SmtTerm.None)
-              rw [hSubGuard, hOrigGuard]
-              simpa [native_ite] using hBaseEval
-          | _ =>
-              exact False.elim
-                (hElemNN (by simp [__eo_to_smt_typed_list_elem_type]))
-      | Apply g head =>
-          cases g with
-          | UOp op =>
-              cases op with
-              | _at__at_TypedList_cons =>
-                  let headSub :=
-                    __substitute_simul_rec (Term.Boolean isRename) head xs ss bvs
-                  let tailSub :=
-                    __substitute_simul_rec (Term.Boolean isRename) tail xs ss bvs
-                  rcases TypedListSubstitutionSupport.typed_list_cons_elem_type_parts head tail hElemNN with
-                    ⟨hHeadTail, hHeadNN, hTailNN, hConsEq⟩
-                  have hHeadTrans : eoHasSmtTranslation head := by
-                    unfold eoHasSmtTranslation
-                    simpa using hHeadNN
-                  have hConsNonbinder :
-                      ¬ IsBinderHead
-                        (Term.Apply
-                          (Term.UOp UserOp._at__at_TypedList_cons) head) :=
-                    not_isBinderHead_apply_of_arg_translation _ _ hHeadTrans
-                  have hHeadSubterm : IsNonbinderSubterm head root :=
-                    isNonbinderSubterm_trans
-                      (by
-                        simp [IsNonbinderSubterm, hConsNonbinder])
-                      hTlSubterm
-                  have hTailSubterm : IsNonbinderSubterm tail root :=
-                    isNonbinderSubterm_trans
-                      (by
-                        simp [IsNonbinderSubterm, hConsNonbinder])
-                      hTlSubterm
-                  have hInnerSub :
-                      __substitute_simul_rec (Term.Boolean isRename)
-                          (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) head)
-                          xs ss bvs =
-                        __eo_mk_apply
-                          (Term.UOp UserOp._at__at_TypedList_cons) headSub := by
-                    have hHeadSub :
-                        __substitute_simul_rec (Term.Boolean isRename)
-                            (Term.UOp UserOp._at__at_TypedList_cons) xs ss bvs =
-                          Term.UOp UserOp._at__at_TypedList_cons :=
-                      substitute_simul_rec_uop_eq_self
-                        UserOp._at__at_TypedList_cons xs ss bvs
-                        hXsEnv hBvsEnv hSsTrans
-                    have hApplyEq :=
-                      SubstituteSupport.substitute_simul_rec_apply
-                        (Term.Boolean isRename)
-                        (Term.UOp UserOp._at__at_TypedList_cons) head xs ss bvs
-                        hisr hxs hss hbvs
-                        (by intro q v vs hEq; cases hEq)
-                    simpa [headSub, hHeadSub] using hApplyEq
-                  have hOuterSub :
-                      __substitute_simul_rec (Term.Boolean isRename)
-                          (Term.Apply
-                            (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) head)
-                            tail) xs ss bvs =
-                        __eo_mk_apply
-                          (__substitute_simul_rec (Term.Boolean isRename)
-                            (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons)
-                              head) xs ss bvs)
-                          tailSub := by
-                    have hApplyEq :=
-                      SubstituteSupport.substitute_simul_rec_apply
-                        (Term.Boolean isRename)
-                        (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) head)
-                        tail xs ss bvs hisr hxs hss hbvs
-                        (by
-                          intro q v vs hEq
-                          cases hEq
-                          exact term_not_eo_list_cons_of_has_smt_translation
-                            hHeadTrans v vs rfl)
-                    simpa [tailSub] using hApplyEq
-                  have hOuterNe :
-                      __eo_mk_apply
-                          (__substitute_simul_rec (Term.Boolean isRename)
-                            (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons)
-                              head) xs ss bvs)
-                          tailSub ≠ Term.Stuck := by
-                    rw [← hOuterSub]
-                    exact TypedListSubstitutionSupport.typed_list_elem_type_non_none_not_stuck
-                      hSubstElemNN
-                  have hOuterNe' :
-                      __eo_mk_apply
-                          (__eo_mk_apply
-                            (Term.UOp UserOp._at__at_TypedList_cons) headSub)
-                          tailSub ≠ Term.Stuck := by
-                    simpa [hInnerSub] using hOuterNe
-                  have hInnerNe :
-                      __eo_mk_apply
-                          (Term.UOp UserOp._at__at_TypedList_cons) headSub ≠
-                        Term.Stuck := by
-                    rw [← hInnerSub]
-                    exact instantiate_eo_mk_apply_fun_ne_stuck_of_ne_stuck hOuterNe
-                  have hInnerMk :
-                      __eo_mk_apply
-                          (Term.UOp UserOp._at__at_TypedList_cons) headSub =
-                        Term.Apply (Term.UOp UserOp._at__at_TypedList_cons)
-                          headSub :=
-                    instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hInnerNe
-                  have hOuterMk :
-                      __eo_mk_apply
-                          (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons)
-                            headSub)
-                          tailSub =
-                        Term.Apply
-                          (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons)
-                            headSub)
-                          tailSub :=
-                    instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ (by
-                      rw [← hInnerMk]
-                      exact hOuterNe')
-                  have hResultEq :
-                      __substitute_simul_rec (Term.Boolean isRename)
-                          (Term.Apply
-                            (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) head)
-                            tail) xs ss bvs =
-                        Term.Apply
-                          (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons)
-                            headSub)
-                          tailSub := by
-                    rw [hOuterSub, hInnerSub, hInnerMk, hOuterMk]
-                  rcases
-                    TypedListSubstitutionSupport.typed_list_cons_elem_type_parts headSub tailSub
-                      (by simpa [headSub, tailSub, hResultEq] using hSubstElemNN) with
-                    ⟨hSubHeadTail, hSubHeadNN, hSubTailNN, hSubConsEq⟩
-                  have hHeadSubTrans : eoHasSmtTranslation headSub := by
-                    unfold eoHasSmtTranslation
-                    simpa [headSub] using hSubHeadNN
-                  have hHeadEval :
-                      __smtx_model_eval M (__eo_to_smt headSub) =
-                        __smtx_model_eval N (__eo_to_smt head) :=
-                    hRec hHeadSubterm (by simp at hLt ⊢; omega)
-                      hHeadTrans hHeadSubTrans
-                  have hBaseSubTy' :
-                      __smtx_typeof baseSub =
-                        SmtType.Set
-                          (__eo_to_smt_typed_list_elem_type
-                            (Term.Apply
-                              (Term.Apply
-                                (Term.UOp UserOp._at__at_TypedList_cons)
-                                headSub)
-                              tailSub)) := by
-                    simpa [headSub, tailSub, hResultEq] using hBaseSubTy
-                  have hBaseSubTailTy :
-                      __smtx_typeof baseSub =
-                        SmtType.Set (__eo_to_smt_typed_list_elem_type tailSub) := by
-                    rw [hBaseSubTy', hSubConsEq, hSubHeadTail]
-                  have hBaseOrigTailTy :
-                      __smtx_typeof baseOrig =
-                        SmtType.Set (__eo_to_smt_typed_list_elem_type tail) := by
-                    rw [hBaseOrigTy, hConsEq, hHeadTail]
-                  have hTailEval :
-                      __smtx_model_eval M
-                          (__eo_to_smt_set_insert tailSub baseSub) =
-                        __smtx_model_eval N
-                          (__eo_to_smt_set_insert tail baseOrig) :=
-                    substFalse_eval_eo_to_smt_set_insert_cross
-                      root baseSub baseOrig tail xs ss bvs
-                      (by simp at hLt ⊢; omega)
-                      hTailSubterm
-                      hXsEnv hBvsEnv hSsTrans hisr hxs hss hbvs
-                      hTailNN
-                      (by simpa [tailSub] using hSubTailNN)
-                      hBaseSubTailTy hBaseOrigTailTy hBaseEval hRec
-                  rw [hResultEq]
-                  change
-                    __smtx_model_eval M
-                        (SmtTerm.set_union
-                          (SmtTerm.set_singleton (__eo_to_smt headSub))
-                          (__eo_to_smt_set_insert tailSub baseSub)) =
-                      __smtx_model_eval N
-                        (SmtTerm.set_union
-                          (SmtTerm.set_singleton (__eo_to_smt head))
-                          (__eo_to_smt_set_insert tail baseOrig))
-                  simp only [__smtx_model_eval]
-                  rw [hHeadEval, hTailEval]
-              | _ =>
-                  exact False.elim
-                    (hElemNN (by simp [__eo_to_smt_typed_list_elem_type]))
-          | _ =>
-              exact False.elim
-                (hElemNN (by simp [__eo_to_smt_typed_list_elem_type]))
-      | _ =>
-          exact False.elim
-            (hElemNN (by simp [__eo_to_smt_typed_list_elem_type]))
-  | _ =>
-      exact False.elim
-        (hElemNN (by simp [__eo_to_smt_typed_list_elem_type]))
-termination_by tl
-
 theorem substFalse_eval_set_insert
     (tl base xs ss bvs : Term) {M N : SmtModel}
     {xsVars bvsVars : List EoVarKey}
@@ -2412,96 +2100,33 @@ theorem substFalse_eval_set_insert
           xs ss bvs =
         Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) tlSub) baseSub := by
     rw [hSubstEq, hInnerMk, hOuterMk]
-  have hOrigNN :
-      __smtx_typeof (__eo_to_smt_set_insert tl (__eo_to_smt base)) ≠
-        SmtType.None := by
-    unfold eoHasSmtTranslation at hFTrans
-    change
-      __smtx_typeof (__eo_to_smt_set_insert tl (__eo_to_smt base)) ≠
-        SmtType.None at hFTrans
-    exact hFTrans
-  rcases eo_to_smt_set_insert_shape_of_non_none tl (__eo_to_smt base)
-      hOrigNN with
-    ⟨A, _hOrigSetTy, hBaseOrigTyA, hElemEqA, hANN⟩
-  have hElemNN : __eo_to_smt_typed_list_elem_type tl ≠ SmtType.None := by
-    rw [hElemEqA]
-    exact hANN
-  have hBaseOrigTy :
-      __smtx_typeof (__eo_to_smt base) =
-        SmtType.Set (__eo_to_smt_typed_list_elem_type tl) := by
-    rw [hElemEqA]
-    exact hBaseOrigTyA
-  have hBaseTrans : eoHasSmtTranslation base := by
-    unfold eoHasSmtTranslation
-    rw [hBaseOrigTyA]
-    simp
-  have hSubstFullTrans :
-      eoHasSmtTranslation
-        (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) tlSub) baseSub) := by
+  rcases set_insert_args_have_smt_translation_of_non_none hFTrans with
+    ⟨hTlTrans, hBaseTrans⟩
+  have hSubstFullTrans : eoHasSmtTranslation
+      (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) tlSub) baseSub) := by
     rw [← hResultEq]
     exact hSubstTrans
-  have hSubstNN :
-      __smtx_typeof (__eo_to_smt_set_insert tlSub (__eo_to_smt baseSub)) ≠
-        SmtType.None := by
-    unfold eoHasSmtTranslation at hSubstFullTrans
-    change
-      __smtx_typeof (__eo_to_smt_set_insert tlSub (__eo_to_smt baseSub)) ≠
-        SmtType.None at hSubstFullTrans
-    exact hSubstFullTrans
-  rcases eo_to_smt_set_insert_shape_of_non_none tlSub (__eo_to_smt baseSub)
-      hSubstNN with
-    ⟨B, _hSubstSetTy, hBaseSubTyB, hSubstElemEqB, hBNN⟩
-  have hSubstElemNN : __eo_to_smt_typed_list_elem_type tlSub ≠ SmtType.None := by
-    rw [hSubstElemEqB]
-    exact hBNN
-  have hBaseSubTy :
-      __smtx_typeof (__eo_to_smt baseSub) =
-        SmtType.Set (__eo_to_smt_typed_list_elem_type tlSub) := by
-    rw [hSubstElemEqB]
-    exact hBaseSubTyB
-  have hBaseSubTrans : eoHasSmtTranslation baseSub := by
-    unfold eoHasSmtTranslation
-    rw [hBaseSubTyB]
-    simp
+  rcases set_insert_args_have_smt_translation_of_non_none hSubstFullTrans with
+    ⟨hTlSubTrans, hBaseSubTrans⟩
   have hOuterNonbinder :
       ¬ IsBinderHead (Term.Apply (Term.UOp UserOp.set_insert) tl) := by
     rintro ⟨q, v, vs, hEq⟩
     exact hNotBinderOuter q v vs hEq
-  have hBaseSubterm :
-      IsNonbinderSubterm base
-        (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) tl) base) := by
+  have hTlSubterm : IsNonbinderSubterm tl
+      (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) tl) base) := by
     simp [IsNonbinderSubterm, hOuterNonbinder]
-  have hTlSubterm :
-      IsNonbinderSubterm tl
-        (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) tl) base) := by
+  have hBaseSubterm : IsNonbinderSubterm base
+      (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) tl) base) := by
     simp [IsNonbinderSubterm, hOuterNonbinder]
-  have hBaseEval :
-      __smtx_model_eval M (__eo_to_smt baseSub) =
-        __smtx_model_eval N (__eo_to_smt base) :=
-    hRecArg hBaseSubterm (by simp; omega) hBaseTrans
-      (by simpa [baseSub] using hBaseSubTrans)
+  have hTlEval := hRecArg hTlSubterm (by simp; omega) hTlTrans hTlSubTrans
+  have hBaseEval := hRecArg hBaseSubterm (by simp; omega) hBaseTrans hBaseSubTrans
   rw [hResultEq]
-  change
-    __smtx_model_eval M
-        (__eo_to_smt_set_insert tlSub (__eo_to_smt baseSub)) =
-      __smtx_model_eval N
-        (__eo_to_smt_set_insert tl (__eo_to_smt base))
-  exact
-    substFalse_eval_eo_to_smt_set_insert_cross
-      (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) tl) base)
-      (__eo_to_smt baseSub) (__eo_to_smt base) tl xs ss bvs
-      (by simp; omega)
-      hTlSubterm
-      hXsEnv hBvsEnv hSsTrans hisr hxs hss hbvs
-      hElemNN (by simpa [tlSub] using hSubstElemNN)
-      (by simpa [tlSub] using hBaseSubTy)
-      hBaseOrigTy hBaseEval
-      hRecArg
+  change __smtx_model_eval M
+      (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt tlSub)) (__eo_to_smt baseSub)) =
+    __smtx_model_eval N
+      (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt tl)) (__eo_to_smt base))
+  simp only [__smtx_model_eval, hTlEval, hBaseEval]
 
-/-- Reusable reduction for a unary indexed special-head application
-`Apply (UOp1 op idx) a`. The indexed head is syntactically fixed by
-substitution; concrete operator cases provide the index-evaluation fact and the
-SMT constructor congruence. -/
 theorem substFalse_eval_unary_uop1
     (op : UserOp1) (idx a xs ss bvs : Term) {M N : SmtModel}
     (hisr : (Term.Boolean isRename : Term) ≠ Term.Stuck)
@@ -4257,44 +3882,6 @@ theorem smtx_model_eval_eo_to_smt_tuple_prepend_cross_eq_of_eval_eq
                           native_and, native_ite, hs, __smtx_model_eval]
   | _ =>
       simp [__eo_to_smt_tuple_prepend_of_type, __smtx_model_eval]
-
-theorem smtx_model_eval_eo_to_smt_set_insert_base_eq_of_eval_eq
-    (M : SmtModel) :
-    ∀ xs a b,
-      __smtx_typeof a = __smtx_typeof b ->
-      __smtx_model_eval M a = __smtx_model_eval M b ->
-        __smtx_model_eval M (__eo_to_smt_set_insert xs a) =
-          __smtx_model_eval M (__eo_to_smt_set_insert xs b) := by
-  intro xs a b hTy hEval
-  cases xs <;> try rfl
-  case Apply f tail =>
-    cases f <;> try rfl
-    case UOp op =>
-      cases op <;> try rfl
-      case _at__at_TypedList_nil =>
-        cases hGuard :
-            native_Teq (__smtx_typeof b)
-              (SmtType.Set (__eo_to_smt_type tail))
-        · simp [__eo_to_smt_set_insert, hTy, hGuard, native_ite]
-        · simpa [__eo_to_smt_set_insert, hTy, hGuard, native_ite] using hEval
-    case Apply f' head =>
-      cases f' <;> try rfl
-      case UOp op =>
-        cases op <;> try rfl
-        case _at__at_TypedList_cons =>
-          change
-            __smtx_model_eval M
-                (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt head))
-                  (__eo_to_smt_set_insert tail a)) =
-              __smtx_model_eval M
-                (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt head))
-                  (__eo_to_smt_set_insert tail b))
-          have hTailEval :=
-            smtx_model_eval_eo_to_smt_set_insert_base_eq_of_eval_eq
-              M tail a b hTy hEval
-          simp only [__smtx_model_eval]
-          rw [hTailEval]
-termination_by xs a b _ _ => xs
 
 theorem substFalse_eval_binary_tuple
     (x y xs ss bvs : Term) {M N : SmtModel}

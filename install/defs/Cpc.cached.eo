@@ -796,7 +796,7 @@
 (declare-const re.++ (-> RegLan RegLan RegLan) :right-assoc-nil @re.empty)
 (declare-const re.inter (-> RegLan RegLan RegLan) :right-assoc-nil re.all)
 (declare-const re.union (-> RegLan RegLan RegLan) :right-assoc-nil re.none)
-(declare-const re.diff (-> RegLan RegLan RegLan))
+(declare-const re.diff (-> RegLan RegLan RegLan) :left-assoc)
 (declare-parameterized-const re.loop ((l Int :opaque) (h Int :opaque))
   (->
     RegLan
@@ -889,7 +889,8 @@
 (declare-parameterized-const set.is_singleton ((T Type :implicit))
   (-> (Set T) Bool))
 (declare-parameterized-const set.insert ((T Type :implicit))
-  (-> (@TList T) (Set T) (Set T)))
+  (-> T (Set T) (Set T))
+  :right-assoc)
 (declare-parameterized-const @sets_deq_diff
   ((T Type :implicit) (s (Set T)) (t (Set T)))
   T)
@@ -4449,6 +4450,11 @@
       (= (set.member (@sets_deq_diff a b) a)
         (set.member (@sets_deq_diff a b) b)))
 )
+(declare-rule sets_choose_member ((T Type) (a (Set T)))
+  :args ((set.choose a))
+  :conclusion
+    (or (= a (as set.empty (eo::typeof a))) (set.member (set.choose a) a))
+)
 (program $set_union_to_list ((T Type) (t (Set T)) (e T))
   :signature ((Set T)) (@TList T)
   (
@@ -4501,20 +4507,6 @@
           ($set_union_to_list b))
         true))
   :conclusion (= a b)
-)
-(program $set_eval_insert ((T Type) (x T) (xs (@TList T) :list) (t (Set T)))
-  :signature ((@TList T) (Set T)) (Set T)
-  (
-  (($set_eval_insert (@tlist x xs) t)
-    (set.union (set.singleton x) ($set_eval_insert xs t)))
-  (($set_eval_insert (@tlist.nil T) t)  t)
-  )
-)
-(declare-rule sets-insert-elim
-  ((T Type) (s (Set T)) (es (@TList T)) (t (Set T)))
-  :args ((= (set.insert es s) t))
-  :requires ((($set_eval_insert es s) t))
-  :conclusion (= (set.insert es s) t)
 )
 
 ; ==== rules/ArithBvConv.eo ====
@@ -6593,6 +6585,10 @@
   ((@T0 Type) (@T1 Type) (x1 (Set @T0)) (y1 (Set @T1)))
   :args (x1 y1)
   :conclusion (= (set.subset x1 y1) (= (set.union x1 y1) y1))
+)
+(declare-rule sets-insert-elim ((@T0 Type) (@T1 Type) (x1 @T0) (y1 (Set @T1)))
+  :args (x1 y1)
+  :conclusion (= (set.insert x1 y1) (set.union (set.singleton x1) y1))
 )
 (declare-rule sets-union-comm
   ((@T0 Type) (@T1 Type) (x1 (Set @T0)) (y1 (Set @T1)))

@@ -366,4 +366,15 @@ theorem typeof_value_model_eval_set_subset
       (__smtx_model_eval_set_inter (__smtx_model_eval M t1) (__smtx_model_eval M t2))
       (__smtx_model_eval M t1)
 
+/-- A translated insertion has a well-typed element and a matching base set. -/
+theorem set_insert_args_of_non_none {x y : SmtTerm}
+    (h : term_has_non_none_type
+      (SmtTerm.set_union (SmtTerm.set_singleton x) y)) :
+    ∃ A, __smtx_typeof x = A ∧ __smtx_typeof y = SmtType.Set A ∧
+      A ≠ SmtType.None := by
+  rcases set_binop_args_of_non_none (typeof_set_union_eq _ _) h with
+    ⟨A, hx, hy⟩
+  rcases set_singleton_type_eq_arg_of_eq hx with ⟨hxA, hA⟩
+  exact ⟨A, hxA, hy, hA⟩
+
 end Smtm
