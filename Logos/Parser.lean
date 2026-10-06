@@ -360,6 +360,12 @@ structure Config (T R C CL : Type) where
   /-- `mkStep rule args premises`, where premises are offsets into the proof stack. -/
   mkStep : R → List T → List Nat → C
   mkStepPop : R → List T → List Nat → C
+  /--
+  The command checking that the most recent step proved the given formula, which
+  a step's stated conclusion becomes; `none` if the calculus has no such command,
+  in which case a conclusion is read but not checked.
+  -/
+  mkCheckProven : Option (T → C) := none
   mkCmdList : List C → CL
   /-- Datatype support; `none` if the calculus has no datatypes. -/
   datatypes : Option (DatatypeOps T) := none
@@ -940,22 +946,25 @@ where
     | k :: _ => throw s!"Error: unexpected annotation {k} in {ctx}"
 
 /--
-Drop the conclusion of a step if one is present; Logos recomputes conclusions
-from the rule, so the printed one is redundant.
+Split the conclusion of a step, if one is present, from its annotations: what
+follows the step's name is a conclusion unless it is a keyword.
 -/
-def dropConclusion : List Sexp → List Sexp
-  | [] => []
+def splitConclusion : List Sexp → Option Sexp × List Sexp
+  | [] => (none, [])
   | c :: rest =>
     match c with
-    | .atom a => if a.startsWith ":" then c :: rest else rest
-    | .expr _ => rest
+    | .atom a => if a.startsWith ":" then (none, c :: rest) else (some c, rest)
+    | .expr _ => (some c, rest)
 
 /-- The result of parsing one top-level command. -/
 inductive Command (T C : Type) where
   /-- An `assume`, which becomes an assumption of the proof. -/
   | assumption (t : T)
-  /-- A proof-stack command. -/
-  | cmd (c : C)
+  /--
+  Proof-stack commands: one, or a step followed by the check of its stated
+  conclusion.
+  -/
+  | cmds (cs : List C)
   /--
   A command that does not extend the proof: a declaration or definition, which
   only updates the parser state, or an ignored command such as `include`.
@@ -968,13 +977,19 @@ def parseCommand (cfg : Config T R C CL) (s : Sexp) : ParserM T (Command T C) :=
   catch e =>
     throw s!"{e}\nError: failed to parse command {s}"
 where
-  annots (rest : List Sexp) : ParserM T (R × List T × List Nat) := do
-    let annots ← parseAnnots s (dropConclusion rest)
+  annots (rest : List Sexp) : ParserM T (R × List T × List Nat × List C) := do
+    let (concl, rest) := splitConclusion rest
+    let annots ← parseAnnots s rest
     let some ruleName := annots.rule | throw s!"Error: missing :rule in {s}"
     let some rule := cfg.parseRule ruleName | throw s!"Error: unknown rule {ruleName}"
     let premises ← annots.premises.mapM parsePremise
     let args ← annots.args.mapM (parseTerm cfg)
-    return (rule, args, premises)
+    -- A stated conclusion is checked against the one the rule derives.
+    let check : List C ← match concl, cfg.mkCheckProven with
+      | some c, some mk => do pure [mk (← parseTerm cfg c)]
+      | some c, none => do let _ ← parseTerm cfg c; pure []
+      | none, _ => pure []
+    return (rule, args, premises, check)
   go : Sexp → ParserM T (Command T C)
     | .expr [.atom "declare-const", name, ty] => do
       declareSymbol cfg (← parseSymbol name) (← parseTerm cfg ty)
@@ -1021,17 +1036,17 @@ where
       let name ← parseName name
       let t ← parseTerm cfg t
       registerAssumePush name
-      return .cmd (cfg.mkAssumePush t)
+      return .cmds [cfg.mkAssumePush t]
     | .expr (.atom "step" :: name :: rest) => do
       let name ← parseName name
-      let (rule, args, premises) ← annots rest
+      let (rule, args, premises, check) ← annots rest
       registerStep name
-      return .cmd (cfg.mkStep rule args premises)
+      return .cmds (cfg.mkStep rule args premises :: check)
     | .expr (.atom "step-pop" :: name :: rest) => do
       let name ← parseName name
-      let (rule, args, premises) ← annots rest
+      let (rule, args, premises, check) ← annots rest
       registerStepPop name
-      return .cmd (cfg.mkStepPop rule args premises)
+      return .cmds (cfg.mkStepPop rule args premises :: check)
     | s => throw s!"Error: unrecognized command {s}, expected one of declare-const, \
                     declare-fun, declare-sort, declare-datatype, declare-datatypes, define, \
                     include, reference, assume, assume-push, step or step-pop"
@@ -1061,7 +1076,7 @@ def parseCommands (cfg : Config T R C CL) (ss : List Sexp) : ParserM T (List T �
       if !cmds.isEmpty then
         throw s!"Error: assumption after the first proof step: {s}"
       assums := assums.push t
-    | .cmd c => cmds := cmds.push c
+    | .cmds cs => cmds := cmds ++ cs
     | .decl => pure ()
   return (assums.toList, cfg.mkCmdList cmds.toList)
 

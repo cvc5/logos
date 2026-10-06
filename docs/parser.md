@@ -64,7 +64,11 @@ however it is sorted, so this is the order and nothing else; but it is the parse
 and the parser is not verified.  The native front end (`docs/lean-native-proofs.md`) does not
 go through here and is not normalized: a script names its declaration block directly, and one
 not in a productive order is reported `incomplete`.
-The conclusion printed on a `step` is ignored, since Logos recomputes it from the rule.
+The conclusion a `step` or `step-pop` may state is read as a term and, as in Ethos, checked
+against the one its rule derives: the parser emits the calculus's `check_proven` command
+(`Config.mkCheckProven`) after the step, which leaves the checker stuck unless the two are
+the same term.  A configuration without that command reads the conclusion and drops it,
+so a malformed conclusion is refused but a well-formed wrong one is not.
 
 ## Terms
 

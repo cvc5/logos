@@ -312,4 +312,39 @@ unwrapped, as Ethos refuses it.
 #guard assumptions "(declare-sort U 0)" == some []
 #guard assumptions "((declare-sort U 0))" == none
 
+/-!
+### Stated conclusions
+
+A step may state its conclusion.  Where the calculus can check one, it becomes a
+command after the step; where it cannot, the conclusion is still read, so a
+malformed one is refused either way.
+-/
+
+private def checkingConfig : Config TestTerm String TestCmd (List TestCmd) :=
+  { testConfig with mkCheckProven := some fun t => ("check", [t], []) }
+
+/-- The commands of a parsed proof, or `none` if it does not parse. -/
+private def commands (cfg : Config TestTerm String TestCmd (List TestCmd))
+    (input : String) : Option (List TestCmd) :=
+  match parseProof cfg input with
+  | .ok (_, cmds) => some cmds
+  | .error _ => none
+
+private def unary : String := "(declare-sort U 0) (declare-const a U) (assume @p0 a)"
+
+#guard commands checkingConfig (unary ++ "(step @p1 a :rule r :premises (@p0))") ==
+  some [("r", [], [0]), ("check", [.uconst 1 (.usort 1)], [])]
+#guard commands checkingConfig (unary ++ "(assume-push @h a) (step-pop @p1 a :rule r)") ==
+  some [("assume-push", [.uconst 1 (.usort 1)], []), ("pop:r", [], []),
+    ("check", [.uconst 1 (.usort 1)], [])]
+-- A step without a conclusion is the step alone.
+#guard commands checkingConfig (unary ++ "(step @p1 :rule r :premises (@p0))") ==
+  some [("r", [], [0])]
+-- Without a check, a conclusion is read and then dropped.
+#guard commands testConfig (unary ++ "(step @p1 a :rule r :premises (@p0))") ==
+  some [("r", [], [0])]
+-- An unknown symbol in a conclusion is refused, checked or not.
+#guard commands checkingConfig (unary ++ "(step @p1 b :rule r)") == none
+#guard commands testConfig (unary ++ "(step @p1 b :rule r)") == none
+
 end Logos.Parser.Tests
