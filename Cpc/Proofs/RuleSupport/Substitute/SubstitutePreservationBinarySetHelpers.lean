@@ -50,7 +50,7 @@ theorem smt_set_singleton_non_none_of_has_smt_translation_type_eq
       __smtx_typeof (__eo_to_smt X) =
         __smtx_typeof (__eo_to_smt A) := by
     rw [hXMatch, hAMatch, hXTyEq]
-  simpa [smtx_typeof_set_singleton_term_eq_closed, hSmtTy] using hOrig
+  simpa [typeof_set_singleton_eq_closed, hSmtTy] using hOrig
 
 theorem eo_typeof_set_union_arg_types_of_ne_stuck
     {A B : Term}
