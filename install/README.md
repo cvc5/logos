@@ -6,9 +6,11 @@ written by hand. This directory is what does that:
 ```text
 install/install-cpc.sh       regenerate Cpc, and with --all CpcMini too
 install/install-sig.sh       compile one signature into one package
+install/install-smt-std.sh   regenerate the standalone standard SMT semantics
 install/get-eo-compiler.sh   fetch and build the compiler
 install/defs/Cpc.eos         what the symbols of CPC mean, kept in git
 install/defs/Cpc.cached.eo   the signature they compile, kept in git
+install/defs/smtStd.eo       the standard SMT theory signature, kept in git
 install/deps/                the Ethos tree and the compiler, ignored by git
 ```
 
@@ -156,6 +158,99 @@ checked-in packages are of, so `--check` reports the tree as out of date until
 the change lands in `install/defs/Cpc.eos` and in the `smt.eos` of the pinned
 compiler.
 
+## Logos Standard SMT-LIB semantics definition
+
+`SmtStd` is the **Logos Standard SMT-LIB semantics definition**: a standalone
+compilation of the standard operators supported by Logos's existing SMT
+semantics. Its maintained input is [`defs/smtStd.eo`](defs/smtStd.eo), an
+Eunoia signature of theory declarations and their encoding helpers, with no
+proof rules and no dependency on an external CPC signature.
+
+```bash
+install/get-eo-compiler.sh       # once, shared with the CPC installation
+install/install-smt-std.sh      # regenerate the four files in SmtStd/
+scripts/build.sh SmtStd         # typecheck the standalone library
+install/install-smt-std.sh --check
+```
+
+The script installs only these compiler outputs:
+
+| module | purpose |
+| --- | --- |
+| `SmtStd/SmtEval.lean` | primitive evaluation operations |
+| `SmtStd/SmtModelDefs.lean` | deeply embedded types, terms, values and datatypes |
+| `SmtStd/SmtValueOrder.lean` | ordering of embedded values |
+| `SmtStd/SmtModel.lean` | typing, model evaluation, well-formed models and satisfiability |
+
+The remaining output, including the checker, Eunoia term language,
+specification and proof artifacts, is discarded from the temporary compilation
+directory. The hand-written root `SmtStd.lean` imports the model and its
+dependencies. `import SmtStd` exposes definitions under `SmtStd.Smtm` and
+primitives under `SmtStd.SmtEval`; the installer qualifies the compiler's
+namespaces so this library can be imported alongside `Cpc`.
+
+`--check` recompiles and compares the four generated files without changing
+them, returning 1 for differences or compilation failure. `--ethos`,
+`--build-dir` and `--deps-dir` select the compiler in the same way as the CPC
+installer. `--semantics` and `--smt-semantics` allow experiments with replacement
+semantics. See `install/install-smt-std.sh --help`.
+
+### Coverage and internal helpers
+
+The signature selects Core, integer and real arithmetic, extensional array
+operators, fixed-size bit-vectors, Unicode strings and regular expressions,
+datatype testers, and quantifiers. The embedding also supplies uninterpreted
+sorts and functions, datatype constructors and selectors. The reference
+vocabulary is SMT-LIB 2.7, including its
+[bit-vector conversion and overflow operators](https://smt-lib.org/theories-FixedSizeBitVectors.shtml)
+and the additional operators of
+[UnicodeStrings](https://smt-lib.org/theories-UnicodeStrings.shtml).
+
+The signature omits set operators, general sequence operations such as
+`seq.unit` and `seq.nth`, tuples, purification,
+skolem witnesses, `int.pow2`, `int.log2`, and string and bit-vector extensions
+outside that vocabulary. It preserves the existing CPC declarations verbatim,
+including the polymorphic string operators, `String := Seq Char`, and
+`seq.empty` with its helper for the empty string/sequence. The Eunoia lists
+and arithmetic predicates are helpers for expressing declarations and binders.
+
+“Standard” describes the selected input operators. The generated embedding
+retains dependencies needed to define them: for example, `div_total`,
+`mod_total` and `qdiv_total` implement the nonzero cases of standard division
+and modulus. The compiler's shared type/value infrastructure also retains
+`Set`, `Seq`, `Char`, choice and binding constructors. `String` is represented
+as `Seq Char`. These are implementation details of the shared embedding;
+the signature also retains the declarations needed to express that encoding.
+The generated Lean datatype is therefore not a validator for standard-only
+SMT-LIB syntax.
+
+This is a selection of existing semantics, not complete SMT-LIB coverage.
+Floating-point arithmetic, parametric datatypes, and the
+[`**` integer exponentiation operator](https://smt-lib.org/theories-Ints.shtml)
+are not supplied by this compilation. The existing modeling restrictions also
+remain: rationals represent reals, arrays are almost constant, and uninterpreted
+sorts have infinite domains. See
+[`../docs/smt-lib-conformance.md`](../docs/smt-lib-conformance.md).
+
+### Relationship to Cpc
+
+`Cpc` compiles the full CPC calculus, including proof rules and extension
+operators. `SmtStd` selects a smaller vocabulary using the same symbol
+transformations in `install/defs/Cpc.eos` and the same SMT semantics in the
+pinned compiler's `tools/eoc/semantics/smt.eos`. It does not maintain a second
+definition of what the shared operators mean.
+
+The generated libraries have separate Lean datatypes. No equivalence theorem
+or translation between them is established by this installation. CPC's
+specification and soundness theorems continue to refer to `Cpc.SmtModel`;
+regenerating `SmtStd` does not change that specification or those theorems.
+It provides an independently importable semantics for studying the standard
+operators without the CPC checker and proof infrastructure.
+
+The `regeneration` CI group checks `SmtStd` against `smtStd.eo` alongside the
+two CPC packages. Changes to the shared semantics or compiler pin should
+regenerate all three libraries; `scripts/bump-eoc-version.py` does so.
+
 ## install-sig.sh
 
 `install-cpc.sh` is `install-sig.sh` run once per package it was asked for.
@@ -182,8 +277,9 @@ with `install/deps/`.
 The Ethos commit is not an option. It is hardcoded as `ETHOS_VERSION` in
 `get-eo-compiler.sh`. For internal development only,
 `scripts/bump-eoc-version.py` moves it to the current head of `cvc5/ethos`'s `main`,
-then runs `get-eo-compiler.sh` and
-`install/install-cpc.sh --all --cached`, regenerating both `Cpc` and `CpcMini`.
+then runs `get-eo-compiler.sh`,
+`install/install-cpc.sh --all --cached` and `install/install-smt-std.sh`,
+regenerating `Cpc`, `CpcMini` and `SmtStd`.
 The full commit hash is recorded, so later installations use that revision even
 after `main` advances. The helper does not fetch a new CPC signature or run the
 Lean proof checks, and it does not modify the CPC semantics in

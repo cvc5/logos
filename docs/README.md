@@ -14,7 +14,7 @@ document here assumes it has been read.
 
 [`../install/README.md`](../install/README.md) sits with the scripts it
 describes rather than here: it is how the `Cpc` and `CpcMini` packages are
-compiled from the Eunoia definition of CPC, what is generated and what is left
-alone.
+compiled from the Eunoia definition of CPC, how `SmtStd` compiles the Logos
+Standard SMT-LIB semantics definition, what is generated and what is left alone.
 
 [`misc/`](misc) keeps the superseded LaTeX source of the write-up.

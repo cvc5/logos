@@ -192,6 +192,16 @@ It includes several non-standard extensions of SMT-LIB (e.g. the theory of sets 
 It additionally contains operators that are helpful in defining the semantics of existing operators.
 This includes total versions of partial arithmetic operators.
 
+The **Logos Standard SMT-LIB semantics definition**, [`SmtStd`](SmtStd.lean),
+is a standalone compilation selecting the standard operators from those same
+semantics. Its maintained theory signature is
+[`install/defs/smtStd.eo`](install/defs/smtStd.eo); regenerate it with
+`install/install-smt-std.sh` and build it with `scripts/build.sh SmtStd`.
+It contains the four semantics modules and has no checker or proof rules.
+The [installation documentation](install/README.md#logos-standard-smt-lib-semantics-definition)
+explains its coverage, retained internal helpers, and relationship to `Cpc`.
+CPC's correctness theorem remains stated against its own model semantics.
+
 The correctness proof for the checker lives in `Cpc/Proofs/Checker.lean`,
 whose final theorem `correct___eo_is_refutation` states that
 a successfully checked proof in Logos implies that the input assumptions to that proof are indeed unsatisfiable.

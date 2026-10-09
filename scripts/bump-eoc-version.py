@@ -2,7 +2,7 @@
 """Internal-use-only helper for advancing Logos to the latest EOC on Ethos main.
 
 Advance the pinned commit to the current head of cvc5/ethos's ``main``, build the
-compiler, and regenerate Cpc and CpcMini from the cached signature. The CPC
+compiler, and regenerate Cpc, CpcMini and SmtStd from their signatures. The CPC
 semantics in install/defs/Cpc.eos is maintained in Logos and is not touched.
 """
 
@@ -21,6 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PIN_FILE = REPO_ROOT / "install" / "get-eo-compiler.sh"
 GET_EO_COMPILER = REPO_ROOT / "install" / "get-eo-compiler.sh"
 INSTALL_CPC = REPO_ROOT / "install" / "install-cpc.sh"
+INSTALL_SMT_STD = REPO_ROOT / "install" / "install-smt-std.sh"
 
 ETHOS_REMOTE = "https://github.com/cvc5/ethos.git"
 ETHOS_BRANCH = "main"
@@ -107,7 +108,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Internal use only: pin EOC to the latest commit on Ethos main, build the "
-            "compiler, and regenerate Cpc and CpcMini from the cached signature."
+            "compiler, and regenerate Cpc, CpcMini and SmtStd from their signatures."
         )
     )
     return parser.parse_args(argv)
@@ -129,6 +130,7 @@ def main(argv: list[str]) -> int:
             "Regenerating CPC from the cached signature",
             [str(INSTALL_CPC), "--all", "--cached"],
         )
+        run_step("Regenerating the standard SMT semantics", [str(INSTALL_SMT_STD)])
     except (BumpError, OSError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1

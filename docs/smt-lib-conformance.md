@@ -1,5 +1,12 @@
 # Conformance to SMT-LIB
 
+The standalone **Logos Standard SMT-LIB semantics definition** in `SmtStd/`
+selects standard operators from the same semantics used by `Cpc`. It inherits
+the modeling restrictions described here. Its name describes operator
+selection, not a stronger conformance claim. See the
+[SmtStd installation documentation](../install/README.md#logos-standard-smt-lib-semantics-definition)
+for coverage and the internal helpers retained by compilation.
+
 Logos's soundness theorem is stated against `Cpc/SmtModel.lean`, a formalization
 of SMT-LIB semantics written independently of the checker. It parts company with
 SMT-LIB in three ways, and they are different kinds of thing:

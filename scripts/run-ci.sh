@@ -111,6 +111,8 @@ run_regeneration() {
 
   echo "Checking that Cpc and CpcMini are what install/defs/Cpc.cached.eo compiles to..."
   if bash install/install-cpc.sh --all --cached --check; then
+    echo "Checking that SmtStd is what install/defs/smtStd.eo compiles to..."
+    bash install/install-smt-std.sh --check
     return 0
   fi
   cat >&2 <<MSG
@@ -133,6 +135,10 @@ MSG
 }
 
 run_regressions() {
+  echo "Checking the standalone standard SMT semantics..."
+  lake build SmtStd Cpc.SmtModel
+  lake env lean test/SmtStd.lean
+
   echo "Checking the generated parser tables against the signature..."
   python3 scripts/check-parser-tables.py
 
