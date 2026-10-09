@@ -285,6 +285,9 @@ which is also auto-generated based on the calculus.
 
 `scripts/cpc-loc-summary.py` reports the size of each of these pieces — the specification, the
 checker, the parser and the correctness proof — in lines of code.
+`scripts/smt-std-loc-summary.py` reports the size of the standalone standard
+semantics using the same counting convention; `--files` lists each module
+and `--deps` shows their dependencies.
 
 ## The name
 

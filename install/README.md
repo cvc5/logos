@@ -173,7 +173,13 @@ scripts/build.sh SmtStd         # typecheck the standalone library
 install/install-smt-std.sh --check
 ```
 
-The script installs only these compiler outputs:
+`scripts/smt-std-loc-summary.py` measures the generated semantics and the
+library entry point separately, using the same non-blank, non-comment LOC
+convention as `scripts/cpc-loc-summary.py`. Add `--files` for per-file counts
+or `--deps` for the import graph. Shared dependencies are counted once;
+Lean's own libraries and the Eunoia source are excluded.
+
+`install-smt-std.sh` installs only these compiler outputs:
 
 | module | purpose |
 | --- | --- |
