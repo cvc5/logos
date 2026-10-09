@@ -52,8 +52,13 @@ s-expression and read again wherever the defined symbol is applied, with the par
 to the arguments given there.  Consequently a parameter's declared type is not used, an error
 in the body is reported at the use site, and a recursive `define` is rejected.  A `define`
 without parameters is read where it is given, as before.
-Datatypes may be mutually recursive; parametric datatypes (a non-zero arity, or a `par` body)
-are rejected, since Logos has no representation for them.
+Datatypes may be mutually recursive.  The generic parser reads parametric datatypes (a
+non-zero arity with `par` bodies) for a calculus that supplies the hooks of `DatatypeOps`:
+the parameters are read as `mkParam`, each use of a generic sort, constructor or selector is
+handed to `elaborate` (or `ascribe`, for `as`), and a block must share one arity, use its own
+datatypes only applied to exactly its parameters, and not nest them in an earlier parametric
+datatype.  CPC does not supply the hooks yet, so it still rejects them; see
+[`parametric-datatypes.md`](parametric-datatypes.md).
 The order of a `declare-datatypes` block matters: the specification witnesses a datatype only
 through references to entries declared *later* in its block (`smt_type_default`,
 `docs/smt-model-definitions.tex`), so a block declaring a datatype before the ones witnessing

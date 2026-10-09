@@ -91,6 +91,30 @@ def __eo_eq : Term -> Term -> Term
   | t, s => (Term.Boolean (native_teq s t))
 
 
+def __eo_dtc_is_mono : DatatypeCons -> native_Bool
+  | (DatatypeCons.cons T c) => (native_and (__eo_dt_is_mono T) (__eo_dtc_is_mono c))
+  | DatatypeCons.unit => true
+
+
+def __eo_dtd_is_mono : Datatype -> native_Bool
+  | (Datatype.sum c d) => (native_and (__eo_dtc_is_mono c) (__eo_dtd_is_mono d))
+  | Datatype.null => true
+
+
+def __eo_dd_is_mono : DatatypeDecl -> native_Bool
+  | (DatatypeDecl.cons s d dd) => (native_and (__eo_dtd_is_mono d) (__eo_dd_is_mono dd))
+  | DatatypeDecl.nil => true
+
+
+def __eo_dt_is_mono : Term -> native_Bool
+  | (Term.DtParam s) => false
+  | (Term.DatatypeParamType s T) => false
+  | (Term.DatatypeType s dd) => (__eo_dd_is_mono dd)
+  | (Term.Apply T U) => (native_and (__eo_dt_is_mono T) (__eo_dt_is_mono U))
+  | (Term.DtcAppType T U) => (native_and (__eo_dt_is_mono T) (__eo_dt_is_mono U))
+  | T => true
+
+
 def __eo_dtc_resolve : DatatypeCons -> DatatypeDecl -> DatatypeCons
   | (DatatypeCons.cons (Term.DatatypeTypeRef s) c), dd => (DatatypeCons.cons (Term.DatatypeType s dd) (__eo_dtc_resolve c dd))
   | (DatatypeCons.cons T c), dd => (DatatypeCons.cons T (__eo_dtc_resolve c dd))
@@ -209,6 +233,15 @@ def __eo_typeof_apply : Term -> Term -> Term
   | _, _ => Term.Stuck
 
 
+def __eo_typeof_datatype_kind : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | (Term.DatatypeParamType s T) =>
+    let _v0 := (__eo_typeof_datatype_kind T)
+    (native_ite (native_not (native_teq _v0 Term.Stuck)) (Term.Apply (Term.Apply Term.FunType Term.Type) _v0) Term.Stuck)
+  | (Term.DatatypeType s dd) => Term.Type
+  | T => Term.Stuck
+
+
 def __eo_typeof_fun_type : Term -> Term -> Term
   | Term.Type, Term.Type => Term.Type
   | _, _ => Term.Stuck
@@ -267,9 +300,11 @@ def __eo_typeof : Term -> Term
   | (Term.String s) => (__eo_lit_type_String (Term.String s))
   | (Term.Binary w n) => (__eo_lit_type_Binary (Term.Binary w n))
   | (Term.Var (Term.String s) T) => T
-  | (Term.DatatypeType s dd) => Term.Type
-  | (Term.DtCons s dd i) => (__eo_typeof_dt_cons_rec (Term.DatatypeType s dd) (__eo_dd_resolve s dd) i)
-  | (Term.DtSel s dd i j) => (Term.Apply (Term.Apply Term.FunType (Term.DatatypeType s dd)) (__eo_typeof_dt_sel_return (__eo_dd_resolve s dd) i j))
+  | (Term.DtParam s) => Term.Stuck
+  | (Term.DatatypeParamType s T) => (__eo_typeof_datatype_kind (Term.DatatypeParamType s T))
+  | (Term.DatatypeType s dd) => (native_ite (__eo_dd_is_mono dd) Term.Type Term.Stuck)
+  | (Term.DtCons s dd i) => (native_ite (__eo_dd_is_mono dd) (__eo_typeof_dt_cons_rec (Term.DatatypeType s dd) (__eo_dd_resolve s dd) i) Term.Stuck)
+  | (Term.DtSel s dd i j) => (native_ite (__eo_dd_is_mono dd) (Term.Apply (Term.Apply Term.FunType (Term.DatatypeType s dd)) (__eo_typeof_dt_sel_return (__eo_dd_resolve s dd) i j)) Term.Stuck)
   | (Term.USort i) => Term.Type
   | (Term.UConst i T) => T
   | Term.Type => Term.Type

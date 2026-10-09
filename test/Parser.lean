@@ -312,4 +312,112 @@ unwrapped, as Ethos refuses it.
 #guard assumptions "(declare-sort U 0)" == some []
 #guard assumptions "((declare-sort U 0))" == none
 
+/-!
+### Parametric datatypes
+
+A calculus with parametric datatypes supplies the hooks of `DatatypeOps`.  These
+record what the parser hands them: a constructor is bound to its field types,
+and `elaborate` marks every application it is given.
+-/
+
+private def dtOps : DatatypeOps TestTerm where
+  mkRef n := .atom s!"ref {n}"
+  mkParam := some fun k => .atom s!"param {k}"
+  mkDecls dts := some <| dts.flatMap fun d =>
+    (d.name, .atom s!"sort {d.name}/{d.arity}") ::
+      d.constructors.flatMap fun c =>
+        (c.name, .app (.atom s!"cons {c.name}") (.gathered (c.selectors.map (·.2)))) ::
+          c.selectors.map fun (sel, _) => (sel, .atom s!"sel {sel}")
+  elaborate t := .app (.atom "elab") t
+  ascribe
+    | c@(.app (.atom _) _), sort => some (.app (.app (.atom "as") c) sort)
+    | _, _ => none
+
+private def dtConfig : Config TestTerm String TestCmd (List TestCmd) :=
+  { testConfig with datatypes := some dtOps }
+
+private def dtAssumptions (input : String) : Option (List TestTerm) :=
+  match parseProof dtConfig input with
+  | .ok (assums, _) => some assums
+  | .error _ => none
+
+private def list : String :=
+  "(declare-datatypes ((List 1)) ((par (X) ((nil) (cons (head X) (tail (List X)))))))"
+
+private def consOf (name : String) (fields : List TestTerm) : TestTerm :=
+  .app (.atom s!"cons {name}") (.gathered fields)
+
+-- A parameter is read as the parameter it is, and the datatype applied to its
+-- parameters as the reference to it.
+#guard dtAssumptions (list ++ "(assume @p0 cons)") ==
+  some [consOf "cons" [.atom "param 0", .atom "ref List"]]
+
+-- `declare-datatype` reads the arity from the `par`.
+#guard dtAssumptions
+    "(declare-datatype List (par (X) ((nil) (cons (head X) (tail (List X)))))) (assume @p0 cons)"
+  == dtAssumptions (list ++ "(assume @p0 cons)")
+
+-- Parameters are matched by position, so each body may name them differently.
+#guard dtAssumptions
+    "(declare-datatypes ((Tree 1) (Forest 1))
+       ((par (X) ((node (val X) (kids (Forest X)))))
+        (par (Y) ((leaf) (grow (t (Tree Y)) (rest (Forest Y)))))))
+     (assume @p0 node) (assume @p1 grow)"
+  == some [consOf "node" [.atom "param 0", .atom "ref Forest"],
+           consOf "grow" [.atom "ref Tree", .atom "ref Forest"]]
+
+-- The parameters are bound only while the block is read.
+#guard dtAssumptions (list ++ "(assume @p0 X)") == none
+
+private def listU : String := "(declare-sort U 0)" ++ list ++
+  "(declare-const x U) (declare-const l (List U))"
+
+private def listUSort : TestTerm := .app (.atom "elab") (.app (.atom "sort List/1") (.usort 1))
+
+-- Applying the sort, applying a constructor, and applying an operator indexed
+-- by a constructor are each handed to `elaborate`.
+#guard dtAssumptions (listU ++ "(assume @p0 l)") == some [.uconst 2 listUSort]
+#guard dtAssumptions (listU ++ "(assume @p0 (cons x l))") ==
+  some [.app (.atom "elab")
+    (.app (.app (consOf "cons" [.atom "param 0", .atom "ref List"]) (.uconst 1 (.usort 1)))
+      (.uconst 2 listUSort))]
+#guard dtAssumptions (listU ++ "(assume @p0 ((_ indexed nil) l))") ==
+  some [.app (.atom "elab") (.app (.app (.atom "indexed") (consOf "nil" [])) (.uconst 2 listUSort))]
+
+-- `as` gives a constructor the instance its sort names.
+#guard dtAssumptions (listU ++ "(assume @p0 (as nil (List U)))") ==
+  some [.app (.app (.atom "as") (consOf "nil" [])) listUSort]
+
+-- A datatype of a block of arity zero is unchanged.
+#guard dtAssumptions "(declare-datatypes ((D 0)) (((a) (b (s D))))) (assume @p0 b)" ==
+  some [consOf "b" [.atom "ref D"]]
+
+-- Refused: a `par` whose parameters are not as many as the arity says, or not
+-- distinct; a body that is not `par` although the arity is not zero; and a
+-- block whose datatypes have different arities.
+#guard dtAssumptions "(declare-datatypes ((L 2)) ((par (X) ((n))))) (assume @p0 n)" == none
+#guard dtAssumptions "(declare-datatypes ((L 0)) ((par (X) ((n))))) (assume @p0 n)" == none
+#guard dtAssumptions "(declare-datatypes ((L 2)) ((par (X X) ((n))))) (assume @p0 n)" == none
+#guard dtAssumptions "(declare-datatypes ((L 1)) (((n)))) (assume @p0 n)" == none
+#guard dtAssumptions
+    "(declare-datatypes ((A 1) (B 0)) ((par (X) ((a (f X)))) ((b)))) (assume @p0 b)" == none
+
+-- Refused: a datatype of the block used in it without its parameters, or with
+-- anything else than them (non-uniform recursion).
+#guard dtAssumptions
+    "(declare-datatypes ((L 1)) ((par (X) ((n) (c (t L)))))) (assume @p0 n)" == none
+#guard dtAssumptions
+    "(declare-datatypes ((L 1)) ((par (X) ((n) (c (t (L (L X)))))))) (assume @p0 n)" == none
+
+-- Refused: a datatype nested inside an earlier parametric one.  Using an
+-- instance of that one at a type from outside the block is fine.
+#guard dtAssumptions (listU ++
+    "(declare-datatypes ((Tree 0)) (((node (kids (List Tree)))))) (assume @p0 node)") == none
+#guard (dtAssumptions (listU ++
+    "(declare-datatypes ((Tree 0)) (((node (vals (List U)))))) (assume @p0 node)")).isSome
+
+-- A calculus without `mkParam` refuses parametric datatypes outright.
+#guard parseProof { dtConfig with datatypes := some { dtOps with mkParam := none } }
+    (list ++ "(assume @p0 cons)") |>.toOption |>.isNone
+
 end Logos.Parser.Tests
