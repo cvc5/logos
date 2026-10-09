@@ -44,8 +44,8 @@ RULES_DIR = os.path.join(REPO_ROOT, "Cpc", "Proofs", "Rules")
 
 # Proof layers excluded from the per-rule PROOF count (see module docstring).
 EXCLUDE_ROOTS = [
-    "Cpc.Spec",                       # eo_satisfiability definition (1)
-    "Cpc.Logos",                      # proof checker (2)
+    "Cpc.Spec",                       # SMT and eo_satisfiability definitions
+    "Cpc.Logos",                      # proof checker definitions
     "Cpc.Proofs.TypePreservation",    # (a)
     "Cpc.Proofs.Canonical",           # (b)
     "Cpc.Proofs.Translation",         # (c)

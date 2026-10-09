@@ -283,11 +283,14 @@ The proofs of correctness of each proof rule are contained in `Cpc/Proofs/Rules/
 The dispatcher which case splits on these rules is in `Cpc/Proofs/RuleLemmas.lean`,
 which is also auto-generated based on the calculus.
 
-`scripts/cpc-loc-summary.py` reports the size of each of these pieces — the specification, the
-checker, the parser and the correctness proof — in lines of code.
+`scripts/cpc-loc-summary.py` reports the size of the SMT semantics, the additional
+Eunoia satisfiability layer, the checker, the parser and the correctness proof
+in lines of code.
 `scripts/smt-std-loc-summary.py` reports the size of the standalone standard
 semantics using the same counting convention; `--files` lists each module
-and `--deps` shows their dependencies.
+and `--deps` shows their dependencies. Compare entry (1) of the two reports to
+measure the reduction from selecting standard SMT operators: both count the
+model and its dependencies, excluding the library entry point.
 
 ## The name
 

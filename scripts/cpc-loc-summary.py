@@ -4,12 +4,16 @@
 Reports, by transitive Lean `import` closure (restricted to the `Cpc` and
 `Logos` libraries):
 
-  (1) Lines to *define* eo_satisfiability: Spec.lean and its dependencies.
-  (2) Lines for the proof *checker*: Logos.lean and its dependencies.
-  (3) Lines for the proof *parser*: Cpc/Parser.lean and its dependencies, minus
-      the checker definitions of (2). This splits into the signature-independent
+  (1) Lines to *define* smt_satisfiability: SmtModel.lean and its dependencies.
+      Compare directly with entry (1) of smt-std-loc-summary.py.
+  (2) Additional lines to *define* eo_satisfiability: Spec.lean and its
+      dependencies, excluding the SMT semantics of (1), followed by the total
+      lines including (1).
+  (3) Lines for the proof *checker*: Logos.lean and its dependencies.
+  (4) Lines for the proof *parser*: Cpc/Parser.lean and its dependencies, minus
+      the checker definitions of (3). This splits into the signature-independent
       parser of the `Logos` library and the generated `Cpc` configuration.
-  (4) Lines for the central proof of correctness of the checker, partitioned
+  (5) Lines for the central proof of correctness of the checker, partitioned
       into disjoint buckets (no file double-counted):
         (a) smt-model-eval type preservation
         (b) canonicity theorem
@@ -30,7 +34,7 @@ include the CheckerCore checker scaffolding they are stated against, and the
 top-level theorem (g) imports the rules, so (g) depends on (f) and nothing
 depends back on (g).
 
-Attribution for (4) is priority-based: the definitions from (1)-(3) are
+Attribution for (5) is priority-based: the definitions from (1)-(4) are
 excluded first, then each file is owned by the earliest bucket whose import
 closure reaches it. So the shared type-preservation foundation is counted once
 under (a), and the rest report only their *incremental* lines. The buckets are
@@ -85,7 +89,8 @@ DISPLAY_ORDER = ["a", "b", "c", "d", "e", "f", "g"]
 # The full central proof (everything reachable from the top-level theorem).
 CENTRAL_ROOTS = ["Cpc.Proofs.Checker"]
 
-# Definitions to exclude from the proof partition (reported as (1) and (2)).
+# Definitions to exclude from the proof partition (reported as (1)-(3)).
+SMT_ROOTS = ["Cpc.SmtModel"]
 SPEC_ROOTS = ["Cpc.Spec"]
 LOGOS_ROOTS = ["Cpc.Logos"]
 
@@ -221,7 +226,7 @@ def print_dependencies(owner, imports, titles):
                 edges[src].add(dst)
 
     rank = {k: i for i, k in enumerate(["def"] + DISPLAY_ORDER)}
-    print("\n(5) Dependencies between proof pieces (X imports from Y)")
+    print("\n(6) Dependencies between proof pieces (X imports from Y)")
     for key in DISPLAY_ORDER:
         deps = sorted(edges[key], key=lambda d: rank.get(d, 99))
         shown = ", ".join("definitions" if d == "def" else f"({d})" for d in deps)
@@ -236,7 +241,9 @@ def main() -> int:
     imports, modules = build_graph()
     cache: dict[str, int] = {}
 
+    smt_cl = closure(SMT_ROOTS, imports, modules)
     spec_cl = closure(SPEC_ROOTS, imports, modules)
+    eo_cl = spec_cl - smt_cl
     logos_cl = closure(LOGOS_ROOTS, imports, modules)
     parser_cl = closure(PARSER_ROOTS, imports, modules) - logos_cl
     central_cl = closure(CENTRAL_ROOTS, imports, modules)
@@ -245,35 +252,41 @@ def main() -> int:
     print("CPC executive summary  (LOC = non-blank, non-comment lines)")
     print("=" * 70)
 
-    # (1) eo_satisfiability definition
-    print("\n(1) Definition of eo_satisfiability  [Cpc.Spec + dependencies]")
-    print(f"    files: {len(spec_cl):4d}    lines: {total_loc(spec_cl, cache):7d}")
-    print_file_list(spec_cl, cache)
+    # (1) SMT semantics, measured like the SmtStd report's first entry.
+    print("\n(1) Definition of smt_satisfiability  [Cpc.SmtModel + dependencies]")
+    print(f"    files: {len(smt_cl):4d}    lines: {total_loc(smt_cl, cache):7d}")
+    print_file_list(smt_cl, cache)
 
-    # (2) proof checker
-    print("\n(2) Proof checker  [Cpc.Logos + dependencies]")
+    # (2) Eunoia satisfiability on top of the SMT semantics, without recounting it.
+    print("\n(2) Definition of eo_satisfiability  [Cpc.Spec + dependencies, excluding (1)]")
+    print(f"    files: {len(eo_cl):4d}    lines: {total_loc(eo_cl, cache):7d}")
+    print_file_list(eo_cl, cache)
+    print(f"    total lines including SMT semantics [(1) + (2)]: {total_loc(smt_cl | eo_cl, cache):7d}")
+
+    # (3) proof checker
+    print("\n(3) Proof checker  [Cpc.Logos + dependencies]")
     print(f"    files: {len(logos_cl):4d}    lines: {total_loc(logos_cl, cache):7d}")
     print_file_list(logos_cl, cache)
 
-    # (3) proof parser: the generic parser plus the generated configuration.
-    # The checker definitions of (2) are excluded, since the configuration
+    # (4) proof parser: the generic parser plus the generated configuration.
+    # The checker definitions of (3) are excluded, since the configuration
     # imports them to build terms.
     generic = {m for m in parser_cl if m.startswith("Logos")}
     generated = parser_cl - generic
-    print("\n(3) Proof parser  [Cpc.Parser + dependencies, excluding (2)]")
+    print("\n(4) Proof parser  [Cpc.Parser + dependencies, excluding (3)]")
     print(f"    files: {len(parser_cl):4d}    lines: {total_loc(parser_cl, cache):7d}")
     print(f"        signature-independent parser: {total_loc(generic, cache):7d}")
     print(f"        generated configuration:      {total_loc(generated, cache):7d}")
     print_file_list(parser_cl, cache)
 
-    # (4) central proof of correctness, partitioned.
+    # (5) central proof of correctness, partitioned.
     # The "proof universe" is everything reachable from the top-level theorem
     # PLUS the bucket roots. Non-vacuity (d) is a standalone meta-theorem that
     # nothing imports, so it is not in the central closure but is still part of
     # the correctness story the buckets account for.
-    excluded = spec_cl | logos_cl | parser_cl
-    print("\n(4) Central proof of correctness of the checker")
-    print("    (definitions from (1)-(3) excluded; buckets disjoint, priority-attributed)")
+    excluded = smt_cl | spec_cl | logos_cl | parser_cl
+    print("\n(5) Central proof of correctness of the checker")
+    print("    (definitions from (1)-(4) excluded; buckets disjoint, priority-attributed)")
 
     claimed = set(excluded)
     owner = {m: "def" for m in excluded}

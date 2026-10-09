@@ -178,6 +178,11 @@ library entry point separately, using the same non-blank, non-comment LOC
 convention as `scripts/cpc-loc-summary.py`. Add `--files` for per-file counts
 or `--deps` for the import graph. Shared dependencies are counted once;
 Lean's own libraries and the Eunoia source are excluded.
+Entry (1) of each script measures the corresponding `SmtModel` and its
+dependencies, so those totals directly compare the full CPC semantics with
+the standard subset. CPC's entry (2) reports the additional Eunoia
+satisfiability layer, followed by the total lines including the SMT semantics
+from entry (1).
 
 `install-smt-std.sh` installs only these compiler outputs:
 
