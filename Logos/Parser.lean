@@ -360,6 +360,13 @@ structure Config (T R C CL : Type) where
   /-- `mkStep rule args premises`, where premises are offsets into the proof stack. -/
   mkStep : R → List T → List Nat → C
   mkStepPop : R → List T → List Nat → C
+  /--
+  The command checking that the most recent step proved the given formula, which
+  is what a step's stated conclusion becomes; `none` if the calculus has no such
+  command.  The parser does not emit it yet, so a stated conclusion is still
+  dropped either way; see `dropConclusion`.
+  -/
+  mkCheckProven : Option (T → C) := none
   mkCmdList : List C → CL
   /-- Datatype support; `none` if the calculus has no datatypes. -/
   datatypes : Option (DatatypeOps T) := none
