@@ -2118,8 +2118,12 @@ theorem substFalse_eval_set_insert
   have hBaseSubterm : IsNonbinderSubterm base
       (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) tl) base) := by
     simp [IsNonbinderSubterm, hOuterNonbinder]
-  have hTlEval := hRecArg hTlSubterm (by simp; omega) hTlTrans hTlSubTrans
-  have hBaseEval := hRecArg hBaseSubterm (by simp; omega) hBaseTrans hBaseSubTrans
+  have hTlEval : __smtx_model_eval M (__eo_to_smt tlSub) =
+      __smtx_model_eval N (__eo_to_smt tl) :=
+    hRecArg hTlSubterm (by simp; omega) hTlTrans hTlSubTrans
+  have hBaseEval : __smtx_model_eval M (__eo_to_smt baseSub) =
+      __smtx_model_eval N (__eo_to_smt base) :=
+    hRecArg hBaseSubterm (by simp; omega) hBaseTrans hBaseSubTrans
   rw [hResultEq]
   change __smtx_model_eval M
       (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt tlSub)) (__eo_to_smt baseSub)) =
