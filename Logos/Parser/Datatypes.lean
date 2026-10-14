@@ -88,8 +88,9 @@ structure ElaboratedTerm (T : Type) where
   value : T
   generics : List (T × T)
 
+-- Terms leaving the parser carry instantiated datatype declarations.
 private def resolved (repr : DatatypeTerms T N) (t : ElaboratedTerm T) : T :=
-  if t.generics.isEmpty then t.value else repr.stuck
+  if t.generics.isEmpty then mono repr (repr.view t.value) else repr.stuck
 
 private def lift (f : List T → T) (ts : List (ElaboratedTerm T)) : ElaboratedTerm T :=
   ⟨f (ts.map (·.value)), ts.flatMap (·.generics)⟩
@@ -212,7 +213,6 @@ private def datatypeBindings (repr : DatatypeTerms T N)
   let template := dts.map fun d =>
     (repr.name d.name, d.constructors.map fun c => c.selectors.map fun (_, t) => resolved repr t)
   let arity := (dts.head?.map (·.arity)).getD 0
-  let template := if arity == 0 then mapFields (fun t => mono repr (repr.view t)) template else template
   some <| dts.flatMap fun d =>
     let name := repr.name d.name
     let sort := (List.range arity).foldr (fun k t => repr.build (.param (paramName repr k) t))
@@ -247,8 +247,8 @@ def withDatatypes (repr : DatatypeTerms T N) (cfg : Config T R C CL) :
   wellTyped := fun t => repr.typeOf (resolved repr t) != repr.stuck
   mkUSort := fun i => ⟨cfg.mkUSort i, []⟩
   mkUConst := fun i t =>
-    ⟨cfg.mkUConst i (if cfg.isType (repr.typeOf (resolved repr t))
-      then mono repr (repr.view t.value) else repr.stuck), []⟩
+    let ty := resolved repr t
+    ⟨cfg.mkUConst i (if cfg.isType (repr.typeOf ty) then ty else repr.stuck), []⟩
   apply := fun f a => ⟨cfg.apply f.value a.value, f.generics ++ a.generics⟩
   parseRule := cfg.parseRule
   mkAssumePush := cfg.mkAssumePush ∘ resolved repr
@@ -256,7 +256,7 @@ def withDatatypes (repr : DatatypeTerms T N) (cfg : Config T R C CL) :
   mkStepPop := fun r ts ps => cfg.mkStepPop r (ts.map (resolved repr)) ps
   mkCheckProven := cfg.mkCheckProven.map (· ∘ resolved repr)
   mkCmdList := cfg.mkCmdList
-  mkVar := cfg.mkVar.map fun mk s t => ⟨mk s (mono repr (repr.view (resolved repr t))), []⟩
+  mkVar := cfg.mkVar.map fun mk s t => ⟨mk s (resolved repr t), []⟩
   datatypes := some
     { mkRef := fun s => ⟨repr.build (.ref (repr.name s)), []⟩
       mkDecls := datatypeBindings repr

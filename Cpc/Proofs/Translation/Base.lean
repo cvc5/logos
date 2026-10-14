@@ -204,18 +204,15 @@ theorem eo_typeof_at_const {i T : Term}
 
 /-- Simplifies EO-to-SMT type translation for `bool`. -/
 @[simp] theorem eo_to_smt_type_bool :
-    __eo_to_smt_type Term.Bool = SmtType.Bool := by
-  simp [__eo_to_smt_type]
+    __eo_to_smt_type Term.Bool = SmtType.Bool := rfl
 
 /-- Simplifies EO-to-SMT type translation for `int`. -/
 @[simp] theorem eo_to_smt_type_int :
-    __eo_to_smt_type (Term.UOp UserOp.Int) = SmtType.Int := by
-  simp [__eo_to_smt_type]
+    __eo_to_smt_type (Term.UOp UserOp.Int) = SmtType.Int := rfl
 
 /-- Simplifies EO-to-SMT type translation for `real`. -/
 @[simp] theorem eo_to_smt_type_real :
-    __eo_to_smt_type (Term.UOp UserOp.Real) = SmtType.Real := by
-  simp [__eo_to_smt_type]
+    __eo_to_smt_type (Term.UOp UserOp.Real) = SmtType.Real := rfl
 
 /-- Simplifies EO-to-SMT type translation for `fun`. -/
 @[simp] theorem eo_to_smt_type_fun (T U : Term) :
@@ -241,13 +238,11 @@ theorem eo_typeof_at_const {i T : Term}
 
 /-- Simplifies EO-to-SMT type translation for `char`. -/
 @[simp] theorem eo_to_smt_type_char :
-    __eo_to_smt_type (Term.UOp UserOp.Char) = SmtType.Char := by
-  simp [__eo_to_smt_type]
+    __eo_to_smt_type (Term.UOp UserOp.Char) = SmtType.Char := rfl
 
 /-- Simplifies EO-to-SMT type translation for `reglan`. -/
 @[simp] theorem eo_to_smt_type_reglan :
-    __eo_to_smt_type (Term.UOp UserOp.RegLan) = SmtType.RegLan := by
-  simp [__eo_to_smt_type]
+    __eo_to_smt_type (Term.UOp UserOp.RegLan) = SmtType.RegLan := rfl
 
 @[simp] theorem guarded_eo_datatype_ne_bool (s : native_String) (d : SmtDatatypeDecl) :
     native_ite (__eo_reserved_datatype_name s) SmtType.None (SmtType.Datatype s d) ≠

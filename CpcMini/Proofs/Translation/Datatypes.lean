@@ -32,20 +32,18 @@ namespace TranslationProofs
 
 /-- Simplifies EO-to-SMT translation for `datatype_cons_unit`. -/
 @[simp] theorem eo_to_smt_datatype_cons_unit :
-    __eo_to_smt_datatype_cons DatatypeCons.unit = SmtDatatypeCons.unit := by
-  simp [__eo_to_smt_datatype_cons]
+    __eo_to_smt_datatype_cons DatatypeCons.unit = SmtDatatypeCons.unit := rfl
 
 /-- Simplifies EO-to-SMT translation for `datatype_null`. -/
 @[simp] theorem eo_to_smt_datatype_null :
-    __eo_to_smt_datatype Datatype.null = SmtDatatype.null := by
-  simp [__eo_to_smt_datatype]
+    __eo_to_smt_datatype Datatype.null = SmtDatatype.null := rfl
 
 /-- Simplifies EO-to-SMT type translation for `datatype`. -/
 @[simp] theorem eo_to_smt_type_datatype (s : native_String) (d : DatatypeDecl) :
     __eo_to_smt_type (Term.DatatypeType s d) =
       native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None
         (SmtType.Datatype s (__eo_to_smt_datatype_decl d)) := by
-  simp [__eo_to_smt_type]
+  rfl
 
 /-- Computes `__smtx_typeof` for `dt_sel_head_none`. -/
 @[simp] theorem smtx_typeof_dt_sel_head_none
@@ -60,8 +58,7 @@ theorem eo_to_smt_datatype_decl_lookup
     : ∀ (s : native_String) (dd : DatatypeDecl),
       __eo_to_smt_datatype (__eo_dd_lookup s dd) =
         __smtx_dd_lookup s (__eo_to_smt_datatype_decl dd)
-  | _, DatatypeDecl.nil => by
-      simp [__eo_dd_lookup, __eo_to_smt_datatype_decl, __smtx_dd_lookup]
+  | _, DatatypeDecl.nil => rfl
   | s, DatatypeDecl.cons s' d dd => by
       cases hEq : native_streq s s' <;>
         simp [__eo_dd_lookup, __smtx_dd_lookup, __eo_to_smt_datatype_decl,
@@ -75,11 +72,11 @@ theorem eo_to_smt_type_typeof_dt_sel_return
         __smtx_ret_typeof_sel_rec (__eo_to_smt_datatype d) i j
   | Datatype.null, _, _ => by
       simp [__eo_typeof_dt_sel_return, __smtx_ret_typeof_sel_rec,
-        __eo_to_smt_type]
+        __eo_to_smt_datatype, __eo_to_smt_type]
   | Datatype.sum DatatypeCons.unit d, native_nat_zero, j => by
       cases j <;>
         simp [__eo_typeof_dt_sel_return, __smtx_ret_typeof_sel_rec,
-          __eo_to_smt_datatype, __eo_to_smt_type]
+          __eo_to_smt_datatype, __eo_to_smt_datatype_cons, __eo_to_smt_type]
   | Datatype.sum DatatypeCons.unit d, native_nat_succ i, j => by
       simpa [__eo_typeof_dt_sel_return, __smtx_ret_typeof_sel_rec,
         __eo_to_smt_datatype, __eo_to_smt_datatype_cons] using

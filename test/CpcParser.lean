@@ -1,8 +1,9 @@
 import Cpc.Parser
+import Cpc.Spec
 
 namespace Cpc.Parser.Tests
 
-open Eo SmtEval
+open Eo SmtEval Smtm
 
 /-- The assumptions of a parsed CPC proof, or `none` if it does not parse. -/
 private def assumptions (input : String) : Option (List Term) :=
@@ -117,6 +118,37 @@ private def listIndexedUses : String :=
     (List.map __eo_typeof) == some [.Bool, .Bool]
 #guard assumptions (parametricListPrelude ++ listIndexedUses) ==
   assumptions (concreteListPrelude ++ listIndexedUses)
+
+-- Datatype applications are normalized at the parser boundary, including
+-- standalone sorts passed as proof arguments.
+private def listType (field : Term) : Term :=
+  .DatatypeType (native_string_lit "L")
+    (.cons (native_string_lit "L")
+      (.sum .unit (.sum (.cons field (.cons (.DatatypeTypeRef (native_string_lit "L")) .unit)) .null)) .nil)
+
+#guard assumptions (parametricListPrelude ++ "(assume @p0 (L Int))") ==
+  some [listType (.UOp .Int)]
+
+private def reflArgument : Except String (List Term × CCmdList) → Option Term
+  | .ok (_, .cons (.step .refl (.cons t .nil) .nil) .nil) => some t
+  | _ => none
+
+#guard reflArgument (Eo.parseProof
+    (parametricListPrelude ++ "(step @p0 :rule refl :args ((L Int)))")) ==
+  some (listType (.UOp .Int))
+
+-- Spec translates the normalized parser output; raw parametric applications
+-- have no translation there.
+#guard __eo_to_smt_type
+    (.Apply (.DatatypeParamType (native_string_lit "A")
+      (listType (.DatatypeTypeRef (native_string_lit "A")))) (.UOp .Int)) == SmtType.None
+#guard (assumptions (parametricListPrelude ++ listConstructorUse)).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool]
+#guard (assumptions (parametricListPrelude ++ listIndexedUses)).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool, SmtType.Bool]
+#guard (assumptions (parametricListPrelude ++
+    "(declare-const xss (L (L Int))) (assume @p0 (= (hd (cns xs xss)) xs))")).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool]
 
 -- A constructor, selector or datatype is named by a symbol.  Read as a
 -- constructor, `#b1` would stop meaning the bit-vector literal.
