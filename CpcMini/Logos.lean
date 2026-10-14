@@ -276,7 +276,6 @@ def __eo_typeof : Term -> Term
   | (Term.String s) => (__eo_lit_type_String (Term.String s))
   | (Term.Binary w n) => (__eo_lit_type_Binary (Term.Binary w n))
   | (Term.Var (Term.String s) T) => T
-  | (Term.DtParam s) => Term.Stuck
   | (Term.DatatypeParamType s T) => (__eo_typeof_datatype_kind (Term.DatatypeParamType s T))
   | (Term.DatatypeType s dd) => Term.Type
   | (Term.DtCons s dd i) => (__eo_typeof_dt_cons_rec (Term.DatatypeType s dd) (__eo_dd_resolve s dd) i)

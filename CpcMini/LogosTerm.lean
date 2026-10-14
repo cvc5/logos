@@ -57,7 +57,6 @@ inductive Term : Type where
   | DatatypeType : native_String -> DatatypeDecl -> Term
   | DatatypeParamType : native_String -> Term -> Term
   | DatatypeTypeRef : native_String -> Term
-  | DtParam : native_String -> Term
   | DtcAppType : Term -> Term -> Term
   | DtCons : native_String -> DatatypeDecl -> native_Nat -> Term
   | DtSel : native_String -> DatatypeDecl -> native_Nat -> native_Nat -> Term

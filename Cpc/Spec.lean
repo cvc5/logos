@@ -203,15 +203,16 @@ def __eo_to_smt_type : Term -> SmtType
   | T => (__eo_to_smt_type_rec T List.nil)
 
 
-def __eo_to_smt_type_param (p : native_String) : List (native_String × SmtType) -> SmtType
-  | (List.cons (Prod.mk q U) params) => (native_ite (native_streq p q) U (__eo_to_smt_type_param p params))
-  | List.nil => SmtType.None
+-- Bound parameters take precedence; an unbound name remains a datatype reference.
+def __eo_to_smt_type_ref (p : native_String) : List (native_String × SmtType) -> SmtType
+  | (List.cons (Prod.mk q U) params) => (native_ite (native_streq p q) U (__eo_to_smt_type_ref p params))
+  | List.nil => (native_ite (__eo_to_smt_reserved_datatype_name p) SmtType.None (SmtType.TypeRef p))
 
 
 def __eo_to_smt_type_rec : Term -> List (native_String × SmtType) -> SmtType
   | Term.Bool, params => SmtType.Bool
   | (Term.DatatypeType s dd), params => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.Datatype s (__eo_to_smt_datatype_decl_rec dd params)))
-  | (Term.DatatypeTypeRef s), params => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.TypeRef s))
+  | (Term.DatatypeTypeRef s), params => (__eo_to_smt_type_ref s params)
   | (Term.DtcAppType T1 T2), params =>
     let _v0 := (__eo_to_smt_type_rec T2 params)
     let _v1 := (__eo_to_smt_type_rec T1 params)
@@ -240,7 +241,6 @@ def __eo_to_smt_type_rec : Term -> List (native_String × SmtType) -> SmtType
   | (Term.Apply (Term.UOp UserOp.Set) x1), params =>
     let _v0 := (__eo_to_smt_type_rec x1 params)
     (__smtx_typeof_guard _v0 (SmtType.Set _v0))
-  | (Term.DtParam p), params => (__eo_to_smt_type_param p params)
   | (Term.Apply T U), params => (__eo_to_smt_type_apply T (List.cons (__eo_to_smt_type_rec U params) List.nil) params)
   | T, params => SmtType.None
 

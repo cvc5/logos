@@ -2027,7 +2027,7 @@ private def parserAppSpine : Term → List Term → Term × List Term
 
 mutual
 private def parserSubst (p : native_String) (a : Term) : Term → Term
-  | .DtParam q => if p == q then a else .DtParam q
+  | .DatatypeTypeRef q => if p == q then a else .DatatypeTypeRef q
   | .DatatypeParamType q t =>
       if p == q then .DatatypeParamType q t else .DatatypeParamType q (parserSubst p a t)
   | .DatatypeType s dd => .DatatypeType s (parserSubstDecl p a dd)
@@ -2050,7 +2050,7 @@ end
 -- arguments. These temporary names are disjoint from parserParamName.
 private def parserSubsts (names : List native_String) (args : List Term) (body : Term) : Term :=
   let fresh := names.zipIdx.map fun (_, i) => native_string_lit ("@inst" ++ toString i)
-  let body := (names.zip fresh).foldl (fun t (p, q) => parserSubst p (.DtParam q) t) body
+  let body := (names.zip fresh).foldl (fun t (p, q) => parserSubst p (.DatatypeTypeRef q) t) body
   (fresh.zip args).foldl (fun t (p, a) => parserSubst p a t) body
 
 -- Elaboration is outside the trusted specification. Its output is checked by
@@ -2090,21 +2090,26 @@ private def parserResolved (t : ParserTerm) : Term :=
 private def parserLift (f : List Term → Term) (ts : List ParserTerm) : ParserTerm :=
   ⟨f (ts.map (·.value)), ts.flatMap (·.generics)⟩
 
+private def parserMatchParam (names : List native_String) (p : native_String)
+    (t : Term) (bs : Array (Option Term)) : Option (Array (Option Term)) := do
+  let (_, k) ← names.zipIdx.find? (fun (q, _) => p == q)
+  let old ← bs[k]?
+  if old.isNone || old == some t then some (bs.set! k (some t)) else none
+
 mutual
-private def parserMatchType (names : List native_String) (pat actual : Term)
-    (bs : Array (Option Term)) : Option (Array (Option Term)) :=
-  match pat, actual with
-  | .DtParam p, t => do
-      let (_, k) ← names.zipIdx.find? (fun (q, _) => p == q)
-      let old ← bs[k]?
-      match old with
-      | none => some (bs.set! k (some t))
-      | some u => if u == t then some bs else none
-  | .Apply f a, .Apply g b | .DtcAppType f a, .DtcAppType g b => do
+private def parserMatchType (names : List native_String) :
+    Term → Term → Array (Option Term) → Option (Array (Option Term))
+  | .DatatypeTypeRef p, t, bs =>
+      if names.contains p then parserMatchParam names p t bs
+      else if .DatatypeTypeRef p == t then some bs else none
+  | .Apply f a, .Apply g b, bs | .DtcAppType f a, .DtcAppType g b, bs => do
       parserMatchType names a b (← parserMatchType names f g bs)
-  | .DatatypeType s dd, .DatatypeType t ee =>
-      if s == t then parserMatchDecl names dd ee bs else none
-  | t, u => if t == u then some bs else none
+  -- Datatype resolution wraps bare parameter references in DatatypeType too.
+  | .DatatypeType s dd, .DatatypeType t ee, bs =>
+      if names.contains s then parserMatchParam names s (.DatatypeType t ee) bs
+      else if s == t then parserMatchDecl names dd ee bs else none
+  | .DatatypeType s _, t, bs => parserMatchParam names s t bs
+  | t, u, bs => if t == u then some bs else none
 private def parserMatchDecl (names : List native_String) (dd ee : DatatypeDecl)
     (bs : Array (Option Term)) : Option (Array (Option Term)) := do
   match dd, ee with
@@ -2251,7 +2256,7 @@ def parserConfig : Logos.Parser.Config ParserTerm CRule CCmd CCmdList where
   datatypes := some
     { mkRef := fun s => ⟨.DatatypeTypeRef (native_string_lit s), []⟩
       mkDecls := parserDatatypeBindings
-      mkParam := some fun k => ⟨.DtParam (parserParamName k), []⟩
+      mkParam := some fun k => ⟨.DatatypeTypeRef (parserParamName k), []⟩
       elaborate := parserElaborate
       ascribe := parserAscribe }
 

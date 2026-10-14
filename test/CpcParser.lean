@@ -86,6 +86,29 @@ private def datatypePrelude : String :=
     "(declare-datatype L (par (X) ((nl) (cns (hd X) (tl (L X)))))) (assume @p0 true)"
   == some [.Boolean true]
 
+-- Parameters and recursive datatype references share one representation.
+-- Constructor inference must bind X while preserving the recursive L field.
+private def parametricListPrelude : String :=
+  "(declare-datatype L (par (X) ((nl) (cns (hd X) (tl (L X))))))
+   (declare-const xs (L Int))"
+
+private def concreteListPrelude : String :=
+  "(declare-datatype L ((nl) (cns (hd Int) (tl L)))) (declare-const xs L)"
+
+private def listConstructorUse : String := "(assume @p0 (= (hd (cns 1 xs)) 1))"
+
+#guard (assumptions (parametricListPrelude ++ listConstructorUse)).map
+    (List.map __eo_typeof) == some [.Bool]
+#guard assumptions (parametricListPrelude ++ listConstructorUse) ==
+  assumptions (concreteListPrelude ++ listConstructorUse)
+#guard assumptions (parametricListPrelude ++ "(assume @p0 (= (as nl (L Int)) (tl xs)))") ==
+  assumptions (concreteListPrelude ++ "(assume @p0 (= nl (tl xs)))")
+
+-- Instantiating the outer list must preserve the inner list's own references.
+#guard (assumptions (parametricListPrelude ++
+    "(declare-const xss (L (L Int))) (assume @p0 (= (hd (cns xs xss)) xs))")).map
+    (List.map __eo_typeof) == some [.Bool]
+
 -- A constructor, selector or datatype is named by a symbol.  Read as a
 -- constructor, `#b1` would stop meaning the bit-vector literal.
 #guard assumptions "(declare-datatypes ((D 0)) (((c (s Int)) (#b1)))) (assume @p0 (= #b1 #b1))"
