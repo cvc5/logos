@@ -313,7 +313,7 @@ A calculus with parametric datatypes sets `mkParam`, and then binds each name of
 a parametric block to a *generic* form, which `elaborate` and `ascribe` turn into
 the instance a use means.  They only propose: a calculus that checks types
 should give a generic form none, so that a use the parser could not elaborate is
-refused rather than read.  See `docs/parametric-datatypes.md`.
+refused rather than read.  See `docs/parser.md`.
 -/
 structure DatatypeOps (T : Type) where
   /--
@@ -1003,7 +1003,7 @@ def parseDatatypes (cfg : Config T R C CL) (sorts bodies : List Sexp) : ParserM 
   if names.length != bodies.length then
     throw s!"Error: {names.length} datatype names but {bodies.length} datatype bodies"
   -- A parametric block is read as one template over one list of parameters,
-  -- so its datatypes share their arity; see docs/parametric-datatypes.md.
+  -- so its datatypes share their arity; see docs/parser.md.
   let arity := (heads.head?.map (·.2)).getD 0
   if heads.any (·.2 != arity) then
     throw s!"Error: the datatypes {String.intercalate ", " names} of one block have \
