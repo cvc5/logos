@@ -63,8 +63,10 @@ handed to `elaborate` (or `ascribe`, for `as`), and a block must share one arity
 datatypes only applied to exactly its parameters, and not nest them in an earlier parametric
 datatype. The shared elaboration in `Logos/Parser/Datatypes.lean` supplies these hooks and infers
 constructor instances from arguments and selector instances from their operand's type.
-The parser normalizes datatype applications to monomorphic declarations before returning
-assumptions or building proof commands. `Spec.lean` translates those declarations directly;
+Parameter lists and datatype templates live in parser metadata, with no parametric
+datatype constructor in `Eo.Term`. The parser instantiates sort applications as it reads
+them, so assumptions and proof commands contain monomorphic declarations.
+`Spec.lean` translates those declarations directly;
 it does not instantiate parametric datatypes. Clients constructing EO terms without the
 parser must supply the instantiated declarations themselves.
 The order of a `declare-datatypes` block matters: the specification witnesses a datatype only

@@ -2028,7 +2028,6 @@ private def parserDeclBuild : Logos.Parser.DatatypeBlock Term native_String → 
 
 private def parserTermView : Term → Logos.Parser.DatatypeTermView Term native_String
   | .Apply f a => .apply f a
-  | .DatatypeParamType p t => .param p t
   | .DatatypeTypeRef p => .ref p
   | .DatatypeType s dd => .datatype s (parserDeclView dd)
   | .DtcAppType t u => .constructorType t u
@@ -2040,7 +2039,6 @@ private def parserTermView : Term → Logos.Parser.DatatypeTermView Term native_
 
 private def parserTermBuild : Logos.Parser.DatatypeTermView Term native_String → Term
   | .apply f a => .Apply f a
-  | .param p t => .DatatypeParamType p t
   | .ref p => .DatatypeTypeRef p
   | .datatype s dd => .DatatypeType s (parserDeclBuild dd)
   | .constructorType t u => .DtcAppType t u

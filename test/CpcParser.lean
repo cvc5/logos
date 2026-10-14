@@ -137,15 +137,35 @@ private def reflArgument : Except String (List Term × CCmdList) → Option Term
     (parametricListPrelude ++ "(step @p0 :rule refl :args ((L Int)))")) ==
   some (listType (.UOp .Int))
 
--- Raw parametric types have no core typing or SMT translation. The parser
--- normalizes their applications before handing them to the checker.
-private def parametricListType : Term :=
-  .DatatypeParamType (native_string_lit "A")
-    (listType (.DatatypeTypeRef (native_string_lit "A")))
+-- An unapplied generic sort stays in the parser's metadata and cannot escape
+-- as an ordinary datatype type.
+#guard assumptions (parametricListPrelude ++ "(assume @p0 L)") == some [.Stuck]
+#guard assumptions (parametricListPrelude ++ "(assume @p0 (L L))") == some [.Stuck]
 
-#guard __eo_typeof parametricListType == .Stuck
-#guard __eo_typeof (.Apply parametricListType (.UOp .Int)) == .Stuck
-#guard __eo_to_smt_type (.Apply parametricListType (.UOp .Int)) == SmtType.None
+-- A partial sort application keeps its parameters in parser metadata, even
+-- when it is named by a definition and completed later.
+private def parametricPairPrelude : String :=
+  "(declare-datatype P (par (X Y) ((pair (fst X) (snd Y)))))"
+
+#guard assumptions (parametricPairPrelude ++ "(assume @p0 (P Int))") == some [.Stuck]
+#guard assumptions (parametricPairPrelude ++
+    "(define PI () (P Int)) (assume @p0 (PI Bool))") ==
+  assumptions (parametricPairPrelude ++ "(assume @p0 (P Int Bool))")
+
+-- A template can use an earlier datatype with its parameters in a different
+-- order; both templates are instantiated before their operators reach the core.
+private def swappedPairUse : String :=
+  parametricPairPrelude ++
+  "(declare-datatype Q (par (X Y) ((wrap (unwrap (P Y X))))))
+   (declare-const q (Q Int Bool))
+   (assume @p0 (= (wrap (pair true 1)) q))
+   (assume @p1 (= (snd (unwrap q)) 1))"
+
+#guard (assumptions swappedPairUse).map (List.map __eo_typeof) == some [.Bool, .Bool]
+#guard (assumptions swappedPairUse).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool, SmtType.Bool]
+
+-- Spec translates the instantiated declarations produced by the parser.
 #guard (assumptions (parametricListPrelude ++ listConstructorUse)).map
     (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool]
 #guard (assumptions (parametricListPrelude ++ listIndexedUses)).map

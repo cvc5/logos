@@ -18,7 +18,6 @@ abbrev DatatypeBlock (T N : Type) := List (N × List (List T))
 /-- The term forms needed for datatype elaboration. Other terms remain opaque. -/
 inductive DatatypeTermView (T N : Type) where
   | apply : T → T → DatatypeTermView T N
-  | param : N → T → DatatypeTermView T N
   | ref : N → DatatypeTermView T N
   | datatype : N → DatatypeBlock T N → DatatypeTermView T N
   | constructorType : T → T → DatatypeTermView T N
@@ -45,10 +44,6 @@ private def mapFields (f : T → T) (dd : DatatypeBlock T N) : DatatypeBlock T N
 private def paramName (repr : DatatypeTerms T N) (k : Nat) : N :=
   repr.name ("@p" ++ toString k)
 
-private partial def binders [Inhabited T] (repr : DatatypeTerms T N) : DatatypeTermView T N → List N × T
-  | .param p t => let (ps, body) := binders repr (repr.view t); (p :: ps, body)
-  | t => ([], repr.build t)
-
 private partial def appSpine [Inhabited T] (repr : DatatypeTerms T N) :
     DatatypeTermView T N → List T → T × List T
   | .apply f a, args => appSpine repr (repr.view f) (a :: args)
@@ -56,8 +51,6 @@ private partial def appSpine [Inhabited T] (repr : DatatypeTerms T N) :
 
 private partial def subst (repr : DatatypeTerms T N) (p : N) (a : T) : DatatypeTermView T N → T
   | .ref q => if p == q then a else repr.build (.ref q)
-  | .param q t =>
-      repr.build (.param q (if p == q then t else subst repr p a (repr.view t)))
   | .datatype s dd => repr.build (.datatype s (mapFields (fun t => subst repr p a (repr.view t)) dd))
   | .apply t u => repr.build (.apply (subst repr p a (repr.view t)) (subst repr p a (repr.view u)))
   | .constructorType t u =>
@@ -71,28 +64,17 @@ private def substs (repr : DatatypeTerms T N) (names : List N) (args : List T) (
     (fun t (p, q) => subst repr p (repr.build (.ref q)) (repr.view t)) body
   (fresh.zip args).foldl (fun t (p, a) => subst repr p a (repr.view t)) body
 
-private partial def mono [Inhabited T] (repr : DatatypeTerms T N) : DatatypeTermView T N → T
-  | .apply f a =>
-      let (head, args) := appSpine repr (.apply f a) []
-      let (names, body) := binders repr (repr.view head)
-      if !names.isEmpty && names.length == args.length then
-        mono repr (repr.view (substs repr names (args.map (fun t => mono repr (repr.view t))) body))
-      else repr.build (.apply (mono repr (repr.view f)) (mono repr (repr.view a)))
-  | .datatype s dd => repr.build (.datatype s (mapFields (fun t => mono repr (repr.view t)) dd))
-  | .constructorType t u =>
-      repr.build (.constructorType (mono repr (repr.view t)) (mono repr (repr.view u)))
-  | t => repr.build t
-
-/-- A term together with generic operators waiting for their type arguments. -/
-structure ElaboratedTerm (T : Type) where
+/-- A term with a parser-local mapping from generic sorts and operators to
+their parameter names and datatype templates. -/
+structure ElaboratedTerm (T N : Type) where
   value : T
-  generics : List (T × T)
+  generics : List (T × List N × T)
 
 -- Terms leaving the parser carry instantiated datatype declarations.
-private def resolved (repr : DatatypeTerms T N) (t : ElaboratedTerm T) : T :=
-  if t.generics.isEmpty then mono repr (repr.view t.value) else repr.stuck
+private def resolved (repr : DatatypeTerms T N) (t : ElaboratedTerm T N) : T :=
+  if t.generics.isEmpty then t.value else repr.stuck
 
-private def lift (f : List T → T) (ts : List (ElaboratedTerm T)) : ElaboratedTerm T :=
+private def lift (f : List T → T) (ts : List (ElaboratedTerm T N)) : ElaboratedTerm T N :=
   ⟨f (ts.map (·.value)), ts.flatMap (·.generics)⟩
 
 private def matchParam (names : List N) (p : N) (t : T)
@@ -152,78 +134,81 @@ private def instantiateOp (repr : DatatypeTerms T N) :
       if s == t then some (repr.build (.selector s dd i j)) else none
   | _, _ => none
 
-private def instantiate (repr : DatatypeTerms T N) (generics : List (T × T))
+private def instantiate (repr : DatatypeTerms T N) (generics : List (T × List N × T))
     (op ty : T) : Option T := do
-  let (_, generic) ← generics.find? (fun (g, _) => g == op)
-  let (names, body) := binders repr (repr.view generic)
-  let actual := mono repr (repr.view ty)
-  let _ ← matchType repr names (repr.view (mono repr (repr.view body)))
-    (repr.view actual) (Array.replicate names.length none)
-  instantiateOp repr (repr.view op) (repr.view actual)
+  let (_, names, body) ← generics.find? (fun (g, _) => g == op)
+  let _ ← matchType repr names (repr.view body)
+    (repr.view ty) (Array.replicate names.length none)
+  instantiateOp repr (repr.view op) (repr.view ty)
 
-private def finish (repr : DatatypeTerms T N) (term : ElaboratedTerm T)
-    (args : List T) (inst old : T) : ElaboratedTerm T :=
+private def finish (repr : DatatypeTerms T N) (term : ElaboratedTerm T N)
+    (args : List T) (inst old : T) : ElaboratedTerm T N :=
   ⟨args.foldl (fun f a => repr.build (.apply f a)) inst,
-    term.generics.filter (fun (g, _) => g != old)⟩
+    term.generics.eraseP (fun (g, _) => g == old)⟩
 
-private def elaborateOperand (repr : DatatypeTerms T N) (term : ElaboratedTerm T)
-    (index : T) (rebuild : T → T) : List T → ElaboratedTerm T
+private def elaborateOperand (repr : DatatypeTerms T N) (term : ElaboratedTerm T N)
+    (index : T) (rebuild : T → T) : List T → ElaboratedTerm T N
   | a :: args =>
       if let some inst := instantiate repr term.generics index (repr.typeOf a) then
         finish repr term (a :: args) (rebuild inst) index
       else term
   | [] => term
 
-private def elaborateHead (repr : DatatypeTerms T N) (term : ElaboratedTerm T)
-    (head : T) (args : List T) : DatatypeTermView T N → ElaboratedTerm T
+private def elaborateHead (repr : DatatypeTerms T N) (term : ElaboratedTerm T N)
+    (head : T) (args : List T) : DatatypeTermView T N → ElaboratedTerm T N
+  | .datatype .. =>
+      if let some (_, names, body) := term.generics.find? (fun (g, _) => g == head) then
+        if names.length == args.length then
+          finish repr term [] (substs repr names args body) head
+        else term
+      else term
   | .constructor .. => Id.run do
-      if let some (_, generic) := term.generics.find? (fun (g, _) => g == head) then
-        let (names, _) := binders repr (repr.view generic)
-        let ty := mono repr (repr.view (repr.typeOf head))
+      if let some (_, names, body) := term.generics.find? (fun (g, _) => g == head) then
+        let ty := repr.typeOf head
         if let some bs := matchFields repr names (repr.view ty) args (Array.replicate names.length none) then
           if let some types := bs.toList.mapM id then
             if let some inst := instantiate repr term.generics head
-                (types.foldl (fun f a => repr.build (.apply f a)) generic) then
+                (substs repr names types body) then
               return finish repr term args inst head
       return term
   | .selector .. => elaborateOperand repr term head id args
   | .indexed rebuild index => elaborateOperand repr term index rebuild args
   | _ => term
 
-private def elaborate (repr : DatatypeTerms T N) (term : ElaboratedTerm T) : ElaboratedTerm T :=
+private def elaborate (repr : DatatypeTerms T N) (term : ElaboratedTerm T N) : ElaboratedTerm T N :=
   let (head, args) := appSpine repr (repr.view term.value) []
   elaborateHead repr term head args (repr.view head)
 
-private def ascribeOp (repr : DatatypeTerms T N) (op ty : ElaboratedTerm T) :
-    DatatypeTermView T N → Option (ElaboratedTerm T)
+private def ascribeOp (repr : DatatypeTerms T N) (op ty : ElaboratedTerm T N) :
+    DatatypeTermView T N → Option (ElaboratedTerm T N)
   | .constructor .. =>
       if op.generics.isEmpty then
-        if repr.typeOf op.value == mono repr (repr.view ty.value) then some op else none
+        if repr.typeOf op.value == ty.value then some op else none
       else do
         let inst ← instantiate repr op.generics op.value ty.value
         some ⟨inst, []⟩
   | _ => none
 
 private def ascribe (repr : DatatypeTerms T N) (isType : T → Bool)
-    (op ty : ElaboratedTerm T) : Option (ElaboratedTerm T) :=
+    (op ty : ElaboratedTerm T N) : Option (ElaboratedTerm T N) :=
   if isType (repr.typeOf (resolved repr ty)) then ascribeOp repr op ty (repr.view op.value) else none
 
 private def datatypeBindings (repr : DatatypeTerms T N)
-    (dts : List (DatatypeSpec (ElaboratedTerm T))) : Option (List (String × ElaboratedTerm T)) :=
+    (dts : List (DatatypeSpec (ElaboratedTerm T N))) : Option (List (String × ElaboratedTerm T N)) :=
   let template := dts.map fun d =>
     (repr.name d.name, d.constructors.map fun c => c.selectors.map fun (_, t) => resolved repr t)
   let arity := (dts.head?.map (·.arity)).getD 0
+  let names := (List.range arity).map (paramName repr)
   some <| dts.flatMap fun d =>
     let name := repr.name d.name
-    let sort := (List.range arity).foldr (fun k t => repr.build (.param (paramName repr k) t))
-      (repr.build (.datatype name template))
-    let generic (op : T) : ElaboratedTerm T := ⟨op, if arity == 0 then [] else [(op, sort)]⟩
-    (d.name, ⟨sort, []⟩) :: d.constructors.zipIdx.flatMap fun (c, i) =>
+    let sort := repr.build (.datatype name template)
+    let generic (op : T) : ElaboratedTerm T N := ⟨op, if arity == 0 then [] else [(op, names, sort)]⟩
+    (d.name, generic sort) :: d.constructors.zipIdx.flatMap fun (c, i) =>
       (c.name, generic (repr.build (.constructor name template i))) ::
         c.selectors.zipIdx.map fun ((sel, _), j) =>
           (sel, generic (repr.build (.selector name template i j)))
 
-private def liftArity : Arity T → Arity (ElaboratedTerm T)
+private def liftArity : Arity T → Arity (ElaboratedTerm T N)
   | .exact n => .exact n
   | .leftAssoc => .leftAssoc
   | .rightAssoc => .rightAssoc
@@ -231,16 +216,16 @@ private def liftArity : Arity T → Arity (ElaboratedTerm T)
   | .chainable f => .chainable (lift f)
   | .argList f => .argList (lift f)
 
-private def liftOp (repr : DatatypeTerms T N) (op : OpDecl T) : OpDecl (ElaboratedTerm T) :=
+private def liftOp (op : OpDecl T) : OpDecl (ElaboratedTerm T N) :=
   { name := op.name, indexArity := op.indexArity, arity := liftArity op.arity,
-    build := fun ts => (op.build (ts.map (fun t => mono repr (repr.view t.value)))).map fun t =>
+    build := fun ts => (op.build (ts.map (·.value))).map fun t =>
       ⟨t, ts.flatMap (·.generics)⟩,
     binder := op.binder.map lift }
 
 /-- Add datatype elaboration to a calculus's generated parser configuration. -/
 def withDatatypes (repr : DatatypeTerms T N) (cfg : Config T R C CL) :
-    Config (ElaboratedTerm T) R C CL where
-  ops := cfg.ops.map (liftOp repr)
+    Config (ElaboratedTerm T N) R C CL where
+  ops := cfg.ops.map liftOp
   parseLiteral := fun l => (cfg.parseLiteral l).map (fun t => ⟨t, []⟩)
   isType := fun t => cfg.isType (resolved repr t)
   mkType := ⟨cfg.mkType, []⟩

@@ -259,7 +259,6 @@ inductive Term : Type where
   | FunType : Term
   | Var : Term -> Term -> Term
   | DatatypeType : native_String -> DatatypeDecl -> Term
-  | DatatypeParamType : native_String -> Term -> Term
   | DatatypeTypeRef : native_String -> Term
   | DtcAppType : Term -> Term -> Term
   | DtCons : native_String -> DatatypeDecl -> native_Nat -> Term
