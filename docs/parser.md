@@ -9,12 +9,16 @@ assumptions the parser reads out of a file.
 
 ## Structure
 
-The parser is split into two parts.
+The parser is split into three parts.
 `Logos/Parser.lean` is signature-independent: it reads the command and term grammar and
 resolves premise references, but knows nothing about any particular operator or proof rule.
-Everything signature-specific is a `Logos.Parser.Config`, and that is auto-generated from
-the calculus alongside `Cpc/Logos.lean` — `Cpc/Parser.lean` lists the operator
-declarations and proof rules of CPC.
+`Logos/Parser/Datatypes.lean` is also signature-independent: it elaborates parametric datatype
+sorts, constructors and selectors, and reads proofs using the resulting configuration.
+A calculus supplies its term representation through `Logos.Parser.DatatypeTerms`:
+name conversion, term views and constructors, its type query, and its stuck term.
+`Cpc/Parser.lean` is auto-generated from the calculus alongside `Cpc/Logos.lean`: it lists
+the operator declarations, macros and proof rules of CPC, supplies the term adapter and
+command constructors, and calls `Logos.Parser.parseProofWithDatatypes`.
 
 Because the configuration is generated, an operator's surface syntax comes from its Eunoia
 declaration metadata.  The generic `.argList` arity implements Eunoia's `:arg-list` attribute:
@@ -52,8 +56,13 @@ s-expression and read again wherever the defined symbol is applied, with the par
 to the arguments given there.  Consequently a parameter's declared type is not used, an error
 in the body is reported at the use site, and a recursive `define` is rejected.  A `define`
 without parameters is read where it is given, as before.
-Datatypes may be mutually recursive; parametric datatypes (a non-zero arity, or a `par` body)
-are rejected, since Logos has no representation for them.
+Datatypes may be mutually recursive.  The generic parser reads parametric datatypes (a
+non-zero arity with `par` bodies) for a calculus that supplies the hooks of `DatatypeOps`:
+the parameters are read as `mkParam`, each use of a generic sort, constructor or selector is
+handed to `elaborate` (or `ascribe`, for `as`), and a block must share one arity, use its own
+datatypes only applied to exactly its parameters, and not nest them in an earlier parametric
+datatype. The shared elaboration in `Logos/Parser/Datatypes.lean` supplies these hooks and infers
+constructor instances from arguments and selector instances from their operand's type.
 The order of a `declare-datatypes` block matters: the specification witnesses a datatype only
 through references to entries declared *later* in its block (`smt_type_default`,
 `docs/smt-model-definitions.tex`), so a block declaring a datatype before the ones witnessing

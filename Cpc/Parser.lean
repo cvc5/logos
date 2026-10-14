@@ -7,8 +7,8 @@
 
 module
 
-public import Logos.Parser
-import all Logos.Parser
+public import Logos.Parser.Datatypes
+import all Logos.Parser.Datatypes
 public import Cpc.Logos
 import all Cpc.Logos
 
@@ -2002,41 +2002,65 @@ private def parserRuleMap : Std.HashMap String CRule := .ofList parserRules
 
 private def parserRule (name : String) : Option CRule := parserRuleMap[name]?
 
-/-- The argument types of one datatype constructor. -/
-private def parserDatatypeCons (selectors : List (String × Term)) : DatatypeCons :=
-  selectors.foldr (fun (_, ty) rest => .cons ty rest) .unit
+private def parserConsView : DatatypeCons → List Term
+  | .unit => []
+  | .cons t c => t :: parserConsView c
 
-/-- The constructors of one datatype, in declaration order. -/
-private def parserDatatype (ctors : List (Logos.Parser.ConsSpec Term)) : Datatype :=
-  ctors.foldr (fun c rest => .sum (parserDatatypeCons c.selectors) rest) .null
+private def parserDatatypeView : Datatype → List (List Term)
+  | .null => []
+  | .sum c d => parserConsView c :: parserDatatypeView d
 
-/-- The datatypes of one `declare-datatypes` block, in declaration order. -/
-private def parserDatatypeDecl (dts : List (Logos.Parser.DatatypeSpec Term)) : DatatypeDecl :=
-  dts.foldr (fun d rest => .cons (native_string_lit d.name) (parserDatatype d.constructors) rest) .nil
+private def parserDeclView : DatatypeDecl → Logos.Parser.DatatypeBlock Term native_String
+  | .nil => []
+  | .cons s d dd => (s, parserDatatypeView d) :: parserDeclView dd
 
-/--
-The sort, constructor and selector bindings introduced by a `declare-datatypes`
-block.  Constructors and selectors are identified by their position, so the
-order here must match `parserDatatypeDecl`.
--/
-private def parserDatatypeBindings (dts : List (Logos.Parser.DatatypeSpec Term)) :
-    Option (List (String × Term)) :=
-  let decl := parserDatatypeDecl dts
-  some <| dts.flatMap fun d =>
-    let name := native_string_lit d.name
-    (d.name, Term.DatatypeType name decl) ::
-      d.constructors.zipIdx.flatMap fun (c, i) =>
-        (c.name, Term.DtCons name decl i) ::
-          c.selectors.zipIdx.map fun ((sel, _), j) => (sel, Term.DtSel name decl i j)
+private def parserConsBuild : List Term → DatatypeCons
+  | [] => .unit
+  | t :: c => .cons t (parserConsBuild c)
+
+private def parserDatatypeBuild : List (List Term) → Datatype
+  | [] => .null
+  | c :: d => .sum (parserConsBuild c) (parserDatatypeBuild d)
+
+private def parserDeclBuild : Logos.Parser.DatatypeBlock Term native_String → DatatypeDecl
+  | [] => .nil
+  | (s, d) :: dd => .cons s (parserDatatypeBuild d) (parserDeclBuild dd)
+
+private def parserTermView : Term → Logos.Parser.DatatypeTermView Term native_String
+  | .Apply f a => .apply f a
+  | .DatatypeParamType p t => .param p t
+  | .DatatypeTypeRef p => .ref p
+  | .DatatypeType s dd => .datatype s (parserDeclView dd)
+  | .DtcAppType t u => .constructorType t u
+  | .DtCons s dd i => .constructor s (parserDeclView dd) i
+  | .DtSel s dd i j => .selector s (parserDeclView dd) i j
+  | .UOp1 op index => .indexed (Term.UOp1 op) index
+
+  | t => .atom t
+
+private def parserTermBuild : Logos.Parser.DatatypeTermView Term native_String → Term
+  | .apply f a => .Apply f a
+  | .param p t => .DatatypeParamType p t
+  | .ref p => .DatatypeTypeRef p
+  | .datatype s dd => .DatatypeType s (parserDeclBuild dd)
+  | .constructorType t u => .DtcAppType t u
+  | .constructor s dd i => .DtCons s (parserDeclBuild dd) i
+  | .selector s dd i j => .DtSel s (parserDeclBuild dd) i j
+  | .indexed rebuild index => rebuild index
+  | .atom t => t
+
+private def parserDatatypeTerms : Logos.Parser.DatatypeTerms Term native_String where
+  name := native_string_lit
+  view := parserTermView
+  build := parserTermBuild
+  typeOf := __eo_typeof
+  stuck := .Stuck
 
 def parserConfig : Logos.Parser.Config Term CRule CCmd CCmdList where
   ops := parserOps
   parseLiteral := parserLiteral
   isType := (· == .Type)
   mkType := .Type
-  -- Tells apart the declarations of an overloaded name: a term the calculus
-  -- gives no type to is not the reading meant.
-  wellTyped := fun t => match __eo_typeof t with | .Stuck => false | _ => true
   mkUSort := .USort
   mkUConst := .UConst
   apply := .Apply
@@ -2050,21 +2074,11 @@ def parserConfig : Logos.Parser.Config Term CRule CCmd CCmdList where
       (premises.foldr (fun i rest => .cons (Int.ofNat i) rest) .nil)
   mkCheckProven := some .check_proven
   mkCmdList := (·.foldr .cons .nil)
-  datatypes := some
-    { mkRef := fun name => Term.DatatypeTypeRef (native_string_lit name)
-      mkDecls := parserDatatypeBindings }
   mkVar := some fun name ty => Term.Var (Term.String (native_string_lit name)) ty
 
-/--
-The initial state of the parser: the operators of the signature, together with
-the identifiers its definitions introduce.
--/
-private def parserState : Logos.Parser.State Term :=
-  { Logos.Parser.State.ofOps parserOps with macros := .ofList parserMacros }
 
-def parseProof (proof : String) : Except String (List Term × CCmdList) := do
-  let ss ← Logos.Sexp.Parser.manySexps!.run proof
-  (Logos.Parser.parseCommands parserConfig ss).run'
-    parserState
+
+def parseProof (proof : String) : Except String (List Term × CCmdList) :=
+  Logos.Parser.parseProofWithDatatypes parserDatatypeTerms parserConfig parserMacros proof
 
 end Eo

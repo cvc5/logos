@@ -27,6 +27,26 @@ Definitions for eo_to_smt_type, eo_to_smt
 -/
 noncomputable section
 
+def __eo_to_smt_datatype_cons_subst (p : native_String) (U : SmtType) : SmtDatatypeCons -> SmtDatatypeCons
+  | SmtDatatypeCons.unit => SmtDatatypeCons.unit
+  | (SmtDatatypeCons.cons T c) => (SmtDatatypeCons.cons (native_ite (native_Teq T (SmtType.TypeRef p)) U T) (__eo_to_smt_datatype_cons_subst p U c))
+
+
+def __eo_to_smt_datatype_subst (p : native_String) (U : SmtType) : SmtDatatype -> SmtDatatype
+  | (SmtDatatype.sum c d) => (SmtDatatype.sum (__eo_to_smt_datatype_cons_subst p U c) (__eo_to_smt_datatype_subst p U d))
+  | SmtDatatype.null => SmtDatatype.null
+
+
+def __eo_to_smt_datatype_decl_subst (p : native_String) (U : SmtType) : SmtDatatypeDecl -> SmtDatatypeDecl
+  | (SmtDatatypeDecl.cons s d dd) => (SmtDatatypeDecl.cons s (__eo_to_smt_datatype_subst p U d) (__eo_to_smt_datatype_decl_subst p U dd))
+  | SmtDatatypeDecl.nil => SmtDatatypeDecl.nil
+
+
+def __eo_to_smt_type_subst (p : native_String) (U : SmtType) : SmtType -> SmtType
+  | (SmtType.Datatype s dd) => (SmtType.Datatype s (__eo_to_smt_datatype_decl_subst p U dd))
+  | T => T
+
+
 def __eo_to_smt_array_deq_diff (a : SmtTerm) : SmtType -> SmtTerm -> SmtType -> SmtTerm
   | (SmtType.Map aT aU), b, (SmtType.Map bT bU) => (SmtTerm.map_diff a b)
   | aT, b, bT => SmtTerm.None
@@ -118,6 +138,13 @@ def __eo_to_smt_reserved_datatype_name (s : native_String) : native_Bool :=
 
 mutual
 
+def __eo_to_smt_type_app : Term -> SmtDatatypeCons -> SmtType
+  | T, SmtDatatypeCons.unit => (__eo_to_smt_type T)
+  | (Term.Apply f a), params => (__eo_to_smt_type_app f (SmtDatatypeCons.cons (__eo_to_smt_type a) params))
+  | (Term.DatatypeParamType p T), (SmtDatatypeCons.cons S params) => (__smtx_typeof_guard S (__eo_to_smt_type_subst p S (__eo_to_smt_type_app T params)))
+  | T, params => SmtType.None
+
+
 def __eo_to_smt_datatype_cons : DatatypeCons -> SmtDatatypeCons
   | DatatypeCons.unit => SmtDatatypeCons.unit
   | (DatatypeCons.cons U c) => (SmtDatatypeCons.cons (__eo_to_smt_type U) (__eo_to_smt_datatype_cons c))
@@ -188,7 +215,7 @@ def __eo_to_smt_quantifiers_skolemize : Term -> SmtTerm -> native_Nat -> SmtTerm
 def __eo_to_smt_type : Term -> SmtType
   | Term.Bool => SmtType.Bool
   | (Term.DatatypeType s dd) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.Datatype s (__eo_to_smt_datatype_decl dd)))
-  | (Term.DatatypeTypeRef s) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.TypeRef s))
+  | (Term.DatatypeTypeRef s) => (SmtType.TypeRef s)
   | (Term.DtcAppType T1 T2) =>
     let _v0 := (__eo_to_smt_type T2)
     let _v1 := (__eo_to_smt_type T1)
@@ -217,6 +244,7 @@ def __eo_to_smt_type : Term -> SmtType
   | (Term.Apply (Term.UOp UserOp.Set) x1) =>
     let _v0 := (__eo_to_smt_type x1)
     (__smtx_typeof_guard _v0 (SmtType.Set _v0))
+  | (Term.Apply f a) => (__eo_to_smt_type_app f (SmtDatatypeCons.cons (__eo_to_smt_type a) SmtDatatypeCons.unit))
   | T => SmtType.None
 
 
