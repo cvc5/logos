@@ -137,11 +137,15 @@ private def reflArgument : Except String (List Term × CCmdList) → Option Term
     (parametricListPrelude ++ "(step @p0 :rule refl :args ((L Int)))")) ==
   some (listType (.UOp .Int))
 
--- Spec translates the normalized parser output; raw parametric applications
--- have no translation there.
-#guard __eo_to_smt_type
-    (.Apply (.DatatypeParamType (native_string_lit "A")
-      (listType (.DatatypeTypeRef (native_string_lit "A")))) (.UOp .Int)) == SmtType.None
+-- Raw parametric types have no core typing or SMT translation. The parser
+-- normalizes their applications before handing them to the checker.
+private def parametricListType : Term :=
+  .DatatypeParamType (native_string_lit "A")
+    (listType (.DatatypeTypeRef (native_string_lit "A")))
+
+#guard __eo_typeof parametricListType == .Stuck
+#guard __eo_typeof (.Apply parametricListType (.UOp .Int)) == .Stuck
+#guard __eo_to_smt_type (.Apply parametricListType (.UOp .Int)) == SmtType.None
 #guard (assumptions (parametricListPrelude ++ listConstructorUse)).map
     (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool]
 #guard (assumptions (parametricListPrelude ++ listIndexedUses)).map

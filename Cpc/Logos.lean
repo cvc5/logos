@@ -8494,14 +8494,6 @@ def __eo_typeof_apply : Term -> Term -> Term
   | _, _ => Term.Stuck
 
 
-def __eo_typeof_datatype_kind : Term -> Term
-  | (Term.DatatypeParamType s T) =>
-    let _v0 := (__eo_typeof_datatype_kind T)
-    (native_ite (native_not (native_teq _v0 Term.Stuck)) (Term.Apply (Term.Apply Term.FunType Term.Type) _v0) Term.Stuck)
-  | (Term.DatatypeType s dd) => Term.Type
-  | _ => Term.Stuck
-
-
 def __eo_typeof_fun_type : Term -> Term -> Term
   | Term.Type, Term.Type => Term.Type
   | _, _ => Term.Stuck
@@ -9057,7 +9049,6 @@ def __eo_typeof : Term -> Term
   | (Term.String s) => (__eo_lit_type_String (Term.String s))
   | (Term.Binary w n) => (__eo_lit_type_Binary (Term.Binary w n))
   | (Term.Var (Term.String s) T) => T
-  | (Term.DatatypeParamType s T) => (__eo_typeof_datatype_kind (Term.DatatypeParamType s T))
   | (Term.DatatypeType s dd) => Term.Type
   | (Term.DtCons s dd i) => (__eo_typeof_dt_cons_rec (Term.DatatypeType s dd) (__eo_dd_resolve s dd) i)
   | (Term.DtSel s dd i j) => (Term.Apply (Term.Apply Term.FunType (Term.DatatypeType s dd)) (__eo_typeof_dt_sel_return (__eo_dd_resolve s dd) i j))
