@@ -43,22 +43,25 @@ namespace TranslationProofs
 
 /-- Simplifies EO-to-SMT translation for `datatype_cons_unit`. -/
 @[simp] theorem eo_to_smt_datatype_cons_unit :
-    __eo_to_smt_datatype_cons DatatypeCons.unit = SmtDatatypeCons.unit := rfl
+    __eo_to_smt_datatype_cons DatatypeCons.unit = SmtDatatypeCons.unit := by
+  simp [__eo_to_smt_datatype_cons]
 
 /-- Simplifies EO-to-SMT translation for `datatype_null`. -/
 @[simp] theorem eo_to_smt_datatype_null :
-    __eo_to_smt_datatype Datatype.null = SmtDatatype.null := rfl
+    __eo_to_smt_datatype Datatype.null = SmtDatatype.null := by
+  simp [__eo_to_smt_datatype]
 
 /-- Simplifies EO-to-SMT translation for `datatype_decl_nil`. -/
 @[simp] theorem eo_to_smt_datatype_decl_nil :
-    __eo_to_smt_datatype_decl DatatypeDecl.nil = SmtDatatypeDecl.nil := rfl
+    __eo_to_smt_datatype_decl DatatypeDecl.nil = SmtDatatypeDecl.nil := by
+  simp [__eo_to_smt_datatype_decl]
 
 /-- Simplifies EO-to-SMT type translation for `datatype`. -/
 @[simp] theorem eo_to_smt_type_datatype (s : native_String) (d : DatatypeDecl) :
     __eo_to_smt_type (Term.DatatypeType s d) =
       native_ite (__eo_reserved_datatype_name s) SmtType.None
         (SmtType.Datatype s (__eo_to_smt_datatype_decl d)) := by
-  rfl
+  simp [__eo_to_smt_type]
 
 /-- Simplifies EO-to-SMT type translation for `unit_tuple`. -/
 @[simp] theorem eo_to_smt_type_unit_tuple :
@@ -113,12 +116,12 @@ theorem eo_to_smt_typeof_dt_sel_return :
         __smtx_ret_typeof_sel_rec (__eo_to_smt_datatype d) i j
   | Datatype.null, i, j => by
       cases i <;> cases j <;>
-        simp [__eo_typeof_dt_sel_return, __eo_to_smt_type, __eo_to_smt_datatype,
+        simp [__eo_typeof_dt_sel_return, __eo_to_smt_type,
           __smtx_ret_typeof_sel_rec]
   | Datatype.sum DatatypeCons.unit d, native_nat_zero, j => by
       cases j <;>
         simp [__eo_typeof_dt_sel_return, __eo_to_smt_type, __eo_to_smt_datatype,
-          __eo_to_smt_datatype_cons, __smtx_ret_typeof_sel_rec]
+          __smtx_ret_typeof_sel_rec]
   | Datatype.sum (DatatypeCons.cons T c) d, native_nat_zero, native_nat_zero => by
       simp [__eo_typeof_dt_sel_return, __eo_to_smt_datatype, __eo_to_smt_datatype_cons,
         __smtx_ret_typeof_sel_rec]
