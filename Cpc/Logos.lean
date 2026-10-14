@@ -8495,12 +8495,11 @@ def __eo_typeof_apply : Term -> Term -> Term
 
 
 def __eo_typeof_datatype_kind : Term -> Term
-  | Term.Stuck  => Term.Stuck
   | (Term.DatatypeParamType s T) =>
     let _v0 := (__eo_typeof_datatype_kind T)
     (native_ite (native_not (native_teq _v0 Term.Stuck)) (Term.Apply (Term.Apply Term.FunType Term.Type) _v0) Term.Stuck)
   | (Term.DatatypeType s dd) => Term.Type
-  | T => Term.Stuck
+  | _ => Term.Stuck
 
 
 def __eo_typeof_fun_type : Term -> Term -> Term

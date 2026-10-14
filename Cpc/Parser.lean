@@ -2035,6 +2035,7 @@ private def parserTermView : Term → Logos.Parser.DatatypeTermView Term native_
   | .DtCons s dd i => .constructor s (parserDeclView dd) i
   | .DtSel s dd i j => .selector s (parserDeclView dd) i j
   | .UOp1 op index => .indexed (Term.UOp1 op) index
+
   | t => .atom t
 
 private def parserTermBuild : Logos.Parser.DatatypeTermView Term native_String → Term
@@ -2074,6 +2075,7 @@ def parserConfig : Logos.Parser.Config Term CRule CCmd CCmdList where
   mkCheckProven := some .check_proven
   mkCmdList := (·.foldr .cons .nil)
   mkVar := some fun name ty => Term.Var (Term.String (native_string_lit name)) ty
+
 
 
 def parseProof (proof : String) : Except String (List Term × CCmdList) :=
