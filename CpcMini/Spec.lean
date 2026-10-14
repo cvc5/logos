@@ -34,117 +34,86 @@ def __eo_to_smt_reserved_datatype_name (s : native_String) : native_Bool :=
 
 mutual
 
-def __eo_to_smt_dt_subst (s : native_String) : Term -> Term -> Term
-  | Term.Stuck , _  => Term.Stuck
-  | _ , Term.Stuck  => Term.Stuck
-  | U, (Term.DtParam p) => (native_ite (native_streq s p) U (Term.DtParam p))
-  | U, (Term.DatatypeParamType p T) => (native_ite (native_streq s p) (Term.DatatypeParamType p T) (Term.DatatypeParamType p (__eo_to_smt_dt_subst s U T)))
-  | U, (Term.DatatypeType p dd) => (Term.DatatypeType p (__eo_to_smt_dd_subst s U dd))
-  | U, (Term.Apply T V) => (Term.Apply (__eo_to_smt_dt_subst s U T) (__eo_to_smt_dt_subst s U V))
-  | U, (Term.DtcAppType T V) => (Term.DtcAppType (__eo_to_smt_dt_subst s U T) (__eo_to_smt_dt_subst s U V))
-  | U, T => T
-
-
-def __eo_to_smt_dtc_subst (s : native_String) : Term -> DatatypeCons -> DatatypeCons
-  | U, (DatatypeCons.cons T c) => (DatatypeCons.cons (__eo_to_smt_dt_subst s U T) (__eo_to_smt_dtc_subst s U c))
-  | U, DatatypeCons.unit => DatatypeCons.unit
-
-
-def __eo_to_smt_dtd_subst (s : native_String) : Term -> Datatype -> Datatype
-  | U, (Datatype.sum c d) => (Datatype.sum (__eo_to_smt_dtc_subst s U c) (__eo_to_smt_dtd_subst s U d))
-  | U, Datatype.null => Datatype.null
-
-
-def __eo_to_smt_dd_subst (s : native_String) : Term -> DatatypeDecl -> DatatypeDecl
-  | U, (DatatypeDecl.cons p d dd) => (DatatypeDecl.cons p (__eo_to_smt_dtd_subst s U d) (__eo_to_smt_dd_subst s U dd))
-  | U, DatatypeDecl.nil => DatatypeDecl.nil
-
-
-def __eo_to_smt_dt_instantiate : Term -> Term -> Term
-  | Term.Stuck , _  => Term.Stuck
-  | _ , Term.Stuck  => Term.Stuck
-  | (Term.DatatypeParamType p T), U => (__eo_to_smt_dt_subst p U T)
-  | T, U => Term.Type
-
-
-def __eo_to_smt_dtc_normalize (fuel : native_Nat) : DatatypeCons -> DatatypeCons
-  | (DatatypeCons.cons T c) => (DatatypeCons.cons (__eo_to_smt_dt_normalize fuel T) (__eo_to_smt_dtc_normalize fuel c))
-  | DatatypeCons.unit => DatatypeCons.unit
-termination_by c => (fuel, sizeOf c)
-decreasing_by all_goals (simp_wf; first | apply Prod.Lex.left; omega | apply Prod.Lex.right; omega)
-
-
-def __eo_to_smt_dtd_normalize (fuel : native_Nat) : Datatype -> Datatype
-  | (Datatype.sum c d) => (Datatype.sum (__eo_to_smt_dtc_normalize fuel c) (__eo_to_smt_dtd_normalize fuel d))
-  | Datatype.null => Datatype.null
-termination_by d => (fuel, sizeOf d)
-decreasing_by all_goals (simp_wf; first | apply Prod.Lex.left; omega | apply Prod.Lex.right; omega)
-
-
-def __eo_to_smt_dd_normalize (fuel : native_Nat) : DatatypeDecl -> DatatypeDecl
-  | (DatatypeDecl.cons s d dd) => (DatatypeDecl.cons s (__eo_to_smt_dtd_normalize fuel d) (__eo_to_smt_dd_normalize fuel dd))
-  | dd => dd
-termination_by dd => (fuel, sizeOf dd)
-decreasing_by all_goals (simp_wf; first | apply Prod.Lex.left; omega | apply Prod.Lex.right; omega)
-
-
-def __eo_to_smt_dt_normalize : native_Nat -> Term -> Term
-  | _ , Term.Stuck  => Term.Stuck
-  | native_nat_zero, T => Term.Stuck
-  | (native_nat_succ fuel), (Term.Apply T U) =>
-    let _v0 := (native_nat_succ fuel)
-    let _v1 := (__eo_to_smt_dt_normalize _v0 U)
-    let _v2 := (__eo_to_smt_dt_normalize _v0 T)
-    let _v3 := (__eo_to_smt_dt_instantiate _v2 _v1)
-    (native_ite (native_teq _v3 Term.Type) (Term.Apply _v2 _v1) (native_ite (native_Teq (__eo_to_smt_type_mono _v1) SmtType.None) Term.Stuck (__eo_to_smt_dt_normalize fuel _v3)))
-  | fuel, (Term.DatatypeType s dd) => (Term.DatatypeType s (__eo_to_smt_dd_normalize fuel dd))
-  | fuel, (Term.DtcAppType T U) => (Term.DtcAppType (__eo_to_smt_dt_normalize fuel T) (__eo_to_smt_dt_normalize fuel U))
-  | fuel, (Term.DtParam s) => Term.Stuck
-  | fuel, T => T
-termination_by fuel T => (fuel, sizeOf T)
-decreasing_by all_goals (simp_wf; first | apply Prod.Lex.left; omega | apply Prod.Lex.right; omega)
-
-
-def __eo_to_smt_type : Term -> SmtType
-  | T => (__eo_to_smt_type_mono (__eo_to_smt_dt_normalize (native_dt_budget T) T))
-
-
-def __eo_to_smt_datatype_cons : DatatypeCons -> SmtDatatypeCons
+def __eo_to_smt_datatype_cons (c : DatatypeCons)
+    (params : List (native_String × SmtType) := []) : SmtDatatypeCons :=
+  match c with
   | DatatypeCons.unit => SmtDatatypeCons.unit
-  | (DatatypeCons.cons U c) => (SmtDatatypeCons.cons (__eo_to_smt_type_mono U) (__eo_to_smt_datatype_cons c))
+  | (DatatypeCons.cons U c) =>
+    SmtDatatypeCons.cons (__eo_to_smt_type U params) (__eo_to_smt_datatype_cons c params)
 
 
-def __eo_to_smt_datatype : Datatype -> SmtDatatype
-  | (Datatype.sum c d) => (SmtDatatype.sum (__eo_to_smt_datatype_cons c) (__eo_to_smt_datatype d))
+def __eo_to_smt_datatype (d : Datatype)
+    (params : List (native_String × SmtType) := []) : SmtDatatype :=
+  match d with
+  | (Datatype.sum c d) =>
+    SmtDatatype.sum (__eo_to_smt_datatype_cons c params) (__eo_to_smt_datatype d params)
   | Datatype.null => SmtDatatype.null
 
 
-def __eo_to_smt_datatype_decl : DatatypeDecl -> SmtDatatypeDecl
-  | (DatatypeDecl.cons s d dd) => (SmtDatatypeDecl.cons s (__eo_to_smt_datatype d) (__eo_to_smt_datatype_decl dd))
-  | dd => SmtDatatypeDecl.nil
+def __eo_to_smt_datatype_decl (dd : DatatypeDecl)
+    (params : List (native_String × SmtType) := []) : SmtDatatypeDecl :=
+  match dd with
+  | (DatatypeDecl.cons s d dd) =>
+    SmtDatatypeDecl.cons s (__eo_to_smt_datatype d params) (__eo_to_smt_datatype_decl dd params)
+  | DatatypeDecl.nil => SmtDatatypeDecl.nil
 
 
-def __eo_to_smt_type_mono : Term -> SmtType
+-- Parameters are substituted as their already translated arguments. Extending
+-- this environment under a binder leaves those arguments free of capture.
+def __eo_to_smt_type (T : Term)
+    (params : List (native_String × SmtType) := []) : SmtType :=
+  match T with
   | Term.Bool => SmtType.Bool
-  | (Term.DatatypeType s dd) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.Datatype s (__eo_to_smt_datatype_decl dd)))
+  | (Term.DatatypeType s dd) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.Datatype s (__eo_to_smt_datatype_decl dd params)))
   | (Term.DatatypeTypeRef s) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.TypeRef s))
   | (Term.DtcAppType T1 T2) =>
-    let _v0 := (__eo_to_smt_type_mono T2)
-    let _v1 := (__eo_to_smt_type_mono T1)
+    let _v0 := (__eo_to_smt_type T2 params)
+    let _v1 := (__eo_to_smt_type T1 params)
     (__smtx_typeof_guard _v1 (__smtx_typeof_guard _v0 (SmtType.DtcAppType _v1 _v0)))
   | (Term.USort i) => (SmtType.USort i)
   | (Term.Apply (Term.Apply Term.FunType T1) T2) =>
-    let _v0 := (__eo_to_smt_type_mono T2)
-    let _v1 := (__eo_to_smt_type_mono T1)
+    let _v0 := (__eo_to_smt_type T2 params)
+    let _v1 := (__eo_to_smt_type T1 params)
     (__smtx_typeof_guard _v1 (__smtx_typeof_guard _v0 (SmtType.FunType _v1 _v0)))
   | (Term.UOp UserOp.Int) => SmtType.Int
   | (Term.UOp UserOp.Real) => SmtType.Real
   | (Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral x1)) => (native_ite (native_zleq 0 x1) (SmtType.BitVec (native_int_to_nat x1)) SmtType.None)
   | (Term.UOp UserOp.Char) => SmtType.Char
   | (Term.Apply (Term.UOp UserOp.Seq) x1) =>
-    let _v0 := (__eo_to_smt_type_mono x1)
+    let _v0 := (__eo_to_smt_type x1 params)
     (__smtx_typeof_guard _v0 (SmtType.Seq _v0))
+  | (Term.DtParam p) =>
+    ((params.find? fun entry => native_streq p entry.1).map (·.2)).getD SmtType.None
+  | (Term.Apply T U) =>
+    __eo_to_smt_type_apply T [__eo_to_smt_type U params] params
   | T => SmtType.None
+
+
+-- Walk the application spine from right to left, restoring argument order.
+-- Translate every argument in the caller's environment before binding any.
+def __eo_to_smt_type_apply (T : Term) (args : List SmtType)
+    (params : List (native_String × SmtType)) : SmtType :=
+  match T with
+  | Term.Apply T U =>
+    __eo_to_smt_type_apply T (__eo_to_smt_type U params :: args) params
+  | Term.DatatypeParamType p T =>
+    match args with
+    | U :: args => __smtx_typeof_guard U (__eo_to_smt_type_bind T args ((p, U) :: params))
+    | [] => SmtType.None
+  | _ => SmtType.None
+
+
+-- Consume the parameter spine one substitution at a time. Only an exactly
+-- saturated datatype has a translation; missing or extra arguments fail.
+def __eo_to_smt_type_bind (T : Term) (args : List SmtType)
+    (params : List (native_String × SmtType)) : SmtType :=
+  match T, args with
+  | Term.DatatypeParamType p T, U :: args =>
+    __smtx_typeof_guard U (__eo_to_smt_type_bind T args ((p, U) :: params))
+  | Term.DatatypeType s dd, [] =>
+    native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None
+      (SmtType.Datatype s (__eo_to_smt_datatype_decl dd params))
+  | _, _ => SmtType.None
 
 
 def __eo_to_smt : Term -> SmtTerm
