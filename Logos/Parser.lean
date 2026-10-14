@@ -8,7 +8,7 @@ The parser itself is independent of any particular signature: everything that is
 specific to a calculus (its operators, its literals and its proof rules) is
 supplied by a `Logos.Parser.Config`.  The configuration for the calculus in this
 repository (`Cpc.Parser`) is generated from the corresponding Eunoia signature,
-so this module is the only hand-written part of the pipeline.
+and adds the shared datatype elaboration in `Logos.Parser.Datatypes`.
 -/
 
 public import Std.Data.HashMap

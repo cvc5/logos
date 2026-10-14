@@ -109,6 +109,15 @@ private def listConstructorUse : String := "(assume @p0 (= (hd (cns 1 xs)) 1))"
     "(declare-const xss (L (L Int))) (assume @p0 (= (hd (cns xs xss)) xs))")).map
     (List.map __eo_typeof) == some [.Bool]
 
+-- Indexed operators instantiate their generic constructor or selector index.
+private def listIndexedUses : String :=
+  "(assume @p0 ((_ is cns) xs)) (assume @p1 (= ((_ update hd) xs 1) xs))"
+
+#guard (assumptions (parametricListPrelude ++ listIndexedUses)).map
+    (List.map __eo_typeof) == some [.Bool, .Bool]
+#guard assumptions (parametricListPrelude ++ listIndexedUses) ==
+  assumptions (concreteListPrelude ++ listIndexedUses)
+
 -- A constructor, selector or datatype is named by a symbol.  Read as a
 -- constructor, `#b1` would stop meaning the bit-vector literal.
 #guard assumptions "(declare-datatypes ((D 0)) (((c (s Int)) (#b1)))) (assume @p0 (= #b1 #b1))"
