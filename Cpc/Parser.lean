@@ -851,7 +851,7 @@ private def parserOps : List (Logos.Parser.OpDecl Term) := [
       | _ => none },
   { name := "re.diff"
     indexArity := 0
-    arity := .exact 2
+    arity := .leftAssoc
     build := fun
       | [] => some (Term.UOp UserOp.re_diff)
       | _ => none },
@@ -1067,7 +1067,7 @@ private def parserOps : List (Logos.Parser.OpDecl Term) := [
       | _ => none },
   { name := "set.insert"
     indexArity := 0
-    arity := .exact 2
+    arity := .rightAssoc
     build := fun
       | [] => some (Term.UOp UserOp.set_insert)
       | _ => none },
@@ -1521,8 +1521,8 @@ private def parserRules : List (String × CRule) := [
   ("seq-eval-op", .seq_eval_op),
   ("sets_singleton_inj", .sets_singleton_inj),
   ("sets_ext", .sets_ext),
+  ("sets_choose_member", .sets_choose_member),
   ("sets-eval-op", .sets_eval_op),
-  ("sets-insert-elim", .sets_insert_elim),
   ("ubv-to-int-elim", .ubv_to_int_elim),
   ("int-to-bv-elim", .int_to_bv_elim),
   ("instantiate", .instantiate),
@@ -1777,6 +1777,7 @@ private def parserRules : List (String × CRule) := [
   ("sets-member-singleton", .sets_member_singleton),
   ("sets-member-emp", .sets_member_emp),
   ("sets-subset-elim", .sets_subset_elim),
+  ("sets-insert-elim", .sets_insert_elim),
   ("sets-union-comm", .sets_union_comm),
   ("sets-inter-comm", .sets_inter_comm),
   ("sets-inter-emp1", .sets_inter_emp1),
@@ -2220,10 +2221,13 @@ private def parserBaseConfig : Logos.Parser.Config Term CRule CCmd CCmdList wher
   apply := .Apply
   parseRule := parserRule
   mkAssumePush := .assume_push
-  mkStep := fun rule args premises => .step rule (args.foldr .cons .nil)
-    (premises.foldr (fun i rest => .cons (Int.ofNat i) rest) .nil)
-  mkStepPop := fun rule args premises => .step_pop rule (args.foldr .cons .nil)
-    (premises.foldr (fun i rest => .cons (Int.ofNat i) rest) .nil)
+  mkStep := fun rule args premises =>
+    .step rule (args.foldr .cons .nil)
+      (premises.foldr (fun i rest => .cons (Int.ofNat i) rest) .nil)
+  mkStepPop := fun rule args premises =>
+    .step_pop rule (args.foldr .cons .nil)
+      (premises.foldr (fun i rest => .cons (Int.ofNat i) rest) .nil)
+  mkCheckProven := some .check_proven
   mkCmdList := (·.foldr .cons .nil)
   mkVar := some fun name ty => Term.Var (Term.String (native_string_lit name)) ty
 
@@ -2241,6 +2245,7 @@ def parserConfig : Logos.Parser.Config ParserTerm CRule CCmd CCmdList where
   mkAssumePush := parserBaseConfig.mkAssumePush ∘ parserResolved
   mkStep := fun r ts ps => parserBaseConfig.mkStep r (ts.map parserResolved) ps
   mkStepPop := fun r ts ps => parserBaseConfig.mkStepPop r (ts.map parserResolved) ps
+  mkCheckProven := parserBaseConfig.mkCheckProven.map (· ∘ parserResolved)
   mkCmdList := parserBaseConfig.mkCmdList
   mkVar := parserBaseConfig.mkVar.map fun mk s t => ⟨mk s (parserMono (parserResolved t)), []⟩
   datatypes := some

@@ -118,9 +118,9 @@ theorem native_re_str_valid_extract {xs : List SmtValue}
   by_cases hOut :
       (decide (i < 0) || decide (n ≤ 0) ||
         decide (i ≥ Int.ofNat xs.length)) = true
-  · rw [if_pos hOut]
+  · rw [ite_eq_left hOut]
     rfl
-  · rw [if_neg hOut]
+  · rw [ite_eq_right hOut]
     exact native_re_str_valid_sublist h fun _ hy =>
       List.mem_of_mem_drop (List.mem_of_mem_take hy)
 

@@ -510,9 +510,9 @@ theorem search_semantics_int
             native_str_in_re (native_str_substr s result k) r = true)) := by
   dsimp
   by_cases hInvalid : start > (s.length : Int) ∨ 0 > start
-  · rw [if_pos hInvalid]
+  · rw [ite_eq_left hInvalid]
     exact search_eq_neg_one_of_invalid s r start hInvalid
-  · rw [if_neg hInvalid]
+  · rw [ite_eq_right hInvalid]
     have hStartNonneg : 0 ≤ start := by omega
     have hStartHigh : start ≤ (s.length : Int) := by omega
     let startNat := start.toNat
@@ -521,14 +521,14 @@ theorem search_semantics_int
     have hStartNat : startNat ≤ s.length := by
       omega
     by_cases hEmpty : native_str_in_re [] r = true
-    · rw [if_pos hEmpty]
+    · rw [ite_eq_left hEmpty]
       rw [← hStartCast]
       exact search_eq_start_of_empty_match s r startNat hValid hStartNat hEmpty
     · have hEmptyFalse : native_str_in_re [] r = false := by
         cases hVal : native_str_in_re [] r with
         | false => rfl
         | true => exact False.elim (hEmpty hVal)
-      rw [if_neg hEmpty]
+      rw [ite_eq_right hEmpty]
       have hSem := search_semantics s r startNat hValid hStartNat hEmptyFalse
       rw [hStartCast] at hSem
       rcases hSem with ⟨hMinimal, hFound⟩
@@ -557,9 +557,9 @@ theorem search_semantics_int
                       else Int.toNat (native_str_indexof_re s r start)) := by
                   by_cases hResult :
                       native_str_indexof_re s r start = -1
-                  · simp only [hResult, if_pos] at hjHi ⊢
+                  · simp only [hResult, ite_eq_left] at hjHi ⊢
                     omega
-                  · simp only [hResult, if_false] at hjHi ⊢
+                  · simp only [hResult, ite_false] at hjHi ⊢
                     have hResultNonneg :
                         0 ≤ native_str_indexof_re s r start := by
                       exact Int.le_of_lt (Int.lt_of_le_of_lt hjNonneg hjHi)

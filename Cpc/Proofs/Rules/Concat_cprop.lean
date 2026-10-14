@@ -901,10 +901,10 @@ private theorem extractString_cons_succ_nat_local
     simp [RuleProofs.extractString, native_str_substr, native_str_len,
       native_zplus, native_zneg, hLenNotLe,
       hMinLeft, hMinRight, List.drop_succ_cons]
-    -- both guards are false and both branches agree.  `rw [if_neg ..]` cannot
+    -- both guards are false and both branches agree.  `rw [ite_eq_right ..]` cannot
     -- be used: it must match the goal's `Decidable` instance syntactically,
     -- while `refine` unifies it up to defeq and hands us the exact conditions.
-    refine Eq.trans (if_neg ?_) (Eq.symm (if_neg ?_))
+    refine Eq.trans (ite_eq_right ?_) (Eq.symm (ite_eq_right ?_))
     -- reuse the negations proved above; the goal's disjunct is the `Bool`
     -- form `decide _ = true`, which is only propositionally equal to theirs
     · rintro (h | h)
@@ -5898,7 +5898,7 @@ private theorem native_seq_extract_suffix_nat_suffix
             true := by
         simp only [Bool.or_eq_true, decide_eq_true_eq]
         exact Or.inl (Or.inl hStartNeg)
-      rw [if_pos hGuard]
+      rw [ite_eq_left hGuard]
     rw [hExtract]
     simp
 

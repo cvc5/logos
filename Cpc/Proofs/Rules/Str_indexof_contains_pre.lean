@@ -196,8 +196,8 @@ private theorem native_seq_indexof_nonneg_of_drop_contains
     exact native_seq_indexof_rec_append_ne_neg pat after before
       (Int.toNat i) (xs.length - (Int.toNat i + pat.length) + 1) hFuel
   rw [native_seq_indexof_eq_rec]
-  rw [if_neg (Int.not_lt_of_ge hINonneg)]
-  rw [dif_pos hBounds]
+  rw [ite_eq_right (Int.not_lt_of_ge hINonneg)]
+  rw [dite_eq_left hBounds]
   rcases native_seq_indexof_rec_eq_neg_one_or_ge
       (xs.drop (Int.toNat i)) pat (Int.toNat i)
       (xs.length - (Int.toNat i + pat.length) + 1) with hNeg | hGe
@@ -431,7 +431,7 @@ private theorem facts___eo_prog_str_indexof_contains_pre_impl
           native_seq_extract (native_unpack_seq st₁) ni
               (native_seq_len (native_unpack_seq st₁)) = [] := by
         unfold native_seq_extract
-        rw [if_pos (by
+        rw [ite_eq_left (by
           simp only [Bool.or_eq_true, decide_eq_true_eq]
           exact Or.inr hLenLe)]
       have hFalse :=

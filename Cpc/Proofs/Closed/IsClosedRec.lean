@@ -95,7 +95,7 @@ by
       __smtx_typeof_seq_diff,
       __smtx_typeof_int_to_bv,
       __eo_to_smt_array_deq_diff,
-      __eo_to_smt_sets_deq_diff, __eo_to_smt_set_insert,
+      __eo_to_smt_sets_deq_diff,
       __eo_to_smt_tuple_prepend, __eo_to_smt_tuple_prepend_of_type,
       __eo_to_smt_set_elem_type, __eo_to_smt_typed_list_elem_type,
       __eo_to_smt_bv_size, __smtx_type_wf, __smtx_type_wf_component,
@@ -6623,141 +6623,6 @@ by
   subst xs
   exact hElemNN (by simp [__eo_to_smt_typed_list_elem_type])
 
-theorem eo_to_smt_set_insert_shape_of_non_none :
-    ∀ xs base,
-      __smtx_typeof (__eo_to_smt_set_insert xs base) ≠ SmtType.None ->
-        ∃ A,
-          __smtx_typeof (__eo_to_smt_set_insert xs base) = SmtType.Set A ∧
-          __smtx_typeof base = SmtType.Set A ∧
-          __eo_to_smt_typed_list_elem_type xs = A ∧
-          A ≠ SmtType.None :=
-by
-  intro xs base hNonNone
-  cases xs
-  all_goals
-    try
-      exfalso
-      apply hNonNone
-      simp [__eo_to_smt_set_insert, TranslationProofs.smtx_typeof_none]
-  case Apply f tail =>
-    cases f
-    all_goals
-      try
-        exfalso
-        apply hNonNone
-        simp [__eo_to_smt_set_insert, TranslationProofs.smtx_typeof_none]
-    case UOp op =>
-      cases op
-      case _at__at_TypedList_nil =>
-        cases hGuard :
-            native_Teq (__smtx_typeof base)
-              (SmtType.Set (__eo_to_smt_type tail))
-        · exfalso
-          apply hNonNone
-          simp [__eo_to_smt_set_insert, hGuard, native_ite,
-            TranslationProofs.smtx_typeof_none]
-        · have hBase :
-              __smtx_typeof base = SmtType.Set (__eo_to_smt_type tail) := by
-            simpa [native_Teq] using hGuard
-          have hBaseNN : term_has_non_none_type base := by
-            unfold term_has_non_none_type
-            rw [hBase]
-            simp
-          have hSetWf :
-              __smtx_type_wf (SmtType.Set (__eo_to_smt_type tail)) = true :=
-            smt_term_set_type_wf_of_non_none base hBaseNN hBase
-          have hTailWf : __smtx_type_wf (__eo_to_smt_type tail) = true :=
-            set_type_wf_component_of_wf hSetWf
-          have hTailNN : __eo_to_smt_type tail ≠ SmtType.None :=
-            type_wf_non_none hTailWf
-          refine ⟨__eo_to_smt_type tail, ?_, hBase, ?_, hTailNN⟩
-          · simpa [__eo_to_smt_set_insert, hGuard, native_ite] using hBase
-          · simp [__eo_to_smt_typed_list_elem_type, native_ite, hTailWf]
-      all_goals
-        exfalso
-        apply hNonNone
-        simp [__eo_to_smt_set_insert, TranslationProofs.smtx_typeof_none]
-    case Apply f' head =>
-      cases f'
-      all_goals
-        try
-          exfalso
-          apply hNonNone
-          simp [__eo_to_smt_set_insert, TranslationProofs.smtx_typeof_none]
-      case UOp op =>
-        cases op
-        case _at__at_TypedList_cons =>
-          have hNNUnion : term_has_non_none_type
-              (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt head))
-                (__eo_to_smt_set_insert tail base)) := by
-            unfold term_has_non_none_type
-            change
-              __smtx_typeof
-                  (__eo_to_smt_set_insert
-                    (Term.Apply
-                      (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons)
-                        head)
-                      tail) base) ≠ SmtType.None at hNonNone
-            simpa [__eo_to_smt_set_insert] using hNonNone
-          rcases set_binop_args_of_non_none (op := SmtTerm.set_union)
-              (typeof_set_union_eq
-                (SmtTerm.set_singleton (__eo_to_smt head))
-                (__eo_to_smt_set_insert tail base))
-              hNNUnion with
-            ⟨A, hHeadSet, hTailSet⟩
-          have hTailNN :
-              __smtx_typeof (__eo_to_smt_set_insert tail base) ≠
-                SmtType.None := by
-            rw [hTailSet]
-            simp
-          rcases eo_to_smt_set_insert_shape_of_non_none tail base hTailNN
-              with
-            ⟨B, hTailSmt, hBase, hTailElem, hBNN⟩
-          have hAB : A = B := by
-            have hSetEq : SmtType.Set A = SmtType.Set B :=
-              hTailSet.symm.trans hTailSmt
-            cases hSetEq
-            rfl
-          have hBaseA : __smtx_typeof base = SmtType.Set A := by
-            rw [hAB]
-            exact hBase
-          have hTailElemA : __eo_to_smt_typed_list_elem_type tail = A :=
-            hTailElem.trans hAB.symm
-          have hHeadArg := set_singleton_type_eq_arg_of_eq hHeadSet
-          have hSmt :
-              __smtx_typeof
-                  (__eo_to_smt_set_insert
-                    (Term.Apply
-                      (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons)
-                        head)
-                      tail) base) = SmtType.Set A := by
-            change
-              __smtx_typeof
-                  (SmtTerm.set_union
-                    (SmtTerm.set_singleton (__eo_to_smt head))
-                    (__eo_to_smt_set_insert tail base)) = SmtType.Set A
-            rw [typeof_set_union_eq, hHeadSet, hTailSet]
-            simp [__smtx_typeof_sets_op_2, native_ite, native_Teq]
-          have hElem :
-              __eo_to_smt_typed_list_elem_type
-                  (Term.Apply
-                    (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons)
-                      head)
-                    tail) = A := by
-            change
-              native_ite
-                (native_Teq (__smtx_typeof (__eo_to_smt head))
-                  (__eo_to_smt_typed_list_elem_type tail))
-                (__smtx_typeof (__eo_to_smt head)) SmtType.None = A
-            rw [hHeadArg.1, hTailElemA]
-            simp [native_Teq, native_ite]
-          exact ⟨A, hSmt, hBaseA, hElem, hHeadArg.2⟩
-        all_goals
-          exfalso
-          apply hNonNone
-          simp [__eo_to_smt_set_insert, TranslationProofs.smtx_typeof_none]
-termination_by xs base _ => sizeOf xs
-
 theorem typeof_apply_set_insert_raw_base_eq_none_closed
     (xs v vs z : Term) :
     __smtx_typeof
@@ -6766,79 +6631,19 @@ theorem typeof_apply_set_insert_raw_base_eq_none_closed
             (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs)
               (Term.Apply (Term.Apply Term.__eo_List_cons v) vs)))
           (__eo_to_smt z)) =
-      SmtType.None :=
-by
-  exact
-    typeof_generic_apply_non_function_head_eq_none_closed _ _
-      (generic_apply_type_of_non_special_head_closed _ _
-        (by
-          intro s d i j h
-          exact
-            TranslationProofs.eo_to_smt_apply_ne_dt_sel
-              _ _ s d i j h)
-        (by
-          intro s d i h
-          exact
-            TranslationProofs.eo_to_smt_apply_ne_dt_tester
-              _ _ s d i h))
-      (by
-        intro A B hFun
-        have hNN :
-            __smtx_typeof
-                (__eo_to_smt
-                  (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs)
-                    (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))) ≠
-              SmtType.None := by
-          rw [hFun]
-          simp
-        change
-            __smtx_typeof
-                (__eo_to_smt_set_insert xs
-                  (__eo_to_smt
-                    (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))) ≠
-              SmtType.None at hNN
-        rcases
-            eo_to_smt_set_insert_shape_of_non_none xs
-              (__eo_to_smt (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))
-              hNN with
-          ⟨C, hSet, _hBase, _hElem, _hCNN⟩
-        change
-            __smtx_typeof
-                (__eo_to_smt_set_insert xs
-                  (__eo_to_smt
-                    (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))) =
-              SmtType.FunType A B at hFun
-        rw [hFun] at hSet
-        cases hSet)
-      (by
-        intro A B hDtc
-        have hNN :
-            __smtx_typeof
-                (__eo_to_smt
-                  (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs)
-                    (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))) ≠
-              SmtType.None := by
-          rw [hDtc]
-          simp
-        change
-            __smtx_typeof
-                (__eo_to_smt_set_insert xs
-                  (__eo_to_smt
-                    (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))) ≠
-              SmtType.None at hNN
-        rcases
-            eo_to_smt_set_insert_shape_of_non_none xs
-              (__eo_to_smt (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))
-              hNN with
-          ⟨C, hSet, _hBase, _hElem, _hCNN⟩
-        change
-            __smtx_typeof
-                (__eo_to_smt_set_insert xs
-                  (__eo_to_smt
-                    (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))) =
-              SmtType.DtcAppType A B at hDtc
-        rw [hDtc] at hSet
-        cases hSet)
+      SmtType.None := by
+  have hBase := smtx_typeof_eo_list_cons_eq_none v vs
+  change __smtx_typeof (SmtTerm.Apply
+    (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt xs))
+      (__eo_to_smt (Term.Apply (Term.Apply Term.__eo_List_cons v) vs)))
+    (__eo_to_smt z)) = SmtType.None
+  change __smtx_typeof_apply
+    (__smtx_typeof (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt xs))
+      (__eo_to_smt (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))))
+    (__smtx_typeof (__eo_to_smt z)) = SmtType.None
+  rw [typeof_set_union_eq, hBase]
+  cases __smtx_typeof (SmtTerm.set_singleton (__eo_to_smt xs)) <;>
+    simp [__smtx_typeof_sets_op_2, __smtx_typeof_apply]
 
 theorem false_of_apply_apply_apply_set_insert_middle_list_has_smt_translation
     {P : Prop} {xs v vs z : Term}
@@ -6864,27 +6669,14 @@ by
       SmtType.None
   exact typeof_apply_set_insert_raw_base_eq_none_closed xs v vs z
 
-theorem set_insert_base_has_smt_translation_and_typed_list_elem_type_non_none
+theorem set_insert_args_have_smt_translation_of_non_none
     {xs base : Term}
-    (hTrans :
-      eoHasSmtTranslation
-        (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) base)) :
-  eoHasSmtTranslation base ∧
-    __eo_to_smt_typed_list_elem_type xs ≠ SmtType.None :=
-by
-  unfold eoHasSmtTranslation at hTrans
-  change
-      __smtx_typeof (__eo_to_smt_set_insert xs (__eo_to_smt base)) ≠
-        SmtType.None at hTrans
-  rcases eo_to_smt_set_insert_shape_of_non_none xs (__eo_to_smt base)
-      hTrans with
-    ⟨A, _hSet, hBase, hElem, hANN⟩
-  refine ⟨?_, ?_⟩
-  · unfold eoHasSmtTranslation
-    rw [hBase]
-    simp
-  · rw [hElem]
-    exact hANN
+    (hTrans : eoHasSmtTranslation
+      (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) base)) :
+    eoHasSmtTranslation xs ∧ eoHasSmtTranslation base := by
+  rcases set_insert_args_of_non_none hTrans with ⟨A, hx, hy, hA⟩
+  exact ⟨eo_has_smt_translation_of_smt_type_eq hx hA,
+    eo_has_smt_translation_of_smt_type_eq hy (by simp)⟩
 
 theorem is_closed_rec_apply_apply_set_insert_eq_and_bool_of_has_smt_translation
     (root : Term)
@@ -6910,41 +6702,19 @@ theorem is_closed_rec_apply_apply_set_insert_eq_and_bool_of_has_smt_translation
       __eo_is_closed_rec
         (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) base)
         env =
-      Term.Boolean b :=
-by
-  rcases
-      set_insert_base_has_smt_translation_and_typed_list_elem_type_non_none
-        hTrans with
-    ⟨hBaseTrans, hElemNN⟩
-  have hXsClosed :=
-    is_closed_rec_typed_list_eq_and_bool_of_elem_type_non_none
-      root ih hEnv hXsLt hElemNN
-  have hBaseClosed := ih hBaseLt hEnv hBaseTrans
-  have hInner :
-      __is_closed_rec (Term.Apply (Term.UOp UserOp.set_insert) xs) env =
-        __eo_is_closed_rec (Term.Apply (Term.UOp UserOp.set_insert) xs)
-          env ∧
-        ∃ b,
-          __eo_is_closed_rec
-              (Term.Apply (Term.UOp UserOp.set_insert) xs) env =
-            Term.Boolean b :=
-    is_closed_rec_apply_uop_eq_and_bool_of_arg hEnv hXsClosed
-  exact
-    is_closed_rec_apply_generic_eq_and_bool_of_parts
-      hEnv
-      (by
-        intro q v vs hEq
-        cases hEq
-        exact typed_list_elem_type_non_none_not_eo_list_cons hElemNN v vs
-          rfl)
-      (by
-        intro vs hEq
-        cases hEq)
-      (by
-        intro vs hEq
-        cases hEq)
-      hInner
-      hBaseClosed
+      Term.Boolean b := by
+  rcases set_insert_args_have_smt_translation_of_non_none hTrans with
+    ⟨hXsTrans, hBaseTrans⟩
+  have hInner := is_closed_rec_apply_uop_eq_and_bool_of_arg
+    (op := UserOp.set_insert) hEnv (ih hXsLt hEnv hXsTrans)
+  exact is_closed_rec_apply_generic_eq_and_bool_of_parts hEnv
+    (by
+      intro q v vs hEq
+      cases hEq
+      exact term_not_eo_list_cons_of_has_smt_translation hXsTrans v vs rfl)
+    (by intro vs hEq; cases hEq)
+    (by intro vs hEq; cases hEq)
+    hInner (ih hBaseLt hEnv hBaseTrans)
 
 theorem is_closed_rec_apply_apply_apply_set_insert_eq_and_bool_of_has_smt_translation
     (root : Term)

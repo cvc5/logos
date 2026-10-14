@@ -127,7 +127,7 @@ private theorem extract_pack_string
   -- into an implication, so discharge its condition here
   rcases ‹(0 ≤ i ∧ 0 < n) ∧ i < Int.ofNat s.length› with
     ⟨⟨hi0, hn0⟩, hilt⟩
-  rw [if_neg (by
+  rw [ite_eq_right (by
     rintro ((hi | hn) | hlen)
     · exact False.elim ((Int.not_lt_of_ge hi0) hi)
     · exact False.elim ((Int.not_le_of_gt hn0) hn)
@@ -412,7 +412,7 @@ private theorem eval_forall_encoding_true
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean false
-    rw [dif_neg hNoSat]
+    rw [dite_eq_right hNoSat]
   change __smtx_model_eval_not
       (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean true
@@ -440,8 +440,8 @@ private theorem eval_exists_is_boolean
         __smtx_value_canonical v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true
-  · exact ⟨true, dif_pos h⟩
-  · exact ⟨false, dif_neg h⟩
+  · exact ⟨true, dite_eq_left h⟩
+  · exact ⟨false, dite_eq_right h⟩
 
 private theorem var_lookup_push_same
     (M : SmtModel) (s : native_String) (T : SmtType) (v : SmtValue) :

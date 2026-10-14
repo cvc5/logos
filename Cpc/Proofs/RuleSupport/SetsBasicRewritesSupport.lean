@@ -2714,7 +2714,7 @@ theorem map_diff_singleton_empty_eq
     (hPredIffV (Classical.choose hDiff)).mp (Classical.choose_spec hDiff)
   rw [hTypm1, hTypm2]
   simp only [native_ite, native_Teq, SmtEval.native_and, decide_true,
-    Bool.and_self, if_true]
-  rw [dif_pos hDiff, hChoose]
+    Bool.and_self, ite_true]
+  rw [dite_eq_left hDiff, hChoose]
 
 end SetsBasicRewritesSupport

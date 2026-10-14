@@ -35,7 +35,7 @@ private theorem native_seq_extract_empty_of_start_ge_len_local
   unfold native_seq_extract
   have hLen : (Int.ofNat xs.length : native_Int) ≤ i := by
     simpa [native_seq_len] using h
-  rw [if_pos (by
+  rw [ite_eq_left (by
     simp only [Bool.or_eq_true, decide_eq_true_eq]
     exact Or.inr hLen)]
 
@@ -77,7 +77,7 @@ private theorem native_seq_extract_nested_of_bound
       Int.toNat_of_nonneg (Int.le_of_lt hnPos)
     have hInnerEq : inner = (xs.drop I).take K := by
       unfold inner native_seq_extract I K
-      rw [if_neg (by
+      rw [ite_eq_right (by
         intro hGuard
         simp only [Bool.or_eq_true, decide_eq_true_eq] at hGuard
         rcases hGuard with (hneg | hmLe) | hLenLe
@@ -122,7 +122,7 @@ private theorem native_seq_extract_nested_of_bound
             Int.ofNat_sub (Nat.le_of_lt hJWithin)
           _ = Int.ofNat inner.length - j := by rw [hjCast]
       unfold native_seq_extract
-      rw [if_neg (by
+      rw [ite_eq_right (by
         intro hGuard
         simp only [Bool.or_eq_true, decide_eq_true_eq] at hGuard
         rcases hGuard with (hneg | hnLe) | hLenLe
@@ -151,7 +151,7 @@ private theorem native_seq_extract_nested_of_bound
             Int.ofNat_sub (Nat.le_of_lt hIJWithin)
           _ = Int.ofNat xs.length - (i + j) := by rw [hIJCast]
       unfold native_seq_extract
-      rw [if_neg (by
+      rw [ite_eq_right (by
         intro hGuard
         simp only [Bool.or_eq_true, decide_eq_true_eq] at hGuard
         rcases hGuard with (hneg | hnLe) | hLenLe

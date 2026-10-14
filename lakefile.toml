@@ -1,6 +1,9 @@
 name = "Cpc"
 version = "0.1.0"
 defaultTargets = ["Logos", "Cpc", "CpcMini"]
+# Lean 4.34 defaults to all CPU cores even when LEAN_NUM_THREADS is set.
+# Keep large proof modules within memory limits; this does not invalidate caches.
+weakLeanArgs = ["-j1"]
 
 [[lean_lib]]
 name = "Logos"

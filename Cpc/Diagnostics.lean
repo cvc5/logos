@@ -50,17 +50,30 @@ def logos_checker_failure (assums : List Term) (cmds : CCmdList) : Option Checke
     | .error (i, cmd) => some (.command i cmd)
     | .ok state => if __eo_state_is_refutation state then none else some .finalCheck
 
-/-- The source labels of the commands represented in `CCmdList`, in the same order. -/
-private def proofCommandLabels (proof : String) : List String :=
+/--
+The source labels of the proof commands, in order, each with whether it states a
+conclusion.
+-/
+private def proofSourceCommands (proof : String) : List (String × Bool) :=
   match Logos.Sexp.Parser.manySexps!.run proof with
   | .error _ => []
   | .ok ss => ss.filterMap label?
 where
-  label? : Logos.Sexp → Option String
-    | .expr (.atom "assume-push" :: .atom name :: _) => some s!"assume-push {name}"
-    | .expr (.atom "step" :: .atom name :: _) => some s!"step {name}"
-    | .expr (.atom "step-pop" :: .atom name :: _) => some s!"step-pop {name}"
+  stated (rest : List Logos.Sexp) : Bool := (Logos.Parser.splitConclusion rest).1.isSome
+  label? : Logos.Sexp → Option (String × Bool)
+    | .expr (.atom "assume-push" :: .atom name :: _) => some (s!"assume-push {name}", false)
+    | .expr (.atom "step" :: .atom name :: rest) => some (s!"step {name}", stated rest)
+    | .expr (.atom "step-pop" :: .atom name :: rest) => some (s!"step-pop {name}", stated rest)
     | _ => none
+
+/--
+The source labels of the commands represented in `CCmdList`, in the same order.
+A step stating its conclusion is two commands: the step, and the check of that
+conclusion.
+-/
+private def proofCommandLabels (proof : String) : List String :=
+  (proofSourceCommands proof).flatMap fun (label, stated) =>
+    if stated then [label, s!"the conclusion of {label}"] else [label]
 
 /-- Keep diagnostics readable when the offending command is large. -/
 private def abbreviate (s : String) : String :=
@@ -81,8 +94,8 @@ def logos_checker_failure_detail (proof : String) (assums : List Term) (cmds : C
     s!"Error: the checker became stuck at {location} (proof command {i + 1}):\n  \
        {abbreviate (toString (repr cmd))}"
   | some .finalCheck =>
-    let after := match labels.reverse.head? with
-      | some label => s!" after {label}"
+    let after := match (proofSourceCommands proof).reverse.head? with
+      | some (label, _) => s!" after {label}"
       | none => ""
     s!"Error: every proof command executed without getting stuck, but the final state{after} \
        is not a closed proof of false."

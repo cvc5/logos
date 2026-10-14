@@ -852,7 +852,7 @@ private theorem native_int_pow2_lt_of_lt_nonneg_div
   have hPowNat : (2 : Nat) ^ Int.toNat w < 2 ^ Int.toNat k :=
     Nat.pow_lt_pow_right (by decide) hNat
   rw [native_int_pow2, native_int_pow2, native_zexp_total,
-    native_zexp_total, if_neg hnotW, if_neg hnotK]
+    native_zexp_total, ite_eq_right hnotW, ite_eq_right hnotK]
   exact_mod_cast hPowNat
 
 private theorem native_int_pow2_add_of_nonneg_div

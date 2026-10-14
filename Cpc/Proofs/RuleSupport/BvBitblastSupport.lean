@@ -322,7 +322,7 @@ private theorem native_and_bits (xs ys : List Bool)
     rfl
   · rw [native_int_pow2_nat]
     simp only [native_binary_and, native_zeq, native_ite, decide_eq_true_eq]
-    rw [if_neg (by exact_mod_cast hw)]
+    rw [ite_eq_right (by exact_mod_cast hw)]
     change
       ((BitVec.ofInt xs.length (bitsValue xs : Int) &&&
           BitVec.ofInt xs.length (bitsValue ys : Int)).toInt %
@@ -350,7 +350,7 @@ private theorem native_or_bits (xs ys : List Bool)
     rfl
   · rw [native_int_pow2_nat]
     simp only [native_binary_or, native_zeq, native_ite, decide_eq_true_eq]
-    rw [if_neg (by exact_mod_cast hw)]
+    rw [ite_eq_right (by exact_mod_cast hw)]
     change
       ((BitVec.ofInt xs.length (bitsValue xs : Int) |||
           BitVec.ofInt xs.length (bitsValue ys : Int)).toInt %
@@ -379,7 +379,7 @@ private theorem native_xor_bits (xs ys : List Bool)
   · rw [native_int_pow2_nat]
     simp only [native_binary_xor, native_zeq, native_ite,
       decide_eq_true_eq]
-    rw [if_neg (by exact_mod_cast hw)]
+    rw [ite_eq_right (by exact_mod_cast hw)]
     change
       ((BitVec.ofInt xs.length (bitsValue xs : Int) ^^^
           BitVec.ofInt xs.length (bitsValue ys : Int)).toInt %
@@ -1992,7 +1992,7 @@ theorem list_repeat_from_bools {M : SmtModel}
     (term_ne_stuck_of_eval_boolean hb)]
   rw [show native_zlt (n : Int) 0 = false by
     simp [native_zlt]]
-  simp only [native_ite, Bool.false_eq_true, if_false]
+  simp only [native_ite, Bool.false_eq_true, ite_false]
   rw [show native_int_to_nat (n : Int) = n by
     simp [native_int_to_nat]]
   exact list_repeat_rec_from_bools hb hty n
@@ -3530,10 +3530,10 @@ theorem eval_step_bvite (M : SmtModel) (hM : model_wf M)
           rw [(BitListEval.cons cbit (Term.Binary 0 0) cb [] hcbit
             (BitListEval.nil (M := M))).eval, ha.eval, hb.eval]
           cases cb
-          · simp only [Bool.false_eq_true, if_false]
+          · simp only [Bool.false_eq_true, ite_false]
             rw [zipWith_right_of_length xs ys hlen]
             rfl
-          · simp only [if_true]
+          · simp only [ite_true]
             rw [zipWith_left_of_length xs ys hlen]
             rfl
 
@@ -8205,14 +8205,14 @@ private theorem shiftLszTerm_numeral (W : Nat) :
   by_cases hp : W = 2 ^ W.log2
   · have hpI : (2 : Int) ^ W.log2 = (W : Int) := by
       exact_mod_cast hp.symm
-    rw [if_pos hpI]
-    rw [if_pos hp]
+    rw [ite_eq_left hpI]
+    rw [ite_eq_left hp]
   · have hpI : (2 : Int) ^ W.log2 ≠ (W : Int) := by
       intro heq
       apply hp
       exact_mod_cast heq.symm
-    rw [if_neg hpI, if_neg hpI]
-    rw [if_neg hp]
+    rw [ite_eq_right hpI, ite_eq_right hpI]
+    rw [ite_eq_right hp]
     congr 2
 
 private theorem barrelWidth_le (W : Nat) (hW : 0 < W) :
@@ -8601,7 +8601,7 @@ private theorem generated_bit_indices (W : Nat) :
     (by intro h; cases h) (by intro h; cases h)]
   rw [show native_zlt (W : Int) 0 = false by
     simp [native_zlt]]
-  simp only [native_ite, Bool.false_eq_true, if_false]
+  simp only [native_ite, Bool.false_eq_true, ite_false]
   rw [show native_int_to_nat (W : Int) = W by
     simp [native_int_to_nat]]
   exact iota_repeat_bitIndexList W 0
@@ -11016,7 +11016,7 @@ private theorem eval_step_bvshl
           shlBarrelBits xs 0 ys L := by
       rw [show decide (bitsValue ys < W) = true by
         exact decide_eq_true hy]
-      simp only [if_true]
+      simp only [ite_true]
       exact zipWith_left_of_length _ _
         (by simp [htrueLen])
     have hpayload :
@@ -11055,7 +11055,7 @@ private theorem eval_step_bvshl
           List.replicate W false := by
       rw [show decide (bitsValue ys < W) = false by
         exact decide_eq_false hy]
-      simp only [Bool.false_eq_true, if_false]
+      simp only [Bool.false_eq_true, ite_false]
       exact zipWith_right_of_length _ _
         (by simp [htrueLen])
     have hpayload :
@@ -11456,7 +11456,7 @@ private theorem eval_step_bvlshr
           shrBarrelBits xs 0 ys L false := by
       rw [show decide (bitsValue ys < W) = true by
         exact decide_eq_true hy]
-      simp only [if_true]
+      simp only [ite_true]
       exact zipWith_left_of_length _ _
         (by simp [htrueLen])
     rw [hout.eval, ha.eval, hamount.eval, bvlshr_binary_values]
@@ -11470,7 +11470,7 @@ private theorem eval_step_bvlshr
           List.replicate W false := by
       rw [show decide (bitsValue ys < W) = false by
         exact decide_eq_false hy]
-      simp only [Bool.false_eq_true, if_false]
+      simp only [Bool.false_eq_true, ite_false]
       exact zipWith_right_of_length _ _
         (by simp [htrueLen])
     have hdiv : bitsValue xs / 2 ^ bitsValue ys = 0 := by
@@ -11801,7 +11801,7 @@ private theorem eval_step_bvashr
               shrBarrelBits xs 0 ys L false := by
           rw [show decide (bitsValue ys < W) = true by
             exact decide_eq_true hy]
-          simp only [if_true]
+          simp only [ite_true]
           exact zipWith_left_of_length _ _ (by simp [htrueLen])
         rw [hout.eval, ha.eval, hamount.eval, hash]
         rw [bvlshr_binary_values, hselected, htrueLen, hxW, hval]
@@ -11814,7 +11814,7 @@ private theorem eval_step_bvashr
               List.replicate W false := by
           rw [show decide (bitsValue ys < W) = false by
             exact decide_eq_false hy]
-          simp only [Bool.false_eq_true, if_false]
+          simp only [Bool.false_eq_true, ite_false]
           exact zipWith_right_of_length _ _ (by simp [htrueLen])
         have hdiv : bitsValue xs / 2 ^ bitsValue ys = 0 := by
           apply Nat.div_eq_of_lt
@@ -11861,7 +11861,7 @@ private theorem eval_step_bvashr
               shrBarrelBits xs 0 ys L true := by
           rw [show decide (bitsValue ys < W) = true by
             exact decide_eq_true hy]
-          simp only [if_true]
+          simp only [ite_true]
           exact zipWith_left_of_length _ _ (by simp [htrueLen])
         have hinner :
             __smtx_model_eval_bvlshr
@@ -11894,7 +11894,7 @@ private theorem eval_step_bvashr
               List.replicate W true := by
           rw [show decide (bitsValue ys < W) = false by
             exact decide_eq_false hy]
-          simp only [Bool.false_eq_true, if_false]
+          simp only [Bool.false_eq_true, ite_false]
           exact zipWith_right_of_length _ _ (by simp [htrueLen])
         have hdiv :
             bitsValue (xs.map (!·)) / 2 ^ bitsValue ys = 0 := by

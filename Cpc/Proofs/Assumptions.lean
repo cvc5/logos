@@ -4,8 +4,8 @@ public import Cpc.Spec
 import all Cpc.Spec
 public import Cpc.Logos
 import all Cpc.Logos
-public import Cpc.SmtModel
-import all Cpc.SmtModel
+public import Cpc.Proofs.ModelEval
+import all Cpc.Proofs.ModelEval
 
 @[expose] public section
 

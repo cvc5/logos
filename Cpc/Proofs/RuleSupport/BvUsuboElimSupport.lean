@@ -28,7 +28,7 @@ theorem emod_sub_nat (w A B : Nat)
   have hpow : 2 ^ (w + 1) = 2 * 2 ^ w := by
     simp [Nat.pow_succ, Nat.mul_comm]
   by_cases hlt : A < B
-  · simp only [hlt, if_true]
+  · simp only [hlt, ite_true]
     have hBLe : B ≤ 2 ^ (w + 1) + A := by omega
     have hCast :
         ((2 ^ (w + 1) + A - B : Nat) : Int) =
@@ -47,7 +47,7 @@ theorem emod_sub_nat (w A B : Nat)
     apply Int.emod_eq_of_lt
     · omega
     · omega
-  · simp only [hlt, if_false]
+  · simp only [hlt, ite_false]
     have hBA : B ≤ A := Nat.le_of_not_gt hlt
     have hCast : ((A - B : Nat) : Int) = (A : Int) - (B : Int) := by
       rw [Int.ofNat_sub hBA]
@@ -65,7 +65,7 @@ theorem extended_sub_payload_lt (w A B : Nat)
   have hpow : 2 ^ (w + 1) = 2 * 2 ^ w := by
     simp [Nat.pow_succ, Nat.mul_comm]
   unfold extendedSubPayload
-  by_cases hlt : A < B <;> simp only [hlt, if_true, if_false] <;> omega
+  by_cases hlt : A < B <;> simp only [hlt, ite_true, ite_false] <;> omega
 
 theorem extended_sub_payload_bit (w A B : Nat)
     (ha : A < 2 ^ w) (hb : B < 2 ^ w) :
@@ -74,11 +74,11 @@ theorem extended_sub_payload_bit (w A B : Nat)
     simp [Nat.pow_succ, Nat.mul_comm]
   unfold extendedSubPayload
   by_cases hlt : A < B
-  · simp only [hlt, if_true, decide_true]
+  · simp only [hlt, ite_true, decide_true]
     apply bit_w_of_range
     · omega
     · omega
-  · simp only [hlt, if_false, decide_false]
+  · simp only [hlt, ite_false, decide_false]
     apply Bool.eq_false_iff.mpr
     intro hbit
     have hge := Nat.ge_two_pow_of_testBit hbit

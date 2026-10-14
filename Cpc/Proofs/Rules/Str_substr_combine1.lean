@@ -26,7 +26,7 @@ private theorem native_seq_extract_empty_of_start_ge_len_local
   unfold native_seq_extract
   have hLen : (Int.ofNat xs.length : native_Int) ≤ i := by
     simpa [native_seq_len] using h
-  rw [if_pos (by
+  rw [ite_eq_left (by
     simp only [Bool.or_eq_true, decide_eq_true_eq]
     exact Or.inr hLen)]
 

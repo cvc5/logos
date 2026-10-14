@@ -320,7 +320,7 @@ private theorem prefix_match_eq_positive_of_not_nullable
       rw [native_re_prefix_match_len?.eq_1,
         impl_native_re_prefix_match_len_go.eq_2,
         native_re_positive_prefix_match_len?.eq_2]
-      simp only [hNull, Bool.false_eq_true, if_false, Nat.zero_add]
+      simp only [hNull, Bool.false_eq_true, ite_false, Nat.zero_add]
       rw [prefix_go_shift (native_re_deriv c r) cs 1]
       cases native_re_prefix_match_len? (native_re_deriv c r) cs <;>
         simp [Nat.add_comm]
@@ -1345,7 +1345,7 @@ theorem full_substr_eq_drop
       omega
     simp only [native_str_substr, native_str_len, Bool.or_eq_true,
       decide_eq_true_eq, Int.ofNat_eq_natCast]
-    rw [if_neg]
+    rw [ite_eq_right]
     · rw [hMin, Int.toNat_natCast]
       exact List.take_of_length_le (by simp)
     · exact fun h =>

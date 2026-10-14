@@ -471,7 +471,7 @@ private theorem stringExtDeq_bool
     · rw [str_substr_smt_typeof a _ _ hSmtA hKInt,
         str_substr_smt_typeof b _ _ hSmtB hKInt]
     · rw [str_substr_smt_typeof a _ _ hSmtA hKInt]; simp
-  · rw [if_neg hChar]
+  · rw [ite_eq_right hChar]
     apply RuleProofs.eo_has_bool_type_not_of_bool_arg
     apply RuleProofs.eo_has_bool_type_eq_of_same_smt_type
     · rw [seq_nth_smt_typeof a _ _ hSmtA hKInt, seq_nth_smt_typeof b _ _ hSmtB hKInt]
@@ -597,7 +597,7 @@ private theorem dite_seqdiff_spec (g : SmtSeq → Nat → SmtValue)
   have hex' : ∃ i, SmtEval.native_not (native_veq (g s1 i) (g s2 i)) = true := by
     obtain ⟨i, hi⟩ := hex
     exact ⟨i, by rw [native_not_veq_true_iff, hg, hg]; exact hi⟩
-  rw [dif_pos hex']
+  rw [dite_eq_left hex']
   refine ⟨Classical.choose hex', rfl, ?_⟩
   have hspec := Classical.choose_spec hex'
   rw [native_not_veq_true_iff, hg, hg] at hspec
@@ -879,7 +879,7 @@ private theorem facts___eo_prog_string_ext_impl
       rw [stringExtDeq_eq a b A
         (ne_stuck_of_smt_typeof_seq a _ hSmtA) (ne_stuck_of_smt_typeof_seq b _ hSmtB)]
       by_cases hChar : A = Term.UOp UserOp.Char
-      · rw [if_pos hChar, tr_deq_char, smtx_eval_not_term_eq, smtx_eval_eq_term_eq,
+      · rw [ite_eq_left hChar, tr_deq_char, smtx_eval_not_term_eq, smtx_eval_eq_term_eq,
           eval_str_substr_eq, eval_str_substr_eq, hAEval, hBEval, hSeqDiffEval]
         simp only [eval_numeral_eq, __smtx_model_eval_str_substr, hElem1, hElem2,
           native_seq_extract_one_nat _ _ hjLt, native_seq_extract_one_nat _ _ hjLt2,
@@ -890,7 +890,7 @@ private theorem facts___eo_prog_string_ext_impl
         intro h
         rw [SmtValue.Seq.injEq] at h
         exact hjDiff (by simpa using native_pack_seq_inj _ h)
-      · rw [if_neg hChar, tr_deq_nth, smtx_eval_not_term_eq, smtx_eval_eq_term_eq,
+      · rw [ite_eq_right hChar, tr_deq_nth, smtx_eval_not_term_eq, smtx_eval_eq_term_eq,
           eval_seq_nth_eq, eval_seq_nth_eq, hAEval, hBEval, hSeqDiffEval]
         have hnth1 : __smtx_seq_nth M (SmtValue.Seq s1) (SmtValue.Numeral (Int.ofNat j))
             = (native_unpack_seq s1).getD j SmtValue.NotValue := by

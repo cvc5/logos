@@ -1697,7 +1697,7 @@ private theorem qds_tuple_prepend_non_none
   simp [__eo_to_smt_tuple_prepend_of_type, __eo_to_smt_tuple_decl,
     native_streq, native_and, native_ite]
   rw [hFullWf']
-  simp only [if_true]
+  simp only [ite_true]
   let tailD := SmtDatatype.sum c SmtDatatype.null
   let tailDD := __eo_to_smt_tuple_decl tailD
   let fullD := SmtDatatype.sum (SmtDatatypeCons.cons A c) SmtDatatype.null

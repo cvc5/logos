@@ -27,7 +27,7 @@ private theorem prefix_payload_bound
     simp
     have hSub : n + tail - n = tail := by omega
     simpa [hSub] using hz
-  · rw [if_neg hi0]
+  · rw [ite_eq_right hi0]
     have hLogLt : i.log2 < n := (Nat.log2_lt hi0).2 hi
     have hiPow : i < 2 ^ (i.log2 + 1) := Nat.lt_log2_self
     have hSum : i * 2 ^ tail + z <
@@ -915,7 +915,7 @@ private theorem bvExtractMultLeadingZerosInt_eq_nat
           i = native_nat_to_int (native_int_to_nat i) := hiRound.symm
           _ = 0 := by simp [h, native_nat_to_int, Smtm.native_nat_to_int]
       exact hi this
-    rw [if_neg hi, if_neg hiNat]
+    rw [ite_eq_right hi, ite_eq_right hiNat]
     have hLogLt :
         Nat.log2 (native_int_to_nat i) < native_int_to_nat n :=
       (Nat.log2_lt hiNat).2 hiRangeNat

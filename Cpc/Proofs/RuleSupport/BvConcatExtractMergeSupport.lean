@@ -666,8 +666,8 @@ private theorem bv_concat_extract_merge_adjacent_extracts
   simp only [BitVec.getElem_cast, BitVec.getElem_append,
     BitVec.getElem_extractLsb']
   by_cases hLow : q < J + 1 - I
-  · simp only [hLow, dif_pos]
-  · simp only [hLow, dif_neg]
+  · simp only [hLow, dite_eq_left]
+  · simp only [hLow, dite_eq_right]
     have hIndexEq :
         J + 1 + (q - (J + 1 - I)) = I + q := by omega
     have hFull : I + q < W := by omega

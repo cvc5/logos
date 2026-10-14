@@ -43,8 +43,8 @@ set_option maxHeartbeats 10000000
 compiler happened to emit for one signature, and the numbering shifts when the
 operator set does: the `and` arm of `__smtx_model_eval` is `eq_9` in `Cpc` and
 `eq_7` in `CpcMini`.  A proof in the checker layer that names a number is
-reusable only by accident, so the three arms this layer needs are named here
-and the numbers are not used anywhere in it.
+reusable only by accident, so the arms this layer needs are named here and in
+`ModelEval`, and the numbers are not used anywhere in it.
 `scripts/check-proof-modularity.sh` keeps it that way.
 -/
 
@@ -56,11 +56,6 @@ theorem typeof_boolean_eq (b : Bool) :
 /-- The `None` arm of the generated `__smtx_typeof`. -/
 theorem typeof_none_eq :
     __smtx_typeof SmtTerm.None = SmtType.None := by
-  rfl
-
-/-- The `Boolean` arm of the generated `__smtx_model_eval`. -/
-theorem model_eval_boolean_eq (M : SmtModel) (b : Bool) :
-    __smtx_model_eval M (SmtTerm.Boolean b) = SmtValue.Boolean b := by
   rfl
 
 /-- The `and` arm of the generated `__smtx_model_eval`. -/

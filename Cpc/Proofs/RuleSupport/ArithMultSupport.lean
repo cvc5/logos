@@ -3925,9 +3925,9 @@ private theorem arith_mult_abs_comparison_rec_has_bool_type
                 rw [hRelEq]
                 exact AbsCmpTypeAcc.gt _ _ _ _ _ _ hLeft hRight
               have hRec := ih hBType hAccNew (by
-                rw [if_pos hEqSelfRaw] at hTy
+                rw [ite_eq_left hEqSelfRaw] at hTy
                 exact hTy)
-              rw [if_pos hEqSelfRaw]
+              rw [ite_eq_left hEqSelfRaw]
               exact hRec
         · simp [__eo_ite, __eo_requires, hZero, native_teq,
             native_ite, __eo_l_2___mk_arith_mult_abs_comparison_rec] at hTy
@@ -4242,9 +4242,9 @@ private theorem facts_arith_mult_abs_comparison_rec
                 exact
                   AbsCmpAcc.gt _ _ _ _ _ _ hLeft hRight hNewLt
               have hRec := ih hBTrue hAccNew (by
-                rw [if_pos hEqSelfRaw] at hTy
+                rw [ite_eq_left hEqSelfRaw] at hTy
                 exact hTy)
-              rw [if_pos hEqSelfRaw]
+              rw [ite_eq_left hEqSelfRaw]
               exact hRec
         · simp [__eo_ite, __eo_requires, hZero, native_teq,
             native_ite, __eo_l_2___mk_arith_mult_abs_comparison_rec] at hTy

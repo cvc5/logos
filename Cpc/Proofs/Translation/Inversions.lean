@@ -1843,8 +1843,8 @@ theorem subst_noResRef_ty (r : native_String) (hRes : __eo_to_smt_reserved_datat
       simp only [noResRefTy] at h
       simp only [__smtx_type_substitute]
       by_cases hrs : native_streq r s = true
-      · rw [native_ite, if_pos hrs]
-      · rw [native_ite, if_neg (by simp [hrs])]
+      · rw [native_ite, ite_eq_left hrs]
+      · rw [native_ite, ite_eq_right (by simp [hrs])]
         rw [subst_noResRef_dt r hRes d (__smtx_dt_lift s d X) h]
   | SmtType.TypeRef s, X, h => by
       simp only [noResRefTy, native_not, Bool.not_eq_true'] at h
@@ -1852,7 +1852,7 @@ theorem subst_noResRef_ty (r : native_String) (hRes : __eo_to_smt_reserved_datat
         simp only [native_streq, decide_eq_false_iff_not]
         intro he; rw [he] at hRes; rw [h] at hRes; exact absurd hRes (by decide)
       simp only [__smtx_type_substitute]
-      rw [native_ite, if_neg (by simp [hrs])]
+      rw [native_ite, ite_eq_right (by simp [hrs])]
   | SmtType.Seq a, X, h => by simp [__smtx_type_substitute]
   | SmtType.Set a, X, h => by simp [__smtx_type_substitute]
   | SmtType.Map a b, X, h => by simp [__smtx_type_substitute]
@@ -1906,10 +1906,10 @@ theorem noResRef_tuple (A B : SmtType)
               by_cases hcond :
                   native_and (native_streq s (native_string_lit "@Tuple"))
                     (__smtx_type_wf_component A) = true
-              · rw [native_ite, if_pos hcond]
+              · rw [native_ite, ite_eq_left hcond]
                 simp only [noResRefTy, noResRefDt, native_and, Bool.and_eq_true, noResRefDtc] at hB ⊢
                 exact ⟨⟨hA, hB.1⟩, hB.2⟩
-              · rw [native_ite, if_neg (by simp [hcond])]; simp [noResRefTy]
+              · rw [native_ite, ite_eq_right (by simp [hcond])]; simp [noResRefTy]
           | sum _ _ => simp [__eo_to_smt_type_tuple, noResRefTy]
       | null => simp [__eo_to_smt_type_tuple, noResRefTy]
   | _ => simp [__eo_to_smt_type_tuple, noResRefTy]
@@ -1924,7 +1924,7 @@ theorem noResRef_translate_ty : (T : Term) → noResRefTy (__eo_to_smt_type T) =
       · simp [__eo_to_smt_type, native_ite, hs, noResRefTy]
       · have hsF : __eo_to_smt_reserved_datatype_name s = false := by
           cases h : __eo_to_smt_reserved_datatype_name s <;> simp [h] at hs ⊢
-        simp only [__eo_to_smt_type, native_ite, hsF, Bool.false_eq_true, if_false, noResRefTy]
+        simp only [__eo_to_smt_type, native_ite, hsF, Bool.false_eq_true, ite_false, noResRefTy]
         exact noResRef_translate_dt d
   | Term.DatatypeTypeRef s => by
       by_cases hs : __eo_to_smt_reserved_datatype_name s = true
@@ -2014,10 +2014,10 @@ theorem noResRef_translate_ty : (T : Term) → noResRefTy (__eo_to_smt_type T) =
                   simp only [__eo_to_smt_type]
                   by_cases hWf :
                       __smtx_type_wf (__eo_to_smt_type_tuple (__eo_to_smt_type y) (__eo_to_smt_type x)) = true
-                  · rw [native_ite, if_pos hWf]
+                  · rw [native_ite, ite_eq_left hWf]
                     exact noResRef_tuple (__eo_to_smt_type y) (__eo_to_smt_type x)
                       (noResRef_translate_ty y) (noResRef_translate_ty x)
-                  · rw [native_ite, if_neg (by simp [hWf])]; simp [noResRefTy]
+                  · rw [native_ite, ite_eq_right (by simp [hWf])]; simp [noResRefTy]
               | _ => simp [__eo_to_smt_type, noResRefTy]
           | _ => simp [__eo_to_smt_type, noResRefTy]
       | _ => simp [__eo_to_smt_type, noResRefTy]
@@ -2120,7 +2120,7 @@ theorem tuple_diag_wf_components (y x : Term)
                   __smtx_dt_cons_wf_rec (SmtDatatypeCons.cons (__eo_to_smt_type y) cx)
                     (SmtDatatypeCons.cons (__eo_to_smt_type y) cx) = true
               · exact hc
-              · rw [if_neg (by simpa using hc)] at hAwf; simp at hAwf
+              · rw [ite_eq_right (by simpa using hc)] at hAwf; simp at hAwf
             have hyNotRef : ∀ s, __eo_to_smt_type y ≠ SmtType.TypeRef s := by
               intro s he
               rw [he] at hConsWF
@@ -2206,14 +2206,14 @@ theorem alignTy_subst (s : native_String) (d0 : SmtDatatype) :
   | SmtType.Datatype s2 d2 => by
       simp only [__smtx_type_substitute]
       by_cases hst : native_streq s s2 = true
-      · simp only [native_ite, if_pos hst, alignTy]; exact alignDt_refl d2
-      · simp only [native_ite, if_neg hst, alignTy]
+      · simp only [native_ite, ite_eq_left hst, alignTy]; exact alignDt_refl d2
+      · simp only [native_ite, ite_eq_right hst, alignTy]
         exact alignDt_subst s (__smtx_dt_lift s2 d2 d0) d2
   | SmtType.TypeRef s2 => by
       simp only [__smtx_type_substitute]
       by_cases hst : native_streq s s2 = true
-      · simp [native_ite, if_pos hst, alignTy]
-      · simp [native_ite, if_neg hst, alignTy]
+      · simp [native_ite, ite_eq_left hst, alignTy]
+      · simp [native_ite, ite_eq_right hst, alignTy]
   | SmtType.Seq a => by simp [__smtx_type_substitute, alignTy]
   | SmtType.Set a => by simp [__smtx_type_substitute, alignTy]
   | SmtType.Map a b => by simp [__smtx_type_substitute, alignTy]
@@ -2357,7 +2357,7 @@ private theorem nn_cons_head (UF U : SmtType) (cFtl c : SmtDatatypeCons)
   rw [hgen] at h
   by_cases hcond : native_and (native_inhabited_type UF) (__smtx_type_wf_rec UF U) = true
   · simp only [native_and, Bool.and_eq_true] at hcond; exact hcond.2
-  · rw [native_ite, if_neg (by simpa using hcond)] at h
+  · rw [native_ite, ite_eq_right (by simpa using hcond)] at h
     exact absurd h (by simp)
 
 /- THE BRIDGE: `dt_wf_rec DF D` together with `alignDt DF D` (the full side is a genuine unfold, so
@@ -2420,8 +2420,8 @@ theorem noNoneDt_of_align :
               __smtx_dt_cons_wf_rec cF c = true ∧ __smtx_dt_wf_rec dF d = true := by
             by_cases hc : __smtx_dt_cons_wf_rec cF c = true
             · refine ⟨hc, ?_⟩
-              simp only [__smtx_dt_wf_rec, native_ite, if_pos hc] at h; exact h
-            · rw [__smtx_dt_wf_rec, native_ite, if_neg (by simpa using hc)] at h
+              simp only [__smtx_dt_wf_rec, native_ite, ite_eq_left hc] at h; exact h
+            · rw [__smtx_dt_wf_rec, native_ite, ite_eq_right (by simpa using hc)] at h
               exact absurd h (by simp)
           have hAlParts :
               alignDtc cF c = true ∧ alignDt dF d = true := by

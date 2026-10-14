@@ -55,10 +55,6 @@ inductive SmtTerm : Type where
   | Binary : native_Int -> native_Int -> SmtTerm
   | Apply : SmtTerm -> SmtTerm -> SmtTerm
   | Var : native_String -> SmtType -> SmtTerm
-  | exists : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | forall : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | choice : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | bind : native_String -> SmtType -> SmtTerm -> SmtTerm -> SmtTerm
   | DtCons : native_String -> SmtDatatypeDecl -> native_Nat -> SmtTerm
   | DtSel : native_String -> SmtDatatypeDecl -> native_Nat -> native_Nat -> SmtTerm
   | DtTester : native_String -> SmtDatatypeDecl -> native_Nat -> SmtTerm

@@ -125,7 +125,7 @@ theorem native_seq_indexof_rec_append_ne_neg
       | succ f =>
           simp only [List.nil_append]
           unfold native_seq_indexof_rec
-          rw [if_pos (native_seq_prefix_eq_append pat after)]
+          rw [ite_eq_left (native_seq_prefix_eq_append pat after)]
           simp
   | cons b bs ih =>
       intro i fuel hFuel
@@ -136,8 +136,8 @@ theorem native_seq_indexof_rec_append_ne_neg
             simp only [List.length_cons] at hFuel; omega
           unfold native_seq_indexof_rec
           by_cases hPre : native_seq_prefix_eq pat ((b :: bs) ++ pat ++ after) = true
-          · rw [if_pos hPre]; simp
-          · rw [if_neg hPre]
+          · rw [ite_eq_left hPre]; simp
+          · rw [ite_eq_right hPre]
             have hxs : (b :: bs) ++ pat ++ after = b :: (bs ++ pat ++ after) := by
               simp
             rw [hxs]
@@ -153,7 +153,7 @@ theorem native_seq_contains_of_decomp (before pat after : List SmtValue) :
       native_seq_indexof (before ++ pat ++ after) pat 0 ≠ -1 := by
     rw [native_seq_indexof_eq_rec]
     simp only [Int.reduceLT, ↓reduceIte, Int.toNat_zero, Nat.zero_add]
-    rw [dif_pos hLen]
+    rw [dite_eq_left hLen]
     have hFuel :
         before.length <
           (before ++ pat ++ after).length - pat.length + 1 := by
@@ -512,7 +512,7 @@ theorem extractString_cons_zero (c : native_Char) (cs : native_String) :
   have hge : (1:Int) ≤ native_str_len (c :: cs) - 0 := by
     rw [h, Int.sub_zero, Int.ofNat_eq_natCast]; omega
   unfold extractString native_str_substr
-  rw [if_neg (by simp [native_str_len, native_zplus, native_zneg])]
+  rw [ite_eq_right (by simp [native_str_len, native_zplus, native_zneg])]
   rw [show native_zplus (native_zplus 0 (native_zneg 0)) 1 = 1 from by simp [native_zplus, native_zneg]]
   rw [Int.min_eq_left hge]
   simp
@@ -3981,8 +3981,8 @@ theorem native_seq_indexof_append_right_of_no_endpoint_overlap
           have hPos : 0 < P.length := Nat.pos_of_ne_zero hLenNe
           simp only [List.nil_append, List.length_nil]
           by_cases hBounds : P.length ≤ C.length
-          · rw [dif_pos hBounds]
-            rw [dif_neg (by omega : ¬ P.length ≤ 0)]
+          · rw [dite_eq_left hBounds]
+            rw [dite_eq_right (by omega : ¬ P.length ≤ 0)]
             by_cases hRec : native_seq_indexof_rec C P i
                 (C.length - P.length + 1) = -1
             · exact hRec
@@ -4001,13 +4001,13 @@ theorem native_seq_indexof_append_right_of_no_endpoint_overlap
               have hLenEq := congrArg List.length hEq
               simp [List.length_append] at hLenEq
               omega
-          · rw [dif_neg hBounds]
-            rw [dif_neg (by omega : ¬ P.length ≤ 0)]
+          · rw [dite_eq_right hBounds]
+            rw [dite_eq_right (by omega : ¬ P.length ≤ 0)]
         | cons a S ih =>
         intro i
         by_cases hLeft : P.length ≤ ((a :: S) ++ C).length
         · by_cases hRight : P.length ≤ (a :: S).length
-          · rw [dif_pos hLeft, dif_pos hRight]
+          · rw [dite_eq_left hLeft, dite_eq_left hRight]
             unfold native_seq_indexof_rec
             have hPref :
                 native_seq_prefix_eq P ((a :: S) ++ C) =
@@ -4036,7 +4036,7 @@ theorem native_seq_indexof_append_right_of_no_endpoint_overlap
                       S.length + 1 - P.length =
                         S.length - P.length + 1 := by omega
                   have hTail' := hTail
-                  rw [dif_pos hTailLeft, dif_pos hTailRight] at hTail'
+                  rw [dite_eq_left hTailLeft, dite_eq_left hTailRight] at hTail'
                   rw [hFuelLeft, hFuelRight]
                   simpa [P] using hTail'
                 · have hTailLeftLen : P.length ≤ S.length + C.length := by
@@ -4055,7 +4055,7 @@ theorem native_seq_indexof_append_right_of_no_endpoint_overlap
                     rw [hFuelRightZero]
                     simp [native_seq_indexof_rec]
                   have hTail' := hTail
-                  rw [dif_pos hTailLeft, dif_neg hTailRight] at hTail'
+                  rw [dite_eq_left hTailLeft, dite_eq_right hTailRight] at hTail'
                   rw [hRightRec]
                   rw [hFuelLeft]
                   simpa [P] using hTail'
@@ -4075,7 +4075,7 @@ theorem native_seq_indexof_append_right_of_no_endpoint_overlap
                     S.length + 1 - P.length = 0 := by omega
                 rw [hFuelLeftZero, hFuelRightZero]
                 simp [native_seq_indexof_rec]
-          · rw [dif_pos hLeft, dif_neg hRight]
+          · rw [dite_eq_left hLeft, dite_eq_right hRight]
             by_cases hRec : native_seq_indexof_rec ((a :: S) ++ C) P i
                 (((a :: S) ++ C).length - P.length + 1) = -1
             · exact hRec
@@ -4099,7 +4099,7 @@ theorem native_seq_indexof_append_right_of_no_endpoint_overlap
         · have hRightFalse : ¬ P.length ≤ (a :: S).length := by
             intro hRight
             exact hLeft (Nat.le_trans hRight (by simp))
-          rw [dif_neg hLeft, dif_neg hRightFalse]
+          rw [dite_eq_right hLeft, dite_eq_right hRightFalse]
   rw [native_seq_indexof_eq_rec, native_seq_indexof_eq_rec]
   simp
   simpa [P] using hSearch S 0
@@ -4183,15 +4183,15 @@ theorem native_seq_indexof_rec_offset
   | i, off, fuel + 1 => by
       by_cases hPrefix : native_seq_prefix_eq pat xs = true
       · unfold native_seq_indexof_rec
-        rw [if_pos hPrefix, if_pos hPrefix]
+        rw [ite_eq_left hPrefix, ite_eq_left hPrefix]
         have hne : (Int.ofNat i : Int) ≠ -1 := by
           intro h
           have hNonneg : (0 : Int) ≤ Int.ofNat i := Int.natCast_nonneg i
           omega
-        rw [if_neg hne]
+        rw [ite_eq_right hne]
         simp
       · unfold native_seq_indexof_rec
-        rw [if_neg hPrefix, if_neg hPrefix]
+        rw [ite_eq_right hPrefix, ite_eq_right hPrefix]
         cases xs with
         | nil =>
             simp
@@ -4240,7 +4240,7 @@ theorem native_seq_indexof_rec_append_left_skip
           simp [Nat.add_assoc]
           omega]
         unfold native_seq_indexof_rec
-      rw [if_neg hPrefix]
+      rw [ite_eq_right hPrefix]
       simpa [Nat.add_assoc, Nat.add_left_comm, Nat.add_comm]
         using ih hNoTail (i + 1) fuel
 
@@ -4271,7 +4271,7 @@ theorem native_seq_indexof_append_left_of_no_endpoint_overlap
       rw [hSidx] at hSnonneg
       have hBad : ¬ (0 ≤ (-1 : Int)) := by decide
       exact False.elim (hBad hSnonneg)
-    rw [if_pos hSneg]
+    rw [ite_eq_left hSneg]
     rcases native_seq_indexof_eq_neg_one_or_ge (C ++ S) P 0 with h | h
     · simpa [P] using h
     · exfalso
@@ -4291,16 +4291,16 @@ theorem native_seq_indexof_append_left_of_no_endpoint_overlap
           native_seq_indexof_rec S P 0 (S.length - P.length + 1) := by
       rw [native_seq_indexof_eq_rec]
       simp only [Int.reduceLT, ↓reduceIte, Int.toNat_zero, Nat.zero_add]
-      rw [dif_pos hPatLe]
+      rw [dite_eq_left hPatLe]
       simp
     have hTotalIdxRec :
         native_seq_indexof (C ++ S) P 0 =
           native_seq_indexof_rec (C ++ S) P 0 ((C ++ S).length - P.length + 1) := by
       rw [native_seq_indexof_eq_rec]
       simp only [Int.reduceLT, ↓reduceIte, Int.toNat_zero, Nat.zero_add]
-      rw [dif_pos hTotalLe]
+      rw [dite_eq_left hTotalLe]
       simp
-    rw [if_neg hSneg]
+    rw [ite_eq_right hSneg]
     rw [hTotalIdxRec]
     have hFuel :
         (C ++ S).length - P.length + 1 =
@@ -4318,7 +4318,7 @@ theorem native_seq_indexof_append_left_of_no_endpoint_overlap
       rw [hSidxRec, hRec] at hSnonneg
       have hBad : ¬ (0 ≤ (-1 : Int)) := by decide
       exact False.elim (hBad hSnonneg)
-    rw [if_neg hRecNe]
+    rw [ite_eq_right hRecNe]
     have hCast :
         Int.ofNat (Int.toNat (native_seq_indexof S P 0)) =
           native_seq_indexof S P 0 :=
@@ -4486,9 +4486,9 @@ theorem native_seq_replace_append_left_of_no_endpoint_overlap
                 (C.length + Int.toNat (native_seq_indexof S (p :: ps) 0))
           simp only [StrEqReplSupport.native_seq_replace_eq_indexof]
           rw [hIdxOffsetPat]
-          rw [if_neg hTotalNonneg]
+          rw [ite_eq_right hTotalNonneg]
           rw [hToNatCast]
-          rw [if_neg hNegPat]
+          rw [ite_eq_right hNegPat]
           rw [List.take_append]
           rw [List.drop_append]
           have hDropC :

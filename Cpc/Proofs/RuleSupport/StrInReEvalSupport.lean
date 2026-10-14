@@ -6954,7 +6954,7 @@ private theorem native_re_deriv_str_to_re_cons_valid
       · have hNe : ¬ (c = d) := by
           intro h
           exact hdc h.symm
-        simp only [if_neg hdc]
+        simp only [ite_eq_right hdc]
         change
           native_re_deriv c
               (native_re_mk_concat (SmtRegLan.char d)
@@ -6964,7 +6964,7 @@ private theorem native_re_deriv_str_to_re_cons_valid
         simp only [native_re_deriv,
           native_re_nullable, native_re_none]
         simp
-        simp only [if_neg hNe]
+        simp only [ite_eq_right hNe]
         rw [show native_re_concat SmtRegLan.empty
             (impl_native_re_of_list (e :: es)) = SmtRegLan.empty by
               exact native_re_mk_concat_left_empty _]

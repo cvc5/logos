@@ -140,9 +140,9 @@ theorem native_toDigitsCore_nonempty_of_acc :
   | fuel + 1, n, ds, hds => by
       rw [Nat.toDigitsCore.eq_2]
       by_cases hDiv : n / 10 = 0
-      · rw [if_pos hDiv]
+      · rw [ite_eq_left hDiv]
         simp
-      · rw [if_neg hDiv]
+      · rw [ite_eq_right hDiv]
         exact native_toDigitsCore_nonempty_of_acc fuel (n / 10)
           ((Nat.digitChar (n % 10)) :: ds) (by simp)
 
@@ -151,9 +151,9 @@ theorem native_toDigitsCore_empty_nonempty
     Nat.toDigitsCore 10 (fuel + 1) n [] ≠ [] := by
   rw [Nat.toDigitsCore.eq_2]
   by_cases hDiv : n / 10 = 0
-  · rw [if_pos hDiv]
+  · rw [ite_eq_left hDiv]
     simp
-  · rw [if_neg hDiv]
+  · rw [ite_eq_right hDiv]
     exact native_toDigitsCore_nonempty_of_acc fuel (n / 10)
       [Nat.digitChar (n % 10)] (by simp)
 
@@ -180,7 +180,7 @@ theorem native_str_from_int_exists_cons_of_nonneg
       unfold native_str_from_int
       have hNot : ¬ ((Int.ofNat n) < 0) := by
         exact Int.not_lt_of_ge (Int.natCast_nonneg n)
-      rw [if_neg hNot]
+      rw [ite_eq_right hNot]
       exact List.ne_nil_iff_exists_cons.mp
         (native_string_lit_nat_toString_nonempty n)
   | negSucc n =>

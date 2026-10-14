@@ -8,7 +8,7 @@ public import Cpc.Proofs.RuleSupport.CongSupport
 import all Cpc.Proofs.RuleSupport.CongSupport
 public import Cpc.Proofs.RuleSupport.StrInReEvalSupport
 import all Cpc.Proofs.RuleSupport.StrInReEvalSupport
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 
 open Eo
 open SmtEval

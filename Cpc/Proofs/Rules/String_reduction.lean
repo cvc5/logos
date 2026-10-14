@@ -260,7 +260,7 @@ private theorem sr_native_seq_extract_pack_string
   -- into an implication, so discharge its condition here
   rcases ‹(0 ≤ i ∧ 0 < n) ∧ i < Int.ofNat s.length› with
     ⟨⟨hi0, hn0⟩, hilt⟩
-  rw [if_neg (by
+  rw [ite_eq_right (by
     rintro ((hi | hn) | hlen)
     · exact False.elim ((Int.not_lt_of_ge hi0) hi)
     · exact False.elim ((Int.not_le_of_gt hn0) hn)
@@ -362,7 +362,7 @@ private theorem sr_native_seq_extract_empty_of_inactive
     intro hiLen
     exact h ⟨hi0, hiLen, hn0⟩
   unfold native_seq_extract
-  rw [if_pos (by
+  rw [ite_eq_left (by
     simp only [Bool.or_eq_true, decide_eq_true_eq]
     exact Or.inr hlen)]
 
@@ -638,7 +638,7 @@ private theorem sr_native_seq_indexof_offset_drop_eq
   rw [native_seq_indexof_eq_rec]
   have hOffNotNeg : ¬ (Int.ofNat off : Int) < 0 :=
     Int.not_lt.mpr (Int.natCast_nonneg off)
-  rw [if_neg hOffNotNeg]
+  rw [ite_eq_right hOffNotNeg]
   change
     (let r :=
       if h : pat.length ≤ (xs.drop off).length then
@@ -656,7 +656,7 @@ private theorem sr_native_seq_indexof_offset_drop_eq
   · have hFullFit : off + pat.length ≤ xs.length := by
       rw [List.length_drop] at hTailFit
       omega
-    rw [dif_pos hTailFit, dif_pos hFullFit]
+    rw [dite_eq_left hTailFit, dite_eq_left hFullFit]
     have hFuel :
         (xs.drop off).length - pat.length + 1 =
           xs.length - (off + pat.length) + 1 := by
@@ -671,7 +671,7 @@ private theorem sr_native_seq_indexof_offset_drop_eq
       apply hTailFit
       rw [List.length_drop]
       omega
-    rw [dif_neg hTailFit, dif_neg hFullNot]
+    rw [dite_eq_right hTailFit, dite_eq_right hFullNot]
     simp
 
 private theorem sr_native_seq_extract_to_end_of_bounds
@@ -785,7 +785,7 @@ private theorem sr_native_str_substr_one_nat (s : native_String) (j : Nat)
   -- the guard is the `Bool` form `decide _ = true`, and `rw` would additionally
   -- have to match the goal's `Decidable` instance syntactically; `refine`
   -- unifies it up to defeq instead
-  refine Eq.trans (if_neg (fun h => absurd (of_decide_eq_true h)
+  refine Eq.trans (ite_eq_right (fun h => absurd (of_decide_eq_true h)
     (show ¬ Int.ofNat j ≥ Int.ofNat s.length by omega))) ?_
   rw [htake, htn]
   have hDrop := congrArg (List.take 1) (List.drop_eq_getElem_cons hj)
@@ -823,7 +823,7 @@ private theorem sr_lower_code_at (s : native_String) (j : Nat)
         (decide ((65 : Int) ≤ Int.ofNat s[j]) &&
           decide (Int.ofNat s[j] ≤ 90)) = true := by
       simpa only [Bool.and_eq_true, decide_eq_true_eq] using hRangeInt
-    rw [if_pos hRangeBool]
+    rw [ite_eq_left hRangeBool]
     simp [impl_native_char_to_lower, hRange]
   · have hRangeInt : ¬ ((65 : Int) ≤ Int.ofNat s[j] ∧ Int.ofNat s[j] ≤ 90) := by
       intro h
@@ -832,7 +832,7 @@ private theorem sr_lower_code_at (s : native_String) (j : Nat)
         (decide ((65 : Int) ≤ Int.ofNat s[j]) &&
           decide (Int.ofNat s[j] ≤ 90)) ≠ true := by
       simpa [Bool.and_eq_true] using hRangeInt
-    rw [if_neg hRangeBool]
+    rw [ite_eq_right hRangeBool]
     simp [impl_native_char_to_lower, hRange]
 
 /-- The code constraint generated for uppercasing matches the native operation. -/
@@ -867,7 +867,7 @@ private theorem sr_upper_code_at (s : native_String) (j : Nat)
         (decide ((97 : Int) ≤ Int.ofNat s[j]) &&
           decide (Int.ofNat s[j] ≤ 122)) = true := by
       simpa only [Bool.and_eq_true, decide_eq_true_eq] using hRangeInt
-    rw [if_pos hRangeBool]
+    rw [ite_eq_left hRangeBool]
     simp [impl_native_char_to_upper, hRange]
     have h32 : 32 ≤ s[j] :=
       Nat.le_trans (by decide) hRange.1
@@ -882,7 +882,7 @@ private theorem sr_upper_code_at (s : native_String) (j : Nat)
         (decide ((97 : Int) ≤ Int.ofNat s[j]) &&
           decide (Int.ofNat s[j] ≤ 122)) ≠ true := by
       simpa [Bool.and_eq_true] using hRangeInt
-    rw [if_neg hRangeBool]
+    rw [ite_eq_right hRangeBool]
     simp [impl_native_char_to_upper, hRange]
 
 private def sr_native_str_leq_bool (s t : native_String) : Bool :=
@@ -974,7 +974,7 @@ private theorem sr_decimal_toDigits (n : Nat) :
     impl_native_decimal_digits_to_nat ((Nat.toDigits 10 n).map Char.toNat) = n := by
   induction n using Nat.strongRecOn with
   | ind n ih =>
-      rw [Nat.toDigits_eq_if (by omega)]
+      rw [Nat.toDigits_eq_ite (by omega)]
       split
       · rename_i hn
         simp only [List.map_cons, List.map_nil, impl_native_decimal_digits_to_nat,
@@ -1002,7 +1002,7 @@ private theorem sr_toDigits_head_nonzero (n : Nat) (hn : 0 < n) :
         49 ≤ c ∧ c ≤ 57 := by
   induction n using Nat.strongRecOn with
   | ind n ih =>
-      rw [Nat.toDigits_eq_if (by omega)]
+      rw [Nat.toDigits_eq_ite (by omega)]
       split
       · rename_i hlt
         refine ⟨Char.toNat (Nat.digitChar n), [], rfl, ?_⟩
@@ -1053,7 +1053,7 @@ private theorem sr_native_str_to_int_from_int (i : native_Int)
             (Int.ofNat n))
         try simp [native_str_from_int, hNonneg] at hsimpa ⊢
         exact hsimpa
-      rw [native_str_from_int, if_neg hNonneg]
+      rw [native_str_from_int, ite_eq_right hNonneg]
       change native_str_to_int (native_string_lit (toString n)) = Int.ofNat n
       rw [sr_native_str_to_int_of_ne_nil_all _
         (sr_native_string_lit_nat_toString_ne_nil n) hAll]
@@ -1088,7 +1088,7 @@ private theorem sr_native_str_from_int_head_pos (i : native_Int)
         · exact Nat.pos_of_ne_zero hn
       rcases sr_toDigits_head_nonzero n hnPos with ⟨c, cs, hrepr, hc⟩
       have hString : native_str_from_int (Int.ofNat n) = c :: cs := by
-        simp only [native_str_from_int, if_neg hNonneg]
+        simp only [native_str_from_int, ite_eq_right hNonneg]
         change native_string_lit (toString n) = c :: cs
         unfold native_string_lit
         rw [Nat.toString_eq_ofList_toDigits, String.toList_ofList, hrepr]
@@ -1119,7 +1119,7 @@ private theorem sr_native_stoi_result_ofNat (s : native_String) (j : Nat)
   have hjPos : 0 < j := Nat.pos_of_ne_zero hj0
   have hInt : (Int.ofNat j : native_Int) ≠ 0 :=
     Int.ofNat_ne_zero.mpr hj0
-  rw [sr_native_stoi_result, if_neg hInt]
+  rw [sr_native_stoi_result, ite_eq_right hInt]
   rw [sr_native_str_substr_zero_nat s j hj]
   exact sr_native_str_to_int_of_ne_nil_all _
     (sr_take_ne_nil s j hjPos hj) (sr_all_digits_take s j hAll)
@@ -1173,7 +1173,7 @@ private theorem sr_str_to_int_nonneg_data (s : native_String)
         simp only [native_str_to_int] at hNonneg
         by_cases hAll : (c :: cs).all impl_native_char_is_digit = true
         · exact hAll
-        · rw [if_neg hAll] at hNonneg
+        · rw [ite_eq_right hAll] at hNonneg
           simp at hNonneg
   refine ⟨hs, hAll, ?_⟩
   exact sr_native_str_to_int_of_ne_nil_all s hs hAll
@@ -1477,7 +1477,7 @@ private theorem sr_native_seq_update_active_facts
     rw [show decide (i < 0) = false from decide_eq_false hNotNeg]
     rw [show decide (Int.ofNat xs.length ≤ i) = false from
       decide_eq_false hNotHigh]
-    simp only [Bool.false_or, Bool.false_eq_true, if_false]
+    simp only [Bool.false_or, Bool.false_eq_true, ite_false]
     by_cases hFits : ys.length ≤ xs.length - Int.toNat i
     · rw [List.take_of_length_le hFits]
     · have hRemLe : xs.length - Int.toNat i ≤ ys.length := by omega
@@ -1773,7 +1773,7 @@ private theorem sr_eval_forall_encoding_true
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean false
-    rw [dif_neg hNoSat]
+    rw [dite_eq_right hNoSat]
   change __smtx_model_eval_not
       (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean true
@@ -1839,7 +1839,7 @@ private theorem sr_eval_forall2_encoding_true
             SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean false
-    rw [dif_neg hNoSat]
+    rw [dite_eq_right hNoSat]
   change __smtx_model_eval_not
       (native_eval_exists M s₁ T₁
         (SmtTerm.exists s₂ T₂ (SmtTerm.not body))) =
@@ -1883,7 +1883,7 @@ private theorem sr_eval_forall_encoding_false
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean true
-    rw [dif_pos hSat]
+    rw [dite_eq_left hSat]
   change __smtx_model_eval_not
       (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean false
@@ -5593,13 +5593,13 @@ private theorem string_reduction_pred_true
               · have hnNonneg : 0 ≤ n := int_nonneg_of_not_neg hnNeg
                 by_cases hnGt : Int.ofNat zs.length < n
                 · have hIndex : native_seq_indexof zs ys n = -1 := by
-                    rw [native_seq_indexof_eq_rec, if_neg hnNeg]
+                    rw [native_seq_indexof_eq_rec, ite_eq_right hnNeg]
                     have hCast : (Int.toNat n : Int) = n :=
                       Int.toNat_of_nonneg hnNonneg
                     have hStartGt : zs.length < Int.toNat n := by
                       apply Int.ofNat_lt.mp
                       simpa [hCast] using hnGt
-                    rw [dif_neg (by omega)]
+                    rw [dite_eq_right (by omega)]
                   have hnGt' : (zs.length : native_Int) < n := by
                     simpa [Int.ofNat_eq_natCast] using hnGt
                   simp [formula, invalid, resultEq, result, resultFound,
@@ -6947,7 +6947,7 @@ private theorem string_reduction_pred_true
                             true)) at hSem
               by_cases hInvalid :
                   start > (source.length : Int) ∨ 0 > start
-              · rw [if_pos hInvalid] at hSem
+              · rw [ite_eq_left hInvalid] at hSem
                 have hInvalidEval :
                     __smtx_model_eval M invalid = SmtValue.Boolean true := by
                   rcases hInvalid with hHigh | hNeg
@@ -6968,7 +6968,7 @@ private theorem string_reduction_pred_true
                   __smtx_model_eval_ite, __smtx_model_eval_eq,
                   hResultEval, hSem, sr_eval_numeral_term_eq, native_veq,
                   nativeResult]
-              · rw [if_neg hInvalid] at hSem
+              · rw [ite_eq_right hInvalid] at hSem
                 have hInvalidEval :
                     __smtx_model_eval M invalid = SmtValue.Boolean false := by
                   have hNotHigh : ¬ (source.length : Int) < start := by
@@ -6984,7 +6984,7 @@ private theorem string_reduction_pred_true
                 rw [smtx_eval_ite_term_eq, hInvalidEval]
                 simp only [__smtx_model_eval_ite]
                 by_cases hEmpty : native_str_in_re [] regex = true
-                · rw [if_pos hEmpty] at hSem
+                · rw [ite_eq_left hEmpty] at hSem
                   rw [smtx_eval_ite_term_eq, hEmptyMatchEval, hEmpty]
                   simp [resultEq, smtx_eval_eq_term_eq,
                     __smtx_model_eval_ite, __smtx_model_eval_eq,
@@ -6993,7 +6993,7 @@ private theorem string_reduction_pred_true
                     cases hVal : native_str_in_re [] regex with
                     | false => rfl
                     | true => exact False.elim (hEmpty hVal)
-                  rw [if_neg hEmpty] at hSem
+                  rw [ite_eq_right hEmpty] at hSem
                   rw [smtx_eval_ite_term_eq, hEmptyMatchEval, hEmptyFalse]
                   simp only [__smtx_model_eval_ite]
                   rcases hSem with ⟨hMinimalNative, hFoundNative⟩

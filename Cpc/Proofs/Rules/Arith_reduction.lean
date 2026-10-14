@@ -321,7 +321,7 @@ private theorem native_int_pow2_log2_le
   have hCast : ((2 ^ Nat.log2 n.toNat : Nat) : Int) ≤ (n.toNat : Int) := by
     exact_mod_cast hNat
   -- v4.33 `simp` no longer discharges the `native_zexp_total` sign guard.
-  rw [if_neg (by omega : ¬ ((Nat.log2 n.toNat : Int) < 0))]
+  rw [ite_eq_right (by omega : ¬ ((Nat.log2 n.toNat : Int) < 0))]
   have hn : ((n.toNat : Nat) : Int) = n := Int.toNat_of_nonneg (Int.le_of_lt hPos)
   rw [hn] at hCast
   exact_mod_cast hCast
@@ -341,7 +341,7 @@ private theorem native_int_lt_next_pow2_log2
       ((n.toNat : Nat) : Int) <
         ((2 ^ (Nat.log2 n.toNat + 1) : Nat) : Int) := by
     exact_mod_cast hNat
-  rw [if_neg (by omega : ¬ (((Nat.log2 n.toNat : Int) + 1) < 0))]
+  rw [ite_eq_right (by omega : ¬ (((Nat.log2 n.toNat : Int) + 1) < 0))]
   have hn : ((n.toNat : Nat) : Int) = n := Int.toNat_of_nonneg (Int.le_of_lt hPos)
   rw [hn] at hCast
   exact_mod_cast hCast

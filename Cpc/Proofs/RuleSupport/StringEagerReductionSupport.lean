@@ -229,7 +229,7 @@ private theorem native_str_indexof_re_eq_neg_one_or_ge
   · simp [hi]
   · have hi0 : 0 ≤ i := int_nonneg_of_not_neg hi
     by_cases hStart : Int.toNat i ≤ s.length
-    · simp only [if_neg hi, if_pos hStart]
+    · simp only [ite_eq_right hi, ite_eq_left hStart]
       cases hFind : native_re_find_idx_from r s
           (Int.toNat i) with
       | none =>
@@ -256,7 +256,7 @@ private theorem native_str_indexof_re_le_len
   by_cases hi : i < 0
   · simp [hi]
   · by_cases hStart : Int.toNat i ≤ s.length
-    · simp only [if_neg hi, if_pos hStart]
+    · simp only [ite_eq_right hi, ite_eq_left hStart]
       cases hFind : native_re_find_idx_from r s
           (Int.toNat i) with
       | none =>

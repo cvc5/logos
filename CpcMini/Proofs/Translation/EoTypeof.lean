@@ -2553,26 +2553,26 @@ private theorem eo_to_smt_type_lift_of_valid (s : native_String) (dRef : Datatyp
       by_cases hReserved : __eo_to_smt_reserved_datatype_name s2 = true
       · simp only [__eo_type_lift]
         by_cases hteq : native_teq (Term.DatatypeType s dRef) (Term.DatatypeType s2 d2) = true
-        · rw [native_ite, if_pos hteq]
+        · rw [native_ite, ite_eq_left hteq]
           have hEq : Term.DatatypeType s dRef = Term.DatatypeType s2 d2 :=
             of_decide_eq_true hteq
           injection hEq with hs _hd
           subst hs
           simp [__eo_to_smt_type, __smtx_type_lift, native_ite, hReserved]
-        · rw [native_ite, if_neg hteq]
+        · rw [native_ite, ite_eq_right hteq]
           simp [__eo_to_smt_type, __smtx_type_lift, native_ite, hReserved]
       · have hReservedFalse : __eo_to_smt_reserved_datatype_name s2 = false := by
           cases hName : __eo_to_smt_reserved_datatype_name s2 <;> simp [hName] at hReserved ⊢
         simp only [__eo_type_lift]
         by_cases hteq : native_teq (Term.DatatypeType s dRef) (Term.DatatypeType s2 d2) = true
-        · rw [native_ite, if_pos hteq]
+        · rw [native_ite, ite_eq_left hteq]
           have hEq : Term.DatatypeType s dRef = Term.DatatypeType s2 d2 :=
             of_decide_eq_true hteq
           injection hEq with hs hd
           subst hs
           subst hd
           simp [__eo_to_smt_type, __smtx_type_lift, native_ite, hReservedFalse, native_Teq]
-        · rw [native_ite, if_neg hteq]
+        · rw [native_ite, ite_eq_right hteq]
           have hNoFold :
               ¬ native_Teq (SmtType.Datatype s (__eo_to_smt_datatype dRef))
                   (SmtType.Datatype s2 (__eo_to_smt_datatype d2)) = true := by

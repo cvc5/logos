@@ -432,7 +432,7 @@ theorem native_inhabited_type_map
   apply native_inhabited_type_of_typed (by simp)
   show __smtx_typeof_value (__smtx_type_default (SmtType.Map A B)) = SmtType.Map A B
   rw [__smtx_type_default, native_ite,
-    if_neg (by simpa [native_veq] using hBval)]
+    ite_eq_right (by simpa [native_veq] using hBval)]
   simp [__smtx_typeof_value, __smtx_typeof_map_value, hBty']
 
 /-- Builds well-formedness for the fallback map used by sequence nth defaults. -/

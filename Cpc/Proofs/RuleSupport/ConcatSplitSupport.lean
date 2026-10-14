@@ -1803,7 +1803,7 @@ theorem native_seq_extract_to_end_nat
       rw [hmin]
       simp
     simp [hend, hLenNotLe]
-    rw [if_neg hiNonneg]
+    rw [ite_eq_right hiNonneg]
     change
       List.take
           ((min (Int.ofNat (xs.length - i))

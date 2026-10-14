@@ -82,11 +82,11 @@ private theorem native_toDigitsCore_all_digits :
   | fuel + 1, n, ds, hds => by
       rw [Nat.toDigitsCore.eq_2]
       by_cases hDiv : n / 10 = 0
-      · rw [if_pos hDiv]
+      · rw [ite_eq_left hDiv]
         have hDigit :=
           native_char_is_digit_digitChar_lt10 (n % 10) (Nat.mod_lt n (by decide))
         simpa [hDigit, hds]
-      · rw [if_neg hDiv]
+      · rw [ite_eq_right hDiv]
         have hDigit :=
           native_char_is_digit_digitChar_lt10 (n % 10) (Nat.mod_lt n (by decide))
         exact native_toDigitsCore_all_digits fuel (n / 10)
@@ -112,13 +112,13 @@ theorem native_str_from_int_all_digits
       unfold native_str_from_int
       have hNot : ¬ ((Int.ofNat n) < 0) := by
         exact Int.not_lt_of_ge (Int.natCast_nonneg n)
-      rw [if_neg hNot]
+      rw [ite_eq_right hNot]
       exact native_string_lit_nat_toString_all_digits n
   | negSucc n =>
       unfold native_str_from_int
       have hNeg : (Int.negSucc n) < 0 := by
         exact Int.negSucc_lt_zero n
-      rw [if_pos hNeg]
+      rw [ite_eq_left hNeg]
       simp [native_string_lit]
 
 theorem native_char_valid_of_digit

@@ -1,7 +1,7 @@
 module
 
 public import Cpc.Proofs.TypePreservation.Datatypes
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 import all Cpc.Proofs.TypePreservation.Common
 
 public section

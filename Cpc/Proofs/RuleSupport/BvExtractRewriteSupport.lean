@@ -181,7 +181,7 @@ theorem natpow2_eq (w : Nat) :
     native_int_pow2 (↑w : Int) = (2 : Int) ^ w := by
   have hwnn : ¬ ((↑w : Int) < 0) := by omega
   unfold native_int_pow2 native_zexp_total
-  rw [if_neg hwnn, Int.toNat_natCast]
+  rw [ite_eq_right hwnn, Int.toNat_natCast]
 
 theorem ofInt_toNat_canonical (w : Nat) (p : Int)
     (hp0 : 0 ≤ p) (hp1 : p < (2 : Int) ^ w) :

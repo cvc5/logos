@@ -70,9 +70,9 @@ theorem native_seq_indexof_rec_le_of_prefix_at
       intro offset hOffset hPrefix
       unfold native_seq_indexof_rec
       by_cases hHere : native_seq_prefix_eq pat xs = true
-      · rw [if_pos hHere]
+      · rw [ite_eq_left hHere]
         exact ⟨0, Nat.zero_le _, by simp⟩
-      · rw [if_neg hHere]
+      · rw [ite_eq_right hHere]
         cases offset with
         | zero =>
             simp at hPrefix
@@ -110,7 +110,7 @@ theorem native_seq_indexof_zero_le_of_prefix_at
   rw [native_seq_indexof_eq_rec]
   simp only [Int.reduceLT, ↓reduceIte, Int.toNat_zero, Nat.zero_add]
   simp only [List.drop_zero]
-  rw [dif_pos hPatFit, hRec]
+  rw [dite_eq_left hPatFit, hRec]
   constructor
   · exact Int.natCast_nonneg _
   · apply Int.ofNat_le.mpr
@@ -198,8 +198,8 @@ theorem occEndsAux_congr (fuel₁ : Nat) :
           | cons p ps =>
               rw [occEndsAux_succ, occEndsAux_succ]
               by_cases hIdxNeg : native_seq_indexof xs (p :: ps) 0 < 0
-              · rw [if_pos hIdxNeg, if_pos hIdxNeg]
-              · rw [if_neg hIdxNeg, if_neg hIdxNeg]
+              · rw [ite_eq_left hIdxNeg, ite_eq_left hIdxNeg]
+              · rw [ite_eq_right hIdxNeg, ite_eq_right hIdxNeg]
                 have hNonneg : 0 ≤ native_seq_indexof xs (p :: ps) 0 :=
                   int_nonneg_of_not_neg hIdxNeg
                 have hBounds :=
@@ -248,11 +248,11 @@ theorem positive_prefix_str_to_re_cons
       rw [native_re_deriv_re_of_list_cons]
       by_cases hx : x = p
       · subst x
-        rw [if_pos rfl, native_re_prefix_match_re_of_list]
+        rw [ite_eq_left rfl, native_re_prefix_match_re_of_list]
         by_cases hPrefix : native_seq_prefix_eq ps xs = true
         · simp [native_seq_prefix_eq, native_veq, hPrefix]
         · simp [native_seq_prefix_eq, native_veq, hPrefix]
-      · rw [if_neg hx]
+      · rw [ite_eq_right hx]
         have hpx : p ≠ x := Ne.symm hx
         simp [native_re_prefix_match_len?, native_re_prefix_go_empty,
           native_seq_prefix_eq, native_veq, hx, hpx]
@@ -354,7 +354,7 @@ theorem occEnds_step (pat xs : List SmtValue) (hPat : pat ≠ [])
   | nil => exact absurd rfl hPat
   | cons p ps =>
       show occEndsAux (xs.length + 1) (p :: ps) xs = _
-      rw [occEndsAux_succ, if_neg hNotNeg,
+      rw [occEndsAux_succ, ite_eq_right hNotNeg,
         occEndsAux_eq_occEnds xs.length (p :: ps) _ hDropLen]
 
 theorem replace_all_eq_self_of_indexof_neg (pat repl xs : List SmtValue)
@@ -480,7 +480,7 @@ theorem replace_all_step (pat repl xs : List SmtValue) (hPat : pat ≠ [])
                 ((x :: xs).length + 1) (native_str_to_re (p :: ps)) repl
                   (x :: xs) = _
             rw [impl_native_re_replace_all_nonempty_list_aux.eq_3,
-              positive_prefix_str_to_re_cons, if_pos hPrefix]
+              positive_prefix_str_to_re_cons, ite_eq_left hPrefix]
             apply congrArg (List.append repl)
             exact replace_aux_eq_replace_all_of_length_lt
               (native_str_to_re (p :: ps)) repl
@@ -904,7 +904,7 @@ theorem filter_le_eq_nil_of_all_gt (L : List Nat) (m : Nat)
       have ha : m < a := h a (List.mem_cons_self ..)
       have hNotLe : ¬ a ≤ m := by omega
       simp only [List.filter_cons, decide_eq_true_eq]
-      rw [if_neg (by simpa using hNotLe)]
+      rw [ite_eq_right (by simpa using hNotLe)]
       exact ih (fun e he => h e (List.mem_cons_of_mem a he))
 
 theorem filter_le_map_add (L : List Nat) (a m : Nat) :
@@ -915,9 +915,9 @@ theorem filter_le_map_add (L : List Nat) (a m : Nat) :
   | cons b L ih =>
       simp only [List.map_cons, List.filter_cons]
       by_cases hb : b + a ≤ m
-      · rw [if_pos (by simpa using hb), if_pos (by simpa using hb)]
+      · rw [ite_eq_left (by simpa using hb), ite_eq_left (by simpa using hb)]
         simp [ih]
-      · rw [if_neg (by simpa using hb), if_neg (by simpa using hb)]
+      · rw [ite_eq_right (by simpa using hb), ite_eq_right (by simpa using hb)]
         exact ih
 
 /-- The occurrences of a prefix of `xs` are exactly the occurrences of `xs`
@@ -977,7 +977,7 @@ theorem occEnds_take (pat xs : List SmtValue) (m : Nat) (hPat : pat ≠ []) :
           rfl
           (m - (Int.toNat (native_seq_indexof ys pat 0) + pat.length))]
         rw [List.filter_cons]
-        rw [if_pos (by simpa using hRoom)]
+        rw [ite_eq_left (by simpa using hRoom)]
         rw [filter_le_map_add]
         congr 1
         apply congrArg (List.map _)
@@ -992,7 +992,7 @@ theorem occEnds_take (pat xs : List SmtValue) (m : Nat) (hPat : pat ≠ []) :
         rw [occEnds_eq_nil_of_indexof_neg pat (ys.take m)
           (indexof_take_neg ys pat m hPat (Or.inr (by omega)))]
         rw [List.filter_cons]
-        rw [if_neg (by simpa using hRoom)]
+        rw [ite_eq_right (by simpa using hRoom)]
         rw [filter_le_eq_nil_of_all_gt]
         intro e hMem
         rcases List.mem_map.mp hMem with ⟨e', hMem', rfl⟩
@@ -1019,15 +1019,15 @@ theorem filter_le_length_mono (L : List Nat) {m₁ m₂ : Nat} (h : m₁ ≤ m�
   | cons a L ih =>
       simp only [List.filter_cons]
       by_cases h₁ : a ≤ m₁
-      · rw [if_pos (by simpa using h₁),
-          if_pos (by simp; omega)]
+      · rw [ite_eq_left (by simpa using h₁),
+          ite_eq_left (by simp; omega)]
         simpa using ih
-      · rw [if_neg (by simpa using h₁)]
+      · rw [ite_eq_right (by simpa using h₁)]
         by_cases h₂ : a ≤ m₂
-        · rw [if_pos (by simpa using h₂)]
+        · rw [ite_eq_left (by simpa using h₂)]
           simp only [List.length_cons]
           exact Nat.le_succ_of_le ih
-        · rw [if_neg (by simpa using h₂)]
+        · rw [ite_eq_right (by simpa using h₂)]
           exact ih
 
 theorem getD_mem_of_lt (L : List Nat) (n : Nat) (hn : n < L.length) :
@@ -1086,7 +1086,7 @@ theorem filter_le_getD_length (L : List Nat) (hPW : L.Pairwise (· < ·)) :
       cases n with
       | zero =>
           simp only [List.getD_cons_zero, List.filter_cons]
-          rw [if_pos (by simp)]
+          rw [ite_eq_left (by simp)]
           rw [filter_le_eq_nil_of_all_gt L a hHead]
           rfl
       | succ n =>
@@ -1094,7 +1094,7 @@ theorem filter_le_getD_length (L : List Nat) (hPW : L.Pairwise (· < ·)) :
           have hMem := getD_mem_of_lt L n hn'
           have hALe : a ≤ L.getD n 0 := Nat.le_of_lt (hHead _ hMem)
           simp only [List.getD_cons_succ, List.filter_cons]
-          rw [if_pos (by simpa using hALe)]
+          rw [ite_eq_left (by simpa using hALe)]
           simp only [List.length_cons]
           rw [ih hPW' n hn']
 
@@ -1110,7 +1110,7 @@ theorem filter_lt_getD_length (L : List Nat) (hPW : L.Pairwise (· < ·)) :
       cases n with
       | zero =>
           simp only [List.getD_cons_zero, List.filter_cons]
-          rw [if_neg (by simp)]
+          rw [ite_eq_right (by simp)]
           rw [filter_eq_nil_of_forall_false _ L
             (fun e he => by
               have := hHead e he
@@ -1122,7 +1122,7 @@ theorem filter_lt_getD_length (L : List Nat) (hPW : L.Pairwise (· < ·)) :
           have hMem := getD_mem_of_lt L n hn'
           have hALt : a < L.getD n 0 := hHead _ hMem
           simp only [List.getD_cons_succ, List.filter_cons]
-          rw [if_pos (by simpa using hALt)]
+          rw [ite_eq_left (by simpa using hALt)]
           simp only [List.length_cons]
           rw [ih hPW' n hn']
 
@@ -1404,12 +1404,12 @@ theorem indexof_add_offset (xs pat : List SmtValue) (off w : Nat)
         native_seq_indexof (xs.drop off) pat ((w : Nat) : Int) +
           ((off : Nat) : Int) := by
   simp only [native_seq_indexof_eq_rec]
-  rw [if_neg (by omega : ¬ ((off + w : Nat) : Int) < 0)]
-  rw [if_neg (by omega : ¬ ((w : Nat) : Int) < 0)]
+  rw [ite_eq_right (by omega : ¬ ((off + w : Nat) : Int) < 0)]
+  rw [ite_eq_right (by omega : ¬ ((w : Nat) : Int) < 0)]
   simp only [Int.toNat_natCast, List.length_drop]
   by_cases hFit : off + w + pat.length ≤ xs.length
-  · rw [dif_pos (by omega : off + w + pat.length ≤ xs.length),
-      dif_pos (by omega : w + pat.length ≤ xs.length - off)]
+  · rw [dite_eq_left (by omega : off + w + pat.length ≤ xs.length),
+      dite_eq_left (by omega : w + pat.length ≤ xs.length - off)]
     have hDrop : (xs.drop off).drop w = xs.drop (off + w) := by
       rw [List.drop_drop]
     rw [hDrop]
@@ -1421,9 +1421,9 @@ theorem indexof_add_offset (xs pat : List SmtValue) (off w : Nat)
       RuleProofs.native_seq_indexof_rec_offset (xs.drop (w + off)) pat w off
         (xs.length - (w + off + pat.length) + 1)]
     simp only [Int.ofNat_eq_natCast]
-  · rw [dif_neg (by omega : ¬ off + w + pat.length ≤ xs.length),
-      dif_neg (by omega : ¬ w + pat.length ≤ xs.length - off)]
-    rw [if_pos rfl]
+  · rw [dite_eq_right (by omega : ¬ off + w + pat.length ≤ xs.length),
+      dite_eq_right (by omega : ¬ w + pat.length ≤ xs.length - off)]
+    rw [ite_eq_left rfl]
 
 /-! ## Facts at the scan boundaries -/
 
@@ -1545,7 +1545,7 @@ theorem indexof_at_bound (pat xs : List SmtValue) (hPat : pat ≠ []) :
                 n)
               hOffLe
             rw [hOffset, hIH.2.2]
-            rw [if_neg (by
+            rw [ite_eq_right (by
               have := hIH.1
               have h1 := hIH.2.1
               intro hAbs
@@ -1606,7 +1606,7 @@ theorem indexof_at_bound_last (pat xs : List SmtValue) (hPat : pat ≠ []) :
               (Int.toNat (native_seq_indexof ys pat 0) +
                 pat.length))).length)
         hBounds
-      rw [hOffset, hIH, if_pos rfl]
+      rw [hOffset, hIH, ite_eq_left rfl]
 
 /-! ## `indexof` / `replace_all` on suffixes at the boundaries -/
 
@@ -1625,11 +1625,11 @@ theorem indexof_drop_bound (pat xs : List SmtValue) (hPat : pat ≠ [])
   rw [hZeroCast] at hIdx
   by_cases hInner :
       native_seq_indexof (xs.drop (bound pat xs n)) pat 0 = -1
-  · rw [if_pos hInner] at hIdx
+  · rw [ite_eq_left hInner] at hIdx
     exfalso
     unfold native_Int at *
     omega
-  · rw [if_neg hInner] at hIdx
+  · rw [ite_eq_right hInner] at hIdx
     rcases native_seq_indexof_eq_neg_one_or_ge
         (xs.drop (bound pat xs n)) pat 0 with hEq | hGe
     · exact absurd hEq hInner
@@ -1653,7 +1653,7 @@ theorem indexof_drop_bound_last (pat xs : List SmtValue) (hPat : pat ≠ []) :
       native_seq_indexof
           (xs.drop (bound pat xs (occEnds pat xs).length)) pat 0 = -1
   · exact hInner
-  · rw [if_neg hInner] at hLast
+  · rw [ite_eq_right hInner] at hLast
     exfalso
     rcases native_seq_indexof_eq_neg_one_or_ge
         (xs.drop (bound pat xs (occEnds pat xs).length)) pat 0 with

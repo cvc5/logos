@@ -164,7 +164,7 @@ private theorem native_seq_replace_source_of_pat_len_ge
             omega
           simpa using hDropBound
         rw [StrEqReplSupport.native_seq_replace_eq_indexof]
-        rw [if_neg hNeg]
+        rw [ite_eq_right hNeg]
         change xs.take idx ++ xs ++ xs.drop (idx + (p :: ps).length) = xs
         rw [hTakeNil, hDropNil]
         simp

@@ -1053,10 +1053,8 @@ theorem congTrueSpine_eq_true
           (Term.Apply (Term.UOp UserOp.exists) Term.__eo_List_nil) x)
           (rhs := rhs) (by rfl) hEqBool)
   | Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) Term.__eo_List_nil) x =>
-      exact False.elim
-        (no_bool_eq_left_of_eo_to_smt_none (t := Term.Apply
-          (Term.Apply (Term.UOp UserOp.set_insert) Term.__eo_List_nil) x)
-          (rhs := rhs) (by rfl) hEqBool)
+      exact congTrueSpine_set_insert_eq_true M hM
+        Term.__eo_List_nil x rhs hEqBool hSpine
   | lhs =>
       match hHead : (appSpineRev lhs).1 with
       | Term.Var (Term.String s) T =>

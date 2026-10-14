@@ -97,7 +97,7 @@ theorem native_seq_indexof_rec_append_ne_neg
       | succ f =>
           simp only [List.nil_append]
           unfold native_seq_indexof_rec
-          rw [if_pos (native_seq_prefix_eq_append pat after)]
+          rw [ite_eq_left (native_seq_prefix_eq_append pat after)]
           simp
   | cons b bs ih =>
       intro i fuel hFuel
@@ -110,9 +110,9 @@ theorem native_seq_indexof_rec_append_ne_neg
           unfold native_seq_indexof_rec
           by_cases hPre :
               native_seq_prefix_eq pat ((b :: bs) ++ pat ++ after) = true
-          · rw [if_pos hPre]
+          · rw [ite_eq_left hPre]
             simp
-          · rw [if_neg hPre]
+          · rw [ite_eq_right hPre]
             have hxs :
                 (b :: bs) ++ pat ++ after = b :: (bs ++ pat ++ after) := by
               simp
@@ -128,8 +128,8 @@ theorem native_seq_contains_of_decomp
   have hNe :
       native_seq_indexof (before ++ pat ++ after) pat 0 ≠ -1 := by
     rw [native_seq_indexof_eq_rec]
-    simp only [Int.reduceLT, if_false, Int.toNat_zero, Nat.zero_add]
-    rw [dif_pos hLen]
+    simp only [Int.reduceLT, ite_false, Int.toNat_zero, Nat.zero_add]
+    rw [dite_eq_left hLen]
     have hFuel :
         before.length <
           (before ++ pat ++ after).length - pat.length + 1 := by
@@ -190,7 +190,7 @@ theorem native_seq_contains_replacement_of_pattern_present
       have hNotNeg : ¬ native_seq_indexof source (p :: ps) 0 < 0 :=
         Int.not_lt_of_ge hNonneg
       rw [StrEqReplSupport.native_seq_replace_eq_indexof]
-      rw [if_neg hNotNeg]
+      rw [ite_eq_right hNotNeg]
       exact native_seq_contains_of_decomp
         (source.take (Int.toNat (native_seq_indexof source (p :: ps) 0)))
         replacement
@@ -753,7 +753,7 @@ theorem mem_native_seq_replace_iff_of_not_mem_pattern
       rw [native_seq_contains_nil]
       rw [StrEqReplSupport.native_seq_replace_eq_indexof,
         StrEqReplSupport.native_seq_indexof_nil_zero]
-      simp only [Int.reduceLT, if_false, Int.toNat_zero, List.take_zero,
+      simp only [Int.reduceLT, ite_false, Int.toNat_zero, List.take_zero,
         List.nil_append, Nat.zero_add, List.drop_zero, List.mem_append,
         true_and]
       exact or_comm
@@ -791,7 +791,7 @@ theorem mem_native_seq_replace_iff_of_not_mem_pattern
             · exact Or.inl (Or.inl hTake)
             · exact Or.inr hDrop
         rw [StrEqReplSupport.native_seq_replace_eq_indexof]
-        rw [if_neg hNotNeg]
+        rw [ite_eq_right hNotNeg]
         change
           w ∈ xs.take n ++ repl ++
               xs.drop (n + (p :: ps).length) ↔
@@ -856,7 +856,7 @@ theorem mem_native_seq_replace_self_iff
       by_cases hNeg : native_seq_indexof xs (p :: ps) 0 < 0
       · simp [StrEqReplSupport.native_seq_replace_eq_indexof, hNeg]
       · rw [StrEqReplSupport.native_seq_replace_eq_indexof]
-        rw [if_neg hNeg]
+        rw [ite_eq_right hNeg]
         simp only [List.mem_append]
         constructor
         · intro h

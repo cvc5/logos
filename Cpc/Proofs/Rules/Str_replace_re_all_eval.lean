@@ -4,7 +4,7 @@ public import Cpc.Proofs.RuleSupport.StrReplaceReEvalSupport
 import all Cpc.Proofs.RuleSupport.StrReplaceReEvalSupport
 public import Cpc.Proofs.RuleSupport.StrConcatSupport
 import all Cpc.Proofs.RuleSupport.StrConcatSupport
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 
 open Eo
 open SmtEval

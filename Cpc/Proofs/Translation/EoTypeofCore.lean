@@ -1152,12 +1152,12 @@ private theorem eo_type_lift_preserves_valid (s0 : native_String) (d0 : Datatype
       rcases hValid with ⟨hRes, hD⟩
       simp only [__eo_type_lift]
       by_cases hteq : native_teq (Term.DatatypeType s0 d0) (Term.DatatypeType s2 d2) = true
-      · rw [native_ite, if_pos hteq]
+      · rw [native_ite, ite_eq_left hteq]
         have hEq : Term.DatatypeType s0 d0 = Term.DatatypeType s2 d2 := of_decide_eq_true hteq
         injection hEq with hs hd
         subst hs
         exact ⟨hRes, hMem⟩
-      · rw [native_ite, if_neg hteq]
+      · rw [native_ite, ite_eq_right hteq]
         exact ⟨hRes, eo_datatype_lift_preserves_valid s0 d0 (List.mem_cons_of_mem _ hMem) hD⟩
   | _ => exact hValid
 
@@ -2898,40 +2898,6 @@ private theorem eo_to_smt_exists_ne_numeral_of_not_nil
         case Var name T =>
           cases name <;> cases h
 
-private theorem eo_to_smt_apply_set_insert_ne_numeral
-    (xs x : Term) (n : native_Int) :
-    __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) x) ≠
-      SmtTerm.Numeral n := by
-  intro h
-  cases xs <;> try cases h
-  case Apply f a =>
-    cases f <;> try cases h
-    case UOp op =>
-      cases op <;> try cases h
-      case _at__at_TypedList_nil =>
-        cases hTy :
-            native_Teq (__smtx_typeof (__eo_to_smt x))
-              (SmtType.Set (__eo_to_smt_type a))
-        · change
-            __eo_to_smt_set_insert
-                (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) a)
-                (__eo_to_smt x) =
-              SmtTerm.Numeral n at h
-          simp [__eo_to_smt_set_insert, hTy, native_ite] at h
-        · change
-            __eo_to_smt_set_insert
-                (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) a)
-                (__eo_to_smt x) =
-              SmtTerm.Numeral n at h
-          simp [__eo_to_smt_set_insert, hTy, native_ite] at h
-          change __eo_to_smt x = SmtTerm.Numeral n at h
-          rw [h] at hTy
-          simp [__smtx_typeof, native_Teq] at hTy
-    case Apply g head =>
-      cases g <;> try cases h
-      case UOp op =>
-        cases op <;> cases h
-
 private theorem eo_to_smt_apply_forall_ne_numeral
     (xs body : Term) (n : native_Int) :
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.forall) xs) body) ≠
@@ -2992,8 +2958,6 @@ private theorem eo_to_smt_apply_ne_numeral
     cases g <;> try cases h
     case UOp op =>
       cases op <;> try cases h
-      case set_insert =>
-        exact False.elim (eo_to_smt_apply_set_insert_ne_numeral y x n h)
       case «forall» =>
         exact False.elim (eo_to_smt_apply_forall_ne_numeral y x n h)
       case «exists» =>
@@ -3502,14 +3466,14 @@ private theorem eo_to_smt_ty_lift_of_valid_noDt (s sub : native_String) (dRef : 
         · exact Or.inr (Or.inr ht)
       simp only [__eo_type_lift]
       by_cases hteq : native_teq (Term.DatatypeType s dRef) (Term.DatatypeType s2 d2) = true
-      · rw [native_ite, if_pos hteq]
+      · rw [native_ite, ite_eq_left hteq]
         have hEq : Term.DatatypeType s dRef = Term.DatatypeType s2 d2 :=
           of_decide_eq_true hteq
         injection hEq with hs hd
         subst hs
         subst hd
         simp [__eo_to_smt_type, native_ite, hRes, __smtx_type_lift, native_Teq]
-      · rw [native_ite, if_neg hteq]
+      · rw [native_ite, ite_eq_right hteq]
         have hTeqF :
             ¬ native_Teq (SmtType.Datatype s (__eo_to_smt_datatype dRef))
                 (SmtType.Datatype s2 (__eo_to_smt_datatype d2)) = true := by
@@ -3528,7 +3492,7 @@ private theorem eo_to_smt_ty_lift_of_valid_noDt (s sub : native_String) (dRef : 
             __eo_to_smt_type (Term.DatatypeType s2 d2) =
               SmtType.Datatype s2 (__eo_to_smt_datatype d2) := by
           simp [__eo_to_smt_type, native_ite, hRes]
-        rw [hTr, __smtx_type_lift, native_ite, if_neg hTeqF]
+        rw [hTr, __smtx_type_lift, native_ite, ite_eq_right hTeqF]
         simp [__eo_to_smt_type, native_ite, hRes]
         congr 1
         exact eo_to_smt_dt_lift_of_valid_noDt s sub dRef hsne hFree d2
@@ -3860,7 +3824,7 @@ theorem eo_dtc_substitute_noop (sub : native_String) (d0 : Datatype) :
           rw [eo_dtc_substitute_noop sub d0 c h.2]
           congr 2
           rcases h.1 with hsh | hns
-          · rw [native_ite, if_pos hsh]
+          · rw [native_ite, ite_eq_left hsh]
           · rw [native_ite]
             split
             · rfl
@@ -4010,7 +3974,7 @@ theorem hasFreeTy_eq_false_of_valid (sub : native_String) :
                     rw [hNone] at hWf
                     simp [__smtx_type_wf, __smtx_type_wf_component, native_inhabited_type,
                       native_Teq, native_and, native_not] at hWf
-                  rw [native_ite, if_pos hWf]
+                  rw [native_ite, ite_eq_left hWf]
                   cases htrX : __eo_to_smt_type x with
                   | Datatype s2 body2 =>
                       cases body2 with
@@ -4172,7 +4136,7 @@ theorem hasFreeDtc_eq_false_of_valid (sub : native_String) :
           have hsne : native_streq s sub = false := by
             simp [native_streq, hsneP]
           simp only [__eo_to_smt_type, native_ite, hRes, hasFreeDtc, native_or,
-            native_and, native_not, hs, hsne, hTail, Bool.false_eq_true, if_false]
+            native_and, native_not, hs, hsne, hTail, Bool.false_eq_true, ite_false]
           decide
       · have hA : ∀ s, __eo_to_smt_type T ≠ SmtType.TypeRef s := by
           intro s hEq
@@ -4519,7 +4483,7 @@ theorem hasFreeTy_reserved_of_translate (sub : native_String)
                   by_cases hWfRaw :
                       __smtx_type_wf
                           (__eo_to_smt_type_tuple (__eo_to_smt_type y) (__eo_to_smt_type x)) = true
-                  · rw [native_ite, if_pos hWfRaw]
+                  · rw [native_ite, ite_eq_left hWfRaw]
                     have hRawNN :
                         __eo_to_smt_type_tuple (__eo_to_smt_type y) (__eo_to_smt_type x) ≠
                           SmtType.None := by
@@ -4645,7 +4609,7 @@ theorem hasFreeTy_reserved_of_translate (sub : native_String)
                     | FunType A B => exfalso; apply hRawNN; simp [__eo_to_smt_type_tuple, htrX]
                     | DtcAppType A B => exfalso; apply hRawNN; simp [__eo_to_smt_type_tuple, htrX]
                     | None => exfalso; apply hRawNN; simp [__eo_to_smt_type_tuple, htrX]
-                  · rw [native_ite, if_neg hWfRaw]
+                  · rw [native_ite, ite_eq_right hWfRaw]
                     simp [hasFreeTy]
               | _ => simp [__eo_to_smt_type, hasFreeTy]
           | _ => simp [__eo_to_smt_type, hasFreeTy]

@@ -1896,7 +1896,7 @@ private theorem eval_bv_mult_slt_raw
     cases unsigned with
     | false =>
         unfold bvMultSltExt
-        simp only [Bool.false_eq_true, if_false]
+        simp only [Bool.false_eq_true, ite_false]
         rw [eval_sign_extend_term, hXEval']
         have hVal := sign_extend_val_bitvec TW NW (xv.toNat : Int)
           (Int.natCast_nonneg _) (by exact_mod_cast xv.isLt)
@@ -1906,7 +1906,7 @@ private theorem eval_bv_mult_slt_raw
           Smtm.native_nat_to_int, bitvec_ofInt_natCast_toNat] using hVal
     | true =>
         unfold bvMultSltExt
-        simp only [if_true]
+        simp only [ite_true]
         rw [mult_eval_zero_extend_term, hXEval']
         have hVal := zero_extend_val_bitvec_local TW NW (xv.toNat : Int)
           (Int.natCast_nonneg _) (by exact_mod_cast xv.isLt)
@@ -1921,7 +1921,7 @@ private theorem eval_bv_mult_slt_raw
     cases unsigned with
     | false =>
         unfold bvMultSltExt
-        simp only [Bool.false_eq_true, if_false]
+        simp only [Bool.false_eq_true, ite_false]
         rw [eval_sign_extend_term, hYEval']
         have hVal := sign_extend_val_bitvec TW NW (yv.toNat : Int)
           (Int.natCast_nonneg _) (by exact_mod_cast yv.isLt)
@@ -1931,7 +1931,7 @@ private theorem eval_bv_mult_slt_raw
           Smtm.native_nat_to_int, bitvec_ofInt_natCast_toNat] using hVal
     | true =>
         unfold bvMultSltExt
-        simp only [if_true]
+        simp only [ite_true]
         rw [mult_eval_zero_extend_term, hYEval']
         have hVal := zero_extend_val_bitvec_local TW NW (yv.toNat : Int)
           (Int.natCast_nonneg _) (by exact_mod_cast yv.isLt)
@@ -1943,7 +1943,7 @@ private theorem eval_bv_mult_slt_raw
           (__eo_to_smt (bvMultSltExt false (Term.Numeral K) a)) =
         SmtValue.Binary (WW : Int) ((av.signExtend WW).toNat : Int) := by
     unfold bvMultSltExt
-    simp only [Bool.false_eq_true, if_false]
+    simp only [Bool.false_eq_true, ite_false]
     rw [eval_sign_extend_term, hAEval']
     have hVal := sign_extend_val_bitvec UW KW (av.toNat : Int)
       (Int.natCast_nonneg _) (by exact_mod_cast av.isLt)

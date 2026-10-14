@@ -133,9 +133,9 @@ private theorem map_native_char_to_lower_toDigitsCore :
         native_char_to_lower_digitChar_of_lt_10
           (Nat.mod_lt n (by decide : 0 < 10))
       by_cases hDiv : n / 10 = 0
-      · rw [if_pos hDiv]
+      · rw [ite_eq_left hDiv]
         simp [hDigit, hds]
-      · rw [if_neg hDiv]
+      · rw [ite_eq_right hDiv]
         exact map_native_char_to_lower_toDigitsCore fuel (n / 10)
           ((Nat.digitChar (n % 10)) :: ds) (by
             simp [hDigit, hds])
@@ -158,7 +158,7 @@ private theorem native_str_to_lower_from_int (i : native_Int) :
       unfold native_str_from_int
       have hNot : ¬ ((Int.ofNat n) < 0) :=
         Int.not_lt_of_ge (Int.natCast_nonneg n)
-      rw [if_neg hNot]
+      rw [ite_eq_right hNot]
       change native_str_to_lower (native_string_lit (toString n)) =
         native_string_lit (toString n)
       exact native_str_to_lower_nat_toString n
@@ -166,7 +166,7 @@ private theorem native_str_to_lower_from_int (i : native_Int) :
       unfold native_str_from_int
       have hNeg : (Int.negSucc n) < 0 :=
         Int.negSucc_lt_zero n
-      rw [if_pos hNeg]
+      rw [ite_eq_left hNeg]
       rfl
 
 private theorem typed___eo_prog_str_to_lower_from_int_impl

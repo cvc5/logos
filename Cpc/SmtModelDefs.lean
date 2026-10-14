@@ -55,10 +55,6 @@ inductive SmtTerm : Type where
   | Binary : native_Int -> native_Int -> SmtTerm
   | Apply : SmtTerm -> SmtTerm -> SmtTerm
   | Var : native_String -> SmtType -> SmtTerm
-  | exists : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | forall : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | choice : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | bind : native_String -> SmtType -> SmtTerm -> SmtTerm -> SmtTerm
   | DtCons : native_String -> SmtDatatypeDecl -> native_Nat -> SmtTerm
   | DtSel : native_String -> SmtDatatypeDecl -> native_Nat -> native_Nat -> SmtTerm
   | DtTester : native_String -> SmtDatatypeDecl -> native_Nat -> SmtTerm
@@ -183,6 +179,7 @@ inductive SmtTerm : Type where
   | seq_diff : SmtTerm -> SmtTerm -> SmtTerm
   | _at_strings_occur_index : SmtTerm -> SmtTerm -> SmtTerm -> SmtTerm
   | _at_strings_occur_index_re : SmtTerm -> SmtTerm -> SmtTerm -> SmtTerm
+  | choice : native_String -> SmtType -> SmtTerm -> SmtTerm
   | set_empty : SmtType -> SmtTerm
   | set_singleton : SmtTerm -> SmtTerm
   | set_union : SmtTerm -> SmtTerm -> SmtTerm
@@ -192,6 +189,9 @@ inductive SmtTerm : Type where
   | set_subset : SmtTerm -> SmtTerm -> SmtTerm
   | qdiv : SmtTerm -> SmtTerm -> SmtTerm
   | qdiv_total : SmtTerm -> SmtTerm -> SmtTerm
+  | forall : native_String -> SmtType -> SmtTerm -> SmtTerm
+  | exists : native_String -> SmtType -> SmtTerm -> SmtTerm
+  | bind : native_String -> SmtType -> SmtTerm -> SmtTerm -> SmtTerm
   | int_to_bv : SmtTerm -> SmtTerm -> SmtTerm
   | ubv_to_int : SmtTerm -> SmtTerm
   | sbv_to_int : SmtTerm -> SmtTerm

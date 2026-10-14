@@ -702,7 +702,7 @@ private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true from by rw [hPred]]
       exact hSatM
-    rw [dif_pos hSatM, dif_pos hSatN]
+    rw [dite_eq_left hSatM, dite_eq_left hSatN]
     exact choose_eq_of_pred_eq hSatM hSatN hPred
   · have hSatN : ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
@@ -721,7 +721,7 @@ private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
             __smtx_model_eval (native_model_push N s T v) body =
               SmtValue.Boolean true from by rw [hPred]]
       exact hN
-    rw [dif_neg hSatM, dif_neg hSatN]
+    rw [dite_eq_right hSatM, dite_eq_right hSatN]
 
 /-! ## Clean-or-`None` facts for the typeof helper families -/
 

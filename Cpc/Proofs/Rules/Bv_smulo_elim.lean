@@ -283,7 +283,7 @@ private theorem signed_formula_value {W X Y : Nat} {sx sy scan : Bool}
         (if sx = sy then decide (2 ^ W ≤ P) else decide (2 ^ W < P)) =
           true
       by_cases hsame : sx = sy
-      · rw [if_pos hsame]
+      · rw [ite_eq_left hsame]
         have hPge : 2 ^ W ≤ P := by
           dsimp [P, inc]
           cases sx <;> cases sy <;> simp [inc] at hsame ⊢
@@ -291,7 +291,7 @@ private theorem signed_formula_value {W X Y : Nat} {sx sy scan : Bool}
           · exact Nat.le_trans hXYov
               (Nat.mul_le_mul (Nat.le_succ X) (Nat.le_succ Y))
         simp [hPge]
-      · rw [if_neg hsame]
+      · rw [ite_eq_right hsame]
         have hYpos : 0 < Y := by
           rcases hp with ⟨_i, _hi1, _hiW, hbit, _⟩
           exact Nat.pos_of_ne_zero (by intro hy0; subst Y; simp at hbit)
@@ -323,9 +323,9 @@ private theorem signed_formula_value {W X Y : Nat} {sx sy scan : Bool}
              R.testBit (W + 1) ^^ R.testBit W)) =
         (if sx = sy then decide (2 ^ W ≤ P) else decide (2 ^ W < P))
       by_cases hsame : sx = sy
-      · rw [if_pos hsame, if_pos hsame]
+      · rw [ite_eq_left hsame, ite_eq_left hsame]
         exact pos_topDiff_eq W P hBound
-      · rw [if_neg hsame, if_neg hsame]
+      · rw [ite_eq_right hsame, ite_eq_right hsame]
         exact neg_topDiff_eq W P hBound
     rw [hscanFalse, hTop]
     simp
@@ -390,7 +390,7 @@ private theorem smulo_natpow2_eq (w : Nat) :
     native_int_pow2 ((w : Nat) : Int) = (2 : Int) ^ w := by
   have hwnn : ¬ (((w : Nat) : Int) < 0) := by omega
   unfold native_int_pow2 native_zexp_total
-  rw [if_neg hwnn, Int.toNat_natCast]
+  rw [ite_eq_right hwnn, Int.toNat_natCast]
 
 private theorem bvxor_payload_nat
     (w : Nat) (cn an : Int)

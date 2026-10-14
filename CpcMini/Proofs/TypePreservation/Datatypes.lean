@@ -3,7 +3,7 @@ module
 public import CpcMini.Proofs.TypePreservation.Common
 import all CpcMini.Proofs.TypePreservation.Common
 public import CpcMini.Proofs.TypePreservation.Helpers
-import all CpcMini.SmtModel
+import all CpcMini.Proofs.ModelEval
 
 public section
 
