@@ -11,6 +11,29 @@ private def assumptions (input : String) : Option (List Term) :=
   | .ok (assums, _) => some assums
   | .error _ => none
 
+-- Sort applications share an allocator with ordinary sorts and reuse the same
+-- instance across repeated uses, aliases and higher-order application syntax.
+private def sortConstructorPrelude : String :=
+  "(declare-sort U 0) (declare-sort Box 1)"
+
+#guard assumptions (sortConstructorPrelude ++
+    "(define BU () (Box U))
+     (assume @p0 BU) (assume @p1 (_ Box U))
+     (assume @p2 (Box Int)) (assume @p3 (Box (Box U)))
+     (declare-sort V 0) (assume @p4 V)") ==
+  some [.USort 3, .USort 3, .USort 4, .USort 5, .USort 6]
+
+#guard assumptions (sortConstructorPrelude ++
+    "(declare-sort Pair 2) (define PU () (Pair U))
+     (assume @p0 (PU Int)) (assume @p1 (Pair U Int))
+     (assume @p2 (Pair Int U))") == some [.USort 4, .USort 4, .USort 5]
+
+#guard assumptions (sortConstructorPrelude ++
+    "(assume @p0 Box) (assume @p1 (Box Box))") == some [.Stuck, .Stuck]
+#guard (assumptions (sortConstructorPrelude ++
+    "(declare-const b (Box U)) (assume @p0 (= b b))")).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool]
+
 -- Nullary definitions from the CPC signature are available without repeating
 -- their `define` commands in the proof.
 #guard assumptions "(assume @p0 String)" ==
@@ -163,6 +186,40 @@ private def swappedPairUse : String :=
 
 #guard (assumptions swappedPairUse).map (List.map __eo_typeof) == some [.Bool, .Bool]
 #guard (assumptions swappedPairUse).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool, SmtType.Bool]
+
+-- Open sort applications in datatype fields are instantiated with the datatype.
+-- Inference recovers the argument of Box from the operand's allocated sort.
+private def boxedDatatypeUses : String :=
+  "(declare-sort Box 1)
+   (declare-datatype D (par (A) ((empty) (wrap (unbox (Box A))))))
+   (declare-const b (Box Int)) (declare-const d (D Int))
+   (assume @p0 (= (wrap b) d))
+   (assume @p1 (= (unbox d) b))
+   (assume @p2 (= (as empty (D Int)) (as empty (D Int))))
+   (assume @p3 ((_ is wrap) d))
+   (assume @p4 (= ((_ update unbox) d b) d))
+   (declare-const bb (Box Bool)) (declare-const db (D Bool))
+   (assume @p5 (= (wrap bb) db))"
+
+#guard (assumptions boxedDatatypeUses).map (List.map __eo_typeof) ==
+  some [.Bool, .Bool, .Bool, .Bool, .Bool, .Bool]
+#guard (assumptions boxedDatatypeUses).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) ==
+  some [SmtType.Bool, SmtType.Bool, SmtType.Bool, SmtType.Bool, SmtType.Bool, SmtType.Bool]
+
+-- A datatype argument can itself contain an open parameter while its template
+-- is read; it must not be allocated as a ground sort prematurely.
+private def boxedListUses : String :=
+  parametricListPrelude ++
+  "(declare-sort Box 1)
+   (declare-datatype W (par (A) ((pack (unpack (Box (L A)))))))
+   (declare-const b (Box (L Int))) (declare-const w (W Int))
+   (assume @p0 (= (pack b) w))
+   (assume @p1 (= (unpack w) b))"
+
+#guard (assumptions boxedListUses).map (List.map __eo_typeof) == some [.Bool, .Bool]
+#guard (assumptions boxedListUses).map
     (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool, SmtType.Bool]
 
 -- Spec translates the instantiated declarations produced by the parser.

@@ -49,9 +49,14 @@ assumption set together with the steps that refute it; an `assume` after a `step
 `assume-push` or `step-pop` is refused, where Ethos accepts one anywhere.
 `include` and `reference` commands are ignored: Logos has the signature built in and does not
 check the proof against the original input problem.
-A `declare-sort` of arity `n` declares a symbol whose type is the sort of sorts, or a function
-type into it, so that arity `0` declares an uninterpreted sort.  The sort of sorts is not itself
-syntax: `Type` is an ordinary symbol name, which cvc5 output declares (e.g. proofs from Verus).
+A `declare-sort` of arity `0` declares an uninterpreted sort; a positive arity declares
+a sort constructor. The parser stores each constructor's identity and arity and maps
+its ground applications to ordinary uninterpreted sorts. Repeated applications share
+the same sort ID, using the same allocator as ordinary sort declarations. Applications
+containing datatype parameters stay symbolic until those parameters are instantiated.
+The parser retains the applications behind allocated sorts for datatype constructor
+inference. The sort of sorts is not itself syntax: `Type` is an ordinary symbol name,
+which cvc5 output declares (e.g. proofs from Verus).
 A `define` with parameters is a macro, since Eunoia has no lambda: its body is kept as an
 s-expression and read again wherever the defined symbol is applied, with the parameters bound
 to the arguments given there.  Consequently a parameter's declared type is not used, an error

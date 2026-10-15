@@ -245,9 +245,9 @@ the specification's `__eo_to_smt`, so the executable links the specification
 layer, even though the checker itself never consults it (the proof rules remain
 untyped syntactic manipulations, and the semantics is not used as an oracle).
 A proof that Logos accepts but whose side conditions fail is reported as
-`incomplete` rather than `correct` — `test/regress/sexp/test-declare-sort.cpc` is
-one, since it declares a sort of arity 1 and the specification has no
-counterpart for a sort constructor applied to a sort.
+`incomplete` rather than `correct`. The parser normalizes datatype instances and
+uninterpreted sort applications before these checks; clients constructing EO
+terms directly must supply the instantiated types themselves.
 
 What is still outside the theorem: the s-expression reader and the parser
 (`Logos/Sexp.lean`, `Logos/Parser.lean`, `Cpc/Parser.lean`) are unverified, so the

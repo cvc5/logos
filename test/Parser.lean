@@ -328,10 +328,10 @@ private def dtOps : DatatypeOps TestTerm where
       d.constructors.flatMap fun c =>
         (c.name, .app (.atom s!"cons {c.name}") (.gathered (c.selectors.map (·.2)))) ::
           c.selectors.map fun (sel, _) => (sel, .atom s!"sel {sel}")
-  elaborate t := .app (.atom "elab") t
+  elaborate t := pure (.app (.atom "elab") t)
   ascribe
-    | c@(.app (.atom _) _), sort => some (.app (.app (.atom "as") c) sort)
-    | _, _ => none
+    | c@(.app (.atom _) _), sort => pure (some (.app (.app (.atom "as") c) sort))
+    | _, _ => pure none
 
 private def dtConfig : Config TestTerm String TestCmd (List TestCmd) :=
   { testConfig with datatypes := some dtOps }

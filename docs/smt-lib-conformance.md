@@ -123,10 +123,11 @@ way SMT-LIB underspecifies partial standard operators.
 
 ## Uninterpreted sort constructors
 
-An uninterpreted parametric *sort* is refused later: `(declare-sort U 1)` parses,
-and an application of it has no counterpart in the specification, so the side
-conditions fail and the run reports `incomplete` rather than `correct`.
-`test/regress/sexp/test-declare-sort.cpc` is that case.
+The parser supports declarations such as `(declare-sort Box 1)` by mapping each
+ground application, such as `(Box Int)`, to an ordinary uninterpreted sort.
+Repeated uses of the same constructor and arguments share a sort; different
+instances get distinct sort IDs. The specification uses its existing `USort`
+representation. `test/regress/sexp/test-declare-sort.cpc` exercises this path.
 
 ## What is faithful, and is easy to assume otherwise
 

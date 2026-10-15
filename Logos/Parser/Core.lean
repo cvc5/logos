@@ -334,6 +334,14 @@ structure DatatypeSpec (T : Type) where
   arity : Nat := 0
   constructors : List (ConsSpec T)
 
+/-- Sort constructors and their ground instances share the ordinary sort allocator. -/
+structure SortState (T : Type) where
+  count : Nat := 0
+  constructors : List (T × Nat) := []
+  instances : List (T × T) := []
+
+abbrev ElaborationM (T : Type) := StateM (SortState T)
+
 /--
 How a calculus represents the contents of a `declare-datatypes` block.
 
@@ -372,12 +380,12 @@ structure DatatypeOps (T : Type) where
   one), return the application of the instance the arguments determine, and
   otherwise the term unchanged.
   -/
-  elaborate : T → T := id
+  elaborate : T → ElaborationM T T := pure
   /--
   `(as c S)`: the instance of the generic form `c` that the sort `S` names, or
   `none` if `c` is not one or `S` is not an instance of its datatype.
   -/
-  ascribe : T → T → Option T := fun _ _ => none
+  ascribe : T → T → ElaborationM T (Option T) := fun _ _ => pure none
 
 /-!
 ## Configuration
@@ -424,6 +432,8 @@ structure Config (T R C CL : Type) where
   wellTyped : T → Bool := fun _ => true
   /-- The `n`-th uninterpreted sort. -/
   mkUSort : Nat → T
+  /-- A parser-local sort constructor, identified by its sort ID and arity. -/
+  mkSortConstructor : Option (Nat → Nat → T) := none
   /-- The `n`-th uninterpreted constant, of the given type. -/
   mkUConst : Nat → T → T
   /-- Function application. -/
@@ -458,8 +468,8 @@ structure Config (T R C CL : Type) where
 
 
 structure State (T : Type) where
-  /-- Number of uninterpreted sorts declared so far. -/
-  usCount : Nat := 0
+  /-- Uninterpreted sorts allocated while parsing and elaborating. -/
+  sorts : SortState T := {}
   /-- Number of uninterpreted constants declared so far. -/
   ufCount : Nat := 0
   /-- Number of proof-stack entries pushed so far. -/
@@ -488,6 +498,12 @@ structure State (T : Type) where
   parametricSorts : Std.HashMap String Nat := {}
 
 abbrev ParserM (T : Type) := StateT (State T) (Except String)
+
+/-- Run elaboration with the sort table of the current proof. -/
+def runElaboration {A : Type} (action : ElaborationM T A) : ParserM T A := do
+  let (a, sorts) := action.run (← get).sorts
+  modify fun s => { s with sorts }
+  return a
 
 def State.ofOps (ops : List (OpDecl T)) : State T :=
   { ops := ops.foldl (fun m d => m.insert d.name (m.getD d.name [] ++ [d])) {} }
@@ -584,13 +600,13 @@ Apply `head` to `args` and hand the result to the calculus to elaborate
 constructor, selector or sort becomes the instance it means.  Every application
 the parser builds goes through here.
 -/
-def applyArgs (cfg : Config T R C CL) (head : T) (args : List T) : T :=
-  if args.isEmpty then head
+def applyArgs (cfg : Config T R C CL) (head : T) (args : List T) : ParserM T T :=
+  if args.isEmpty then pure head
   else
     let t := args.foldl cfg.apply head
     match cfg.datatypes with
-    | some d => d.elaborate t
-    | none => t
+    | some d => runElaboration (d.elaborate t)
+    | none => pure t
 
 mutual
 
@@ -644,7 +660,7 @@ partial def parseTermCore (cfg : Config T R C CL) : Sexp → ParserM T T
     | .expr (.atom "as" :: _) =>
       -- A type ascription is a qualified identifier, so it may head an
       -- application.
-      return applyArgs cfg (← parseTerm cfg f) args
+      return ← applyArgs cfg (← parseTerm cfg f) args
     | _ =>
       match asOpHead f with
       | some (name, idxs) => parseApp cfg name idxs args
@@ -668,7 +684,8 @@ partial def parseAs (cfg : Config T R C CL) (name : String) (ty : Sexp) : Parser
   if let some d := cfg.datatypes then
     if !bound.isEmpty then
       let sort ← parseTerm cfg ty
-      if let some t := resolve cfg (bound.filterMap (d.ascribe · sort)) then
+      let candidates ← bound.mapM (fun t => runElaboration (d.ascribe t sort))
+      if let some t := resolve cfg (candidates.filterMap id) then
         return t
   parseApp cfg name [ty] []
 
@@ -726,7 +743,7 @@ partial def parseUnderscoreExpr (cfg : Config T R C CL) (rest : List Sexp)
   | f :: inner => do
     let head ← parseTerm cfg f
     let inner ← inner.mapM (parseTerm cfg)
-    return applyArgs cfg head (inner ++ args)
+    return ← applyArgs cfg head (inner ++ args)
   | [] => throw "Error: expected an operator name or a term after _"
 
 /--
@@ -743,7 +760,7 @@ partial def parseUnderscoreApp (cfg : Config T R C CL) (name : String)
     parseApp cfg name idxs args
   else
     let head ← parseTerm cfg (.expr (.atom name :: idxs))
-    return applyArgs cfg head args
+    return ← applyArgs cfg head args
 
 /--
 Build the application of the operator (or declared symbol) `name`, indexed by
@@ -758,12 +775,12 @@ partial def parseApp (cfg : Config T R C CL) (name : String) (idxs : List Sexp)
       throw s!"Error: {name} takes {m.params.length} arguments but is applied to {args.length}"
     -- A macro whose body denotes a function may be applied to further arguments.
     let (args, extra) := args.splitAt m.params.length
-    return applyArgs cfg (← expandMacro cfg name m args) extra
+    return ← applyArgs cfg (← expandMacro cfg name m args) extra
   let decls := (← get).ops.getD name []
   let bound := (← get).terms.getD name []
   -- A symbol a proof declares takes no indices, so indexed syntax is an
   -- operator and nothing else.
-  let boundCands := if idxs.isEmpty then bound.map (applyArgs cfg · args) else []
+  let boundCands ← if idxs.isEmpty then bound.mapM (applyArgs cfg · args) else pure []
   let opCand : Option T ←
     if decls.isEmpty then pure none else do
       let idxTerms ← idxs.mapM (parseTerm cfg)
@@ -786,7 +803,7 @@ partial def parseApp (cfg : Config T R C CL) (name : String) (idxs : List Sexp)
               {args.length} arguments"
   if !idxs.isEmpty then
     throw s!"Error: unknown indexed operator {name}"
-  return applyArgs cfg (← parseTermCore cfg (.atom name)) args
+  return ← applyArgs cfg (← parseTermCore cfg (.atom name)) args
 
 /-- Build an already-resolved operator application. -/
 partial def buildOpApp (cfg : Config T R C CL) (name : String) (d : OpDecl T)
@@ -798,7 +815,7 @@ partial def buildOpApp (cfg : Config T R C CL) (name : String) (d : OpDecl T)
   -- `((_ is cons) l)`, takes its instance from the arguments.
   if args.isEmpty then return t
   match cfg.datatypes with
-  | some dt => return dt.elaborate t
+  | some dt => runElaboration (dt.elaborate t)
   | none => return t
 
 /--
@@ -1087,9 +1104,9 @@ def declareSymbol (cfg : Config T R C CL) (name : String) (ty : T) : ParserM T U
   if cfg.isType ty then
     modify fun s =>
       { s with
-        usCount := s.usCount + 1,
+        sorts := { s.sorts with count := s.sorts.count + 1 },
         terms := s.terms.insert name
-          (cfg.mkUSort (s.usCount + 1) :: s.terms.getD name []) }
+          (cfg.mkUSort (s.sorts.count + 1) :: s.terms.getD name []) }
   else
     modify fun s =>
       { s with
@@ -1117,6 +1134,20 @@ def parseSortType (cfg : Config T R C CL) (n : Nat) : ParserM T T :=
   | n + 1 => do
     let arrow ← parseTerm cfg (.atom "->")
     return (rightAssoc cfg.apply arrow (List.replicate (n + 2) cfg.mkType)).getD cfg.mkType
+
+/-- Bind a sort constructor using a fresh identity, or the calculus's kind encoding. -/
+def declareSort (cfg : Config T R C CL) (name : String) (arity : Nat) : ParserM T Unit := do
+  if arity != 0 then
+    if let some mk := cfg.mkSortConstructor then
+      modify fun s =>
+        let t := mk (s.sorts.count + 1) arity
+        { s with
+          sorts := { s.sorts with
+            count := s.sorts.count + 1,
+            constructors := (t, arity) :: s.sorts.constructors },
+          terms := s.terms.insert name (t :: s.terms.getD name []) }
+      return
+  declareSymbol cfg name (← parseSortType cfg arity)
 
 /--
 Parse the parameter list of a `define`.  Only the parameter names are recorded:
@@ -1213,10 +1244,7 @@ where
       declareSymbol cfg (← parseSymbol name) (← parseFunType cfg args ty)
       return .decl
     | .expr [.atom "declare-sort", name, arity] => do
-      -- `(declare-sort S n)` declares a symbol of type `(-> Type … Type)`; for
-      -- `n = 0` that is `Type` itself, i.e. an uninterpreted sort.
-      let arity ← parseArity arity
-      declareSymbol cfg (← parseSymbol name) (← parseSortType cfg arity)
+      declareSort cfg (← parseSymbol name) (← parseArity arity)
       return .decl
     | .expr [.atom "declare-datatypes", .expr sorts, .expr bodies] => do
       parseDatatypes cfg sorts bodies
