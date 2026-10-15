@@ -334,11 +334,15 @@ structure DatatypeSpec (T : Type) where
   arity : Nat := 0
   constructors : List (ConsSpec T)
 
-/-- Sort constructors and their ground instances share the ordinary sort allocator. -/
+/-- Sort allocation and the datatype templates and instances of the current proof. -/
 structure SortState (T : Type) where
   count : Nat := 0
   constructors : List (T × Nat) := []
   instances : List (T × T) := []
+  /-- Datatype templates and counters for their declaration and instance identities. -/
+  datatypes : List T := []
+  datatypeCount : Nat := 0
+  datatypeInstanceCount : Nat := 0
 
 abbrev ElaborationM (T : Type) := StateM (SortState T)
 
@@ -365,8 +369,9 @@ structure DatatypeOps (T : Type) where
   The constructors of a datatype, and the selectors of a constructor, are in
   declaration order; the datatypes are in the order `productiveOrder` settled
   on, which need not be the one they were declared in.
+  The action may register templates and allocate declaration identities.
   -/
-  mkDecls : List (DatatypeSpec T) → Option (List (String × T))
+  mkDecls : List (DatatypeSpec T) → ElaborationM T (Option (List (String × T)))
   /--
   The `k`-th type parameter of the block being declared, as its constructors'
   argument types write it.  `none` if the calculus has no parametric datatypes,
@@ -1086,7 +1091,7 @@ def parseDatatypes (cfg : Config T R C CL) (sorts bodies : List Sexp) : ParserM 
   -- The block is built in an order that witnesses its datatypes, which is not
   -- necessarily the one it was written in; see `productiveOrder`.
   let order := productiveOrder (names.zip (bodies.map fun (_, ctors) => bodyRefs names (.expr ctors)))
-  let some bindings := dtOps.mkDecls (order.filterMap (specs[·]?))
+  let some bindings ← runElaboration (dtOps.mkDecls (order.filterMap (specs[·]?)))
     | throw s!"Error: could not build the declaration of {String.intercalate ", " names}"
   modify fun s =>
     { s with

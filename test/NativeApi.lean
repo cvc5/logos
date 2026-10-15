@@ -72,6 +72,25 @@ private def sortConstructorProof : String :=
 #guard nativeAccepts sortConstructorProof
 #guard verdict sortConstructorProof == Verdict.correct
 
+-- Applying a selector to the wrong constructor is underspecified separately
+-- at each instance. These assumptions are satisfiable: the two Int results
+-- may differ even though A never occurs in a field of P.
+private def phantomInstanceProof : String :=
+  "(declare-datatype P (par (A) ((empty) (wrap (value Int)))))
+   (assume @p0 (not (= (value (as empty (P Int)))
+                      (value (as empty (P Bool))))))
+   (step @p1 :rule refl :args ((value (as empty (P Int)))))
+   (step @p2 :rule contra :premises (@p1 @p0))"
+
+#guard (parseProof phantomInstanceProof).toOption.isSome
+#guard !uncheckedAccepts phantomInstanceProof
+#guard !nativeAccepts phantomInstanceProof
+#guard verdict phantomInstanceProof == Verdict.incorrect
+
+-- Repeated uses of one instance still agree, and the same derivation then
+-- refutes an actual contradiction with all translation checks satisfied.
+#guard verdict (phantomInstanceProof.replace "(P Bool)" "(P Int)") == Verdict.correct
+
 -- Raw EO sort applications still have no SMT translation. A native client
 -- bypassing the parser must provide instantiated sorts itself.
 private def rawSortApplication : List Term × CCmdList :=

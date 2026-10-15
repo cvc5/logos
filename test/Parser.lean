@@ -323,7 +323,7 @@ and `elaborate` marks every application it is given.
 private def dtOps : DatatypeOps TestTerm where
   mkRef n := .atom s!"ref {n}"
   mkParam := some fun k => .atom s!"param {k}"
-  mkDecls dts := some <| dts.flatMap fun d =>
+  mkDecls dts := pure <| some <| dts.flatMap fun d =>
     (d.name, .atom s!"sort {d.name}/{d.arity}") ::
       d.constructors.flatMap fun c =>
         (c.name, .app (.atom s!"cons {c.name}") (.gathered (c.selectors.map (·.2)))) ::

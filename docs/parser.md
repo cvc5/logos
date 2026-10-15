@@ -72,6 +72,16 @@ constructor instances from arguments and selector instances from their operand's
 Parameter lists and datatype templates live in parser metadata, with no parametric
 datatype constructor in `Eo.Term`. The parser instantiates sort applications as it reads
 them, so assumptions and proof commands contain monomorphic declarations.
+Each instantiated block receives names of the form `.par_1_P`. Its identity is
+cached by the declaration block and the complete list of type arguments, including
+unused parameters: `(P Int)` and `(P Bool)` remain distinct even if their fields
+have identical types. All members of a mutually recursive block share the instance
+ID, and their recursive references, constructors and selectors use the generated
+names. The parser retains the template and arguments for constructor inference;
+open applications in templates are named only after their arguments are ground.
+To prevent collisions, source datatype names beginning with `.` acquire one extra
+leading dot internally. This also applies to their recursive references and does
+not change how those names are written in proof files.
 `Spec.lean` translates those declarations directly;
 it does not instantiate parametric datatypes. Clients constructing EO terms without the
 parser must supply the instantiated declarations themselves.
