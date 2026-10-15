@@ -263,8 +263,8 @@ reasoning — on the quantifier-free linear fragments the two agree — and on t
 fragments it touches it makes `correct` claim slightly less than *unsatisfiable
 in SMT-LIB*. Separately, the semantics extends SMT-LIB with sorts and operators
 the standard does not define, sets and sequences among them, where conformance is
-not a question that arises; and parametric datatypes are refused outright rather
-than mismodeled. [docs/smt-lib-conformance.md](docs/smt-lib-conformance.md) has
+not a question that arises; and non-uniform and nested recursive datatype declarations
+are refused by the parser. [docs/smt-lib-conformance.md](docs/smt-lib-conformance.md) has
 all three kinds and what each costs.
 
 The proof of the core checker is agnostic to the proof rules being used, i.e.

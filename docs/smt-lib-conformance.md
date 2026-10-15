@@ -10,8 +10,8 @@ SMT-LIB in three ways, and they are different kinds of thing:
 - **Extensions.** Sets and sequences are not in SMT-LIB at all, and neither are
   the auxiliary operators the semantics adds. Conformance is not defined for
   them, so nothing here is measured against the standard.
-- **Refusals.** Parametric datatypes are rejected rather than interpreted, which
-  costs coverage and nothing else.
+- **Refusals.** Non-uniform and nested recursive datatype declarations are
+  rejected during parsing, which costs coverage and nothing else.
 
 **None of them is a gap in the proof.** The theorem is proven, and it says what
 it says about the semantics it is stated against. What the narrowings record is
@@ -123,19 +123,17 @@ the available set operators preserve; and out-of-bounds `seq.nth` is
 underspecified through a model-dependent function, `@oob_seq_nth`, in the same
 way SMT-LIB underspecifies partial standard operators.
 
-## A coverage limit, not a semantic one: parametric datatypes
+## Datatype support and coverage limits
 
-Parametric datatypes are refused, not mismodeled. Both the sort list and a `par`
-body are rejected during parsing, in `Logos/Parser.lean`, with `parametric
-datatype ... is not supported`, and the run exits 1 without a verdict. The generic parser can
-read them, but CPC does not yet give them a representation to be read into;
-[`parametric-datatypes.md`](parametric-datatypes.md) is the plan for doing so, which leaves the
-model semantics as it is.
+The parser supports parametric datatypes by instantiating their declarations
+before passing terms to the checker. The model semantics remains monomorphic.
+The [parser documentation](parser.md) describes the supported declarations and
+their restrictions: each block shares one arity, recursive uses apply exactly
+the block's parameters in order, and a datatype being declared cannot occur
+inside an earlier parametric datatype's arguments. Declarations outside these
+restrictions are rejected during parsing.
 
-This costs coverage and nothing else: a proof over parametric datatypes is not
-checked, rather than checked against the wrong meaning.
-
-A parametric *sort* is refused later and more gently: `(declare-sort U 1)` parses,
+An uninterpreted parametric *sort* is refused later: `(declare-sort U 1)` parses,
 and an application of it has no counterpart in the specification, so the side
 conditions fail and the run reports `incomplete` rather than `correct`.
 `test/regress/sexp/test-declare-sort.cpc` is that case.
