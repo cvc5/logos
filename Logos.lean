@@ -8,7 +8,5 @@ public import Logos.Sexp
 import all Logos.Sexp
 public import Logos.Parser
 import all Logos.Parser
-public import Logos.Parser.Datatypes
-import all Logos.Parser.Datatypes
 
 public section

@@ -263,9 +263,8 @@ reasoning — on the quantifier-free linear fragments the two agree — and on t
 fragments it touches it makes `correct` claim slightly less than *unsatisfiable
 in SMT-LIB*. Separately, the semantics extends SMT-LIB with sorts and operators
 the standard does not define, sets and sequences among them, where conformance is
-not a question that arises; and non-uniform and nested recursive datatype declarations
-are refused by the parser. [docs/smt-lib-conformance.md](docs/smt-lib-conformance.md) has
-all three kinds and what each costs.
+not a question that arises. [docs/smt-lib-conformance.md](docs/smt-lib-conformance.md)
+describes these narrowings and extensions.
 
 The proof of the core checker is agnostic to the proof rules being used, i.e.
 the core definition of Logos and its correctness does not depend on the particular rules of the calculus.

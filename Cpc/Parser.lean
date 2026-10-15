@@ -7,8 +7,8 @@
 
 module
 
-public import Logos.Parser.Datatypes
-import all Logos.Parser.Datatypes
+public import Logos.Parser
+import all Logos.Parser
 public import Cpc.Logos
 import all Cpc.Logos
 
@@ -2047,7 +2047,9 @@ private def parserTermBuild : Logos.Parser.DatatypeTermView Term native_String �
   | .indexed rebuild index => rebuild index
   | .atom t => t
 
-private def parserDatatypeTerms : Logos.Parser.DatatypeTerms Term native_String where
+private def parserDatatypeTerms : Logos.Parser.DatatypeTerms Term where
+  Name := native_String
+  nameBEq := inferInstance
   name := native_string_lit
   view := parserTermView
   build := parserTermBuild
@@ -2056,6 +2058,8 @@ private def parserDatatypeTerms : Logos.Parser.DatatypeTerms Term native_String 
 
 def parserConfig : Logos.Parser.Config Term CRule CCmd CCmdList where
   ops := parserOps
+  macros := parserMacros
+  datatypeTerms := some parserDatatypeTerms
   parseLiteral := parserLiteral
   isType := (· == .Type)
   mkType := .Type
@@ -2076,6 +2080,6 @@ def parserConfig : Logos.Parser.Config Term CRule CCmd CCmdList where
 
 
 def parseProof (proof : String) : Except String (List Term × CCmdList) :=
-  Logos.Parser.parseProofWithDatatypes parserDatatypeTerms parserConfig parserMacros proof
+  Logos.Parser.parseProof parserConfig proof
 
 end Eo

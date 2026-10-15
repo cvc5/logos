@@ -2,7 +2,7 @@
 
 Logos's soundness theorem is stated against `Cpc/SmtModel.lean`, a formalization
 of SMT-LIB semantics written independently of the checker. It parts company with
-SMT-LIB in three ways, and they are different kinds of thing:
+SMT-LIB in two ways, and they are different kinds of thing:
 
 - **Narrowings.** On three standard theories — arrays, `Real`, and uninterpreted
   sorts — the semantics admits fewer models than SMT-LIB does. These change what
@@ -10,10 +10,8 @@ SMT-LIB in three ways, and they are different kinds of thing:
 - **Extensions.** Sets and sequences are not in SMT-LIB at all, and neither are
   the auxiliary operators the semantics adds. Conformance is not defined for
   them, so nothing here is measured against the standard.
-- **Refusals.** Non-uniform and nested recursive datatype declarations are
-  rejected during parsing, which costs coverage and nothing else.
 
-**None of them is a gap in the proof.** The theorem is proven, and it says what
+**Neither is a gap in the proof.** The theorem is proven, and it says what
 it says about the semantics it is stated against. What the narrowings record is
 that the model class is slightly smaller than SMT-LIB's, so `correct` claims
 slightly less than the words *these assumptions are unsatisfiable* are normally
@@ -123,15 +121,7 @@ the available set operators preserve; and out-of-bounds `seq.nth` is
 underspecified through a model-dependent function, `@oob_seq_nth`, in the same
 way SMT-LIB underspecifies partial standard operators.
 
-## Datatype support and coverage limits
-
-The parser supports parametric datatypes by instantiating their declarations
-before passing terms to the checker. The model semantics remains monomorphic.
-The [parser documentation](parser.md) describes the supported declarations and
-their restrictions: each block shares one arity, recursive uses apply exactly
-the block's parameters in order, and a datatype being declared cannot occur
-inside an earlier parametric datatype's arguments. Declarations outside these
-restrictions are rejected during parsing.
+## Uninterpreted sort constructors
 
 An uninterpreted parametric *sort* is refused later: `(declare-sort U 1)` parses,
 and an application of it has no counterpart in the specification, so the side
@@ -153,10 +143,10 @@ conditions fail and the run reports `incomplete` rather than `correct`.
 ## Where this is written down elsewhere
 
 The write-up, [`smt-model-definitions.pdf`](smt-model-definitions.pdf), states the
-same three kinds in its introduction and then each narrowing again at the
+same narrowings and extensions in its introduction and then each narrowing again at the
 definition that introduces it — arrays under the type constructors and again
 where maps are defined, the rational assumption where values are introduced, and
 the cardinality assumption where uninterpreted sort values are. The parser's
-refusal is in [`parser.md`](parser.md). This page is the list as it matters to
+supported syntax is in [`parser.md`](parser.md). This page is the list as it matters to
 somebody running the checker; the write-up is where the definitions and their
 reasoning are.

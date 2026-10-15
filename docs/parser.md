@@ -9,16 +9,17 @@ assumptions the parser reads out of a file.
 
 ## Structure
 
-The parser is split into three parts.
-`Logos/Parser.lean` is signature-independent: it reads the command and term grammar and
-resolves premise references, but knows nothing about any particular operator or proof rule.
-`Logos/Parser/Datatypes.lean` is also signature-independent: it elaborates parametric datatype
-sorts, constructors and selectors, and reads proofs using the resulting configuration.
-A calculus supplies its term representation through `Logos.Parser.DatatypeTerms`:
-name conversion, term views and constructors, its type query, and its stuck term.
+The parser has a shared implementation and a generated configuration for each calculus.
+`Logos/Parser.lean` exposes the shared `Logos.Parser.parseProof` entry point.
+Its implementation reads the command and term grammar, resolves premise references,
+and elaborates datatype sorts, constructors and selectors. These details live in
+`Logos/Parser/Core.lean` and `Logos/Parser/Datatypes.lean`.
 `Cpc/Parser.lean` is auto-generated from the calculus alongside `Cpc/Logos.lean`: it lists
 the operator declarations, macros and proof rules of CPC, supplies the term adapter and
-command constructors, and calls `Logos.Parser.parseProofWithDatatypes`.
+command constructors, and calls `Logos.Parser.parseProof parserConfig`.
+The configuration's `datatypeTerms` field supplies name conversion, term views and
+constructors, its type query, and its stuck term through `Logos.Parser.DatatypeTerms`.
+Datatype elaboration is internal to the shared parser.
 
 Because the configuration is generated, an operator's surface syntax comes from its Eunoia
 declaration metadata.  The generic `.argList` arity implements Eunoia's `:arg-list` attribute:
