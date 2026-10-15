@@ -2075,7 +2075,6 @@ def parserConfig : Logos.Parser.Config Term CRule CCmd CCmdList where
   mkVar := some fun name ty => Term.Var (Term.String (native_string_lit name)) ty
 
 
-
 def parseProof (proof : String) : Except String (List Term × CCmdList) :=
   Logos.Parser.parseProofWithDatatypes parserDatatypeTerms parserConfig parserMacros proof
 
