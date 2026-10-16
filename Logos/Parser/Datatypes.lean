@@ -69,8 +69,13 @@ private def renameBlock (repr : DatatypeTerms T) (dd : DatatypeBlock T repr.Name
   (dd.zip names).map fun ((_, d), name) =>
     (name, d.map (List.map (fun t => renameRefs repr renames (repr.view t))))
 
+/--
+What a generic form stands for: a sort, constructor or selector of a parametric
+datatype, with the datatype's parameters, its template sort, and the source name
+and arity of each datatype of its block; or a sort constructor of an arity.
+-/
 private inductive Generic (T N : Type) where
-  | datatype : List N → T → List String → Generic T N
+  | datatype : List N → T → List (String × Nat) → Generic T N
   | sort : Nat → Generic T N
 
 /-- A term with a parser-local mapping from generic sorts and operators to
@@ -92,9 +97,58 @@ private partial def closedType (repr : DatatypeTerms T) (bound : List repr.Name)
         closedType repr (dd.map (·.1) ++ bound) (repr.view t)
   | _ => true
 
+/-- A block of parametric datatypes being instantiated by `instanceOf`. -/
+private structure Template (T N : Type) where
+  /-- The block, with its datatypes under their internal names. -/
+  dd : DatatypeBlock T N
+  /-- The source name and arity of each datatype of the block. -/
+  info : List (String × Nat)
+  /-- The template sorts of the proof, which substitution does not enter. -/
+  templates : List T
+
+/-- The template sort of the `k`-th datatype of `tpl`, applied to `args`. -/
+private def Template.app [Inhabited T] (repr : DatatypeTerms T) (tpl : Template T repr.Name)
+    (k : Nat) (args : List T) : T :=
+  let sort := match tpl.dd[k]? with
+    | some (name, _) => repr.build (.datatype name tpl.dd)
+    | none => repr.stuck
+  args.foldl (fun f a => repr.build (.apply f a)) sort
+
+/-- The parameters of the `k`-th datatype of `tpl`, as its fields write them. -/
+private def Template.params (repr : DatatypeTerms T) (tpl : Template T repr.Name) (k : Nat) :
+    List repr.Name :=
+  (List.range ((tpl.info[k]?.map (·.2)).getD 0)).map (paramName repr)
+
+/--
+The instances one call of `instanceOf` discovers, numbered in the order they are
+found: each one's datatype position and arguments, its name, and the instances
+its fields refer to.
+-/
+private structure Explore (T N : Type) where
+  keys : Array (Nat × List T) := #[]
+  names : Array N := #[]
+  edges : Array (List Nat) := #[]
+
+private abbrev ExploreM (T N : Type) := StateT (Explore T N) (TermElaborationM T N)
+
+/-- A bound on the instances one instantiation may discover; `checkRegular` keeps it finite. -/
+private def maxInstances : Nat := 10000
+
+/-- The positions reachable from `i` along `edges`, including `i`. -/
+private def reachable (edges : Array (List Nat)) (i : Nat) : List Nat :=
+  go (edges.size + 1) [i] [i]
+where
+  go : Nat → List Nat → List Nat → List Nat
+    | 0, _, seen => seen
+    | fuel + 1, frontier, seen =>
+      let next := (frontier.flatMap (edges.getD · [])).eraseDups.filter (!seen.contains ·)
+      if next.isEmpty then seen else go fuel next (seen ++ next)
+
+mutual
 -- Open applications remain symbolic in datatype templates. Ground datatype
--- applications get a named block, keyed by the template and *all* arguments;
--- ground uninterpreted applications get an ordinary sort from the same table.
+-- applications are instantiated by `instanceOf`, keyed by the template and *all*
+-- arguments; ground uninterpreted applications get an ordinary sort from the
+-- same table.
 private partial def normalizeSort (repr : DatatypeTerms T) (cfg : Config T R C CL) :
     DatatypeTermView T repr.Name → TermElaborationM T repr.Name T
   | .apply f a => do
@@ -106,29 +160,13 @@ private partial def normalizeSort (repr : DatatypeTerms T) (cfg : Config T R C C
       if let some (_, ty) := state.instances.find? (fun (app, _) => app.value == t) then
         return ty.value
       if let some template := state.datatypes.find? (fun d => d.value == head) then
-        if let [(_, .datatype params _ sourceNames)] := template.generics then
+        if let [(_, .datatype params _ info)] := template.generics then
           if args.length == params.length && args.all (fun a =>
               closedType repr [] (repr.view a) && cfg.isType (repr.typeOf a)) then
-            if let .datatype _ dd := repr.view head then
-              let id := state.datatypeInstanceCount + 1
-              modify fun s => { s with datatypeInstanceCount := id }
-              let names := sourceNames.map fun n => repr.name (s!".par_{id}_" ++ n)
-              let instantiated := renameBlock repr dd names
-              let instantiated := mapFields
-                (substs repr (state.datatypes.map (·.value)) params args) instantiated
-              let instantiated ← instantiated.mapM fun (n, d) => do
-                let d ← d.mapM (List.mapM (fun t => normalizeSort repr cfg (repr.view t)))
-                return (n, d)
-              -- Register every member together so mutual references and later
-              -- applications of another member use exactly the same block.
-              let instances := (dd.zip names).map fun ((old, _), new) =>
-                let app := args.foldl (fun f a => repr.build (.apply f a))
-                  (repr.build (.datatype old dd))
-                (⟨app, []⟩, ⟨repr.build (.datatype new instantiated), []⟩)
-              modify fun s => { s with instances := instances ++ s.instances }
-              if let some (_, ty) := instances.find? (fun (app, _) => app.value == t) then
-                return ty.value
-              return repr.stuck
+            if let .datatype s dd := repr.view head then
+              if let some j := dd.findIdx? (·.1 == s) then
+                let tpl := { dd, info, templates := state.datatypes.map (·.value) }
+                return ← instanceOf repr cfg tpl j args
       if let some (_, arity) := state.constructors.find? (fun (c, _) => c.value == head) then
         if args.length == arity && args.all (fun a =>
             closedType repr [] (repr.view a) && cfg.isType (repr.typeOf a)) then
@@ -149,6 +187,109 @@ private partial def normalizeSort (repr : DatatypeTerms T) (cfg : Config T R C C
       return repr.build (.constructorType
         (← normalizeSort repr cfg (repr.view t)) (← normalizeSort repr cfg (repr.view u)))
   | t => pure (repr.build t)
+
+/--
+What a field refers to with the `k`-th datatype of `tpl` applied to `args`: the
+instance, if it was built before, and otherwise a reference to the instance
+being discovered, which is numbered if it is new.  `src` is the instance whose
+field this is.
+-/
+private partial def refInstance (repr : DatatypeTerms T) (cfg : Config T R C CL)
+    (tpl : Template T repr.Name) (src : Option Nat) (k : Nat) (args : List T) :
+    ExploreM T repr.Name T := do
+  let args ← args.mapM fun a => StateT.lift (normalizeSort repr cfg (repr.view a))
+  let app := tpl.app repr k args
+  if let some (_, ty) := (← StateT.lift get).instances.find? (fun (a, _) => a.value == app) then
+    return ty.value
+  let idx ← match (← get).keys.findIdx? (· == (k, args)) with
+    | some idx => pure idx
+    | none => do
+      let id ← StateT.lift (modifyGet fun s =>
+        (s.datatypeInstanceCount + 1, { s with datatypeInstanceCount := s.datatypeInstanceCount + 1 }))
+      let name := repr.name (s!".par_{id}_" ++ (tpl.info[k]?.map (·.1)).getD "")
+      modifyGet fun ex => (ex.keys.size,
+        { ex with keys := ex.keys.push (k, args), names := ex.names.push name, edges := ex.edges.push [] })
+  if let some src := src then
+    modify fun ex => { ex with edges := ex.edges.modify src (idx :: ·) }
+  return repr.build (.ref ((← get).names.getD idx (repr.name "")))
+
+/-- Replace each reference to a datatype of `tpl` in a field of instance `src` (`refInstance`). -/
+private partial def replaceRefs (repr : DatatypeTerms T) (cfg : Config T R C CL)
+    (tpl : Template T repr.Name) (src : Nat) (view : DatatypeTermView T repr.Name) :
+    ExploreM T repr.Name T := do
+  let (head, args) := appSpine repr view []
+  if let .ref q := repr.view head then
+    if let some k := tpl.dd.findIdx? (·.1 == q) then
+      if args.length == (tpl.params repr k).length then
+        return ← refInstance repr cfg tpl (some src) k args
+  match view with
+  | .apply f a => return repr.build (.apply
+      (← replaceRefs repr cfg tpl src (repr.view f)) (← replaceRefs repr cfg tpl src (repr.view a)))
+  | .constructorType f a => return repr.build (.constructorType
+      (← replaceRefs repr cfg tpl src (repr.view f)) (← replaceRefs repr cfg tpl src (repr.view a)))
+  | t => return repr.build t
+
+/--
+The instance of the `j`-th datatype of `tpl` at the ground sorts `args`.
+
+The instances it needs are discovered first: instantiating the fields of one
+instance names the instances of the block's datatypes they refer to, and so on
+until no new one appears.  Those that refer to each other in a cycle are built
+together as one declaration block, ordered by `productiveOrder`, and blocks are
+built after the blocks they refer to, so every reference is either within its
+block or to an already built type.  Every instance built is registered, so a
+later application with the same template and arguments reuses it.
+-/
+private partial def instanceOf (repr : DatatypeTerms T) (cfg : Config T R C CL)
+    (tpl : Template T repr.Name) (j : Nat) (args : List T) : TermElaborationM T repr.Name T := do
+  let discover : ExploreM T repr.Name (T × Array (List (List T))) := do
+    let start ← refInstance repr cfg tpl none j args
+    let mut fields := #[]
+    let mut i := 0
+    while i < (← get).keys.size && i < maxInstances do
+      let (k, as) := (← get).keys.getD i (0, [])
+      let ctors := (tpl.dd[k]?.map (·.2)).getD []
+      let ctors ← ctors.mapM fun c => c.mapM fun t => do
+        let t := substs repr tpl.templates (tpl.params repr k) as t
+        let t ← replaceRefs repr cfg tpl i (repr.view t)
+        StateT.lift (normalizeSort repr cfg (repr.view t))
+      fields := fields.push ctors
+      i := i + 1
+    return (start, fields)
+  let ((start, fields), ex) ← discover.run {}
+  if ex.keys.isEmpty then return start
+  if fields.size < ex.keys.size then return repr.stuck
+  let n := ex.keys.size
+  let reach := (Array.range n).map (reachable ex.edges)
+  let component (i : Nat) : List Nat :=
+    (List.range n).filter fun k => (reach.getD i []).contains k && (reach.getD k []).contains i
+  let name (i : Nat) : repr.Name := ex.names.getD i (repr.name "")
+  let mut built : Array (Option T) := Array.replicate n none
+  for _ in [0:n] do
+    for i in [0:n] do
+      let c := component i
+      let deps := (c.flatMap (ex.edges.getD · [])).filter (!c.contains ·)
+      if c.all (built.getD · none |>.isNone) && deps.all (built.getD · none |>.isSome) then
+        -- References to instances of other blocks become their types.
+        let close (t : T) : T := deps.eraseDups.foldl (fun t d =>
+          match built.getD d none with
+          | some ty => subst repr tpl.templates (name d) ty (repr.view t)
+          | none => t) t
+        let members := c.map fun m => (name m, ((fields.getD m []).map (List.map close)))
+        let refs := members.map fun (m, ctors) => (m, ctors.map (List.filterMap fun t =>
+          match repr.view t with
+          | .ref q => if c.any (name · == q) then some q else none
+          | _ => none))
+        let block := (productiveOrder refs).filterMap (members[·]?)
+        for m in c do
+          built := built.set! m (some (repr.build (.datatype (name m) block)))
+  let instances := (List.range n).filterMap fun i => do
+    let (k, as) ← ex.keys[i]?
+    let ty ← built.getD i none
+    return ((⟨tpl.app repr k as, []⟩ : ElaboratedTerm T repr.Name), (⟨ty, []⟩ : ElaboratedTerm T repr.Name))
+  modify fun s => { s with instances := instances ++ s.instances }
+  return (built.getD 0 none).getD repr.stuck
+end
 
 -- Recover the applications behind allocated sorts when inferring datatype
 -- parameters, e.g. match Box A against the sort allocated for Box Int.
@@ -188,7 +329,12 @@ private partial def matchType (repr : DatatypeTerms T) (names : List repr.Name) 
     DatatypeTermView T repr.Name → DatatypeTermView T repr.Name → Array (Option T) → Option (Array (Option T))
   | .ref p, t, bs =>
       if names.contains p then matchParam names p (repr.build t) bs
-      else if repr.build (.ref p) == repr.build t then some bs else none
+      else if repr.build (.ref p) == repr.build t then some bs
+      else match t with
+        -- Typing resolves only a bare reference to its datatype, so a reference
+        -- applied to arguments meets the operand's template sort by name.
+        | .datatype s _ => if s == p then some bs else none
+        | _ => none
   | .apply f a, .apply g b, bs | .constructorType f a, .constructorType g b, bs => do
       matchType repr names (repr.view a) (repr.view b)
         (← matchType repr names (repr.view f) (repr.view g) bs)
@@ -197,15 +343,8 @@ private partial def matchType (repr : DatatypeTerms T) (names : List repr.Name) 
       if names.contains s then matchParam names s (repr.build (.datatype t ee)) bs
       else if s == t && dd == ee then some bs
       else if s == t then matchDecl repr names dd ee bs else none
-  | .datatype s dd, t, bs =>
-      if names.contains s then matchParam names s (repr.build t) bs
-      else
-        -- Typing resolves a recursive reference to the generic datatype. Its
-        -- operand expands to that template applied to the instance arguments.
-        let (head, args) := appSpine repr t []
-        if head == repr.build (.datatype s dd) && args.length == names.length then
-          matchCons repr names (names.map (fun p => repr.build (.ref p))) args bs
-        else none
+  | .datatype s _, t, bs =>
+      if names.contains s then matchParam names s (repr.build t) bs else none
   | t, u, bs => if repr.build t == repr.build u then some bs else none
 private partial def matchDecl (repr : DatatypeTerms T) (names : List repr.Name) :
     DatatypeBlock T repr.Name → DatatypeBlock T repr.Name → Array (Option T) → Option (Array (Option T))
@@ -318,31 +457,44 @@ private def ascribe (repr : DatatypeTerms T) (isType : T → Bool)
     return ascribeOp repr (sortInstances (← get)) op ty (repr.view op.value)
   return none
 
-private def datatypeBindings (repr : DatatypeTerms T)
+private def datatypeBindings (repr : DatatypeTerms T) (cfg : Config T R C CL)
     (dts : List (DatatypeSpec (ElaboratedTerm T repr.Name))) :
     TermElaborationM T repr.Name (Option (List (String × ElaboratedTerm T repr.Name))) := do
-  let template := dts.map fun d =>
+  let fields := dts.map fun d =>
     (sourceName repr d.name, d.constructors.map fun c => c.selectors.map fun (_, t) => resolved repr t)
-  let arity := (dts.head?.map (·.arity)).getD 0
-  let names := (List.range arity).map (paramName repr)
+  -- The sort, constructors and selectors of `d`, whose sort is `sort`.
+  let ops (d : DatatypeSpec (ElaboratedTerm T repr.Name)) (sort : T)
+      (wrap : T → ElaboratedTerm T repr.Name) : List (String × ElaboratedTerm T repr.Name) :=
+    match repr.view sort with
+    | .datatype name block =>
+      (d.name, wrap sort) :: d.constructors.zipIdx.flatMap fun (c, i) =>
+        (c.name, wrap (repr.build (.constructor name block i))) ::
+          c.selectors.zipIdx.map fun ((sel, _), j) =>
+            (sel, wrap (repr.build (.selector name block i j)))
+    | _ => [(d.name, wrap sort)]
+  if dts.all (·.arity == 0) then
+    return some (dts.flatMap fun d =>
+      ops d (repr.build (.datatype (sourceName repr d.name) fields)) (⟨·, []⟩))
+  -- A parametric block is a template: its datatypes get internal names, and a
+  -- use of one is instantiated (`instanceOf`).
   let id := (← get).datatypeCount + 1
   modify fun s => { s with datatypeCount := id }
-  let members := dts.zipIdx.map fun (d, i) =>
-    if arity == 0 then sourceName repr d.name else repr.name s!"@datatype{id}_{i}"
-  let template := renameBlock repr template members
-  let bindings := (dts.zip members).flatMap fun (d, name) =>
-    let sort := repr.build (.datatype name template)
-    let generic (op : T) : ElaboratedTerm T repr.Name :=
-      ⟨op, if arity == 0 then [] else [(op, .datatype names sort (dts.map (·.name)))]⟩
-    (d.name, generic sort) :: d.constructors.zipIdx.flatMap fun (c, i) =>
-      (c.name, generic (repr.build (.constructor name template i))) ::
-        c.selectors.zipIdx.map fun ((sel, _), j) =>
-          (sel, generic (repr.build (.selector name template i j)))
-  if arity != 0 then
-    let templates := bindings.filterMap fun (_, t) =>
-      match repr.view t.value with | .datatype .. => some t | _ => none
-    modify fun s => { s with datatypes := templates ++ s.datatypes }
-  return some bindings
+  let members := dts.zipIdx.map fun (_, i) => repr.name s!"@datatype{id}_{i}"
+  let block := renameBlock repr fields members
+  let info := dts.map fun d => (d.name, d.arity)
+  let generic (d : DatatypeSpec (ElaboratedTerm T repr.Name)) (sort op : T) :
+      ElaboratedTerm T repr.Name :=
+    ⟨op, [(op, .datatype ((List.range d.arity).map (paramName repr)) sort info)]⟩
+  let sorts := members.map fun m => repr.build (.datatype m block)
+  modify fun s =>
+    { s with datatypes := (dts.zip sorts).map (fun (d, sort) => generic d sort sort) ++ s.datatypes }
+  let tpl := { dd := block, info, templates := (← get).datatypes.map (·.value) }
+  -- A datatype of arity zero has exactly one instance, built here.
+  let bindings ← (dts.zip sorts).zipIdx.mapM fun ((d, sort), i) => do
+    if d.arity == 0 then
+      return ops d (← instanceOf repr cfg tpl i []) (⟨·, []⟩)
+    return ops d sort (generic d sort)
+  return some bindings.flatten
 
 private def liftArity : Arity T → Arity (ElaboratedTerm T N)
   | .exact n => .exact n
@@ -384,10 +536,11 @@ private def elaborationConfig (repr : DatatypeTerms T) (cfg : Config T R C CL) :
   mkVar := cfg.mkVar.map fun mk s t => ⟨mk s (resolved repr t), []⟩
   datatypes := some
     { mkRef := fun s => ⟨repr.build (.ref (sourceName repr s)), []⟩
-      mkDecls := datatypeBindings repr
+      mkDecls := datatypeBindings repr cfg
       mkParam := some fun k => ⟨repr.build (.ref (paramName repr k)), []⟩
       elaborate := elaborate repr cfg
-      ascribe := ascribe repr cfg.isType }
+      ascribe := ascribe repr cfg.isType
+      isGeneric := fun t => !t.generics.isEmpty }
 
 private def parseConfigured [BEq T] (cfg : Config T R C CL) (ss : List Sexp) :
     Option (DatatypeTerms T) → Except String (List T × CL)

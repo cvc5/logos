@@ -64,19 +64,39 @@ in the body is reported at the use site, and a recursive `define` is rejected.  
 without parameters is read where it is given, as before.
 Datatypes may be mutually recursive.  The generic parser reads parametric datatypes (a
 non-zero arity with `par` bodies) for a calculus that supplies the hooks of `DatatypeOps`:
-the parameters are read as `mkParam`, each use of a generic sort, constructor or selector is
-handed to `elaborate` (or `ascribe`, for `as`), and a block must share one arity, use its own
-datatypes only applied to exactly its parameters, and not nest them in an earlier parametric
-datatype. The shared elaboration in `Logos/Parser/Datatypes.lean` supplies these hooks and infers
+the parameters are read as `mkParam`, and each use of a generic sort, constructor or selector
+is handed to `elaborate` (or `ascribe`, for `as`). The datatypes of one block may have
+different arities, including zero. As SMT-LIB requires, a datatype of the block is applied
+to as many arguments as its arity, and those arguments do not mention the block, so
+`(List (List X))` is refused in the declaration of `List`; nor may it be nested in an earlier
+parametric datatype, as in `(List Tree)`. Otherwise its arguments are arbitrary: the
+parameters in another order, a ground sort such as `(L Int)` inside `L`, or a larger sort.
+The one block SMT-LIB allows that the parser refuses is one where an instance needs
+infinitely many others, such as `N` with a field `(N (Option X))`: the parser builds every
+instance it needs, so it cannot represent one. A block is refused when a parameter flows,
+through an argument larger than itself, around a cycle of references back to itself
+(`checkRegular` in `Logos/Parser/Core.lean`), which is exactly the case where the instances
+are infinite. In particular, a block where each argument of a datatype of the block is a
+parameter or a ground sort is always accepted. A sort given to `declare-const` or
+`declare-fun` that applies a parametric sort to too few or too many arguments is refused.
+The shared elaboration in `Logos/Parser/Datatypes.lean` supplies these hooks and infers
 constructor instances from arguments and selector instances from their operand's type.
 Parameter lists and datatype templates live in parser metadata, with no parametric
 datatype constructor in `Eo.Term`. The parser instantiates sort applications as it reads
 them, so assumptions and proof commands contain monomorphic declarations.
-Each instantiated block receives names of the form `.par_1_P`. Its identity is
-cached by the declaration block and the complete list of type arguments, including
-unused parameters: `(P Int)` and `(P Bool)` remain distinct even if their fields
-have identical types. All members of a mutually recursive block share the instance
-ID, and their recursive references, constructors and selectors use the generated
+Instantiating `(A Int Bool)` first finds the instances it needs, by instantiating the
+fields of each instance found until no new one appears, and then declares them: instances
+that refer to each other in a cycle form one block, and a block is declared after the
+blocks it refers to. In the block `((A 2) (B 2))` with fields `(B Y X)` and `(A Y X)`,
+`(A Int Bool)` and `(B Bool Int)` form one block; in `L` with a field `(L Int)`, `(L Bool)`
+refers to a separate, earlier block for `(L Int)`. A datatype of arity zero in a
+parametric block has one instance, declared with the block.
+Each instance receives a name of the form `.par_1_P`, numbered in the order instances are
+found. Its identity is cached by the declaration block, the datatype and the complete list
+of type arguments, including unused parameters: `(P Int)` and `(P Bool)` remain distinct
+even if their fields have identical types. Every instance found by one instantiation is
+registered, so a later application of another datatype of the block at the same arguments
+reuses it, and their recursive references, constructors and selectors use the generated
 names. The parser retains the template and arguments for constructor inference;
 open applications in templates are named only after their arguments are ground.
 To prevent collisions, source datatype names beginning with `.` acquire one extra

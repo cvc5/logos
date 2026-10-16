@@ -283,6 +283,47 @@ private def mutualParametricUses : String :=
     (List.map (fun t => __smtx_typeof (__eo_to_smt t))) ==
   some [SmtType.Bool, SmtType.Bool, SmtType.Bool, SmtType.Bool]
 
+-- A block may mix arities. Its datatype of arity zero has one instance, which
+-- shares a declaration with the instance it refers to and refers back to it.
+private def mixedArityUses : String :=
+  "(declare-datatypes ((A 1) (B 0))
+     ((par (X) ((leafA (va X)) (mkA (ab B))))
+      ((leafB) (mkB (ba (A Int))))))
+   (declare-const x (A Int)) (declare-const y (A Bool)) (declare-const b B)
+   (assume @p0 (= (ba (mkB x)) x))
+   (assume @p1 (= ((as mkA (A Bool)) b) y))
+   (assume @p2 (= (ab (ba b)) b))"
+
+#guard (assumptions mixedArityUses).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) ==
+  some [SmtType.Bool, SmtType.Bool, SmtType.Bool]
+
+-- Instances that refer to each other at swapped or ground arguments are built
+-- as the blocks they form: (A Int Bool) with (B Bool Int), and (L Bool) after (L Int).
+private def nonUniformUses : String :=
+  "(declare-datatypes ((A 2) (B 2))
+     ((par (X Y) ((a0) (mkA (ab (B Y X)))))
+      (par (X Y) ((b0) (mkB (ba (A Y X)))))))
+   (declare-datatype L (par (X) ((nil) (c (h X) (t (L Int))))))
+   (declare-const x (A Int Bool)) (declare-const y (B Bool Int)) (declare-const l (L Bool))
+   (assume @p0 (= (ab x) y))
+   (assume @p1 (= (mkA (mkB x)) x))
+   (assume @p2 (= (h (t l)) 1))
+   (assume @p3 (= (c true (c 1 (as nil (L Int)))) l))"
+
+#guard (assumptions nonUniformUses).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) ==
+  some [SmtType.Bool, SmtType.Bool, SmtType.Bool, SmtType.Bool]
+
+-- Refused: a datatype needing infinitely many instances, and a declared sort
+-- applying a parametric datatype to the wrong number of arguments.
+#guard assumptions
+    "(declare-datatype O (par (X) ((none) (some (val X)))))
+     (declare-datatype N (par (X) ((nil) (cons (hd X) (tl (N (O X)))))))
+     (assume @p0 true)" == none
+#guard assumptions (parametricListPrelude ++ "(declare-const y (L Int Int)) (assume @p0 true)") == none
+#guard assumptions (parametricListPrelude ++ "(declare-const y L) (assume @p0 true)") == none
+
 -- Declaration identity is part of the key even for structurally equal blocks.
 #guard match assumptions
     "(declare-datatype P (par (A) ((first)))) (define Old () (P Int))

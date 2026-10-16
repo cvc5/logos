@@ -178,7 +178,7 @@ supports non-standard extensions of theories, and defines non-standard internal 
 
 \subsection{Deviations from SMT-LIB}
 
-The formalization that follows departs from SMT-LIB in two ways, which are
+The formalization that follows departs from SMT-LIB in three ways, which are
 different in kind.
 
 First, on three standard theories it admits fewer models than SMT-LIB does:
@@ -197,6 +197,10 @@ Second, the semantics interprets sorts and operators that SMT-LIB does not
 define, including the theories of sets and sequences and the auxiliary operators
 introduced below. Conformance to SMT-LIB is not defined for these, and what they
 are measured against is the meaning CPC gives them.
+
+Third, the parser refuses the parametric datatypes SMT-LIB allows whose
+instances need infinitely many other instances, such as a datatype \code{N} with
+a field of sort \code{(N (Option X))}, rather than interpreting them.
 
 The file \code{docs/smt-lib-conformance.md} records the same list from the point
 of view of somebody running the checker, with what each restriction costs.

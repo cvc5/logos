@@ -347,10 +347,14 @@ private def list : String :=
 private def consOf (name : String) (fields : List TestTerm) : TestTerm :=
   .app (.atom s!"cons {name}") (.gathered fields)
 
+/-- A datatype of the block applied to arguments, as a field type reads it. -/
+private def refOf (name : String) (args : List TestTerm) : TestTerm :=
+  .app (.atom "elab") (args.foldl .app (.atom s!"ref {name}"))
+
 -- A parameter is read as the parameter it is, and the datatype applied to its
--- parameters as the reference to it.
+-- arguments as the application of the reference to it.
 #guard dtAssumptions (list ++ "(assume @p0 cons)") ==
-  some [consOf "cons" [.atom "param 0", .atom "ref List"]]
+  some [consOf "cons" [.atom "param 0", refOf "List" [.atom "param 0"]]]
 
 -- `declare-datatype` reads the arity from the `par`.
 #guard dtAssumptions
@@ -363,8 +367,8 @@ private def consOf (name : String) (fields : List TestTerm) : TestTerm :=
        ((par (X) ((node (val X) (kids (Forest X)))))
         (par (Y) ((leaf) (grow (t (Tree Y)) (rest (Forest Y)))))))
      (assume @p0 node) (assume @p1 grow)"
-  == some [consOf "node" [.atom "param 0", .atom "ref Forest"],
-           consOf "grow" [.atom "ref Tree", .atom "ref Forest"]]
+  == some [consOf "node" [.atom "param 0", refOf "Forest" [.atom "param 0"]],
+           consOf "grow" [refOf "Tree" [.atom "param 0"], refOf "Forest" [.atom "param 0"]]]
 
 -- The parameters are bound only while the block is read.
 #guard dtAssumptions (list ++ "(assume @p0 X)") == none
@@ -379,7 +383,7 @@ private def listUSort : TestTerm := .app (.atom "elab") (.app (.atom "sort List/
 #guard dtAssumptions (listU ++ "(assume @p0 l)") == some [.uconst 2 listUSort]
 #guard dtAssumptions (listU ++ "(assume @p0 (cons x l))") ==
   some [.app (.atom "elab")
-    (.app (.app (consOf "cons" [.atom "param 0", .atom "ref List"]) (.uconst 1 (.usort 1)))
+    (.app (.app (consOf "cons" [.atom "param 0", refOf "List" [.atom "param 0"]]) (.uconst 1 (.usort 1)))
       (.uconst 2 listUSort))]
 #guard dtAssumptions (listU ++ "(assume @p0 ((_ indexed nil) l))") ==
   some [.app (.atom "elab") (.app (.app (.atom "indexed") (consOf "nil" [])) (.uconst 2 listUSort))]
@@ -392,22 +396,63 @@ private def listUSort : TestTerm := .app (.atom "elab") (.app (.atom "sort List/
 #guard dtAssumptions "(declare-datatypes ((D 0)) (((a) (b (s D))))) (assume @p0 b)" ==
   some [consOf "b" [.atom "ref D"]]
 
--- Refused: a `par` whose parameters are not as many as the arity says, or not
--- distinct; a body that is not `par` although the arity is not zero; and a
--- block whose datatypes have different arities.
+-- Refused: a `par` whose parameters are not as many as the arity says, not
+-- distinct, or none at all; a body that is not `par` although the arity is not
+-- zero; and an arity that is not an SMT-LIB numeral.
 #guard dtAssumptions "(declare-datatypes ((L 2)) ((par (X) ((n))))) (assume @p0 n)" == none
 #guard dtAssumptions "(declare-datatypes ((L 0)) ((par (X) ((n))))) (assume @p0 n)" == none
 #guard dtAssumptions "(declare-datatypes ((L 2)) ((par (X X) ((n))))) (assume @p0 n)" == none
 #guard dtAssumptions "(declare-datatypes ((L 1)) (((n)))) (assume @p0 n)" == none
-#guard dtAssumptions
-    "(declare-datatypes ((A 1) (B 0)) ((par (X) ((a (f X)))) ((b)))) (assume @p0 b)" == none
+#guard dtAssumptions "(declare-datatypes ((L 0)) ((par () ((n))))) (assume @p0 n)" == none
+#guard dtAssumptions "(declare-datatype L (par () ((n)))) (assume @p0 n)" == none
+#guard dtAssumptions "(declare-datatypes ((L 01)) ((par (X) ((n))))) (assume @p0 n)" == none
+#guard dtAssumptions "(declare-sort U 01) (assume @p0 true)" == none
 
--- Refused: a datatype of the block used in it without its parameters, or with
--- anything else than them (non-uniform recursion).
+-- The datatypes of one block may have different arities.
+#guard dtAssumptions
+    "(declare-datatypes ((A 1) (B 0)) ((par (X) ((a (f X)))) ((b)))) (assume @p0 b)" ==
+  some [consOf "b" []]
+
+-- A datatype of the block may be applied to any arguments that do not mention
+-- the block, such as its parameters in another order or a ground sort.
+#guard dtAssumptions
+    "(declare-datatypes ((A 2)) ((par (X Y) ((a0) (a (s (A Y X))))))) (assume @p0 a)" ==
+  some [consOf "a" [refOf "A" [.atom "param 1", .atom "param 0"]]]
+#guard (dtAssumptions
+    "(declare-datatypes ((L 1)) ((par (X) ((n) (c (t (L U))))))) (assume @p0 n)").isNone
+#guard (dtAssumptions ("(declare-sort U 0)" ++
+    "(declare-datatypes ((L 1)) ((par (X) ((n) (c (t (L U))))))) (assume @p0 n)")).isSome
+
+-- Refused: a datatype of the block used without its arguments, with the wrong
+-- number of them, or applied to arguments mentioning the block (nesting).
 #guard dtAssumptions
     "(declare-datatypes ((L 1)) ((par (X) ((n) (c (t L)))))) (assume @p0 n)" == none
 #guard dtAssumptions
+    "(declare-datatypes ((L 1)) ((par (X) ((n) (c (t (L X X))))))) (assume @p0 n)" == none
+#guard dtAssumptions
+    "(declare-datatypes ((D 0)) (((n) (c (t (D D)))))) (assume @p0 n)" == none
+#guard dtAssumptions
     "(declare-datatypes ((L 1)) ((par (X) ((n) (c (t (L (L X)))))))) (assume @p0 n)" == none
+
+-- Refused: a datatype whose instances need infinitely many others.  A sort
+-- that grows along a reference is fine when it does not lead back.
+#guard dtAssumptions (list ++
+    "(declare-datatypes ((N 1)) ((par (X) ((n) (c (t (N (List X)))))))) (assume @p0 n)") == none
+#guard dtAssumptions (list ++
+    "(declare-datatypes ((A 1) (B 1))
+       ((par (X) ((a0) (a (t (B (List X))))))
+        (par (Y) ((b0) (b (t (A Y)))))))
+     (assume @p0 a0)") == none
+#guard (dtAssumptions (list ++
+    "(declare-datatypes ((A 1) (B 1))
+       ((par (X) ((a0) (a (t (B (List X))))))
+        (par (Y) ((b0) (b (t (A Y)) (u (B Y)))))))
+     (assume @p0 a0)")).isNone
+#guard (dtAssumptions ("(declare-sort U 0)" ++ list ++
+    "(declare-datatypes ((A 1) (B 1))
+       ((par (X) ((a0) (a (t (B (List X))))))
+        (par (Y) ((b0) (b (t (A U)))))))
+     (assume @p0 a0)")).isSome
 
 -- Refused: a datatype nested inside an earlier parametric one.  Using an
 -- instance of that one at a type from outside the block is fine.
