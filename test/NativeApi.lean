@@ -58,13 +58,8 @@ private def refutation : String :=
    (assume @p0 (= y x))
    (step @p1 :rule symm :premises (@p0))"
 
-/--
-The proof of `test/regress/sexp/test-declare-sort.cpc`: Logos accepts it as a CPC
-derivation, but `(Box U)` -- a declared sort constructor applied to a sort -- has
-no counterpart in `Cpc/SmtModel.lean`, so the side conditions of
-`correct___eo_is_refutation` do not hold of it and `logos` reports `incomplete`.
--/
-private def untranslatable : String :=
+/-- Sort constructor instances are normalized before either front end checks them. -/
+private def sortConstructorProof : String :=
   "(declare-sort U 0)
    (declare-sort Box 1)
    (declare-fun f ((Box U)) U)
@@ -73,13 +68,45 @@ private def untranslatable : String :=
    (step @p1 :rule refl :args ((f b)))
    (step @p2 :rule contra :premises (@p1 @p0))"
 
--- The checker accepts it, so a script used to evaluate to `true`, ...
-#guard uncheckedAccepts untranslatable
--- ... and now evaluates to `false`, with the `incomplete` `logos` reports for it.
-#guard !nativeAccepts untranslatable
-#guard logos_state_verdict (logos_run (parsed untranslatable).1 (parsed untranslatable).2)
-  == Verdict.incomplete
-#guard verdict untranslatable == Verdict.incomplete
+#guard uncheckedAccepts sortConstructorProof
+#guard nativeAccepts sortConstructorProof
+#guard verdict sortConstructorProof == Verdict.correct
+
+-- Applying a selector to the wrong constructor is underspecified separately
+-- at each instance. These assumptions are satisfiable: the two Int results
+-- may differ even though A never occurs in a field of P.
+private def phantomInstanceProof : String :=
+  "(declare-datatype P (par (A) ((empty) (wrap (value Int)))))
+   (assume @p0 (not (= (value (as empty (P Int)))
+                      (value (as empty (P Bool))))))
+   (step @p1 :rule refl :args ((value (as empty (P Int)))))
+   (step @p2 :rule contra :premises (@p1 @p0))"
+
+#guard (parseProof phantomInstanceProof).toOption.isSome
+#guard !uncheckedAccepts phantomInstanceProof
+#guard !nativeAccepts phantomInstanceProof
+#guard verdict phantomInstanceProof == Verdict.incorrect
+
+-- Repeated uses of one instance still agree, and the same derivation then
+-- refutes an actual contradiction with all translation checks satisfied.
+#guard verdict (phantomInstanceProof.replace "(P Bool)" "(P Int)") == Verdict.correct
+
+-- Raw EO sort applications still have no SMT translation. A native client
+-- bypassing the parser must provide instantiated sorts itself.
+private def rawSortApplication : List Term × CCmdList :=
+  let box := Term.UConst 1 (.Apply (.Apply .FunType .Type) .Type)
+  let ty := Term.Apply box (.USort 1)
+  let f := Term.UConst 2 (.Apply (.Apply .FunType ty) (.USort 1))
+  let b := Term.UConst 3 ty
+  let fb := Term.Apply f b
+  let eq := Term.Apply (.Apply (.UOp .eq) fb) fb
+  ([.Apply (.UOp .not) eq],
+    .cons (.step .refl (.cons fb .nil) .nil)
+      (.cons (.step .contra .nil (.cons 0 (.cons 1 .nil))) .nil))
+
+#guard logos_check_refutation rawSortApplication.1 rawSortApplication.2
+#guard !logos_state_is_refutation (logos_run rawSortApplication.1 rawSortApplication.2)
+#guard logos_verdict rawSortApplication.1 rawSortApplication.2 == Verdict.incomplete
 
 -- An input assumption that is not Boolean-typed makes the checker state `Stuck`, and
 -- nothing pushed on top of it is ever a refutation.

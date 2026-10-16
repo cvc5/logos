@@ -84,6 +84,7 @@ generated code the moment it is worth keeping.
 Everything else is hand-written and is left alone: `Cpc/Api*.lean`,
 `Cpc/Diagnostics.lean`, `Cpc/Native.lean` and `Cpc/Native/`, and everything under
 `Cpc/Proofs/` other than `RuleLemmas.lean` and `Rules/`.
+The shared parser and datatype elaboration under `Logos/` are also hand-written.
 
 Rule files are preserved. The compiler emits each rule as its statement with
 `sorry` for a proof, and the proofs live in those same files, so an existing

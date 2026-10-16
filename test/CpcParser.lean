@@ -1,14 +1,38 @@
 import Cpc.Parser
+import Cpc.Spec
 
 namespace Cpc.Parser.Tests
 
-open Eo SmtEval
+open Eo SmtEval Smtm
 
 /-- The assumptions of a parsed CPC proof, or `none` if it does not parse. -/
 private def assumptions (input : String) : Option (List Term) :=
   match Eo.parseProof input with
   | .ok (assums, _) => some assums
   | .error _ => none
+
+-- Sort applications share an allocator with ordinary sorts and reuse the same
+-- instance across repeated uses, aliases and higher-order application syntax.
+private def sortConstructorPrelude : String :=
+  "(declare-sort U 0) (declare-sort Box 1)"
+
+#guard assumptions (sortConstructorPrelude ++
+    "(define BU () (Box U))
+     (assume @p0 BU) (assume @p1 (_ Box U))
+     (assume @p2 (Box Int)) (assume @p3 (Box (Box U)))
+     (declare-sort V 0) (assume @p4 V)") ==
+  some [.USort 3, .USort 3, .USort 4, .USort 5, .USort 6]
+
+#guard assumptions (sortConstructorPrelude ++
+    "(declare-sort Pair 2) (define PU () (Pair U))
+     (assume @p0 (PU Int)) (assume @p1 (Pair U Int))
+     (assume @p2 (Pair Int U))") == some [.USort 4, .USort 4, .USort 5]
+
+#guard assumptions (sortConstructorPrelude ++
+    "(assume @p0 Box) (assume @p1 (Box Box))") == some [.Stuck, .Stuck]
+#guard (assumptions (sortConstructorPrelude ++
+    "(declare-const b (Box U)) (assume @p0 (= b b))")).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool]
 
 -- Nullary definitions from the CPC signature are available without repeating
 -- their `define` commands in the proof.
@@ -81,10 +105,249 @@ private def datatypePrelude : String :=
     "(declare-datatypes ((L 0)) (((nl) (cns (hd Int) (tl L))))) (declare-const x L)
      (assume @p0 (= (tl (cns 1 x)) nl))").isSome
 
--- Its parametric form is refused, as the plural's is.
+-- Its parametric form is accepted, as the plural's is.
 #guard assumptions
     "(declare-datatype L (par (X) ((nl) (cns (hd X) (tl (L X)))))) (assume @p0 true)"
-  == none
+  == some [.Boolean true]
+
+-- Parameters and recursive datatype references share one representation.
+-- Constructor inference must bind X while preserving the recursive L field.
+private def parametricListPrelude : String :=
+  "(declare-datatype L (par (X) ((nl) (cns (hd X) (tl (L X))))))
+   (declare-const xs (L Int))"
+
+private def listConstructorUse : String := "(assume @p0 (= (hd (cns 1 xs)) 1))"
+
+#guard (assumptions (parametricListPrelude ++ listConstructorUse)).map
+    (List.map __eo_typeof) == some [.Bool]
+#guard (assumptions (parametricListPrelude ++ "(assume @p0 (= (as nl (L Int)) (tl xs)))")).map
+    (List.map __eo_typeof) == some [.Bool]
+
+-- Instantiating the outer list must preserve the inner list's own references.
+#guard (assumptions (parametricListPrelude ++
+    "(declare-const xss (L (L Int))) (assume @p0 (= (hd (cns xs xss)) xs))")).map
+    (List.map __eo_typeof) == some [.Bool]
+
+-- Indexed operators instantiate their generic constructor or selector index.
+private def listIndexedUses : String :=
+  "(assume @p0 ((_ is cns) xs)) (assume @p1 (= ((_ update hd) xs 1) xs))"
+
+#guard (assumptions (parametricListPrelude ++ listIndexedUses)).map
+    (List.map __eo_typeof) == some [.Bool, .Bool]
+
+-- Datatype applications are normalized at the parser boundary, including
+-- standalone sorts passed as proof arguments.
+private def listType (field : Term) : Term :=
+  .DatatypeType (native_string_lit ".par_1_L")
+    (.cons (native_string_lit ".par_1_L")
+      (.sum .unit (.sum (.cons field (.cons (.DatatypeTypeRef (native_string_lit ".par_1_L")) .unit)) .null)) .nil)
+
+#guard assumptions (parametricListPrelude ++ "(assume @p0 (L Int))") ==
+  some [listType (.UOp .Int)]
+
+private def reflArgument : Except String (List Term × CCmdList) → Option Term
+  | .ok (_, .cons (.step .refl (.cons t .nil) .nil) .nil) => some t
+  | _ => none
+
+#guard reflArgument (Eo.parseProof
+    (parametricListPrelude ++ "(step @p0 :rule refl :args ((L Int)))")) ==
+  some (listType (.UOp .Int))
+
+-- An unapplied generic sort stays in the parser's metadata and cannot escape
+-- as an ordinary datatype type.
+#guard assumptions (parametricListPrelude ++ "(assume @p0 L)") == some [.Stuck]
+#guard assumptions (parametricListPrelude ++ "(assume @p0 (L L))") == some [.Stuck]
+
+-- A partial sort application keeps its parameters in parser metadata, even
+-- when it is named by a definition and completed later.
+private def parametricPairPrelude : String :=
+  "(declare-datatype P (par (X Y) ((pair (fst X) (snd Y)))))"
+
+#guard assumptions (parametricPairPrelude ++ "(assume @p0 (P Int))") == some [.Stuck]
+#guard assumptions (parametricPairPrelude ++
+    "(define PI () (P Int)) (assume @p0 (PI Bool))") ==
+  assumptions (parametricPairPrelude ++ "(assume @p0 (P Int Bool))")
+
+-- A template can use an earlier datatype with its parameters in a different
+-- order; both templates are instantiated before their operators reach the core.
+private def swappedPairUse : String :=
+  parametricPairPrelude ++
+  "(declare-datatype Q (par (X Y) ((wrap (unwrap (P Y X))))))
+   (declare-const q (Q Int Bool))
+   (assume @p0 (= (wrap (pair true 1)) q))
+   (assume @p1 (= (snd (unwrap q)) 1))"
+
+#guard (assumptions swappedPairUse).map (List.map __eo_typeof) == some [.Bool, .Bool]
+#guard (assumptions swappedPairUse).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool, SmtType.Bool]
+
+-- Open sort applications in datatype fields are instantiated with the datatype.
+-- Inference recovers the argument of Box from the operand's allocated sort.
+private def boxedDatatypeUses : String :=
+  "(declare-sort Box 1)
+   (declare-datatype D (par (A) ((empty) (wrap (unbox (Box A))))))
+   (declare-const b (Box Int)) (declare-const d (D Int))
+   (assume @p0 (= (wrap b) d))
+   (assume @p1 (= (unbox d) b))
+   (assume @p2 (= (as empty (D Int)) (as empty (D Int))))
+   (assume @p3 ((_ is wrap) d))
+   (assume @p4 (= ((_ update unbox) d b) d))
+   (declare-const bb (Box Bool)) (declare-const db (D Bool))
+   (assume @p5 (= (wrap bb) db))"
+
+#guard (assumptions boxedDatatypeUses).map (List.map __eo_typeof) ==
+  some [.Bool, .Bool, .Bool, .Bool, .Bool, .Bool]
+#guard (assumptions boxedDatatypeUses).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) ==
+  some [SmtType.Bool, SmtType.Bool, SmtType.Bool, SmtType.Bool, SmtType.Bool, SmtType.Bool]
+
+-- A datatype argument can itself contain an open parameter while its template
+-- is read; it must not be allocated as a ground sort prematurely.
+private def boxedListUses : String :=
+  parametricListPrelude ++
+  "(declare-sort Box 1)
+   (declare-datatype W (par (A) ((pack (unpack (Box (L A)))))))
+   (declare-const b (Box (L Int))) (declare-const w (W Int))
+   (assume @p0 (= (pack b) w))
+   (assume @p1 (= (unpack w) b))"
+
+#guard (assumptions boxedListUses).map (List.map __eo_typeof) == some [.Bool, .Bool]
+#guard (assumptions boxedListUses).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool, SmtType.Bool]
+
+-- Spec translates the instantiated declarations produced by the parser.
+#guard (assumptions (parametricListPrelude ++ listConstructorUse)).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool]
+#guard (assumptions (parametricListPrelude ++ listIndexedUses)).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool, SmtType.Bool]
+#guard (assumptions (parametricListPrelude ++
+    "(declare-const xss (L (L Int))) (assume @p0 (= (hd (cns xs xss)) xs))")).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool]
+
+-- Unused parameters still distinguish instances, both before and after SMT
+-- translation. Aliases and repeated applications reuse the same identity.
+private def phantomPrelude : String :=
+  "(declare-datatype P (par (A B) ((empty) (wrap (value Int)))))"
+
+#guard match assumptions (phantomPrelude ++
+    "(define PI () (P Int)) (define PIB () (PI Bool))
+     (assume @p0 PIB) (assume @p1 (P Int Int)) (assume @p2 (P Bool Int))
+     (assume @p3 (P Int Bool))") with
+  | some [a, b, c, d] => a == d && a != b && a != c && b != c &&
+      __eo_to_smt_type a != __eo_to_smt_type b &&
+      __eo_to_smt_type b != __eo_to_smt_type c
+  | _ => false
+
+-- An open phantom application must retain its arguments until the enclosing
+-- template is instantiated. Inference must also recover them from an operand.
+private def nestedPhantomUses : String := phantomPrelude ++
+  "(declare-datatype W (par (A B) ((pack (unpack (P B A))))))
+   (declare-const x (W Int Bool)) (declare-const y (W Bool Int))
+   (assume @p0 (= (pack (as empty (P Bool Int))) x))
+   (assume @p1 (= (pack (as empty (P Int Bool))) y))
+   (assume @p2 (= (unpack x) (as empty (P Bool Int))))
+   (assume @p3 (W Int Bool)) (assume @p4 (W Bool Int))"
+
+#guard match assumptions nestedPhantomUses with
+  | some [a, b, c, x, y] =>
+      [a, b, c].map __eo_typeof == [.Bool, .Bool, .Bool] &&
+      [a, b, c].map (fun t => __smtx_typeof (__eo_to_smt t)) ==
+        [SmtType.Bool, SmtType.Bool, SmtType.Bool] && x != y
+  | _ => false
+
+-- The recursive operand carries even a parameter absent from every field.
+private def phantomRecursiveUses : String :=
+  "(declare-datatype C (par (A) ((end) (more (tail (C A))))))
+   (declare-const c (C Int))
+   (assume @p0 (= (tail (more c)) c))
+   (assume @p1 ((_ is more) c))
+   (assume @p2 (= ((_ update tail) c c) c))"
+
+#guard (assumptions phantomRecursiveUses).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) ==
+  some [SmtType.Bool, SmtType.Bool, SmtType.Bool]
+
+-- Instantiating either member of a mutual block registers both. Constructor
+-- inference and selectors must agree with explicit applications of each sort.
+private def mutualParametricUses : String :=
+  "(declare-datatypes ((Tree 1) (Forest 1))
+     ((par (A) ((node (kids (Forest A)))))
+      (par (B) ((leaf) (grow (tree (Tree B)) (rest (Forest B)))))))
+   (declare-const ts (Forest Int)) (declare-const t (Tree Int))
+   (assume @p0 (= (node ts) t))
+   (assume @p1 (= (kids (node ts)) ts))
+   (assume @p2 (= (tree (grow t ts)) t))
+   (assume @p3 (= (rest (grow t ts)) ts))"
+
+#guard (assumptions mutualParametricUses).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) ==
+  some [SmtType.Bool, SmtType.Bool, SmtType.Bool, SmtType.Bool]
+
+-- A block may mix arities. Its datatype of arity zero has one instance, which
+-- shares a declaration with the instance it refers to and refers back to it.
+private def mixedArityUses : String :=
+  "(declare-datatypes ((A 1) (B 0))
+     ((par (X) ((leafA (va X)) (mkA (ab B))))
+      ((leafB) (mkB (ba (A Int))))))
+   (declare-const x (A Int)) (declare-const y (A Bool)) (declare-const b B)
+   (assume @p0 (= (ba (mkB x)) x))
+   (assume @p1 (= ((as mkA (A Bool)) b) y))
+   (assume @p2 (= (ab (ba b)) b))"
+
+#guard (assumptions mixedArityUses).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) ==
+  some [SmtType.Bool, SmtType.Bool, SmtType.Bool]
+
+-- Instances that refer to each other at swapped or ground arguments are built
+-- as the blocks they form: (A Int Bool) with (B Bool Int), and (L Bool) after (L Int).
+private def nonUniformUses : String :=
+  "(declare-datatypes ((A 2) (B 2))
+     ((par (X Y) ((a0) (mkA (ab (B Y X)))))
+      (par (X Y) ((b0) (mkB (ba (A Y X)))))))
+   (declare-datatype L (par (X) ((nil) (c (h X) (t (L Int))))))
+   (declare-const x (A Int Bool)) (declare-const y (B Bool Int)) (declare-const l (L Bool))
+   (assume @p0 (= (ab x) y))
+   (assume @p1 (= (mkA (mkB x)) x))
+   (assume @p2 (= (h (t l)) 1))
+   (assume @p3 (= (c true (c 1 (as nil (L Int)))) l))"
+
+#guard (assumptions nonUniformUses).map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) ==
+  some [SmtType.Bool, SmtType.Bool, SmtType.Bool, SmtType.Bool]
+
+-- Refused: a datatype needing infinitely many instances, and a declared sort
+-- applying a parametric datatype to the wrong number of arguments.
+#guard assumptions
+    "(declare-datatype O (par (X) ((none) (some (val X)))))
+     (declare-datatype N (par (X) ((nil) (cons (hd X) (tl (N (O X)))))))
+     (assume @p0 true)" == none
+#guard assumptions (parametricListPrelude ++ "(declare-const y (L Int Int)) (assume @p0 true)") == none
+#guard assumptions (parametricListPrelude ++ "(declare-const y L) (assume @p0 true)") == none
+
+-- Declaration identity is part of the key even for structurally equal blocks.
+#guard match assumptions
+    "(declare-datatype P (par (A) ((first)))) (define Old () (P Int))
+     (declare-datatype P (par (A) ((second))))
+     (assume @p0 Old) (assume @p1 (P Int))" with
+  | some [a, b] => a != b
+  | _ => false
+
+-- Source names resembling generated ones are escaped injectively, including
+-- declarations encountered after an instance has already been allocated.
+#guard match assumptions
+    "(declare-datatype P (par (A) ((empty) (wrap (value Int)))))
+     (define PI () (P Int))
+     (declare-datatype .par_1_P ((empty1) (wrap1 (value1 Int))))
+     (declare-datatype ..par_1_P ((empty2) (wrap2 (value2 Int))))
+     (assume @p0 PI) (assume @p1 .par_1_P) (assume @p2 ..par_1_P)" with
+  | some [a, b, c] => a != b && a != c && b != c &&
+      [a, b, c].all (fun t => __eo_to_smt_type t != SmtType.None)
+  | _ => false
+
+#guard (assumptions
+    "(declare-datatype .D ((end) (more (tail .D))))
+     (declare-const d .D) (assume @p0 (= (tail (more d)) d))").map
+    (List.map (fun t => __smtx_typeof (__eo_to_smt t))) == some [SmtType.Bool]
 
 -- A constructor, selector or datatype is named by a symbol.  Read as a
 -- constructor, `#b1` would stop meaning the bit-vector literal.

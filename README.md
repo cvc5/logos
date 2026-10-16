@@ -245,9 +245,9 @@ the specification's `__eo_to_smt`, so the executable links the specification
 layer, even though the checker itself never consults it (the proof rules remain
 untyped syntactic manipulations, and the semantics is not used as an oracle).
 A proof that Logos accepts but whose side conditions fail is reported as
-`incomplete` rather than `correct` — `test/regress/sexp/test-declare-sort.cpc` is
-one, since it declares a sort of arity 1 and the specification has no
-counterpart for a sort constructor applied to a sort.
+`incomplete` rather than `correct`. The parser normalizes datatype instances and
+uninterpreted sort applications before these checks; clients constructing EO
+terms directly must supply the instantiated types themselves.
 
 What is still outside the theorem: the s-expression reader and the parser
 (`Logos/Sexp.lean`, `Logos/Parser.lean`, `Cpc/Parser.lean`) are unverified, so the
@@ -263,9 +263,10 @@ reasoning — on the quantifier-free linear fragments the two agree — and on t
 fragments it touches it makes `correct` claim slightly less than *unsatisfiable
 in SMT-LIB*. Separately, the semantics extends SMT-LIB with sorts and operators
 the standard does not define, sets and sequences among them, where conformance is
-not a question that arises; and parametric datatypes are refused outright rather
-than mismodeled. [docs/smt-lib-conformance.md](docs/smt-lib-conformance.md) has
-all three kinds and what each costs.
+not a question that arises; and parametric datatypes needing infinitely many
+instances are refused outright rather than mismodeled.
+[docs/smt-lib-conformance.md](docs/smt-lib-conformance.md) has all three kinds
+and what each costs.
 
 The proof of the core checker is agnostic to the proof rules being used, i.e.
 the core definition of Logos and its correctness does not depend on the particular rules of the calculus.

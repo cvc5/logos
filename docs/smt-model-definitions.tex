@@ -198,7 +198,9 @@ define, including the theories of sets and sequences and the auxiliary operators
 introduced below. Conformance to SMT-LIB is not defined for these, and what they
 are measured against is the meaning CPC gives them.
 
-Third, parametric datatypes are rejected by the parser rather than interpreted.
+Third, the parser refuses the parametric datatypes SMT-LIB allows whose
+instances need infinitely many other instances, such as a datatype \code{N} with
+a field of sort \code{(N (Option X))}, rather than interpreting them.
 
 The file \code{docs/smt-lib-conformance.md} records the same list from the point
 of view of somebody running the checker, with what each restriction costs.
