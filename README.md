@@ -8,7 +8,7 @@ specification, which depends on a complete definition of SMT-LIB semantics in Le
 That definition, `Cpc/SmtModel.lean`, is an independent model semantics for SMT-LIB:
 a standalone Lean formalization of the meaning of SMT-LIB terms that does not depend
 on the checker and can be used on its own.
-See [Correctness](#correctness) below for what that proof establishes and what it still assumes.
+See [Correctness](#correctness) below for what that proof establishes.
 
 The semantics, the correctness specification and the checker are written up in
 [docs/smt-model-definitions.pdf](docs/smt-model-definitions.pdf).
@@ -39,11 +39,6 @@ To build the proof checker, run:
 ```bash
 scripts/build.sh logos
 ```
-
-This builds the `logos` executable only. It does **not** build or check the
-correctness proof, and you do not need that proof to use Logos: the executable
-is the same code that the proof is about, and the proof is checked separately
-(see [Checking the correctness proof](#checking-the-correctness-proof)).
 
 The build script uses the Lean version pinned in `lean-toolchain`. A direct
 `lake build logos` is equivalent on supported hosts; the script additionally
