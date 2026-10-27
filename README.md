@@ -299,10 +299,18 @@ See [`install/README.md`](install/README.md) for more details.
 
 ## The name
 
-*Logos* (λόγος) is Greek for an account or a reasoned argument — what somebody
-gives when asked to justify a claim rather than restate it. A proof is such an
-account, and this checker decides whether one holds. The name is therefore the
-thing the tool reads, and not a claim about how well it reads it.
+*Logos* (λόγος) is Greek for reason, and for the account that justifies a
+claim. An SMT solver that answers "unsat" gives such an account in the form of
+a proof. Logos checks that account, and its own soundness is proven in Lean, so
+a `correct` verdict rests on reasoning that has itself been verified.
+
+The name pairs with that of [Ethos](https://github.com/cvc5/ethos). In
+Aristotle's rhetoric, *ethos* and *logos* are two complementary ways an argument
+earns trust: *ethos* through the credibility of the one making it, and *logos*
+through the reasoning itself. The two checkers complement each other in the
+same way. Ethos is the fast, general checker for any calculus defined in
+Eunoia, including CPC, while Logos checks the same CPC proofs with a guarantee
+that comes from a proof of its own correctness.
 
 ## How this repository is maintained
 
