@@ -8,7 +8,7 @@ specification, which depends on a complete definition of SMT-LIB semantics in Le
 That definition, `Cpc/SmtModel.lean`, is an independent model semantics for SMT-LIB:
 a standalone Lean formalization of the meaning of SMT-LIB terms that does not depend
 on the checker and can be used on its own.
-See [Correctness](#correctness) below for what that proof establishes and what it still assumes.
+See [Correctness](#correctness) below for what that proof establishes.
 
 The semantics, the correctness specification and the checker are written up in
 [docs/smt-model-definitions.pdf](docs/smt-model-definitions.pdf).
@@ -20,8 +20,8 @@ the logical framework of the proof checker Ethos
 calculus in which cvc5 emits proofs, maintained at
 https://github.com/cvc5/cvc5/blob/main/proofs/eo/cpc/Cpc.eo.
 
-Logos has a fully functional CPC parser, meaning that it accepts the same syntax for proofs as Ethos
-(see [docs/parser.md](docs/parser.md)).
+Logos reads CPC proofs in the same s-expression syntax as Ethos
+(see [docs/parser.md](docs/parser.md) for what it supports).
 However, Logos does not support arbitrary Eunoia signatures.
 Instead,
 the proof rules currently used by Logos are automatically generated from the current definition of CPC.
@@ -32,7 +32,9 @@ The definition of Logos evolves and remains in sync with the definition of CPC
 as further reasoning capabilities are added to cvc5.
 See [Regenerating the calculus](#regenerating-the-calculus) for how to rerun that compilation.
 
-## Building the Logos checker
+## Installing Logos
+
+To build the proof checker, run:
 
 ```bash
 scripts/build.sh logos
@@ -45,95 +47,11 @@ Lean's bundled Clang cannot run against the host's glibc. The header of
 `scripts/lean-toolchain-env.sh` describes that fallback and what to do when it
 is not enough.
 
-The checker executable is `logos`; it checks CPC proofs in s-expression syntax.
-The first build of a CPC executable takes roughly 3.5 minutes currently. A
-second executable, `logos-native`, reads an internal input format; see
+The first build takes roughly 3.5 minutes currently. A second executable,
+`logos-native`, reads an internal input format; see
 [docs/lean-native-proofs.md](docs/lean-native-proofs.md).
 
-`CpcMini` is a cut-down calculus used to develop and test the proofs; it has no
-parser and no executable of its own.
-
-To run the same checks as CI locally, use:
-
-```bash
-bash scripts/run-ci.sh
-```
-
-One of them, the `regeneration` group, recompiles the calculus and is skipped
-until `install/get-eo-compiler.sh` has been run once. See
-[Regenerating the calculus](#regenerating-the-calculus).
-
-To build every CPC proof rule, use:
-
-```bash
-scripts/build-all-cpc-rules.sh
-```
-
-The script builds one rule target at a time by default to keep peak memory
-bounded. On machines with more RAM, `--batch-size 2` (or a larger value) trades
-memory for speed. `--all-at-once` enables the previous maximum-parallelism mode
-and may exhaust memory.
-
-**Be warned that building the entire proof development takes over two hours**, and
-it is *not* part of CI: CI compiles only a small representative set of proof
-targets (the `cpc-proofs` group of `scripts/run-ci.sh`). The current
-workarounds:
-
-- Build only what you are working on, one rule at a time:
-  `lake build Cpc.Proofs.Rules.<Rule>`.
-- `scripts/build-all-cpc-rules.sh` is resumable — Lake caches completed
-  targets, so an interrupted run picks up where it left off.
-- Run the same representative subset as CI locally with
-  `bash scripts/run-ci.sh cpc-proofs`.
-- `scripts/check-proof-hygiene.sh` (the `proof-hygiene` CI group) rejects
-  `sorry`, `admit` and `axiom` textually without building anything, so an
-  unproven rule cannot land silently even though CI does not build every proof.
-
-A full build is still the only way to catch a rule whose proof broke, e.g.
-because its statement changed after regenerating the calculus, so it should be
-run (for instance overnight) before a release or after a regeneration.
-
-To remove Lake build artifacts, use either of these equivalent commands:
-
-```bash
-scripts/clean-build.sh
-lake clean
-```
-
-## Regenerating the calculus
-
-The `Cpc` package is compiled from the Eunoia definition of CPC rather than
-written by hand:
-
-```bash
-install/get-eo-compiler.sh                  # once: build the compiler
-install/install-cpc.sh <cvc5>/.../Cpc.eo    # regenerate from a signature
-scripts/build.sh Cpc                        # check the result
-```
-
-Any copy of `Cpc.eo` reachable on the machine can be passed, including one
-being edited; no cvc5 *binary* or build is involved. Regenerating from the
-version last compiled needs no cvc5 checkout at all:
-
-```bash
-install/install-cpc.sh --cached          # regenerate from that version
-install/install-cpc.sh --cached --check  # ask whether it still matches
-```
-
-A plain run is of `Cpc` alone; `--all` adds `CpcMini`, the reduced package of
-the same calculus, which follows the same signature. The `regeneration` CI
-group is `--all --cached --check`, and fails when either package has drifted
-from the signature it came from.
-
-Regeneration rewrites the signature-wide modules of the package but preserves
-the existing per-rule proofs under `Proofs/Rules/`. A rule newly added to CPC
-appears as a `sorry` stub, and a rule whose statement changed keeps its old
-proof and therefore fails to build — both are the intended signal that a proof
-needs attention.
-
-See [`install/README.md`](install/README.md) for more details.
-
-## Using the Logos checker
+## Using Logos
 
 The `logos` executable reads the s-expression (Eunoia) syntax emitted by
 `cvc5 --dump-proofs --proof-format=cpc`:
@@ -232,7 +150,8 @@ about it:
 
   That is: if the parser reads the assumptions `assums` out of `input`, and
   `logos` prints `correct` for `input`, then their conjunction is unsatisfiable.
-  `Main.lean` only reads the file, prints the verdict and picks an exit status.
+  `Main.lean` reads the file, prints the verdict and picks an exit status; it
+  also explains `incorrect` and `incomplete` verdicts on stderr.
 
 The side conditions are not re-implemented for the executable to run: they are
 the predicates of `Cpc/Proofs/Assumptions.lean`, and that file also derives the
@@ -277,12 +196,111 @@ which is also auto-generated based on the calculus.
 `scripts/cpc-loc-summary.py` reports the size of each of these pieces — the specification, the
 checker, the parser and the correctness proof — in lines of code.
 
+## Checking the correctness proof
+
+This section is only needed to re-verify the soundness theorem; it is not
+needed to build or use the checker.
+
+The theorem `correct___logos_check_proof` (see [Correctness](#correctness))
+depends on a correctness proof for every CPC proof rule. To check it in full,
+build every rule first and then the theorem:
+
+```bash
+scripts/build-all-cpc-rules.sh
+lake build Cpc.ApiCorrect
+```
+
+**Be warned that this takes over two hours.** The script builds one rule
+target at a time by default to keep peak memory bounded. On machines with more
+RAM, `--batch-size 2` (or a larger value) trades memory for speed;
+`--all-at-once` builds every rule in one Lake invocation and may exhaust
+memory. The script is resumable: Lake caches completed targets, so an
+interrupted run picks up where it left off. To work on a single rule, build
+just that one with `lake build Cpc.Proofs.Rules.<Rule>`.
+
+The full proof is *not* checked in CI. Instead:
+
+- CI compiles a small representative set of proof targets (the `cpc-proofs`
+  group of `scripts/run-ci.sh`), and typechecks `Cpc.Proofs.Checker` and
+  `Cpc.ApiCorrect` with the per-rule proofs stubbed out
+  (`scripts/check-checker-soundness.sh`).
+- `scripts/check-proof-hygiene.sh` (the `proof-hygiene` CI group) rejects
+  `sorry`, `admit` and `axiom` textually without building anything, so an
+  unproven rule cannot land silently.
+
+A full build is still the only way to catch a rule whose proof broke, e.g.
+because its statement changed after regenerating the calculus, so it should be
+run (for instance overnight) before a release or after a regeneration.
+
+## Development
+
+`CpcMini` is a cut-down calculus used to develop and test the proofs; it has no
+parser and no executable of its own.
+
+To run the same checks as CI locally, use:
+
+```bash
+bash scripts/run-ci.sh
+```
+
+One of them, the `regeneration` group, recompiles the calculus and is skipped
+until `install/get-eo-compiler.sh` has been run once. See
+[Regenerating the calculus](#regenerating-the-calculus).
+
+To remove Lake build artifacts, use either of these equivalent commands:
+
+```bash
+scripts/clean-build.sh
+lake clean
+```
+
+### Regenerating the calculus
+
+The `Cpc` package is compiled from the Eunoia definition of CPC rather than
+written by hand:
+
+```bash
+install/get-eo-compiler.sh                  # once: build the compiler
+install/install-cpc.sh <cvc5>/.../Cpc.eo    # regenerate from a signature
+scripts/build.sh Cpc                        # check the result
+```
+
+Any copy of `Cpc.eo` reachable on the machine can be passed, including one
+being edited; no cvc5 *binary* or build is involved. Regenerating from the
+version last compiled needs no cvc5 checkout at all:
+
+```bash
+install/install-cpc.sh --cached          # regenerate from that version
+install/install-cpc.sh --cached --check  # ask whether it still matches
+```
+
+A plain run is of `Cpc` alone; `--all` adds `CpcMini`, the reduced package of
+the same calculus, which follows the same signature. The `regeneration` CI
+group is `--all --cached --check`, and fails when either package has drifted
+from the signature it came from.
+
+Regeneration rewrites the signature-wide modules of the package but preserves
+the existing per-rule proofs under `Proofs/Rules/`. A rule newly added to CPC
+appears as a `sorry` stub, and a rule whose statement changed keeps its old
+proof and therefore fails to build — both are the intended signal that a proof
+needs attention.
+
+See [`install/README.md`](install/README.md) for more details.
+
 ## The name
 
-*Logos* (λόγος) is Greek for an account or a reasoned argument — what somebody
-gives when asked to justify a claim rather than restate it. A proof is such an
-account, and this checker decides whether one holds. The name is therefore the
-thing the tool reads, and not a claim about how well it reads it.
+*Logos* (λόγος) is Greek for reason, and for the account that justifies a
+claim. An SMT solver that answers "unsat" gives such an account in the form of
+a proof. Logos checks that account, and its own soundness is proven in Lean, so
+a `correct` verdict rests on reasoning that has itself been verified.
+
+The name pairs with that of [Ethos](https://github.com/cvc5/ethos). In
+Aristotle's rhetoric, *ethos* and *logos* are two complementary ways an argument
+earns trust: *ethos* through the credibility of the one making it, and *logos*
+through the reasoning itself. The two checkers complement each other in the
+same way. Ethos is the fast, general checker for any calculus defined in
+Eunoia, including CPC, while Logos checks the same CPC proofs with a guarantee
+that comes from a proof of its own correctness.
 
 ## How this repository is maintained
 
