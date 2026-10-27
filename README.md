@@ -10,12 +10,6 @@ a standalone Lean formalization of the meaning of SMT-LIB terms that does not de
 on the checker and can be used on its own.
 See [Correctness](#correctness) below for what that proof establishes and what it still assumes.
 
-Using Logos and checking its correctness proof are separate tasks. Building
-and running the checker takes a few minutes and does not build the proof;
-checking the proof takes hours and is only needed to re-verify the soundness
-theorem yourself. See [Installing Logos](#installing-logos) and
-[Checking the correctness proof](#checking-the-correctness-proof).
-
 The semantics, the correctness specification and the checker are written up in
 [docs/smt-model-definitions.pdf](docs/smt-model-definitions.pdf).
 
