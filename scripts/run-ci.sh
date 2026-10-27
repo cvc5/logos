@@ -118,7 +118,7 @@ run_regressions() {
   python3 scripts/check-parser-tables.py
 
   echo "Checking parser tests..."
-  lake build Logos.Parser Cpc.Parser
+  lake build Logos.Parser Cpc.Parser Cpc.Spec
   lake env lean test/Parser.lean
   lake env lean test/CpcParser.lean
 
