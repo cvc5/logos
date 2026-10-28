@@ -1,0 +1,7 @@
+; A cvc5 proof over a block whose datatypes have different arities (1 and 0).
+(declare-datatypes ((B 0)(A 1)) (((leafB) (mkB (ba (A Int))))(par (X)((leafA (va X)) (mkA (ab B))))))
+(declare-const x (A Int))
+(define @t1 () (= x (_ (as mkA (A Int)) (mkB x))))
+(assume @p1 @t1)
+(step @p2 :rule dt-cycle :args ((= @t1 false)))
+(step @p3 false :rule eq_resolve :premises (@p1 @p2))

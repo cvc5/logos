@@ -10,8 +10,8 @@ SMT-LIB in three ways, and they are different kinds of thing:
 - **Extensions.** Sets and sequences are not in SMT-LIB at all, and neither are
   the auxiliary operators the semantics adds. Conformance is not defined for
   them, so nothing here is measured against the standard.
-- **Refusals.** Parametric datatypes are rejected rather than interpreted, which
-  costs coverage and nothing else.
+- **Refusals.** Parametric datatypes needing infinitely many instances are
+  rejected rather than interpreted, which costs coverage and nothing else.
 
 **None of them is a gap in the proof.** The theorem is proven, and it says what
 it says about the semantics it is stated against. What the narrowings record is
@@ -123,20 +123,32 @@ the available set operators preserve; and out-of-bounds `seq.nth` is
 underspecified through a model-dependent function, `@oob_seq_nth`, in the same
 way SMT-LIB underspecifies partial standard operators.
 
-## A coverage limit, not a semantic one: parametric datatypes
+## A coverage limit, not a semantic one: non-regular parametric datatypes
 
-Parametric datatypes are refused, not mismodeled. Both the sort list and a `par`
-body are rejected during parsing, in `Logos/Parser.lean`, with `parametric
-datatype ... is not supported`, and the run exits 1 without a verdict. `SmtDatatypeDecl` carries no type parameter, so there is nothing for
-such a declaration to translate to.
+The parser instantiates parametric datatypes as it reads them, building each
+instance a proof uses together with every instance that one needs (see
+[`parser.md`](parser.md)). SMT-LIB also allows a datatype whose instances need
+infinitely many others, such as
 
-This costs coverage and nothing else: a proof over parametric datatypes is not
-checked, rather than checked against the wrong meaning.
+```smt2
+(declare-datatype N (par (X) ((nil) (cons (hd X) (tl (N (Option X)))))))
+```
 
-A parametric *sort* is refused later and more gently: `(declare-sort U 1)` parses,
-and an application of it has no counterpart in the specification, so the side
-conditions fail and the run reports `incomplete` rather than `correct`.
-`test/regress/sexp/test-declare-sort.cpc` is that case.
+where `(N Int)` needs `(N (Option Int))`, which needs `(N (Option (Option Int)))`,
+and so on. Such a block is refused during parsing, in `Logos/Parser/Core.lean`
+(`checkRegular`), and the run exits 1 without a verdict. This costs coverage
+and nothing else: a proof over such a datatype is not checked, rather than
+checked against the wrong meaning. Every other parametric datatype SMT-LIB
+allows is accepted, including blocks mixing arities and datatypes whose own
+datatypes appear in their fields at permuted or ground arguments.
+
+## Uninterpreted sort constructors
+
+The parser supports declarations such as `(declare-sort Box 1)` by mapping each
+ground application, such as `(Box Int)`, to an ordinary uninterpreted sort.
+Repeated uses of the same constructor and arguments share a sort; different
+instances get distinct sort IDs. The specification uses its existing `USort`
+representation. `test/regress/sexp/test-declare-sort.cpc` exercises this path.
 
 ## What is faithful, and is easy to assume otherwise
 
