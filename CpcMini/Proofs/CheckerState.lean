@@ -47,12 +47,6 @@ private theorem eo_to_smt_stuck_eq :
     __eo_to_smt Term.Stuck = SmtTerm.None := by
   rfl
 
-/-- Simplifies EO-to-SMT translation for `and_eq`. -/
-private theorem eo_to_smt_and_eq (A B : Term) :
-    __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) =
-      SmtTerm.and (__eo_to_smt A) (__eo_to_smt B) := by
-  rfl
-
 /-- Lemma about `eo_has_smt_translation_true`. -/
 private theorem eo_has_smt_translation_true :
     RuleProofs.eo_has_smt_translation (Term.Boolean true) := by
@@ -103,128 +97,60 @@ theorem eo_interprets_true_not_false (M : SmtModel) (t : Term) :
   ¬ eo_interprets M t false :=
 by
   exact RuleProofs.eo_interprets_true_not_false M t
-/-- Left-projection lemma for `eo_interprets_and`. -/
-theorem eo_interprets_and_left (M : SmtModel) (A B : Term) :
-  eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) true ->
-  eo_interprets M A true :=
+/-- Every formula of the empty list is interpreted as `true`. -/
+theorem AllInterpretedTrue.nil (M : SmtModel) : AllInterpretedTrue M [] := by
+  intro t ht
+  cases ht
+/-- The head of a list all of whose formulas are interpreted as `true`. -/
+theorem AllInterpretedTrue.head {M : SmtModel} {A : Term} {ts : List Term} :
+  AllInterpretedTrue M (A :: ts) -> eo_interprets M A true :=
 by
-  exact RuleProofs.eo_interprets_and_left M A B
-/-- Right-projection lemma for `eo_interprets_and`. -/
-theorem eo_interprets_and_right (M : SmtModel) (A B : Term) :
-  eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) true ->
-  eo_interprets M B true :=
+  intro h
+  exact h A (List.mem_cons_self)
+/-- The tail of a list all of whose formulas are interpreted as `true`. -/
+theorem AllInterpretedTrue.tail {M : SmtModel} {A : Term} {ts : List Term} :
+  AllInterpretedTrue M (A :: ts) -> AllInterpretedTrue M ts :=
 by
-  exact RuleProofs.eo_interprets_and_right M A B
-/-- Introduction lemma for `eo_interprets_and`. -/
-theorem eo_interprets_and_intro (M : SmtModel) (A B : Term) :
-  eo_interprets M A true ->
-  eo_interprets M B true ->
-  eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) true :=
+  intro h t ht
+  exact h t (List.mem_cons_of_mem A ht)
+/-- Extends a list all of whose formulas are interpreted as `true`. -/
+theorem AllInterpretedTrue.cons {M : SmtModel} {A : Term} {ts : List Term} :
+  eo_interprets M A true -> AllInterpretedTrue M ts -> AllInterpretedTrue M (A :: ts) :=
 by
-  exact RuleProofs.eo_interprets_and_intro M A B
-/-- Derives `eo_interprets_and_false_left` from `right_not_false`. -/
-theorem eo_interprets_and_false_left_of_right_not_false (M : SmtModel) (A B : Term) :
-  eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) false ->
-  ¬ eo_interprets M B false ->
-  eo_interprets M A false :=
+  intro hA hts t ht
+  cases ht with
+  | head => exact hA
+  | tail _ ht => exact hts t ht
+/-- No model interprets every formula of `[Term.Stuck]` as `true`. -/
+theorem AllInterpretedTrue.stuck_absurd (M : SmtModel) :
+  ¬ AllInterpretedTrue M [Term.Stuck] :=
 by
-  intro hAnd hBNotFalse
-  rw [eo_interprets_iff_smt_interprets] at hAnd hBNotFalse ⊢
-  rw [eo_to_smt_and_eq A B] at hAnd
-  cases hAnd with
-  | intro_false hty hEval =>
-      have htyA : __smtx_typeof (__eo_to_smt A) = SmtType.Bool := by
-        have hNN : term_has_non_none_type
-            (SmtTerm.and (__eo_to_smt A) (__eo_to_smt B)) := by
-          unfold term_has_non_none_type
-          rw [hty]
-          simp
-        exact (bool_binop_args_bool_of_non_none (op := SmtTerm.and)
-          (typeof_and_eq (__eo_to_smt A) (__eo_to_smt B)) hNN).1
-      have htyB : __smtx_typeof (__eo_to_smt B) = SmtType.Bool := by
-        have hNN : term_has_non_none_type
-            (SmtTerm.and (__eo_to_smt A) (__eo_to_smt B)) := by
-          unfold term_has_non_none_type
-          rw [hty]
-          simp
-        exact (bool_binop_args_bool_of_non_none (op := SmtTerm.and)
-          (typeof_and_eq (__eo_to_smt A) (__eo_to_smt B)) hNN).2
-      have hEvalA : __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean false := by
-        rw [RuleProofs.model_eval_and_eq] at hEval
-        cases hAeval : __smtx_model_eval M (__eo_to_smt A) <;>
-          cases hBeval : __smtx_model_eval M (__eo_to_smt B) <;>
-          simp [hAeval, hBeval, __smtx_model_eval_and] at hEval
-        case Boolean.Boolean a b =>
-          cases a <;> cases b
-          · simp [SmtEval.native_and] at hEval
-            have hBFalse : smt_interprets M (__eo_to_smt B) false :=
-              smt_interprets.intro_false M (__eo_to_smt B) htyB hBeval
-            exact False.elim (hBNotFalse hBFalse)
-          · simp [SmtEval.native_and] at hEval
-            simp
-          · simp [SmtEval.native_and] at hEval
-            have hBFalse : smt_interprets M (__eo_to_smt B) false :=
-              smt_interprets.intro_false M (__eo_to_smt B) htyB hBeval
-            exact False.elim (hBNotFalse hBFalse)
-          · simp [SmtEval.native_and] at hEval
-      exact smt_interprets.intro_false M (__eo_to_smt A) htyA hEvalA
-/-- Derives `eo_interprets_and_false_right_true` from `left_false_and_right_not_false`. -/
-theorem eo_interprets_and_false_right_true_of_left_false_and_right_not_false
-    (M : SmtModel) (A B : Term) :
-  eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) false ->
-  eo_interprets M A false ->
-  ¬ eo_interprets M B false ->
-  eo_interprets M B true :=
-by
-  intro hAnd hAFalse hBNotFalse
-  rw [eo_interprets_iff_smt_interprets] at hAnd hAFalse hBNotFalse ⊢
-  rw [eo_to_smt_and_eq A B] at hAnd
-  cases hAnd with
-  | intro_false htyAnd hEvalAnd =>
-      cases hAFalse with
-      | intro_false htyA hEvalA =>
-          have htyB : __smtx_typeof (__eo_to_smt B) = SmtType.Bool := by
-            have hNN : term_has_non_none_type
-                (SmtTerm.and (__eo_to_smt A) (__eo_to_smt B)) := by
-              unfold term_has_non_none_type
-              rw [htyAnd]
-              simp
-            exact (bool_binop_args_bool_of_non_none (op := SmtTerm.and)
-              (typeof_and_eq (__eo_to_smt A) (__eo_to_smt B)) hNN).2
-          have hEvalB : __smtx_model_eval M (__eo_to_smt B) = SmtValue.Boolean true := by
-            rw [RuleProofs.model_eval_and_eq] at hEvalAnd
-            cases hBeval : __smtx_model_eval M (__eo_to_smt B) <;>
-              simp [hEvalA, hBeval, __smtx_model_eval_and] at hEvalAnd
-            case Boolean b =>
-              cases b with
-              | false =>
-                  have hBFalse : smt_interprets M (__eo_to_smt B) false :=
-                    smt_interprets.intro_false M (__eo_to_smt B) htyB hBeval
-                  exact False.elim (hBNotFalse hBFalse)
-              | true =>
-                  simp
-          exact smt_interprets.intro_true M (__eo_to_smt B) htyB hEvalB
-/-- Extracts the conjunction of active assumptions from a checker state. -/
-def stateAssumes : CState -> Term
-  | CState.nil => Term.Boolean true
-  | CState.cons (CStateObj.assume F) s =>
-      Term.Apply (Term.Apply (Term.UOp UserOp.and) F) (stateAssumes s)
+  intro h
+  exact eo_interprets_stuck_true_absurd M h.head
+/-
+The three components of a checker state, each a list of formulas read off the
+state head first.  They are lists rather than conjunctions so that nothing here
+names an operator of the calculus.  `Stuck` reads as `[Term.Stuck]`, which no
+model interprets as `true` (`AllInterpretedTrue.stuck_absurd`).
+-/
+/-- Extracts the active assumptions from a checker state. -/
+def stateAssumes : CState -> List Term
+  | CState.nil => []
+  | CState.cons (CStateObj.assume F) s => F :: stateAssumes s
   | CState.cons _ s => stateAssumes s
-  | CState.Stuck => Term.Stuck
-/-- Extracts the list of assumptions introduced by `assume_push` commands in a checker state. -/
-def statePushes : CState -> Term
-  | CState.nil => Term.Boolean true
-  | CState.cons (CStateObj.assume_push F) s =>
-      Term.Apply (Term.Apply (Term.UOp UserOp.and) F) (statePushes s)
+  | CState.Stuck => [Term.Stuck]
+/-- Extracts the assumptions introduced by `assume_push` commands in a checker state. -/
+def statePushes : CState -> List Term
+  | CState.nil => []
+  | CState.cons (CStateObj.assume_push F) s => F :: statePushes s
   | CState.cons _ s => statePushes s
-  | CState.Stuck => Term.Stuck
-/-- Extracts the list of proven terms stored in a checker state. -/
-def stateProvens : CState -> Term
-  | CState.nil => Term.Boolean true
-  | CState.cons (CStateObj.proven F) s =>
-      Term.Apply (Term.Apply (Term.UOp UserOp.and) F) (stateProvens s)
+  | CState.Stuck => [Term.Stuck]
+/-- Extracts the proven terms stored in a checker state. -/
+def stateProvens : CState -> List Term
+  | CState.nil => []
+  | CState.cons (CStateObj.proven F) s => F :: stateProvens s
   | CState.cons _ s => stateProvens s
-  | CState.Stuck => Term.Stuck
+  | CState.Stuck => [Term.Stuck]
 /-
 Because the checker pushes new entries at the head of the state, the initial
 assumptions from `__eo_invoke_assume_list` live in a tail block of reachable
@@ -317,7 +243,7 @@ by
 theorem statePushes_eq_of_stateStepPopSuffix_assume_push
     {root tail : CState} {A : Term} :
   stateStepPopSuffix (CState.cons (CStateObj.assume_push A) tail) root ->
-  statePushes root = Term.Apply (Term.Apply (Term.UOp UserOp.and) A) (statePushes tail) :=
+  statePushes root = A :: statePushes tail :=
 by
   intro hSuffix
   simpa [statePushes] using statePushes_eq_of_stateStepPopSuffix hSuffix
@@ -696,9 +622,9 @@ by
 /-- Derives `state_proven_nth_true` from `context`. -/
 theorem state_proven_nth_true_of_context (M : SmtModel) :
   forall (s : CState) (n : native_Int),
-    eo_interprets M (stateAssumes s) true ->
-    eo_interprets M (statePushes s) true ->
-    eo_interprets M (stateProvens s) true ->
+    AllInterpretedTrue M (stateAssumes s) ->
+    AllInterpretedTrue M (statePushes s) ->
+    AllInterpretedTrue M (stateProvens s) ->
     eo_interprets M (__eo_state_proven_nth s n) true
 :=
 by
@@ -709,33 +635,33 @@ by
       simpa [__eo_state_proven_nth] using eo_interprets_true M
   | Stuck =>
       intro n hAss hPush hProv
-      exact False.elim (eo_interprets_stuck_true_absurd M (by simpa [stateAssumes] using hAss))
+      exact False.elim (AllInterpretedTrue.stuck_absurd M (by simpa [stateAssumes] using hAss))
   | cons so s ih =>
       intro n hAss hPush hProv
       by_cases hZero : n = 0
       · subst hZero
         cases so with
         | assume A =>
-            simpa [__eo_state_proven_nth, __eo_StateObj_proven] using eo_interprets_and_left M A (stateAssumes s) hAss
+            simpa [__eo_state_proven_nth, __eo_StateObj_proven] using AllInterpretedTrue.head hAss
         | assume_push A =>
-            simpa [__eo_state_proven_nth, __eo_StateObj_proven] using eo_interprets_and_left M A (statePushes s) hPush
+            simpa [__eo_state_proven_nth, __eo_StateObj_proven] using AllInterpretedTrue.head hPush
         | proven A =>
-            simpa [__eo_state_proven_nth, __eo_StateObj_proven] using eo_interprets_and_left M A (stateProvens s) hProv
+            simpa [__eo_state_proven_nth, __eo_StateObj_proven] using AllInterpretedTrue.head hProv
       ·
         cases so with
         | assume A =>
-            have hAssTail : eo_interprets M (stateAssumes s) true :=
-              eo_interprets_and_right M A (stateAssumes s) hAss
+            have hAssTail : AllInterpretedTrue M (stateAssumes s) :=
+              AllInterpretedTrue.tail hAss
             simpa [__eo_state_proven_nth, hZero] using
               ih (native_zplus n (native_zneg 1)) hAssTail hPush hProv
         | assume_push A =>
-            have hPushTail : eo_interprets M (statePushes s) true :=
-              eo_interprets_and_right M A (statePushes s) hPush
+            have hPushTail : AllInterpretedTrue M (statePushes s) :=
+              AllInterpretedTrue.tail hPush
             simpa [__eo_state_proven_nth, hZero] using
               ih (native_zplus n (native_zneg 1)) hAss hPushTail hProv
         | proven A =>
-            have hProvTail : eo_interprets M (stateProvens s) true :=
-              eo_interprets_and_right M A (stateProvens s) hProv
+            have hProvTail : AllInterpretedTrue M (stateProvens s) :=
+              AllInterpretedTrue.tail hProv
             simpa [__eo_state_proven_nth, hZero] using
               ih (native_zplus n (native_zneg 1)) hAss hPush hProvTail
 /-- Describes `stateAssumptionTail` after `invoke_assume_list`. -/
@@ -778,13 +704,13 @@ by
 theorem stateAssumes_invoke_assume_list :
   forall {F : CArgList},
     stateOk (__eo_invoke_assume_list CState.nil F) ->
-    stateAssumes (__eo_invoke_assume_list CState.nil F) = argListAssumes F
+    stateAssumes (__eo_invoke_assume_list CState.nil F) = argListTerms F
 :=
 by
   intro F hOk
   induction F with
   | nil =>
-      simp [__eo_invoke_assume_list, stateAssumes, argListAssumes]
+      simp [__eo_invoke_assume_list, stateAssumes, argListTerms]
   | cons A rest ih =>
       have hPushOk :
           stateOk (__eo_push_input_assume_check (assumptionCheckGuard A) A
@@ -799,14 +725,14 @@ by
       change stateAssumes
           (__eo_push_input_assume_check (assumptionCheckGuard A) A
             (__eo_invoke_assume_list CState.nil rest)) =
-        Term.Apply (Term.Apply (Term.UOp UserOp.and) A) (argListAssumes rest)
+        A :: argListTerms rest
       rw [hPushEq]
       simpa [stateAssumes] using ih hRestOk
 /-- Describes `statePushes` after `invoke_assume_list`. -/
 theorem statePushes_invoke_assume_list :
   forall {F : CArgList},
     stateOk (__eo_invoke_assume_list CState.nil F) ->
-    statePushes (__eo_invoke_assume_list CState.nil F) = Term.Boolean true
+    statePushes (__eo_invoke_assume_list CState.nil F) = []
 :=
 by
   intro F hOk
@@ -827,14 +753,14 @@ by
       change statePushes
           (__eo_push_input_assume_check (assumptionCheckGuard A) A
             (__eo_invoke_assume_list CState.nil rest)) =
-        Term.Boolean true
+        []
       rw [hPushEq]
       simpa [statePushes] using ih hRestOk
 /-- Describes `stateProvens` after `invoke_assume_list`. -/
 theorem stateProvens_invoke_assume_list :
   forall {F : CArgList},
     stateOk (__eo_invoke_assume_list CState.nil F) ->
-    stateProvens (__eo_invoke_assume_list CState.nil F) = Term.Boolean true
+    stateProvens (__eo_invoke_assume_list CState.nil F) = []
 :=
 by
   intro F hOk
@@ -855,7 +781,7 @@ by
       change stateProvens
           (__eo_push_input_assume_check (assumptionCheckGuard A) A
             (__eo_invoke_assume_list CState.nil rest)) =
-        Term.Boolean true
+        []
       rw [hPushEq]
       simpa [stateProvens] using ih hRestOk
 /-- Derives `stateOk` from `state_closed_true`. -/
@@ -879,7 +805,7 @@ by
           exact ih hClosed
 /-- Derives `statePushes` from `state_closed_true`. -/
 theorem statePushes_of_state_closed_true :
-  forall {s : CState}, __eo_state_is_closed s = true -> statePushes s = Term.Boolean true
+  forall {s : CState}, __eo_state_is_closed s = true -> statePushes s = []
 :=
 by
   intro s hClosed
@@ -1381,7 +1307,7 @@ by
 theorem stateAssumes_of_checker_true (F : CArgList) (pf : CCmdList) :
   (__eo_checker_is_refutation F pf) = true ->
   stateAssumes (__eo_invoke_cmd_list (__eo_invoke_assume_list CState.nil F) pf) =
-    argListAssumes F :=
+    argListTerms F :=
 by
   intro hChecker
   let S0 := __eo_invoke_assume_list CState.nil F
@@ -1395,5 +1321,5 @@ by
   calc
     stateAssumes S1 = stateAssumes S0 := by
       simpa [S1] using stateAssumes_invoke_cmd_list S0 pf hShape0 hS1Ok
-    _ = argListAssumes F := by
+    _ = argListTerms F := by
       simpa [S0] using stateAssumes_invoke_assume_list hS0Ok

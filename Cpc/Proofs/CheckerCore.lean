@@ -34,8 +34,8 @@ def checkerTruthInvariant (M : SmtModel) : CState -> Prop
   | CState.Stuck => True
   | s =>
       ∀ n : native_Int,
-        eo_interprets M (stateAssumes s) true ->
-        eo_interprets M (statePushes s) true ->
+        AllInterpretedTrue M (stateAssumes s) ->
+        AllInterpretedTrue M (statePushes s) ->
         eo_interprets M (__eo_state_proven_nth s n) true
 /-- Describes `checkerTruthInvariant` on the stuck state. -/
 theorem checkerTruthInvariant_stuck (M : SmtModel) :
@@ -317,8 +317,8 @@ by
 theorem checkerLocalTruthInvariant_head_proven
     (M : SmtModel) (s : CState) (P : Term) :
   checkerLocalTruthInvariant M (CState.cons (CStateObj.proven P) s) ->
-  eo_interprets M (stateAssumes s) true ->
-  eo_interprets M (statePushes s) true ->
+  AllInterpretedTrue M (stateAssumes s) ->
+  AllInterpretedTrue M (statePushes s) ->
   eo_interprets M P true :=
 by
   intro hs hAss hPush
@@ -328,8 +328,8 @@ theorem checkerLocalTruthInvariant_at (M : SmtModel) :
   forall {s : CState},
     checkerLocalTruthInvariant M s ->
     forall n : native_Int,
-      eo_interprets M (stateAssumes s) true ->
-      eo_interprets M (statePushes s) true ->
+      AllInterpretedTrue M (stateAssumes s) ->
+      AllInterpretedTrue M (statePushes s) ->
       eo_interprets M (__eo_state_proven_nth s n) true
 :=
 by
@@ -340,7 +340,7 @@ by
       simpa [__eo_state_proven_nth] using eo_interprets_true M
   | Stuck =>
       intro n hAss hPush
-      exact False.elim (eo_interprets_stuck_true_absurd M (by simpa [stateAssumes] using hAss))
+      exact False.elim (AllInterpretedTrue.stuck_absurd M (by simpa [stateAssumes] using hAss))
   | cons so s ih =>
       intro n hAss hPush
       by_cases hZero : n = 0
@@ -348,26 +348,26 @@ by
         cases so with
         | assume A =>
             simpa [__eo_state_proven_nth, __eo_StateObj_proven] using
-              eo_interprets_and_left M A (stateAssumes s) hAss
+              AllInterpretedTrue.head hAss
         | assume_push A =>
             simpa [__eo_state_proven_nth, __eo_StateObj_proven] using
-              eo_interprets_and_left M A (statePushes s) hPush
+              AllInterpretedTrue.head hPush
         | proven P =>
-            have hAss' : eo_interprets M (stateAssumes s) true := by
+            have hAss' : AllInterpretedTrue M (stateAssumes s) := by
               simpa [stateAssumes] using hAss
-            have hPush' : eo_interprets M (statePushes s) true := by
+            have hPush' : AllInterpretedTrue M (statePushes s) := by
               simpa [statePushes] using hPush
             simpa [__eo_state_proven_nth, __eo_StateObj_proven] using hs.1.true_here hAss' hPush'
       · cases so with
         | assume A =>
-            have hAssTail : eo_interprets M (stateAssumes s) true :=
-              eo_interprets_and_right M A (stateAssumes s) hAss
+            have hAssTail : AllInterpretedTrue M (stateAssumes s) :=
+              AllInterpretedTrue.tail hAss
             simpa [__eo_state_proven_nth, hZero] using
               ih (by simpa [checkerLocalTruthInvariant] using hs)
                 (native_zplus n (native_zneg 1)) hAssTail hPush
         | assume_push A =>
-            have hPushTail : eo_interprets M (statePushes s) true :=
-              eo_interprets_and_right M A (statePushes s) hPush
+            have hPushTail : AllInterpretedTrue M (statePushes s) :=
+              AllInterpretedTrue.tail hPush
             simpa [__eo_state_proven_nth, hZero] using
               ih (by simpa [checkerLocalTruthInvariant] using hs)
                 (native_zplus n (native_zneg 1)) hAss hPushTail
@@ -384,8 +384,8 @@ theorem checkerLocalTruthInvariant_at_var_model (M : SmtModel) :
       model_wf N ->
       model_agrees_on_globals M N ->
       forall n : native_Int,
-        eo_interprets N (stateAssumes s) true ->
-        eo_interprets N (statePushes s) true ->
+        AllInterpretedTrue N (stateAssumes s) ->
+        AllInterpretedTrue N (statePushes s) ->
         eo_interprets N (__eo_state_proven_nth s n) true
 :=
 by
@@ -396,7 +396,7 @@ by
       simpa [__eo_state_proven_nth] using eo_interprets_true N
   | Stuck =>
       intro N hN hAgree n hAss hPush
-      exact False.elim (eo_interprets_stuck_true_absurd N (by simpa [stateAssumes] using hAss))
+      exact False.elim (AllInterpretedTrue.stuck_absurd N (by simpa [stateAssumes] using hAss))
   | cons so s ih =>
       intro N hN hAgree n hAss hPush
       by_cases hZero : n = 0
@@ -404,27 +404,27 @@ by
         cases so with
         | assume A =>
             simpa [__eo_state_proven_nth, __eo_StateObj_proven] using
-              eo_interprets_and_left N A (stateAssumes s) hAss
+              AllInterpretedTrue.head hAss
         | assume_push A =>
             simpa [__eo_state_proven_nth, __eo_StateObj_proven] using
-              eo_interprets_and_left N A (statePushes s) hPush
+              AllInterpretedTrue.head hPush
         | proven P =>
-            have hAss' : eo_interprets N (stateAssumes s) true := by
+            have hAss' : AllInterpretedTrue N (stateAssumes s) := by
               simpa [stateAssumes] using hAss
-            have hPush' : eo_interprets N (statePushes s) true := by
+            have hPush' : AllInterpretedTrue N (statePushes s) := by
               simpa [statePushes] using hPush
             simpa [__eo_state_proven_nth, __eo_StateObj_proven] using
               hs.1.true_in_var_model N hN hAgree hAss' hPush'
       · cases so with
         | assume A =>
-            have hAssTail : eo_interprets N (stateAssumes s) true :=
-              eo_interprets_and_right N A (stateAssumes s) hAss
+            have hAssTail : AllInterpretedTrue N (stateAssumes s) :=
+              AllInterpretedTrue.tail hAss
             simpa [__eo_state_proven_nth, hZero] using
               ih (by simpa [checkerLocalTruthInvariant] using hs)
                 N hN hAgree (native_zplus n (native_zneg 1)) hAssTail hPush
         | assume_push A =>
-            have hPushTail : eo_interprets N (statePushes s) true :=
-              eo_interprets_and_right N A (statePushes s) hPush
+            have hPushTail : AllInterpretedTrue N (statePushes s) :=
+              AllInterpretedTrue.tail hPush
             simpa [__eo_state_proven_nth, hZero] using
               ih (by simpa [checkerLocalTruthInvariant] using hs)
                 N hN hAgree (native_zplus n (native_zneg 1)) hAss hPushTail
@@ -439,8 +439,8 @@ theorem checkerLocalTruthInvariant_at_stable_var_model (M : SmtModel) :
     model_wf M ->
     checkerLocalTruthInvariant M s ->
     checkerExtraInvariant M s ->
-    eo_interprets M (stateAssumes s) true ->
-    eo_interprets M (statePushes s) true ->
+    AllInterpretedTrue M (stateAssumes s) ->
+    AllInterpretedTrue M (statePushes s) ->
     forall (N : SmtModel),
       model_wf N ->
       model_agrees_on_globals M N ->
@@ -455,7 +455,7 @@ by
       simpa [__eo_state_proven_nth] using eo_interprets_true N
   | Stuck =>
       intro N hN hAgree n
-      exact False.elim (eo_interprets_stuck_true_absurd M (by simpa [stateAssumes] using hAss))
+      exact False.elim (AllInterpretedTrue.stuck_absurd M (by simpa [stateAssumes] using hAss))
   | cons so s ih =>
       intro N hN hAgree n
       by_cases hZero : n = 0
@@ -463,22 +463,22 @@ by
         cases so with
         | assume A =>
             have hA : eo_interprets M A true :=
-              eo_interprets_and_left M A (stateAssumes s) hAss
+              AllInterpretedTrue.head hAss
             exact hStable.1 M hM hA N hN hAgree
         | assume_push A =>
             have hA : eo_interprets M A true :=
-              eo_interprets_and_left M A (statePushes s) hPush
+              AllInterpretedTrue.head hPush
             exact hStable.1 M hM hA N hN hAgree
         | proven P =>
-            have hAssTail : eo_interprets M (stateAssumes s) true := by
+            have hAssTail : AllInterpretedTrue M (stateAssumes s) := by
               simpa [stateAssumes] using hAss
-            have hPushTail : eo_interprets M (statePushes s) true := by
+            have hPushTail : AllInterpretedTrue M (statePushes s) := by
               simpa [statePushes] using hPush
-            have hAssN : eo_interprets N (stateAssumes s) true :=
+            have hAssN : AllInterpretedTrue N (stateAssumes s) :=
               stateAssumes_true_in_var_model_of_assumptionStability M hM
                 (by simpa [checkerAssumptionStabilityInvariant] using hStable)
                 hAssTail N hN hAgree
-            have hPushN : eo_interprets N (statePushes s) true :=
+            have hPushN : AllInterpretedTrue N (statePushes s) :=
               statePushes_true_in_var_model_of_assumptionStability M hM
                 (by simpa [checkerAssumptionStabilityInvariant] using hStable)
                 hPushTail N hN hAgree
@@ -486,23 +486,23 @@ by
               hs.1.true_in_var_model N hN hAgree hAssN hPushN
       · cases so with
         | assume A =>
-            have hAssTail : eo_interprets M (stateAssumes s) true :=
-              eo_interprets_and_right M A (stateAssumes s) hAss
+            have hAssTail : AllInterpretedTrue M (stateAssumes s) :=
+              AllInterpretedTrue.tail hAss
             simpa [__eo_state_proven_nth, hZero] using
               ih (by simpa [checkerLocalTruthInvariant] using hs)
                 hStable.2 hAssTail hPush N hN hAgree
                 (native_zplus n (native_zneg 1))
         | assume_push A =>
-            have hPushTail : eo_interprets M (statePushes s) true :=
-              eo_interprets_and_right M A (statePushes s) hPush
+            have hPushTail : AllInterpretedTrue M (statePushes s) :=
+              AllInterpretedTrue.tail hPush
             simpa [__eo_state_proven_nth, hZero] using
               ih (by simpa [checkerLocalTruthInvariant] using hs)
                 hStable.2 hAss hPushTail N hN hAgree
                 (native_zplus n (native_zneg 1))
         | proven P =>
-            have hAssTail : eo_interprets M (stateAssumes s) true := by
+            have hAssTail : AllInterpretedTrue M (stateAssumes s) := by
               simpa [stateAssumes] using hAss
-            have hPushTail : eo_interprets M (statePushes s) true := by
+            have hPushTail : AllInterpretedTrue M (statePushes s) := by
               simpa [statePushes] using hPush
             simpa [__eo_state_proven_nth, hZero] using
               ih hs.2
@@ -719,26 +719,26 @@ def checkerStateInvariant (M : SmtModel) (s : CState) : Prop :=
 theorem checkerTruthInvariant_at (M : SmtModel) {s : CState} :
   checkerTruthInvariant M s ->
   ∀ n : native_Int,
-    eo_interprets M (stateAssumes s) true ->
-    eo_interprets M (statePushes s) true ->
+    AllInterpretedTrue M (stateAssumes s) ->
+    AllInterpretedTrue M (statePushes s) ->
     eo_interprets M (__eo_state_proven_nth s n) true
 :=
 by
   intro hs n hAss hPush
   cases s with
   | Stuck =>
-      exact False.elim (eo_interprets_stuck_true_absurd M (by simpa [stateAssumes] using hAss))
+      exact False.elim (AllInterpretedTrue.stuck_absurd M (by simpa [stateAssumes] using hAss))
   | nil =>
       have hs' : ∀ n : native_Int,
-          eo_interprets M (stateAssumes CState.nil) true ->
-          eo_interprets M (statePushes CState.nil) true ->
+          AllInterpretedTrue M (stateAssumes CState.nil) ->
+          AllInterpretedTrue M (statePushes CState.nil) ->
           eo_interprets M (__eo_state_proven_nth CState.nil n) true := by
         simpa [checkerTruthInvariant] using hs
       exact hs' n hAss hPush
   | cons so s =>
       have hs' : ∀ n : native_Int,
-          eo_interprets M (stateAssumes (CState.cons so s)) true ->
-          eo_interprets M (statePushes (CState.cons so s)) true ->
+          AllInterpretedTrue M (stateAssumes (CState.cons so s)) ->
+          AllInterpretedTrue M (statePushes (CState.cons so s)) ->
           eo_interprets M (__eo_state_proven_nth (CState.cons so s) n) true := by
         simpa [checkerTruthInvariant] using hs
       exact hs' n hAss hPush
@@ -755,19 +755,17 @@ by
     by_cases hZero : n = 0
     · subst hZero
       have hPush' :
-          eo_interprets M
-            (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) (statePushes s)) true := by
+          AllInterpretedTrue M (A :: statePushes s) := by
         simpa [push_assume_eq_cons_of_guard_true, hGuard, statePushes] using hPush
       simpa [push_assume_eq_cons_of_guard_true, hGuard, __eo_state_proven_nth, __eo_StateObj_proven] using
-        eo_interprets_and_left M A (statePushes s) hPush'
-    · have hAss' : eo_interprets M (stateAssumes s) true := by
+        AllInterpretedTrue.head hPush'
+    · have hAss' : AllInterpretedTrue M (stateAssumes s) := by
         simpa [push_assume_eq_cons_of_guard_true, hGuard, stateAssumes] using hAss
       have hPush' :
-          eo_interprets M
-            (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) (statePushes s)) true := by
+          AllInterpretedTrue M (A :: statePushes s) := by
         simpa [push_assume_eq_cons_of_guard_true, hGuard, statePushes] using hPush
-      have hPushTail : eo_interprets M (statePushes s) true :=
-        eo_interprets_and_right M A (statePushes s) hPush'
+      have hPushTail : AllInterpretedTrue M (statePushes s) :=
+        AllInterpretedTrue.tail hPush'
       simpa [push_assume_eq_cons_of_guard_true, hGuard, __eo_state_proven_nth, hZero] using
         checkerTruthInvariant_at M hs
           (native_zplus n (native_zneg 1)) hAss' hPushTail
@@ -776,22 +774,22 @@ by
 theorem push_proven_preserves_truthInvariant_of_contextual_true
     (M : SmtModel) (s : CState) (P : Term) :
   checkerTruthInvariant M s ->
-  (eo_interprets M (stateAssumes s) true ->
-   eo_interprets M (statePushes s) true ->
+  (AllInterpretedTrue M (stateAssumes s) ->
+   AllInterpretedTrue M (statePushes s) ->
    eo_interprets M P true) ->
   checkerTruthInvariant M (CState.cons (CStateObj.proven P) s) :=
 by
   intro hs hP n hAss hPush
   by_cases hZero : n = 0
   · subst hZero
-    have hAss' : eo_interprets M (stateAssumes s) true := by
+    have hAss' : AllInterpretedTrue M (stateAssumes s) := by
       simpa [stateAssumes] using hAss
-    have hPush' : eo_interprets M (statePushes s) true := by
+    have hPush' : AllInterpretedTrue M (statePushes s) := by
       simpa [statePushes] using hPush
     simpa [__eo_state_proven_nth, __eo_StateObj_proven] using hP hAss' hPush'
-  · have hAss' : eo_interprets M (stateAssumes s) true := by
+  · have hAss' : AllInterpretedTrue M (stateAssumes s) := by
       simpa [stateAssumes] using hAss
-    have hPush' : eo_interprets M (statePushes s) true := by
+    have hPush' : AllInterpretedTrue M (statePushes s) := by
       simpa [statePushes] using hPush
     simpa [__eo_state_proven_nth, hZero] using
       checkerTruthInvariant_at M hs
@@ -807,26 +805,26 @@ by
       __eo_invoke_assume_list CState.nil F ≠ CState.Stuck :=
     stateOk_not_stuck hOk
   have hProvens :
-      stateProvens (__eo_invoke_assume_list CState.nil F) = Term.Boolean true :=
+      stateProvens (__eo_invoke_assume_list CState.nil F) = [] :=
     stateProvens_invoke_assume_list hOk
   cases hS : __eo_invoke_assume_list CState.nil F with
   | nil =>
       intro n hAss hPush
-      have hProvens' : stateProvens CState.nil = Term.Boolean true := by
+      have hProvens' : stateProvens CState.nil = [] := by
         simpa [hS] using hProvens
       have hProv :
-          eo_interprets M (stateProvens CState.nil) true := by
+          AllInterpretedTrue M (stateProvens CState.nil) := by
         rw [hProvens']
-        exact eo_interprets_true M
+        exact AllInterpretedTrue.nil M
       exact state_proven_nth_true_of_context M CState.nil n hAss hPush hProv
   | cons so s =>
       intro n hAss hPush
-      have hProvens' : stateProvens (CState.cons so s) = Term.Boolean true := by
+      have hProvens' : stateProvens (CState.cons so s) = [] := by
         simpa [hS] using hProvens
       have hProv :
-          eo_interprets M (stateProvens (CState.cons so s)) true := by
+          AllInterpretedTrue M (stateProvens (CState.cons so s)) := by
         rw [hProvens']
-        exact eo_interprets_true M
+        exact AllInterpretedTrue.nil M
       exact state_proven_nth_true_of_context M (CState.cons so s) n hAss hPush hProv
   | Stuck =>
       exact False.elim (hNotStuck hS)
@@ -849,7 +847,7 @@ by
 /-- Derives `refutation_contradiction` from `truthInvariant`. -/
 theorem refutation_contradiction_of_truthInvariant
     (M : SmtModel) (F : CArgList) (pf : CCmdList) :
-  eo_interprets M (argListAssumes F) true ->
+  AllInterpretedTrue M (argListTerms F) ->
   checkerTruthInvariant M (__eo_invoke_cmd_list (__eo_invoke_assume_list CState.nil F) pf) ->
   (__eo_checker_is_refutation F pf) = true ->
   False :=
@@ -857,16 +855,16 @@ by
   intro hF hTruth hChecker
   let S1 := __eo_invoke_cmd_list (__eo_invoke_assume_list CState.nil F) pf
   rcases final_state_shape_of_checker_true F pf hChecker with ⟨s, hShape, hClosed⟩
-  have hAssumes : eo_interprets M (stateAssumes (CState.cons (CStateObj.proven (Term.Boolean false)) s)) true := by
-    have hAssumesEq : stateAssumes S1 = argListAssumes F := by
+  have hAssumes : AllInterpretedTrue M (stateAssumes (CState.cons (CStateObj.proven (Term.Boolean false)) s)) := by
+    have hAssumesEq : stateAssumes S1 = argListTerms F := by
       simpa [S1] using stateAssumes_of_checker_true F pf hChecker
-    have hAssumesEqS : stateAssumes s = argListAssumes F := by
+    have hAssumesEqS : stateAssumes s = argListTerms F := by
       simpa [S1, hShape, stateAssumes] using hAssumesEq
     simpa [stateAssumes, hAssumesEqS] using hF
-  have hPushes : eo_interprets M (statePushes (CState.cons (CStateObj.proven (Term.Boolean false)) s)) true := by
-    have hPushesEq : statePushes s = Term.Boolean true :=
+  have hPushes : AllInterpretedTrue M (statePushes (CState.cons (CStateObj.proven (Term.Boolean false)) s)) := by
+    have hPushesEq : statePushes s = [] :=
       statePushes_of_state_closed_true hClosed
-    simpa [statePushes, hPushesEq] using eo_interprets_true M
+    simpa [statePushes, hPushesEq] using AllInterpretedTrue.nil M
   have hFalseTrue :
       eo_interprets M (Term.Boolean false) true := by
     have hAt := checkerTruthInvariant_at M
@@ -934,8 +932,8 @@ theorem premiseTermList_true_of_truthInvariant
     (M : SmtModel) (s : CState) :
   forall (premises : CIndexList),
     checkerTruthInvariant M s ->
-    eo_interprets M (stateAssumes s) true ->
-    eo_interprets M (statePushes s) true ->
+    AllInterpretedTrue M (stateAssumes s) ->
+    AllInterpretedTrue M (statePushes s) ->
     AllInterpretedTrue M (premiseTermList s premises)
 :=
 by
@@ -958,8 +956,8 @@ theorem premiseTermList_true_of_localTruthInvariant_var_model
     forall (N : SmtModel),
       model_wf N ->
       model_agrees_on_globals M N ->
-      eo_interprets N (stateAssumes s) true ->
-      eo_interprets N (statePushes s) true ->
+      AllInterpretedTrue N (stateAssumes s) ->
+      AllInterpretedTrue N (statePushes s) ->
       AllInterpretedTrue N (premiseTermList s premises)
 :=
 by
@@ -981,8 +979,8 @@ theorem premiseTermList_true_of_localTruthInvariant_stable_var_model
     model_wf M ->
     checkerLocalTruthInvariant M s ->
     checkerExtraInvariant M s ->
-    eo_interprets M (stateAssumes s) true ->
-    eo_interprets M (statePushes s) true ->
+    AllInterpretedTrue M (stateAssumes s) ->
+    AllInterpretedTrue M (statePushes s) ->
     forall (N : SmtModel),
       model_wf N ->
       model_agrees_on_globals M N ->
@@ -1008,8 +1006,8 @@ theorem premiseEvidence_of_localTruthInvariant
   checkerExtraInvariant M s ->
   model_wf N ->
   model_agrees_on_globals M N ->
-  eo_interprets N (stateAssumes s) true ->
-  eo_interprets N (statePushes s) true ->
+  AllInterpretedTrue N (stateAssumes s) ->
+  AllInterpretedTrue N (statePushes s) ->
   RulePremiseEvidence N
     (premiseTermList s premises) :=
 by
@@ -1020,10 +1018,10 @@ by
   · intro K hK hAgreeNK
     have hStableN : checkerExtraInvariant N s :=
       checkerAssumptionStabilityInvariant_rebase M N hStable
-    have hAssK : eo_interprets K (stateAssumes s) true :=
+    have hAssK : AllInterpretedTrue K (stateAssumes s) :=
       stateAssumes_true_in_var_model_of_assumptionStability N hN
         hStableN hAss K hK hAgreeNK
-    have hPushK : eo_interprets K (statePushes s) true :=
+    have hPushK : AllInterpretedTrue K (statePushes s) :=
       statePushes_true_in_var_model_of_assumptionStability N hN
         hStableN hPush K hK hAgreeNK
     exact premiseTermList_true_of_localTruthInvariant_var_model
@@ -1032,14 +1030,14 @@ by
 /-- Structure bundling the premise facts needed to justify a single checker step. -/
 structure CmdStepFacts (M : SmtModel) (s : CState) (P : Term) : Prop where
   true_of_context :
-    eo_interprets M (stateAssumes s) true ->
-    eo_interprets M (statePushes s) true ->
+    AllInterpretedTrue M (stateAssumes s) ->
+    AllInterpretedTrue M (statePushes s) ->
     eo_interprets M P true
   true_in_var_model :
     ∀ N, model_wf N ->
       model_agrees_on_globals M N ->
-      eo_interprets N (stateAssumes s) true ->
-      eo_interprets N (statePushes s) true ->
+      AllInterpretedTrue N (stateAssumes s) ->
+      AllInterpretedTrue N (statePushes s) ->
       eo_interprets N P true
   has_smt_translation :
     RuleProofs.eo_has_smt_translation P
@@ -1089,30 +1087,30 @@ by
   rcases hProps with ⟨X, hXMem, hFactsOfImp, hPopTrans⟩
   refine ⟨?_, ?_, ?_⟩
   · intro hAss hPush
-    have hAssRoot : eo_interprets M (stateAssumes root) true := by
+    have hAssRoot : AllInterpretedTrue M (stateAssumes root) := by
       rw [stateAssumes_eq_of_stateStepPopSuffix_assume_push hSuffix]
       exact hAss
     have hScoped :
         eo_interprets M A true -> eo_interprets M X true := by
       intro hATrue
-      have hPushRoot : eo_interprets M (statePushes root) true := by
+      have hPushRoot : AllInterpretedTrue M (statePushes root) := by
         rw [statePushes_eq_of_stateStepPopSuffix_assume_push hSuffix]
-        exact eo_interprets_and_intro M A (statePushes tail) hATrue hPush
+        exact AllInterpretedTrue.cons hATrue hPush
       exact (premiseTermList_true_of_localTruthInvariant_var_model
           M root premises hsRoot M hM (model_agrees_on_globals_refl M)
           hAssRoot hPushRoot)
         X hXMem
     exact hFactsOfImp M hM hScoped
   · intro N hN hAgree hAss hPush
-    have hAssRoot : eo_interprets N (stateAssumes root) true := by
+    have hAssRoot : AllInterpretedTrue N (stateAssumes root) := by
       rw [stateAssumes_eq_of_stateStepPopSuffix_assume_push hSuffix]
       exact hAss
     have hScoped :
         eo_interprets N A true -> eo_interprets N X true := by
       intro hATrue
-      have hPushRoot : eo_interprets N (statePushes root) true := by
+      have hPushRoot : AllInterpretedTrue N (statePushes root) := by
         rw [statePushes_eq_of_stateStepPopSuffix_assume_push hSuffix]
-        exact eo_interprets_and_intro N A (statePushes tail) hATrue hPush
+        exact AllInterpretedTrue.cons hATrue hPush
       exact (premiseTermList_true_of_localTruthInvariant_var_model
           M root premises hsRoot N hN hAgree hAssRoot hPushRoot)
         X hXMem
