@@ -7,11 +7,10 @@ import all Cpc.Proofs.Common
 # `and`, `not` and `eq` helper lemmas
 
 Translation, typing and interpretation lemmas for the SMT-LIB symbols `and`,
-`not` and `=`.  They are used only by rule proofs and by the calculus's lemmas
-about `argListAssumes` (`Proofs/RuleSupport/CalculusAssumptions.lean`), never by
-the checker, so they live here rather than in `Proofs/Common.lean`: that keeps these operators out of
-the checker layer's transitive imports, and a calculus whose signature declares
-none of them can drop this module without touching anything else.
+`not` and `=`.  They are used only by rule proofs, never by the checker, so
+they live here rather than in `Proofs/Common.lean`: that keeps these operators
+out of the checker layer's transitive imports, and a calculus whose signature
+declares none of them can drop this module without touching anything else.
 -/
 
 public section

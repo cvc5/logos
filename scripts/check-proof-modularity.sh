@@ -133,13 +133,11 @@ done
 
 # 5. The checker layer depends on no signature symbol.
 #
-# The proof state and the input assumptions are read off as lists.  The one
-# formula soundness is stated about, `argListAssumes`, is the calculus's to
-# define (Proofs/CalculusAssumptions.lean), along with the two lemmas the checker
-# needs about it (Proofs/RuleSupport/CalculusAssumptions.lean).  So the checker
-# needs no operator of the calculus.  `and`, `not`, `eq` and `imp` were each a
-# requirement once; their lemmas live in Proofs/CommonBoolOps.lean, which only
-# the calculus side uses.  An operator appearing here is a new requirement on
+# The proof state and the input assumptions are read off as lists, and
+# soundness is stated about the list (some assumption is false in every
+# well-formed model), so the checker needs no operator of the calculus.  `and`,
+# `not`, `eq` and `imp` were each a requirement once; their lemmas live in
+# Proofs/CommonBoolOps.lean, which the checker does not import.  An operator appearing here is a new requirement on
 # every consumer's signature.
 echo "Checking the checker layer's operator dependency..."
 for pkg in Cpc CpcMini; do

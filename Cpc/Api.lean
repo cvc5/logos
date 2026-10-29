@@ -36,7 +36,8 @@ theorem correct___eo_is_refutation (F : CArgList) (pf : CCmdList) :
   TranslatableAssumptionList F ->
   CmdListTranslationOk pf ->
   (eo_is_refutation F pf) ->
-  eo_satisfiability (argListAssumes F) false
+  ∀ M : SmtModel, model_wf M ->
+    ∃ A ∈ argListTerms F, __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean false
 ```
 
 | component of the theorem        | computed here by                           |
@@ -46,8 +47,8 @@ theorem correct___eo_is_refutation (F : CArgList) (pf : CCmdList) :
 | `TranslatableAssumptionList F`  | `logos_check_translatableAssumptionList`   |
 | `CmdListTranslationOk pf`       | `logos_check_cmdListTranslationOk`         |
 
-`logos_assumption_term assums` is `argListAssumes` of that list: the formula the
-correctness of the executable is ultimately about.
+`argListTerms` of that list is the parser's assumptions in reverse order, so the
+conclusion is about exactly the assumptions the parser read.
 
 Nothing here is trusted: `Cpc/ApiChecks.lean` proves that each check gives the
 component it stands for, and `Cpc/ApiCorrect.lean` assembles those into
@@ -99,19 +100,6 @@ guarded push over the parser's list instead, and `invoke_assume_list_eq_fold`
 -/
 def logos_assumption_arglist (assums : List Term) : CArgList :=
   assums.foldl logos_assumption_list_step CArgList.nil
-
-/--
-The conjunction of the parser's assumptions: the term the correctness of the
-executable is ultimately about.
-
-`correct___eo_is_refutation` concludes `eo_satisfiability (argListAssumes F) false`
-for the list `F` it was run on, and this is that term for the list the parser
-produced -- for assumptions `A1 ... An`,
-
-    (and An (and A(n-1) ... (and A1 true) ... ))
--/
-def logos_assumption_term (assums : List Term) : Term :=
-  argListAssumes (logos_assumption_arglist assums)
 
 /--
 The checker state a run starts in: nothing assumed, nothing proven.

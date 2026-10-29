@@ -308,10 +308,12 @@ Third, the core methods that Logos depends on.
 \end{itemize}
 
 Our proof of correctness for Logos
-will state that under suitable assumptions, \eoisrefutation $F$ $C$ implies \eosatisfiability $F$ $\bot$.
+will state that under suitable assumptions, \eoisrefutation $F$ $C$ implies that
+every well-formed model evaluates some assumption of $F$ to false.
 In other words, if we successfully execute Logos given a proof $C$ that assumes $F$,
 then indeed $F$ is unsatisfiable.
-Our trusted core for this specification is thus the definition of \eosatisfiability,
+Our trusted core for this specification is thus the definition of model evaluation
+(\smtmodeleval) and of the translation to SMT-LIB,
 which is contained in the SMT-LIB and specification layers.
 The third layer does not need to be trusted.
 Roughly, the first layer is 2050 lines of Lean,
@@ -2902,9 +2904,11 @@ well-typed SMT-LIB term.
 These obligations are collected structurally over the assumption list and
 the command list.
 Figure~\ref{fig:soundness} then states the top-level soundness theorem:
-a successful checker run on translatable inputs implies that the conjunction
-of the input assumptions is unsatisfiable in the sense of
-Figure~\ref{fig:eo-sat}.
+a successful checker run on translatable inputs implies that every
+well-formed model evaluates one of the input assumptions to false.
+This is the \code{false} case of Figure~\ref{fig:eo-sat}, said of a list of
+formulas rather than of a single formula, so that the statement names no
+operator of the calculus.
 Its proof proceeds by establishing the combined state invariant of
 Figure~\ref{fig:checker-invariant} for every executed command:
 the state has its input assumptions as a suffix (shape),
@@ -2947,11 +2951,13 @@ inductive CmdListTranslationOk : CmdList -> Prop
 
 \begin{figure}[p]
 \begin{lstlisting}
-theorem correct_eo_is_refutation (F : Term) (pf : CmdList) :
+theorem correct___eo_is_refutation (F : CArgList) (pf : CCmdList) :
   TranslatableAssumptionList F ->
   CmdListTranslationOk pf ->
   (eo_is_refutation F pf) ->
-  (eo_satisfiability F false)
+  forall M : SmtModel, model_wf M ->
+    exists A, A ∈ argListTerms F /\
+      __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean false
 \end{lstlisting}
 \caption{Top-level checker soundness theorem.}
 \label{fig:soundness}

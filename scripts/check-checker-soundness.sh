@@ -31,9 +31,6 @@ PKG="${1:-Cpc}"
 RULE_LEMMAS="${PKG}/Proofs/RuleLemmas.lean"
 CHECKER="${PKG}/Proofs/Checker.lean"
 API_CORRECT="${PKG}/ApiCorrect.lean"
-# The calculus's lemmas about `argListAssumes`, which Checker.lean imports
-# alongside RuleLemmas.lean.  They do not depend on the rules, so they are built.
-CALCULUS_ASSUMPTIONS="${PKG}.Proofs.RuleSupport.CalculusAssumptions"
 
 for f in "${RULE_LEMMAS}" "${CHECKER}"; do
   [ -f "${f}" ] || { echo "error: ${f} not found." >&2; exit 1; }
@@ -67,8 +64,6 @@ emit_scratch() {
     echo
     echo "public import ${PKG}.Proofs.CheckerCore"
     echo "import all ${PKG}.Proofs.CheckerCore"
-    echo "public import ${CALCULUS_ASSUMPTIONS}"
-    echo "import all ${CALCULUS_ASSUMPTIONS}"
     if [ -f "${API_CORRECT}" ]; then
       echo "public import ${PKG}.ApiChecks"
       echo "import all ${PKG}.ApiChecks"
@@ -116,7 +111,7 @@ source "${script_dir}/lean-toolchain-env.sh"
 logos_configure_lean_toolchain
 
 echo "Building ${PKG}.Proofs.CheckerCore (the soundness proof is checked against it)..."
-lake build "${PKG}.Proofs.CheckerCore" "${CALCULUS_ASSUMPTIONS}" >/dev/null
+lake build "${PKG}.Proofs.CheckerCore" >/dev/null
 
 run_lean() {
   lake env lean "${scratch}" 2>&1 | grep -v "declaration uses \`sorry\`" || true

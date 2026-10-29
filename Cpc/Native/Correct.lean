@@ -30,9 +30,9 @@ A Lean-native proof script builds a `LogosState` from `logos_init_state` by a
 sequence of `logos_invoke_assume` calls followed by a sequence of
 `logos_invoke_cmd` calls, which is `Eo.logos_run assums cmds` for the assumptions
 and commands it names; `logos-native` reports the `logos_state_is_refutation` the
-script evaluates.  So a `true` from such a script means the conjunction of the
-assumptions it names is unsatisfiable -- exactly what `correct` from `logos` means
-for the assumptions its parser read.
+script evaluates.  So a `true` from such a script means every well-formed model
+evaluates one of the assumptions it names to `false` -- exactly what `correct`
+from `logos` means for the assumptions its parser read.
 
 What is unverified here is the counterpart of the parser on the `logos` side:
 nothing checks that a script builds its state this way.
@@ -43,7 +43,8 @@ and commands, so the three checks are discharged there.
 -/
 theorem correct___logos_state_is_refutation (assums : List Term) (cmds : CCmdList)
     (h : logos_state_is_refutation (logos_run assums cmds) = true) :
-    eo_satisfiability (logos_assumption_term assums) false := by
+    ∀ M : SmtModel, model_wf M ->
+      ∃ A ∈ assums, __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean false := by
   apply correct___logos_verdict assums cmds
   rw [← logos_state_verdict_eq_verdict assums cmds]
   exact (logos_state_is_refutation_eq_correct _).mp h

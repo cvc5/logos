@@ -52,14 +52,15 @@ The examples in `test/regress/*.cpc.lean` are in this format; CI runs each of th
 
 ## What a `true` means
 
-A `true` from a script of the shape above means the same as `correct` from `logos`: the
-conjunction of the assumptions the script names is unsatisfiable.  That is
+A `true` from a script of the shape above means the same as `correct` from `logos`: every
+well-formed model evaluates one of the assumptions the script names to `false`.  That is
 `correct___logos_state_is_refutation` (`Cpc/Native/Correct.lean`):
 
 ```lean
 theorem correct___logos_state_is_refutation (assums : List Term) (cmds : CCmdList)
     (h : logos_state_is_refutation (logos_run assums cmds) = true) :
-    eo_satisfiability (logos_assumption_term assums) false
+    ∀ M : SmtModel, model_wf M ->
+      ∃ A ∈ assums, __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean false
 ```
 
 `Eo.logos_run` (`Cpc/Native.lean`) is the state a script of that shape builds, so the

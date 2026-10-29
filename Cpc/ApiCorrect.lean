@@ -35,8 +35,24 @@ open SmtEval
 open Smtm
 
 /--
+The checker's input list holds the parser's assumptions in reverse order
+(`logos_assumption_arglist`).
+-/
+theorem argListTerms_logos_assumption_arglist (assums : List Term) :
+    argListTerms (logos_assumption_arglist assums) = assums.reverse := by
+  suffices h : ∀ acc : CArgList,
+      argListTerms (assums.foldl logos_assumption_list_step acc) =
+        assums.reverse ++ argListTerms acc by
+    simpa [logos_assumption_arglist, argListTerms] using h CArgList.nil
+  induction assums with
+  | nil => intro acc; simp
+  | cons A rest ih =>
+      intro acc
+      simp [ih, logos_assumption_list_step, argListTerms]
+
+/--
 Soundness of the verdict `Main.lean` computes: `correct` for a parsed proof means
-the conjunction of its assumptions is unsatisfiable.
+every well-formed model evaluates one of its assumptions to `false`.
 
 Each of the three checks `logos_verdict` runs discharges one hypothesis of
 `correct___eo_is_refutation`, with no proof obligation left to the caller:
@@ -47,30 +63,35 @@ Each of the three checks `logos_verdict` runs discharges one hypothesis of
 * `logos_check_refutation assums cmds` gives
   `eo_is_refutation (logos_assumption_arglist assums) cmds`.
 
-`logos_assumption_term assums` is `argListAssumes (logos_assumption_arglist assums)`
-by definition, so the conclusion is the one the theorem gives, with no step in
-between.
+The theorem's conclusion is about `argListTerms (logos_assumption_arglist assums)`,
+which is `assums` reversed (`argListTerms_logos_assumption_arglist`), so it has
+the same members.
 -/
 theorem correct___logos_verdict (assums : List Term) (cmds : CCmdList)
     (h : logos_verdict assums cmds = Verdict.correct) :
-    eo_satisfiability (logos_assumption_term assums) false := by
+    ∀ M : SmtModel, model_wf M ->
+      ∃ A ∈ assums, __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean false := by
   obtain ⟨hRefutation, hAssums, hCmds⟩ := checks_of_verdict_correct assums cmds h
-  exact correct___eo_is_refutation (logos_assumption_arglist assums) cmds
+  intro M hM
+  obtain ⟨A, hA, hFalse⟩ := correct___eo_is_refutation (logos_assumption_arglist assums) cmds
     (translatableAssumptionList_of_check assums hAssums)
     (cmdListTranslationOk_of_check cmds hCmds)
-    (eo_is_refutation_of_check assums cmds hRefutation)
+    (eo_is_refutation_of_check assums cmds hRefutation) M hM
+  rw [argListTerms_logos_assumption_arglist, List.mem_reverse] at hA
+  exact ⟨A, hA, hFalse⟩
 
 /--
 Soundness of the `logos` executable, stated about the proof file it reads.
 
 If the parser reads the assumptions `assums` (and the commands `cmds`) out of
-`input`, and `logos` prints `correct` for `input`, then the conjunction of those
-assumptions is unsatisfiable.
+`input`, and `logos` prints `correct` for `input`, then every well-formed model
+evaluates one of those assumptions to `false`.
 -/
 theorem correct___logos_check_proof (input : String) (assums : List Term) (cmds : CCmdList)
     (hParse : parseProof input = Except.ok (assums, cmds))
     (hCorrect : logos_check_proof input = Except.ok Verdict.correct) :
-    eo_satisfiability (logos_assumption_term assums) false := by
+    ∀ M : SmtModel, model_wf M ->
+      ∃ A ∈ assums, __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean false := by
   apply correct___logos_verdict assums cmds
   rw [logos_check_proof_of_parse input assums cmds hParse] at hCorrect
   exact Except.ok.inj hCorrect

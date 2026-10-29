@@ -13,11 +13,13 @@ Reading the file aside, all of the work is `Eo.logos_check_proof`
 theorem correct___logos_check_proof (input : String) (assums : List Term) (cmds : CCmdList)
     (hParse : parseProof input = Except.ok (assums, cmds))
     (hCorrect : logos_check_proof input = Except.ok Verdict.correct) :
-    eo_satisfiability (logos_assumption_term assums) false
+    ∀ M : SmtModel, model_wf M ->
+      ∃ A ∈ assums, __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean false
 ```
 
-So `correct` on the terminal means: the conjunction of the formulas this file
-`assume`s, as the parser read them, is unsatisfiable.
+So `correct` on the terminal means: the formulas this file `assume`s, as the
+parser read them, are unsatisfiable -- every well-formed model makes one of them
+`false`.
 
 When Logos accepts the proof but a side condition fails, the run is reported as
 `incomplete` instead: the proof is a valid CPC derivation, but it mentions

@@ -124,8 +124,8 @@ There are no `sorry`s in the soundness proof or its dependencies.
 list, and two side conditions (`TranslatableAssumptionList F` and
 `CmdListTranslationOk`, defined in `Cpc/Proofs/Assumptions.lean`, which restrict
 the proof to terms the SMT-LIB formalization gives a meaning to). Its conclusion
-is about `argListAssumes F`, the conjunction of that list, which the calculus
-defines in `Cpc/Proofs/CalculusAssumptions.lean`. Three further
+is that every well-formed model evaluates some formula of that list to `false`;
+it names no operator of the calculus. Three further
 files connect that statement to what the executable actually runs, so that the
 `correct` it prints is the theorem's conclusion rather than an informal argument
 about it:
@@ -146,11 +146,13 @@ about it:
   theorem correct___logos_check_proof (input : String) (assums : List Term) (cmds : CCmdList)
       (hParse : parseProof input = Except.ok (assums, cmds))
       (hCorrect : logos_check_proof input = Except.ok Verdict.correct) :
-      eo_satisfiability (logos_assumption_term assums) false
+      ∀ M : SmtModel, model_wf M ->
+        ∃ A ∈ assums, __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean false
   ```
 
   That is: if the parser reads the assumptions `assums` out of `input`, and
-  `logos` prints `correct` for `input`, then their conjunction is unsatisfiable.
+  `logos` prints `correct` for `input`, then every well-formed model evaluates
+  one of them to `false`: they are unsatisfiable.
   `Main.lean` reads the file, prints the verdict and picks an exit status; it
   also explains `incorrect` and `incomplete` verdicts on stderr.
 

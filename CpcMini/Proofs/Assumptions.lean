@@ -6,8 +6,6 @@ public import CpcMini.Logos
 import all CpcMini.Logos
 public import CpcMini.Proofs.ModelEval
 import all CpcMini.Proofs.ModelEval
-public import CpcMini.Proofs.CalculusAssumptions
-import all CpcMini.Proofs.CalculusAssumptions
 
 @[expose] public section
 
@@ -23,9 +21,8 @@ time.  This is what `stateAssumes` reads back off the state
 `Proofs/CheckerState.lean`): the head of the list is pushed last, which is where
 `stateAssumes` then finds it.
 
-Soundness is stated about `argListAssumes F`, the one formula the calculus says
-the list stands for (`Proofs/CalculusAssumptions.lean`); the checker itself only
-ever reasons about this list.
+`correct___eo_is_refutation` is stated about this list: every well-formed model
+evaluates one of its formulas to `false`.
 -/
 def argListTerms : CArgList -> List Term
   | CArgList.nil => []

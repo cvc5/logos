@@ -1,8 +1,6 @@
 module
 
 public import Cpc.Proofs.RuleLemmas
-public import Cpc.Proofs.RuleSupport.CalculusAssumptions
-import all Cpc.Proofs.RuleSupport.CalculusAssumptions
 import all Cpc.Proofs.CheckerCore
 
 public section
@@ -866,12 +864,17 @@ theorem argListTerms_have_bool_type (F : CArgList) :
           exact ih hRestTrans hRestOk B hB
 
 /- correctness theorem for the checker -/
-/-- Main soundness theorem showing that a successful checker run yields an EO refutation. -/
+/--
+Main soundness theorem: if the checker accepts `pf` as a refutation of the
+assumptions `F`, then every well-formed model evaluates some assumption of `F`
+to `false`.
+-/
 theorem correct___eo_is_refutation (F : CArgList) (pf : CCmdList) :
   TranslatableAssumptionList F ->
   CmdListTranslationOk pf ->
   (eo_is_refutation F pf) ->
-  eo_satisfiability (argListAssumes F) false :=
+  ∀ M : SmtModel, model_wf M ->
+    ∃ A ∈ argListTerms F, __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean false :=
 by
   intro hFTrans hPfTrans hRef
   have hNoInterp :
@@ -902,7 +905,17 @@ by
     | intro hChecker =>
         exact invoke_cmd_list_reflects_stateOk (__eo_invoke_assume_list CState.nil F) pf
           (final_stateOk_of_checker_true F pf hChecker)
-  apply RuleProofs.smt_satisfiability_false_of_no_true (argListAssumes F)
-    (argListAssumes_has_bool_type F (argListTerms_have_bool_type F hFTrans hS0Ok))
-  intro M hM hTrue
-  exact hNoInterp M hM (argListTerms_true_of_argListAssumes_true M F hTrue)
+  have hBool := argListTerms_have_bool_type F hFTrans hS0Ok
+  intro M hM
+  -- Each assumption evaluates to a Boolean; if none evaluated to `false`, all
+  -- would be interpreted as `true`, which the checker run rules out.
+  apply Classical.byContradiction
+  intro hNone
+  apply hNoInterp M hM
+  intro A hA
+  rcases RuleProofs.eo_eval_is_boolean_of_has_bool_type M hM A (hBool A hA) with ⟨b, hb⟩
+  cases b with
+  | true =>
+      exact RuleProofs.eo_interprets_of_bool_eval M A true (hBool A hA) hb
+  | false =>
+      exact False.elim (hNone ⟨A, hA, hb⟩)
