@@ -240,7 +240,7 @@ private theorem facts___eo_prog_arrays_read_over_write_1_impl
     simpa [lhs] using hArgTrans
   rcases smt_types_of_select_store_arg a i e i hArgTrans' with
     ⟨A, B, hATy, hITy, hETy, _hIdxTy, _hLhsTy, _hBNonNone, hATrans, _hETrans⟩
-  have hACan : value_canonical (__smtx_model_eval M (__eo_to_smt a)) :=
+  have hACan : value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt a)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM a hATrans
   have hEvalATy :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt a)) =
@@ -249,7 +249,7 @@ private theorem facts___eo_prog_arrays_read_over_write_1_impl
       (by simpa [RuleProofs.eo_has_smt_translation, term_has_non_none_type] using hATrans)]
     exact hATy
   rcases Smtm.map_value_canonical hEvalATy with ⟨m, hEvalA⟩
-  have hMapCan : __smtx_map_canonical m = true := by
+  have hMapCan : __smtx_map_canonical M.usortCard m = true := by
     rw [hEvalA] at hACan
     simpa [value_canonical, __smtx_value_canonical] using hACan
   rw [prog_arrays_read_over_write_1_eq a i e i]

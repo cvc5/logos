@@ -7,6 +7,8 @@ import all Cpc.Proofs.RuleSupport.CoreSupport
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -258,7 +260,7 @@ theorem model_eval_set_empty
   simp [__eo_to_smt_set_empty, __smtx_model_eval]
 
 theorem set_empty_map_canonical' (A : SmtType) :
-    __smtx_map_canonical
+    __smtx_map_canonical uc
         (SmtMap.default A (SmtValue.Boolean false)) = true :=
   set_empty_map_canonical A
 
@@ -276,9 +278,9 @@ theorem set_empty_map_default_leaf (A : SmtType) :
 theorem set_map_lookup_eq_default_of_not_typed_canonical :
     ∀ {m : SmtMap} {A B : SmtType} {v : SmtValue},
       __smtx_typeof_map_value m = SmtType.Map A B ->
-        __smtx_map_canonical m = true ->
+        __smtx_map_canonical uc m = true ->
           ¬ (__smtx_typeof_value v = A ∧
-              __smtx_value_canonical v = true) ->
+              __smtx_value_canonical uc v = true) ->
             __smtx_map_lookup m v = __smtx_map_get_default m
   | SmtMap.default T e, A, B, v, _hTy, _hCan, _hNot => by
       simp [__smtx_map_lookup, __smtx_map_get_default]
@@ -305,11 +307,11 @@ theorem set_map_lookup_eq_default_of_not_typed_canonical :
       have hiTy : __smtx_typeof_value i = A := by
         cases hHead
         rfl
-      have hiCan : __smtx_value_canonical i = true := by
+      have hiCan : __smtx_value_canonical uc i = true := by
         have hParts := hCan
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         exact hParts.1.1.1.1
-      have hmCan : __smtx_map_canonical m = true := by
+      have hmCan : __smtx_map_canonical uc m = true := by
         have hParts := hCan
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         exact hParts.1.1.2
@@ -327,14 +329,14 @@ theorem set_map_lookup_eq_default_of_not_typed_canonical :
 theorem set_map_lookup_bool_ite_true_false
     {m : SmtMap} {A : SmtType} (v : SmtValue)
     (hmTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool)
-    (hmCan : __smtx_map_canonical m = true)
+    (hmCan : __smtx_map_canonical uc m = true)
     (hmDef : __smtx_map_get_default m = SmtValue.Boolean false) :
     native_ite
         (native_veq (__smtx_map_lookup m v) (SmtValue.Boolean true))
         (SmtValue.Boolean true) (SmtValue.Boolean false) =
       __smtx_map_lookup m v := by
   by_cases hv :
-      __smtx_typeof_value v = A ∧ __smtx_value_canonical v = true
+      __smtx_typeof_value v = A ∧ __smtx_value_canonical uc v = true
   · have hLookupTy :
         __smtx_typeof_value (__smtx_map_lookup m v) = SmtType.Bool :=
       Smtm.map_lookup_typed hmTy hv.1
@@ -1575,7 +1577,7 @@ theorem set_union_empty_right_rel_of_premise_bool
         SmtType.Map (__eo_to_smt_type T) SmtType.Bool := by
     dsimp [empty]
     simp [__smtx_typeof_map_value, __smtx_typeof_value]
-  have hEmptyCan : __smtx_map_canonical empty = true := by
+  have hEmptyCan : __smtx_map_canonical M.usortCard empty = true := by
     dsimp [empty]
     exact set_empty_map_canonical' (__eo_to_smt_type T)
   have hEmptyDef : __smtx_map_get_default empty = SmtValue.Boolean false := by
@@ -1588,7 +1590,7 @@ theorem set_union_empty_right_rel_of_premise_bool
     rw [hMxTy]
     simp [__smtx_index_typeof_map, __smtx_typeof_map_value,
       __smtx_typeof_value]
-  have hResCan : __smtx_map_canonical res = true := by
+  have hResCan : __smtx_map_canonical M.usortCard res = true := by
     dsimp [res]
     exact Smtm.mss_op_internal_canonical false hMxCan hEmptyCan
   have hResTy :
@@ -1680,7 +1682,7 @@ theorem set_inter_empty_right_rel_of_premise_bool
         SmtType.Map (__eo_to_smt_type T) SmtType.Bool := by
     dsimp [empty]
     simp [__smtx_typeof_map_value, __smtx_typeof_value]
-  have hEmptyCan : __smtx_map_canonical empty = true := by
+  have hEmptyCan : __smtx_map_canonical M.usortCard empty = true := by
     dsimp [empty]
     exact set_empty_map_canonical' (__eo_to_smt_type T)
   have hEmptyDef : __smtx_map_get_default empty = SmtValue.Boolean false := by
@@ -1693,14 +1695,14 @@ theorem set_inter_empty_right_rel_of_premise_bool
     rw [hMxTy]
     simp [__smtx_index_typeof_map, __smtx_typeof_map_value,
       __smtx_typeof_value]
-  have hAccCan : __smtx_map_canonical acc = true := by
+  have hAccCan : __smtx_map_canonical M.usortCard acc = true := by
     dsimp [acc]
     exact set_empty_map_canonical'
       (__smtx_index_typeof_map (__smtx_typeof_map_value mx))
   have hAccDef : __smtx_map_get_default acc = SmtValue.Boolean false := by
     dsimp [acc]
     simp [__smtx_map_get_default]
-  have hResCan : __smtx_map_canonical res = true := by
+  have hResCan : __smtx_map_canonical M.usortCard res = true := by
     dsimp [res]
     exact Smtm.mss_op_internal_canonical true hMxCan hAccCan
   have hResTy :
@@ -1792,7 +1794,7 @@ theorem set_minus_empty_right_rel_of_premise_bool
         SmtType.Map (__eo_to_smt_type T) SmtType.Bool := by
     dsimp [empty]
     simp [__smtx_typeof_map_value, __smtx_typeof_value]
-  have hEmptyCan : __smtx_map_canonical empty = true := by
+  have hEmptyCan : __smtx_map_canonical M.usortCard empty = true := by
     dsimp [empty]
     exact set_empty_map_canonical' (__eo_to_smt_type T)
   have hEmptyDef : __smtx_map_get_default empty = SmtValue.Boolean false := by
@@ -1805,14 +1807,14 @@ theorem set_minus_empty_right_rel_of_premise_bool
     rw [hMxTy]
     simp [__smtx_index_typeof_map, __smtx_typeof_map_value,
       __smtx_typeof_value]
-  have hAccCan : __smtx_map_canonical acc = true := by
+  have hAccCan : __smtx_map_canonical M.usortCard acc = true := by
     dsimp [acc]
     exact set_empty_map_canonical'
       (__smtx_index_typeof_map (__smtx_typeof_map_value mx))
   have hAccDef : __smtx_map_get_default acc = SmtValue.Boolean false := by
     dsimp [acc]
     simp [__smtx_map_get_default]
-  have hResCan : __smtx_map_canonical res = true := by
+  have hResCan : __smtx_map_canonical M.usortCard res = true := by
     dsimp [res]
     exact Smtm.mss_op_internal_canonical false hMxCan hAccCan
   have hResTy :
@@ -2535,7 +2537,7 @@ theorem typed_set_minus_self_eq_empty
 theorem set_minus_self_lookup_false
     (m : SmtMap) (A : SmtType) (v : SmtValue)
     (hmTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool)
-    (hmCan : __smtx_map_canonical m = true)
+    (hmCan : __smtx_map_canonical uc m = true)
     (hmDef : __smtx_map_get_default m = SmtValue.Boolean false) :
     __smtx_map_lookup
         (__smtx_set_op_rec false m m
@@ -2574,10 +2576,10 @@ theorem set_minus_self_rel
     rw [hmTy]
     simp [__smtx_index_typeof_map, __smtx_typeof_map_value,
       __smtx_typeof_value]
-  have hAccCan : __smtx_map_canonical acc = true := by
+  have hAccCan : __smtx_map_canonical M.usortCard acc = true := by
     dsimp [acc]
     exact set_empty_map_canonical (__smtx_index_typeof_map (__smtx_typeof_map_value m))
-  have hResCan : __smtx_map_canonical res = true := by
+  have hResCan : __smtx_map_canonical M.usortCard res = true := by
     dsimp [res]
     exact Smtm.mss_op_internal_canonical false hmCan hAccCan
   have hResTy :
@@ -2589,7 +2591,7 @@ theorem set_minus_self_rel
     dsimp [res, acc]
     rw [Smtm.mss_op_internal_get_default]
     simp [__smtx_map_get_default]
-  have hEmptyCan : __smtx_map_canonical empty = true := by
+  have hEmptyCan : __smtx_map_canonical M.usortCard empty = true := by
     dsimp [empty]
     exact set_empty_map_canonical (__eo_to_smt_type T)
   have hLeaf :
@@ -2652,10 +2654,10 @@ private theorem singleton_map_lookup (v i : SmtValue) (A : SmtType) :
     exactly the element `v`.  This is the semantic core of `sets_choose_singleton`:
     the witness `i` distinguishing the two maps is uniquely `v`. -/
 theorem map_diff_singleton_empty_eq
-    (v : SmtValue) (A : SmtType)
+    {M : SmtModel} (v : SmtValue) (A : SmtType)
     (hvTy : __smtx_typeof_value v = A)
-    (hvCan : __smtx_value_canonical v = true) :
-    native_eval_map_diff
+    (hvCan : __smtx_value_canonical M.usortCard v = true) :
+    native_eval_map_diff M
         (SmtMap.cons v (SmtValue.Boolean true)
           (SmtMap.default A (SmtValue.Boolean false)))
         (SmtMap.default A (SmtValue.Boolean false)) = v := by
@@ -2664,7 +2666,7 @@ theorem map_diff_singleton_empty_eq
   have hPredIffV :
       ∀ i : SmtValue,
         (__smtx_typeof_value i = A ∧
-          __smtx_value_canonical i = true ∧
+          __smtx_value_canonical M.usortCard i = true ∧
             native_veq
               (__smtx_map_lookup
                 (SmtMap.cons v (SmtValue.Boolean true)
@@ -2702,7 +2704,7 @@ theorem map_diff_singleton_empty_eq
   have hDiff :
       ∃ i : SmtValue,
         __smtx_typeof_value i = A ∧
-          __smtx_value_canonical i = true ∧
+          __smtx_value_canonical M.usortCard i = true ∧
             native_veq
               (__smtx_map_lookup
                 (SmtMap.cons v (SmtValue.Boolean true)

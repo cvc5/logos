@@ -494,19 +494,19 @@ private theorem facts___eo_prog_array_store_swap_impl
       t1 i1 j1 e1 f1 p1
       hT1Trans hI1Trans hJ1Trans hE1Trans hF1Trans hResultTy
   have hT1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt t1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t1 hT1Trans
   have hI1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt i1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt i1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM i1 hI1Trans
   have hJ1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt j1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt j1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM j1 hJ1Trans
   have hE1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt e1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt e1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM e1 hE1Trans
   have hF1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt f1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt f1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM f1 hF1Trans
   have hT1NotStuck : t1 ≠ Term.Stuck :=
     RuleProofs.term_ne_stuck_of_has_smt_translation t1 hT1Trans

@@ -7,6 +7,8 @@ import all CpcMini.Proofs.Canonical.TypeDefaultBasic
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open SmtEval
 open Smtm
 
@@ -26,7 +28,7 @@ theorem cpcmini_datatype_type_default_typed_canonical_assumption
     (_hRec : __smtx_type_wf_rec (SmtType.Datatype s d) = true) :
       __smtx_typeof_value (__smtx_type_default (SmtType.Datatype s d)) =
         SmtType.Datatype s d ∧
-      value_canonical (__smtx_type_default (SmtType.Datatype s d)) := by
+      value_canonical uc (__smtx_type_default (SmtType.Datatype s d)) := by
   classical
   have hTyped : native_Teq (__smtx_typeof_value
       (__smtx_type_default (SmtType.Datatype s d))) (SmtType.Datatype s d) = true := by

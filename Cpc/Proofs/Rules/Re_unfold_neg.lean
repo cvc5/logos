@@ -17,6 +17,8 @@ set_option maxHeartbeats 10000000
 
 namespace RuleProofs
 
+variable {uc : native_Nat -> native_Nat}
+
 private abbrev idxName : native_String :=
   native_string_lit "@var.str_index"
 
@@ -1093,7 +1095,7 @@ private theorem qforall_idx_eval_true_of_forall_values
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = SmtType.Int ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical M.usortCard v = true ->
         __smtx_model_eval (native_model_push M idxName SmtType.Int v)
           (__eo_to_smt body) = SmtValue.Boolean true) :
     __smtx_model_eval M (__eo_to_smt (qforallIdx body)) =
@@ -1108,7 +1110,7 @@ private theorem qforall_idx_eval_true_of_forall_values
   by_cases hEx :
       ∃ v : SmtValue,
         __smtx_typeof_value v = SmtType.Int ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval_not
               (__smtx_model_eval
                 (native_model_push M idxName SmtType.Int v)

@@ -6,6 +6,8 @@ import all Cpc.Proofs.RuleSupport.SubstituteSimulEvalSupport
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -309,7 +311,7 @@ private theorem model_agrees_on_globals_push_diff
     (h : model_agrees_on_globals M N) :
     model_agrees_on_globals
       (native_model_push M t T v) (native_model_push N s T v) := by
-  refine ⟨?_, ?_⟩
+  refine ⟨?_, ?_, h.usortCard⟩
   · intro name ty
     simpa [native_model_lookup, model_key, native_model_push]
       using h.1 name ty
@@ -1193,25 +1195,27 @@ theorem alpha_preserves_type_and_translation
 witness under the target name on the left and the source name on the right. -/
 theorem native_eval_texists_eq_of_renamed_body
     {M N : SmtModel} {s t : native_String} {T : SmtType}
+    (hCard : M.usortCard = N.usortCard)
     {bodyM bodyN : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T →
-      __smtx_value_canonical v = true →
+      __smtx_value_canonical M.usortCard v = true →
       __smtx_model_eval (native_model_push M t T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     (native_eval_exists M t T bodyM : SmtValue) =
       (native_eval_exists N s T bodyN : SmtValue) := by
   classical
+  rw [← hCard]
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M t T v) bodyM =
           SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push N s T v) bodyN =
           SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -1264,7 +1268,7 @@ theorem alpha_eval_eo_to_smt_exists
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists sourceTail bodyN))
       simpa [__smtx_model_eval] using
-        native_eval_texists_eq_of_renamed_body
+        native_eval_texists_eq_of_renamed_body hRel.globals.usortCard
           (fun v hValTy hValCanon => by
             have hM' :
                 model_wf
@@ -1277,7 +1281,7 @@ theorem alpha_eval_eo_to_smt_exists
                   (native_model_push N s (__eo_to_smt_type T) v) :=
               model_total_typed_push hN s (__eo_to_smt_type T) v
                 hHeadWf hValTy
-                (by simpa [value_canonical] using hValCanon)
+                (by simpa [value_canonical, hRel.globals.usortCard] using hValCanon)
             exact ih hM' hN'
               (alphaRel_push_mapped hLists hSourceDistinct hTargetDistinct
                 hRel s t T v hPair)
@@ -1306,7 +1310,7 @@ theorem alpha_eval_eo_to_smt_exists
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists sourceTail bodyN))
       simpa [__smtx_model_eval] using
-        native_eval_texists_eq_of_renamed_body
+        native_eval_texists_eq_of_renamed_body hRel.globals.usortCard
           (fun v hValTy hValCanon => by
             have hM' :
                 model_wf
@@ -1319,7 +1323,7 @@ theorem alpha_eval_eo_to_smt_exists
                   (native_model_push N s (__eo_to_smt_type T) v) :=
               model_total_typed_push hN s (__eo_to_smt_type T) v
                 hHeadWf hValTy
-                (by simpa [value_canonical] using hValCanon)
+                (by simpa [value_canonical, hRel.globals.usortCard] using hValCanon)
             exact ih hM' hN'
               (alphaRel_push_unmapped hLists hSourceDistinct hRel
                 s T v hHeadWf hSourceFree hTargetFree)
