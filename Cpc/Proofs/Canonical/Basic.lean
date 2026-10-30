@@ -94,7 +94,7 @@ cardinality, where `0` means the sort is infinite. -/
 theorem value_canonical_uvalue (u n : native_Nat) (h : uc u = 0 ∨ n < uc u) :
     value_canonical uc (SmtValue.UValue u n) := by
   rcases h with h | h <;>
-    simp [value_canonical, __smtx_value_canonical, native_or, native_nateq,
+    simp [value_canonical, __smtx_value_canonical, native_usort_card, native_or, native_nateq,
       native_natlt, h]
 
 theorem value_canonical_dt_cons (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :

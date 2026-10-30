@@ -1054,8 +1054,7 @@ theorem model_agrees_except_on_env_symm
   model_agrees_except_on_env except bound N M :=
 by
   refine ⟨?_, ?_⟩
-  · exact ⟨by intro s T; exact (hAgree.globals.1 s T).symm,
-      by intro fid T U; exact (hAgree.globals.2 fid T U).symm⟩
+  · exact model_agrees_on_globals_symm hAgree.globals
   · intro s T hKey
     exact (hAgree.vars_eq s T hKey).symm
 
@@ -1106,7 +1105,7 @@ theorem model_agrees_except_on_env_push_left_of_mem_except
   model_agrees_except_on_env except bound
     (native_model_push M s T v) M :=
 by
-  refine ⟨model_agrees_on_globals_push M s T v, ?_⟩
+  refine ⟨model_agrees_on_globals_symm (model_agrees_on_globals_push M s T v), ?_⟩
   intro s' T' hAllowed
   by_cases hKey :
       ({ isVar := true, name := s', ty := T' } : SmtModelKey) =
@@ -1129,7 +1128,8 @@ theorem model_agrees_except_on_env_push_left
 by
   refine
     ⟨model_agrees_on_globals_trans
-      (model_agrees_on_globals_push N s T v) hAgree.globals, ?_⟩
+      (model_agrees_on_globals_symm (model_agrees_on_globals_push N s T v))
+      hAgree.globals, ?_⟩
   intro s' T' hAllowed
   by_cases hKey :
       ({ isVar := true, name := s', ty := T' } : SmtModelKey) =
@@ -1169,8 +1169,7 @@ theorem model_agrees_except_on_eo_env_symm
   model_agrees_except_on_eo_env except bound N M :=
 by
   refine ⟨?_, ?_⟩
-  · exact ⟨by intro s T; exact (hAgree.globals.1 s T).symm,
-      by intro fid T U; exact (hAgree.globals.2 fid T U).symm⟩
+  · exact model_agrees_on_globals_symm hAgree.globals
   · intro s T hKey
     exact (hAgree.vars_eq s T hKey).symm
 
@@ -2693,7 +2692,8 @@ by
         root hXLt hExcept hBound hTrans
         set_is_empty_arg_has_smt_translation_of_has_smt_translation
         hNoFree hAgree
-        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx])
+        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx,
+          smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard])
         ih
   case set_is_singleton =>
     exact
@@ -2701,7 +2701,8 @@ by
         root hXLt hExcept hBound hTrans
         set_is_singleton_arg_has_smt_translation_of_has_smt_translation
         hNoFree hAgree
-        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx])
+        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx,
+          smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard])
         ih
   case ubv_to_int =>
     exact
@@ -3519,7 +3520,7 @@ by
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists vs body))
       exact
-        smtx_model_eval_exists_eq_of_body_eval_eq
+        smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortCard
           (fun v =>
             ih
               (boundVars := (s, T) :: boundVars)
@@ -3595,7 +3596,7 @@ by
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists vs body))
       exact
-        smtx_model_eval_exists_eq_of_body_eval_eq
+        smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortCard
           (fun v =>
             ih
               (boundVars := (s, T) :: boundVars)
@@ -4607,8 +4608,8 @@ by
             simp only [__eo_to_smt_array_deq_diff]
             cases hXTy : __smtx_typeof (__eo_to_smt x) <;>
               cases hYTy : __smtx_typeof (__eo_to_smt y) <;>
-              simp [__smtx_model_eval, __smtx_model_eval_map_diff,
-                hx, hy])
+              simp [__smtx_model_eval, hx, hy,
+                smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard])
           ih
     | exact
         smt_model_eval_apply_apply_uop_binary_eq_of_contains_atomic_term_list_free_rec_false_mapped
@@ -4623,8 +4624,8 @@ by
             simp only [__eo_to_smt_sets_deq_diff]
             cases hXTy : __smtx_typeof (__eo_to_smt x) <;>
               cases hYTy : __smtx_typeof (__eo_to_smt y) <;>
-              simp [__smtx_model_eval, __smtx_model_eval_map_diff,
-                hx, hy])
+              simp [__smtx_model_eval, hx, hy,
+                smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard])
           ih
     | exact
         smt_model_eval_apply_apply_uop_binary_eq_of_contains_atomic_term_list_free_rec_false_mapped

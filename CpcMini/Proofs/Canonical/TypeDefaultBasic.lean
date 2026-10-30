@@ -117,10 +117,10 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
       simp [__smtx_type_wf_rec, native_and] at h
       exact h.2
     simpa [__smtx_type_default] using ih hDecl
-  · intros
-    simp [__smtx_type_default, __smtx_value_canonical, native_or, native_nateq,
-      native_natlt]
-    exact Nat.eq_zero_or_pos _
+  · intro u _ _
+    rcases Nat.eq_zero_or_pos (uc u) with h | h <;>
+      simp [__smtx_type_default, __smtx_value_canonical, native_usort_card, native_or,
+        native_nateq, native_natlt, h]
   · intros
     simp [__smtx_type_default, __smtx_value_canonical]
   · intro T h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 _hInh hRec

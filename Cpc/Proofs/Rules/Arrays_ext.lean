@@ -343,7 +343,7 @@ private theorem facts___eo_prog_arrays_ext_impl
         SmtValue.Boolean false := by
     rw [RuleProofs.eo_to_smt_eq_eq, smtx_eval_eq_term_eq]
     have hsimpa := hSelectEqFalse
-    try simp [lhs, rhs, idx, RuleProofs.eo_to_smt_select_eq, hIdxSmtTerm, __smtx_model_eval, __smtx_model_eval_select, __smtx_model_eval_map_diff, hEvalA, hEvalB] at hsimpa ⊢
+    try simp [lhs, rhs, idx, RuleProofs.eo_to_smt_select_eq, hIdxSmtTerm, __smtx_model_eval, __smtx_model_eval_select, __smtx_map_diff, hEvalA, hEvalB] at hsimpa ⊢
     exact hsimpa
   have hEqFalse : eo_interprets M (Term.Apply (Term.Apply Term.eq lhs) rhs) false :=
     RuleProofs.eo_interprets_of_bool_eval M

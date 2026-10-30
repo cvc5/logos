@@ -386,7 +386,7 @@ theorem typeof_value_model_eval_map_diff
   · rcases hMap with ⟨A, B, h1, h2, hTy⟩
     rw [hTy]
     rw [show __smtx_model_eval M (SmtTerm.map_diff t1 t2) =
-        __smtx_model_eval_map_diff M (__smtx_model_eval M t1) (__smtx_model_eval M t2) by
+        __smtx_map_diff M (__smtx_model_eval M t1) (__smtx_model_eval M t2) by
       simp [__smtx_model_eval]]
     rcases map_value_canonical (A := A) (B := B)
         (by simpa [h1] using hpres1) with ⟨m1, hm1⟩
@@ -400,7 +400,7 @@ theorem typeof_value_model_eval_map_diff
   · rcases hSet with ⟨A, h1, h2, hTy⟩
     rw [hTy]
     rw [show __smtx_model_eval M (SmtTerm.map_diff t1 t2) =
-        __smtx_model_eval_map_diff M (__smtx_model_eval M t1) (__smtx_model_eval M t2) by
+        __smtx_map_diff M (__smtx_model_eval M t1) (__smtx_model_eval M t2) by
       simp [__smtx_model_eval]]
     rcases set_value_canonical (A := A)
         (by simpa [h1] using hpres1) with ⟨m1, hm1⟩
@@ -428,7 +428,7 @@ theorem model_eval_map_diff_canonical
   rcases map_diff_args_of_non_none ht with hMap | hSet
   · rcases hMap with ⟨A, B, h1, h2, hTy⟩
     rw [show __smtx_model_eval M (SmtTerm.map_diff t1 t2) =
-        __smtx_model_eval_map_diff M (__smtx_model_eval M t1) (__smtx_model_eval M t2) by
+        __smtx_map_diff M (__smtx_model_eval M t1) (__smtx_model_eval M t2) by
       simp [__smtx_model_eval]]
     rcases map_value_canonical (A := A) (B := B)
         (by simpa [h1] using hpres1) with ⟨m1, hm1⟩
@@ -441,7 +441,7 @@ theorem model_eval_map_diff_canonical
       (hDefault hTy)
   · rcases hSet with ⟨A, h1, h2, hTy⟩
     rw [show __smtx_model_eval M (SmtTerm.map_diff t1 t2) =
-        __smtx_model_eval_map_diff M (__smtx_model_eval M t1) (__smtx_model_eval M t2) by
+        __smtx_map_diff M (__smtx_model_eval M t1) (__smtx_model_eval M t2) by
       simp [__smtx_model_eval]]
     rcases set_value_canonical (A := A)
         (by simpa [h1] using hpres1) with ⟨m1, hm1⟩

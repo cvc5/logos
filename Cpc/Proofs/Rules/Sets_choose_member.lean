@@ -115,7 +115,7 @@ private theorem choose_member_properties
       (SmtTerm.map_diff (__eo_to_smt a) (SmtTerm.set_empty A)) =
       native_eval_map_diff m (SmtMap.default A (SmtValue.Boolean false)) := by
     rw [__smtx_model_eval.eq_def]
-    simp only [hm, hEvalEmpty, __smtx_model_eval_map_diff]
+    simp only [hm, hEvalEmpty, __smtx_map_diff]
     rfl
   rw [smtx_eval_or_term_eq, smtx_eval_eq_term_eq, smtx_eval_or_term_eq]
   have hMem : __smtx_model_eval M

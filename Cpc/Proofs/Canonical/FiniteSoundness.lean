@@ -362,6 +362,46 @@ private theorem typed_bitvec_shape (v : SmtValue) (w : Nat)
         (by intro _ _ hEq; cases hEq) (by intro _ _ hEq; cases hEq)
   | _ => simp [__smtx_typeof_value] at h
 
+private theorem typed_usort_shape (v : SmtValue) (u : native_Nat)
+    (h : __smtx_typeof_value v = SmtType.USort u) :
+    ∃ n : native_Nat, v = SmtValue.UValue u n := by
+  cases v with
+  | UValue i n =>
+      simp [__smtx_typeof_value] at h
+      subst h
+      exact ⟨n, rfl⟩
+  | Binary wi n =>
+      by_cases hc :
+          (native_and (native_zleq 0 wi)
+            (native_zeq n (native_mod_total n (native_int_pow2 wi)))) = true <;>
+        simp [__smtx_typeof_value, native_ite, hc] at h
+  | Char c =>
+      by_cases hc : native_char_valid c = true <;>
+        simp [__smtx_typeof_value, native_ite, hc] at h
+  | Map m =>
+      rcases typeof_map_value_shape m with ⟨A, B, hm⟩ | hm <;>
+        simp [__smtx_typeof_value, hm] at h
+  | Set m =>
+      rcases map_to_set_type_shape (__smtx_typeof_map_value m) with
+        ⟨A, hm⟩ | hm <;>
+        simp [__smtx_typeof_value, hm] at h
+  | Seq ss =>
+      rcases typeof_seq_value_shape ss with ⟨A, hs⟩ | hs <;>
+        simp [__smtx_typeof_value, hs] at h
+  | DtCons s' dd' j =>
+      exfalso
+      rcases dt_cons_result_chain s' dd' j (SmtType.USort u) h
+          (by intro hEq; cases hEq) with ⟨Us, hChain⟩
+      exact not_chain_of_base hChain.symm
+        (by intro _ _ hEq; cases hEq) (by intro _ _ hEq; cases hEq)
+  | Apply f a =>
+      exfalso
+      rcases apply_result_chain f a (SmtType.USort u) h
+          (by intro hEq; cases hEq) with ⟨s, dd, Us, hChain⟩
+      exact not_chain_of_base hChain.symm
+        (by intro _ _ hEq; cases hEq) (by intro _ _ hEq; cases hEq)
+  | _ => simp [__smtx_typeof_value] at h
+
 private theorem typed_char_shape (v : SmtValue)
     (h : __smtx_typeof_value v = SmtType.Char) :
     ∃ c : native_Char, v = SmtValue.Char c := by
@@ -867,7 +907,16 @@ theorem unit_type_values_default
       simp [__smtx_is_unit_type, __smtx_type_bounded, native_and,
         native_not] at hUnit
   | USort u =>
-      simp [__smtx_is_unit_type, __smtx_type_bounded] at hUnit
+      have hOne : uc u = 1 := (smtx_is_unit_type_usort_iff u).mp hUnit
+      intro v hTy hCan
+      rcases typed_usort_shape v u hTy with ⟨n, rfl⟩
+      have hLt : n < 1 := by
+        rcases (smtx_value_canonical_uvalue_iff u n).mp hCan with h | h
+        · rw [hOne] at h; cases h
+        · rwa [hOne] at h
+      have hZero : n = 0 := Nat.lt_one_iff.mp hLt
+      subst hZero
+      simp [__smtx_type_default]
   | BitVec w =>
       cases w with
       | succ w =>
@@ -1658,7 +1707,15 @@ theorem finite_type_enumerable
   | Seq T =>
       simp [__smtx_is_finite_type, __smtx_type_bounded] at hFin
   | USort u =>
-      simp [__smtx_is_finite_type, __smtx_type_bounded] at hFin
+      have hNe0 : uc u ≠ 0 := (smtx_is_finite_type_usort_iff u).mp hFin
+      refine ⟨(List.range (uc u)).map (fun n => SmtValue.UValue u n), ?_⟩
+      intro v hTy hCan
+      rcases typed_usort_shape v u hTy with ⟨n, rfl⟩
+      have hLt : n < uc u := by
+        rcases (smtx_value_canonical_uvalue_iff u n).mp hCan with h | h
+        · exact absurd h hNe0
+        · exact h
+      simp [hLt]
   | Bool =>
       refine ⟨[SmtValue.Boolean false, SmtValue.Boolean true], ?_⟩
       intro v hTy hCan

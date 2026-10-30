@@ -55,6 +55,16 @@ theorem model_agrees_on_globals_refl (M : SmtModel) :
 by
   exact ⟨by intro s T; rfl, by intro fid T U; rfl, rfl⟩
 
+theorem model_agrees_on_globals_symm {M N : SmtModel} :
+  model_agrees_on_globals M N ->
+  model_agrees_on_globals N M :=
+by
+  intro h
+  exact
+    ⟨by intro s T; exact (h.1 s T).symm,
+      by intro fid T U; exact (h.2 fid T U).symm,
+      h.usortCard.symm⟩
+
 theorem model_agrees_on_globals_trans {M N K : SmtModel} :
   model_agrees_on_globals M N ->
   model_agrees_on_globals N K ->

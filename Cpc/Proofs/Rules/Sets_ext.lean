@@ -357,7 +357,7 @@ private theorem facts___eo_prog_sets_ext_impl
     rw [eo_to_smt_set_member_eq idx a, eo_to_smt_set_member_eq idx b]
     have hsimpa :=
       hSelectEqFalse
-    try simp [idx, hIdxSmtTerm, __smtx_model_eval, __smtx_model_eval_set_member, __smtx_model_eval_map_diff, __smtx_map_select, hEvalA, hEvalB] at hsimpa ⊢
+    try simp [idx, hIdxSmtTerm, __smtx_model_eval, __smtx_model_eval_set_member, __smtx_map_diff, __smtx_map_select, hEvalA, hEvalB] at hsimpa ⊢
     exact hsimpa
   have hEqFalse : eo_interprets M (Term.Apply (Term.Apply Term.eq lhs) rhs) false :=
     RuleProofs.eo_interprets_of_bool_eval M

@@ -15,7 +15,7 @@ set_option maxHeartbeats 10000000
 private theorem smtx_eval_map_diff_term_eq
     (M : SmtModel) (x y : SmtTerm) :
     __smtx_model_eval M (SmtTerm.map_diff x y) =
-      __smtx_model_eval_map_diff (__smtx_model_eval M x)
+      __smtx_map_diff (__smtx_model_eval M x)
         (__smtx_model_eval M y) := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
@@ -183,7 +183,7 @@ private theorem facts___eo_prog_sets_choose_singleton_impl
     rw [hElemTy]
     rw [smtx_eval_map_diff_term_eq, smtx_eval_set_singleton_term_eq',
       smtx_eval_set_empty_term_eq']
-    rw [__smtx_model_eval_set_singleton, __smtx_model_eval_map_diff]
+    rw [__smtx_model_eval_set_singleton, __smtx_map_diff]
     rw [hA1EvalTy]
     exact map_diff_singleton_empty_eq
       (__smtx_model_eval M (__eo_to_smt a1)) (__smtx_typeof (__eo_to_smt a1))

@@ -77,7 +77,7 @@ by
 /-- `map_diff` reads its model only through the cardinalities of uninterpreted sorts. -/
 theorem smtx_model_eval_map_diff_eq_of_usortCard
     {M N : SmtModel} (hCard : M.usortCard = N.usortCard) (a b : SmtValue) :
-  __smtx_model_eval_map_diff M a b = __smtx_model_eval_map_diff N a b :=
+  __smtx_map_diff M a b = __smtx_map_diff N a b :=
 by
   obtain ⟨vM, fM, cM⟩ := M
   obtain ⟨vN, fN, cN⟩ := N

@@ -117,10 +117,10 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
       simp [__smtx_type_wf_rec, native_and] at h
       exact h.2
     simpa [__smtx_type_default] using ih hDecl
-  · intros
-    simp [__smtx_type_default, __smtx_value_canonical, native_or, native_nateq,
-      native_natlt]
-    exact Nat.eq_zero_or_pos _
+  · intro u _ _
+    rcases Nat.eq_zero_or_pos (uc u) with h | h <;>
+      simp [__smtx_type_default, __smtx_value_canonical, native_usort_card, native_or,
+        native_nateq, native_natlt, h]
   · intros
     simp [__smtx_type_default, __smtx_value_canonical]
   · intro T h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 _hInh hRec
@@ -196,23 +196,6 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
     · rcases hRef with ⟨s, hs⟩
       exact absurd hs (hnotref s)
     · simpa [__smtx_field_type_default, hnotref] using ih hInh hRec
-
-/-- A value of an uninterpreted sort is canonical when it is within the sort's
-cardinality, where `0` means the sort is infinite. -/
-theorem smtx_value_canonical_uvalue_iff (u n : native_Nat) :
-    __smtx_value_canonical uc (SmtValue.UValue u n) = true ↔ (uc u = 0 ∨ n < uc u) := by
-  simp [__smtx_value_canonical, native_or, native_nateq, native_natlt]
-
-/-- An uninterpreted sort is finite exactly when its cardinality is not `0`. -/
-theorem smtx_is_finite_type_usort_iff (u : native_Nat) :
-    __smtx_is_finite_type uc (SmtType.USort u) = true ↔ uc u ≠ 0 := by
-  simp [__smtx_is_finite_type, __smtx_type_bounded, native_ite, native_not,
-    native_nateq]
-
-/-- An uninterpreted sort has one element exactly when its cardinality is `1`. -/
-theorem smtx_is_unit_type_usort_iff (u : native_Nat) :
-    __smtx_is_unit_type uc (SmtType.USort u) = true ↔ uc u = 1 := by
-  simp [__smtx_is_unit_type, __smtx_type_bounded, native_ite, native_nateq]
 
 /-- A recursively well-formed inhabited type has a typed, canonical default. -/
 theorem type_default_kernel (T : SmtType)
