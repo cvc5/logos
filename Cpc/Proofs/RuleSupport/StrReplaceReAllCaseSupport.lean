@@ -468,7 +468,7 @@ private theorem agrees_push_push
     (s₂ : native_String) (T₂ : SmtType) (v₂ : SmtValue) :
     model_agrees_on_globals M
       (native_model_push (native_model_push M s₁ T₁ v₁) s₂ T₂ v₂) := by
-  refine ⟨?_, ?_⟩
+  refine ⟨?_, ?_, rfl⟩
   · intro s' T'
     simp [native_model_lookup, model_key, native_model_push]
   · intro fid A B
