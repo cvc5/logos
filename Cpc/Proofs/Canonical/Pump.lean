@@ -322,20 +322,20 @@ private theorem dd_count_lt {B B' : SmtDatatypeDecl} (hSub : SubDD B B')
         · by_cases hsB' : __smtx_dd_has_dt s B' = true <;>
             simp [dd_count, hsB, hsB'] <;> omega
 
-private def StableDD (u : native_Bool) (dd B : SmtDatatypeDecl) : Prop :=
+private def StableDD (uc : native_Nat -> native_Nat) (u : native_Bool) (dd B : SmtDatatypeDecl) : Prop :=
   EqDD (__smtx_datatype_decl_bounded_step uc u dd B) B
 
 private theorem stable_congr {u : native_Bool} {dd B B' : SmtDatatypeDecl}
-    (hEq : EqDD B B') (hStable : StableDD u dd B) : StableDD u dd B' :=
+    (hEq : EqDD B B') (hStable : StableDD uc u dd B) : StableDD uc u dd B' :=
   eqdd_trans (eqdd_trans (step_congr u dd B' B (eqdd_symm hEq)) hStable) hEq
 
 private theorem step_stable_or_grow (u : native_Bool) (dd : SmtDatatypeDecl) :
     ∀ B : SmtDatatypeDecl,
-      StableDD u dd B ∨
+      StableDD uc u dd B ∨
         dd_count B dd < dd_count (__smtx_datatype_decl_bounded_step uc u dd B) dd := by
   intro B
   classical
-  by_cases hStable : StableDD u dd B
+  by_cases hStable : StableDD uc u dd B
   · exact Or.inl hStable
   · right
     have hDiff :
@@ -376,7 +376,7 @@ private theorem decl_bounded_congr (u : native_Bool) (dd : SmtDatatypeDecl) :
 
 private theorem decl_bounded_stable_fix (u : native_Bool) (dd : SmtDatatypeDecl) :
     ∀ (ddC : SmtDatatypeDecl) {B : SmtDatatypeDecl},
-      StableDD u dd B ->
+      StableDD uc u dd B ->
         EqDD (__smtx_datatype_decl_bounded uc u ddC dd B) B
   | SmtDatatypeDecl.nil, B, hStable => by
       simpa [__smtx_datatype_decl_bounded] using eqdd_refl B
@@ -389,7 +389,7 @@ private theorem decl_bounded_stable_fix (u : native_Bool) (dd : SmtDatatypeDecl)
 
 private theorem decl_bounded_stable_or_count (u : native_Bool) (dd : SmtDatatypeDecl) :
     ∀ (ddC : SmtDatatypeDecl) (B : SmtDatatypeDecl),
-      StableDD u dd (__smtx_datatype_decl_bounded uc u ddC dd B) ∨
+      StableDD uc u dd (__smtx_datatype_decl_bounded uc u ddC dd B) ∨
         dd_len ddC + dd_count B dd ≤
           dd_count (__smtx_datatype_decl_bounded uc u ddC dd B) dd
   | SmtDatatypeDecl.nil, B => by
@@ -400,7 +400,7 @@ private theorem decl_bounded_stable_or_count (u : native_Bool) (dd : SmtDatatype
       rcases step_stable_or_grow u dd B with hStable | hGrow
       · left
         have hStepStable :
-            StableDD u dd (__smtx_datatype_decl_bounded_step uc u dd B) :=
+            StableDD uc u dd (__smtx_datatype_decl_bounded_step uc u dd B) :=
           stable_congr (eqdd_symm hStable) hStable
         exact stable_congr
           (eqdd_symm (decl_bounded_stable_fix u dd ddC hStepStable))
@@ -414,7 +414,7 @@ private theorem decl_bounded_stable_or_count (u : native_Bool) (dd : SmtDatatype
 
 /-- The finiteness fixpoint is saturated: one more step changes nothing. -/
 private theorem decl_bounded_saturated (u : native_Bool) (dd : SmtDatatypeDecl) :
-    StableDD u dd
+    StableDD uc u dd
       (__smtx_datatype_decl_bounded uc u dd dd SmtDatatypeDecl.nil) := by
   rcases decl_bounded_stable_or_count u dd dd SmtDatatypeDecl.nil with
     hStable | hCount
@@ -676,17 +676,17 @@ theorem resolved_field_inh_wf
         exact resolved_field_inh_wf dd hDecl c hTail F hFc
 
 /-- The finiteness fixpoint of a declaration. -/
-def bounded_fix (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
+def bounded_fix (uc : native_Nat -> native_Nat) (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
   __smtx_datatype_decl_bounded uc false dd dd SmtDatatypeDecl.nil
 
 theorem is_finite_datatype_eq (s : native_String) (dd : SmtDatatypeDecl) :
     __smtx_is_finite_type uc (SmtType.Datatype s dd) =
-      __smtx_dd_has_dt s (bounded_fix dd) := by
+      __smtx_dd_has_dt s (bounded_fix uc dd) := by
   simp [__smtx_is_finite_type, __smtx_type_bounded, bounded_fix]
 
 private theorem unbounded_field_infinite
     (dd : SmtDatatypeDecl) (F : SmtType)
-    (hUnb : __smtx_field_type_bounded uc false F (bounded_fix dd) = false) :
+    (hUnb : __smtx_field_type_bounded uc false F (bounded_fix uc dd) = false) :
     __smtx_is_finite_type uc (resolve_ty dd F) = false := by
   cases F <;>
     simp [__smtx_field_type_bounded, resolve_ty, __smtx_is_finite_type,
@@ -749,17 +749,17 @@ def build_spine : SmtValue -> List SmtValue -> SmtValue
   | f, [] => f
   | f, v :: vs => build_spine (SmtValue.Apply f v) vs
 
-def list_typed_canonical : List SmtValue -> List SmtType -> Prop
+def list_typed_canonical (uc : native_Nat -> native_Nat) : List SmtValue -> List SmtType -> Prop
   | [], [] => True
   | v :: vs, U :: Us =>
       (__smtx_typeof_value v = U ∧ U ≠ SmtType.None ∧
-        __smtx_value_canonical uc v = true) ∧ list_typed_canonical vs Us
+        __smtx_value_canonical uc v = true) ∧ list_typed_canonical uc vs Us
   | _, _ => False
 
 theorem build_spine_typeof (Bt : SmtType) :
     ∀ (Us : List SmtType) (vs : List SmtValue) (f : SmtValue),
       __smtx_typeof_value f = dtc_chain_type Bt Us ->
-      list_typed_canonical vs Us ->
+      list_typed_canonical uc vs Us ->
       __smtx_typeof_value (build_spine f vs) = Bt
   | [], [], f, hTy, _ => by
       simpa [build_spine, dtc_chain_type] using hTy
@@ -783,7 +783,7 @@ theorem build_spine_typeof (Bt : SmtType) :
 theorem build_spine_canonical :
     ∀ (Us : List SmtType) (vs : List SmtValue) (f : SmtValue),
       __smtx_value_canonical uc f = true ->
-      list_typed_canonical vs Us ->
+      list_typed_canonical uc vs Us ->
       __smtx_value_canonical uc (build_spine f vs) = true
   | [], [], f, hCan, _ => by
       simpa [build_spine] using hCan
@@ -839,7 +839,7 @@ theorem list_typed_canonical_defaults :
     ∀ Us : List SmtType,
       (∀ U ∈ Us,
         native_inhabited_type U = true ∧ __smtx_type_wf_rec U = true) ->
-      list_typed_canonical (defaults_of Us) Us
+      list_typed_canonical uc (defaults_of Us) Us
   | [], _ => by
       simp [defaults_of, list_typed_canonical]
   | U :: Us, hWf => by
@@ -855,9 +855,9 @@ theorem list_typed_canonical_defaults :
 theorem list_typed_canonical_append :
     ∀ {vs1 : List SmtValue} {Us1 : List SmtType}
       {vs2 : List SmtValue} {Us2 : List SmtType},
-      list_typed_canonical vs1 Us1 ->
-      list_typed_canonical vs2 Us2 ->
-      list_typed_canonical (vs1 ++ vs2) (Us1 ++ Us2)
+      list_typed_canonical uc vs1 Us1 ->
+      list_typed_canonical uc vs2 Us2 ->
+      list_typed_canonical uc (vs1 ++ vs2) (Us1 ++ Us2)
   | [], [], vs2, Us2, _, h2 => by
       simpa using h2
   | [], U :: Us, vs2, Us2, h1, _ => by
@@ -922,12 +922,12 @@ private theorem infinite_datatype_unbounded_constructor
   have hRecParts :
       __smtx_dd_has_dt s dd = true ∧ __smtx_decl_wf_rec dd dd = true := by
     simpa [__smtx_type_wf_rec, native_and] using hRec
-  have hNotFix : __smtx_dd_has_dt s (bounded_fix dd) = false := by
+  have hNotFix : __smtx_dd_has_dt s (bounded_fix uc dd) = false := by
     rw [is_finite_datatype_eq] at hInfinite
     exact hInfinite
   have hUnbLookup :
       __smtx_datatype_bounded uc false (__smtx_dd_lookup s dd)
-        (bounded_fix dd) = false :=
+        (bounded_fix uc dd) = false :=
     unbounded_lookup_of_not_fix false dd s hRecParts.1 hNotFix
   have hDtWf : __smtx_dt_wf_rec dd (__smtx_dd_lookup s dd) = true :=
     decl_wf_rec_lookup_local s dd dd hRecParts.1 hRecParts.2
@@ -971,7 +971,7 @@ of the previous level (`type_large` handles ground field types structurally),
 and pads the remaining fields with defaults.
 -/
 
-private def LargeOracle (n : Nat) : Prop :=
+private def LargeOracle uc (n : Nat) : Prop :=
   ∀ (s : native_String) (dd : SmtDatatypeDecl),
     native_inhabited_type (SmtType.Datatype s dd) = true →
     __smtx_type_wf_rec (SmtType.Datatype s dd) = true →
@@ -1555,7 +1555,7 @@ theorem decl_bounded_payload (u : native_Bool) (dd : SmtDatatypeDecl)
 
 theorem bounded_field_finite
     (dd : SmtDatatypeDecl) (F : SmtType)
-    (hBnd : __smtx_field_type_bounded uc false F (bounded_fix dd) = true) :
+    (hBnd : __smtx_field_type_bounded uc false F (bounded_fix uc dd) = true) :
     __smtx_is_finite_type uc (resolve_ty dd F) = true := by
   cases F <;>
     simp [__smtx_field_type_bounded, resolve_ty, __smtx_is_finite_type,
@@ -1563,17 +1563,17 @@ theorem bounded_field_finite
     exact hBnd
 
 /-- The unit fixpoint of a declaration. -/
-def unit_fix (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
+def unit_fix (uc : native_Nat -> native_Nat) (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
   __smtx_datatype_decl_bounded uc true dd dd SmtDatatypeDecl.nil
 
 theorem is_unit_datatype_eq (s : native_String) (dd : SmtDatatypeDecl) :
     __smtx_is_unit_type uc (SmtType.Datatype s dd) =
-      __smtx_dd_has_dt s (unit_fix dd) := by
+      __smtx_dd_has_dt s (unit_fix uc dd) := by
   simp [__smtx_is_unit_type, __smtx_type_bounded, unit_fix]
 
 theorem nonunit_field_nonunit
     (dd : SmtDatatypeDecl) (F : SmtType)
-    (hUnb : __smtx_field_type_bounded uc true F (unit_fix dd) = false) :
+    (hUnb : __smtx_field_type_bounded uc true F (unit_fix uc dd) = false) :
     __smtx_is_unit_type uc (resolve_ty dd F) = false := by
   cases F <;>
     simp [__smtx_field_type_bounded, resolve_ty, __smtx_is_unit_type,
@@ -1770,7 +1770,7 @@ theorem constructor_spine_typed
     (s : native_String) (dd : SmtDatatypeDecl) (k : Nat) (c : SmtDatatypeCons)
     (hnth : dt_nth_cons (__smtx_dd_lookup s dd) k = some c)
     (vs : List SmtValue)
-    (hTyped : list_typed_canonical vs ((dtc_fields c).map (resolve_ty dd))) :
+    (hTyped : list_typed_canonical uc vs ((dtc_fields c).map (resolve_ty dd))) :
     __smtx_typeof_value (build_spine (SmtValue.DtCons s dd k) vs) =
         SmtType.Datatype s dd ∧
       __smtx_value_canonical uc (build_spine (SmtValue.DtCons s dd k) vs) =
@@ -1847,19 +1847,19 @@ private theorem dt_nondefault
   have hUniq : dd_unique dd := dd_unique_of_decl_wf dd dd hRecParts.2
   have hDtWf : __smtx_dt_wf_rec dd (__smtx_dd_lookup s dd) = true :=
     decl_wf_rec_lookup_local s dd dd hRecParts.1 hRecParts.2
-  have hNotUnitFix : __smtx_dd_has_dt s (unit_fix dd) = false := by
+  have hNotUnitFix : __smtx_dd_has_dt s (unit_fix uc dd) = false := by
     rw [is_unit_datatype_eq] at hNonUnit
     exact hNonUnit
   have hUnbLookup :
       __smtx_datatype_bounded uc true (__smtx_dd_lookup s dd)
-        (unit_fix dd) = false :=
+        (unit_fix uc dd) = false :=
     unbounded_lookup_of_not_fix true dd s hRecParts.1 hNotUnitFix
-  have hFixMem : __smtx_dd_has_dt s (bounded_fix dd) = true := by
+  have hFixMem : __smtx_dd_has_dt s (bounded_fix uc dd) = true := by
     rw [is_finite_datatype_eq] at hFinite
     exact hFinite
   have hFixBnd :
       __smtx_datatype_bounded uc false (__smtx_dd_lookup s dd)
-        (bounded_fix dd) = true :=
+        (bounded_fix uc dd) = true :=
     bounded_fix_sound false dd hUniq s hFixMem
   cases hd : __smtx_dd_lookup s dd with
   | null =>
@@ -1912,10 +1912,10 @@ private theorem dt_nondefault
       | null =>
           -- single constructor: replace the designated non-unit field
           have hConsUnb :
-              __smtx_datatype_cons_bounded uc true c (unit_fix dd) = false := by
+              __smtx_datatype_cons_bounded uc true c (unit_fix uc dd) = false := by
             simpa [__smtx_datatype_bounded, hd] using hUnbLookup
           have hConsBnd :
-              __smtx_datatype_cons_bounded uc false c (bounded_fix dd) = true := by
+              __smtx_datatype_cons_bounded uc false c (bounded_fix uc dd) = true := by
             simpa [__smtx_datatype_bounded, hd] using hFixBnd
           have hnth0 :
               dt_nth_cons (__smtx_dd_lookup s dd) 0 = some c := by
@@ -1929,7 +1929,7 @@ private theorem dt_nondefault
             rw [hFields]
             simp
           have hFieldBnd :
-              __smtx_field_type_bounded uc false F (bounded_fix dd) = true :=
+              __smtx_field_type_bounded uc false F (bounded_fix uc dd) = true :=
             bounded_cons_field c hConsBnd F hFmem
           have hXWf := resolved_field_inh_wf dd hRecParts.2 c hConsWf F hFmem
           have hXNonUnit := nonunit_field_nonunit dd F hFieldUnb
@@ -2077,7 +2077,7 @@ private theorem dt_nondefault
           have hXNone : resolve_ty dd F ≠ SmtType.None :=
             ne_none_of_inh hXWf.1
           have hTyped :
-              list_typed_canonical
+              list_typed_canonical uc
                 (defaults_of (pre.map (resolve_ty dd)) ++
                   eF :: defaults_of (post.map (resolve_ty dd)))
                 ((dtc_fields c).map (resolve_ty dd)) := by
@@ -2402,7 +2402,7 @@ termination_by sizeOf A
 -- === large values of arbitrary infinite types, given the oracle ===
 
 private theorem type_large
-    (n : Nat) (hO : LargeOracle n) (A : SmtType) :
+    (n : Nat) (hO : LargeOracle uc n) (A : SmtType) :
     native_inhabited_type A = true →
     __smtx_type_wf_rec A = true →
     __smtx_is_finite_type uc A = false →
@@ -2594,14 +2594,14 @@ termination_by sizeOf A
 
 -- === the pump ===
 
-private theorem oracle_zero : LargeOracle 0 := by
+private theorem oracle_zero : LargeOracle uc 0 := by
   intro s dd hInh hRec _hInf
   have hKernel := type_default_kernel (SmtType.Datatype s dd) hInh hRec
   exact ⟨__smtx_type_default (SmtType.Datatype s dd), hKernel.1, hKernel.2,
     Nat.zero_le _⟩
 
-private theorem oracle_succ (n : Nat) (hO : LargeOracle n) :
-    LargeOracle (Nat.succ n) := by
+private theorem oracle_succ (n : Nat) (hO : LargeOracle uc n) :
+    LargeOracle uc (Nat.succ n) := by
   intro s dd hInh hRec hInf
   rcases infinite_datatype_unbounded_constructor s dd hRec hInf with
     ⟨k, preU, postU, X, hChain, hAllWf, hXInf⟩
@@ -2619,7 +2619,7 @@ private theorem oracle_succ (n : Nat) (hO : LargeOracle n) :
     intro U hU
     exact hAllWf U (by simp [hU])
   have hTyped :
-      list_typed_canonical
+      list_typed_canonical uc
         (defaults_of preU ++ w :: defaults_of postU)
         (preU ++ X :: postU) :=
     list_typed_canonical_append
@@ -2641,7 +2641,7 @@ private theorem oracle_succ (n : Nat) (hO : LargeOracle n) :
       (SmtValue.DtCons s dd k) w hMem
     omega
 
-private theorem oracle_all : ∀ n : Nat, LargeOracle n
+private theorem oracle_all : ∀ n : Nat, LargeOracle uc n
   | 0 => oracle_zero
   | Nat.succ n => oracle_succ n (oracle_all n)
 

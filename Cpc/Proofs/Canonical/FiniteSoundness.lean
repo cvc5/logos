@@ -475,11 +475,11 @@ private theorem build_spine_snoc :
 
 private theorem list_typed_canonical_snoc
     {vs : List SmtValue} {Us : List SmtType}
-    (h : list_typed_canonical vs Us)
+    (h : list_typed_canonical uc vs Us)
     {a : SmtValue} {U : SmtType}
     (ha : __smtx_typeof_value a = U) (hU : U ≠ SmtType.None)
     (hc : __smtx_value_canonical uc a = true) :
-    list_typed_canonical (vs ++ [a]) (Us ++ [U]) :=
+    list_typed_canonical uc (vs ++ [a]) (Us ++ [U]) :=
   list_typed_canonical_append h ⟨⟨ha, hU, hc⟩, trivial⟩
 
 /--
@@ -499,7 +499,7 @@ private theorem chain_typed_spine :
           some cr ∧
         dtc_fields cr = consumed ++ Us ∧
         v = build_spine (SmtValue.DtCons s dd k) vs ∧
-        list_typed_canonical vs consumed
+        list_typed_canonical uc vs consumed
   | SmtValue.NotValue, s, dd, Us, h, _ => by
       exfalso
       exact not_chain_of_base (Eq.symm h)
@@ -619,7 +619,7 @@ theorem datatype_typed_canonical_spine
       dt_nth_cons (__smtx_dt_resolve (__smtx_dd_lookup s dd) dd) k =
         some cr ∧
       v = build_spine (SmtValue.DtCons s dd k) vs ∧
-      list_typed_canonical vs (dtc_fields cr) := by
+      list_typed_canonical uc vs (dtc_fields cr) := by
   rcases chain_typed_spine v s dd [] (by simpa [dtc_chain_type] using hTy)
       hCan with ⟨k, cr, consumed, vs, hnth, hFields, hSpine, hTyped⟩
   refine ⟨k, cr, vs, hnth, hSpine, ?_⟩
@@ -723,7 +723,7 @@ private theorem unit_body_shape {d : SmtDatatype} {B : SmtDatatypeDecl}
 
 private theorem list_typed_all_default :
     ∀ (Us : List SmtType) (vs : List SmtValue),
-      list_typed_canonical vs Us ->
+      list_typed_canonical uc vs Us ->
       (∀ U ∈ Us, ∀ w : SmtValue,
         __smtx_typeof_value w = U ->
         __smtx_value_canonical uc w = true ->
@@ -1445,12 +1445,12 @@ private theorem dt_resolve_nth_inv (dd : SmtDatatypeDecl) :
       rcases dt_resolve_nth_inv dd d k cr h' with ⟨c', hnth, hcr⟩
       exact ⟨c', by simpa [dt_nth_cons] using hnth, hcr⟩
 
-private def covers_fields : List (List SmtValue) → List SmtType → Prop
+private def covers_fields (uc : native_Nat -> native_Nat) : List (List SmtValue) → List SmtType → Prop
   | [], [] => True
   | L :: Ls, U :: Us =>
       (∀ v : SmtValue, __smtx_typeof_value v = U →
         __smtx_value_canonical uc v = true → v ∈ L) ∧
-      covers_fields Ls Us
+      covers_fields uc Ls Us
   | _, _ => False
 
 private def arg_lists : List (List SmtValue) → List (List SmtValue)
@@ -1460,8 +1460,8 @@ private def arg_lists : List (List SmtValue) → List (List SmtValue)
 private theorem arg_lists_complete :
     ∀ (Ls : List (List SmtValue)) (Us : List SmtType)
       (vs : List SmtValue),
-      covers_fields Ls Us →
-      list_typed_canonical vs Us →
+      covers_fields uc Ls Us →
+      list_typed_canonical uc vs Us →
       vs ∈ arg_lists Ls
   | [], [], [], _, _ => by
       simp [arg_lists]
@@ -1506,7 +1506,7 @@ private theorem cons_covers_exist
       __smtx_datatype_cons_bounded uc false c B0 = true →
       __smtx_dt_cons_wf_rec dd c = true →
       ∃ Ls : List (List SmtValue),
-        covers_fields Ls ((dtc_fields c).map (resolve_ty dd))
+        covers_fields uc Ls ((dtc_fields c).map (resolve_ty dd))
   | SmtDatatypeCons.unit, _, _, _ => ⟨[], by simp [dtc_fields, covers_fields]⟩
   | SmtDatatypeCons.cons F c, hSize, hBnd, hWf => by
       have hFieldBnd : __smtx_field_type_bounded uc false F B0 = true := by
@@ -1582,7 +1582,7 @@ private theorem dt_spine_covers
       ∃ cover : List SmtValue,
         ∀ (j : Nat) (c : SmtDatatypeCons) (vs : List SmtValue),
           dt_nth_cons d j = some c →
-          list_typed_canonical vs ((dtc_fields c).map (resolve_ty dd)) →
+          list_typed_canonical uc vs ((dtc_fields c).map (resolve_ty dd)) →
           build_spine (SmtValue.DtCons t dd (k0 + j)) vs ∈ cover
   | SmtDatatype.null, k0, _, _, _ =>
       ⟨[], by
@@ -1832,7 +1832,7 @@ theorem finite_type_enumerable
         ⟨c, hnthU, hcr⟩
       subst hcr
       have hTyped' :
-          list_typed_canonical vs ((dtc_fields c).map (resolve_ty dd)) := by
+          list_typed_canonical uc vs ((dtc_fields c).map (resolve_ty dd)) := by
         rw [← dtc_resolve_fields dd c]
         exact hTyped
       have := hCover k c vs hnthU hTyped'

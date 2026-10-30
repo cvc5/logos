@@ -181,16 +181,15 @@ supports non-standard extensions of theories, and defines non-standard internal 
 The formalization that follows departs from SMT-LIB in three ways, which are
 different in kind.
 
-First, on three standard theories it admits fewer models than SMT-LIB does:
-arrays are interpreted as almost-constant maps, values of type \code{Real} are
-assumed to be rational, and uninterpreted sorts are assumed to be of infinite
-cardinality. Each restriction is stated again at the definition that introduces
+First, on two standard theories it admits fewer models than SMT-LIB does:
+arrays are interpreted as almost-constant maps, and values of type \code{Real}
+are assumed to be rational. Each restriction is stated again at the definition that introduces
 it, and they are collected here so that the list can be read in one place. Read
 on the standard theories alone, every model of this semantics is an SMT-LIB
 model and the converse does not hold, so unsatisfiability as defined here is
 implied by unsatisfiability in SMT-LIB and does not imply it: a formula
 satisfiable in SMT-LIB only by a model this semantics cannot express is treated
-here as unsatisfiable. All three are confined to quantified or nonlinear
+here as unsatisfiable. Both are confined to quantified or nonlinear
 reasoning, and on the quantifier-free linear fragments the two notions agree.
 
 Second, the semantics interprets sorts and operators that SMT-LIB does not
@@ -730,6 +729,7 @@ deriving Repr, DecidableEq, Inhabited
 structure SmtModel where
   values : SmtModelKey -> SmtValue
   nativeFuns : SmtModelKey -> (SmtValue -> SmtValue)
+  usortCard : Nat -> Nat
 deriving Inhabited
 
 def model_push (M : SmtModel) (s : String) (T : SmtType) (v : SmtValue) : SmtModel :=
@@ -745,11 +745,13 @@ def model_push (M : SmtModel) (s : String) (T : SmtType) (v : SmtValue) : SmtMod
 
 Before giving the definition of SMT-LIB values (\smtvalue), 
 we first give a definition of \smtmodel.
-A model consists of two mappings.
+A model consists of two mappings and a cardinality function.
 The first (\code{values}) is a mapping from keys (as defined via the structure \code{SmtModelKey})
 to values.
 The second (\code{nativeFuns}) is a mapping from keys to native (unary) Lean functions.
-For both, a model key consists of three things:
+The third (\code{usortCard}) gives the cardinality of each uninterpreted sort,
+as described in Section~\ref{sec:values}.
+For both mappings, a model key consists of three things:
 (1) whether the key is for a variable (resp. free constant),
 (2) a string identifier for the variable or constant, and
 (3) the type of the variable or constant.
@@ -972,9 +974,14 @@ number $n$.
 The second index is the identifier for the value,
 where we assume that \code{(UValue n i)} and \code{(UValue n j)} are distinct
 when $i$ and $j$ are distinct.
-This implies that uninterpreted sorts are implicitly assumed to be interpreted
-as infinite cardinality.
-Note that this does not necessarily hold for arbitrary SMT-LIB inputs.
+The cardinality of each uninterpreted sort is chosen by the model:
+\code{(M.usortCard n)} is either $0$, in which case \code{(USort n)} is
+countably infinite and every \code{(UValue n i)} is one of its values,
+or some $k > 0$, in which case its values are \code{(UValue n i)} for $i < k$.
+Since a satisfiable first-order formula that has an infinite model also has a
+countable one, this admits every cardinality SMT-LIB allows.
+The restriction to the values of the sort is enforced by canonicity,
+described below.
 
 Values have the same type class properties as types,
 and can be compared with \code{veq}.
@@ -1152,6 +1159,7 @@ def smt_datatype_decl_bounded (u : Bool) : SmtDatatypeDecl -> SmtDatatypeDecl ->
 
 def smt_type_bounded (u : Bool) : SmtType -> Bool
   | SmtType.Bool => !u
+  | (SmtType.USort i) => (if u then (uc i = 1) else (uc i != 0))
   | (SmtType.BitVec w) => (!u || (w = 0))
   | SmtType.Char => !u
   | (SmtType.Datatype s dd) => (smt_dd_has_dt s (smt_datatype_decl_bounded u dd dd SmtDatatypeDecl.nil))
@@ -1232,8 +1240,15 @@ same element everywhere),
 or both its index and element types are finite;
 it is unit iff its element type is unit.
 Set types are finite iff their element type is finite, and are never unit.
-Other types such as integers, reals, sequences, regular expressions
-and uninterpreted sorts are unconditionally not finite.
+An uninterpreted sort is finite iff the model gives it a nonzero cardinality,
+and unit iff that cardinality is one.
+Other types such as integers, reals, sequences and regular expressions
+are unconditionally not finite.
+Since uninterpreted sorts are classified using the cardinality function
+\code{uc} of the model, \code{smt_type_bounded} and every method that calls it,
+including \code{smt_is_finite_type} and \code{smt_value_canonical} below,
+take \code{uc} as an additional argument, which we leave implicit in the
+listings; when a model \code{M} is at hand it is \code{M.usortCard}.
 We do not define finiteness for functions here,
 as they will not be considered first-class.
 
@@ -1491,6 +1506,7 @@ def smt_value_canonical : SmtValue -> Bool
   | (SmtValue.Map m) => (smt_map_canonical m)
   | (SmtValue.Set m) => (smt_map_canonical m) && (veq (smt_map_get_default m) (SmtValue.Boolean false))
   | (SmtValue.Seq s) => (smt_seq_canonical s)
+  | (SmtValue.UValue i n) => (uc i = 0) || (n < uc i)
   | (SmtValue.RegLan r) => (re_canonical r)
   | (SmtValue.Apply f v) => (smt_value_canonical f) && (smt_value_canonical v)
   | v => true
@@ -2851,7 +2867,8 @@ def assumptionCheckGuard (A : Term) : Term :=
 /-- Two models agree on the global part of the interpretation. -/
 def model_agrees_on_globals (M N : SmtModel) : Prop :=
   (∀ s T, model_lookup M false s T = model_lookup N false s T) ∧
-  (∀ fid T U, model_fun_lookup M fid T U = model_fun_lookup N fid T U)
+  (∀ fid T U, model_fun_lookup M fid T U = model_fun_lookup N fid T U) ∧
+  M.usortCard = N.usortCard
 
 theorem smt_model_eval_eq_of_eo_closed
     (P : Term) (hClosed : eo_is_closed P = Term.Boolean true)
