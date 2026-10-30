@@ -28,7 +28,7 @@ namespace Smtm
 /-- The typing conjunct carried by the generated Boolean inhabitation check. -/
 theorem native_inhabited_type_typed {T : SmtType} (h : native_inhabited_type T = true) :
     native_Teq (__smtx_typeof_value (__smtx_type_default T)) T = true := by
-  simp only [native_inhabited_type, native_and, Bool.and_eq_true] at h
+  simp only [native_inhabited_type_eq, native_and, Bool.and_eq_true] at h
   exact h.2
 
 /-- The two facts carried by the inhabitation check: the type is not `None`, and the

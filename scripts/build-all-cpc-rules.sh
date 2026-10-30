@@ -21,8 +21,8 @@ Options:
   -jN, --jobs N        Lake runtime threads per invocation (default: 1).
   --all-at-once        Build every rule in one Lake invocation (high memory).
   --dry-run            Print the planned Lake commands without running them.
-  --clean              Run `lake clean` before building all rules.
-  --clean-only         Run `lake clean` and exit without building.
+  --clean              Clean verification build artifacts before building.
+  --clean-only         Clean verification build artifacts and exit.
   -h, --help           Show this help.
 
 Examples:
@@ -88,11 +88,11 @@ rules_dir="${repo_root}/Cpc/Proofs/Rules"
 cd "${repo_root}"
 
 if [ "${do_clean}" = true ]; then
-  echo "==> Cleaning build artifacts (lake clean)"
+  echo "==> Cleaning verification build artifacts"
   if [ "${dry_run}" = true ]; then
-    echo "lake clean"
+    echo "lake -d verification clean"
   else
-    lake clean
+    lake -d verification clean
   fi
 fi
 
@@ -130,13 +130,13 @@ echo
 
 run_lake_build() {
   if [ "${dry_run}" = true ]; then
-    printf 'lake --verbose --no-ansi build'
+    printf 'lake -d verification --verbose --no-ansi build'
     printf ' %q' "$@"
     echo
     return
   fi
 
-  lake --verbose --no-ansi build "$@" 2>&1 | awk '
+  lake -d verification --verbose --no-ansi build "$@" 2>&1 | awk '
   {
     line = $0
 

@@ -6,6 +6,37 @@ facts, and about the invariants that machine maintains. This page records how
 far that separation has been taken, what a checker for a *different* calculus
 would have to supply, and what is left to do.
 
+## Executable and verification projects
+
+The root Lake project owns the executable definitions. The project in
+`verification/` depends on it and owns model semantics and correctness proofs.
+Its source directory is the repository root, so existing Lean module names and
+proof paths are preserved; explicit, disjoint library globs assign each module
+to one project. `scripts/build.sh` selects the verification workspace for proof
+targets. Future mathematical dependencies, including real-number libraries,
+belong exclusively to the verification project.
+
+For a standalone proof file, use `lake -d verification lean path/to/File.lean`.
+Lake supplies the module artifact paths across both projects; a plain
+`lake env lean` cannot resolve a namespace shared between their build trees.
+
+The executable imports `SmtSyntax`, `SmtTyping`, `SmtTranslate`, and
+`TranslationChecks`. These contain no `SmtValue` or model evaluation.
+`Proofs/Assumptions` re-exports `TranslationChecks` for existing proofs, so
+translatability predicates and per-rule masks still have one definition.
+
+`native_inhabited_type` uses structural default information: `none` when no
+default is constructed, and `some T` when a constructed default has type `T`.
+These cases must be distinguished even when `T` is the invalid type `None`.
+`Proofs/StaticTyping` proves exact agreement with the semantic default generator
+on all types and malformed datatype declarations. The default generator has its
+own mutual block with a stable induction principle across signatures.
+
+`scripts/check-checker-boundary.py` audits both executable import closures. With
+`--build` it copies only checker sources and the root Lake configuration to a
+temporary tree and builds both executables and CpcMini. Semantic sources,
+verification dependencies, and cached semantic artifacts are absent.
+
 Sizes below are rounded, and are not kept exact: they move with every change,
 and nothing depends on the precise figure.
 
@@ -25,7 +56,8 @@ essentially as-is.
 | rule support | `Proofs/RuleSupport/*` | 350K | <1K | no — rule-specific |
 | rules | `Proofs/Rules/*` | 280K (591 files) | 1K (5 files) | no |
 
-`Logos.lean`, `LogosTerm.lean`, `SmtEval.lean`, `SmtModel*.lean`,
+`Logos.lean`, `LogosTerm.lean`, `SmtEval.lean`, `SmtSyntax.lean`,
+`SmtTyping.lean`, `SmtTranslate.lean`, `SmtModel*.lean`,
 `SmtValueOrder.lean`, `Spec.lean`, `Parser.lean`, `Proofs/RuleLemmas.lean` and
 one stub per rule are emitted by `ethos-eoc` instead; see
 [`../install/README.md`](../install/README.md).
@@ -37,13 +69,15 @@ layer.
 
 ### Module order
 
-`Proofs/ModelEval.lean` sits directly above `SmtModel.lean`, before the
+`Proofs/StaticTyping.lean` proves the structural inhabitation check agrees with
+`SmtModel.lean`. `Proofs/ModelEval.lean` imports that bridge before the
 type-preservation and other proof modules. Its Boolean evaluation lemma also
 generates the exposed evaluator's unfolding theorem once for those imports.
 
 ```
 Proofs/Common.lean            core semantics predicates (eo_interprets, eo_has_bool_type)
-Proofs/Assumptions.lean       input-problem + per-command side conditions
+TranslationChecks.lean       input-problem + per-command side conditions
+Proofs/Assumptions.lean       compatibility import of those side conditions
 Proofs/RuleSupport/Contract.lean   the checker/rule contract
 Proofs/CheckerState.lean      the state machine — no invariant is named here
 Proofs/Invariants/Stability.lean   the one optional invariant

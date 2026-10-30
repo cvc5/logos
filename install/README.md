@@ -17,7 +17,8 @@ install/deps/                the Ethos tree and the compiler, ignored by git
 ```bash
 install/get-eo-compiler.sh                          # once
 install/install-cpc.sh ~/cvc5/proofs/eo/cpc/Cpc.eo  # regenerate Cpc
-scripts/build.sh Cpc                                # check the result
+scripts/build.sh Cpc                                # build the checker interface
+scripts/build.sh Cpc.Proofs.StaticTyping             # check model/static agreement
 ```
 
 Passing the signature is the whole of a normal update. It can be any Eunoia
@@ -33,6 +34,7 @@ compiles to has to move it as well. `--all` is both:
 ```bash
 install/install-cpc.sh --all ~/cvc5/proofs/eo/cpc/Cpc.eo
 scripts/build.sh Cpc CpcMini
+scripts/build.sh Cpc.Proofs.StaticTyping CpcMini.Proofs.StaticTyping
 ```
 
 With no signature to hand, `--cached` compiles that recorded copy:
@@ -73,6 +75,7 @@ Cpc/Logos.lean       Cpc/SmtModelDefs.lean   Cpc/Spec.lean
 Cpc/LogosTerm.lean   Cpc/SmtValueOrder.lean  Cpc/Proofs/RuleLemmas.lean
 Cpc/Parser.lean      Cpc/SmtModel.lean       Cpc/Proofs/Rules/<Rule>.lean
 Cpc/SmtEval.lean
+Cpc/SmtSyntax.lean   Cpc/SmtTyping.lean     Cpc/SmtTranslate.lean
 ```
 
 Each of those signature-wide modules is installed with a banner saying it is
@@ -82,7 +85,7 @@ get one: the compiler's stub is where the proof then goes, so it stops being
 generated code the moment it is worth keeping.
 
 Everything else is hand-written and is left alone: `Cpc/Api*.lean`,
-`Cpc/Diagnostics.lean`, `Cpc/Native.lean` and `Cpc/Native/`, and everything under
+`Cpc/TranslationChecks.lean`, `Cpc/Diagnostics.lean`, `Cpc/Native.lean` and `Cpc/Native/`, and everything under
 `Cpc/Proofs/` other than `RuleLemmas.lean` and `Rules/`.
 The shared parser and datatype elaboration under `Logos/` are also hand-written.
 
@@ -138,6 +141,18 @@ rather than here: `tools/eoc/semantics/smt.eos` in
 
 `Spec.lean` and the `SmtModel` modules are what the two compile to, so changing
 what CPC means changes what satisfiability means in Logos.
+
+The compiler's target layout separates a static interface from model semantics.
+`SmtSyntax` contains types, datatype declarations, and terms; `SmtTyping` holds
+static typing, well-formedness, and structural default information;
+`SmtTranslate` contains EO-to-SMT translation. `Spec` connects translation to
+model satisfiability. `Proofs/StaticTyping.lean` proves that structural default
+information agrees with the semantic default generator for both packages.
+
+The checked-in Lean modules define this fixed layout. The EOC compiler needs
+to be updated to emit it directly; there is no installation-time splitting
+pass. The installer expects the new modules and checks that all are present
+before copying any compiler output into a package.
 
 In practice they only need to change when a new theory symbol is added, when
 the formalized semantics of an operator is being revised, or when the Eunoia

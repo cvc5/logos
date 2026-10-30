@@ -44,8 +44,8 @@ the counterpart here of the unverified parser on the `logos` side.
 else internal to the checker.  These definitions used to be generated into
 `Cpc/Logos.lean`, where they were `CState` operations that ran the checker alone.
 They are hand-written here because the checks are: `Cpc/Logos.lean` is compiled
-from the calculus and knows nothing of `Cpc/SmtModel.lean`, which deciding the
-side conditions needs.
+from the calculus. The side conditions use only the static SMT interface;
+model semantics and soundness proofs belong to the verification project.
 -/
 
 open SmtEval
@@ -90,7 +90,7 @@ Run one checker command, checking it exactly as `logos` checks a parsed one.
 
 `decide (cmdTranslationOk c)` is the per-command half of
 `logos_check_cmdListTranslationOk`, decided by the same instance of
-`Cpc/Proofs/Assumptions.lean`, so the per-rule masks the rule proofs assume are
+`Cpc/TranslationChecks.lean`, so the per-rule masks the rule proofs assume are
 checked here too.
 -/
 def logos_invoke_cmd (s : LogosState) (c : CCmd) : LogosState :=

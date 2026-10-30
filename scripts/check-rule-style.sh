@@ -13,16 +13,16 @@ fi
 
 check_no_rule_imports() {
   local import_pattern
-  local violations
+  local violations=() line
 
   import_pattern='^[[:space:]]*(public[[:space:]]+)?import[[:space:]]+(all[[:space:]]+)?Cpc\.Proofs\.Rules\.'
 
   if command -v rg >/dev/null 2>&1; then
-    mapfile -t violations < <(
+    while IFS= read -r line; do violations+=("${line}"); done < <(
       rg -n "${import_pattern}" "${rules_dir}"/*.lean || true
     )
   else
-    mapfile -t violations < <(
+    while IFS= read -r line; do violations+=("${line}"); done < <(
       grep -nHE "${import_pattern}" "${rules_dir}"/*.lean || true
     )
   fi

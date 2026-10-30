@@ -31,7 +31,7 @@ theorem cpcmini_datatype_type_default_typed_canonical_assumption
   have hTyped : native_Teq (__smtx_typeof_value
       (__smtx_type_default (SmtType.Datatype s d))) (SmtType.Datatype s d) = true := by
     have h2 := _hInh
-    simp only [native_inhabited_type, native_and, Bool.and_eq_true] at h2
+    simp only [native_inhabited_type_eq, native_and, Bool.and_eq_true] at h2
     exact h2.2
   refine ⟨of_decide_eq_true (by simpa [native_Teq] using hTyped), ?_⟩
   -- Canonicity follows from recursive well-formedness of the datatype block.

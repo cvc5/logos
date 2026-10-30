@@ -7,13 +7,20 @@ weakLeanArgs = ["-j1"]
 
 [[lean_lib]]
 name = "Logos"
+allowImportAll = true
 
 [[lean_lib]]
 name = "Cpc"
+roots = []
+globs = ["Cpc", "Cpc.Logos", "Cpc.LogosTerm", "Cpc.Parser", "Cpc.SmtEval", "Cpc.SmtSyntax", "Cpc.SmtTyping", "Cpc.SmtTranslate", "Cpc.TranslationChecks", "Cpc.Api", "Cpc.Native", "Cpc.Diagnostics"]
+allowImportAll = true
 moreLeanArgs = ["-DmaxHeartbeats=10000000", "-DwarningAsError=true"]
 
 [[lean_lib]]
 name = "CpcMini"
+roots = []
+globs = ["CpcMini", "CpcMini.Logos", "CpcMini.LogosTerm", "CpcMini.SmtEval", "CpcMini.SmtSyntax", "CpcMini.SmtTyping", "CpcMini.SmtTranslate", "CpcMini.TranslationChecks"]
+allowImportAll = true
 moreLeanArgs = ["-DwarningAsError=true"]
 
 [[lean_exe]]

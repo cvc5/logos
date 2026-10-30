@@ -51,6 +51,12 @@ The first build takes roughly 3.5 minutes currently. A second executable,
 `logos-native`, reads an internal input format; see
 [docs/lean-native-proofs.md](docs/lean-native-proofs.md).
 
+Both executable targets build from the root Lake project without model semantics
+or proof dependencies. The separate [`verification/`](verification/lakefile.toml)
+project depends on this checker project and owns the model semantics and
+correctness proofs. Mathematical libraries needed by the semantics belong in
+that project; compiling the checker does not fetch or compile them.
+
 ## Using Logos
 
 The `logos` executable reads the s-expression (Eunoia) syntax emitted by
@@ -101,8 +107,8 @@ Logos is verified: its soundness is stated and proven in Lean against a specific
 SMT-LIB semantics, so a proof it accepts implies that the assumptions of that
 proof are indeed unsatisfiable.
 The specification is in two parts. First, the file `./Cpc/SmtModel.lean` formalizes a model semantics of SMT-LIB.
-Second, the file `./Cpc/Spec.lean` defines a correspondence between Eunoia terms and SMT-LIB terms
-and a definition of satisfiability for Eunoia terms.
+Second, `Cpc/SmtTranslate.lean` defines the correspondence between Eunoia terms
+and SMT-LIB terms, and `Cpc/Spec.lean` defines satisfiability for Eunoia terms.
 
 The SMT-LIB formalization `./Cpc/SmtModel.lean` is self-contained: it defines the
 model semantics of SMT-LIB without reference to the checker.
@@ -122,7 +128,7 @@ There are no `sorry`s in the soundness proof or its dependencies.
 
 `correct___eo_is_refutation` is stated about an assumption list `F`, a command
 list, and two side conditions (`TranslatableAssumptionList F` and
-`CmdListTranslationOk`, defined in `Cpc/Proofs/Assumptions.lean`, which restrict
+`CmdListTranslationOk`, defined in `Cpc/TranslationChecks.lean`, which restrict
 the proof to terms the SMT-LIB formalization gives a meaning to). Its conclusion
 is about `argListAssumes F`, the conjunction of that list. Three further
 files connect that statement to what the executable actually runs, so that the
@@ -154,15 +160,18 @@ about it:
   also explains `incorrect` and `incomplete` verdicts on stderr.
 
 The side conditions are not re-implemented for the executable to run: they are
-the predicates of `Cpc/Proofs/Assumptions.lean`, and that file also derives the
+the predicates of `Cpc/TranslationChecks.lean`, and that file also derives the
 `Decidable` instances that decide them, so the per-rule conditions the rule
 proofs assume and the ones the executable checks are one definition, written
 down once.
 
 Note that the side conditions are *checked at run time*: computing them needs
-the specification's `__eo_to_smt`, so the executable links the specification
-layer, even though the checker itself never consults it (the proof rules remain
-untyped syntactic manipulations, and the semantics is not used as an oracle).
+the static interface's `__eo_to_smt` and SMT typing functions. These live in
+`SmtSyntax`, `SmtTyping`, and `SmtTranslate`, which contain no semantic values,
+model evaluator, or external mathematical dependencies. Type inhabitation is
+computed structurally; `Proofs/StaticTyping.lean` proves that its default
+information agrees with the semantic default generator, including malformed
+datatype declarations. The proof rules remain syntactic manipulations.
 A proof that Logos accepts but whose side conditions fail is reported as
 `incomplete` rather than `correct`. The parser normalizes datatype instances and
 uninterpreted sort applications before these checks; clients constructing EO
@@ -207,7 +216,7 @@ build every rule first and then the theorem:
 
 ```bash
 scripts/build-all-cpc-rules.sh
-lake build Cpc.ApiCorrect
+scripts/build.sh Cpc.ApiCorrect
 ```
 
 **Be warned that this takes over two hours.** The script builds one rule
@@ -216,7 +225,9 @@ RAM, `--batch-size 2` (or a larger value) trades memory for speed;
 `--all-at-once` builds every rule in one Lake invocation and may exhaust
 memory. The script is resumable: Lake caches completed targets, so an
 interrupted run picks up where it left off. To work on a single rule, build
-just that one with `lake build Cpc.Proofs.Rules.<Rule>`.
+just that one with `scripts/build.sh Cpc.Proofs.Rules.<Rule>`. The build script
+routes proof targets to the verification project; the direct equivalent is
+`lake -d verification build Cpc.Proofs.Rules.<Rule>`.
 
 The full proof is *not* checked in CI. Instead:
 
@@ -224,6 +235,9 @@ The full proof is *not* checked in CI. Instead:
   group of `scripts/run-ci.sh`), and typechecks `Cpc.Proofs.Checker` and
   `Cpc.ApiCorrect` with the per-rule proofs stubbed out
   (`scripts/check-checker-soundness.sh`).
+- The `checker-boundary` group builds both executables in a temporary tree
+  containing only their source imports, with all semantic and verification
+  sources absent. This also excludes caches from earlier proof builds.
 - `scripts/check-proof-hygiene.sh` (the `proof-hygiene` CI group) rejects
   `sorry`, `admit` and `axiom` textually without building anything, so an
   unproven rule cannot land silently.
@@ -247,11 +261,10 @@ One of them, the `regeneration` group, recompiles the calculus and is skipped
 until `install/get-eo-compiler.sh` has been run once. See
 [Regenerating the calculus](#regenerating-the-calculus).
 
-To remove Lake build artifacts, use either of these equivalent commands:
+To remove Lake build artifacts from both projects:
 
 ```bash
 scripts/clean-build.sh
-lake clean
 ```
 
 ### Regenerating the calculus

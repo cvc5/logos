@@ -225,6 +225,10 @@ Build with:
 
   scripts/build.sh ${PACKAGES}
 
+Check the generated semantics and its static-interface agreement with:
+
+  scripts/build.sh Cpc.Proofs.StaticTyping CpcMini.Proofs.StaticTyping
+
 A preserved rule file whose statement the calculus has changed will fail to
 build. Review with git diff before committing.
 DONE

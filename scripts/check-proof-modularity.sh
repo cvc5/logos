@@ -53,6 +53,7 @@ core_files() {
 #                                          inherit is measured rather than
 #                                          assumed.
 SHARED_FILES=(
+  "Proofs/StaticTyping.lean"
   "Proofs/ModelEval.lean"
   "Proofs/Checker.lean"
   "Proofs/CheckerState.lean"
@@ -70,8 +71,8 @@ for f in "${SHARED_FILES[@]}"; do
     continue
   fi
   if diff -q \
-       <(sed 's/\bCpcMini\./@PKG@./g' "CpcMini/${f}") \
-       <(sed 's/\bCpc\./@PKG@./g' "Cpc/${f}") >/dev/null; then
+       <(sed 's/CpcMini\./@PKG@./g' "CpcMini/${f}") \
+       <(sed 's/Cpc\./@PKG@./g' "Cpc/${f}") >/dev/null; then
     note "${f}"
   else
     bad "Cpc/${f} and CpcMini/${f} have diverged."

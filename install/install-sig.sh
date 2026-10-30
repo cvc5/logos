@@ -486,6 +486,9 @@ LEAN_OUTPUTS=(
   "LogosTerm.lean"
   "Parser.lean"
   "SmtEval.lean"
+  "SmtSyntax.lean"
+  "SmtTyping.lean"
+  "SmtTranslate.lean"
   "SmtModelDefs.lean"
   "SmtValueOrder.lean"
   "SmtModel.lean"
@@ -595,6 +598,20 @@ python3 "${DRIVER}" "${driver_args[@]}"
 LEAN_DIR="${OUT_DIR}/lean"
 [ -d "${LEAN_DIR}" ] || { echo "error: the compiler published nothing in ${LEAN_DIR}." >&2; exit 1; }
 
+# The compiler emits the fixed static/model split directly. Check its complete
+# output before copying anything, so an older compiler cannot partially replace
+# a package with the previous monolithic layout.
+for name in "${LEAN_OUTPUTS[@]}"; do
+  if [ "${NO_PARSER}" = "1" ] && [ "${name}" = "Parser.lean" ]; then
+    continue
+  fi
+  if [ ! -f "${LEAN_DIR}/${name}" ]; then
+    echo "error: ${LEAN_DIR}/${name} was not generated." >&2
+    echo "The Eunoia compiler must emit the fixed static/model SMT module split." >&2
+    exit 1
+  fi
+done
+
 # What the checker layer requires of a signature, checked against what the
 # compiler just emitted rather than against the signature text: the name an
 # operator compiles to need not be its spelling, and `:right-assoc-nil` is
@@ -610,7 +627,7 @@ contract_errors=()
 
 TERM_MODULE="${LEAN_DIR}/LogosTerm.lean"
 CORE_MODULE="${LEAN_DIR}/Logos.lean"
-SPEC_MODULE="${LEAN_DIR}/Spec.lean"
+SPEC_MODULE="${LEAN_DIR}/SmtTranslate.lean"
 
 # 1. An operator named `and`.
 #

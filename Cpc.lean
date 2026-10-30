@@ -6,17 +6,12 @@ public import Cpc.Logos
 import all Cpc.Logos
 public import Cpc.SmtEval
 import all Cpc.SmtEval
-public import Cpc.SmtModel
-import all Cpc.SmtModel
-public import Cpc.Spec
-import all Cpc.Spec
+public import Cpc.SmtTranslate
+import all Cpc.SmtTranslate
 public import Cpc.Api
 import all Cpc.Api
-public import Cpc.ApiChecks
-import all Cpc.ApiChecks
 
--- `Cpc.ApiCorrect` is deliberately not imported here: it depends on
--- `Cpc.Proofs.Checker`, and so on the whole rule-correctness tree, which is too
--- expensive to build as part of the default target.
+-- Model semantics and correctness proofs belong to the verification project.
+-- This root and both executable targets import only the static SMT interface.
 
 public section

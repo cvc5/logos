@@ -1,4 +1,5 @@
 /.lake
+/verification/.lake
 
 # Downloaded and built by install/get-eo-compiler.sh: the ethos source tree,
 # ethos-eoc, and the compiler's staged output. What is kept in git instead is

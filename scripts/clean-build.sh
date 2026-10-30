@@ -6,8 +6,7 @@ usage() {
   cat <<'USAGE'
 Usage: scripts/clean-build.sh
 
-Remove this project's Lake build artifacts. This is equivalent to running
-`lake clean` from the repository root.
+Remove Lake build artifacts from both the checker and verification projects.
 USAGE
 }
 
@@ -23,4 +22,5 @@ repo_root="$(cd "${script_dir}/.." && pwd)"
 echo "==> Cleaning Lake build artifacts"
 cd "${repo_root}"
 lake clean
+lake -d verification clean
 echo "==> Build artifacts cleaned"

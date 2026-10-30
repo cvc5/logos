@@ -111,10 +111,12 @@ source "${script_dir}/lean-toolchain-env.sh"
 logos_configure_lean_toolchain
 
 echo "Building ${PKG}.Proofs.CheckerCore (the soundness proof is checked against it)..."
-lake build "${PKG}.Proofs.CheckerCore" >/dev/null
+lake -d verification build "${PKG}.Proofs.CheckerCore" >/dev/null
 
 run_lean() {
-  lake env lean "${scratch}" 2>&1 | grep -v "declaration uses \`sorry\`" || true
+  # Lake supplies per-module artifact paths across the two projects. A plain
+  # `lake env lean` search stops at the first Cpc namespace directory.
+  lake -d verification lean "${scratch}" 2>&1 | grep -v "declaration uses \`sorry\`" || true
 }
 
 echo "Typechecking ${CHECKER}$([ -f "${API_CORRECT}" ] && echo " and ${API_CORRECT}") with the rule bridge stubbed..."
