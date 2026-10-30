@@ -6,6 +6,8 @@ public import Cpc.Logos
 import all Cpc.Logos
 public import Cpc.Proofs.ModelEval
 import all Cpc.Proofs.ModelEval
+public import Cpc.Proofs.CalculusAssumptions
+import all Cpc.Proofs.CalculusAssumptions
 
 @[expose] public section
 
@@ -14,22 +16,21 @@ open SmtEval
 open Smtm
 
 /--
-The conjunction of an input assumption list, as one term.
+The formulas of an input assumption list, in order.
 
 The checker takes a proof's assumptions as a `CArgList` and pushes them one at a
-time, so nothing it runs builds this term.  Soundness is a statement about the
-formula those assumptions stand for, and that is this `and`-chain: it is what
-`stateAssumes` reads back off the state `__eo_invoke_assume_list` builds from the
-list (`stateAssumes_invoke_assume_list`, `Proofs/CheckerState.lean`), and it is
-the term `correct___eo_is_refutation` concludes about.
+time.  This is what `stateAssumes` reads back off the state
+`__eo_invoke_assume_list` builds from the list (`stateAssumes_invoke_assume_list`,
+`Proofs/CheckerState.lean`): the head of the list is pushed last, which is where
+`stateAssumes` then finds it.
 
-The head of the list is the outermost conjunct because `__eo_invoke_assume_list`
-pushes it last, which is where `stateAssumes` then finds it.
+Soundness is stated about `argListAssumes F`, the one formula the calculus says
+the list stands for (`Proofs/CalculusAssumptions.lean`); the checker itself only
+ever reasons about this list.
 -/
-def argListAssumes : CArgList -> Term
-  | CArgList.nil => Term.Boolean true
-  | CArgList.cons A as =>
-      Term.Apply (Term.Apply (Term.UOp UserOp.and) A) (argListAssumes as)
+def argListTerms : CArgList -> List Term
+  | CArgList.nil => []
+  | CArgList.cons A as => A :: argListTerms as
 
 /-- Predicate asserting that translating an EO term yields a non-`None` SMT term. -/
 def eoHasSmtTranslation (t : Term) : Prop :=

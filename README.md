@@ -124,7 +124,8 @@ There are no `sorry`s in the soundness proof or its dependencies.
 list, and two side conditions (`TranslatableAssumptionList F` and
 `CmdListTranslationOk`, defined in `Cpc/Proofs/Assumptions.lean`, which restrict
 the proof to terms the SMT-LIB formalization gives a meaning to). Its conclusion
-is about `argListAssumes F`, the conjunction of that list. Three further
+is about `argListAssumes F`, the conjunction of that list, which the calculus
+defines in `Cpc/Proofs/CalculusAssumptions.lean`. Three further
 files connect that statement to what the executable actually runs, so that the
 `correct` it prints is the theorem's conclusion rather than an informal argument
 about it:

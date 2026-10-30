@@ -81,16 +81,16 @@ the derived formula remains true in any model that only changes variables,
 provided the same assumptions and local pushes hold there.
 -/
 structure ContextualTruth
-    (M : SmtModel) (assumes pushes P : Term) : Prop where
+    (M : SmtModel) (assumes pushes : List Term) (P : Term) : Prop where
   true_here :
-    eo_interprets M assumes true ->
-    eo_interprets M pushes true ->
+    AllInterpretedTrue M assumes ->
+    AllInterpretedTrue M pushes ->
     eo_interprets M P true
   true_in_var_model :
     ∀ N, model_wf N ->
       model_agrees_on_globals M N ->
-      eo_interprets N assumes true ->
-      eo_interprets N pushes true ->
+      AllInterpretedTrue N assumes ->
+      AllInterpretedTrue N pushes ->
       eo_interprets N P true
 
 /--
