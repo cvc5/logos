@@ -7,6 +7,8 @@ import all Cpc.Proofs.Canonical.Basic
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open SmtEval
 open Smtm
 
@@ -21,7 +23,7 @@ theorem model_eval_canonical_of_bool_type
     (hM : model_wf M)
     (t : SmtTerm)
     (hTy : __smtx_typeof t = SmtType.Bool) :
-    value_canonical (__smtx_model_eval M t) := by
+    value_canonical M.usortCard (__smtx_model_eval M t) := by
   have hValTy :
       __smtx_typeof_value (__smtx_model_eval M t) = SmtType.Bool := by
     simpa [hTy] using
@@ -37,7 +39,7 @@ theorem model_eval_canonical_of_int_type
     (hM : model_wf M)
     (t : SmtTerm)
     (hTy : __smtx_typeof t = SmtType.Int) :
-    value_canonical (__smtx_model_eval M t) := by
+    value_canonical M.usortCard (__smtx_model_eval M t) := by
   have hValTy :
       __smtx_typeof_value (__smtx_model_eval M t) = SmtType.Int := by
     simpa [hTy] using
@@ -53,7 +55,7 @@ theorem model_eval_canonical_of_real_type
     (hM : model_wf M)
     (t : SmtTerm)
     (hTy : __smtx_typeof t = SmtType.Real) :
-    value_canonical (__smtx_model_eval M t) := by
+    value_canonical M.usortCard (__smtx_model_eval M t) := by
   have hValTy :
       __smtx_typeof_value (__smtx_model_eval M t) = SmtType.Real := by
     simpa [hTy] using
@@ -70,7 +72,7 @@ theorem model_eval_canonical_of_bitvec_type
     (t : SmtTerm)
     (w : native_Nat)
     (hTy : __smtx_typeof t = SmtType.BitVec w) :
-    value_canonical (__smtx_model_eval M t) := by
+    value_canonical M.usortCard (__smtx_model_eval M t) := by
   have hValTy :
       __smtx_typeof_value (__smtx_model_eval M t) = SmtType.BitVec w := by
     simpa [hTy] using
@@ -86,8 +88,8 @@ theorem model_eval_canonical_of_reglan_type
     (hM : model_wf M)
     (t : SmtTerm)
     (hTy : __smtx_typeof t = SmtType.RegLan)
-    (hCan : __smtx_value_canonical (__smtx_model_eval M t) = true) :
-    value_canonical (__smtx_model_eval M t) := by
+    (hCan : __smtx_value_canonical M.usortCard (__smtx_model_eval M t) = true) :
+    value_canonical M.usortCard (__smtx_model_eval M t) := by
   have hValTy :
       __smtx_typeof_value (__smtx_model_eval M t) = SmtType.RegLan := by
     simpa [hTy] using

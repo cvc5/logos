@@ -118,13 +118,13 @@ private theorem smtExistsOfBinders_cons_congr
   let P : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v) t =
           SmtValue.Boolean true
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v) u =
           SmtValue.Boolean true
   have hPQ : P ↔ Q := by
@@ -152,10 +152,10 @@ private theorem smtExistsOfBinders_swap
   let P : Prop :=
     ∃ v1 : SmtValue,
       __smtx_typeof_value v1 = T1 ∧
-        __smtx_value_canonical v1 = true ∧
+        __smtx_value_canonical M.usortCard v1 = true ∧
         ∃ v2 : SmtValue,
           __smtx_typeof_value v2 = T2 ∧
-            __smtx_value_canonical v2 = true ∧
+            __smtx_value_canonical M.usortCard v2 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s1 T1 v1) s2 T2 v2)
                 rest =
@@ -163,10 +163,10 @@ private theorem smtExistsOfBinders_swap
   let Q : Prop :=
     ∃ v2 : SmtValue,
       __smtx_typeof_value v2 = T2 ∧
-        __smtx_value_canonical v2 = true ∧
+        __smtx_value_canonical M.usortCard v2 = true ∧
         ∃ v1 : SmtValue,
           __smtx_typeof_value v1 = T1 ∧
-            __smtx_value_canonical v1 = true ∧
+            __smtx_value_canonical M.usortCard v1 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s2 T2 v2) s1 T1 v1)
                 rest =
@@ -230,10 +230,10 @@ private theorem smtExistsOfBinders_dup
   let P : Prop :=
     ∃ v1 : SmtValue,
       __smtx_typeof_value v1 = T ∧
-        __smtx_value_canonical v1 = true ∧
+        __smtx_value_canonical M.usortCard v1 = true ∧
         ∃ v2 : SmtValue,
           __smtx_typeof_value v2 = T ∧
-            __smtx_value_canonical v2 = true ∧
+            __smtx_value_canonical M.usortCard v2 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s T v1) s T v2)
                 rest =
@@ -241,7 +241,7 @@ private theorem smtExistsOfBinders_dup
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v) rest =
           SmtValue.Boolean true
   have hPQ : P ↔ Q := by
@@ -2028,7 +2028,7 @@ private theorem smtx_model_eval_exists_eq_body_of_body_eval_eq
     (hBody :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T ->
-          __smtx_value_canonical v = true ->
+          __smtx_value_canonical M.usortCard v = true ->
             __smtx_model_eval (native_model_push M s T v) body =
               __smtx_model_eval M body) :
   __smtx_model_eval M (SmtTerm.exists s T body) =
@@ -2039,14 +2039,14 @@ by
     ⟨b, hEvalBody⟩
   rcases canonical_type_inhabited_of_type_wf T hWF with
     ⟨w, hwTy, hwCan⟩
-  have hwCanBool : __smtx_value_canonical w = true := by
+  have hwCanBool : __smtx_value_canonical M.usortCard w = true := by
     simpa [value_canonical] using hwCan
   cases b
   · rw [hEvalBody]
     by_cases hSat :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true
     · rcases hSat with ⟨v, hvTy, hvCan, hvEval⟩
@@ -2059,7 +2059,7 @@ by
     have hSat :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true := by
       refine ⟨w, hwTy, hwCanBool, ?_⟩
@@ -2145,7 +2145,7 @@ by
       have hTailConst :
           ∀ v : SmtValue,
             __smtx_typeof_value v = ST ->
-              __smtx_value_canonical v = true ->
+              __smtx_value_canonical uc v = true ->
                 __smtx_model_eval
                     (native_model_push N s ST v)
                     (__eo_to_smt_exists env body) =
@@ -2241,7 +2241,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
             let P : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical v = true ∧
+                  __smtx_value_canonical M.usortCard v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a
@@ -2250,7 +2250,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
             let Q : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical v = true ∧
+                  __smtx_value_canonical M.usortCard v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a body) =
@@ -2320,7 +2320,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
             let P : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical v = true ∧
+                  __smtx_value_canonical M.usortCard v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a
@@ -2329,7 +2329,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
             let Q : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical v = true ∧
+                  __smtx_value_canonical M.usortCard v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a body) =

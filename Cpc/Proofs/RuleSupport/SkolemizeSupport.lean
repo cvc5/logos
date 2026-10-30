@@ -74,6 +74,8 @@ Proof plan (mirrors `Instantiate.lean` where possible):
 
 namespace SkolemizeRule
 
+variable {uc : native_Nat -> native_Nat}
+
 /-- SMT-level keys of a reflected binder environment. -/
 abbrev smtKeys (vars : List EoVarKey) : List SmtVarKey :=
   vars.map EoVarKey.toSmt
@@ -699,11 +701,11 @@ private theorem eval_bind_eq (M : SmtModel) (s : native_String) (T : SmtType)
       __smtx_model_eval (native_model_push M s T (__smtx_model_eval M v)) b := rfl
 
 private theorem canonical_of_canonical_bool {v : SmtValue}
-    (h : __smtx_value_canonical v = true) : value_canonical v := by
+    (h : __smtx_value_canonical uc v = true) : value_canonical uc v := by
   simpa [value_canonical] using h
 
 private theorem canonical_bool_of_canonical {v : SmtValue}
-    (h : value_canonical v) : __smtx_value_canonical v = true := by
+    (h : value_canonical uc v) : __smtx_value_canonical uc v = true := by
   simpa [value_canonical] using h
 
 /-- If an encoded existential is true, pushing its choice value makes the body
@@ -717,7 +719,7 @@ theorem texists_true_push_tchoice
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical N.usortCard v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true
   · have hChoice :
@@ -733,18 +735,18 @@ theorem tchoice_typed_canonical_of_wf
     (N : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm)
     (hWf : __smtx_type_wf T = true) :
     __smtx_typeof_value (native_eval_choice N s T body) = T ∧
-      __smtx_value_canonical (native_eval_choice N s T body) = true := by
+      __smtx_value_canonical N.usortCard (native_eval_choice N s T body) = true := by
   classical
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical N.usortCard v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true
   · rw [dite_eq_left hSat]
     exact ⟨(Classical.choose_spec hSat).1, (Classical.choose_spec hSat).2.1⟩
   · have hTy : ∃ v : SmtValue,
-        __smtx_typeof_value v = T ∧ __smtx_value_canonical v := by
+        __smtx_typeof_value v = T ∧ __smtx_value_canonical N.usortCard v := by
       rcases canonical_type_inhabited_of_type_wf T hWf with ⟨v, hvTy, hvCan⟩
       exact ⟨v, hvTy, by simpa using canonical_bool_of_canonical hvCan⟩
     rw [dite_eq_right hSat, dite_eq_left hTy]
@@ -757,7 +759,7 @@ theorem native_eval_tchoice_eq_of_body_eval_eq_diff_typed
     {M N : SmtModel} {s : native_String} {T : SmtType} {bodyM bodyN : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical uc v = true ->
       __smtx_model_eval (native_model_push M s T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     native_eval_choice M s T bodyM = native_eval_choice N s T bodyN := by
@@ -765,12 +767,12 @@ theorem native_eval_tchoice_eq_of_body_eval_eq_diff_typed
   have hPredEq :
       (fun v : SmtValue =>
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical uc v = true ∧
           __smtx_model_eval (native_model_push M s T v) bodyM =
             SmtValue.Boolean true) =
       (fun v : SmtValue =>
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical uc v = true ∧
           __smtx_model_eval (native_model_push N s T v) bodyN =
             SmtValue.Boolean true) := by
     funext v

@@ -6,6 +6,8 @@ import all Cpc.Proofs.RuleSupport.SubstituteSimulEvalSupport
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -1196,7 +1198,7 @@ theorem native_eval_texists_eq_of_renamed_body
     {bodyM bodyN : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T →
-      __smtx_value_canonical v = true →
+      __smtx_value_canonical uc v = true →
       __smtx_model_eval (native_model_push M t T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     (native_eval_exists M t T bodyM : SmtValue) =
@@ -1205,13 +1207,13 @@ theorem native_eval_texists_eq_of_renamed_body
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push M t T v) bodyM =
           SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push N s T v) bodyN =
           SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =

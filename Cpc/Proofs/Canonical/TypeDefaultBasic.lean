@@ -5,6 +5,8 @@ import all Cpc.Proofs.ModelEval
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open SmtEval
 open Smtm
 
@@ -26,33 +28,33 @@ defaults are used by the model.
 private theorem type_default_canonical_kernel : ∀ T : SmtType,
     native_inhabited_type T = true →
     __smtx_type_wf_rec T = true →
-    __smtx_value_canonical (__smtx_type_default T) = true := by
+    __smtx_value_canonical uc (__smtx_type_default T) = true := by
   refine __smtx_type_default.induct
     (motive1 := fun T =>
       native_inhabited_type T = true →
       __smtx_type_wf_rec T = true →
-      __smtx_value_canonical (__smtx_type_default T) = true)
+      __smtx_value_canonical uc (__smtx_type_default T) = true)
     (motive2 := fun s dd ddF =>
       __smtx_decl_wf_rec dd ddF = true →
-      __smtx_value_canonical
+      __smtx_value_canonical uc
         (__smtx_datatype_decl_default s dd ddF) = true)
     (motive3 := fun s dd n dF ddF =>
       __smtx_dt_wf_rec dd dF = true →
       __smtx_decl_wf_rec dd ddF = true →
-      __smtx_value_canonical
+      __smtx_value_canonical uc
         (__smtx_datatype_default s dd n dF ddF) = true)
     (motive4 := fun v dd c ddF =>
       __smtx_dt_cons_wf_rec dd c = true →
       __smtx_decl_wf_rec dd ddF = true →
-      __smtx_value_canonical v = true →
-      __smtx_value_canonical
+      __smtx_value_canonical uc v = true →
+      __smtx_value_canonical uc
         (__smtx_datatype_cons_default v dd c ddF) = true)
     (motive5 := fun dd T ddF =>
       __smtx_decl_wf_rec dd ddF = true →
       ((∃ s, T = SmtType.TypeRef s) ∨
         (native_inhabited_type T = true ∧
          __smtx_type_wf_rec T = true)) →
-      __smtx_value_canonical
+      __smtx_value_canonical uc
         (__smtx_field_type_default dd T ddF) = true)
     ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
   · intros
@@ -82,7 +84,7 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
         __smtx_type_wf_rec U = true :=
       ⟨hRaw.1.1, hRaw.1.2, hRaw.2.1, hRaw.2.2⟩
     have hFieldCan :
-        __smtx_value_canonical (__smtx_type_default U) = true :=
+        __smtx_value_canonical uc (__smtx_type_default U) = true :=
       ih hParts.2.2.1 hParts.2.2.2
     have hFieldTy :
         __smtx_typeof_value (__smtx_type_default U) = U := by
@@ -116,7 +118,9 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
       exact h.2
     simpa [__smtx_type_default] using ih hDecl
   · intros
-    simp [__smtx_type_default, __smtx_value_canonical]
+    simp [__smtx_type_default, __smtx_value_canonical, native_or, native_nateq,
+      native_natlt]
+    exact Nat.eq_zero_or_pos _
   · intros
     simp [__smtx_type_default, __smtx_value_canonical]
   · intro T h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 _hInh hRec
@@ -172,10 +176,10 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
       cases T <;>
         simp_all [__smtx_dt_cons_wf_rec, native_and]
     have hFieldCan :
-        __smtx_value_canonical field = true := by
+        __smtx_value_canonical uc field = true := by
       simpa only [field] using ihField hDecl hFieldPrem
     rw [__smtx_datatype_cons_default.eq_def]
-    change __smtx_value_canonical
+    change __smtx_value_canonical uc
       (native_ite (native_veq field SmtValue.NotValue)
         SmtValue.NotValue
         (__smtx_datatype_cons_default (SmtValue.Apply v field) dd c ddF)) = true
@@ -198,7 +202,7 @@ theorem type_default_kernel (T : SmtType)
     (hInh : native_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
-    __smtx_value_canonical (__smtx_type_default T) = true := by
+    __smtx_value_canonical uc (__smtx_type_default T) = true := by
   have hTyped :
       native_Teq (__smtx_typeof_value (__smtx_type_default T)) T = true := by
     have h := hInh
@@ -222,7 +226,7 @@ theorem type_default_typed_of_inhabited (T : SmtType)
 theorem type_default_canonical_of_inhabited_wf_rec (T : SmtType)
     (hInh : native_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
-    __smtx_value_canonical (__smtx_type_default T) = true :=
+    __smtx_value_canonical uc (__smtx_type_default T) = true :=
   type_default_canonical_kernel T hInh hRec
 
 end Smtm

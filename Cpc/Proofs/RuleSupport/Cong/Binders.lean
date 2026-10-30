@@ -5,6 +5,8 @@ import all Cpc.Proofs.RuleSupport.Cong.RegLanSpine
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -105,7 +107,7 @@ private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
                 by_cases hSat :
                     ∃ v : SmtValue,
                       __smtx_typeof_value v = __eo_to_smt_type T ∧
-                        __smtx_value_canonical v = true ∧
+                        __smtx_value_canonical uc v = true ∧
                         __smtx_model_eval
                             (native_model_push N s (__eo_to_smt_type T) v)
                             (__eo_to_smt_exists xs body) =
@@ -113,7 +115,7 @@ private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
                 · have hSat' :
                       ∃ v : SmtValue,
                         __smtx_typeof_value v = __eo_to_smt_type T ∧
-                          __smtx_value_canonical v = true ∧
+                          __smtx_value_canonical uc v = true ∧
                           __smtx_model_eval
                               (native_model_push N s (__eo_to_smt_type T) v)
                               (__eo_to_smt_exists xs body') =
@@ -137,7 +139,7 @@ private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
                 by_cases hSat :
                     ∃ v : SmtValue,
                       __smtx_typeof_value v = __eo_to_smt_type T ∧
-                        __smtx_value_canonical v = true ∧
+                        __smtx_value_canonical uc v = true ∧
                         __smtx_model_eval
                             (native_model_push N s (__eo_to_smt_type T) v)
                             (__eo_to_smt_exists xs body') =
@@ -145,7 +147,7 @@ private theorem eo_to_smt_exists_eval_true_iff_of_body_true_iff
                 · have hSat' :
                       ∃ v : SmtValue,
                         __smtx_typeof_value v = __eo_to_smt_type T ∧
-                          __smtx_value_canonical v = true ∧
+                          __smtx_value_canonical uc v = true ∧
                           __smtx_model_eval
                               (native_model_push N s (__eo_to_smt_type T) v)
                               (__eo_to_smt_exists xs body) =
@@ -247,7 +249,7 @@ private theorem eo_to_smt_exists_eval_eq_of_body_true_iff_cons
       by_cases hSat :
           ∃ v : SmtValue,
             __smtx_typeof_value v = __eo_to_smt_type T ∧
-              __smtx_value_canonical v = true ∧
+              __smtx_value_canonical uc v = true ∧
               __smtx_model_eval
                   (native_model_push N s (__eo_to_smt_type T) v)
                   (__eo_to_smt_exists tail body) =
@@ -255,7 +257,7 @@ private theorem eo_to_smt_exists_eval_eq_of_body_true_iff_cons
       · have hSat' :
             ∃ v : SmtValue,
               __smtx_typeof_value v = __eo_to_smt_type T ∧
-                __smtx_value_canonical v = true ∧
+                __smtx_value_canonical uc v = true ∧
                 __smtx_model_eval
                     (native_model_push N s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists tail body') =
@@ -277,7 +279,7 @@ private theorem eo_to_smt_exists_eval_eq_of_body_true_iff_cons
       · have hSat' :
             ¬ ∃ v : SmtValue,
               __smtx_typeof_value v = __eo_to_smt_type T ∧
-                __smtx_value_canonical v = true ∧
+                __smtx_value_canonical uc v = true ∧
                 __smtx_model_eval
                     (native_model_push N s (__eo_to_smt_type T) v)
                     (__eo_to_smt_exists tail body') =

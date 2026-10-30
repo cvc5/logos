@@ -13,6 +13,8 @@ import all Cpc.Proofs.Closed.Substitute
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -294,7 +296,7 @@ theorem eo_to_smt_eval_typed_canonical
     (hTrans : RuleProofs.eo_has_smt_translation t) :
     __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) ∧
-      value_canonical (__smtx_model_eval M (__eo_to_smt t)) := by
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t)) := by
   have hNN : term_has_non_none_type (__eo_to_smt t) := by
     simpa [RuleProofs.eo_has_smt_translation, term_has_non_none_type] using hTrans
   exact ⟨smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt t) hNN,
@@ -331,7 +333,7 @@ inductive ForallInstantiationModel : SmtModel -> Term -> SmtModel -> Prop where
   | cons {M N : SmtModel} {s : native_String} {T env : Term} {v : SmtValue} :
       __smtx_type_wf (__eo_to_smt_type T) = true ->
       __smtx_typeof_value v = __eo_to_smt_type T ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical uc v = true ->
       ForallInstantiationModel
         (native_model_push M s (__eo_to_smt_type T) v) env N ->
       ForallInstantiationModel M
@@ -833,7 +835,7 @@ theorem forall_instantiation_body_true
       have hNoSat :
           ¬ ∃ w : SmtValue,
             __smtx_typeof_value w = ST ∧
-              __smtx_value_canonical w = true ∧
+              __smtx_value_canonical uc w = true ∧
               __smtx_model_eval (native_model_push M s ST w) tail =
                 SmtValue.Boolean true := by
         intro hSat
@@ -984,12 +986,12 @@ theorem native_eval_texists_eq_of_body_eval_eq_diff
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push M s T v) bodyM = SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push N s T v) bodyN = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -1013,7 +1015,7 @@ theorem native_eval_texists_eq_of_body_eval_eq_diff_typed
     {M N : SmtModel} {s : native_String} {T : SmtType} {bodyM bodyN : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical uc v = true ->
       __smtx_model_eval (native_model_push M s T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     (native_eval_exists M s T bodyM : SmtValue) =
@@ -1022,12 +1024,12 @@ theorem native_eval_texists_eq_of_body_eval_eq_diff_typed
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push M s T v) bodyM = SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push N s T v) bodyN = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -1057,12 +1059,12 @@ theorem native_eval_tforall_eq_of_body_eval_eq_diff
   let PM : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical uc v = true ->
         __smtx_model_eval (native_model_push M s T v) bodyM = SmtValue.Boolean true
   let PN : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical uc v = true ->
         __smtx_model_eval (native_model_push N s T v) bodyN = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -1084,7 +1086,7 @@ theorem native_eval_tforall_eq_of_body_eval_eq_diff_typed
     {M N : SmtModel} {s : native_String} {T : SmtType} {bodyM bodyN : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical uc v = true ->
       __smtx_model_eval (native_model_push M s T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     (native_eval_forall M s T bodyM : SmtValue) =
@@ -1093,12 +1095,12 @@ theorem native_eval_tforall_eq_of_body_eval_eq_diff_typed
   let PM : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical uc v = true ->
         __smtx_model_eval (native_model_push M s T v) bodyM = SmtValue.Boolean true
   let PN : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical uc v = true ->
         __smtx_model_eval (native_model_push N s T v) bodyN = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)

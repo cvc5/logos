@@ -310,13 +310,13 @@ private theorem facts___eo_prog_arrays_ext_impl
     have hsimpa := hEvalBTy
     try simp [hEvalB] at hsimpa ⊢
     exact hsimpa
-  have hACan : value_canonical (__smtx_model_eval M (__eo_to_smt a)) :=
+  have hACan : value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt a)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM a hATrans
-  have hBCan : value_canonical (__smtx_model_eval M (__eo_to_smt b)) :=
+  have hBCan : value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt b)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM b hBTrans
-  have hm1Can : __smtx_map_canonical m1 = true := by
+  have hm1Can : __smtx_map_canonical M.usortCard m1 = true := by
     simpa [hEvalA, value_canonical, __smtx_value_canonical] using hACan
-  have hm2Can : __smtx_map_canonical m2 = true := by
+  have hm2Can : __smtx_map_canonical M.usortCard m2 = true := by
     simpa [hEvalB, value_canonical, __smtx_value_canonical] using hBCan
   have hMapsEqFalse :
       __smtx_model_eval_eq (SmtValue.Map m1) (SmtValue.Map m2) =

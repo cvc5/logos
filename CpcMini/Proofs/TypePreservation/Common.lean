@@ -9,6 +9,8 @@ import all CpcMini.Proofs.Canonical.TypeDefaultBasic
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open SmtEval
 open Smtm
 
@@ -62,7 +64,7 @@ theorem type_default_typed_canonical_of_native_inhabited_type
     (h : native_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
-      value_canonical (__smtx_type_default T) := by
+      value_canonical uc (__smtx_type_default T) := by
   refine ⟨(native_inhabited_type_parts h).2, ?_⟩
   simpa [value_canonical] using
     type_default_canonical_of_inhabited_wf_rec T h hRec

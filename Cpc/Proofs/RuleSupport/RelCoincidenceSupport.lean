@@ -9,6 +9,8 @@ import all Cpc.Proofs.RuleSupport.InstantiateSupport
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 /-!
 # Rel-coincidence: evaluation respects extensional model equivalence
 
@@ -660,19 +662,19 @@ private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
     {M N : SmtModel} {s : native_String} {T : SmtType} {body : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical uc v = true ->
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
     native_eval_choice M s T body = native_eval_choice N s T body := by
   classical
   have hPred : (fun v : SmtValue =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) =
     (fun v : SmtValue =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push N s T v) body =
           SmtValue.Boolean true) := by
     funext v
@@ -684,12 +686,12 @@ private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
       exact ⟨h1, h2, by rw [hBody v h1 h2]; exact h3⟩
   by_cases hSatM : ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true
   · have hSatN : ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical uc v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true := by
       rw [show (∃ v : SmtValue,
@@ -706,7 +708,7 @@ private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
     exact choose_eq_of_pred_eq hSatM hSatN hPred
   · have hSatN : ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical uc v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true := by
       intro hN
@@ -2899,8 +2901,8 @@ theorem smt_model_eval_true_push_of_rel
     (hSTWf : __smtx_type_wf ST = true)
     (hvTy : __smtx_typeof_value v = ST)
     (hwTy : __smtx_typeof_value w = ST)
-    (hvCanon : __smtx_value_canonical v = true)
-    (hwCanon : __smtx_value_canonical w = true)
+    (hvCanon : __smtx_value_canonical M.usortCard v = true)
+    (hwCanon : __smtx_value_canonical M.usortCard w = true)
     (hRel : RuleProofs.smt_value_rel v w)
     (hTy : term_has_non_none_type u)
     (hTrue : __smtx_model_eval (native_model_push M s ST w) u =

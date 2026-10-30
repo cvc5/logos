@@ -5,6 +5,8 @@ import all Cpc.Proofs.RuleSupport.Cong.TupleBvSeq
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -2276,19 +2278,19 @@ private theorem regl_tchoice_congr_bodies
     (M : SmtModel) (s : native_String) (T : SmtType) (b₁ b₂ : SmtTerm)
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical M.usortCard v = true ->
       __smtx_model_eval (native_model_push M s T v) b₁ =
         __smtx_model_eval (native_model_push M s T v) b₂) :
     native_eval_choice M s T b₁ = native_eval_choice M s T b₂ := by
   classical
   have hPredEq : (fun v : SmtValue =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v) b₁ =
           SmtValue.Boolean true) =
       (fun v : SmtValue =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v) b₂ =
           SmtValue.Boolean true) := by
     funext v
@@ -2300,12 +2302,12 @@ private theorem regl_tchoice_congr_bodies
       exact ⟨h1, h2, by rw [hBody v h1 h2]; exact h3⟩
   by_cases hSat₁ : ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v) b₁ =
           SmtValue.Boolean true
   · have hSat₂ : ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval (native_model_push M s T v) b₂ =
             SmtValue.Boolean true := by
       rw [show (fun v : SmtValue =>
@@ -2322,7 +2324,7 @@ private theorem regl_tchoice_congr_bodies
     exact regl_choose_eq_of_pred_eq hSat₁ hSat₂ hPredEq
   · have hSat₂ : ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval (native_model_push M s T v) b₂ =
             SmtValue.Boolean true := by
       intro hSat₂

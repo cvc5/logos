@@ -133,8 +133,8 @@ private theorem mss_inter_lookup_acc :
       __smtx_typeof_map_value m1 = SmtType.Map A SmtType.Bool ->
       __smtx_typeof_map_value m2 = SmtType.Map A SmtType.Bool ->
       __smtx_typeof_map_value acc = SmtType.Map A SmtType.Bool ->
-      __smtx_map_canonical m1 = true ->
-      __smtx_map_canonical acc = true ->
+      __smtx_map_canonical uc m1 = true ->
+      __smtx_map_canonical uc acc = true ->
       __smtx_map_get_default m1 = SmtValue.Boolean false ->
       __smtx_map_lookup (__smtx_set_op_rec true m1 m2 acc) i =
         native_ite
@@ -155,9 +155,9 @@ private theorem mss_inter_lookup_acc :
         map_cons_tail_type hm1Ty
       have heTy : __smtx_typeof_value e = A :=
         map_cons_head_key_type hm1Ty
-      have hmTailCan : __smtx_map_canonical m1 = true :=
+      have hmTailCan : __smtx_map_canonical uc m1 = true :=
         map_cons_tail_canonical hm1Can
-      have heCan : value_canonical e :=
+      have heCan : value_canonical uc e :=
         map_cons_head_key_canonical hm1Can
       have hOrdTail : __smtx_map_entries_ordered_after e m1 = true :=
         map_cons_tail_ordered hm1Can
@@ -192,7 +192,7 @@ private theorem mss_inter_lookup_acc :
         have hacc'Ty : __smtx_typeof_map_value acc' = SmtType.Map A SmtType.Bool := by
           dsimp [acc']
           exact map_canon_insert_typed haccTy heTy rfl
-        have hacc'Can : __smtx_map_canonical acc' = true := by
+        have hacc'Can : __smtx_map_canonical uc acc' = true := by
           dsimp [acc']
           exact map_update_aux_canonical haccCan heCan (value_canonical_boolean true)
         have hRec := mss_inter_lookup_acc (m1 := m1) (m2 := m2) (acc := acc')
@@ -313,21 +313,21 @@ private theorem facts___eo_prog_sets_inter_member_impl
       __smtx_typeof_map_value mz = SmtType.Map (__eo_to_smt_type T) SmtType.Bool :=
     set_map_value_typed (by simpa [hzVal] using hzEvalTy)
   have hYCanEval :
-      value_canonical (__smtx_model_eval M (__eo_to_smt y)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt y)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM y hyTrans
   have hZCanEval :
-      value_canonical (__smtx_model_eval M (__eo_to_smt z)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt z)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM z hzTrans
-  have hYCanSet : value_canonical (SmtValue.Set my) := by
+  have hYCanSet : value_canonical M.usortCard (SmtValue.Set my) := by
     simpa [hyVal] using hYCanEval
-  have hZCanSet : value_canonical (SmtValue.Set mz) := by
+  have hZCanSet : value_canonical M.usortCard (SmtValue.Set mz) := by
     simpa [hzVal] using hZCanEval
-  have hMyCan : __smtx_map_canonical my = true := by
+  have hMyCan : __smtx_map_canonical M.usortCard my = true := by
     have hParts := hYCanSet
     simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
-  have hMzCan : __smtx_map_canonical mz = true := by
+  have hMzCan : __smtx_map_canonical M.usortCard mz = true := by
     have hParts := hZCanSet
     simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
@@ -346,7 +346,7 @@ private theorem facts___eo_prog_sets_inter_member_impl
     dsimp [acc]
     simp [__smtx_typeof_map_value, __smtx_index_typeof_map, hMyTy,
       __smtx_typeof_value]
-  have hAccCan : __smtx_map_canonical acc = true := by
+  have hAccCan : __smtx_map_canonical M.usortCard acc = true := by
     dsimp [acc]
     exact set_empty_map_canonical (__smtx_index_typeof_map (__smtx_typeof_map_value my))
   have hInterLookup :

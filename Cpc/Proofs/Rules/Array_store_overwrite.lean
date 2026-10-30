@@ -225,16 +225,16 @@ private theorem facts___eo_prog_array_store_overwrite_impl
   have hF1NotStuck : f1 ≠ Term.Stuck :=
     RuleProofs.term_ne_stuck_of_has_smt_translation f1 hF1Trans
   have hT1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt t1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t1 hT1Trans
   have hI1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt i1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt i1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM i1 hI1Trans
   have hE1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt e1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt e1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM e1 hE1Trans
   have hF1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt f1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt f1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM f1 hF1Trans
   have hProgEq :=
     prog_array_store_overwrite_eq t1 i1 e1 f1

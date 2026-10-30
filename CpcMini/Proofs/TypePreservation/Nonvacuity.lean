@@ -5,6 +5,8 @@ import all CpcMini.Proofs.TypePreservation.Model
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open SmtEval
 open Smtm
 
@@ -15,7 +17,7 @@ noncomputable def default_typed_model_of
     (hCan :
       ∀ T : SmtType,
         __smtx_type_wf T = true ->
-          ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical v) :
+          ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical uc v) :
     SmtModel := by
   classical
   exact
@@ -27,24 +29,26 @@ noncomputable def default_typed_model_of
       nativeFuns := fun k =>
         match k.ty with
         | SmtType.FunType _ U => fun _ => __smtx_type_default U
-        | _ => fun _ => SmtValue.NotValue }
+        | _ => fun _ => SmtValue.NotValue
+      usortCard := uc }
 
 private theorem default_typed_model_of_native_fun_typed
     (hCan :
       ∀ T : SmtType,
         __smtx_type_wf T = true ->
-          ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical v) :
+          ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical uc v) :
     model_fun_wf (default_typed_model_of hCan) := by
   intro fid A B i hFunWF hi
   have hBWF : __smtx_type_wf B = true :=
     (fun_type_wf_components_of_wf hFunWF).2
   have hDefault :=
-    type_default_typed_canonical_of_type_wf B hBWF
+    type_default_typed_canonical_of_type_wf (uc := uc) B hBWF
   have hDefaultCan :
-      __smtx_value_canonical (__smtx_type_default B) = true := by
+      __smtx_value_canonical uc (__smtx_type_default B) = true := by
     simpa [value_canonical] using hDefault.2
   by_cases hDefaultId : fid = native_default_fun_id
-  · simp [native_eval_fun_apply, hDefaultId, hDefault.1, hDefaultCan]
+  · simp [native_eval_fun_apply, default_typed_model_of, hDefaultId, hDefault.1,
+      hDefaultCan]
   · simp [native_eval_fun_apply, model_fun_lookup,
       default_typed_model_of, model_key, hDefaultId, hDefault.1, hDefaultCan]
 
@@ -56,7 +60,7 @@ theorem exists_total_typed_model_of_canonical_type_inhabited
     (hCan :
       ∀ T : SmtType,
         __smtx_type_wf T = true ->
-          ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical v) :
+          ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical uc v) :
     ∃ M : SmtModel, model_wf M := by
   classical
   refine ⟨default_typed_model_of hCan, ?_⟩
@@ -71,9 +75,12 @@ theorem exists_total_typed_model_of_canonical_type_inhabited
         using hSpec.2
     · exact default_typed_model_of_native_fun_typed hCan
 
+/-- Every uninterpreted sort of `default_typed_model` is infinite. -/
+def default_usort_card : native_Nat -> native_Nat := fun _ => native_nat_zero
+
 /-- Choice-based model that returns a canonical inhabitant for every well-formed SMT type. -/
 noncomputable def default_typed_model : SmtModel :=
-  default_typed_model_of canonical_type_inhabited_of_type_wf
+  default_typed_model_of (uc := default_usort_card) canonical_type_inhabited_of_type_wf
 
 /-- Shows that `default_typed_model` is total and type-correct on every well-formed SMT type. -/
 theorem default_typed_model_total_typed :
@@ -83,13 +90,16 @@ theorem default_typed_model_total_typed :
   constructor
   · intro isVar s T hT
     simp [default_typed_model_of, hT,
-      (Classical.choose_spec (canonical_type_inhabited_of_type_wf T hT)).1]
+      (Classical.choose_spec
+        (canonical_type_inhabited_of_type_wf (uc := default_usort_card) T hT)).1]
   · constructor
     · intro isVar s T hT
-      have hSpec := Classical.choose_spec (canonical_type_inhabited_of_type_wf T hT)
+      have hSpec := Classical.choose_spec
+        (canonical_type_inhabited_of_type_wf (uc := default_usort_card) T hT)
       simpa [default_typed_model_of, hT, value_canonical]
         using hSpec.2
-    · exact default_typed_model_of_native_fun_typed canonical_type_inhabited_of_type_wf
+    · exact default_typed_model_of_native_fun_typed
+        (uc := default_usort_card) canonical_type_inhabited_of_type_wf
 
 /-- Constructs a total typed SMT model. -/
 theorem exists_total_typed_model :

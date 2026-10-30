@@ -10,6 +10,8 @@ import all Cpc.Proofs.RuleSupport.Contract
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -179,12 +181,12 @@ by
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -214,12 +216,12 @@ by
   let PM : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical uc v = true ->
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PN : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical uc v = true ->
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -246,14 +248,14 @@ by
   classical
   let PredM : SmtValue -> Prop := fun v =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PredN : SmtValue -> Prop := fun v =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical uc v = true ∧
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   let PTy : Prop :=
-    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical v
+    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical uc v
   change
     (if hSat : ∃ v : SmtValue, PredM v then Classical.choose hSat
       else if hTy : PTy then Classical.choose hTy else SmtValue.NotValue) =

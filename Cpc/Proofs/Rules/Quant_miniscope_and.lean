@@ -306,7 +306,7 @@ private theorem smtx_model_eval_exists_not_and_true_iff
                       let P : Prop :=
                         ∃ v : SmtValue,
                           __smtx_typeof_value v = __eo_to_smt_type T ∧
-                            __smtx_value_canonical v = true ∧
+                            __smtx_value_canonical M.usortCard v = true ∧
                             __smtx_model_eval
                                 (native_model_push M s (__eo_to_smt_type T) v)
                                 (__eo_to_smt_exists a
@@ -315,7 +315,7 @@ private theorem smtx_model_eval_exists_not_and_true_iff
                       let Q : Prop :=
                         ∃ v : SmtValue,
                           __smtx_typeof_value v = __eo_to_smt_type T ∧
-                            __smtx_value_canonical v = true ∧
+                            __smtx_value_canonical M.usortCard v = true ∧
                             __smtx_model_eval
                                 (native_model_push M s (__eo_to_smt_type T) v)
                                 (__eo_to_smt_exists a (SmtTerm.not A)) =
@@ -323,7 +323,7 @@ private theorem smtx_model_eval_exists_not_and_true_iff
                       let R : Prop :=
                         ∃ v : SmtValue,
                           __smtx_typeof_value v = __eo_to_smt_type T ∧
-                            __smtx_value_canonical v = true ∧
+                            __smtx_value_canonical M.usortCard v = true ∧
                             __smtx_model_eval
                                 (native_model_push M s (__eo_to_smt_type T) v)
                                 (__eo_to_smt_exists a (SmtTerm.not B)) =
@@ -572,7 +572,7 @@ private theorem smtx_model_eval_exists_not_true_true_iff
                       let P : Prop :=
                         ∃ v : SmtValue,
                           __smtx_typeof_value v = __eo_to_smt_type T ∧
-                            __smtx_value_canonical v = true ∧
+                            __smtx_value_canonical M.usortCard v = true ∧
                             __smtx_model_eval
                                 (native_model_push M s (__eo_to_smt_type T) v)
                                 (__eo_to_smt_exists a
