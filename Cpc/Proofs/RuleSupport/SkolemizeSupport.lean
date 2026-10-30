@@ -757,22 +757,24 @@ theorem tchoice_typed_canonical_of_wf
 only at values passing the evaluator's guards. -/
 theorem native_eval_tchoice_eq_of_body_eval_eq_diff_typed
     {M N : SmtModel} {s : native_String} {T : SmtType} {bodyM bodyN : SmtTerm}
+    (hCard : M.usortCard = N.usortCard)
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical uc v = true ->
+      __smtx_value_canonical M.usortCard v = true ->
       __smtx_model_eval (native_model_push M s T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     native_eval_choice M s T bodyM = native_eval_choice N s T bodyN := by
   classical
+  rw [← hCard]
   have hPredEq :
       (fun v : SmtValue =>
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical uc v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval (native_model_push M s T v) bodyM =
             SmtValue.Boolean true) =
       (fun v : SmtValue =>
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical uc v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval (native_model_push N s T v) bodyN =
             SmtValue.Boolean true) := by
     funext v
@@ -1084,6 +1086,7 @@ theorem existsList_eval_congr
       rw [eval_exists_eq P s (__eo_to_smt_type T) (smtExistsList vs B1),
         eval_exists_eq Q s (__eo_to_smt_type T) (smtExistsList vs B2)]
       apply InstantiateRule.native_eval_texists_eq_of_body_eval_eq_diff_typed
+        (hMP.usortCard.symm.trans hMQ.usortCard)
       intro w hwTy hwCan
       have hPushP : model_wf
           (native_model_push P s (__eo_to_smt_type T) w) :=
@@ -1092,7 +1095,8 @@ theorem existsList_eval_congr
       have hPushQ : model_wf
           (native_model_push Q s (__eo_to_smt_type T) w) :=
         model_total_typed_push hQ s _ w hWfHead hwTy
-          (canonical_of_canonical_bool hwCan)
+          (canonical_of_canonical_bool
+            ((hMP.usortCard.symm.trans hMQ.usortCard) ▸ hwCan))
       refine ih ((s, __eo_to_smt_type T) :: E)
         (native_model_push P s (__eo_to_smt_type T) w)
         (native_model_push Q s (__eo_to_smt_type T) w)
@@ -1130,7 +1134,7 @@ theorem existsList_eval_congr
 
 private theorem globals_symm {M N : SmtModel}
     (h : model_agrees_on_globals M N) : model_agrees_on_globals N M :=
-  ⟨fun s T => (h.1 s T).symm, fun f T U => (h.2 f T U).symm⟩
+  ⟨fun s T => (h.1 s T).symm, fun f T U => (h.2 f T U).symm, h.usortCard.symm⟩
 
 /-- The head choice of a skolem agrees between any pin-respecting model pair. -/
 private theorem qskol_head_choice_eq
@@ -1153,6 +1157,7 @@ private theorem qskol_head_choice_eq
     native_eval_choice P s (__eo_to_smt_type T) (smtExistsList vs B) =
       native_eval_choice L s (__eo_to_smt_type T) (smtExistsList vs H) := by
   apply native_eval_tchoice_eq_of_body_eval_eq_diff_typed
+    (hMP.usortCard.symm.trans hML.usortCard)
   intro w hwTy hwCan
   refine existsList_eval_congr M pins B H vs [(s, __eo_to_smt_type T)]
     (native_model_push P s (__eo_to_smt_type T) w)
@@ -1160,7 +1165,8 @@ private theorem qskol_head_choice_eq
     (model_total_typed_push hP s _ w hWfHead hwTy
       (canonical_of_canonical_bool hwCan))
     (model_total_typed_push hL s _ w hWfHead hwTy
-      (canonical_of_canonical_bool hwCan))
+      (canonical_of_canonical_bool
+        ((hMP.usortCard.symm.trans hML.usortCard) ▸ hwCan)))
     (model_agrees_on_globals_trans hMP
       (model_agrees_on_globals_push P s _ w))
     (model_agrees_on_globals_trans hML
@@ -1323,7 +1329,8 @@ theorem qskol_eval_eq_chainValue (M : SmtModel) (H : SmtTerm) :
                   (smtExistsList vs H)))
               Q
               (model_total_typed_push hP s _ _ hWfHead hCTy
-                (canonical_of_canonical_bool hCCan))
+                (canonical_of_canonical_bool
+                  (by rw [← hMP.usortCard, hML.usortCard]; exact hCCan)))
               hQ
               (model_agrees_on_globals_trans hMP
                 (model_agrees_on_globals_push P s _ _))

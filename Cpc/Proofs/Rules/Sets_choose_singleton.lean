@@ -15,7 +15,7 @@ set_option maxHeartbeats 10000000
 private theorem smtx_eval_map_diff_term_eq
     (M : SmtModel) (x y : SmtTerm) :
     __smtx_model_eval M (SmtTerm.map_diff x y) =
-      __smtx_map_diff (__smtx_model_eval M x)
+      __smtx_map_diff M (__smtx_model_eval M x)
         (__smtx_model_eval M y) := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 

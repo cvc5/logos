@@ -2312,11 +2312,11 @@ private theorem regl_tchoice_congr_bodies
             SmtValue.Boolean true := by
       rw [show (fun v : SmtValue =>
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
             __smtx_model_eval (native_model_push M s T v) b₂ =
               SmtValue.Boolean true) = (fun v : SmtValue =>
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
             __smtx_model_eval (native_model_push M s T v) b₁ =
               SmtValue.Boolean true) from hPredEq.symm]
       exact hSat₁
@@ -2331,11 +2331,11 @@ private theorem regl_tchoice_congr_bodies
       apply hSat₁
       rw [show (fun v : SmtValue =>
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
             __smtx_model_eval (native_model_push M s T v) b₁ =
               SmtValue.Boolean true) = (fun v : SmtValue =>
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
             __smtx_model_eval (native_model_push M s T v) b₂ =
               SmtValue.Boolean true) from hPredEq]
       exact hSat₂
@@ -2572,7 +2572,7 @@ private theorem regl_int_wf : __smtx_type_wf SmtType.Int = true := by
 
 private theorem regl_agrees_refl (M : SmtModel) :
     model_agrees_on_globals M M :=
-  ⟨fun _ _ => rfl, fun _ _ _ => rfl⟩
+  ⟨fun _ _ => rfl, fun _ _ _ => rfl, rfl⟩
 
 private theorem regl_eval_replace_all_term_eq
     (M : SmtModel) (a b c : SmtTerm) :

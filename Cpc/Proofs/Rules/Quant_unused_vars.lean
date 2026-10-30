@@ -396,7 +396,7 @@ by
           __smtx_model_eval N
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists env body))
-      apply smtx_model_eval_exists_eq_of_body_eval_eq
+      apply smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortCard
       intro v
       have hPush :
           model_agrees_except_on_env except (head :: bound)

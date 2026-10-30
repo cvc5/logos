@@ -1195,25 +1195,27 @@ theorem alpha_preserves_type_and_translation
 witness under the target name on the left and the source name on the right. -/
 theorem native_eval_texists_eq_of_renamed_body
     {M N : SmtModel} {s t : native_String} {T : SmtType}
+    (hCard : M.usortCard = N.usortCard)
     {bodyM bodyN : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T →
-      __smtx_value_canonical uc v = true →
+      __smtx_value_canonical M.usortCard v = true →
       __smtx_model_eval (native_model_push M t T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     (native_eval_exists M t T bodyM : SmtValue) =
       (native_eval_exists N s T bodyN : SmtValue) := by
   classical
+  rw [← hCard]
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical uc v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M t T v) bodyM =
           SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical uc v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push N s T v) bodyN =
           SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -1266,7 +1268,7 @@ theorem alpha_eval_eo_to_smt_exists
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists sourceTail bodyN))
       simpa [__smtx_model_eval] using
-        native_eval_texists_eq_of_renamed_body
+        native_eval_texists_eq_of_renamed_body hRel.globals.usortCard
           (fun v hValTy hValCanon => by
             have hM' :
                 model_wf
@@ -1308,7 +1310,7 @@ theorem alpha_eval_eo_to_smt_exists
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists sourceTail bodyN))
       simpa [__smtx_model_eval] using
-        native_eval_texists_eq_of_renamed_body
+        native_eval_texists_eq_of_renamed_body hRel.globals.usortCard
           (fun v hValTy hValCanon => by
             have hM' :
                 model_wf

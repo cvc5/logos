@@ -17,13 +17,14 @@ set_option maxHeartbeats 10000000
 
 /-- Choosing from a nonempty canonical set finds a true entry. -/
 private theorem choose_mem_of_ne_empty
+    {M : SmtModel}
     (m : SmtMap) (A : SmtType)
     (hTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool)
-    (hCan : __smtx_map_canonical uc m = true)
+    (hCan : __smtx_map_canonical M.usortCard m = true)
     (hDef : __smtx_map_get_default m = SmtValue.Boolean false)
     (hNe : m ≠ SmtMap.default A (SmtValue.Boolean false)) :
     __smtx_map_lookup m
-      (native_eval_map_diff m (SmtMap.default A (SmtValue.Boolean false))) =
+      (native_eval_map_diff M m (SmtMap.default A (SmtValue.Boolean false))) =
         SmtValue.Boolean true := by
   have hDiff := RuleProofs.map_diff_selects_model_eval_eq_false_of_default_eq
     m (SmtMap.default A (SmtValue.Boolean false)) A SmtType.Bool
@@ -31,7 +32,7 @@ private theorem choose_mem_of_ne_empty
     hCan (set_empty_map_canonical A) hDef (by decide)
     (by simp [__smtx_model_eval_eq, native_veq, hNe])
   rcases bool_value_canonical
-    (SetsMemberSupport.set_map_lookup_bool (i := native_eval_map_diff m
+    (SetsMemberSupport.set_map_lookup_bool (i := native_eval_map_diff M m
       (SmtMap.default A (SmtValue.Boolean false))) hTy) with ⟨b, hb⟩
   rw [hb]
   rw [__smtx_map_lookup] at hDiff
@@ -113,7 +114,7 @@ private theorem choose_member_properties
     rw [__smtx_model_eval.eq_def]
   have hEvalChoose : __smtx_model_eval M
       (SmtTerm.map_diff (__eo_to_smt a) (SmtTerm.set_empty A)) =
-      native_eval_map_diff m (SmtMap.default A (SmtValue.Boolean false)) := by
+      native_eval_map_diff M m (SmtMap.default A (SmtValue.Boolean false)) := by
     rw [__smtx_model_eval.eq_def]
     simp only [hm, hEvalEmpty, __smtx_map_diff]
     rfl
@@ -122,12 +123,12 @@ private theorem choose_member_properties
       (SmtTerm.set_member
         (SmtTerm.map_diff (__eo_to_smt a) (SmtTerm.set_empty A)) (__eo_to_smt a)) =
       __smtx_map_lookup m
-        (native_eval_map_diff m (SmtMap.default A (SmtValue.Boolean false))) := by
+        (native_eval_map_diff M m (SmtMap.default A (SmtValue.Boolean false))) := by
     rw [__smtx_model_eval.eq_def]
     simp only [hEvalChoose, hm, __smtx_model_eval_set_member, __smtx_map_select]
   rw [hm, hEvalEmpty, hMem]
   rcases bool_value_canonical
-    (SetsMemberSupport.set_map_lookup_bool (i := native_eval_map_diff m
+    (SetsMemberSupport.set_map_lookup_bool (i := native_eval_map_diff M m
       (SmtMap.default A (SmtValue.Boolean false))) hmTy) with ⟨b, hb⟩
   by_cases hEmpty : m = SmtMap.default A (SmtValue.Boolean false)
   · rw [hb, hEmpty]

@@ -2684,7 +2684,8 @@ by
         root hXLt hExcept hBound hTrans
         set_choose_arg_has_smt_translation_of_has_smt_translation
         hNoFree hAgree
-        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx])
+        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx,
+          smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard])
         ih
   case set_is_empty =>
     exact
@@ -2692,8 +2693,7 @@ by
         root hXLt hExcept hBound hTrans
         set_is_empty_arg_has_smt_translation_of_has_smt_translation
         hNoFree hAgree
-        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx,
-          smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard])
+        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx])
         ih
   case set_is_singleton =>
     exact

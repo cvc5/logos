@@ -174,8 +174,8 @@ theorem vsm_canonical_spine :
         ∀ a ∈ vsmArgs v, __smtx_value_canonical uc a = true
   | SmtValue.Apply f a => by
       intro hCanon
-      rw [show __smtx_value_canonical (SmtValue.Apply f a) =
-        native_and (__smtx_value_canonical f) (__smtx_value_canonical a) from rfl]
+      rw [show __smtx_value_canonical uc (SmtValue.Apply f a) =
+        native_and (__smtx_value_canonical uc f) (__smtx_value_canonical uc a) from rfl]
         at hCanon
       have hf : __smtx_value_canonical uc f = true := by
         cases hcf : __smtx_value_canonical uc f
@@ -219,8 +219,8 @@ theorem vsm_canonical_of_spine (args : List SmtValue) :
       intro head hHead hArgs
       rw [vsmMkSpine_cons]
       refine ih (SmtValue.Apply head a) ?_ ?_
-      · rw [show __smtx_value_canonical (SmtValue.Apply head a) =
-          native_and (__smtx_value_canonical head) (__smtx_value_canonical a) from rfl,
+      · rw [show __smtx_value_canonical uc (SmtValue.Apply head a) =
+          native_and (__smtx_value_canonical uc head) (__smtx_value_canonical uc a) from rfl,
           hHead, hArgs a (List.mem_cons_self ..)]
         rfl
       · intro b hb

@@ -332,8 +332,8 @@ private theorem facts___eo_prog_arrays_ext_impl
       (__eo_to_smt a) (__eo_to_smt_type I) (__eo_to_smt_type E) hSmtA
   have hSelectEqFalse :
       __smtx_model_eval_eq
-          (__smtx_map_lookup m1 (native_eval_map_diff m1 m2))
-          (__smtx_map_lookup m2 (native_eval_map_diff m1 m2)) =
+          (__smtx_map_lookup m1 (native_eval_map_diff M m1 m2))
+          (__smtx_map_lookup m2 (native_eval_map_diff M m1 m2)) =
         SmtValue.Boolean false :=
     RuleProofs.map_diff_selects_model_eval_eq_false
       m1 m2 (__eo_to_smt_type I) (__eo_to_smt_type E)
