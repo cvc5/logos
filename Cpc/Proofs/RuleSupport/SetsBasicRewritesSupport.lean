@@ -2654,10 +2654,10 @@ private theorem singleton_map_lookup (v i : SmtValue) (A : SmtType) :
     exactly the element `v`.  This is the semantic core of `sets_choose_singleton`:
     the witness `i` distinguishing the two maps is uniquely `v`. -/
 theorem map_diff_singleton_empty_eq
-    (v : SmtValue) (A : SmtType)
+    {M : SmtModel} (v : SmtValue) (A : SmtType)
     (hvTy : __smtx_typeof_value v = A)
-    (hvCan : __smtx_value_canonical uc v = true) :
-    native_eval_map_diff
+    (hvCan : __smtx_value_canonical M.usortCard v = true) :
+    native_eval_map_diff M
         (SmtMap.cons v (SmtValue.Boolean true)
           (SmtMap.default A (SmtValue.Boolean false)))
         (SmtMap.default A (SmtValue.Boolean false)) = v := by
@@ -2666,7 +2666,7 @@ theorem map_diff_singleton_empty_eq
   have hPredIffV :
       ∀ i : SmtValue,
         (__smtx_typeof_value i = A ∧
-          __smtx_value_canonical uc i = true ∧
+          __smtx_value_canonical M.usortCard i = true ∧
             native_veq
               (__smtx_map_lookup
                 (SmtMap.cons v (SmtValue.Boolean true)
@@ -2704,7 +2704,7 @@ theorem map_diff_singleton_empty_eq
   have hDiff :
       ∃ i : SmtValue,
         __smtx_typeof_value i = A ∧
-          __smtx_value_canonical uc i = true ∧
+          __smtx_value_canonical M.usortCard i = true ∧
             native_veq
               (__smtx_map_lookup
                 (SmtMap.cons v (SmtValue.Boolean true)

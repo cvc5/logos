@@ -649,6 +649,7 @@ private theorem globals_push_push {M N : SmtModel}
   · intro fid A B
     exact ((model_agrees_on_globals_push M s T v).2 fid A B).symm.trans
       ((h.2 fid A B).trans ((model_agrees_on_globals_push N s T w).2 fid A B))
+  · exact h.usortCard
 
 /-! ## Typed body congruence for `choice` -/
 
@@ -2211,7 +2212,7 @@ theorem smt_model_eval_rel_of_var_rel_lt
         have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
         have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
-        rw [e1, e2]
+        rw [e1, e2, smtx_model_eval_map_diff_eq_of_usortCard hGlobals.usortCard]
         exact RuleProofs.smt_value_rel_refl _
       case seq_diff x1 x2 =>
         have hA := seq_diff_args hTy
@@ -2825,7 +2826,7 @@ theorem smt_model_eval_rel_of_var_rel_lt
         have hPM := model_total_typed_push hM s0 T0 v hTWf hvTy
           (by simpa [value_canonical] using hvCanon)
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
-          (by simpa [value_canonical] using hvCanon)
+          (by simpa [value_canonical, hGlobals.usortCard] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
           (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
@@ -2842,7 +2843,7 @@ theorem smt_model_eval_rel_of_var_rel_lt
         have hPM := model_total_typed_push hM s0 T0 v hTWf hvTy
           (by simpa [value_canonical] using hvCanon)
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
-          (by simpa [value_canonical] using hvCanon)
+          (by simpa [value_canonical, hGlobals.usortCard] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
           (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
@@ -2858,7 +2859,7 @@ theorem smt_model_eval_rel_of_var_rel_lt
         have hPM := model_total_typed_push hM s0 T0 v hTWf hvTy
           (by simpa [value_canonical] using hvCanon)
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
-          (by simpa [value_canonical] using hvCanon)
+          (by simpa [value_canonical, hGlobals.usortCard] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
           (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)

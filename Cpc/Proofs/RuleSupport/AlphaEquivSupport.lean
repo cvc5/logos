@@ -311,7 +311,7 @@ private theorem model_agrees_on_globals_push_diff
     (h : model_agrees_on_globals M N) :
     model_agrees_on_globals
       (native_model_push M t T v) (native_model_push N s T v) := by
-  refine ⟨?_, ?_⟩
+  refine ⟨?_, ?_, h.usortCard⟩
   · intro name ty
     simpa [native_model_lookup, model_key, native_model_push]
       using h.1 name ty
@@ -1281,7 +1281,7 @@ theorem alpha_eval_eo_to_smt_exists
                   (native_model_push N s (__eo_to_smt_type T) v) :=
               model_total_typed_push hN s (__eo_to_smt_type T) v
                 hHeadWf hValTy
-                (by simpa [value_canonical] using hValCanon)
+                (by simpa [value_canonical, hRel.globals.usortCard] using hValCanon)
             exact ih hM' hN'
               (alphaRel_push_mapped hLists hSourceDistinct hTargetDistinct
                 hRel s t T v hPair)
@@ -1323,7 +1323,7 @@ theorem alpha_eval_eo_to_smt_exists
                   (native_model_push N s (__eo_to_smt_type T) v) :=
               model_total_typed_push hN s (__eo_to_smt_type T) v
                 hHeadWf hValTy
-                (by simpa [value_canonical] using hValCanon)
+                (by simpa [value_canonical, hRel.globals.usortCard] using hValCanon)
             exact ih hM' hN'
               (alphaRel_push_unmapped hLists hSourceDistinct hRel
                 s T v hHeadWf hSourceFree hTargetFree)

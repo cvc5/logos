@@ -432,7 +432,7 @@ theorem forall_encoding_true_of_all_inst
         hWf s T (List.Mem.head _)
       have hnP : ¬ (∃ v : SmtValue,
           __smtx_typeof_value v = __eo_to_smt_type T ∧
-            __smtx_value_canonical uc v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
               __smtx_model_eval
                 (native_model_push M s (__eo_to_smt_type T) v)
                 (__eo_to_smt_exists env (SmtTerm.not body)) =
@@ -468,7 +468,7 @@ theorem forall_encoding_true_of_all_inst
             SmtValue.Boolean false := by
         show (if _ : (∃ v : SmtValue,
             __smtx_typeof_value v = __eo_to_smt_type T ∧
-              __smtx_value_canonical uc v = true ∧
+              __smtx_value_canonical M.usortCard v = true ∧
                 __smtx_model_eval
                   (native_model_push M s (__eo_to_smt_type T) v)
                   (__eo_to_smt_exists env (SmtTerm.not body)) =
@@ -1195,6 +1195,7 @@ theorem inst_push_last_bridge
     (hvC : __smtx_value_canonical uc v = true) :
     ∀ {M N : SmtModel} {ys : Term},
       ForallInstantiationModel M ys N ->
+      M.usortCard = uc ->
       (∀ K, ForallInstantiationModel (native_model_push M sx Tx v) ys K ->
         __smtx_model_eval K body = SmtValue.Boolean true) ->
       __smtx_model_eval (native_model_push N sx Tx v) body =
@@ -1202,13 +1203,13 @@ theorem inst_push_last_bridge
   intro M N ys hInst
   induction hInst with
   | nil M =>
-      intro h
+      intro _hc h
       exact h (native_model_push M sx Tx v)
         (ForallInstantiationModel.nil _)
   | cons hWf hwT hwC hTail ih =>
       rename_i M N s T env w
-      intro h
-      refine ih ?_
+      intro hc h
+      refine ih hc ?_
       intro K hK
       by_cases hKey :
           ({ isVar := true, name := s, ty := __eo_to_smt_type T } : SmtModelKey) =
@@ -1230,7 +1231,7 @@ theorem inst_push_last_bridge
           · exact hKey.symm
           · cases hKey; rfl
         refine h K (ForallInstantiationModel.cons hWf (by rw [hTeq]; exact hvT)
-          hvC ?_)
+          (show __smtx_value_canonical M.usortCard v = true by rw [hc]; exact hvC) ?_)
         rw [hBase2]
         exact hK
       · have hSwap :
@@ -1264,11 +1265,8 @@ theorem eval_push_not_free_eq
     (EoVarEnvPerm.of_exact EoVarEnv.nil)
     hTrans hNoFree ?_
   refine ⟨?_, ?_⟩
-  · exact
-      ⟨fun s' T' =>
-        ((model_agrees_on_globals_push K sw (__eo_to_smt_type Tw) u).1 s' T').symm,
-       fun fid T U =>
-        ((model_agrees_on_globals_push K sw (__eo_to_smt_type Tw) u).2 fid T U).symm⟩
+  · exact model_agrees_on_globals_symm
+      (model_agrees_on_globals_push K sw (__eo_to_smt_type Tw) u)
   · intro s' T' hKey
     rcases hKey with hBound | hNotExcept
     · cases hBound
@@ -1343,9 +1341,17 @@ theorem lhs_gives_push_last
         SmtValue.Boolean true := by
   intro N hInst v hvT hvC
   refine inst_push_last_bridge sx (__eo_to_smt_type xT) v (__eo_to_smt F)
-    hvT hvC hInst ?_
+    hvT hvC hInst rfl ?_
   intro K hK
   exact hLHS K (ForallInstantiationModel.cons hWfX hvT hvC hK)
+
+/-- An instantiation only pushes variables, so it keeps the base model's
+cardinalities of uninterpreted sorts. -/
+private theorem forallInstantiationModel_usortCard {M N : SmtModel} {xs : Term}
+    (h : ForallInstantiationModel M xs N) : N.usortCard = M.usortCard := by
+  induction h with
+  | nil M => rfl
+  | cons _ _ _ _ ih => exact ih
 
 /-- Rebase an instantiation performed after `x` was pushed into one where the
 retained binders are instantiated first and the effective value of `x` is
@@ -1354,24 +1360,24 @@ theorem inst_rebase_push_last
     (sx : native_String) (Tx : SmtType) :
     ∀ {M N : SmtModel} {ys : Term} {v : SmtValue},
       __smtx_typeof_value v = Tx ->
-      __smtx_value_canonical uc v = true ->
+      __smtx_value_canonical M.usortCard v = true ->
       ForallInstantiationModel (native_model_push M sx Tx v) ys N ->
       ∃ (N₀ : SmtModel) (w : SmtValue),
         ForallInstantiationModel M ys N₀ ∧
         __smtx_typeof_value w = Tx ∧
-        __smtx_value_canonical uc w = true ∧
+        __smtx_value_canonical M.usortCard w = true ∧
         N = native_model_push N₀ sx Tx w := by
   intro M N ys v hvTy hvCanon hInst
   have aux : ∀ {K N : SmtModel} {ys : Term},
       ForallInstantiationModel K ys N ->
       ∀ (M : SmtModel) (v : SmtValue),
         __smtx_typeof_value v = Tx ->
-        __smtx_value_canonical uc v = true ->
+        __smtx_value_canonical M.usortCard v = true ->
         K = native_model_push M sx Tx v ->
         ∃ (N₀ : SmtModel) (w : SmtValue),
           ForallInstantiationModel M ys N₀ ∧
           __smtx_typeof_value w = Tx ∧
-          __smtx_value_canonical uc w = true ∧
+          __smtx_value_canonical M.usortCard w = true ∧
           N = native_model_push N₀ sx Tx w := by
     intro K N ys hKN
     induction hKN with
@@ -1381,6 +1387,8 @@ theorem inst_rebase_push_last
     | cons hWf huTy huCanon hTail ih =>
       rename_i K N sy Ty env u
       intro M v hvTy hvCanon hK
+      have huCanonM : __smtx_value_canonical M.usortCard u = true := by
+        rw [hK] at huCanon; exact huCanon
       by_cases hKey :
           ({ isVar := true, name := sy, ty := __eo_to_smt_type Ty } :
             SmtModelKey) = { isVar := true, name := sx, ty := Tx }
@@ -1401,9 +1409,9 @@ theorem inst_rebase_push_last
             (__eo_to_smt_type Ty) u sx Tx u hKey).symm
         obtain ⟨N₀, w, hN₀, hwTy, hwCanon, hN⟩ :=
           ih (native_model_push M sy (__eo_to_smt_type Ty) u) u
-            (by simpa [hTx] using huTy) huCanon hStart
+            (by simpa [hTx] using huTy) huCanonM hStart
         exact ⟨N₀, w,
-          ForallInstantiationModel.cons hWf huTy huCanon hN₀,
+          ForallInstantiationModel.cons hWf huTy huCanonM hN₀,
           hwTy, hwCanon, hN⟩
       · have hStart :
             native_model_push K sy (__eo_to_smt_type Ty) u =
@@ -1416,7 +1424,7 @@ theorem inst_rebase_push_last
           ih (native_model_push M sy (__eo_to_smt_type Ty) u) v
             hvTy hvCanon hStart
         exact ⟨N₀, w,
-          ForallInstantiationModel.cons hWf huTy huCanon hN₀,
+          ForallInstantiationModel.cons hWf huTy huCanonM hN₀,
           hwTy, hwCanon, hN⟩
   exact aux hInst M v hvTy hvCanon rfl
 
@@ -1732,7 +1740,7 @@ theorem conj_forward_aux
       (∀ N, ForallInstantiationModel M₀ ysRem N ->
         ∀ v : SmtValue,
           __smtx_typeof_value v = __eo_to_smt_type xT ->
-          __smtx_value_canonical uc v = true ->
+          __smtx_value_canonical M₀.usortCard v = true ->
           __smtx_model_eval
               (native_model_push N sx (__eo_to_smt_type xT) v)
               (__eo_to_smt F) = SmtValue.Boolean true) ->
@@ -3128,6 +3136,7 @@ theorem split_backward
   | cons hWfX' hvTy hvCanon hTailInst =>
     obtain ⟨N₀, w, hN₀, hwTy, hwCanon, hN⟩ :=
       inst_rebase_push_last sx (__eo_to_smt_type xT) hvTy hvCanon hTailInst
+    have hN₀Card : N₀.usortCard = M.usortCard := forallInstantiationModel_usortCard hN₀
     by_cases hDt : ∃ s d, xT = Term.DatatypeType s d
     · obtain ⟨sD, dD, rfl⟩ := hDt
       have hReserved := datatype_name_not_reserved_of_type_wf sD dD hWfX
@@ -3256,7 +3265,8 @@ theorem split_backward
         rwa [hArgs]
       have hCI := conj_ctor_inst_from_values sD dD ci hReserved crel
         N₀ w args hgEncTy hFinalTy hFieldsLen
-        hMatchTypes hArgsCanon' hEvalHead hTarget
+        hMatchTypes (fun a ha => by rw [hN₀Card]; exact hArgsCanon' a ha)
+        hEvalHead hTarget
       have hBody := conj_backward_aux sx (Term.DatatypeType sD dD) F hWfX
         hFTrans crel (CS.head (CH.datatype sD dD ci)) M hM hgEncTy hgEncTrue
         N₀ hN₀ w hCI
@@ -3479,11 +3489,11 @@ theorem split_backward
                 (native_model_push N₀ s₁ A u) :=
               model_total_typed_push hN₀Typed s₁ A u
                 (by simpa [A] using hU₁Wf) huTy
-                (by simpa [value_canonical] using huCanon)
+                (by simpa [value_canonical, hN₀Card] using huCanon)
             have hPTyped : model_wf P :=
               model_total_typed_push hP₁Typed s₂ (__eo_to_smt_type T₂)
                 tailVal hU₂Wf hTailValTyEo
-                (by simpa [value_canonical] using hTailValCanon)
+                (by simpa [value_canonical, native_model_push, hN₀Card] using hTailValCanon)
             have hEvalHead : __smtx_model_eval P
                 (__eo_to_smt (Term.Var (Term.String s₁) T₁)) = u := by
               change native_model_var_lookup P s₁ A = u
@@ -3535,7 +3545,8 @@ theorem split_backward
                 _ = w := by simpa [vsmMkSpine] using hW.symm
             have hCI := ctorInst_of_two_absorbed crel N₀ w
               s₁ T₁ u s₂ T₂ tailVal hAbs
-              (by simpa [A] using huTy) huCanon hTailValTyEo hTailValCanon hEvalFinal
+              (by simpa [A] using huTy) (by rw [hN₀Card]; exact huCanon)
+              hTailValTyEo (by rw [hN₀Card]; exact hTailValCanon) hEvalFinal
             have hBody := conj_backward_aux sx
               (Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T₁) T₂)
               F hWfX hFTrans crel (CS.head CH.tuple) M hM
