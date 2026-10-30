@@ -971,7 +971,7 @@ of the previous level (`type_large` handles ground field types structurally),
 and pads the remaining fields with defaults.
 -/
 
-private def LargeOracle uc (n : Nat) : Prop :=
+private def LargeOracle (uc : native_Nat -> native_Nat) (n : Nat) : Prop :=
   ∀ (s : native_String) (dd : SmtDatatypeDecl),
     native_inhabited_type (SmtType.Datatype s dd) = true →
     __smtx_type_wf_rec (SmtType.Datatype s dd) = true →
