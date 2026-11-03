@@ -9,6 +9,8 @@ import all Cpc.Proofs.RuleSupport.InstantiateSupport
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 /-!
 # Rel-coincidence: evaluation respects extensional model equivalence
 
@@ -647,6 +649,7 @@ private theorem globals_push_push {M N : SmtModel}
   · intro fid A B
     exact ((model_agrees_on_globals_push M s T v).2 fid A B).symm.trans
       ((h.2 fid A B).trans ((model_agrees_on_globals_push N s T w).2 fid A B))
+  · exact h.usortCard
 
 /-! ## Typed body congruence for `choice` -/
 
@@ -658,21 +661,23 @@ private theorem choose_eq_of_pred_eq {p q : SmtValue -> Prop}
 
 private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
     {M N : SmtModel} {s : native_String} {T : SmtType} {body : SmtTerm}
+    (hCard : M.usortCard = N.usortCard)
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical M.usortCard v = true ->
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
     native_eval_choice M s T body = native_eval_choice N s T body := by
   classical
+  rw [← hCard]
   have hPred : (fun v : SmtValue =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) =
     (fun v : SmtValue =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push N s T v) body =
           SmtValue.Boolean true) := by
     funext v
@@ -684,21 +689,21 @@ private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
       exact ⟨h1, h2, by rw [hBody v h1 h2]; exact h3⟩
   by_cases hSatM : ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true
   · have hSatN : ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true := by
       rw [show (∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
             __smtx_model_eval (native_model_push N s T v) body =
               SmtValue.Boolean true) = ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true from by rw [hPred]]
       exact hSatM
@@ -706,18 +711,18 @@ private theorem native_eval_tchoice_eq_of_body_eval_eq_typed
     exact choose_eq_of_pred_eq hSatM hSatN hPred
   · have hSatN : ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true := by
       intro hN
       apply hSatM
       rw [show (∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true) = ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortCard v = true ∧
             __smtx_model_eval (native_model_push N s T v) body =
               SmtValue.Boolean true from by rw [hPred]]
       exact hN
@@ -2207,7 +2212,7 @@ theorem smt_model_eval_rel_of_var_rel_lt
         have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
         have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
-        rw [e1, e2]
+        rw [e1, e2, smtx_model_eval_map_diff_eq_of_usortCard hGlobals.usortCard]
         exact RuleProofs.smt_value_rel_refl _
       case seq_diff x1 x2 =>
         have hA := seq_diff_args hTy
@@ -2816,11 +2821,12 @@ theorem smt_model_eval_rel_of_var_rel_lt
         simp only [__smtx_model_eval]
         apply rel_of_eq
         apply InstantiateRule.native_eval_texists_eq_of_body_eval_eq_diff_typed
+          hGlobals.usortCard
         intro v hvTy hvCanon
         have hPM := model_total_typed_push hM s0 T0 v hTWf hvTy
           (by simpa [value_canonical] using hvCanon)
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
-          (by simpa [value_canonical] using hvCanon)
+          (by simpa [value_canonical, hGlobals.usortCard] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
           (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
@@ -2832,11 +2838,12 @@ theorem smt_model_eval_rel_of_var_rel_lt
         simp only [__smtx_model_eval]
         apply rel_of_eq
         apply InstantiateRule.native_eval_tforall_eq_of_body_eval_eq_diff_typed
+          hGlobals.usortCard
         intro v hvTy hvCanon
         have hPM := model_total_typed_push hM s0 T0 v hTWf hvTy
           (by simpa [value_canonical] using hvCanon)
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
-          (by simpa [value_canonical] using hvCanon)
+          (by simpa [value_canonical, hGlobals.usortCard] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
           (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
@@ -2847,12 +2854,12 @@ theorem smt_model_eval_rel_of_var_rel_lt
           tnn_of_typeof_eq hBTy (by simp)
         simp only [__smtx_model_eval]
         apply rel_of_eq
-        apply native_eval_tchoice_eq_of_body_eval_eq_typed
+        apply native_eval_tchoice_eq_of_body_eval_eq_typed hGlobals.usortCard
         intro v hvTy hvCanon
         have hPM := model_total_typed_push hM s0 T0 v hTWf hvTy
           (by simpa [value_canonical] using hvCanon)
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
-          (by simpa [value_canonical] using hvCanon)
+          (by simpa [value_canonical, hGlobals.usortCard] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
           (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
@@ -2899,8 +2906,8 @@ theorem smt_model_eval_true_push_of_rel
     (hSTWf : __smtx_type_wf ST = true)
     (hvTy : __smtx_typeof_value v = ST)
     (hwTy : __smtx_typeof_value w = ST)
-    (hvCanon : __smtx_value_canonical v = true)
-    (hwCanon : __smtx_value_canonical w = true)
+    (hvCanon : __smtx_value_canonical M.usortCard v = true)
+    (hwCanon : __smtx_value_canonical M.usortCard w = true)
     (hRel : RuleProofs.smt_value_rel v w)
     (hTy : term_has_non_none_type u)
     (hTrue : __smtx_model_eval (native_model_push M s ST w) u =

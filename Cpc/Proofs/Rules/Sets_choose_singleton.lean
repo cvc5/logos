@@ -15,7 +15,7 @@ set_option maxHeartbeats 10000000
 private theorem smtx_eval_map_diff_term_eq
     (M : SmtModel) (x y : SmtTerm) :
     __smtx_model_eval M (SmtTerm.map_diff x y) =
-      __smtx_model_eval_map_diff (__smtx_model_eval M x)
+      __smtx_map_diff M (__smtx_model_eval M x)
         (__smtx_model_eval M y) := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
@@ -161,10 +161,10 @@ private theorem facts___eo_prog_sets_choose_singleton_impl
     smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt a1)
       (by unfold term_has_non_none_type; exact ha1Trans)
   have hA1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt a1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt a1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM a1 ha1Trans
   have hA1CanBool :
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt a1)) = true := by
+      __smtx_value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt a1)) = true := by
     simpa [Smtm.value_canonical_bool_eq_true] using hA1Can
   have hSetWf :
       __smtx_type_wf (SmtType.Set (__smtx_typeof (__eo_to_smt a1))) = true :=
@@ -183,7 +183,7 @@ private theorem facts___eo_prog_sets_choose_singleton_impl
     rw [hElemTy]
     rw [smtx_eval_map_diff_term_eq, smtx_eval_set_singleton_term_eq',
       smtx_eval_set_empty_term_eq']
-    rw [__smtx_model_eval_set_singleton, __smtx_model_eval_map_diff]
+    rw [__smtx_model_eval_set_singleton, __smtx_map_diff]
     rw [hA1EvalTy]
     exact map_diff_singleton_empty_eq
       (__smtx_model_eval M (__eo_to_smt a1)) (__smtx_typeof (__eo_to_smt a1))

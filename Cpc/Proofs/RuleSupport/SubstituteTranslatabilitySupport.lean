@@ -9,6 +9,8 @@ import all Cpc.Proofs.Closed.ContainsAtomicTermListFree
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -286,7 +288,7 @@ theorem eo_to_smt_eval_typed_canonical
     (hTrans : RuleProofs.eo_has_smt_translation t) :
     __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) ∧
-      value_canonical (__smtx_model_eval M (__eo_to_smt t)) := by
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t)) := by
   have hNN : term_has_non_none_type (__eo_to_smt t) := by
     simpa [RuleProofs.eo_has_smt_translation, term_has_non_none_type] using hTrans
   exact ⟨smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt t) hNN,
@@ -300,7 +302,7 @@ inductive SubstActualsTyped (M : SmtModel) : Term -> Term -> Prop where
       __smtx_type_wf (__eo_to_smt_type T) = true ->
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __eo_to_smt_type T ->
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt t)) = true ->
+      __smtx_value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t)) = true ->
       SubstActualsTyped M env ts ->
       SubstActualsTyped M
         (Term.Apply (Term.Apply Term.__eo_List_cons

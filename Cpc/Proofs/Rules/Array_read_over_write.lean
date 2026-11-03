@@ -162,13 +162,13 @@ private theorem facts___eo_prog_array_read_over_write_impl
   have hE1NotStuck : e1 ≠ Term.Stuck :=
     RuleProofs.term_ne_stuck_of_has_smt_translation e1 hE1Trans
   have hT1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt t1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t1 hT1Trans
   have hI1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt i1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt i1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM i1 hI1Trans
   have hE1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt e1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt e1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM e1 hE1Trans
   have hSmtT1Raw :
       __smtx_typeof (__eo_to_smt t1) =
@@ -195,7 +195,7 @@ private theorem facts___eo_prog_array_read_over_write_impl
       (by simpa [RuleProofs.eo_has_smt_translation, term_has_non_none_type] using hT1Trans)]
     exact hSmtT1
   rcases Smtm.map_value_canonical hEvalT1Ty with ⟨m, hT1EvalMap⟩
-  have hMapCan : __smtx_map_canonical m = true := by
+  have hMapCan : __smtx_map_canonical M.usortCard m = true := by
     rw [hT1EvalMap] at hT1Can
     simpa [value_canonical, __smtx_value_canonical] using hT1Can
   let lhs :=

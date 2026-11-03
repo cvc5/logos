@@ -22,6 +22,8 @@ set_option maxHeartbeats 10000000
 
 namespace QuantVarElimEqRule
 
+variable {uc : native_Nat -> native_Nat}
+
 private def qeq (A B : Term) : Term :=
   Term.Apply (Term.Apply (Term.UOp UserOp.eq) A) B
 
@@ -507,7 +509,7 @@ private theorem eval_value_facts
     (hTTrans : RuleProofs.eo_has_smt_translation t) :
     __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) ∧
-      __smtx_value_canonical (__smtx_model_eval M (__eo_to_smt t)) = true := by
+      __smtx_value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t)) = true := by
   rcases InstantiateRule.eo_to_smt_eval_typed_canonical M hM t hTTrans with ⟨h1, h2⟩
   exact ⟨h1, by simpa [value_canonical] using h2⟩
 
@@ -532,7 +534,7 @@ private theorem eval_t_after_push_eq
     (M : SmtModel) (s : native_String) (T t : Term) (v : SmtValue)
     (hTWf : __smtx_type_wf (__eo_to_smt_type T) = true)
     (hvTy : __smtx_typeof_value v = __eo_to_smt_type T)
-    (hvCanon : __smtx_value_canonical v = true)
+    (hvCanon : __smtx_value_canonical M.usortCard v = true)
     (hTTrans : RuleProofs.eo_has_smt_translation t)
     (hNoFree :
       __contains_atomic_term_list_free_rec t
@@ -575,8 +577,8 @@ private theorem eval_true_push_of_rel
     (hSTWf : __smtx_type_wf ST = true)
     (hvTy : __smtx_typeof_value v = ST)
     (hwTy : __smtx_typeof_value w = ST)
-    (hvCanon : __smtx_value_canonical v = true)
-    (hwCanon : __smtx_value_canonical w = true)
+    (hvCanon : __smtx_value_canonical M.usortCard v = true)
+    (hwCanon : __smtx_value_canonical M.usortCard w = true)
     (hRel : __smtx_model_eval_eq v w = SmtValue.Boolean true)
     (hTrans : RuleProofs.eo_has_smt_translation u)
     (hBool : RuleProofs.eo_has_bool_type u)
@@ -751,7 +753,7 @@ private theorem quant_var_elim_eq_diseq_interprets
     simp [__smtx_model_eval_not, SmtEval.native_not]
   have hSat : ∃ v : SmtValue,
       __smtx_typeof_value v = __eo_to_smt_type T ∧
-      __smtx_value_canonical v = true ∧
+      __smtx_value_canonical M.usortCard v = true ∧
       __smtx_model_eval_not
           (__smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
             (__eo_to_smt (qnot (qeq (Term.Var (Term.String s) T) t)))) =
@@ -981,7 +983,7 @@ private theorem quant_var_elim_eq_or_interprets
       from rfl]
     have hNoSat : ∀ v : SmtValue,
         __smtx_typeof_value v = __eo_to_smt_type T →
-        __smtx_value_canonical v = true →
+        __smtx_value_canonical M.usortCard v = true →
         ¬ __smtx_model_eval_not
             (__smtx_model_eval (native_model_push M s (__eo_to_smt_type T) v)
               (__eo_to_smt

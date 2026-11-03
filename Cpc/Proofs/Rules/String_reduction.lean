@@ -1745,7 +1745,7 @@ private theorem sr_eval_forall_encoding_true
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T →
-        __smtx_value_canonical v = true →
+        __smtx_value_canonical M.usortCard v = true →
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval M
@@ -1755,7 +1755,7 @@ private theorem sr_eval_forall_encoding_true
   have hNoSat :
       ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v)
             (SmtTerm.not body) = SmtValue.Boolean true := by
     rintro ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -1768,7 +1768,7 @@ private theorem sr_eval_forall_encoding_true
     change (if _h :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval (native_model_push M s T v)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -1788,9 +1788,9 @@ private theorem sr_eval_forall2_encoding_true
     (hAll :
       ∀ v₁ v₂ : SmtValue,
         __smtx_typeof_value v₁ = T₁ →
-        __smtx_value_canonical v₁ = true →
+        __smtx_value_canonical M.usortCard v₁ = true →
         __smtx_typeof_value v₂ = T₂ →
-        __smtx_value_canonical v₂ = true →
+        __smtx_value_canonical M.usortCard v₂ = true →
         __smtx_model_eval
             (native_model_push (native_model_push M s₁ T₁ v₁) s₂ T₂ v₂)
             body = SmtValue.Boolean true) :
@@ -1803,7 +1803,7 @@ private theorem sr_eval_forall2_encoding_true
   have hNoSat :
       ¬ ∃ v₁ : SmtValue,
         __smtx_typeof_value v₁ = T₁ ∧
-        __smtx_value_canonical v₁ = true ∧
+        __smtx_value_canonical M.usortCard v₁ = true ∧
         __smtx_model_eval (native_model_push M s₁ T₁ v₁)
             (SmtTerm.exists s₂ T₂ (SmtTerm.not body)) =
           SmtValue.Boolean true := by
@@ -1811,7 +1811,7 @@ private theorem sr_eval_forall2_encoding_true
     change (if _h :
         ∃ v₂ : SmtValue,
           __smtx_typeof_value v₂ = T₂ ∧
-          __smtx_value_canonical v₂ = true ∧
+          __smtx_value_canonical M.usortCard v₂ = true ∧
           __smtx_model_eval
               (native_model_push (native_model_push M s₁ T₁ v₁)
                 s₂ T₂ v₂) (SmtTerm.not body) =
@@ -1833,7 +1833,7 @@ private theorem sr_eval_forall2_encoding_true
     change (if _h :
         ∃ v₁ : SmtValue,
           __smtx_typeof_value v₁ = T₁ ∧
-          __smtx_value_canonical v₁ = true ∧
+          __smtx_value_canonical M.usortCard v₁ = true ∧
           __smtx_model_eval (native_model_push M s₁ T₁ v₁)
               (SmtTerm.exists s₂ T₂ (SmtTerm.not body)) =
             SmtValue.Boolean true then
@@ -1853,7 +1853,7 @@ private theorem sr_eval_forall_encoding_false
     (M : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm)
     (v : SmtValue)
     (hvTy : __smtx_typeof_value v = T)
-    (hvCanonical : __smtx_value_canonical v = true)
+    (hvCanonical : __smtx_value_canonical M.usortCard v = true)
     (hvBody :
       __smtx_model_eval (native_model_push M s T v) body =
         SmtValue.Boolean false) :
@@ -1868,7 +1868,7 @@ private theorem sr_eval_forall_encoding_false
   have hSat :
       ∃ w : SmtValue,
         __smtx_typeof_value w = T ∧
-        __smtx_value_canonical w = true ∧
+        __smtx_value_canonical M.usortCard w = true ∧
         __smtx_model_eval (native_model_push M s T w)
             (SmtTerm.not body) = SmtValue.Boolean true :=
     ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -1878,7 +1878,7 @@ private theorem sr_eval_forall_encoding_false
     change (if _h :
         ∃ w : SmtValue,
           __smtx_typeof_value w = T ∧
-          __smtx_value_canonical w = true ∧
+          __smtx_value_canonical M.usortCard w = true ∧
           __smtx_model_eval (native_model_push M s T w)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -2220,7 +2220,7 @@ private theorem string_reduction_pred_true
                     (SmtTerm.not qBody))) = SmtValue.Boolean true
               have hAll : ∀ v : SmtValue,
                   __smtx_typeof_value v = SmtType.Int →
-                  __smtx_value_canonical v = true →
+                  __smtx_value_canonical M.usortCard v = true →
                   __smtx_model_eval
                       (native_model_push M idxName SmtType.Int v) qBody =
                     SmtValue.Boolean true := by
@@ -2652,7 +2652,7 @@ private theorem string_reduction_pred_true
                     (SmtTerm.not qBody))) = SmtValue.Boolean true
               have hAll : ∀ v : SmtValue,
                   __smtx_typeof_value v = SmtType.Int →
-                  __smtx_value_canonical v = true →
+                  __smtx_value_canonical M.usortCard v = true →
                   __smtx_model_eval
                       (native_model_push M idxName SmtType.Int v) qBody =
                     SmtValue.Boolean true := by
@@ -3049,7 +3049,7 @@ private theorem string_reduction_pred_true
               have hAll :
                   ∀ v : SmtValue,
                     __smtx_typeof_value v = SmtType.Int →
-                    __smtx_value_canonical v = true →
+                    __smtx_value_canonical M.usortCard v = true →
                     __smtx_model_eval
                         (native_model_push M idxName SmtType.Int v) qBody =
                       SmtValue.Boolean true := by
@@ -3287,7 +3287,7 @@ private theorem string_reduction_pred_true
               have hAll :
                   ∀ v : SmtValue,
                     __smtx_typeof_value v = SmtType.Int →
-                    __smtx_value_canonical v = true →
+                    __smtx_value_canonical M.usortCard v = true →
                     __smtx_model_eval
                         (native_model_push M idxName SmtType.Int v) qBody =
                       SmtValue.Boolean true := by
@@ -3501,7 +3501,7 @@ private theorem string_reduction_pred_true
               have hAll :
                   ∀ v : SmtValue,
                     __smtx_typeof_value v = SmtType.Int →
-                    __smtx_value_canonical v = true →
+                    __smtx_value_canonical M.usortCard v = true →
                     __smtx_model_eval
                         (native_model_push M idxName SmtType.Int v) qBody =
                       SmtValue.Boolean true := by
@@ -3794,7 +3794,7 @@ private theorem string_reduction_pred_true
               have hAll :
                   ∀ v : SmtValue,
                     __smtx_typeof_value v = SmtType.Int →
-                    __smtx_value_canonical v = true →
+                    __smtx_value_canonical M.usortCard v = true →
                     __smtx_model_eval
                         (native_model_push M idxName SmtType.Int v) qBody =
                       SmtValue.Boolean true := by

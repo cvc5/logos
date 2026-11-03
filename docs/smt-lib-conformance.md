@@ -2,7 +2,7 @@
 
 Logos's soundness theorem is stated against `Cpc/SmtModel.lean`, a formalization
 of SMT-LIB semantics written independently of the checker. It parts company with
-SMT-LIB in three ways, and they are different kinds of thing:
+SMT-LIB in five ways, and they are different kinds of thing:
 
 - **Narrowings.** On three standard theories — arrays, `Real`, and uninterpreted
   sorts — the semantics admits fewer models than SMT-LIB does. These change what
@@ -12,13 +12,20 @@ SMT-LIB in three ways, and they are different kinds of thing:
   them, so nothing here is measured against the standard.
 - **Refusals.** Parametric datatypes needing infinitely many instances are
   rejected rather than interpreted, which costs coverage and nothing else.
+- **Higher-order input is out of scope.** Function values are names, and
+  equality on them is intensional, deliberately. On a formula that compares
+  functions or quantifies over them, the semantics and SMT-LIB 2.7 can disagree
+  in either direction.
+- **Lenient typing.** A few terms SMT-LIB rejects as ill-sorted are given a
+  meaning here. No term SMT-LIB accepts changes meaning.
 
 **None of them is a gap in the proof.** The theorem is proven, and it says what
 it says about the semantics it is stated against. What the narrowings record is
 that the model class is slightly smaller than SMT-LIB's, so `correct` claims
 slightly less than the words *these assumptions are unsatisfiable* are normally
 taken to mean. Each is confined to quantified or nonlinear reasoning; on the
-quantifier-free linear fragments the two agree.
+quantifier-free linear fragments the two agree. The higher-order difference is
+confined to input that is not first-order, which SMT-LIB 2.6 does not have.
 
 ## What `correct` means, exactly
 
@@ -150,6 +157,80 @@ Repeated uses of the same constructor and arguments share a sort; different
 instances get distinct sort IDs. The specification uses its existing `USort`
 representation. `test/regress/sexp/test-declare-sort.cpc` exercises this path.
 
+## Higher-order input is out of scope
+
+Logos is meant for first-order input. The semantics can express function-sorted
+terms, because CPC uses them internally, but it does not give them their
+SMT-LIB 2.7 meaning, and that is deliberate.
+
+A function value is `SmtValue.Fun name T U` (`Cpc/SmtModelDefs.lean`): a name,
+whose behaviour the model supplies (`native_eval_fun_apply` in
+`Cpc/SmtModel.lean`). Two consequences follow.
+
+- **Equality on functions is intensional.** `=` compares values structurally
+  (`__smtx_model_eval_eq`), so two names with the same behaviour are unequal.
+  SMT-LIB 2.7 interprets `(-> A B)` as the total functions from `A` to `B`,
+  where `=` is extensional.
+- **Function sorts range over named functions.** A variable of sort `(-> A B)`
+  ranges over `Fun s A B` for every string `s` (the quantifier domain is the
+  well-typed canonical values, and every `Fun` is canonical). That is countably
+  many values, possibly with repetitions, rather than the full function space.
+
+Unlike the narrowings, this cuts both ways. It admits models SMT-LIB does not
+have:
+
+```smt2
+(declare-const f (-> Int Int))
+(declare-const g (-> Int Int))
+(assert (forall ((x Int)) (= (f x) (g x))))
+(assert (not (= f g)))
+```
+
+is unsatisfiable in SMT-LIB 2.7 and satisfiable here. And it rules out ones
+SMT-LIB has:
+
+```smt2
+(assert (forall ((f (-> Bool Bool)) (g (-> Bool Bool)))
+          (=> (forall ((x Bool)) (= (f x) (g x))) (= f g))))
+```
+
+is valid in SMT-LIB 2.7 and false under every model here: of any five names, two
+behave the same as `Bool -> Bool` functions, and `=` still calls them distinct.
+That second direction is the one that matters for `correct`.
+
+None of this is reachable from first-order input. A first-order formula applies
+declared functions but never uses one as an argument: it does not compare
+functions, quantify over them or partially apply them. On such a formula a
+function value is only ever applied, and evaluation sees only its behaviour.
+
+## Lenient typing
+
+`__smtx_typeof` (`Cpc/SmtModel.lean`) accepts a few terms that SMT-LIB rejects as
+ill-sorted, and gives them a meaning. No term SMT-LIB accepts is affected, so
+this matters only for input that is not well-sorted SMT-LIB to begin with.
+
+| term | SMT-LIB | here |
+| --- | --- | --- |
+| `(_ BitVec 0)`, `((_ int_to_bv 0) t)` | widths are at least 1 | width 0 is a type, with one value |
+| `(/ x y)` with `x`, `y` of sort `Int` | `/` is `Real Real Real` only | both arguments converted to `Real` |
+| `(abs r)` with `r` of sort `Real` | `abs` is `Int Int` only | the absolute value of `r` |
+| `((_ divisible n) t)` | `n` a numeral, `n > 0` | `n` any `Int` term; `0` means `t = 0`, and negative `n` acts as `abs n` |
+
+## Quantifying over `RegLan`
+
+A variable of sort `RegLan` ranges over the values `SmtValue.RegLan`, which are
+regular expressions, compared by the language they denote. So quantification
+over `RegLan` ranges over the regular languages only. No SMT-LIB logic
+quantifies over `RegLan`, so this is outside the standard's logics either way.
+
+## Sorts that are refused
+
+`__smtx_type_wf` (`Cpc/SmtModel.lean`) rejects a function sort whose argument is
+a function or `RegLan`, and arrays, sequences, sets and datatype fields whose
+element is a function or `RegLan`. A term of such a sort has no translation, so a
+proof whose assumptions mention one is reported `incomplete`. This costs
+coverage and nothing else.
+
 ## What is faithful, and is easy to assume otherwise
 
 - **Division by zero, `mod` by zero and real division by zero** are
@@ -159,8 +240,9 @@ representation. `test/regress/sexp/test-declare-sort.cpc` exercises this path.
   value for it.
 - **The character alphabet** is SMT-LIB's, code points `0` to `196607`
   (`native_char_valid`, `Cpc/SmtEval.lean`).
-- **Uninterpreted functions** get the full function space, not the almost-constant
-  restriction arrays carry.
+- **Uninterpreted functions** may be any type-respecting function, not the
+  almost-constant restriction arrays carry. That is what first-order input
+  sees; quantifying over a function sort is the higher-order case above.
 
 ## Where this is written down elsewhere
 

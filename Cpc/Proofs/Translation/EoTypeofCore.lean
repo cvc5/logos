@@ -13,6 +13,8 @@ public import Cpc.Proofs.TypePreservation.SeqStringRegex
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -1975,11 +1977,7 @@ private theorem eo_type_valid_of_folded_smt_wf_rec
       replace h :=
         smt_fold_generic_field_wf (refs := refs) (by intro s2 d2 h; cases h) (by simpa [smt_fold_type_rec] using hFold) h
       let choice :=
-        native_ite
-          (__smtx_is_finite_type
-            (SmtType.FunType (__eo_to_smt_type T1) (__eo_to_smt_type T2)))
-          (SmtType.FunType (__eo_to_smt_type T1) (__eo_to_smt_type T2))
-          (SmtType.FunType (__eo_to_smt_type T1) (__eo_to_smt_type T2))
+        (SmtType.FunType (__eo_to_smt_type T1) (__eo_to_smt_type T2))
       have hInnerNoRef :
           ∀ s,
             __smtx_typeof_guard (__eo_to_smt_type T2)
@@ -1988,10 +1986,7 @@ private theorem eo_type_valid_of_folded_smt_wf_rec
         smtx_typeof_guard_ne_typeref _ _
           (by
             intro s hRef
-            cases hFin :
-                __smtx_is_finite_type
-                  (SmtType.FunType (__eo_to_smt_type T1) (__eo_to_smt_type T2)) <;>
-              simp [choice, native_ite, hFin] at hRef)
+            simp [choice, native_ite] at hRef)
       have hGuardWf :
           __smtx_type_wf_rec
               (__smtx_typeof_guard (__eo_to_smt_type T1)
@@ -2018,10 +2013,7 @@ private theorem eo_type_valid_of_folded_smt_wf_rec
       have hChoice : __smtx_type_wf_rec choice = true :=
         smtx_type_wf_rec_guard_of_true (__eo_to_smt_type T2)
           choice hOuter
-      cases hFin :
-          __smtx_is_finite_type
-            (SmtType.FunType (__eo_to_smt_type T1) (__eo_to_smt_type T2)) <;>
-        simp [choice, native_ite, hFin, __smtx_type_wf_rec] at hChoice
+      simp [choice, native_ite, __smtx_type_wf_rec] at hChoice
   | Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral n), hFold, h => by
       replace h :=
         smt_fold_generic_field_wf (refs := refs) (by intro s2 d2 h; cases h) (by simpa [smt_fold_type_rec] using hFold) h
@@ -2209,21 +2201,14 @@ private theorem eo_type_valid_of_folded_smt_wf_rec
           | FunType =>
               exfalso
               let choice :=
-                native_ite
-                  (__smtx_is_finite_type
-                    (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x)))
-                  (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x))
-                  (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x))
+                (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x))
               have hInnerNoRef :
                   ∀ s,
                     __smtx_typeof_guard (__eo_to_smt_type x) choice ≠ SmtType.TypeRef s :=
                 smtx_typeof_guard_ne_typeref _ _
                   (by
                     intro s hRef
-                    cases hFin :
-                        __smtx_is_finite_type
-                          (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x)) <;>
-                      simp [choice, native_ite, hFin] at hRef)
+                    simp [choice, native_ite] at hRef)
               have hGuardWf :
                   __smtx_type_wf_rec
                       (__smtx_typeof_guard (__eo_to_smt_type y)
@@ -2243,10 +2228,7 @@ private theorem eo_type_valid_of_folded_smt_wf_rec
                   (__smtx_typeof_guard (__eo_to_smt_type x) choice) hGuardWf
               have hChoice : __smtx_type_wf_rec choice = true :=
                 smtx_type_wf_rec_guard_of_true (__eo_to_smt_type x) choice hOuter
-              cases hFin :
-                  __smtx_is_finite_type
-                    (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x)) <;>
-                simp [choice, native_ite, hFin, __smtx_type_wf_rec] at hChoice
+              simp [choice, native_ite, __smtx_type_wf_rec] at hChoice
           | UOp op =>
               cases op with
               | Array =>

@@ -11,6 +11,8 @@ import all Cpc.Proofs.RuleSupport.DtConsEqSupport
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -401,8 +403,8 @@ private theorem set_union_lookup_true_of_left_true
     {m₁ m₂ : SmtMap} {A : SmtType} {w : SmtValue}
     (hm₁Ty : __smtx_typeof_map_value m₁ = SmtType.Map A SmtType.Bool)
     (hm₂Ty : __smtx_typeof_map_value m₂ = SmtType.Map A SmtType.Bool)
-    (hm₁Can : __smtx_map_canonical m₁ = true)
-    (hm₂Can : __smtx_map_canonical m₂ = true)
+    (hm₁Can : __smtx_map_canonical uc m₁ = true)
+    (hm₂Can : __smtx_map_canonical uc m₂ = true)
     (hm₁Def : __smtx_map_get_default m₁ = SmtValue.Boolean false)
     (hLeft : __smtx_map_lookup m₁ w = SmtValue.Boolean true) :
     __smtx_map_lookup
@@ -432,8 +434,8 @@ private theorem set_union_lookup_false_of_both_false
     {m₁ m₂ : SmtMap} {A : SmtType} {w : SmtValue}
     (hm₁Ty : __smtx_typeof_map_value m₁ = SmtType.Map A SmtType.Bool)
     (hm₂Ty : __smtx_typeof_map_value m₂ = SmtType.Map A SmtType.Bool)
-    (hm₁Can : __smtx_map_canonical m₁ = true)
-    (hm₂Can : __smtx_map_canonical m₂ = true)
+    (hm₁Can : __smtx_map_canonical uc m₁ = true)
+    (hm₂Can : __smtx_map_canonical uc m₂ = true)
     (hm₁Def : __smtx_map_get_default m₁ = SmtValue.Boolean false)
     (hLeft : __smtx_map_lookup m₁ w = SmtValue.Boolean false)
     (hRight : __smtx_map_lookup m₂ w = SmtValue.Boolean false) :
@@ -464,8 +466,8 @@ private theorem set_union_lookup_true_of_right_true
     {m₁ m₂ : SmtMap} {A : SmtType} {w : SmtValue}
     (hm₁Ty : __smtx_typeof_map_value m₁ = SmtType.Map A SmtType.Bool)
     (hm₂Ty : __smtx_typeof_map_value m₂ = SmtType.Map A SmtType.Bool)
-    (hm₁Can : __smtx_map_canonical m₁ = true)
-    (hm₂Can : __smtx_map_canonical m₂ = true)
+    (hm₁Can : __smtx_map_canonical uc m₁ = true)
+    (hm₂Can : __smtx_map_canonical uc m₂ = true)
     (hm₁Def : __smtx_map_get_default m₁ = SmtValue.Boolean false)
     (hRight : __smtx_map_lookup m₂ w = SmtValue.Boolean true) :
     __smtx_map_lookup
@@ -527,7 +529,7 @@ private theorem set_eval_map_info
     ∃ m,
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Set m ∧
       __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool ∧
-      __smtx_map_canonical m = true ∧
+      __smtx_map_canonical M.usortCard m = true ∧
       __smtx_map_get_default m = SmtValue.Boolean false := by
   intro hTrans hTy
   have hEvalTy :
@@ -545,11 +547,11 @@ private theorem set_eval_map_info
       __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool :=
     set_map_value_typed (by simpa [hEval] using hEvalTy)
   have hCanEval :
-      value_canonical (__smtx_model_eval M (__eo_to_smt t)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t hTrans
-  have hCanSet : value_canonical (SmtValue.Set m) := by
+  have hCanSet : value_canonical M.usortCard (SmtValue.Set m) := by
     simpa [hEval] using hCanEval
-  have hMapCan : __smtx_map_canonical m = true := by
+  have hMapCan : __smtx_map_canonical M.usortCard m = true := by
     have hParts := hCanSet
     simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
@@ -570,8 +572,8 @@ private theorem set_union_eval_maps
       __smtx_model_eval M (__eo_to_smt y) = SmtValue.Set my ∧
       __smtx_typeof_map_value mx = SmtType.Map A SmtType.Bool ∧
       __smtx_typeof_map_value my = SmtType.Map A SmtType.Bool ∧
-      __smtx_map_canonical mx = true ∧
-      __smtx_map_canonical my = true ∧
+      __smtx_map_canonical M.usortCard mx = true ∧
+      __smtx_map_canonical M.usortCard my = true ∧
       __smtx_map_get_default mx = SmtValue.Boolean false ∧
       __smtx_map_get_default my = SmtValue.Boolean false ∧
       __smtx_model_eval M

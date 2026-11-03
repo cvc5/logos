@@ -25,6 +25,8 @@ import all Cpc.Proofs.Closed.IsClosedRec
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open Eo
 open SmtEval
 open Smtm
@@ -116,17 +118,17 @@ private theorem tchoice_eq_of_unique
     (M : SmtModel) (s : native_String) (T : SmtType) (b : SmtTerm)
     (v₀ : SmtValue)
     (hTy : __smtx_typeof_value v₀ = T)
-    (hCanon : __smtx_value_canonical v₀ = true)
+    (hCanon : __smtx_value_canonical M.usortCard v₀ = true)
     (hSat : __smtx_model_eval (native_model_push M s T v₀) b =
       SmtValue.Boolean true)
     (hUnique : ∀ v : SmtValue, __smtx_typeof_value v = T ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical M.usortCard v = true ->
       __smtx_model_eval (native_model_push M s T v) b =
         SmtValue.Boolean true -> v = v₀) :
     native_eval_choice M s T b = v₀ := by
   classical
   have hEx : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-      __smtx_value_canonical v = true ∧
+      __smtx_value_canonical M.usortCard v = true ∧
       __smtx_model_eval (native_model_push M s T v) b =
         SmtValue.Boolean true := ⟨v₀, hTy, hCanon, hSat⟩
   rw [dite_eq_left hEx]
@@ -214,7 +216,7 @@ private theorem eval_eq_term_eq (M : SmtModel) (x y : SmtTerm) :
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem numeral_canonical (m : native_Int) :
-    __smtx_value_canonical (SmtValue.Numeral m) = true := by
+    __smtx_value_canonical uc (SmtValue.Numeral m) = true := by
   simp [__smtx_value_canonical]
 
 private theorem numeral_typeof (m : native_Int) :
@@ -613,7 +615,7 @@ private theorem eval_forall_encoding_true
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical M.usortCard v = true ->
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval M
@@ -623,7 +625,7 @@ private theorem eval_forall_encoding_true
   have hNoSat :
       ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v)
             (SmtTerm.not body) = SmtValue.Boolean true := by
     rintro ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -636,7 +638,7 @@ private theorem eval_forall_encoding_true
     change (if _h :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval (native_model_push M s T v)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -674,19 +676,19 @@ private theorem tchoice_typed_canonical_of_wf'
     (N : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm)
     (hWf : __smtx_type_wf T = true) :
     __smtx_typeof_value (native_eval_choice N s T body) = T ∧
-      __smtx_value_canonical (native_eval_choice N s T body) =
+      __smtx_value_canonical N.usortCard (native_eval_choice N s T body) =
         true := by
   classical
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical N.usortCard v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true
   · rw [dite_eq_left hSat]
     exact ⟨(Classical.choose_spec hSat).1, (Classical.choose_spec hSat).2.1⟩
   · have hTy : ∃ v : SmtValue,
-        __smtx_typeof_value v = T ∧ __smtx_value_canonical v := by
+        __smtx_typeof_value v = T ∧ __smtx_value_canonical N.usortCard v := by
       rcases canonical_type_inhabited_of_type_wf T hWf with ⟨v, hvTy, hvCan⟩
       exact ⟨v, hvTy, by simpa [value_canonical] using hvCan⟩
     rw [dite_eq_right hSat, dite_eq_left hTy]
@@ -698,7 +700,7 @@ private theorem agrees_push_push
     (s₂ : native_String) (T₂ : SmtType) (v₂ : SmtValue) :
     model_agrees_on_globals M
       (native_model_push (native_model_push M s₁ T₁ v₁) s₂ T₂ v₂) := by
-  refine ⟨?_, ?_⟩
+  refine ⟨?_, ?_, rfl⟩
   · intro s' T'
     simp [native_model_lookup, model_key, native_model_push]
   · intro fid A B

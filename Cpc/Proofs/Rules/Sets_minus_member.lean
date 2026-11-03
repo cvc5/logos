@@ -228,11 +228,11 @@ private theorem facts___eo_prog_sets_minus_member_impl
       __smtx_typeof_map_value mz = SmtType.Map (__eo_to_smt_type T) SmtType.Bool :=
     set_map_value_typed (by simpa [hzVal] using hzEvalTy)
   have hYCanEval :
-      value_canonical (__smtx_model_eval M (__eo_to_smt y)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt y)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM y hyTrans
-  have hYCanSet : value_canonical (SmtValue.Set my) := by
+  have hYCanSet : value_canonical M.usortCard (SmtValue.Set my) := by
     simpa [hyVal] using hYCanEval
-  have hMyCan : __smtx_map_canonical my = true := by
+  have hMyCan : __smtx_map_canonical M.usortCard my = true := by
     have hParts := hYCanSet
     simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
@@ -251,7 +251,7 @@ private theorem facts___eo_prog_sets_minus_member_impl
     dsimp [acc]
     simp [__smtx_typeof_map_value, __smtx_index_typeof_map, hMyTy,
       __smtx_typeof_value]
-  have hAccCan : __smtx_map_canonical acc = true := by
+  have hAccCan : __smtx_map_canonical M.usortCard acc = true := by
     dsimp [acc]
     exact set_empty_map_canonical (__smtx_index_typeof_map (__smtx_typeof_map_value my))
   have hAccLookupFalse :

@@ -183,21 +183,21 @@ private theorem facts___eo_prog_sets_subset_elim_impl
       __smtx_typeof_map_value my = SmtType.Map (__eo_to_smt_type T) SmtType.Bool :=
     set_map_value_typed (by simpa [hyVal] using hyEvalTy)
   have hXCanEval :
-      value_canonical (__smtx_model_eval M (__eo_to_smt x)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt x)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM x hxTrans
   have hYCanEval :
-      value_canonical (__smtx_model_eval M (__eo_to_smt y)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt y)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM y hyTrans
-  have hXCanSet : value_canonical (SmtValue.Set mx) := by
+  have hXCanSet : value_canonical M.usortCard (SmtValue.Set mx) := by
     simpa [hxVal] using hXCanEval
-  have hYCanSet : value_canonical (SmtValue.Set my) := by
+  have hYCanSet : value_canonical M.usortCard (SmtValue.Set my) := by
     simpa [hyVal] using hYCanEval
-  have hMxCan : __smtx_map_canonical mx = true := by
+  have hMxCan : __smtx_map_canonical M.usortCard mx = true := by
     have hParts := hXCanSet
     simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
-  have hMyCan : __smtx_map_canonical my = true := by
+  have hMyCan : __smtx_map_canonical M.usortCard my = true := by
     have hParts := hYCanSet
     simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts

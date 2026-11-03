@@ -83,8 +83,8 @@ private theorem typed___eo_prog_sets_union_comm_impl
 
 private theorem set_union_comm_rel
     (mx my : SmtMap) (A : SmtType)
-    (hMxCan : __smtx_map_canonical mx = true)
-    (hMyCan : __smtx_map_canonical my = true)
+    (hMxCan : __smtx_map_canonical uc mx = true)
+    (hMyCan : __smtx_map_canonical uc my = true)
     (hMxTy : __smtx_typeof_map_value mx = SmtType.Map A SmtType.Bool)
     (hMyTy : __smtx_typeof_map_value my = SmtType.Map A SmtType.Bool)
     (hMxDef : __smtx_map_get_default mx = SmtValue.Boolean false)
@@ -114,10 +114,10 @@ private theorem set_union_comm_rel
     rw [hMyTy]
     simp [__smtx_index_typeof_map, __smtx_typeof_map_value,
       __smtx_typeof_value]
-  have hLeftCan : __smtx_map_canonical left = true := by
+  have hLeftCan : __smtx_map_canonical uc left = true := by
     dsimp [left]
     exact Smtm.mss_op_internal_canonical false hMxCan hMyCan
-  have hRightCan : __smtx_map_canonical right = true := by
+  have hRightCan : __smtx_map_canonical uc right = true := by
     dsimp [right]
     exact Smtm.mss_op_internal_canonical false hMyCan hMxCan
   have hLeftTy :
