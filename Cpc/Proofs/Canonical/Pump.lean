@@ -913,19 +913,13 @@ private theorem type_default_typed_canonical_p
   type_default_kernel T hInh hRec
 
 theorem ne_none_of_inh {T : SmtType}
-    (h : native_inhabited_type T = true) : T ≠ SmtType.None := by
-  intro hN
-  subst T
-  simp [native_inhabited_type, native_Teq, native_not, native_and] at h
+    (h : native_inhabited_type T = true) : T ≠ SmtType.None :=
+  native_inhabited_type_ne_none h
 
 theorem default_ne_notValue_of_inh {T : SmtType}
     (hInh : native_inhabited_type T = true) :
-    __smtx_type_default T ≠ SmtValue.NotValue := by
-  intro hEq
-  have hTy := type_default_typed_of_inhabited T hInh
-  rw [hEq] at hTy
-  simp [__smtx_typeof_value] at hTy
-  exact ne_none_of_inh hInh hTy.symm
+    __smtx_type_default T ≠ SmtValue.NotValue :=
+  (native_inhabited_type_iff T).1 hInh
 
 /--
 An infinite well-formed datatype has a constructor whose fields are all
@@ -1893,9 +1887,7 @@ private theorem dt_nondefault
           __smtx_type_default (SmtType.Datatype s dd) = SmtValue.NotValue := by
         have := decl_default_of_lookup_null s dd dd hd
         simpa [__smtx_type_default] using this
-      have hTy := type_default_typed_of_inhabited _ hInh
-      rw [hDef] at hTy
-      simp [__smtx_typeof_value] at hTy
+      exact (native_inhabited_type_iff _).1 hInh hDef
   | sum c dRest =>
       cases dRest with
       | sum c2 d2 =>

@@ -44,10 +44,6 @@ def native_int_to_nat (x : native_Int) : native_Nat :=
 def native_uconst_id : native_Nat -> native_String
   | i => (native_string_lit "@u.") ++ (native_string_lit (toString i))
 
-def native_inhabited_type (T : SmtType) : native_Bool :=
-  native_and (native_not (native_Teq T SmtType.None))
-    (native_Teq (__smtx_default_info_type (__smtx_default_info T)) T)
-
 def __smtx_type_wf_rec : SmtType -> native_Bool
   | SmtType.None => false
   | SmtType.RegLan => false
@@ -167,67 +163,39 @@ def __smtx_typeof : SmtTerm -> SmtType
   | (SmtTerm.UConst s T) => (__smtx_typeof_guard_wf T T)
   | x1 => SmtType.None
 
-def __smtx_default_info_type : Option SmtType -> SmtType
-  | none => SmtType.None
-  | some T => T
-
-def __smtx_default_info : SmtType -> Option SmtType
-  | SmtType.Bool => some SmtType.Bool
-  | SmtType.Int => some SmtType.Int
-  | SmtType.Real => some SmtType.Real
-  | SmtType.RegLan => some SmtType.RegLan
-  | SmtType.BitVec n => some (SmtType.BitVec n)
-  | SmtType.Map T U =>
-    match __smtx_default_info U with
-    | none => none
-    | some V => some (SmtType.Map T V)
-  | SmtType.Set T => some (SmtType.Set T)
-  | SmtType.Seq T => some (SmtType.Seq T)
-  | SmtType.Char => some SmtType.Char
-  | SmtType.Datatype s dd => __smtx_datatype_decl_default_info s dd dd
-  | SmtType.USort n => some (SmtType.USort n)
-  | SmtType.FunType T U => some (SmtType.FunType T U)
-  | _ => none
+/-- Whether `__smtx_type_default` constructs a value for `T`. Base types are
+inhabited, a map type is inhabited when its range is, and a datatype is
+inhabited when one of its constructors has inhabited fields. As in the default
+generator, a field `TypeRef s` is resolved among the declarations that follow
+the current one, which is what makes the recursion well founded. -/
+def native_inhabited_type : SmtType -> native_Bool
+  | SmtType.None => false
+  | SmtType.TypeRef _ => false
+  | SmtType.DtcAppType _ _ => false
+  | SmtType.Map _ U => native_inhabited_type U
+  | SmtType.Datatype s dd => __smtx_decl_inhabited s dd
+  | _ => true
 termination_by T => 2 * sizeOf T
 
-def __smtx_datatype_decl_default_info (s : native_String) (dd : SmtDatatypeDecl) :
-    SmtDatatypeDecl -> Option SmtType
+def __smtx_decl_inhabited (s : native_String) : SmtDatatypeDecl -> native_Bool
   | SmtDatatypeDecl.cons sF dF ddF =>
-    native_ite (native_streq s sF)
-      (__smtx_datatype_default_info s dd native_nat_zero dF ddF)
-      (__smtx_datatype_decl_default_info s dd ddF)
-  | _ => none
+    native_ite (native_streq s sF) (__smtx_dt_inhabited dF ddF) (__smtx_decl_inhabited s ddF)
+  | SmtDatatypeDecl.nil => false
 termination_by ddF => 2 * sizeOf ddF
 
-def __smtx_datatype_default_info (s : native_String) (dd : SmtDatatypeDecl)
-    (n : native_Nat) : SmtDatatype -> SmtDatatypeDecl -> Option SmtType
-  | SmtDatatype.sum cF dF, ddF =>
-    match __smtx_datatype_cons_default_info
-      (some (__smtx_typeof_dt_cons_value_rec (SmtType.Datatype s dd)
-        (__smtx_dt_resolve (__smtx_dd_lookup s dd) dd) n)) dd cF ddF with
-    | none => __smtx_datatype_default_info s dd (native_nat_succ n) dF ddF
-    | some T => some T
-  | _, _ => none
-termination_by dF ddF => 2 * (sizeOf dF + sizeOf ddF) + 1
+def __smtx_dt_inhabited : SmtDatatype -> SmtDatatypeDecl -> native_Bool
+  | SmtDatatype.sum c d, ddF =>
+    native_or (__smtx_dt_cons_inhabited c ddF) (__smtx_dt_inhabited d ddF)
+  | SmtDatatype.null, _ => false
+termination_by d ddF => 2 * (sizeOf d + sizeOf ddF) + 1
 
-def __smtx_datatype_cons_default_info (v : Option SmtType) (dd : SmtDatatypeDecl) :
-    SmtDatatypeCons -> SmtDatatypeDecl -> Option SmtType
-  | SmtDatatypeCons.unit, _ => v
+def __smtx_dt_cons_inhabited : SmtDatatypeCons -> SmtDatatypeDecl -> native_Bool
+  | SmtDatatypeCons.cons (SmtType.TypeRef s) c, ddF =>
+    native_and (__smtx_decl_inhabited s ddF) (__smtx_dt_cons_inhabited c ddF)
   | SmtDatatypeCons.cons T c, ddF =>
-    match __smtx_field_default_info dd T ddF with
-    | none => none
-    | some U => __smtx_datatype_cons_default_info
-      (some (__smtx_typeof_apply_value (__smtx_default_info_type v) U)) dd c ddF
+    native_and (native_inhabited_type T) (__smtx_dt_cons_inhabited c ddF)
+  | SmtDatatypeCons.unit, _ => true
 termination_by c ddF => 2 * (sizeOf c + sizeOf ddF) + 2
-
-def __smtx_field_default_info (dd : SmtDatatypeDecl) :
-    SmtType -> SmtDatatypeDecl -> Option SmtType
-  | SmtType.TypeRef s, ddF => __smtx_datatype_decl_default_info s dd ddF
-  | T, _ => __smtx_default_info T
-termination_by T ddF => 2 * (sizeOf T + sizeOf ddF) + 3
-decreasing_by
-  all_goals simp_wf
-  all_goals omega
 
 end
 

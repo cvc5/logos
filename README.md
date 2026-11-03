@@ -169,9 +169,9 @@ Note that the side conditions are *checked at run time*: computing them needs
 the static interface's `__eo_to_smt` and SMT typing functions. These live in
 `SmtSyntax`, `SmtTyping`, and `SmtTranslate`, which contain no semantic values,
 model evaluator, or external mathematical dependencies. Type inhabitation is
-computed structurally; `Proofs/StaticTyping.lean` proves that its default
-information agrees with the semantic default generator, including malformed
-datatype declarations. The proof rules remain syntactic manipulations.
+a structural predicate; `Proofs/StaticTyping.lean` proves that it holds exactly
+when the semantic default generator constructs a value, and that on
+well-formed types this value has the requested type. The proof rules remain syntactic manipulations.
 A proof that Logos accepts but whose side conditions fail is reported as
 `incomplete` rather than `correct`. The parser normalizes datatype instances and
 uninterpreted sort applications before these checks; clients constructing EO

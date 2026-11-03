@@ -87,10 +87,8 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
         __smtx_value_canonical uc (__smtx_type_default U) = true :=
       ih hParts.2.2.1 hParts.2.2.2
     have hFieldTy :
-        __smtx_typeof_value (__smtx_type_default U) = U := by
-      have h := hParts.2.2.1
-      simp [native_inhabited_type, native_and, native_not, native_Teq] at h
-      exact h.2
+        __smtx_typeof_value (__smtx_type_default U) = U :=
+      type_default_typed U hParts.2.2.1 hParts.2.2.2
     rw [__smtx_type_default]
     by_cases hv :
         native_veq (__smtx_type_default U) SmtValue.NotValue = true
@@ -202,25 +200,8 @@ theorem type_default_kernel (T : SmtType)
     (hInh : native_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
-    __smtx_value_canonical uc (__smtx_type_default T) = true := by
-  have hTyped :
-      native_Teq (__smtx_typeof_value (__smtx_type_default T)) T = true := by
-    have h := hInh
-    simp [native_inhabited_type, native_and] at h
-    exact h.2
-  exact ⟨by simpa [native_Teq] using hTyped,
-    type_default_canonical_kernel T hInh hRec⟩
-
-/-- The inhabitation check supplies the requested default type. -/
-theorem type_default_typed_of_inhabited (T : SmtType)
-    (hInh : native_inhabited_type T = true) :
-    __smtx_typeof_value (__smtx_type_default T) = T := by
-  have hTyped :
-      native_Teq (__smtx_typeof_value (__smtx_type_default T)) T = true := by
-    have h := hInh
-    simp [native_inhabited_type, native_and] at h
-    exact h.2
-  simpa [native_Teq] using hTyped
+    __smtx_value_canonical uc (__smtx_type_default T) = true :=
+  ⟨type_default_typed T hInh hRec, type_default_canonical_kernel T hInh hRec⟩
 
 /-- A recursively well-formed inhabited default value is canonical. -/
 theorem type_default_canonical_of_inhabited_wf_rec (T : SmtType)

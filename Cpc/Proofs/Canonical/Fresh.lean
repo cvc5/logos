@@ -58,20 +58,14 @@ private theorem type_default_typed_canonical
   type_default_kernel T hInh hRec
 
 private theorem ne_none_of_native_inhabited {T : SmtType}
-    (h : native_inhabited_type T = true) : T ≠ SmtType.None := by
-  intro hN
-  subst T
-  simp [native_inhabited_type, native_Teq, native_not, native_and] at h
+    (h : native_inhabited_type T = true) : T ≠ SmtType.None :=
+  native_inhabited_type_ne_none h
 
 private theorem type_default_ne_notValue_of_native_inhabited
     {T : SmtType}
     (hInh : native_inhabited_type T = true) :
-    __smtx_type_default T ≠ SmtValue.NotValue := by
-  intro hEq
-  have hTy := type_default_typed_of_inhabited T hInh
-  rw [hEq] at hTy
-  simp [__smtx_typeof_value] at hTy
-  exact ne_none_of_native_inhabited hInh hTy.symm
+    __smtx_type_default T ≠ SmtValue.NotValue :=
+  (native_inhabited_type_iff T).1 hInh
 
 -- === finiteness / unit-type unfolding on containers ===
 

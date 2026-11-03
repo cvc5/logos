@@ -25,12 +25,15 @@ The executable imports `SmtSyntax`, `SmtTyping`, `SmtTranslate`, and
 `Proofs/Assumptions` re-exports `TranslationChecks` for existing proofs, so
 translatability predicates and per-rule masks still have one definition.
 
-`native_inhabited_type` uses structural default information: `none` when no
-default is constructed, and `some T` when a constructed default has type `T`.
-These cases must be distinguished even when `T` is the invalid type `None`.
-`Proofs/StaticTyping` proves exact agreement with the semantic default generator
-on all types and malformed datatype declarations. The default generator has its
-own mutual block with a stable induction principle across signatures.
+`native_inhabited_type` is a Boolean predicate over types: base types are
+inhabited, a map type when its range is, and a datatype when one of its
+constructors has inhabited fields. It follows the shape of the semantic default
+generator but never builds a value. `Proofs/StaticTyping` connects the two:
+`native_inhabited_type_iff` says the check succeeds exactly when the generator
+constructs a value, for every type including malformed datatype declarations,
+and `type_default_typed` says that on a recursively well-formed type
+(`__smtx_type_wf_rec`) that value has the requested type. The default generator
+has its own mutual block with a stable induction principle across signatures.
 
 `scripts/check-checker-boundary.py` audits both executable import closures. With
 `--build` it copies only checker sources and the root Lake configuration to a
@@ -69,8 +72,8 @@ layer.
 
 ### Module order
 
-`Proofs/StaticTyping.lean` proves the structural inhabitation check agrees with
-`SmtModel.lean`. `Proofs/ModelEval.lean` imports that bridge before the
+`Proofs/StaticTyping.lean` connects the structural inhabitation check to the
+default generator of `SmtModel.lean`. `Proofs/ModelEval.lean` imports that bridge before the
 type-preservation and other proof modules. Its Boolean evaluation lemma also
 generates the exposed evaluator's unfolding theorem once for those imports.
 

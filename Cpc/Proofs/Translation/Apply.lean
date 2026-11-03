@@ -68,8 +68,7 @@ private theorem smtx_type_field_wf_rec_ne_none
 @[simp] private theorem native_inhabited_type_typeref_apply
     (s : native_String) :
     native_inhabited_type (SmtType.TypeRef s) = false := by
-  simp [native_inhabited_type, native_Teq, native_not, __smtx_type_default,
-    __smtx_typeof_value, native_and]
+  simp [native_inhabited_type]
 
 @[simp] private theorem native_inhabited_type_seq_apply
     (T : SmtType) :
@@ -84,11 +83,7 @@ private theorem smtx_type_field_wf_rec_ne_none
 @[simp] theorem native_inhabited_type_bitvec_apply
     (w : native_Nat) :
     native_inhabited_type (SmtType.BitVec w) = true := by
-  simp [native_inhabited_type, native_not, native_Teq, __smtx_type_default,
-    __smtx_typeof_value,
-    native_and, native_zleq, native_zeq,
-    native_mod_total, native_int_pow2, native_zexp_total, native_nat_to_int,
-    native_int_to_nat, native_ite]
+  simp [native_inhabited_type]
 
 /-- Simplifies EO-to-SMT translation for `typeof_matches_translation_apply_concat`. -/
 private theorem eo_to_smt_typeof_matches_translation_apply_concat

@@ -144,10 +144,10 @@ what CPC means changes what satisfiability means in Logos.
 
 The compiler's target layout separates a static interface from model semantics.
 `SmtSyntax` contains types, datatype declarations, and terms; `SmtTyping` holds
-static typing, well-formedness, and structural default information;
+static typing, well-formedness, and the structural inhabitation check;
 `SmtTranslate` contains EO-to-SMT translation. `Spec` connects translation to
-model satisfiability. `Proofs/StaticTyping.lean` proves that structural default
-information agrees with the semantic default generator for both packages.
+model satisfiability. `Proofs/StaticTyping.lean` connects the inhabitation check
+to the semantic default generator for both packages.
 
 The checked-in Lean modules define this fixed layout. The EOC compiler needs
 to be updated to emit it directly; there is no installation-time splitting

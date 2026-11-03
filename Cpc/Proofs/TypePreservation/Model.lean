@@ -201,8 +201,8 @@ theorem type_default_typed_canonical_of_inhabited_wf_rec
 theorem type_default_typed_of_inhabited_wf_rec
     (T : SmtType)
     (hInh : native_inhabited_type T = true)
-    (_hRec : __smtx_type_wf_rec T = true) :
+    (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T :=
-  type_default_typed_of_inhabited T hInh
+  type_default_typed T hInh hRec
 
 end Smtm
