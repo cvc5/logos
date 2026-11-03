@@ -1479,6 +1479,7 @@ private def parserRules : List (String × CRule) := [
   ("bv_bitblast_step", .bv_bitblast_step),
   ("bv_poly_norm", .bv_poly_norm),
   ("bv_poly_norm_eq", .bv_poly_norm_eq),
+  ("bv_abstraction", .bv_abstraction),
   ("string_length_pos", .string_length_pos),
   ("string_length_non_empty", .string_length_non_empty),
   ("concat_eq", .concat_eq),
