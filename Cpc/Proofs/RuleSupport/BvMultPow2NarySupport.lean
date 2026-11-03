@@ -665,7 +665,7 @@ private theorem bvmul_args_of_smt_type
         exact hsimpa
       rw [smtx_typeof_bvmul_term_eq_nary] at hTy'
       simpa [__smtx_typeof_bv_op_2, hXTy, hYTy, native_ite,
-        native_nateq, Smtm.native_nateq] using hTy'
+        native_nateq, SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst actual

@@ -1054,7 +1054,7 @@ private theorem eo_to_smt_updater_rec_update_arg_non_reg_of_non_none
         -- the hypothesis; strip the `decide` explicitly instead.
         have h := hIdx
         simp [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-          Smtm.native_nat_to_int] at h
+          SmtEval.native_nat_to_int] at h
         exact of_decide_eq_true h
       have hjNonneg : (0 : Int) ≤ j := Int.natCast_nonneg j
       omega
@@ -1087,17 +1087,17 @@ private theorem eo_to_smt_updater_rec_update_arg_non_reg_of_non_none
               have hjSuccInt : (j : Int) < (Nat.succ k : Int) := by
                 have h := hIdx
                 simp [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-                  Smtm.native_nat_to_int] at h
+                  SmtEval.native_nat_to_int] at h
                 exact of_decide_eq_true h
               exact Int.ofNat_lt.mp hjSuccInt
             have hne : j ≠ k := by
               intro h
               subst j
-              simp [native_nateq, Smtm.native_nateq] at hEq
+              simp [native_nateq, SmtEval.native_nateq] at hEq
             exact Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hjSucc) hne
           have hjkInt : (j : Int) < (k : Int) := Int.ofNat_lt.mpr hjk
           simpa [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-            Smtm.native_nat_to_int] using hjkInt
+            SmtEval.native_nat_to_int] using hjkInt
         have hGeneric : generic_apply_type recTerm argTerm :=
           generic_apply_type_of_non_datatype_head hRecSel hRecTester
         have hApplyNN :

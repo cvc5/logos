@@ -95,8 +95,3 @@ def __eo_to_smt : Term -> SmtTerm
 end
 
 end
-
-/-
-Eunoia satisfiability depends on SMT satisfiability.
--/
-/- ---------------------------------------------- -/

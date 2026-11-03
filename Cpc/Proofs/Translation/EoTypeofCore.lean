@@ -491,7 +491,7 @@ private theorem eo_to_smt_type_unique_of_valid_rec_apply
       have hnNonneg : 0 <= n := by
         simpa [native_zleq, SmtEval.native_zleq] using hz
       have hNatInt : native_nat_to_int (native_int_to_nat n) = n := by
-        simp [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+        simp [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
           SmtEval.native_int_to_nat, Int.toNat_of_nonneg hnNonneg]
       rw [hNatInt]
   | Term.Apply (Term.UOp UserOp.Seq) T1, U, hValid, hEq => by
@@ -623,7 +623,7 @@ private theorem eo_to_smt_type_unique_of_valid_rec_apply
                   have hnNonneg : 0 <= n := by
                     simpa [native_zleq, SmtEval.native_zleq] using hz
                   have hNatInt : native_nat_to_int (native_int_to_nat n) = n := by
-                    simp [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+                    simp [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
                       SmtEval.native_int_to_nat, Int.toNat_of_nonneg hnNonneg]
                   rw [hNatInt]
               | _ =>
@@ -5718,7 +5718,7 @@ theorem eo_to_smt_type_typeof_apply_bvnot_of_bitvec
   change __eo_to_smt_type (Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral (native_nat_to_int w))) =
     SmtType.BitVec w
   simp [__eo_to_smt_type, native_ite, native_zleq, SmtEval.native_zleq,
-    native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+    native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
     SmtEval.native_int_to_nat]
 
 /-- Simplifies EO-to-SMT type translation for `typeof_apply_bvneg_of_bitvec`. -/
@@ -5731,7 +5731,7 @@ theorem eo_to_smt_type_typeof_apply_bvneg_of_bitvec
   change __eo_to_smt_type (Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral (native_nat_to_int w))) =
     SmtType.BitVec w
   simp [__eo_to_smt_type, native_ite, native_zleq, SmtEval.native_zleq,
-    native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+    native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
     SmtEval.native_int_to_nat]
 
 /-- Simplifies EO-to-SMT type translation for `typeof_apply_bvnego_of_bitvec`. -/

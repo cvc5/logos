@@ -642,7 +642,7 @@ private theorem facts_bv_ssubo_term
   have hW : 0 < W := by
     rw [← hRound] at hwPos
     have hwPos' : (0 : Int) < (W : Int) := by
-      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hwPos
+      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hwPos
     exact_mod_cast hwPos'
   have hOneLe : 1 ≤ W := hW
   have hIndexNat : n = native_nat_to_int (W - 1) := by

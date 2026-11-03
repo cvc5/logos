@@ -23,7 +23,132 @@ default generator `__smtx_type_default`:
   included.
 * `type_default_typed`: on a recursively well-formed type, that value has the
   requested type.
+
+Proofs about the generator use `type_default_induct` below rather than the
+`.induct` principle Lean derives for it, whose motives and cases are ordered by
+where the generated definitions happen to stand.
 -/
+
+section TypeDefaultInduct
+
+-- Each case below uses only some of the hypotheses; all are shared.
+set_option linter.unusedSectionVars false
+
+variable
+  (typeM : SmtType → Prop)
+  (declM : native_String → SmtDatatypeDecl → SmtDatatypeDecl → Prop)
+  (dtM : native_String → SmtDatatypeDecl → native_Nat → SmtDatatype →
+    SmtDatatypeDecl → Prop)
+  (consM : SmtValue → SmtDatatypeDecl → SmtDatatypeCons → SmtDatatypeDecl → Prop)
+  (fieldM : SmtDatatypeDecl → SmtType → SmtDatatypeDecl → Prop)
+  (hBool : typeM SmtType.Bool)
+  (hInt : typeM SmtType.Int)
+  (hReal : typeM SmtType.Real)
+  (hRegLan : typeM SmtType.RegLan)
+  (hBitVec : ∀ n, typeM (SmtType.BitVec n))
+  (hMap : ∀ T U, typeM U → typeM (SmtType.Map T U))
+  (hSet : ∀ T, typeM (SmtType.Set T))
+  (hSeq : ∀ T, typeM (SmtType.Seq T))
+  (hChar : typeM SmtType.Char)
+  (hDatatype : ∀ s dd, declM s dd dd → typeM (SmtType.Datatype s dd))
+  (hUSort : ∀ n, typeM (SmtType.USort n))
+  (hFun : ∀ T U, typeM (SmtType.FunType T U))
+  (hOther : ∀ T : SmtType,
+    (T = SmtType.Bool → False) → (T = SmtType.Int → False) →
+    (T = SmtType.Real → False) → (T = SmtType.RegLan → False) →
+    (∀ n, T = SmtType.BitVec n → False) → (∀ A B, T = SmtType.Map A B → False) →
+    (∀ A, T = SmtType.Set A → False) → (∀ A, T = SmtType.Seq A → False) →
+    (T = SmtType.Char → False) → (∀ s dd, T = SmtType.Datatype s dd → False) →
+    (∀ n, T = SmtType.USort n → False) → (∀ A B, T = SmtType.FunType A B → False) →
+    typeM T)
+  (hDeclCons : ∀ s dd sF dF ddF, dtM s dd Nat.zero dF ddF → declM s dd ddF →
+    declM s dd (SmtDatatypeDecl.cons sF dF ddF))
+  (hDeclNil : ∀ s dd ddF,
+    (∀ sF dF ddF', ddF = SmtDatatypeDecl.cons sF dF ddF' → False) → declM s dd ddF)
+  (hDtSum : ∀ s dd n cF dF ddF, consM (SmtValue.DtCons s dd n) dd cF ddF →
+    dtM s dd (Nat.succ n) dF ddF → dtM s dd n (SmtDatatype.sum cF dF) ddF)
+  (hDtNull : ∀ s dd n dF ddF,
+    (∀ cF dF', dF = SmtDatatype.sum cF dF' → False) → dtM s dd n dF ddF)
+  (hConsUnit : ∀ v dd ddF, consM v dd SmtDatatypeCons.unit ddF)
+  (hConsCons : ∀ v dd T c ddF,
+    have _v0 := __smtx_field_type_default dd T ddF
+    fieldM dd T ddF → consM (SmtValue.Apply v _v0) dd c ddF →
+      consM v dd (SmtDatatypeCons.cons T c) ddF)
+  (hFieldRef : ∀ dd s ddF, declM s dd ddF → fieldM dd (SmtType.TypeRef s) ddF)
+  (hFieldOther : ∀ dd T ddF, (∀ s, T = SmtType.TypeRef s → False) → typeM T →
+    fieldM dd T ddF)
+
+include hBool hInt hReal hRegLan hBitVec hMap hSet hSeq hChar hDatatype hUSort
+  hFun hOther hDeclCons hDeclNil hDtSum hDtNull hConsUnit hConsCons hFieldRef
+  hFieldOther
+
+mutual
+
+private theorem typeDefaultInduct_type : ∀ T, typeM T
+  | SmtType.Bool => hBool
+  | SmtType.Int => hInt
+  | SmtType.Real => hReal
+  | SmtType.RegLan => hRegLan
+  | SmtType.BitVec n => hBitVec n
+  | SmtType.Map T U => hMap T U (typeDefaultInduct_type U)
+  | SmtType.Set T => hSet T
+  | SmtType.Seq T => hSeq T
+  | SmtType.Char => hChar
+  | SmtType.Datatype s dd => hDatatype s dd (typeDefaultInduct_decl s dd dd)
+  | SmtType.USort n => hUSort n
+  | SmtType.FunType T U => hFun T U
+  | SmtType.None => hOther _ (by simp) (by simp) (by simp) (by simp) (by simp)
+      (by simp) (by simp) (by simp) (by simp) (by simp) (by simp) (by simp)
+  | SmtType.TypeRef s => hOther _ (by simp) (by simp) (by simp) (by simp) (by simp)
+      (by simp) (by simp) (by simp) (by simp) (by simp) (by simp) (by simp)
+  | SmtType.DtcAppType A B => hOther _ (by simp) (by simp) (by simp) (by simp)
+      (by simp) (by simp) (by simp) (by simp) (by simp) (by simp) (by simp)
+      (by simp)
+termination_by T => 2 * sizeOf T
+
+private theorem typeDefaultInduct_decl (s : native_String) (dd : SmtDatatypeDecl) :
+    ∀ ddF, declM s dd ddF
+  | SmtDatatypeDecl.cons sF dF ddF => hDeclCons s dd sF dF ddF
+      (typeDefaultInduct_dt s dd Nat.zero dF ddF) (typeDefaultInduct_decl s dd ddF)
+  | SmtDatatypeDecl.nil => hDeclNil s dd _ (by simp)
+termination_by ddF => 2 * sizeOf ddF
+
+private theorem typeDefaultInduct_dt (s : native_String) (dd : SmtDatatypeDecl)
+    (n : native_Nat) : ∀ dF ddF, dtM s dd n dF ddF
+  | SmtDatatype.sum cF dF, ddF => hDtSum s dd n cF dF ddF
+      (typeDefaultInduct_cons (SmtValue.DtCons s dd n) dd cF ddF)
+      (typeDefaultInduct_dt s dd (Nat.succ n) dF ddF)
+  | SmtDatatype.null, ddF => hDtNull s dd n _ ddF (by simp)
+termination_by dF ddF => 2 * (sizeOf dF + sizeOf ddF) + 1
+
+private theorem typeDefaultInduct_cons (v : SmtValue) (dd : SmtDatatypeDecl) :
+    ∀ c ddF, consM v dd c ddF
+  | SmtDatatypeCons.unit, ddF => hConsUnit v dd ddF
+  | SmtDatatypeCons.cons T c, ddF => hConsCons v dd T c ddF
+      (typeDefaultInduct_field dd T ddF)
+      (typeDefaultInduct_cons (SmtValue.Apply v (__smtx_field_type_default dd T ddF))
+        dd c ddF)
+termination_by c ddF => 2 * (sizeOf c + sizeOf ddF) + 2
+
+private theorem typeDefaultInduct_field (dd : SmtDatatypeDecl) (T : SmtType)
+    (ddF : SmtDatatypeDecl) : fieldM dd T ddF := by
+  by_cases h : ∃ s, T = SmtType.TypeRef s
+  · obtain ⟨s, rfl⟩ := h
+    exact hFieldRef dd s ddF (typeDefaultInduct_decl s dd ddF)
+  · exact hFieldOther dd T ddF (fun s hs => h ⟨s, hs⟩) (typeDefaultInduct_type T)
+termination_by 2 * (sizeOf T + sizeOf ddF) + 3
+
+end
+
+/-- Induction following the recursion of the default generator, with one motive
+per generator function: types, declaration search, datatype search,
+constructor application and constructor fields. -/
+theorem type_default_induct : ∀ T, typeM T :=
+  typeDefaultInduct_type typeM declM dtM consM fieldM hBool hInt hReal hRegLan
+    hBitVec hMap hSet hSeq hChar hDatatype hUSort hFun hOther hDeclCons hDeclNil
+    hDtSum hDtNull hConsUnit hConsCons hFieldRef hFieldOther
+
+end TypeDefaultInduct
 
 /-- The type a constructor field has once a reference to a datatype of the
 declaration `dd` is resolved, as `__smtx_dtc_resolve` resolves it. -/
@@ -56,20 +181,20 @@ theorem native_inhabited_type_ne_none {T : SmtType}
 /-- The structural check succeeds exactly when the generator constructs a value. -/
 theorem native_inhabited_type_iff : ∀ T : SmtType,
     native_inhabited_type T = true ↔ __smtx_type_default T ≠ SmtValue.NotValue := by
-  refine __smtx_type_default.induct
-    (motive1 := fun T =>
+  refine type_default_induct
+    (typeM := fun T =>
       native_inhabited_type T = true ↔ __smtx_type_default T ≠ SmtValue.NotValue)
-    (motive2 := fun s dd ddF =>
+    (declM := fun s dd ddF =>
       __smtx_decl_inhabited s ddF = true ↔
         __smtx_datatype_decl_default s dd ddF ≠ SmtValue.NotValue)
-    (motive3 := fun s dd n dF ddF =>
+    (dtM := fun s dd n dF ddF =>
       __smtx_dt_inhabited dF ddF = true ↔
         __smtx_datatype_default s dd n dF ddF ≠ SmtValue.NotValue)
-    (motive4 := fun v dd c ddF =>
+    (consM := fun v dd c ddF =>
       v ≠ SmtValue.NotValue →
         (__smtx_dt_cons_inhabited c ddF = true ↔
           __smtx_datatype_cons_default v dd c ddF ≠ SmtValue.NotValue))
-    (motive5 := fun dd T ddF =>
+    (fieldM := fun dd T ddF =>
       fieldInhabited ddF T = true ↔
         __smtx_field_type_default dd T ddF ≠ SmtValue.NotValue)
     ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
@@ -137,18 +262,18 @@ theorem type_default_typed : ∀ T : SmtType,
     native_inhabited_type T = true →
     __smtx_type_wf_rec T = true →
     __smtx_typeof_value (__smtx_type_default T) = T := by
-  refine __smtx_type_default.induct
-    (motive1 := fun T =>
+  refine type_default_induct
+    (typeM := fun T =>
       native_inhabited_type T = true →
       __smtx_type_wf_rec T = true →
       __smtx_typeof_value (__smtx_type_default T) = T)
-    (motive2 := fun s dd ddF =>
+    (declM := fun s dd ddF =>
       __smtx_decl_wf_rec dd ddF = true →
       LookupAgrees dd ddF →
       __smtx_datatype_decl_default s dd ddF ≠ SmtValue.NotValue →
       __smtx_typeof_value (__smtx_datatype_decl_default s dd ddF) =
         SmtType.Datatype s dd)
-    (motive3 := fun s dd n dF ddF =>
+    (dtM := fun s dd n dF ddF =>
       __smtx_dt_wf_rec dd dF = true →
       __smtx_decl_wf_rec dd ddF = true →
       LookupAgrees dd ddF →
@@ -159,7 +284,7 @@ theorem type_default_typed : ∀ T : SmtType,
       __smtx_datatype_default s dd n dF ddF ≠ SmtValue.NotValue →
       __smtx_typeof_value (__smtx_datatype_default s dd n dF ddF) =
         SmtType.Datatype s dd)
-    (motive4 := fun v dd c ddF =>
+    (consM := fun v dd c ddF =>
       __smtx_dt_cons_wf_rec dd c = true →
       __smtx_decl_wf_rec dd ddF = true →
       LookupAgrees dd ddF →
@@ -168,7 +293,7 @@ theorem type_default_typed : ∀ T : SmtType,
             (SmtDatatype.sum (__smtx_dtc_resolve c dd) d) 0 →
       __smtx_datatype_cons_default v dd c ddF ≠ SmtValue.NotValue →
       __smtx_typeof_value (__smtx_datatype_cons_default v dd c ddF) = R)
-    (motive5 := fun dd T ddF =>
+    (fieldM := fun dd T ddF =>
       __smtx_decl_wf_rec dd ddF = true →
       LookupAgrees dd ddF →
       ((∃ s, T = SmtType.TypeRef s) ∨

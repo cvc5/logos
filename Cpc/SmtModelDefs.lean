@@ -22,14 +22,6 @@ open SmtEval
 mutual
 
 /-
-SMT-LIB types.
--/
-
-/-
-SMT-LIB terms.
--/
-
-/-
 SMT-LIB values.
 -/
 inductive SmtValue : Type where
@@ -49,18 +41,6 @@ inductive SmtValue : Type where
   | Apply : SmtValue -> SmtValue -> SmtValue
 
 deriving Repr, DecidableEq, Inhabited, Ord
-
-/-
-The SmtDatatype of the embedding.
--/
-
-/-
-The SmtDatatypeCons of the embedding.
--/
-
-/-
-The SmtDatatypeDecl of the embedding.
--/
 
 /-
 The SmtMap of the embedding.
@@ -98,12 +78,10 @@ deriving Repr, DecidableEq, Inhabited, Ord
 
 end
 
--- Equality of a type and of a value, decided by the two inductives above.
--- They stand after the mutual block rather than beside the inductive whose
--- `deriving` makes them possible: a mutual block holds inductives or
--- definitions, never both.
+-- Equality of a value, decided by the inductive above. It stands after the
+-- mutual block rather than beside the inductive whose `deriving` makes it
+-- possible: a mutual block holds inductives or definitions, never both.
 
-/- Type equality -/
 /- Value equality -/
 def native_veq : SmtValue -> SmtValue -> native_Bool
   | x, y => decide (x = y)

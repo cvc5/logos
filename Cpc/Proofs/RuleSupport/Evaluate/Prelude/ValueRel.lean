@@ -462,7 +462,7 @@ theorem EvaluateProofInternal.smtx_typeof_binary_mod_nat_to_int
     unfold __smtx_typeof
     have hWidth :
         native_zleq 0 (native_nat_to_int w) = true := by
-      simp [SmtEval.native_zleq, Smtm.native_nat_to_int]
+      simp [SmtEval.native_zleq, SmtEval.native_nat_to_int]
     have hMod :
         native_zeq
             (native_mod_total n (native_int_pow2 (native_nat_to_int w)))
@@ -472,7 +472,7 @@ theorem EvaluateProofInternal.smtx_typeof_binary_mod_nat_to_int
           true :=
       native_mod_total_canonical (native_nat_to_int w) n
     simp [SmtEval.native_and, hWidth, hMod, native_ite]
-  simpa [SmtEval.native_int_to_nat, Smtm.native_nat_to_int]
+  simpa [SmtEval.native_int_to_nat, SmtEval.native_nat_to_int]
     using
       TranslationProofs.smtx_typeof_binary_of_non_none
         (native_nat_to_int w)
@@ -542,7 +542,7 @@ theorem EvaluateProofInternal.native_nat_to_int_of_int_to_nat_eq
   have hToNat : Int.toNat w = u := by
     simpa [native_int_to_nat, SmtEval.native_int_to_nat] using hNat
   rw [← hToNat]
-  simp [native_nat_to_int, Smtm.native_nat_to_int,
+  simp [native_nat_to_int, SmtEval.native_nat_to_int,
     Int.toNat_of_nonneg hw0]
 
 theorem EvaluateProofInternal.model_eval_bitvec_term_binary

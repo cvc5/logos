@@ -19,8 +19,12 @@ namespace Smtm
 
 open SmtEval
 
+
 mutual
 
+/-
+SMT-LIB types.
+-/
 inductive SmtType : Type where
   | None : SmtType
   | Bool : SmtType
@@ -40,6 +44,9 @@ inductive SmtType : Type where
 
 deriving Repr, DecidableEq, Inhabited, Ord
 
+/-
+SMT-LIB terms.
+-/
 inductive SmtTerm : Type where
   | None : SmtTerm
   | Boolean : native_Bool -> SmtTerm
@@ -62,23 +69,35 @@ inductive SmtTerm : Type where
 
 deriving Repr, DecidableEq, Inhabited
 
+/-
+The SmtDatatype of the embedding.
+-/
 inductive SmtDatatype : Type where
   | null : SmtDatatype
   | sum : SmtDatatypeCons -> SmtDatatype -> SmtDatatype
 deriving Repr, DecidableEq, Inhabited, Ord
 
+/-
+The SmtDatatypeCons of the embedding.
+-/
 inductive SmtDatatypeCons : Type where
   | unit : SmtDatatypeCons
   | cons : SmtType -> SmtDatatypeCons -> SmtDatatypeCons
 deriving Repr, DecidableEq, Inhabited, Ord
 
+/-
+The SmtDatatypeDecl of the embedding.
+-/
 inductive SmtDatatypeDecl : Type where
   | nil : SmtDatatypeDecl
   | cons : native_String -> SmtDatatype -> SmtDatatypeDecl -> SmtDatatypeDecl
 deriving Repr, DecidableEq, Inhabited, Ord
 
+
+
 end
 
+/- Type equality -/
 def native_Teq : SmtType -> SmtType -> native_Bool
   | x, y => decide (x = y)
 

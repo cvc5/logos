@@ -2384,7 +2384,7 @@ theorem bvslt_bitvec_values {W : Nat} (x y : BitVec W) :
   have hW0 : native_zleq 0 (W : Int) = true := by
     simp [SmtEval.native_zleq]
   have hWCast : (W : Int) = native_nat_to_int W := by
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hXCanon : native_zeq (x.toNat : Int)
       (native_mod_total (x.toNat : Int)
         (native_int_pow2 (W : Int))) = true := by
@@ -4050,7 +4050,7 @@ private theorem smt_typeof_bitsValue (xs : List Bool) :
         true := by
     have hWCast :
         (xs.length : Int) = native_nat_to_int xs.length := by
-      simp [native_nat_to_int, Smtm.native_nat_to_int]
+      simp [native_nat_to_int, SmtEval.native_nat_to_int]
     rw [hWCast]
     rw [BvBitblast.native_int_pow2_native_nat xs.length]
     have hMod :
@@ -5306,7 +5306,7 @@ private theorem add_smt_typeof_bitsValue (xs : List Bool) :
             (native_int_pow2 (xs.length : Int))) = true := by
     have hWCast :
         (xs.length : Int) = native_nat_to_int xs.length := by
-      simp [native_nat_to_int, Smtm.native_nat_to_int]
+      simp [native_nat_to_int, SmtEval.native_nat_to_int]
     rw [hWCast, BvBitblast.native_int_pow2_native_nat xs.length]
     have hMod :
         (BvBitblast.bitsValue xs : Int) % (2 ^ xs.length : Nat) =
@@ -5647,7 +5647,7 @@ private theorem bitCons_type_info
     rw [typeof_concat_eq, htailTy, hbitTy] at hConcatTy
     simp [__smtx_typeof_concat,
       SmtEval.native_zplus, native_nat_to_int,
-      Smtm.native_nat_to_int, native_int_to_nat,
+      SmtEval.native_nat_to_int, native_int_to_nat,
       SmtEval.native_int_to_nat] at hConcatTy
     have hsimpa := hConcatTy.symm
     try simp at hsimpa ⊢
@@ -5704,19 +5704,19 @@ private theorem eval_bitvec_of_type
   have hWidth0 :
       native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hrange := bitvec_payload_range_of_canonical hWidth0 hcan
   have hp0 : (0 : Int) ≤ p := hrange.1
   have hp1 : p < (2 : Int) ^ W := by
     simpa [natpow2_eq, native_nat_to_int,
-      Smtm.native_nat_to_int] using hrange.2
+      SmtEval.native_nat_to_int] using hrange.2
   let x := BitVec.ofInt W p
   have hx : (x.toNat : Int) = p := by
     rw [show x.toNat = p.toNat by
       exact ofInt_toNat_canonical W p hp0 hp1]
     exact Int.toNat_of_nonneg hp0
   exact ⟨x, by simpa [hx, native_nat_to_int,
-    Smtm.native_nat_to_int] using hp⟩
+    SmtEval.native_nat_to_int] using hp⟩
 
 private theorem eval_bit_ite
     (M : SmtModel) (b : Term) (v : Bool)
@@ -6015,7 +6015,7 @@ private theorem eval_step_extract
   have hui0 : (0 : Int) ≤ ui := Int.le_trans hli hliui
   have huiW' : ui < (W : Int) := by
     have hsimpa := huiW
-    try simp [SmtEval.native_zlt, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+    try simp [SmtEval.native_zlt, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
     exact of_decide_eq_true hsimpa
   let L : Nat := li.toNat
   let U : Nat := ui.toNat
@@ -6109,7 +6109,7 @@ private theorem bitCons_type
   rw [typeof_concat_eq, htail, hite]
   simp [__smtx_typeof_concat,
     SmtEval.native_zplus, native_nat_to_int,
-    Smtm.native_nat_to_int, native_int_to_nat,
+    SmtEval.native_nat_to_int, native_int_to_nat,
     SmtEval.native_int_to_nat]
 
 private theorem bitblast_concat_type
@@ -6280,7 +6280,7 @@ private theorem mk_step_concat_type_eval
         SmtType.BitVec (w1 + w2)
       rw [typeof_concat_eq, h1Ty, h2Ty]
       simp only [__smtx_typeof_concat, SmtEval.native_zplus,
-        native_nat_to_int, Smtm.native_nat_to_int,
+        native_nat_to_int, SmtEval.native_nat_to_int,
         native_int_to_nat, SmtEval.native_int_to_nat]
       congr 1
     have hW : W = w1 + w2 := by
@@ -6960,7 +6960,7 @@ private theorem bvmul_args_of_bitvec_type
             (__smtx_typeof (__eo_to_smt y)) by
         rw [__smtx_typeof.eq_def] <;> simp only] at hTy'
       simpa [__smtx_typeof_bv_op_2, hxTy, hyTy, native_ite,
-        native_nateq, Smtm.native_nateq] using hTy'
+        native_nateq, SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst W'

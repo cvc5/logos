@@ -623,7 +623,7 @@ private theorem native_int_to_nat_roundtrip
     native_nat_to_int (native_int_to_nat w) = w := by
   have hw : (0 : Int) ≤ w := by
     simpa [SmtEval.native_zleq] using hw0
-  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using Int.toNat_of_nonneg hw
 
 private theorem eval_bvsize_eq
@@ -732,7 +732,7 @@ private theorem eval_bv_rotate_elim_lhs_eq
   rcases bitvec_value_canonical hEvalTy with ⟨p, hXEval⟩
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) = SmtValue.Binary (↑W) p := by
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
   have hEvalTy' :
       __smtx_typeof_value (SmtValue.Binary (↑W) p) = SmtType.BitVec W := by
     simpa [hXEval'] using hEvalTy

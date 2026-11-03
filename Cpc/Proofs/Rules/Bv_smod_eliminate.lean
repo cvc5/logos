@@ -1162,7 +1162,7 @@ private theorem native_nat_to_int_int_to_nat_of_nonneg (n : native_Int) :
         exact Int.le_antisymm hle hInt
       simp [max, hle, hn0]
     · simp [max, hle]
-  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hMax
 
 private theorem smt_typeof_extract_diag

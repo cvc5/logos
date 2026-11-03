@@ -52,7 +52,7 @@ private theorem native_width_roundtrip
     simpa [SmtEval.native_zleq] using hW
   have hInt : (Int.ofNat (Int.toNat W) : Int) = W :=
     Int.toNat_of_nonneg hWProp
-  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem list_concat_eq_rec_of_lists

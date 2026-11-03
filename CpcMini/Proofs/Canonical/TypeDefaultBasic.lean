@@ -29,27 +29,27 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
     native_inhabited_type T = true →
     __smtx_type_wf_rec T = true →
     __smtx_value_canonical uc (__smtx_type_default T) = true := by
-  refine __smtx_type_default.induct
-    (motive1 := fun T =>
+  refine type_default_induct
+    (typeM := fun T =>
       native_inhabited_type T = true →
       __smtx_type_wf_rec T = true →
       __smtx_value_canonical uc (__smtx_type_default T) = true)
-    (motive2 := fun s dd ddF =>
+    (declM := fun s dd ddF =>
       __smtx_decl_wf_rec dd ddF = true →
       __smtx_value_canonical uc
         (__smtx_datatype_decl_default s dd ddF) = true)
-    (motive3 := fun s dd n dF ddF =>
+    (dtM := fun s dd n dF ddF =>
       __smtx_dt_wf_rec dd dF = true →
       __smtx_decl_wf_rec dd ddF = true →
       __smtx_value_canonical uc
         (__smtx_datatype_default s dd n dF ddF) = true)
-    (motive4 := fun v dd c ddF =>
+    (consM := fun v dd c ddF =>
       __smtx_dt_cons_wf_rec dd c = true →
       __smtx_decl_wf_rec dd ddF = true →
       __smtx_value_canonical uc v = true →
       __smtx_value_canonical uc
         (__smtx_datatype_cons_default v dd c ddF) = true)
-    (motive5 := fun dd T ddF =>
+    (fieldM := fun dd T ddF =>
       __smtx_decl_wf_rec dd ddF = true →
       ((∃ s, T = SmtType.TypeRef s) ∨
         (native_inhabited_type T = true ∧

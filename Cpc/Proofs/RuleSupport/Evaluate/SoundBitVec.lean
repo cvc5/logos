@@ -2013,7 +2013,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_at_bvsize_core
     rfl]
   have hWNonneg : native_zleq 0 (native_nat_to_int w) = true := by
     simp [native_zleq, SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   constructor
   · rw [hTranslate, hBTy]
     simp [__eo_to_smt_bv_size, __smtx_typeof, native_ite, hWNonneg]
@@ -2170,7 +2170,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_zero_extend_core
     simpa [SmtEval.native_zleq] using hi0
   have hwNonneg : native_zleq 0 (native_nat_to_int w) = true := by
     simp [native_zleq, SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hw : 0 <= native_nat_to_int w := by
     simpa [SmtEval.native_zleq] using hwNonneg
   have hWidthNonneg :
@@ -2420,7 +2420,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_sign_extend_core
     simpa [SmtEval.native_zleq] using hi0
   have hwNonneg : native_zleq 0 (native_nat_to_int w) = true := by
     simp [native_zleq, SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hw : 0 <= native_nat_to_int w := by
     simpa [SmtEval.native_zleq] using hwNonneg
   have hWidthNonneg :
@@ -2603,7 +2603,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_repeat_core
   have hIntNat :
       native_nat_to_int (native_int_to_nat i) = i := by
     simpa [native_nat_to_int, native_int_to_nat,
-      Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       Int.toNat_of_nonneg hi0Int]
   have hXTrans : RuleProofs.eo_has_smt_translation x := by
     unfold RuleProofs.eo_has_smt_translation
@@ -2752,7 +2752,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_repeat_core
   have hWidthNonneg :
       native_zleq 0 (native_zmult i (native_nat_to_int w)) = true := by
     have hw : 0 <= native_nat_to_int w := by
-      simp [Smtm.native_nat_to_int]
+      simp [SmtEval.native_nat_to_int]
     have hMul : 0 <= i * native_nat_to_int w :=
       Int.mul_nonneg hi0Int hw
     have hsimpa := hMul
@@ -4473,7 +4473,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
         dsimp [runDiv, runBTerm, maxTerm, widthTerm] at hRunDivEoBv
         rw [hRunB] at hRunDivEoBv
         have hsimpa := hRunDivEoBv
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, Smtm.native_nat_to_int] at hsimpa ⊢
+        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, SmtEval.native_nat_to_int] at hsimpa ⊢
         exact hsimpa
       have hRunDivEq :
           runDiv =
@@ -4487,7 +4487,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
         dsimp [runDiv, runBTerm, maxTerm, widthTerm]
         rw [hRunB]
         have hsimpa := hToBin
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, Smtm.native_nat_to_int] at hsimpa ⊢
+        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, SmtEval.native_nat_to_int] at hsimpa ⊢
         exact hsimpa
       rw [hRunDivEq]
       constructor
@@ -7356,7 +7356,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvshl_core
     rw [← hBSameTy]
     exact hBTy
   have hWNonneg : 0 <= native_nat_to_int w := by
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   change
     __smtx_typeof (SmtTerm.bvshl (__eo_to_smt a) (__eo_to_smt b)) =
         __smtx_typeof (__eo_to_smt runShift) ∧
@@ -7766,7 +7766,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvlshr_core
     rw [← hBSameTy]
     exact hBTy
   have hWNonneg : 0 <= native_nat_to_int w := by
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   change
     __smtx_typeof (SmtTerm.bvlshr (__eo_to_smt a) (__eo_to_smt b)) =
         __smtx_typeof (__eo_to_smt runShift) ∧

@@ -1159,7 +1159,7 @@ theorem eo_to_smt_type_eq_bitvec
                     have hnNonneg : 0 <= n := by
                       simpa [native_zleq, SmtEval.native_zleq] using hn
                     simp [native_nat_to_int, native_int_to_nat,
-                      Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+                      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
                       Int.toNat_of_nonneg hnNonneg]
                   · simp [native_ite, hn] at h
               | _ =>

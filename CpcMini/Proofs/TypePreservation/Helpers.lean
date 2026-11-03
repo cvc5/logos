@@ -647,13 +647,13 @@ theorem bitvec_value_canonical
           simp [__smtx_typeof_value, native_ite, SmtEval.native_and, hWidth, hMod] at h
       have hw' : w' = native_nat_to_int w := by
         have hNonneg : 0 <= w' := by
-          simpa [native_zleq, Smtm.native_zleq] using hWidth
+          simpa [native_zleq, SmtEval.native_zleq] using hWidth
         have hNat : native_int_to_nat w' = w := by
           cases h
           rfl
         have hInt : (Int.ofNat (Int.toNat w') : Int) = w' :=
           Int.toNat_of_nonneg hNonneg
-        simp [native_int_to_nat, Smtm.native_int_to_nat] at hNat
+        simp [native_int_to_nat, SmtEval.native_int_to_nat] at hNat
         simp [hNat] at hInt
         exact hInt.symm
       subst hw'
@@ -730,7 +730,7 @@ theorem bitvec_payload_range_of_canonical
     (hMod : native_zeq n (native_mod_total n (native_int_pow2 w)) = true) :
     0 <= n ∧ n < native_int_pow2 w := by
   have hw : 0 <= w := by
-    simpa [Smtm.native_zleq] using hWidth
+    simpa [SmtEval.native_zleq] using hWidth
   have hPowPos : 0 < native_int_pow2 w := by
     have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
     simp [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hnot]
@@ -772,9 +772,9 @@ theorem bitvec_payload_canonical_zero_extend
     (hMod : native_zeq n (native_mod_total n (native_int_pow2 w)) = true) :
     native_zeq n (native_mod_total n (native_int_pow2 (i + w))) = true := by
   have hi : 0 <= i := by
-    simpa [Smtm.native_zleq] using hi0
+    simpa [SmtEval.native_zleq] using hi0
   have hw : 0 <= w := by
-    simpa [Smtm.native_zleq] using hw0
+    simpa [SmtEval.native_zleq] using hw0
   have hRange := bitvec_payload_range_of_canonical hw0 hMod
   have hleWidth : w <= i + w := Int.le_add_of_nonneg_left hi
   have hpowLe : native_int_pow2 w <= native_int_pow2 (i + w) :=
