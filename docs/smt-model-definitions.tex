@@ -67,7 +67,7 @@
   xrightmargin=0.5em,
   aboveskip=0.75em,
   belowskip=0.75em,
-  literate={∀}{{$\forall$}}1 {∧}{{$\land$}}1 {∃}{{$\exists$}}1 {∈}{{$\in$}}1 {≠}{{$\neq$}}1 {¬}{{$\neg$}}1 {⟨}{{$\langle$}}1 {⟩}{{$\rangle$}}1 {·}{{$\cdot$}}1 {→}{{$\rightarrow$}}1
+  literate={∀}{{$\forall$}}1 {∧}{{$\land$}}1 {∃}{{$\exists$}}1 {∈}{{$\in$}}1 {≠}{{$\neq$}}1 {¬}{{$\neg$}}1 {⟨}{{$\langle$}}1 {⟩}{{$\rangle$}}1 {·}{{$\cdot$}}1 {→}{{$\rightarrow$}}1 {↔}{{$\leftrightarrow$}}1
 }
 
 % Inline Lean/SMT identifiers in typewriter font; \detokenize prints
@@ -1490,15 +1490,47 @@ inhabited.
 A constructor is inhabited (\code{smt_dt_cons_inhabited}) iff all of its fields
 are, where a field \code{(TypeRef s')} is resolved among the declarations
 strictly later in the block, as in \code{smt_field_type_default}.
-Thus \code{inhabited_type T} holds exactly when \code{smt_type_default}
-succeeds in constructing a value for \code{T}, i.e. returns a value other
-than \code{NotValue}; this holds for every type, including types whose
-declaration blocks are malformed.
-For recursively well-formed types (Section~\ref{sec:type-wf}) the constructed
-value moreover has type \code{T},
-where recall that the type of values can be computed by the method \code{smt_typeof_value}.
-Both facts are proven in Lean (\code{native_inhabited_type_iff} and
-\code{type_default_typed} in \code{Proofs/StaticTyping.lean}).
+
+\begin{figure}
+\begin{lstlisting}
+theorem native_inhabited_type_iff (T : SmtType) :
+    inhabited_type T = true ↔ smt_type_default T ≠ SmtValue.NotValue
+
+theorem type_default_typed (T : SmtType)
+    (hInh : inhabited_type T = true)
+    (hRec : smt_type_wf_rec T = true) :
+    smt_typeof_value (smt_type_default T) = T
+\end{lstlisting}
+\caption{The connection between inhabitedness and default values, proven in
+\code{Proofs/StaticTyping.lean}.}
+\label{fig:inhabited-default}
+\end{figure}
+
+Figure~\ref{fig:inhabited-default} states the connection between the two
+definitions.
+First, \code{native_inhabited_type_iff} says that \code{inhabited_type T} holds
+exactly when \code{smt_type_default} succeeds in constructing a value for
+\code{T}, i.e. returns a value other than \code{NotValue}.
+This holds for every type, including types whose declaration blocks are
+malformed, since both methods make the same choices: they search the block for
+the same entry, try its constructors in the same order, and resolve each field
+reference against the same suffix of the block.
+Second, \code{type_default_typed} says that for an inhabited type that is
+moreover recursively well-formed (method \code{smt_type_wf_rec},
+Section~\ref{sec:type-wf}), the constructed value has type \code{T},
+where recall that the type of values can be computed by the method
+\code{smt_typeof_value}.
+The well-formedness hypothesis is necessary.
+The type of a constructor value is computed by looking up its datatype in the
+\emph{whole} declaration block (\code{smt_dd_lookup}), whereas a field reference
+is defaulted from the entry found in a \emph{suffix} of the block.
+The two agree when the names of the block are distinct, which
+\code{smt_decl_wf_rec} requires;
+for a block declaring the same name twice, the default can be constructed from
+one entry and typed against the other.
+Together the two theorems give that every well-formed type has a default value
+of that type, which is how inhabitedness is used throughout the remainder of
+this document.
 
 Note that any datatype that is not well-founded (i.e. does not have finite values)
 is not inhabited by this definition.
