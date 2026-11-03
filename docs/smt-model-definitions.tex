@@ -1132,7 +1132,8 @@ First, we will require defining a predicate for deciding whether a type is finit
 Second, we require defining a "default value" for a given type, that is,
 a method for constructs an arbitrary value for a given type.
 These both will impact our definition of canonicity for map values.
-The latter will additionally be used to define our notion of inhabited types.
+Our notion of inhabited types is defined alongside default values, as exactly
+the types for which a default value can be constructed.
 
 \begin{figure}
 \begin{lstlisting}
@@ -1321,8 +1322,26 @@ def smt_type_default : SmtType -> SmtValue
   | ... => ...
   | T => SmtValue.NotValue
 
-def inhabited_type (T : SmtType) : Bool :=
-  !(Teq T SmtType.None) && (Teq (smt_typeof_value (smt_type_default T)) T)
+def inhabited_type : SmtType -> Bool
+  | SmtType.None => false
+  | (SmtType.TypeRef _) => false
+  | (SmtType.DtcAppType _ _) => false
+  | (SmtType.Map _ U) => (inhabited_type U)
+  | (SmtType.Datatype s dd) => (smt_decl_inhabited s dd)
+  | _ => true
+
+def smt_decl_inhabited (s : String) : SmtDatatypeDecl -> Bool
+  | (SmtDatatypeDecl.cons sF dF ddF) => (if (s = sF) then (smt_dt_inhabited dF ddF) else (smt_decl_inhabited s ddF))
+  | SmtDatatypeDecl.nil => false
+
+def smt_dt_inhabited : SmtDatatype -> SmtDatatypeDecl -> Bool
+  | (SmtDatatype.sum c d), ddF => ((smt_dt_cons_inhabited c ddF) || (smt_dt_inhabited d ddF))
+  | SmtDatatype.null, _ => false
+
+def smt_dt_cons_inhabited : SmtDatatypeCons -> SmtDatatypeDecl -> Bool
+  | (SmtDatatypeCons.cons (SmtType.TypeRef s) c), ddF => ((smt_decl_inhabited s ddF) && (smt_dt_cons_inhabited c ddF))
+  | (SmtDatatypeCons.cons T c), ddF => ((inhabited_type T) && (smt_dt_cons_inhabited c ddF))
+  | SmtDatatypeCons.unit, _ => true
 \end{lstlisting}
 \caption{Finite default value computation and type inhabitedness.}
 \label{fig:default-value}
@@ -1430,12 +1449,12 @@ well-formed type here, but for a different reason, and no reordering admits it.
 Note also that the specification is not uniform in this respect.
 Finiteness of a datatype is decided by the fixpoint computation
 \code{smt_datatype_decl_bounded} described above, which does not depend on the
-order of the block, whereas inhabitedness is decided by the suffix walk of
-\code{smt_type_default}, which does.
+order of the block, whereas inhabitedness is decided by the suffix walk shared
+by \code{smt_type_default} and \code{inhabited_type}, which does.
 The two therefore disagree: for the block above written with \code{TreeList}
 first, \code{smt_is_finite_type} of a datatype of the block is unchanged by
 the reordering while \code{inhabited_type} of it becomes false.
-Reformulating \code{smt_type_default} as a fixpoint of the same shape, so that
+Reformulating \code{smt_type_default} and \code{inhabited_type} as fixpoints of the same shape, so that
 a reference resolves against the declarations already known to have a default
 value rather than against the suffix, would remove the ordering requirement;
 the cost is that the recursion is then no longer structural in the block, and
@@ -1457,23 +1476,49 @@ i.e. the first value of the uninterpreted sort's domain.
 
 In the figure, we also give a definition of inhabitedness for types
 via the method \code{inhabited_type}.
-We define type inhabitedness operationally.
-In particular, a type is considered inhabited if it is not \code{None},
-and the method \code{smt_type_default}
-succeeds in generating a value of that type,
+We define type inhabitedness structurally, following the shape of
+\code{smt_type_default} without constructing a value.
+Base types are inhabited, and the types \code{None}, \code{TypeRef} and
+\code{DtcAppType} are not.
+A map type is inhabited iff its element type is,
+mirroring the corresponding guard of \code{smt_type_default}.
+For a datatype type \code{(Datatype s dd)},
+the method \code{smt_decl_inhabited} scans the declaration block for the entry
+declared under name \code{s}, exactly as \code{smt_datatype_decl_default} does,
+and \code{smt_dt_inhabited} requires \emph{some} constructor of that entry to be
+inhabited.
+A constructor is inhabited (\code{smt_dt_cons_inhabited}) iff all of its fields
+are, where a field \code{(TypeRef s')} is resolved among the declarations
+strictly later in the block, as in \code{smt_field_type_default}.
+Thus \code{inhabited_type T} holds exactly when \code{smt_type_default}
+succeeds in constructing a value for \code{T}, i.e. returns a value other
+than \code{NotValue}; this holds for every type, including types whose
+declaration blocks are malformed.
+For recursively well-formed types (Section~\ref{sec:type-wf}) the constructed
+value moreover has type \code{T},
 where recall that the type of values can be computed by the method \code{smt_typeof_value}.
+Both facts are proven in Lean (\code{native_inhabited_type_iff} and
+\code{type_default_typed} in \code{Proofs/StaticTyping.lean}).
+
 Note that any datatype that is not well-founded (i.e. does not have finite values)
-will be such that \code{smt_type_default} fails to return a value of that sort.
+is not inhabited by this definition.
 The converse does not hold: as discussed above, \code{smt_type_default} also
-fails on a well-founded datatype whose declaration block is not in productive
-order.
+fails, and hence \code{inhabited_type} is false, on a well-founded datatype
+whose declaration block is not in productive order.
 It is important to note that the definition of \code{inhabited_type}
 could alternatively have been defined by a native Lean binder,
 i.e. a type is inhabited iff there exists a value having that type.
 However, this definition does not quite coincide with our desired notion,
 as it admits other types (e.g. datatypes with nested recursion) to be
-considered inhabited. Instead, \code{smt_type_default} operationally
-defines what we consider to be an inhabited type.
+considered inhabited. Instead, \code{inhabited_type} captures exactly the
+types for which \code{smt_type_default} constructs a value.
+
+Defining \code{inhabited_type} without reference to values has a practical
+purpose. Inhabitedness is part of type well-formedness, which the proof checker
+computes when checking side conditions. A structural definition lets the checker
+decide it without depending on the value datatype \code{SmtValue} or the model
+semantics, so that these can use mathematical libraries (e.g. for real numbers)
+that the checker is never built against.
 
 \begin{figure}
 \begin{lstlisting}
