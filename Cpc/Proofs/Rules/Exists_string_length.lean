@@ -301,7 +301,7 @@ private theorem eslFormula_true
     exact Int.add_one_le_iff.mpr hkLt
   have hAParts := seq_elem_wf_parts_of_seq_wf hSeqWF
   have hDef :=
-    Smtm.type_default_typed_canonical_of_native_inhabited_type
+    Smtm.type_default_typed_canonical_of_native_inhabited_type (uc := M.usortCard)
       A hAParts.1 hAParts.2
   let xs : List SmtValue :=
     List.replicate (native_int_to_nat k) (__smtx_type_default A)

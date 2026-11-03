@@ -43,7 +43,7 @@ private theorem native_model_push_same
     native_model_push (native_model_push M s T v) s T w =
       native_model_push M s T w := by
   cases M with
-  | mk values nativeFuns =>
+  | mk values nativeFuns usortCard =>
       change
         SmtModel.mk
             (fun k =>
@@ -51,12 +51,12 @@ private theorem native_model_push_same
               else
                 (if k = ({ isVar := true, name := s, ty := T } : SmtModelKey) then v
                 else values k))
-            nativeFuns =
+            nativeFuns usortCard =
           SmtModel.mk
             (fun k =>
               if k = ({ isVar := true, name := s, ty := T } : SmtModelKey) then w
               else values k)
-            nativeFuns
+            nativeFuns usortCard
       congr
       funext k
       by_cases hk : k = ({ isVar := true, name := s, ty := T } : SmtModelKey)
@@ -72,7 +72,7 @@ private theorem native_model_push_comm
     native_model_push (native_model_push M s1 T1 v1) s2 T2 v2 =
       native_model_push (native_model_push M s2 T2 v2) s1 T1 v1 := by
   cases M with
-  | mk values nativeFuns =>
+  | mk values nativeFuns usortCard =>
       change
         SmtModel.mk
             (fun k =>
@@ -80,14 +80,14 @@ private theorem native_model_push_comm
               else
                 (if k = ({ isVar := true, name := s1, ty := T1 } : SmtModelKey) then v1
                 else values k))
-            nativeFuns =
+            nativeFuns usortCard =
           SmtModel.mk
             (fun k =>
               if k = ({ isVar := true, name := s1, ty := T1 } : SmtModelKey) then v1
               else
                 (if k = ({ isVar := true, name := s2, ty := T2 } : SmtModelKey) then v2
                 else values k))
-            nativeFuns
+            nativeFuns usortCard
       congr
       funext k
       by_cases h1 : k = ({ isVar := true, name := s1, ty := T1 } : SmtModelKey)
@@ -197,7 +197,9 @@ private theorem smtExistsOfBinders_swap
         simpa [native_model_push_comm M s1 s2 T1 T2 v1 v2 hKey] using
           hEval
   have hPropEq : P = Q := propext hPQ
-  simp [smtExistsOfBinders, __smtx_model_eval, P, Q, rest, hPropEq]
+  have hCard (M : SmtModel) (s : native_String) (T : SmtType) (v : SmtValue) :
+      (native_model_push M s T v).usortCard = M.usortCard := rfl
+  simp [smtExistsOfBinders, __smtx_model_eval, hCard, P, Q, rest, hPropEq]
 
 private theorem smtExistsOfBinders_eval_perm
     (body : SmtTerm) {xs ys : List QuantBinder}
@@ -255,7 +257,9 @@ private theorem smtExistsOfBinders_dup
       exact ⟨v, hv, hc, v, hv, hc, by
         simpa [native_model_push_same] using hEval⟩
   have hPropEq : P = Q := propext hPQ
-  simp [smtExistsOfBinders, __smtx_model_eval, P, Q, rest, hPropEq]
+  have hCard (M : SmtModel) (s : native_String) (T : SmtType) (v : SmtValue) :
+      (native_model_push M s T v).usortCard = M.usortCard := rfl
+  simp [smtExistsOfBinders, __smtx_model_eval, hCard, P, Q, rest, hPropEq]
 
 private theorem smtExistsOfBinders_append
     (xs ys : List QuantBinder) (body : SmtTerm) :
@@ -2037,7 +2041,7 @@ by
   classical
   rcases smt_model_eval_bool_is_boolean M hM body hBodyTy with
     ⟨b, hEvalBody⟩
-  rcases canonical_type_inhabited_of_type_wf T hWF with
+  rcases canonical_type_inhabited_of_type_wf (uc := M.usortCard) T hWF with
     ⟨w, hwTy, hwCan⟩
   have hwCanBool : __smtx_value_canonical M.usortCard w = true := by
     simpa [value_canonical] using hwCan
@@ -2145,7 +2149,7 @@ by
       have hTailConst :
           ∀ v : SmtValue,
             __smtx_typeof_value v = ST ->
-              __smtx_value_canonical uc v = true ->
+              __smtx_value_canonical N.usortCard v = true ->
                 __smtx_model_eval
                     (native_model_push N s ST v)
                     (__eo_to_smt_exists env body) =
