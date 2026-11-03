@@ -5,6 +5,8 @@ import all Cpc.Proofs.TypePreservation.Common
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open SmtEval
 open Smtm
 
@@ -107,10 +109,10 @@ inductive supported_preservation_term : SmtTerm -> Prop
       (ht2 : term_has_non_none_type t2)
       (hs2 : supported_preservation_term t2)
       (hDefault :
-        ∀ {A : SmtType},
+        ∀ {A : SmtType} {uc : native_Nat -> native_Nat},
           __smtx_typeof (SmtTerm.map_diff t1 t2) = A ->
             __smtx_typeof_value (__smtx_type_default A) = A ∧
-              value_canonical (__smtx_type_default A)) :
+              value_canonical uc (__smtx_type_default A)) :
       supported_preservation_term
         (SmtTerm.map_diff t1 t2)
   | seq_diff {t1 t2 : SmtTerm}

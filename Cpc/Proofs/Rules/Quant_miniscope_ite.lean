@@ -158,13 +158,13 @@ private theorem native_eval_texists_eq_of_body_eval_eq_same
   let P : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortCard v = true ∧
         __smtx_model_eval (native_model_push M s T v) body' =
           SmtValue.Boolean true
   change (if _ : P then SmtValue.Boolean true else SmtValue.Boolean false) =

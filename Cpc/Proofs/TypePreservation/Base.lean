@@ -7,6 +7,8 @@ import all Cpc.Proofs.TypePreservation.Common
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open SmtEval
 open Smtm
 
@@ -473,7 +475,7 @@ theorem typeof_value_model_eval_exists
   by_cases h :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   · simp [h, __smtx_typeof_value]
   · simp [h, __smtx_typeof_value]
@@ -531,20 +533,18 @@ theorem typeof_value_model_eval_forall
   by_cases h :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T ->
-          __smtx_value_canonical v = true ->
+          __smtx_value_canonical M.usortCard v = true ->
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   · simp [dite_eq_left h, __smtx_typeof_value]
   · simp [dite_eq_right h, __smtx_typeof_value]
 
 /-- Provides a witness for a `choice` term whose typing is non-`None`. -/
 theorem choice_term_has_witness
-    (Mw : SmtModel)
-    (hMw : model_wf Mw)
     {s : native_String}
     {T : SmtType}
     {body : SmtTerm}
     (ht : term_has_non_none_type (SmtTerm.choice s T body)) :
-    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical v := by
+    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical uc v := by
   unfold term_has_non_none_type at ht
   have hEq : native_Teq (__smtx_typeof body) SmtType.Bool = true := by
     by_cases hEq : native_Teq (__smtx_typeof body) SmtType.Bool = true
@@ -560,9 +560,7 @@ theorem choice_term_has_witness
     simpa [hEq, native_ite] using ht
   have hWF : __smtx_type_wf T = true :=
     smtx_typeof_guard_wf_wf_of_non_none T T hGuardNN
-  exact ⟨native_model_lookup Mw s T,
-    model_total_typed_lookup hMw s T hWF,
-    model_total_typed_lookup_canonical hMw s T hWF⟩
+  exact canonical_type_inhabited_of_type_wf T hWF
 
 /-- Derives the `choice` type as the self-guarded choice type from `non_none`. -/
 theorem choice_term_guard_type_of_non_none
@@ -697,18 +695,18 @@ theorem typeof_value_model_eval_choice
       __smtx_typeof (SmtTerm.choice s T body) := by
   classical
   have hTy : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-      __smtx_value_canonical v = true := by
-    rcases choice_term_has_witness Mw hMw ht with ⟨v, hvTy, hvCanon⟩
+      __smtx_value_canonical M.usortCard v = true := by
+    rcases choice_term_has_witness (uc := M.usortCard) ht with ⟨v, hvTy, hvCanon⟩
     exact ⟨v, hvTy, by simpa [value_canonical] using hvCanon⟩
   have hTyIf : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-      __smtx_value_canonical v := by
+      __smtx_value_canonical M.usortCard v := by
     rcases hTy with ⟨v, hvTy, hvCanon⟩
     exact ⟨v, hvTy, by simp [hvCanon]⟩
   rw [choice_term_typeof_of_non_none ht]
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortCard v = true ∧
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   · rw [smtx_model_eval_choice_eq]
     simp [hSat]

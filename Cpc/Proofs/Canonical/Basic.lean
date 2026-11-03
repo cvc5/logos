@@ -5,6 +5,8 @@ import all Cpc.Proofs.TypePreservation.Helpers
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open SmtEval
 open Smtm
 
@@ -37,72 +39,76 @@ theorem native_veq_false_symm {v1 v2 : SmtValue}
 
 /-- Unfolding helper for the canonicality predicate. -/
 theorem value_canonical_bool_eq_true {v : SmtValue} :
-    value_canonical v = (__smtx_value_canonical v = true) := by
+    value_canonical uc v = (__smtx_value_canonical uc v = true) := by
   rfl
 
 /-- `NotValue` is canonical as a value constructor, although it is not well typed. -/
 theorem value_canonical_notValue :
-    value_canonical SmtValue.NotValue := by
+    value_canonical uc SmtValue.NotValue := by
   simp [value_canonical, __smtx_value_canonical]
 
 theorem value_canonical_boolean (b : native_Bool) :
-    value_canonical (SmtValue.Boolean b) := by
+    value_canonical uc (SmtValue.Boolean b) := by
   simp [value_canonical, __smtx_value_canonical]
 
 theorem value_canonical_numeral (n : native_Int) :
-    value_canonical (SmtValue.Numeral n) := by
+    value_canonical uc (SmtValue.Numeral n) := by
   simp [value_canonical, __smtx_value_canonical]
 
 theorem value_canonical_rational (q : native_Rat) :
-    value_canonical (SmtValue.Rational q) := by
+    value_canonical uc (SmtValue.Rational q) := by
   simp [value_canonical, __smtx_value_canonical]
 
 theorem value_canonical_char (c : native_Char)
     (hc : native_char_valid c = true) :
-    value_canonical (SmtValue.Char c) := by
+    value_canonical uc (SmtValue.Char c) := by
   simp [value_canonical, __smtx_value_canonical, hc]
 
 theorem value_canonical_reglan (r : SmtRegLan)
     (hr : __smtx_re_canonical r = true) :
-    value_canonical (SmtValue.RegLan r) := by
+    value_canonical uc (SmtValue.RegLan r) := by
   simp [value_canonical, __smtx_value_canonical, hr]
 
 theorem value_canonical_char_zero :
-    value_canonical (SmtValue.Char 0) := by
+    value_canonical uc (SmtValue.Char 0) := by
   exact value_canonical_char 0 (by native_decide)
 
 theorem value_canonical_char_one :
-    value_canonical (SmtValue.Char 1) := by
+    value_canonical uc (SmtValue.Char 1) := by
   exact value_canonical_char 1 (by native_decide)
 
 theorem value_canonical_reglan_allchar :
-    value_canonical (SmtValue.RegLan native_re_allchar) := by
+    value_canonical uc (SmtValue.RegLan native_re_allchar) := by
   exact value_canonical_reglan native_re_allchar (by native_decide)
 
 theorem value_canonical_reglan_none :
-    value_canonical (SmtValue.RegLan native_re_none) := by
+    value_canonical uc (SmtValue.RegLan native_re_none) := by
   exact value_canonical_reglan native_re_none (by native_decide)
 
 theorem value_canonical_reglan_all :
-    value_canonical (SmtValue.RegLan native_re_all) := by
+    value_canonical uc (SmtValue.RegLan native_re_all) := by
   exact value_canonical_reglan native_re_all (by native_decide)
 
-theorem value_canonical_uvalue (u n : native_Nat) :
-    value_canonical (SmtValue.UValue u n) := by
-  simp [value_canonical, __smtx_value_canonical]
+/-- A value of an uninterpreted sort is canonical when it is within the sort's
+cardinality, where `0` means the sort is infinite. -/
+theorem value_canonical_uvalue (u n : native_Nat) (h : uc u = 0 ∨ n < uc u) :
+    value_canonical uc (SmtValue.UValue u n) := by
+  rcases h with h | h <;>
+    simp [value_canonical, __smtx_value_canonical, native_usort_card, native_or, native_nateq,
+      native_natlt, h]
 
 theorem value_canonical_dt_cons (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
-    value_canonical (SmtValue.DtCons s d i) := by
+    value_canonical uc (SmtValue.DtCons s d i) := by
   simp [value_canonical, __smtx_value_canonical]
 
 theorem value_canonical_apply
     {f x : SmtValue}
-    (hf : value_canonical f)
-    (hx : value_canonical x) :
-    value_canonical (SmtValue.Apply f x) := by
-  have hfBool : __smtx_value_canonical f = true := by
+    (hf : value_canonical uc f)
+    (hx : value_canonical uc x) :
+    value_canonical uc (SmtValue.Apply f x) := by
+  have hfBool : __smtx_value_canonical uc f = true := by
     simpa [value_canonical] using hf
-  have hxBool : __smtx_value_canonical x = true := by
+  have hxBool : __smtx_value_canonical uc x = true := by
     simpa [value_canonical] using hx
   simp [value_canonical, __smtx_value_canonical, hfBool, hxBool,
     SmtEval.native_and]
@@ -111,7 +117,7 @@ theorem value_canonical_apply
 theorem value_canonical_of_bool_type
     {v : SmtValue}
     (h : __smtx_typeof_value v = SmtType.Bool) :
-    value_canonical v := by
+    value_canonical uc v := by
   rcases bool_value_canonical h with ⟨b, rfl⟩
   exact value_canonical_boolean b
 
@@ -119,7 +125,7 @@ theorem value_canonical_of_bool_type
 theorem value_canonical_of_int_type
     {v : SmtValue}
     (h : __smtx_typeof_value v = SmtType.Int) :
-    value_canonical v := by
+    value_canonical uc v := by
   rcases int_value_canonical h with ⟨n, rfl⟩
   exact value_canonical_numeral n
 
@@ -127,7 +133,7 @@ theorem value_canonical_of_int_type
 theorem value_canonical_of_real_type
     {v : SmtValue}
     (h : __smtx_typeof_value v = SmtType.Real) :
-    value_canonical v := by
+    value_canonical uc v := by
   rcases real_value_canonical h with ⟨q, rfl⟩
   exact value_canonical_rational q
 
@@ -136,7 +142,7 @@ theorem value_canonical_of_bitvec_type
     {v : SmtValue}
     {w : native_Nat}
     (h : __smtx_typeof_value v = SmtType.BitVec w) :
-    value_canonical v := by
+    value_canonical uc v := by
   rcases bitvec_value_canonical h with ⟨n, rfl⟩
   have hPayload :
       native_zeq n
@@ -149,8 +155,8 @@ theorem value_canonical_of_bitvec_type
 theorem value_canonical_of_reglan_type
     {v : SmtValue}
     (h : __smtx_typeof_value v = SmtType.RegLan)
-    (hCan : __smtx_value_canonical v = true) :
-    value_canonical v := by
+    (hCan : __smtx_value_canonical uc v = true) :
+    value_canonical uc v := by
   simpa [value_canonical] using hCan
 
 end Smtm

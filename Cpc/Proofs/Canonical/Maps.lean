@@ -5,6 +5,8 @@ import all Cpc.Proofs.Canonical.Order
 
 public section
 
+variable {uc : native_Nat -> native_Nat}
+
 open SmtEval
 open Smtm
 
@@ -32,14 +34,14 @@ theorem map_default_leaf_get_default :
 /-- The default payload of a canonical map is canonical. -/
 theorem map_default_value_canonical :
     ∀ {m : SmtMap},
-      __smtx_map_canonical m = true ->
-        value_canonical (__smtx_map_get_default m)
+      __smtx_map_canonical uc m = true ->
+        value_canonical uc (__smtx_map_get_default m)
   | SmtMap.default T e, h => by
       have hParts := h
       simp [__smtx_map_canonical, SmtEval.native_and] at hParts
       exact hParts.2
   | SmtMap.cons i e m, h => by
-      have hm : __smtx_map_canonical m = true := by
+      have hm : __smtx_map_canonical uc m = true := by
         have hParts := h
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         rcases hParts with ⟨hMain, _hNeDefault⟩
@@ -50,19 +52,19 @@ theorem map_default_value_canonical :
 /-- Entries in a canonical map have canonical values. -/
 theorem map_lookup_value_canonical :
     ∀ {m : SmtMap} {i : SmtValue},
-      __smtx_map_canonical m = true ->
-        value_canonical (__smtx_map_lookup m i)
+      __smtx_map_canonical uc m = true ->
+        value_canonical uc (__smtx_map_lookup m i)
   | SmtMap.default T e, i, h => by
       simpa [__smtx_map_lookup, __smtx_map_get_default] using
         map_default_value_canonical (m := SmtMap.default T e) h
   | SmtMap.cons k v m, i, h => by
-      have hv : value_canonical v := by
+      have hv : value_canonical uc v := by
         have hParts := h
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         rcases hParts with ⟨hMain, _hNeDefault⟩
         rcases hMain with ⟨hEntries, _hOrdered⟩
         exact hEntries.1.2
-      have hm : __smtx_map_canonical m = true := by
+      have hm : __smtx_map_canonical uc m = true := by
         have hParts := h
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         rcases hParts with ⟨hMain, _hNeDefault⟩
@@ -76,16 +78,16 @@ theorem map_lookup_value_canonical :
 /-- Canonical maps give canonical `Map` values. -/
 theorem value_canonical_map_of_map_canonical
     {m : SmtMap}
-    (h : __smtx_map_canonical m = true) :
-    value_canonical (SmtValue.Map m) := by
+    (h : __smtx_map_canonical uc m = true) :
+    value_canonical uc (SmtValue.Map m) := by
   simpa [value_canonical, __smtx_value_canonical] using h
 
 /-- Canonical maps give canonical `Set` values. -/
 theorem value_canonical_set_of_map_canonical
     {m : SmtMap}
-    (h : __smtx_map_canonical m = true)
+    (h : __smtx_map_canonical uc m = true)
     (hDef : __smtx_map_get_default m = SmtValue.Boolean false) :
-    value_canonical (SmtValue.Set m) := by
+    value_canonical uc (SmtValue.Set m) := by
   have hDefVeq :
       native_veq (__smtx_map_get_default m) (SmtValue.Boolean false) = true := by
     rw [hDef]
@@ -100,11 +102,11 @@ a position that is already known to be ordered with respect to the tail map.
 theorem map_update_aux_no_default_canonical
     {m : SmtMap}
     {i e : SmtValue}
-    (hm : __smtx_map_canonical m = true)
-    (hi : value_canonical i)
-    (he : value_canonical e)
+    (hm : __smtx_map_canonical uc m = true)
+    (hi : value_canonical uc i)
+    (he : value_canonical uc e)
     (hOrd : __smtx_map_entries_ordered_after i m = true) :
-    __smtx_map_canonical
+    __smtx_map_canonical uc
       (__smtx_map_update_aux_no_default (__smtx_map_get_default m) m i e) = true := by
   by_cases hEq : native_veq (__smtx_map_get_default m) e = true
   · simpa [__smtx_map_update_aux_no_default, native_ite, hEq] using hm
@@ -113,9 +115,9 @@ theorem map_update_aux_no_default_canonical
         simp [hEqBool] at hEq ⊢
     have hSymm : native_veq e (__smtx_map_get_default m) = false :=
       native_veq_false_symm hEqFalse
-    have hiBool : __smtx_value_canonical i = true := by
+    have hiBool : __smtx_value_canonical uc i = true := by
       simpa [value_canonical] using hi
-    have heBool : __smtx_value_canonical e = true := by
+    have heBool : __smtx_value_canonical uc e = true := by
       simpa [value_canonical] using he
     simp [__smtx_map_update_aux_no_default, __smtx_map_canonical, native_ite,
       hEqFalse, hiBool, heBool, hm, hOrd, hSymm, SmtEval.native_and,
@@ -187,7 +189,7 @@ theorem map_entries_ordered_after_trans
           native_vcmp b c = true ->
             native_vcmp a c = true) :
     ∀ {m : SmtMap} {lo hi : SmtValue},
-      __smtx_map_canonical m = true ->
+      __smtx_map_canonical uc m = true ->
         __smtx_map_entries_ordered_after lo m = true ->
           native_vcmp lo hi = true ->
             __smtx_map_entries_ordered_after hi m = true
@@ -236,7 +238,7 @@ theorem map_update_aux_entries_ordered_after
           native_vcmp b c = true ->
             native_vcmp a c = true) :
     ∀ (ed : SmtValue) {m : SmtMap} {upper i e : SmtValue},
-      __smtx_map_canonical m = true ->
+      __smtx_map_canonical uc m = true ->
         __smtx_map_entries_ordered_after upper m = true ->
           native_veq upper i = false ->
             native_vcmp upper i = false ->
@@ -260,7 +262,7 @@ theorem map_update_aux_entries_ordered_after
       · have hki : k = i := eq_of_native_veq_true hEq
         subst i
         have hIUpper : native_vcmp k upper = true := hFlip hNe hCmp
-        have hm : __smtx_map_canonical m = true := by
+        have hm : __smtx_map_canonical uc m = true := by
           have hParts := hmCons
           simp [__smtx_map_canonical, SmtEval.native_and] at hParts
           rcases hParts with ⟨hMain, _hNeDefault⟩
@@ -294,27 +296,27 @@ theorem map_update_aux_canonical_of_order_laws
           native_vcmp b c = true ->
             native_vcmp a c = true) :
     ∀ {m : SmtMap} {i e : SmtValue},
-      __smtx_map_canonical m = true ->
-        value_canonical i ->
-          value_canonical e ->
-            __smtx_map_canonical
+      __smtx_map_canonical uc m = true ->
+        value_canonical uc i ->
+          value_canonical uc e ->
+            __smtx_map_canonical uc
               (__smtx_map_update_aux (__smtx_map_get_default m) m i e) = true
   | SmtMap.default T d, i, e, hm, hi, he => by
       exact map_update_aux_no_default_canonical hm hi he (by simp [__smtx_map_entries_ordered_after])
   | SmtMap.cons k v m, i, e, hmCons, hi, he => by
-      have hk : value_canonical k := by
+      have hk : value_canonical uc k := by
         have hParts := hmCons
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         rcases hParts with ⟨hMain, _hNeDefault⟩
         rcases hMain with ⟨hEntries, _hOrdered⟩
         exact hEntries.1.1
-      have hv : value_canonical v := by
+      have hv : value_canonical uc v := by
         have hParts := hmCons
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         rcases hParts with ⟨hMain, _hNeDefault⟩
         rcases hMain with ⟨hEntries, _hOrdered⟩
         exact hEntries.1.2
-      have hm : __smtx_map_canonical m = true := by
+      have hm : __smtx_map_canonical uc m = true := by
         have hParts := hmCons
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         rcases hParts with ⟨hMain, _hNeDefault⟩
@@ -333,7 +335,7 @@ theorem map_update_aux_canonical_of_order_laws
       cases hEq : native_veq k i
       · cases hLt : native_vcmp k i
         · have hTailCanon :
-            __smtx_map_canonical
+            __smtx_map_canonical uc
               (__smtx_map_update_aux (__smtx_map_get_default m) m i e) = true :=
               map_update_aux_canonical_of_order_laws hFlip hTrans hm hi he
           have hOrdUpdated :
@@ -346,9 +348,9 @@ theorem map_update_aux_canonical_of_order_laws
                 (__smtx_map_update_aux (__smtx_map_get_default m) m i e) =
                   __smtx_map_get_default m :=
             map_update_aux_get_default (__smtx_map_get_default m) m i e
-          have hkBool : __smtx_value_canonical k = true := by
+          have hkBool : __smtx_value_canonical uc k = true := by
             simpa [value_canonical] using hk
-          have hvBool : __smtx_value_canonical v = true := by
+          have hvBool : __smtx_value_canonical uc v = true := by
             simpa [value_canonical] using hv
           simp [__smtx_map_update_aux, __smtx_map_get_default, native_ite, hEq,
             hLt, __smtx_map_canonical, hkBool, hvBool, hTailCanon,
@@ -366,10 +368,10 @@ theorem map_update_aux_canonical_of_order_laws
 theorem map_update_aux_canonical
     {m : SmtMap}
     {i e : SmtValue}
-    (hm : __smtx_map_canonical m = true)
-    (hi : value_canonical i)
-    (he : value_canonical e) :
-    __smtx_map_canonical
+    (hm : __smtx_map_canonical uc m = true)
+    (hi : value_canonical uc i)
+    (he : value_canonical uc e) :
+    __smtx_map_canonical uc
       (__smtx_map_update_aux (__smtx_map_get_default m) m i e) = true :=
   map_update_aux_canonical_of_order_laws
     (fun hNe hCmp => native_vcmp_flip hNe hCmp)
@@ -382,14 +384,14 @@ through to the map default.
 -/
 theorem map_lookup_eq_default_of_entries_ordered_after :
     ∀ {m : SmtMap} {i : SmtValue},
-      __smtx_map_canonical m = true ->
+      __smtx_map_canonical uc m = true ->
         __smtx_map_entries_ordered_after i m = true ->
           __smtx_map_lookup m i = __smtx_map_get_default m
   | SmtMap.default T e, i, _hm, _hOrd => by
       simp [__smtx_map_lookup, __smtx_map_get_default]
   | SmtMap.cons k v m, i, hmCons, hOrd => by
       have hki : native_veq k i = false := native_vcmp_ne hOrd
-      have hm : __smtx_map_canonical m = true := by
+      have hm : __smtx_map_canonical uc m = true := by
         have hParts := hmCons
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         rcases hParts with ⟨hMain, _hNeDefault⟩
@@ -413,7 +415,7 @@ provided the insertion point is ordered with respect to the tail.
 theorem map_lookup_update_aux_no_default_same
     {m : SmtMap}
     {i e : SmtValue}
-    (hm : __smtx_map_canonical m = true)
+    (hm : __smtx_map_canonical uc m = true)
     (hOrd : __smtx_map_entries_ordered_after i m = true) :
     __smtx_map_lookup
       (__smtx_map_update_aux_no_default (__smtx_map_get_default m) m i e) i = e := by
@@ -450,7 +452,7 @@ rules out duplicate keys hidden in the ordered tail.
 -/
 theorem map_lookup_update_aux_same
     : ∀ {m : SmtMap} {i e : SmtValue},
-      __smtx_map_canonical m = true ->
+      __smtx_map_canonical uc m = true ->
         __smtx_map_lookup
           (__smtx_map_update_aux (__smtx_map_get_default m) m i e) i = e
   | SmtMap.default T d, i, e, hm => by
@@ -458,7 +460,7 @@ theorem map_lookup_update_aux_same
         (m := SmtMap.default T d) (i := i) (e := e) hm
         (by simp [__smtx_map_entries_ordered_after])
   | SmtMap.cons k v m, i, e, hm => by
-      have hmTail : __smtx_map_canonical m = true := by
+      have hmTail : __smtx_map_canonical uc m = true := by
         have hParts := hm
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         rcases hParts with ⟨hMain, _hNeDefault⟩
@@ -495,7 +497,7 @@ The proof needs the same sorted-map uniqueness invariant as
 -/
 theorem map_lookup_update_aux_other
     : ∀ {m : SmtMap} {i j e : SmtValue},
-      __smtx_map_canonical m = true ->
+      __smtx_map_canonical uc m = true ->
         native_veq i j = false ->
           __smtx_map_lookup
             (__smtx_map_update_aux (__smtx_map_get_default m) m i e) j =
@@ -505,7 +507,7 @@ theorem map_lookup_update_aux_other
         (__smtx_map_get_default (SmtMap.default T d)) (SmtMap.default T d)
         (i := i) (j := j) (e := e) hij
   | SmtMap.cons k v m, i, j, e, hm, hij => by
-      have hmTail : __smtx_map_canonical m = true := by
+      have hmTail : __smtx_map_canonical uc m = true := by
         have hParts := hm
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         rcases hParts with ⟨hMain, _hNeDefault⟩
@@ -541,9 +543,9 @@ theorem map_lookup_update_aux_other
 theorem map_lookup_update_aux_overwrite
     {m : SmtMap}
     {i e f x : SmtValue}
-    (hm : __smtx_map_canonical m = true)
-    (hi : value_canonical i)
-    (he : value_canonical e) :
+    (hm : __smtx_map_canonical uc m = true)
+    (hi : value_canonical uc i)
+    (he : value_canonical uc e) :
     __smtx_map_lookup
         (__smtx_map_update_aux
           (__smtx_map_get_default
@@ -552,7 +554,7 @@ theorem map_lookup_update_aux_overwrite
       __smtx_map_lookup
         (__smtx_map_update_aux (__smtx_map_get_default m) m i f) x := by
   let m' := __smtx_map_update_aux (__smtx_map_get_default m) m i e
-  have hm' : __smtx_map_canonical m' = true := by
+  have hm' : __smtx_map_canonical uc m' = true := by
     simpa [m'] using map_update_aux_canonical (m := m) (i := i) (e := e) hm hi he
   cases hix : native_veq i x
   · calc
@@ -579,11 +581,11 @@ theorem map_lookup_update_aux_overwrite
 theorem map_lookup_update_aux_swap
     {m : SmtMap}
     {i j e f x : SmtValue}
-    (hm : __smtx_map_canonical m = true)
-    (hi : value_canonical i)
-    (hj : value_canonical j)
-    (he : value_canonical e)
-    (hf : value_canonical f)
+    (hm : __smtx_map_canonical uc m = true)
+    (hi : value_canonical uc i)
+    (hj : value_canonical uc j)
+    (he : value_canonical uc e)
+    (hf : value_canonical uc f)
     (hij : native_veq i j = false) :
     __smtx_map_lookup
         (__smtx_map_update_aux
@@ -597,9 +599,9 @@ theorem map_lookup_update_aux_swap
           (__smtx_map_update_aux (__smtx_map_get_default m) m j f) i e) x := by
   let mi := __smtx_map_update_aux (__smtx_map_get_default m) m i e
   let mj := __smtx_map_update_aux (__smtx_map_get_default m) m j f
-  have hmi : __smtx_map_canonical mi = true := by
+  have hmi : __smtx_map_canonical uc mi = true := by
     simpa [mi] using map_update_aux_canonical (m := m) (i := i) (e := e) hm hi he
-  have hmj : __smtx_map_canonical mj = true := by
+  have hmj : __smtx_map_canonical uc mj = true := by
     simpa [mj] using map_update_aux_canonical (m := m) (i := j) (e := f) hm hj hf
   cases hjx : native_veq j x
   · cases hix : native_veq i x
@@ -643,7 +645,7 @@ theorem map_lookup_update_aux_swap
 theorem map_lookup_update_aux_self
     {m : SmtMap}
     {i x : SmtValue}
-    (hm : __smtx_map_canonical m = true) :
+    (hm : __smtx_map_canonical uc m = true) :
     __smtx_map_lookup
         (__smtx_map_update_aux (__smtx_map_get_default m) m i
           (__smtx_map_lookup m i)) x =
@@ -663,8 +665,8 @@ tag stored in `SmtMap.default`.
 -/
 theorem map_ext_of_lookup_eq :
     ∀ {m1 m2 : SmtMap},
-      __smtx_map_canonical m1 = true ->
-        __smtx_map_canonical m2 = true ->
+      __smtx_map_canonical uc m1 = true ->
+        __smtx_map_canonical uc m2 = true ->
           smt_map_default_leaf m1 = smt_map_default_leaf m2 ->
             (∀ v : SmtValue, __smtx_map_lookup m1 v = __smtx_map_lookup m2 v) ->
               m1 = m2
@@ -707,15 +709,15 @@ theorem map_ext_of_lookup_eq :
       rw [hVeq] at hNeDefault
       cases hNeDefault
   | SmtMap.cons i e m, SmtMap.cons j f n, hm1, hm2, hDef, hLookup => by
-      have hiCanon : value_canonical i := by
+      have hiCanon : value_canonical uc i := by
         have hParts := hm1
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         exact hParts.1.1.1.1
-      have heCanon : value_canonical e := by
+      have heCanon : value_canonical uc e := by
         have hParts := hm1
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         exact hParts.1.1.1.2
-      have hm : __smtx_map_canonical m = true := by
+      have hm : __smtx_map_canonical uc m = true := by
         have hParts := hm1
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         exact hParts.1.1.2
@@ -727,15 +729,15 @@ theorem map_ext_of_lookup_eq :
         have hParts := hm1
         simp [__smtx_map_canonical, SmtEval.native_and, SmtEval.native_not] at hParts
         exact hParts.2
-      have hjCanon : value_canonical j := by
+      have hjCanon : value_canonical uc j := by
         have hParts := hm2
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         exact hParts.1.1.1.1
-      have hfCanon : value_canonical f := by
+      have hfCanon : value_canonical uc f := by
         have hParts := hm2
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         exact hParts.1.1.1.2
-      have hn : __smtx_map_canonical n = true := by
+      have hn : __smtx_map_canonical uc n = true := by
         have hParts := hm2
         simp [__smtx_map_canonical, SmtEval.native_and] at hParts
         exact hParts.1.1.2
@@ -825,8 +827,8 @@ theorem map_ext_of_lookup_eq :
 theorem model_eval_select_canonical_of_map
     {m : SmtMap}
     {i : SmtValue}
-    (hm : __smtx_map_canonical m = true) :
-    value_canonical
+    (hm : __smtx_map_canonical uc m = true) :
+    value_canonical uc
       (__smtx_model_eval_select (SmtValue.Map m) i) := by
   simpa [__smtx_model_eval_select, __smtx_map_select] using
     map_lookup_value_canonical (m := m) (i := i) hm
@@ -835,8 +837,8 @@ theorem model_eval_select_canonical_of_map
 theorem model_eval_select_canonical_of_set
     {m : SmtMap}
     {i : SmtValue}
-    (hm : __smtx_map_canonical m = true) :
-    value_canonical
+    (hm : __smtx_map_canonical uc m = true) :
+    value_canonical uc
       (__smtx_model_eval_select (SmtValue.Set m) i) := by
   simpa [__smtx_model_eval_select, __smtx_map_select] using
     map_lookup_value_canonical (m := m) (i := i) hm
@@ -844,16 +846,16 @@ theorem model_eval_select_canonical_of_set
 /-- Value-level select preserves canonicality of its map/set argument. -/
 theorem model_eval_select_canonical
     {v i : SmtValue}
-    (hv : value_canonical v) :
-    value_canonical (__smtx_model_eval_select v i) := by
+    (hv : value_canonical uc v) :
+    value_canonical uc (__smtx_model_eval_select v i) := by
   cases v <;>
     try
       simpa [__smtx_model_eval_select, __smtx_map_select] using
         value_canonical_notValue
-  · have hm : __smtx_map_canonical ‹SmtMap› = true := by
+  · have hm : __smtx_map_canonical uc ‹SmtMap› = true := by
       simpa [value_canonical, __smtx_value_canonical] using hv
     exact model_eval_select_canonical_of_map (m := ‹SmtMap›) (i := i) hm
-  · have hm : __smtx_map_canonical ‹SmtMap› = true := by
+  · have hm : __smtx_map_canonical uc ‹SmtMap› = true := by
       have hParts := hv
       simp [value_canonical, __smtx_value_canonical,
         SmtEval.native_and] at hParts

@@ -279,16 +279,16 @@ private theorem facts___eo_prog_array_read_over_write_split_impl
       __smtx_typeof (__eo_to_smt j1) = A :=
     TranslationProofs.eo_to_smt_typeof_matches_translation j1 hJ1Trans
   have hT1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt t1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t1 hT1Trans
   have hI1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt i1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt i1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM i1 hI1Trans
   have hE1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt e1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt e1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM e1 hE1Trans
   have hJ1Can :
-      value_canonical (__smtx_model_eval M (__eo_to_smt j1)) :=
+      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt j1)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM j1 hJ1Trans
   have hEvalT1Ty :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t1)) =
@@ -297,7 +297,7 @@ private theorem facts___eo_prog_array_read_over_write_split_impl
       (by simpa [RuleProofs.eo_has_smt_translation, term_has_non_none_type] using hT1Trans)]
     exact hSmtT1
   rcases Smtm.map_value_canonical hEvalT1Ty with ⟨m, hT1EvalMap⟩
-  have hMapCan : __smtx_map_canonical m = true := by
+  have hMapCan : __smtx_map_canonical M.usortCard m = true := by
     rw [hT1EvalMap] at hT1Can
     simpa [value_canonical, __smtx_value_canonical] using hT1Can
   have hARec : __smtx_type_wf_rec A = true :=
