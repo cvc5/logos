@@ -18,7 +18,7 @@ install/deps/                the Ethos tree and the compiler, ignored by git
 install/get-eo-compiler.sh                          # once
 install/install-cpc.sh ~/cvc5/proofs/eo/cpc/Cpc.eo  # regenerate Cpc
 scripts/build.sh Cpc                                # build the checker interface
-scripts/build.sh Cpc.Proofs.StaticTyping             # check model/static agreement
+scripts/build.sh Cpc.Proofs.StaticTyping             # check inhabitation against the model
 ```
 
 Passing the signature is the whole of a normal update. It can be any Eunoia
@@ -149,9 +149,8 @@ static typing, well-formedness, and the structural inhabitation check;
 model satisfiability. `Proofs/StaticTyping.lean` connects the inhabitation check
 to the semantic default generator for both packages.
 
-The checked-in Lean modules define this fixed layout. The EOC compiler needs
-to be updated to emit it directly; there is no installation-time splitting
-pass. The installer expects the new modules and checks that all are present
+The EOC compiler emits this layout directly; there is no installation-time
+splitting pass. The installer checks that all of the modules are present
 before copying any compiler output into a package.
 
 In practice they only need to change when a new theory symbol is added, when

@@ -136,8 +136,8 @@ theorem model_total_typed_push
 /--
 Datatype-default canonicity for the generated model.
 
-The `__smtx_inhabited_type` witness uniformly carries exactly this canonical
-default witness for datatype types.
+For a recursively well-formed datatype type, inhabitation gives a typed,
+canonical default (`type_default_typed`, `Proofs/StaticTyping.lean`).
 -/
 theorem datatype_type_default_typed_canonical_of_inhabited
     (s : native_String)

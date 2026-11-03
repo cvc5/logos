@@ -43,7 +43,7 @@ theorem type_inhabited_of_native_inhabited_type
     type_inhabited T :=
   ⟨__smtx_type_default T, type_default_typed T h hRec⟩
 
-/-- Extracts the concrete default witness carried by the generated Boolean inhabitation check. -/
+/-- On a recursively well-formed inhabited type, the default is a typed, canonical witness. -/
 theorem type_default_typed_canonical_of_native_inhabited_type
     (T : SmtType)
     (h : __smtx_inhabited_type T = true)

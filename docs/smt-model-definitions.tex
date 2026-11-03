@@ -1182,7 +1182,7 @@ def smt_is_finite_type (uc : Nat -> Nat) (T : SmtType) : Bool :=
 \begin{lstlisting}
 theorem finite_type_enumerable
     (uc : Nat -> Nat) (A : SmtType)
-    (hInh : inhabited_type A = true)
+    (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hFin : smt_is_finite_type uc A = true) :
     ∃ l : List SmtValue, ∀ v : SmtValue,
@@ -1191,7 +1191,7 @@ theorem finite_type_enumerable
 
 theorem fresh_typed_canonical_value_for_infinite_type
     (uc : Nat -> Nat) (A : SmtType)
-    (hInh : inhabited_type A = true)
+    (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hInfinite : smt_is_finite_type uc A = false)
     (avoid : List SmtValue) :
@@ -1202,7 +1202,7 @@ theorem fresh_typed_canonical_value_for_infinite_type
 
 theorem unit_type_values_default
     (uc : Nat -> Nat) (A : SmtType)
-    (hInh : inhabited_type A = true)
+    (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hUnit : smt_is_unit_type uc A = true) :
     ∀ v : SmtValue,
@@ -1212,7 +1212,7 @@ theorem unit_type_values_default
 
 theorem nonunit_typed_canonical_nondefault_value
     (uc : Nat -> Nat) (A : SmtType)
-    (hInh : inhabited_type A = true)
+    (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hNonUnit : smt_is_unit_type uc A = false) :
     ∃ e : SmtValue,
@@ -1322,11 +1322,11 @@ def smt_type_default : SmtType -> SmtValue
   | ... => ...
   | T => SmtValue.NotValue
 
-def inhabited_type : SmtType -> Bool
+def smt_inhabited_type : SmtType -> Bool
   | SmtType.None => false
   | (SmtType.TypeRef _) => false
   | (SmtType.DtcAppType _ _) => false
-  | (SmtType.Map _ U) => (inhabited_type U)
+  | (SmtType.Map _ U) => (smt_inhabited_type U)
   | (SmtType.Datatype s dd) => (smt_decl_inhabited s dd)
   | _ => true
 
@@ -1340,7 +1340,7 @@ def smt_dt_inhabited : SmtDatatype -> SmtDatatypeDecl -> Bool
 
 def smt_dt_cons_inhabited : SmtDatatypeCons -> SmtDatatypeDecl -> Bool
   | (SmtDatatypeCons.cons (SmtType.TypeRef s) c), ddF => ((smt_decl_inhabited s ddF) && (smt_dt_cons_inhabited c ddF))
-  | (SmtDatatypeCons.cons T c), ddF => ((inhabited_type T) && (smt_dt_cons_inhabited c ddF))
+  | (SmtDatatypeCons.cons T c), ddF => ((smt_inhabited_type T) && (smt_dt_cons_inhabited c ddF))
   | SmtDatatypeCons.unit, _ => true
 \end{lstlisting}
 \caption{Finite default value computation and type inhabitedness.}
@@ -1424,7 +1424,7 @@ front end rather than of the checker.
 A block that reaches these definitions in another order is rejected, and it is
 rejected \emph{as a whole}.
 Since \code{smt_decl_wf_rec} (Section~\ref{sec:type-wf}) requires
-\code{inhabited_type} of every datatype of the block, a single datatype whose
+\code{smt_inhabited_type} of every datatype of the block, a single datatype whose
 references all point earlier makes every type of the block ill-formed,
 including those datatypes that do have a default value.
 For example, of the two SMT-LIB declarations
@@ -1450,11 +1450,11 @@ Note also that the specification is not uniform in this respect.
 Finiteness of a datatype is decided by the fixpoint computation
 \code{smt_datatype_decl_bounded} described above, which does not depend on the
 order of the block, whereas inhabitedness is decided by the suffix walk shared
-by \code{smt_type_default} and \code{inhabited_type}, which does.
+by \code{smt_type_default} and \code{smt_inhabited_type}, which does.
 The two therefore disagree: for the block above written with \code{TreeList}
 first, \code{smt_is_finite_type} of a datatype of the block is unchanged by
-the reordering while \code{inhabited_type} of it becomes false.
-Reformulating \code{smt_type_default} and \code{inhabited_type} as fixpoints of the same shape, so that
+the reordering while \code{smt_inhabited_type} of it becomes false.
+Reformulating \code{smt_type_default} and \code{smt_inhabited_type} as fixpoints of the same shape, so that
 a reference resolves against the declarations already known to have a default
 value rather than against the suffix, would remove the ordering requirement;
 the cost is that the recursion is then no longer structural in the block, and
@@ -1475,7 +1475,7 @@ Uninterpreted sort values use a default natural number identifier,
 i.e. the first value of the uninterpreted sort's domain.
 
 In the figure, we also give a definition of inhabitedness for types
-via the method \code{inhabited_type}.
+via the method \code{smt_inhabited_type}.
 We define type inhabitedness structurally, following the shape of
 \code{smt_type_default} without constructing a value.
 Base types are inhabited, and the types \code{None}, \code{TypeRef} and
@@ -1494,10 +1494,10 @@ strictly later in the block, as in \code{smt_field_type_default}.
 \begin{figure}
 \begin{lstlisting}
 theorem native_inhabited_type_iff (T : SmtType) :
-    inhabited_type T = true ↔ smt_type_default T ≠ SmtValue.NotValue
+    smt_inhabited_type T = true ↔ smt_type_default T ≠ SmtValue.NotValue
 
 theorem type_default_typed (T : SmtType)
-    (hInh : inhabited_type T = true)
+    (hInh : smt_inhabited_type T = true)
     (hRec : smt_type_wf_rec T = true) :
     smt_typeof_value (smt_type_default T) = T
 \end{lstlisting}
@@ -1508,7 +1508,7 @@ theorem type_default_typed (T : SmtType)
 
 Figure~\ref{fig:inhabited-default} states the connection between the two
 definitions.
-First, \code{native_inhabited_type_iff} says that \code{inhabited_type T} holds
+First, \code{native_inhabited_type_iff} says that \code{smt_inhabited_type T} holds
 exactly when \code{smt_type_default} succeeds in constructing a value for
 \code{T}, i.e. returns a value other than \code{NotValue}.
 This holds for every type, including types whose declaration blocks are
@@ -1535,17 +1535,17 @@ this document.
 Note that any datatype that is not well-founded (i.e. does not have finite values)
 is not inhabited by this definition.
 The converse does not hold: as discussed above, \code{smt_type_default} also
-fails, and hence \code{inhabited_type} is false, on a well-founded datatype
+fails, and hence \code{smt_inhabited_type} is false, on a well-founded datatype
 whose declaration block is not in productive order.
-It is important to note that the definition of \code{inhabited_type}
+It is important to note that the definition of \code{smt_inhabited_type}
 could alternatively have been defined by a native Lean binder,
 i.e. a type is inhabited iff there exists a value having that type.
 However, this definition does not quite coincide with our desired notion,
 as it admits other types (e.g. datatypes with nested recursion) to be
-considered inhabited. Instead, \code{inhabited_type} captures exactly the
+considered inhabited. Instead, \code{smt_inhabited_type} captures exactly the
 types for which \code{smt_type_default} constructs a value.
 
-Defining \code{inhabited_type} without reference to values has a practical
+Defining \code{smt_inhabited_type} without reference to values has a practical
 purpose. Inhabitedness is part of type well-formedness, which the proof checker
 computes when checking side conditions. A structural definition lets the checker
 decide it without depending on the value datatype \code{SmtValue} or the model
@@ -1694,7 +1694,7 @@ and confirm that all values they are built from are also canonical.
 \begin{lstlisting}
 def smt_dt_cons_wf_rec (dd : SmtDatatypeDecl) : SmtDatatypeCons -> Bool
   | (SmtDatatypeCons.cons (SmtType.TypeRef s) c) => ((smt_dd_has_dt s dd) && (smt_dt_cons_wf_rec dd c))
-  | (SmtDatatypeCons.cons T c) => ((inhabited_type T) && (smt_type_wf_rec T) && (smt_dt_cons_wf_rec dd c))
+  | (SmtDatatypeCons.cons T c) => ((smt_inhabited_type T) && (smt_type_wf_rec T) && (smt_dt_cons_wf_rec dd c))
   | SmtDatatypeCons.unit => true
 
 def smt_dt_wf_rec (dd : SmtDatatypeDecl) : SmtDatatype -> Bool
@@ -1703,16 +1703,16 @@ def smt_dt_wf_rec (dd : SmtDatatypeDecl) : SmtDatatype -> Bool
 
 def smt_decl_wf_rec (dd : SmtDatatypeDecl) : SmtDatatypeDecl -> Bool
   | (SmtDatatypeDecl.cons s d ddF) =>
-      ((smt_dt_wf_rec dd d) && (inhabited_type (SmtType.Datatype s dd)) && (smt_decl_wf_rec dd ddF) && !(smt_dd_has_dt s ddF))
+      ((smt_dt_wf_rec dd d) && (smt_inhabited_type (SmtType.Datatype s dd)) && (smt_decl_wf_rec dd ddF) && !(smt_dd_has_dt s ddF))
   | SmtDatatypeDecl.nil => true
 
 def smt_type_wf_rec : SmtType -> Bool
   | (SmtType.Datatype s dd) => ((smt_dd_has_dt s dd) && (smt_decl_wf_rec dd dd))
   | (SmtType.TypeRef s) => false
-  | (SmtType.Seq x1) => ((inhabited_type x1) && (smt_type_wf_rec x1))
+  | (SmtType.Seq x1) => ((smt_inhabited_type x1) && (smt_type_wf_rec x1))
   | (SmtType.Map x1 x2) =>
-      ((inhabited_type x1) && (smt_type_wf_rec x1) && (inhabited_type x2) && (smt_type_wf_rec x2))
-  | (SmtType.Set x1) => ((inhabited_type x1) && (smt_type_wf_rec x1))
+      ((smt_inhabited_type x1) && (smt_type_wf_rec x1) && (smt_inhabited_type x2) && (smt_type_wf_rec x2))
+  | (SmtType.Set x1) => ((smt_inhabited_type x1) && (smt_type_wf_rec x1))
   | (SmtType.FunType x1 x2) => false
   | (SmtType.DtcAppType x1 x2) => false
   | SmtType.None => false
@@ -1720,7 +1720,7 @@ def smt_type_wf_rec : SmtType -> Bool
   | U => true
 
 def smt_type_wf_component (T : SmtType) : Bool :=
-  (inhabited_type T) && (smt_type_wf_rec T)
+  (smt_inhabited_type T) && (smt_type_wf_rec T)
 
 def smt_type_wf : SmtType -> Bool
   | SmtType.RegLan => true
@@ -1775,7 +1775,7 @@ At a high level, the method ensures that non-first-class types such as
 regular expressions, functions, and partially applied datatype constructors
 do not occur as component types.
 It also ensures that \emph{every} field of every constructor of a datatype
-is inhabited and well-formed, whereas note that \code{inhabited_type}
+is inhabited and well-formed, whereas note that \code{smt_inhabited_type}
 only requires that \emph{some} constructor is inhabited.
 
 For a datatype type \code{(Datatype s dd)},

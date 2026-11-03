@@ -32,7 +32,12 @@ generator but never builds a value. `Proofs/StaticTyping` connects the two:
 `native_inhabited_type_iff` says the check succeeds exactly when the generator
 constructs a value, for every type including malformed datatype declarations,
 and `type_default_typed` says that on a recursively well-formed type
-(`__smtx_type_wf_rec`) that value has the requested type.
+(`__smtx_type_wf_rec`) that value has the requested type. These proofs, and
+the canonicity proof in `Proofs/Canonical/TypeDefaultBasic.lean`, use
+`type_default_induct`, an induction principle for the generator proved in
+`Proofs/StaticTyping`. Its motives are named, so the proofs do not depend on the
+order in which the compiler emits the generator's definitions, which decides
+the order of the motives of the `.induct` principle Lean derives.
 
 `scripts/check-checker-boundary.py` audits both executable import closures. With
 `--build` it copies only checker sources and the root Lake configuration to a
