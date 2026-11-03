@@ -32,8 +32,7 @@ generator but never builds a value. `Proofs/StaticTyping` connects the two:
 `native_inhabited_type_iff` says the check succeeds exactly when the generator
 constructs a value, for every type including malformed datatype declarations,
 and `type_default_typed` says that on a recursively well-formed type
-(`__smtx_type_wf_rec`) that value has the requested type. The default generator
-has its own mutual block with a stable induction principle across signatures.
+(`__smtx_type_wf_rec`) that value has the requested type.
 
 `scripts/check-checker-boundary.py` audits both executable import closures. With
 `--build` it copies only checker sources and the root Lake configuration to a

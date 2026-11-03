@@ -246,9 +246,6 @@ decreasing_by
   all_goals simp_wf
   all_goals omega
 
-end
-
-mutual
 
 def __smtx_typeof_seq_value : SmtSeq -> SmtType
   | (SmtSeq.cons v vs) =>
