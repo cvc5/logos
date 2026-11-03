@@ -101,7 +101,7 @@ private theorem native_model_push_same
     native_model_push (native_model_push M s T v) s T w =
       native_model_push M s T w := by
   cases M with
-  | mk values nativeFuns =>
+  | mk values nativeFuns usortCard =>
       change
         SmtModel.mk
             (fun k =>
@@ -109,12 +109,12 @@ private theorem native_model_push_same
               else
                 (if k = ({ isVar := true, name := s, ty := T } : SmtModelKey) then v
                 else values k))
-            nativeFuns =
+            nativeFuns usortCard =
           SmtModel.mk
             (fun k =>
               if k = ({ isVar := true, name := s, ty := T } : SmtModelKey) then w
               else values k)
-            nativeFuns
+            nativeFuns usortCard
       congr
       funext k
       by_cases hk : k = ({ isVar := true, name := s, ty := T } : SmtModelKey)
@@ -130,7 +130,7 @@ private theorem native_model_push_comm
     native_model_push (native_model_push M s1 T1 v1) s2 T2 v2 =
       native_model_push (native_model_push M s2 T2 v2) s1 T1 v1 := by
   cases M with
-  | mk values nativeFuns =>
+  | mk values nativeFuns usortCard =>
       change
         SmtModel.mk
             (fun k =>
@@ -138,14 +138,14 @@ private theorem native_model_push_comm
               else
                 (if k = ({ isVar := true, name := s1, ty := T1 } : SmtModelKey) then v1
                 else values k))
-            nativeFuns =
+            nativeFuns usortCard =
           SmtModel.mk
             (fun k =>
               if k = ({ isVar := true, name := s1, ty := T1 } : SmtModelKey) then v1
               else
                 (if k = ({ isVar := true, name := s2, ty := T2 } : SmtModelKey) then v2
                 else values k))
-            nativeFuns
+            nativeFuns usortCard
       congr
       funext k
       by_cases h1 : k = ({ isVar := true, name := s1, ty := T1 } : SmtModelKey)
@@ -255,7 +255,9 @@ private theorem smtExistsOfBinders_swap
         simpa [native_model_push_comm M s1 s2 T1 T2 v1 v2 hKey] using
           hEval
   have hPropEq : P = Q := propext hPQ
-  simp [smtExistsOfBinders, __smtx_model_eval, P, Q, rest, hPropEq]
+  have hCard (M : SmtModel) (s : native_String) (T : SmtType) (v : SmtValue) :
+      (native_model_push M s T v).usortCard = M.usortCard := rfl
+  simp [smtExistsOfBinders, __smtx_model_eval, hCard, P, Q, rest, hPropEq]
 
 private theorem smtExistsOfBinders_eval_perm
     (body : SmtTerm) {xs ys : List QuantBinder}
