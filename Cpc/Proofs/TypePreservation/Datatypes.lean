@@ -832,8 +832,8 @@ theorem apply_arg_nth_type_of_non_none :
               exact hEq'.symm
             · simp [__smtx_typeof_apply_value, __smtx_typeof_guard, native_ite, hRNone, hEq] at hTyEq
               exact (hSuccNN hTyEq.symm).elim
-        have hcond : SmtEval.native_nateq (vsm_num_apply_args f) (vsm_num_apply_args f) = true := by
-          simp [SmtEval.native_nateq]
+        have hcond : native_nateq (vsm_num_apply_args f) (vsm_num_apply_args f) = true := by
+          simp [native_nateq]
         simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, native_ite, hcond] using hArgTy
       · have hjSucc : j < Nat.succ (vsm_num_apply_args f) := by
           simpa [vsm_num_apply_args] using hj
@@ -844,8 +844,8 @@ theorem apply_arg_nth_type_of_non_none :
               exact False.elim (hLast hEq)
           | inr hLt =>
               exact hLt
-        have hcond : SmtEval.native_nateq j (vsm_num_apply_args f) = false := by
-          simp [SmtEval.native_nateq, hLast]
+        have hcond : native_nateq j (vsm_num_apply_args f) = false := by
+          simp [native_nateq, hLast]
         simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, native_ite, hcond] using
           apply_arg_nth_type_of_non_none hHeadF hFunNN hj'
 
