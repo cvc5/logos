@@ -41,49 +41,49 @@ private theorem smtx_type_field_wf_rec_ne_none
   simp [smtx_type_field_wf_rec, __smtx_type_wf_rec] at h
 
 @[simp] private theorem native_inhabited_type_bool_apply :
-    native_inhabited_type SmtType.Bool = true :=
+    __smtx_inhabited_type SmtType.Bool = true :=
   native_inhabited_type_bool
 
 @[simp] private theorem native_inhabited_type_int_apply :
-    native_inhabited_type SmtType.Int = true :=
+    __smtx_inhabited_type SmtType.Int = true :=
   native_inhabited_type_int
 
 @[simp] private theorem native_inhabited_type_real_apply :
-    native_inhabited_type SmtType.Real = true :=
+    __smtx_inhabited_type SmtType.Real = true :=
   native_inhabited_type_real
 
 @[simp] private theorem native_inhabited_type_reglan_apply :
-    native_inhabited_type SmtType.RegLan = true :=
+    __smtx_inhabited_type SmtType.RegLan = true :=
   native_inhabited_type_reglan
 
 @[simp] private theorem native_inhabited_type_char_apply :
-    native_inhabited_type SmtType.Char = true :=
+    __smtx_inhabited_type SmtType.Char = true :=
   native_inhabited_type_char
 
 @[simp] private theorem native_inhabited_type_usort_apply
     (i : native_Nat) :
-    native_inhabited_type (SmtType.USort i) = true :=
+    __smtx_inhabited_type (SmtType.USort i) = true :=
   native_inhabited_type_usort i
 
 @[simp] private theorem native_inhabited_type_typeref_apply
     (s : native_String) :
-    native_inhabited_type (SmtType.TypeRef s) = false := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type (SmtType.TypeRef s) = false := by
+  simp [__smtx_inhabited_type]
 
 @[simp] private theorem native_inhabited_type_seq_apply
     (T : SmtType) :
-    native_inhabited_type (SmtType.Seq T) = true :=
+    __smtx_inhabited_type (SmtType.Seq T) = true :=
   native_inhabited_type_seq T
 
 @[simp] private theorem native_inhabited_type_set_apply
     (T : SmtType) :
-    native_inhabited_type (SmtType.Set T) = true :=
+    __smtx_inhabited_type (SmtType.Set T) = true :=
   native_inhabited_type_set T
 
 @[simp] theorem native_inhabited_type_bitvec_apply
     (w : native_Nat) :
-    native_inhabited_type (SmtType.BitVec w) = true := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type (SmtType.BitVec w) = true := by
+  simp [__smtx_inhabited_type]
 
 /-- Simplifies EO-to-SMT translation for `typeof_matches_translation_apply_concat`. -/
 private theorem eo_to_smt_typeof_matches_translation_apply_concat
@@ -3044,13 +3044,13 @@ private theorem smtx_type_field_wf_of_full_cons_wf
     (h : __smtx_dt_cons_wf_rec (SmtDatatypeCons.cons TF cF) (SmtDatatypeCons.cons T cU) = true) :
     __smtx_type_wf_rec TF T = true := by
   have hgen : __smtx_dt_cons_wf_rec (SmtDatatypeCons.cons TF cF) (SmtDatatypeCons.cons T cU) =
-      native_ite (native_and (native_inhabited_type TF) (__smtx_type_wf_rec TF T))
+      native_ite (native_and (__smtx_inhabited_type TF) (__smtx_type_wf_rec TF T))
         (__smtx_dt_cons_wf_rec cF cU) false := by
     cases T with
     | TypeRef s => exact absurd rfl (hNotRef s)
     | _ => simp [__smtx_dt_cons_wf_rec]
   rw [hgen] at h
-  cases hb : native_and (native_inhabited_type TF) (__smtx_type_wf_rec TF T) with
+  cases hb : native_and (__smtx_inhabited_type TF) (__smtx_type_wf_rec TF T) with
   | false => rw [hb] at h; exact absurd h (by simp [native_ite])
   | true => simp only [native_and, Bool.and_eq_true] at hb; exact hb.2
 
@@ -3476,7 +3476,7 @@ Substituting a fixed datatype for its recursive reference preserves datatype
 well-formedness for a target datatype.
 
 The remaining hard case is semantic rather than list-shaped: a nested datatype
-field produces a fresh `native_inhabited_type` obligation for the substituted
+field produces a fresh `__smtx_inhabited_type` obligation for the substituted
 datatype, so the proof needs inhabitance preservation for datatype substitution.
 -/
 
@@ -3952,22 +3952,22 @@ private theorem smtx_type_fun_like_domains_no_reglan_of_wf_rec :
       U ≠ SmtType.RegLan ∧ smtx_type_fun_like_domains_no_reglan U
   | SmtType.Map A B, UF, h => by
       have hParts :
-          ((native_inhabited_type A = true ∧ __smtx_type_wf_rec A A = true) ∧
+          ((__smtx_inhabited_type A = true ∧ __smtx_type_wf_rec A A = true) ∧
             __smtx_type_no_alias_rec native_reflist_nil A = true) ∧
-            (native_inhabited_type B = true ∧ __smtx_type_wf_rec B B = true) ∧
+            (__smtx_inhabited_type B = true ∧ __smtx_type_wf_rec B B = true) ∧
               __smtx_type_no_alias_rec native_reflist_nil B = true := by
         simpa [__smtx_type_wf_rec, native_and] using h
       have hA := smtx_type_fun_like_domains_no_reglan_of_wf_rec A A hParts.1.1.2
       have hB := smtx_type_fun_like_domains_no_reglan_of_wf_rec B B hParts.2.1.2
       exact ⟨by simp, hA.2, hB.2⟩
   | SmtType.Set A, UF, h => by
-      have hA' : (native_inhabited_type A = true ∧ __smtx_type_wf_rec A A = true) ∧
+      have hA' : (__smtx_inhabited_type A = true ∧ __smtx_type_wf_rec A A = true) ∧
           __smtx_type_no_alias_rec native_reflist_nil A = true := by
         simpa [__smtx_type_wf_rec, native_and] using h
       have hA := smtx_type_fun_like_domains_no_reglan_of_wf_rec A A hA'.1.2
       exact ⟨by simp, hA.2⟩
   | SmtType.Seq A, UF, h => by
-      have hA' : (native_inhabited_type A = true ∧ __smtx_type_wf_rec A A = true) ∧
+      have hA' : (__smtx_inhabited_type A = true ∧ __smtx_type_wf_rec A A = true) ∧
           __smtx_type_no_alias_rec native_reflist_nil A = true := by
         simpa [__smtx_type_wf_rec, native_and] using h
       have hA := smtx_type_fun_like_domains_no_reglan_of_wf_rec A A hA'.1.2
@@ -3996,14 +3996,14 @@ private theorem smtx_cons_wf_head_wf_rec
     __smtx_type_wf_rec UF U = true := by
   have hgen :
       __smtx_dt_cons_wf_rec (SmtDatatypeCons.cons UF cFtl) (SmtDatatypeCons.cons U c) =
-        native_ite (native_and (native_inhabited_type UF) (__smtx_type_wf_rec UF U))
+        native_ite (native_and (__smtx_inhabited_type UF) (__smtx_type_wf_rec UF U))
           (__smtx_dt_cons_wf_rec cFtl c) false := by
     cases U with
     | TypeRef s => exact absurd rfl (hNotRef s)
     | _ => cases UF <;> rfl
   rw [hgen] at h
   by_cases hcond :
-      native_and (native_inhabited_type UF) (__smtx_type_wf_rec UF U) = true
+      native_and (__smtx_inhabited_type UF) (__smtx_type_wf_rec UF U) = true
   · simp only [native_and, Bool.and_eq_true] at hcond; exact hcond.2
   · rw [native_ite, ite_eq_right (by simpa using hcond)] at h
     exact absurd h (by simp)
@@ -8271,7 +8271,7 @@ private theorem eo_to_smt_type_tuple_eq_tuple_datatype_of_wf
           cases rest with
           | null =>
               by_cases hComp :
-                  (native_inhabited_type A = true ∧
+                  (__smtx_inhabited_type A = true ∧
                     __smtx_type_wf_rec A A = true) ∧
                       __smtx_type_no_alias_rec native_reflist_nil A = true
               · exact ⟨
@@ -9719,7 +9719,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_tuple_of_tail_type
     smtx_tuple_head_wf_component_of_wf headTy c hHeadNotTupleRef
       (by simpa [fullDD, fullD] using hFullWfForRaw)
   have hHeadParts :
-      native_inhabited_type headTy = true ∧ __smtx_type_wf_rec headTy = true :=
+      __smtx_inhabited_type headTy = true ∧ __smtx_type_wf_rec headTy = true :=
     Smtm.smtx_type_wf_component_parts hHeadComp
   have hRaw :
       __eo_to_smt_type_tuple headTy (__eo_to_smt_type (__eo_typeof x)) =
@@ -9851,7 +9851,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_tuple_of_tail_type
                 (__smtx_dtc_substitute (native_string_lit "@Tuple") fullD c))
               (SmtDatatypeCons.cons headTy c) =
             native_ite
-              (native_and (native_inhabited_type headTy) (__smtx_type_wf_rec headTy headTy))
+              (native_and (__smtx_inhabited_type headTy) (__smtx_type_wf_rec headTy headTy))
               (__smtx_dt_cons_wf_rec
                 (__smtx_dtc_substitute (native_string_lit "@Tuple") fullD c) c)
               false := by
@@ -9860,13 +9860,13 @@ private theorem eo_to_smt_typeof_matches_translation_apply_tuple_of_tail_type
         | _ => simp [__smtx_dt_cons_wf_rec]
       rw [hgen] at hConsWf
       cases hb :
-          native_and (native_inhabited_type headTy) (__smtx_type_wf_rec headTy headTy) with
+          native_and (__smtx_inhabited_type headTy) (__smtx_type_wf_rec headTy headTy) with
       | false => rw [hb] at hConsWf; exact absurd hConsWf (by simp [native_ite])
       | true =>
           simp only [native_and, Bool.and_eq_true] at hb
           exact Smtm.smtx_type_wf_component_of_parts hb.1 hb.2 hHeadNA
     have hHeadParts :
-        native_inhabited_type headTy = true ∧
+        __smtx_inhabited_type headTy = true ∧
           __smtx_type_wf_rec headTy headTy = true :=
       Smtm.smtx_type_wf_component_parts hHeadComp
     simp [headTy, tailD, fullD, hXTailType, __eo_to_smt_type_tuple,

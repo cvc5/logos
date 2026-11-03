@@ -132,16 +132,16 @@ private theorem eo_seq_type_eq_of_wf (U : Term)
   generalize hA : __eo_to_smt_type U = A at hWF ⊢
   cases A <;> simp [__smtx_typeof_guard, native_ite, native_Teq,
     __smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
-    native_inhabited_type, native_and] at hWF ⊢
+    __smtx_inhabited_type, native_and] at hWF ⊢
 
 private theorem seq_elem_wf_parts_of_seq_wf {A : SmtType} :
     __smtx_type_wf (SmtType.Seq A) = true ->
-    native_inhabited_type A = true ∧
+    __smtx_inhabited_type A = true ∧
       __smtx_type_wf_rec A = true := by
   intro h
   have hAll :
-      native_inhabited_type (SmtType.Seq A) = true ∧
-        (native_inhabited_type A = true ∧
+      __smtx_inhabited_type (SmtType.Seq A) = true ∧
+        (__smtx_inhabited_type A = true ∧
           __smtx_type_wf_rec A = true) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and] using h

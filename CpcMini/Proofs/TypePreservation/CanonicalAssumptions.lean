@@ -24,7 +24,7 @@ recursive datatype well-formedness hypothesis.
 theorem cpcmini_datatype_type_default_typed_canonical_assumption
     (s : native_String)
     (d : SmtDatatypeDecl)
-    (_hInh : native_inhabited_type (SmtType.Datatype s d) = true)
+    (_hInh : __smtx_inhabited_type (SmtType.Datatype s d) = true)
     (_hRec : __smtx_type_wf_rec (SmtType.Datatype s d) = true) :
       __smtx_typeof_value (__smtx_type_default (SmtType.Datatype s d)) =
         SmtType.Datatype s d ∧

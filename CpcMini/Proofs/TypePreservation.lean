@@ -815,7 +815,7 @@ private theorem tp_type_wf_parts_of_wf_ne_reglan
     (hWf : __smtx_type_wf T = true)
     (hNe : T ≠ SmtType.RegLan)
     (hNeFun : ∀ A B : SmtType, T ≠ SmtType.FunType A B) :
-    native_inhabited_type T = true ∧
+    __smtx_inhabited_type T = true ∧
       __smtx_type_wf_rec T = true := by
   cases T <;> simp [__smtx_type_wf, native_and] at hWf hNe ⊢
   case FunType A B =>
@@ -891,23 +891,23 @@ theorem dt_sel_wrong_map_type_wf_of_non_none
       tp_ret_typeof_sel_ne_funtype_of_datatype_wf
         (s := s) (d := d) (i := i) (j := j) hDTWf A B
   have hRParts :
-      native_inhabited_type R = true ∧ __smtx_type_wf_rec R = true :=
+      __smtx_inhabited_type R = true ∧ __smtx_type_wf_rec R = true :=
     tp_type_wf_parts_of_wf_ne_reglan hRWf hRNe hRNeFun
   have hDTParts :
-      native_inhabited_type D = true ∧ __smtx_type_wf_rec D = true :=
+      __smtx_inhabited_type D = true ∧ __smtx_type_wf_rec D = true :=
     tp_type_wf_parts_of_wf_ne_reglan hDTWf (by simp [D]) (by
       intro A B h
       simp [D] at h)
-  have hM3Inh : native_inhabited_type M3 = true :=
+  have hM3Inh : __smtx_inhabited_type M3 = true :=
     native_inhabited_type_map hRParts.1
   have hM3Rec : __smtx_type_wf_rec M3 = true := by
     simp [M3, __smtx_type_wf_rec, native_and, hDTParts.1,
       hDTParts.2, hRParts.1, hRParts.2]
-  have hM2Inh : native_inhabited_type M2 = true :=
+  have hM2Inh : __smtx_inhabited_type M2 = true :=
     native_inhabited_type_map hM3Inh
   have hM2Rec : __smtx_type_wf_rec M2 = true := by
     simp [M2, __smtx_type_wf_rec, native_and, hM3Inh, hM3Rec]
-  have hM1Inh : native_inhabited_type M1 = true :=
+  have hM1Inh : __smtx_inhabited_type M1 = true :=
     native_inhabited_type_map hM2Inh
   have hM1Rec : __smtx_type_wf_rec M1 = true := by
     simp [M1, __smtx_type_wf_rec, native_and, hM2Inh, hM2Rec]

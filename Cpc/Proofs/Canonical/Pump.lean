@@ -580,7 +580,7 @@ theorem decl_wf_rec_inh
     (s : native_String) (dd : SmtDatatypeDecl) :
     ∀ dd2, __smtx_dd_has_dt s dd2 = true →
       __smtx_decl_wf_rec dd dd2 = true →
-      native_inhabited_type (SmtType.Datatype s dd) = true
+      __smtx_inhabited_type (SmtType.Datatype s dd) = true
   | SmtDatatypeDecl.nil, hHas, _ => by
       simp [__smtx_dd_has_dt] at hHas
   | SmtDatatypeDecl.cons s2 d2 dd2, hHas, h => by
@@ -618,7 +618,7 @@ theorem resolved_field_inh_wf
     (dd : SmtDatatypeDecl) (hDecl : __smtx_decl_wf_rec dd dd = true) :
     ∀ (c : SmtDatatypeCons), __smtx_dt_cons_wf_rec dd c = true ->
       ∀ F ∈ dtc_fields c,
-        native_inhabited_type (resolve_ty dd F) = true ∧
+        __smtx_inhabited_type (resolve_ty dd F) = true ∧
           __smtx_type_wf_rec (resolve_ty dd F) = true
   | SmtDatatypeCons.unit, _, F, hF => by
       simp [dtc_fields] at hF
@@ -862,7 +862,7 @@ def defaults_of : List SmtType -> List SmtValue
 theorem list_typed_canonical_defaults :
     ∀ Us : List SmtType,
       (∀ U ∈ Us,
-        native_inhabited_type U = true ∧ __smtx_type_wf_rec U = true) ->
+        __smtx_inhabited_type U = true ∧ __smtx_type_wf_rec U = true) ->
       list_typed_canonical uc (defaults_of Us) Us
   | [], _ => by
       simp [defaults_of, list_typed_canonical]
@@ -872,7 +872,7 @@ theorem list_typed_canonical_defaults :
       have hNone : U ≠ SmtType.None := by
         intro hEq
         subst U
-        simp [native_inhabited_type, native_Teq, native_not, native_and] at hU
+        simp [__smtx_inhabited_type, native_Teq, native_not, native_and] at hU
       refine ⟨⟨hKernel.1, hNone, hKernel.2⟩, ?_⟩
       exact list_typed_canonical_defaults Us (fun V hV => hWf V (by simp [hV]))
 
@@ -906,18 +906,18 @@ theorem veq_refl_true (a : SmtValue) : native_veq a a = true := by
 
 private theorem type_default_typed_canonical_p
     {T : SmtType}
-    (hInh : native_inhabited_type T = true)
+    (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
       __smtx_value_canonical uc (__smtx_type_default T) = true :=
   type_default_kernel T hInh hRec
 
 theorem ne_none_of_inh {T : SmtType}
-    (h : native_inhabited_type T = true) : T ≠ SmtType.None :=
+    (h : __smtx_inhabited_type T = true) : T ≠ SmtType.None :=
   native_inhabited_type_ne_none h
 
 theorem default_ne_notValue_of_inh {T : SmtType}
-    (hInh : native_inhabited_type T = true) :
+    (hInh : __smtx_inhabited_type T = true) :
     __smtx_type_default T ≠ SmtValue.NotValue :=
   (native_inhabited_type_iff T).1 hInh
 
@@ -935,7 +935,7 @@ private theorem infinite_datatype_unbounded_constructor
       __smtx_typeof_value (SmtValue.DtCons s dd k) =
         dtc_chain_type (SmtType.Datatype s dd) (preU ++ X :: postU) ∧
       (∀ U ∈ preU ++ X :: postU,
-        native_inhabited_type U = true ∧ __smtx_type_wf_rec U = true) ∧
+        __smtx_inhabited_type U = true ∧ __smtx_type_wf_rec U = true) ∧
       __smtx_is_finite_type uc X = false := by
   have hRecParts :
       __smtx_dd_has_dt s dd = true ∧ __smtx_decl_wf_rec dd dd = true := by
@@ -991,7 +991,7 @@ and pads the remaining fields with defaults.
 
 private def LargeOracle (uc : native_Nat -> native_Nat) (n : Nat) : Prop :=
   ∀ (s : native_String) (dd : SmtDatatypeDecl),
-    native_inhabited_type (SmtType.Datatype s dd) = true →
+    __smtx_inhabited_type (SmtType.Datatype s dd) = true →
     __smtx_type_wf_rec (SmtType.Datatype s dd) = true →
     __smtx_is_finite_type uc (SmtType.Datatype s dd) = false →
     ∃ v : SmtValue,
@@ -1105,7 +1105,7 @@ private theorem smt_seq_repeat_size_ge_p
 
 private theorem seq_large_witness_p
     (T : SmtType)
-    (hInh : native_inhabited_type T = true)
+    (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true)
     (minSize : Nat) :
     ∃ i : SmtValue,
@@ -1833,7 +1833,7 @@ theorem constructor_default_spine
         __smtx_apply_head_value v = SmtValue.DtCons s dd k := by
   have hWfAll :
       ∀ U ∈ (dtc_fields c).map (resolve_ty dd),
-        native_inhabited_type U = true ∧ __smtx_type_wf_rec U = true := by
+        __smtx_inhabited_type U = true ∧ __smtx_type_wf_rec U = true := by
     intro U hU
     rcases List.mem_map.mp hU with ⟨F', hF'mem, hF'eq⟩
     rw [← hF'eq]
@@ -1852,7 +1852,7 @@ mutual
 /-- Non-default typed canonical value of a finite non-unit datatype. -/
 private theorem dt_nondefault
     (s : native_String) (dd : SmtDatatypeDecl)
-    (hInh : native_inhabited_type (SmtType.Datatype s dd) = true)
+    (hInh : __smtx_inhabited_type (SmtType.Datatype s dd) = true)
     (hRec : __smtx_type_wf_rec (SmtType.Datatype s dd) = true)
     (hFinite : __smtx_is_finite_type uc (SmtType.Datatype s dd) = true)
     (hNonUnit : __smtx_is_unit_type uc (SmtType.Datatype s dd) = false) :
@@ -2075,7 +2075,7 @@ private theorem dt_nondefault
             simp
           have hPreWf :
               ∀ U ∈ pre.map (resolve_ty dd),
-                native_inhabited_type U = true ∧
+                __smtx_inhabited_type U = true ∧
                   __smtx_type_wf_rec U = true := by
             intro U hU
             rcases List.mem_map.mp hU with ⟨F', hF'mem, hF'eq⟩
@@ -2084,7 +2084,7 @@ private theorem dt_nondefault
               (by rw [hFields]; simp [hF'mem])
           have hPostWf :
               ∀ U ∈ post.map (resolve_ty dd),
-                native_inhabited_type U = true ∧
+                __smtx_inhabited_type U = true ∧
                   __smtx_type_wf_rec U = true := by
             intro U hU
             rcases List.mem_map.mp hU with ⟨F', hF'mem, hF'eq⟩
@@ -2145,7 +2145,7 @@ decreasing_by
 /-- Non-default typed canonical value of a finite non-unit type. -/
 private theorem ty_nondefault
     (A : SmtType)
-    (_hInh : native_inhabited_type A = true)
+    (_hInh : __smtx_inhabited_type A = true)
     (_hRec : __smtx_type_wf_rec A = true)
     (_hFinite : __smtx_is_finite_type uc A = true)
     (_hNonUnit : __smtx_is_unit_type uc A = false) :
@@ -2178,9 +2178,9 @@ private theorem ty_nondefault
               bitvec_succ_one_ne_default_p w⟩
   | Map T U =>
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true ∧
-              native_inhabited_type U = true ∧
+              __smtx_inhabited_type U = true ∧
                 __smtx_type_wf_rec U = true := by
         have h := _hRec
         simp [__smtx_type_wf_rec, native_and] at h
@@ -2224,7 +2224,7 @@ private theorem ty_nondefault
         simp [native_ite, native_veq, hUNV]
   | Set T =>
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true := by
         have h := _hRec
         simp [__smtx_type_wf_rec, native_and] at h
@@ -2288,7 +2288,7 @@ default.
 -/
 theorem finite_nonunit_datatype_nondefault_value
     (s : native_String) (dd : SmtDatatypeDecl)
-    (hInh : native_inhabited_type (SmtType.Datatype s dd) = true)
+    (hInh : __smtx_inhabited_type (SmtType.Datatype s dd) = true)
     (hRec : __smtx_type_wf_rec (SmtType.Datatype s dd) = true)
     (hFinite : __smtx_is_finite_type uc (SmtType.Datatype s dd) = true)
     (hNonUnit : __smtx_is_unit_type uc (SmtType.Datatype s dd) = false) :
@@ -2304,7 +2304,7 @@ different from its default.
 -/
 private theorem finite_nonunit_nondefault
     (A : SmtType)
-    (_hInh : native_inhabited_type A = true)
+    (_hInh : __smtx_inhabited_type A = true)
     (_hRec : __smtx_type_wf_rec A = true)
     (_hFinite : __smtx_is_finite_type uc A = true)
     (_hNonUnit : __smtx_is_unit_type uc A = false) :
@@ -2338,9 +2338,9 @@ private theorem finite_nonunit_nondefault
               bitvec_succ_one_ne_default_p w⟩
   | Map T U =>
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true ∧
-              native_inhabited_type U = true ∧
+              __smtx_inhabited_type U = true ∧
                 __smtx_type_wf_rec U = true := by
         have h := _hRec
         simp [__smtx_type_wf_rec, native_and] at h
@@ -2385,7 +2385,7 @@ private theorem finite_nonunit_nondefault
         simp [native_ite, native_veq, hUNV]
   | Set T =>
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true := by
         have h := _hRec
         simp [__smtx_type_wf_rec, native_and] at h
@@ -2434,7 +2434,7 @@ termination_by sizeOf A
 
 private theorem type_large
     (n : Nat) (hO : LargeOracle uc n) (A : SmtType) :
-    native_inhabited_type A = true →
+    __smtx_inhabited_type A = true →
     __smtx_type_wf_rec A = true →
     __smtx_is_finite_type uc A = false →
     ∃ v : SmtValue,
@@ -2466,9 +2466,9 @@ private theorem type_large
   | Map T U =>
       intro hInh hRec hInf
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true ∧
-              native_inhabited_type U = true ∧
+              __smtx_inhabited_type U = true ∧
                 __smtx_type_wf_rec U = true := by
         have h := hRec
         simp [__smtx_type_wf_rec, native_and] at h
@@ -2569,7 +2569,7 @@ private theorem type_large
   | Set T =>
       intro hInh hRec hInf
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true := by
         have h := hRec
         simp [__smtx_type_wf_rec, native_and] at h
@@ -2600,7 +2600,7 @@ private theorem type_large
   | Seq T =>
       intro hInh hRec _hInf
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true := by
         have h := hRec
         simp [__smtx_type_wf_rec, native_and] at h
@@ -2644,12 +2644,12 @@ private theorem oracle_succ (n : Nat) (hO : LargeOracle uc n) :
   rcases type_large n hO X hXWf.1 hXWf.2 hXInf with ⟨w, hwTy, hwCan, hwSize⟩
   have hXNone : X ≠ SmtType.None := ne_none_of_inh hXWf.1
   have hPreWf :
-      ∀ U ∈ preU, native_inhabited_type U = true ∧
+      ∀ U ∈ preU, __smtx_inhabited_type U = true ∧
         __smtx_type_wf_rec U = true := by
     intro U hU
     exact hAllWf U (by simp [hU])
   have hPostWf :
-      ∀ U ∈ postU, native_inhabited_type U = true ∧
+      ∀ U ∈ postU, __smtx_inhabited_type U = true ∧
         __smtx_type_wf_rec U = true := by
     intro U hU
     exact hAllWf U (by simp [hU])
@@ -2687,7 +2687,7 @@ large size.
 -/
 theorem infinite_datatype_large_witness
     (minSize : Nat) (s : native_String) (dd : SmtDatatypeDecl)
-    (hInh : native_inhabited_type (SmtType.Datatype s dd) = true)
+    (hInh : __smtx_inhabited_type (SmtType.Datatype s dd) = true)
     (hRec : __smtx_type_wf_rec (SmtType.Datatype s dd) = true)
     (hInfinite : __smtx_is_finite_type uc (SmtType.Datatype s dd) = false) :
     ∃ v : SmtValue,

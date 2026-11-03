@@ -196,7 +196,7 @@ private theorem smt_map_elem_type_ne_reglan_of_typeof
 private theorem smt_map_domain_inhabited_wf_rec_of_typeof
     (t : SmtTerm) (A B : SmtType)
     (hTy : __smtx_typeof t = SmtType.Map A B) :
-    native_inhabited_type A = true ∧
+    __smtx_inhabited_type A = true ∧
       __smtx_type_wf_rec A = true := by
   have hNN : term_has_non_none_type t := by
     unfold term_has_non_none_type
@@ -209,14 +209,14 @@ private theorem smt_map_domain_inhabited_wf_rec_of_typeof
       __smtx_type_wf_component (SmtType.Map A B) = true := by
     simpa [__smtx_type_wf] using hWF
   have hParts :
-        native_inhabited_type A = true ∧
+        __smtx_inhabited_type A = true ∧
         __smtx_type_wf_rec A = true ∧
-          native_inhabited_type B = true ∧
+          __smtx_inhabited_type B = true ∧
             __smtx_type_wf_rec B = true := by
     have hRec := (smtx_type_wf_component_parts hComponent).2
     have hRecParts :
-        (native_inhabited_type A = true ∧ __smtx_type_wf_rec A = true) ∧
-          native_inhabited_type B = true ∧ __smtx_type_wf_rec B = true := by
+        (__smtx_inhabited_type A = true ∧ __smtx_type_wf_rec A = true) ∧
+          __smtx_inhabited_type B = true ∧ __smtx_type_wf_rec B = true := by
       simpa [__smtx_type_wf_rec, SmtEval.native_and] using hRec
     exact ⟨hRecParts.1.1, hRecParts.1.2, hRecParts.2.1, hRecParts.2.2⟩
   exact ⟨hParts.1, hParts.2.1⟩
@@ -326,7 +326,7 @@ private theorem facts___eo_prog_arrays_ext_impl
     smt_map_elem_type_ne_reglan_of_typeof
       (__eo_to_smt a) (__eo_to_smt_type I) (__eo_to_smt_type E) hSmtA
   have hADomain :
-      native_inhabited_type (__eo_to_smt_type I) = true ∧
+      __smtx_inhabited_type (__eo_to_smt_type I) = true ∧
         __smtx_type_wf_rec (__eo_to_smt_type I) = true :=
     smt_map_domain_inhabited_wf_rec_of_typeof
       (__eo_to_smt a) (__eo_to_smt_type I) (__eo_to_smt_type E) hSmtA

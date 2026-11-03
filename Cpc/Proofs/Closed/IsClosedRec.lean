@@ -50,7 +50,7 @@ theorem smtx_dt_cons_wf_rec_cons_none_eq_false
   __smtx_dt_cons_wf_rec dd (SmtDatatypeCons.cons SmtType.None c) =
     false :=
 by
-  simp [__smtx_dt_cons_wf_rec, native_inhabited_type, native_and]
+  simp [__smtx_dt_cons_wf_rec, __smtx_inhabited_type, native_and]
 
 set_option maxHeartbeats 50000000 in
 /--

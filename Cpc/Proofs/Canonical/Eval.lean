@@ -368,7 +368,7 @@ theorem model_eval_seq_nth_term_canonical
   have hTWf : __smtx_type_wf T = true :=
     smtx_typeof_guard_wf_wf_of_non_none T T hGuardNN
   have hRec : __smtx_type_wf_rec T = true := hElemRec ht1Ty
-  have hTInh : native_inhabited_type T = true := by
+  have hTInh : __smtx_inhabited_type T = true := by
     cases T <;>
       simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
         native_and] at hTWf hRec ⊢

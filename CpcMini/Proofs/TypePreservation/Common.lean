@@ -30,7 +30,7 @@ namespace Smtm
 /-- The two facts the inhabitation check supplies on a recursively well-formed
 type: the type is not `None`, and the default value has that type. Canonicity
 additionally follows via `type_default_canonical_of_inhabited_wf_rec`. -/
-theorem native_inhabited_type_parts {T : SmtType} (h : native_inhabited_type T = true)
+theorem native_inhabited_type_parts {T : SmtType} (h : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     T ≠ SmtType.None ∧ __smtx_typeof_value (__smtx_type_default T) = T :=
   ⟨native_inhabited_type_ne_none h, type_default_typed T h hRec⟩
@@ -38,7 +38,7 @@ theorem native_inhabited_type_parts {T : SmtType} (h : native_inhabited_type T =
 /-- Extracts semantic inhabitation from the generated Boolean inhabitation check. -/
 theorem type_inhabited_of_native_inhabited_type
     (T : SmtType)
-    (h : native_inhabited_type T = true)
+    (h : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     type_inhabited T :=
   ⟨__smtx_type_default T, type_default_typed T h hRec⟩
@@ -46,7 +46,7 @@ theorem type_inhabited_of_native_inhabited_type
 /-- Extracts the concrete default witness carried by the generated Boolean inhabitation check. -/
 theorem type_default_typed_canonical_of_native_inhabited_type
     (T : SmtType)
-    (h : native_inhabited_type T = true)
+    (h : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
       value_canonical uc (__smtx_type_default T) := by
@@ -66,13 +66,13 @@ theorem smtx_typeof_guard_wf_of_non_none
 theorem smtx_type_wf_component_parts
     {T : SmtType}
     (h : __smtx_type_wf_component T = true) :
-    native_inhabited_type T = true ∧
+    __smtx_inhabited_type T = true ∧
       __smtx_type_wf_rec T = true := by
   simpa [__smtx_type_wf_component, native_and] using h
 
 theorem smtx_type_wf_component_of_parts
     {T : SmtType}
-    (hInh : native_inhabited_type T = true)
+    (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_type_wf_component T = true := by
   simp [__smtx_type_wf_component, native_and, hInh, hRec]
@@ -82,11 +82,11 @@ from a well-formed function type. -/
 theorem fun_type_wf_parts
     {A B : SmtType}
     (h : __smtx_type_wf (SmtType.FunType A B) = true) :
-    native_inhabited_type A = true ∧
+    __smtx_inhabited_type A = true ∧
       __smtx_type_wf_rec A = true ∧
         __smtx_type_wf B = true := by
   have hAll :
-      (native_inhabited_type A = true ∧
+      (__smtx_inhabited_type A = true ∧
         __smtx_type_wf_rec A = true) ∧
           __smtx_type_wf B = true := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, native_and] using h
@@ -107,7 +107,7 @@ theorem smtx_typeof_guard_wf_inhabited_of_non_none
       exact ⟨SmtValue.Fun native_default_fun_id A B, by
         simp [__smtx_typeof_value]⟩
     · have hPair :
-        native_inhabited_type T = true ∧
+        __smtx_inhabited_type T = true ∧
           __smtx_type_wf_rec T = true := by
         cases T <;>
           simp [__smtx_type_wf, __smtx_type_wf_component, native_and] at hWf hReg hFun ⊢
@@ -144,7 +144,7 @@ theorem type_wf_rec_ne_reglan
 /-- Rebuilds public well-formedness from recursive well-formedness plus inhabitation. -/
 theorem type_wf_of_inhabited_and_wf_rec
     {T : SmtType}
-    (hInh : native_inhabited_type T = true)
+    (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_type_wf T = true := by
   have hComp : __smtx_type_wf_component T = true := by
@@ -168,7 +168,7 @@ theorem type_inhabited_of_type_wf
     · rcases hFun with ⟨A, B, rfl⟩
       exact ⟨SmtValue.Fun native_default_fun_id A B, rfl⟩
     · have hPair :
-          native_inhabited_type T = true ∧ __smtx_type_wf_rec T = true := by
+          __smtx_inhabited_type T = true ∧ __smtx_type_wf_rec T = true := by
         cases T <;>
           simp [__smtx_type_wf, __smtx_type_wf_component, native_and] at hWF hReg hFun ⊢
         all_goals first | contradiction | exact hWF
@@ -180,8 +180,8 @@ theorem seq_type_wf_component_of_wf
     (h : __smtx_type_wf (SmtType.Seq A) = true) :
     __smtx_type_wf A = true := by
   have hAll :
-      native_inhabited_type (SmtType.Seq A) = true ∧
-        (native_inhabited_type A = true ∧
+      __smtx_inhabited_type (SmtType.Seq A) = true ∧
+        (__smtx_inhabited_type A = true ∧
           __smtx_type_wf_rec A = true) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and] using h
@@ -193,8 +193,8 @@ theorem set_type_wf_component_of_wf
     (h : __smtx_type_wf (SmtType.Set A) = true) :
     __smtx_type_wf A = true := by
   have hAll :
-      native_inhabited_type (SmtType.Set A) = true ∧
-        (native_inhabited_type A = true ∧
+      __smtx_inhabited_type (SmtType.Set A) = true ∧
+        (__smtx_inhabited_type A = true ∧
           __smtx_type_wf_rec A = true) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and] using h
@@ -206,10 +206,10 @@ theorem map_type_wf_components_of_wf
     (h : __smtx_type_wf (SmtType.Map A B) = true) :
     __smtx_type_wf A = true ∧ __smtx_type_wf B = true := by
   have hAll :
-      native_inhabited_type (SmtType.Map A B) = true ∧
-        ((native_inhabited_type A = true ∧
+      __smtx_inhabited_type (SmtType.Map A B) = true ∧
+        ((__smtx_inhabited_type A = true ∧
           __smtx_type_wf_rec A = true) ∧
-          (native_inhabited_type B = true ∧
+          (__smtx_inhabited_type B = true ∧
             __smtx_type_wf_rec B = true)) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and] using h
@@ -222,7 +222,7 @@ theorem fun_type_wf_components_of_wf
     (h : __smtx_type_wf (SmtType.FunType A B) = true) :
     __smtx_type_wf A = true ∧ __smtx_type_wf B = true := by
   have hAll :
-      (native_inhabited_type A = true ∧
+      (__smtx_inhabited_type A = true ∧
         __smtx_type_wf_rec A = true) ∧
         __smtx_type_wf B = true := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, native_and] using h
@@ -398,25 +398,25 @@ theorem type_inhabited_map {A B : SmtType} (hB : type_inhabited B) :
 /-- Maps have a generated default witness when their codomain does. -/
 theorem native_inhabited_type_map
     {A B : SmtType}
-    (hB : native_inhabited_type B = true) :
-    native_inhabited_type (SmtType.Map A B) = true := by
-  simpa [native_inhabited_type] using hB
+    (hB : __smtx_inhabited_type B = true) :
+    __smtx_inhabited_type (SmtType.Map A B) = true := by
+  simpa [__smtx_inhabited_type] using hB
 
 /-- Builds well-formedness for the fallback map used by sequence nth defaults. -/
 theorem seq_nth_wrong_map_type_wf
     {T : SmtType}
-    (hTInh : native_inhabited_type T = true)
+    (hTInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_type_wf
       (SmtType.Map (SmtType.Seq T) (SmtType.Map SmtType.Int T)) = true := by
-  have hIntInh : native_inhabited_type SmtType.Int = true := by
-    simp [native_inhabited_type]
-  have hSeqInh : native_inhabited_type (SmtType.Seq T) = true := by
-    simp [native_inhabited_type]
-  have hMapInh : native_inhabited_type (SmtType.Map SmtType.Int T) = true := by
+  have hIntInh : __smtx_inhabited_type SmtType.Int = true := by
+    simp [__smtx_inhabited_type]
+  have hSeqInh : __smtx_inhabited_type (SmtType.Seq T) = true := by
+    simp [__smtx_inhabited_type]
+  have hMapInh : __smtx_inhabited_type (SmtType.Map SmtType.Int T) = true := by
     exact native_inhabited_type_map hTInh
   have hOuterInh :
-      native_inhabited_type
+      __smtx_inhabited_type
         (SmtType.Map (SmtType.Seq T) (SmtType.Map SmtType.Int T)) = true :=
     by
       exact native_inhabited_type_map hMapInh
@@ -436,47 +436,47 @@ theorem type_inhabited_set (A : SmtType) : type_inhabited (SmtType.Set A) :=
 
 /-- The generated Boolean inhabitation check accepts `bool`. -/
 @[simp] theorem native_inhabited_type_bool :
-    native_inhabited_type SmtType.Bool = true := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type SmtType.Bool = true := by
+  simp [__smtx_inhabited_type]
 
 /-- The generated Boolean inhabitation check accepts `int`. -/
 @[simp] theorem native_inhabited_type_int :
-    native_inhabited_type SmtType.Int = true := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type SmtType.Int = true := by
+  simp [__smtx_inhabited_type]
 
 /-- The generated Boolean inhabitation check accepts `real`. -/
 @[simp] theorem native_inhabited_type_real :
-    native_inhabited_type SmtType.Real = true := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type SmtType.Real = true := by
+  simp [__smtx_inhabited_type]
 
 /-- The generated Boolean inhabitation check accepts regular languages. -/
 @[simp] theorem native_inhabited_type_reglan :
-    native_inhabited_type SmtType.RegLan = true := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type SmtType.RegLan = true := by
+  simp [__smtx_inhabited_type]
 
 /-- The generated Boolean inhabitation check accepts characters. -/
 @[simp] theorem native_inhabited_type_char :
-    native_inhabited_type SmtType.Char = true := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type SmtType.Char = true := by
+  simp [__smtx_inhabited_type]
 
 /-- The generated Boolean inhabitation check accepts uninterpreted sorts. -/
 @[simp] theorem native_inhabited_type_usort (i : native_Nat) :
-    native_inhabited_type (SmtType.USort i) = true := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type (SmtType.USort i) = true := by
+  simp [__smtx_inhabited_type]
 
 /-- The generated Boolean inhabitation check accepts sequences. -/
 @[simp] theorem native_inhabited_type_seq (T : SmtType) :
-    native_inhabited_type (SmtType.Seq T) = true := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type (SmtType.Seq T) = true := by
+  simp [__smtx_inhabited_type]
 
 /-- The generated Boolean inhabitation check accepts sets. -/
 @[simp] theorem native_inhabited_type_set (A : SmtType) :
-    native_inhabited_type (SmtType.Set A) = true := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type (SmtType.Set A) = true := by
+  simp [__smtx_inhabited_type]
 
 /-- The generated Boolean inhabitation check accepts function types. -/
 @[simp] theorem native_inhabited_type_fun (A B : SmtType) :
-    native_inhabited_type (SmtType.FunType A B) = true := by
-  simp [native_inhabited_type]
+    __smtx_inhabited_type (SmtType.FunType A B) = true := by
+  simp [__smtx_inhabited_type]
 
 end Smtm

@@ -25,7 +25,7 @@ The executable imports `SmtSyntax`, `SmtTyping`, `SmtTranslate`, and
 `Proofs/Assumptions` re-exports `TranslationChecks` for existing proofs, so
 translatability predicates and per-rule masks still have one definition.
 
-`native_inhabited_type` is a Boolean predicate over types: base types are
+`__smtx_inhabited_type` is a Boolean predicate over types: base types are
 inhabited, a map type when its range is, and a datatype when one of its
 constructors has inhabited fields. It follows the shape of the semantic default
 generator but never builds a value. `Proofs/StaticTyping` connects the two:

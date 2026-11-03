@@ -26,12 +26,12 @@ defaults are used by the model.
 -/
 
 private theorem type_default_canonical_kernel : ∀ T : SmtType,
-    native_inhabited_type T = true →
+    __smtx_inhabited_type T = true →
     __smtx_type_wf_rec T = true →
     __smtx_value_canonical uc (__smtx_type_default T) = true := by
   refine type_default_induct
     (typeM := fun T =>
-      native_inhabited_type T = true →
+      __smtx_inhabited_type T = true →
       __smtx_type_wf_rec T = true →
       __smtx_value_canonical uc (__smtx_type_default T) = true)
     (declM := fun s dd ddF =>
@@ -52,7 +52,7 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
     (fieldM := fun dd T ddF =>
       __smtx_decl_wf_rec dd ddF = true →
       ((∃ s, T = SmtType.TypeRef s) ∨
-        (native_inhabited_type T = true ∧
+        (__smtx_inhabited_type T = true ∧
          __smtx_type_wf_rec T = true)) →
       __smtx_value_canonical uc
         (__smtx_field_type_default dd T ddF) = true)
@@ -72,15 +72,15 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
       native_int_to_nat, native_ite]
   · intro T U ih _hInh hRec
     have hRaw :
-        (native_inhabited_type T = true ∧
+        (__smtx_inhabited_type T = true ∧
          __smtx_type_wf_rec T = true) ∧
-        (native_inhabited_type U = true ∧
+        (__smtx_inhabited_type U = true ∧
          __smtx_type_wf_rec U = true) := by
       simpa [__smtx_type_wf_rec, native_and] using hRec
     have hParts :
-        native_inhabited_type T = true ∧
+        __smtx_inhabited_type T = true ∧
         __smtx_type_wf_rec T = true ∧
-        native_inhabited_type U = true ∧
+        __smtx_inhabited_type U = true ∧
         __smtx_type_wf_rec U = true :=
       ⟨hRaw.1.1, hRaw.1.2, hRaw.2.1, hRaw.2.2⟩
     have hFieldCan :
@@ -127,7 +127,7 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
   · intro s dd sF dF ddF ihDt ihDecl hWf
     have hParts :
         __smtx_dt_wf_rec dd dF = true ∧
-        native_inhabited_type (SmtType.Datatype sF dd) = true ∧
+        __smtx_inhabited_type (SmtType.Datatype sF dd) = true ∧
         __smtx_decl_wf_rec dd ddF = true ∧
         native_not (__smtx_dd_has_dt sF ddF) = true := by
       simpa [__smtx_decl_wf_rec, native_and] using hWf
@@ -163,7 +163,7 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
   · intro v dd T c ddF field ihField ihTail hCons hDecl hCan
     have hFieldPrem :
         (∃ s, T = SmtType.TypeRef s) ∨
-          (native_inhabited_type T = true ∧
+          (__smtx_inhabited_type T = true ∧
            __smtx_type_wf_rec T = true) := by
       by_cases hRef : ∃ s, T = SmtType.TypeRef s
       · exact Or.inl hRef
@@ -197,7 +197,7 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
 
 /-- A recursively well-formed inhabited type has a typed, canonical default. -/
 theorem type_default_kernel (T : SmtType)
-    (hInh : native_inhabited_type T = true)
+    (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
     __smtx_value_canonical uc (__smtx_type_default T) = true :=
@@ -205,7 +205,7 @@ theorem type_default_kernel (T : SmtType)
 
 /-- A recursively well-formed inhabited default value is canonical. -/
 theorem type_default_canonical_of_inhabited_wf_rec (T : SmtType)
-    (hInh : native_inhabited_type T = true)
+    (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_value_canonical uc (__smtx_type_default T) = true :=
   type_default_canonical_kernel T hInh hRec

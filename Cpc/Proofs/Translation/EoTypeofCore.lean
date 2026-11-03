@@ -413,9 +413,9 @@ private theorem eo_to_smt_type_unique_of_valid_rec_apply
               smtx_type_field_wf_rec
                 (__eo_to_smt_type (Term.UOp UserOp.UnitTuple)) native_reflist_nil := by
             change smtx_type_field_wf_rec tupleTy native_reflist_nil
-            have hInh : native_inhabited_type tupleTy = true := by
+            have hInh : __smtx_inhabited_type tupleTy = true := by
               classical
-              simp [tupleTy, native_inhabited_type, native_and, native_ite, native_not,
+              simp [tupleTy, __smtx_inhabited_type, native_and, native_ite, native_not,
                 native_veq, native_Teq, __smtx_type_default, __smtx_type_default_rec,
                 __smtx_datatype_default,
                 __smtx_datatype_cons_default, __smtx_typeof_value,
@@ -3954,7 +3954,7 @@ theorem hasFreeTy_eq_false_of_valid (sub : native_String) :
                         SmtType.None := by
                     intro hNone
                     rw [hNone] at hWf
-                    simp [__smtx_type_wf, __smtx_type_wf_component, native_inhabited_type,
+                    simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_inhabited_type,
                       native_Teq, native_and, native_not] at hWf
                   rw [native_ite, ite_eq_left hWf]
                   cases htrX : __eo_to_smt_type x with

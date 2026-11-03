@@ -394,13 +394,13 @@ private theorem wf_elem_of_seq_typeof
     unfold term_has_non_none_type; rw [hSmtA]; simp
   have hWf : __smtx_type_wf (SmtType.Seq As) = true :=
     Smtm.smt_term_seq_type_wf_of_non_none (__eo_to_smt a) hNN hSmtA
-  have hParts : native_inhabited_type As = true ∧
+  have hParts : __smtx_inhabited_type As = true ∧
       __smtx_type_wf_rec As = true := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       SmtEval.native_and] using hWf
   cases As <;>
     simp_all [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
-      SmtEval.native_and, native_inhabited_type]
+      SmtEval.native_and, __smtx_inhabited_type]
 
 /-- SMT typeof of `seq_nth a k` is `As` when `a : Seq As`. -/
 private theorem seq_nth_smt_typeof
