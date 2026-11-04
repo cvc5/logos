@@ -8686,10 +8686,8 @@ private theorem smtx_ret_typeof_tuple_sel_rec_eq_eo_list_nth_rec_nat :
             have hStep :
                 native_zplus (native_nat_to_int (native_nat_succ j)) (-1 : native_Int) =
                   native_nat_to_int j := by
-              have hInt : ((j : Int) + 1) + (-1 : Int) = j := by
-                omega
-              simpa [native_zplus, SmtEval.native_zplus, native_nat_to_int,
-                SmtEval.native_nat_to_int] using hInt
+              simp [native_zplus, SmtEval.native_zplus, native_nat_to_int,
+                SmtEval.native_nat_to_int]
             have hNe :
                 native_nat_to_int (native_nat_succ j) ≠ (0 : native_Int) := by
               have hInt : ((j : Int) + 1) ≠ 0 := by
@@ -8946,10 +8944,8 @@ theorem eo_type_valid_rec_tuple_list_nth_rec_nat :
             have hStep :
                 native_zplus (native_nat_to_int (native_nat_succ j)) (-1 : native_Int) =
                   native_nat_to_int j := by
-              have hInt : ((j : Int) + 1) + (-1 : Int) = j := by
-                omega
-              simpa [native_zplus, SmtEval.native_zplus, native_nat_to_int,
-                SmtEval.native_nat_to_int] using hInt
+              simp [native_zplus, SmtEval.native_zplus, native_nat_to_int,
+                SmtEval.native_nat_to_int]
             have hNe :
                 native_nat_to_int (native_nat_succ j) ≠ (0 : native_Int) := by
               have hInt : ((j : Int) + 1) ≠ 0 := by

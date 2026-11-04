@@ -6053,7 +6053,6 @@ by
     omega
   have hXLt : sizeOf x < sizeOf (Term.Apply f x) := by
     simp
-    omega
   exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
     hSmt hNotForall hNotExists hEnv
     (fun hEnv' hClosed' => hRec hFLt hEnv' hClosed')
@@ -6076,7 +6075,6 @@ theorem smtTermClosedIn_eo_to_smt_uop1_any_below
 by
   have hXLt : sizeOf x < sizeOf (Term.UOp1 op x) := by
     simp
-    omega
   cases op <;> try trivial
   case seq_empty =>
     exact smtTermClosedIn_eo_to_smt_seq_empty_of_closed_rec_using
@@ -6104,7 +6102,6 @@ by
     omega
   have hYLt : sizeOf y < sizeOf (Term.UOp2 op x y) := by
     simp
-    omega
   cases op <;> try trivial
   case _at_const =>
     cases hValid : __eo_to_smt_nat_is_valid x
@@ -6150,7 +6147,6 @@ by
     omega
   have hZLt : sizeOf z < sizeOf (Term.UOp3 op x y z) := by
     simp
-    omega
   cases op
   case _at_re_unfold_pos_component =>
     exact smtTermClosedIn_eo_to_smt_re_unfold_pos_component_of_closed_rec_using
@@ -6211,7 +6207,6 @@ theorem smtTermClosedIn_eo_to_smt_apply_uop_any_below
 by
   have hXLt : sizeOf x < sizeOf (Term.Apply (Term.UOp op) x) := by
     simp
-    omega
   let recX :
       ∀ {env' : Term} {vars' : List SmtVarKey},
         EoSmtVarEnvPerm env' vars' ->
@@ -6444,7 +6439,7 @@ by
   have hXLt : sizeOf x < sizeOf (Term.Apply (Term.UOp1 op x) y) := by
     simp; omega
   have hYLt : sizeOf y < sizeOf (Term.Apply (Term.UOp1 op x) y) := by
-    simp; omega
+    simp
   cases op
   case «repeat» =>
     exact smtTermClosedIn_eo_to_smt_repeat_of_closed_rec_using
@@ -6512,7 +6507,7 @@ by
   have hYLt : sizeOf y < sizeOf (Term.Apply (Term.UOp2 op x y) z) := by
     simp; omega
   have hZLt : sizeOf z < sizeOf (Term.Apply (Term.UOp2 op x y) z) := by
-    simp; omega
+    simp
   cases op
   case extract =>
     exact smtTermClosedIn_eo_to_smt_extract_of_closed_rec_using
@@ -6558,7 +6553,7 @@ by
   have hZLt :
       sizeOf z <
         sizeOf (Term.Apply (Term.Apply (Term.UOp1 op x) y) z) := by
-    simp; omega
+    simp
   cases op
   case update =>
     exact smtTermClosedIn_eo_to_smt_update_of_closed_rec_using
@@ -6606,7 +6601,7 @@ by
   have hZLt :
       sizeOf z <
         sizeOf (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) x) y) z) := by
-    simp; omega
+    simp
   cases op
   case ite =>
     exact smtTermClosedIn_eo_to_smt_ite_of_closed_rec_using
@@ -6726,7 +6721,7 @@ theorem smtTermClosedIn_eo_to_smt_set_insert_below
   have hCases := eo_is_closed_rec_binary_uop_eq_true_cases
     (op := UserOp.set_insert) (by decide) (by decide) hEnv hClosed
   exact ⟨hRec (by simp; omega) hEnv hCases.1,
-    hRec (by simp; omega) hEnv hCases.2⟩
+    hRec (by simp) hEnv hCases.2⟩
 
 theorem smtTermClosedIn_eo_to_smt_apply_apply_uop_any_below
     {op : UserOp} {x y env : Term} {vars : List SmtVarKey}
@@ -6749,7 +6744,7 @@ by
     simp; omega
   have hYLt :
       sizeOf y < sizeOf (Term.Apply (Term.Apply (Term.UOp op) x) y) := by
-    simp; omega
+    simp
   let recX :
       ∀ {env' : Term} {vars' : List SmtVarKey},
         EoSmtVarEnvPerm env' vars' ->
@@ -7105,7 +7100,7 @@ by
                 (fun hEnv' hClosed' =>
                   hRec (by simp; omega) hEnv' hClosed')
                 (fun hEnv' hClosed' =>
-                  hRec (by simp; omega) hEnv' hClosed')
+                  hRec (by simp) hEnv' hClosed')
                 hClosed
           case _at_strings_replace_re_all_result =>
             exact
@@ -7123,7 +7118,7 @@ by
                 (fun hEnv' hClosed' =>
                   hRec (by simp; omega) hEnv' hClosed')
                 (fun hEnv' hClosed' =>
-                  hRec (by simp; omega) hEnv' hClosed')
+                  hRec (by simp) hEnv' hClosed')
                 hClosed
           all_goals
             exact smtTermClosedIn_eo_to_smt_apply_generic_below
@@ -7553,32 +7548,32 @@ by
         exact smtx_model_eval_uconst_eq_of_env hAgree
       case Apply f x =>
         exact smtx_model_eval_apply_eq_of_env hAgree
-          (hRec (by simp; omega) hClosed.1 hAgree)
-          (hRec (by simp; omega) hClosed.2 hAgree)
+          (hRec (by simp <;> omega) hClosed.1 hAgree)
+          (hRec (by simp) hClosed.2 hAgree)
       case «exists» s T body =>
         exact smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortCard
           (fun v =>
-            hRec (by simp; omega) hClosed
+            hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
       case «forall» s T body =>
         exact smtx_model_eval_forall_eq_of_body_eval_eq hAgree.globals.usortCard
           (fun v =>
-            hRec (by simp; omega) hClosed
+            hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
       case choice s T body =>
         rw [smtx_model_eval_choice_eq M s T body,
           smtx_model_eval_choice_eq N s T body]
         exact native_eval_tchoice_eq_of_body_eval_eq hAgree.globals.usortCard
           (fun v =>
-            hRec (by simp; omega) hClosed
+            hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
       case bind s T x1 x2 =>
         rw [smtx_model_eval_bind_eq M s T x1 x2,
           smtx_model_eval_bind_eq N s T x1 x2]
         have hx1 : __smtx_model_eval M x1 = __smtx_model_eval N x1 :=
-          hRec (by simp; omega) hClosed.1 hAgree
+          hRec (by simp <;> omega) hClosed.1 hAgree
         rw [hx1]
-        exact hRec (by simp; omega) hClosed.2
+        exact hRec (by simp) hClosed.2
           (model_agrees_on_env_push_same hAgree)
       case not x =>
         simp [__smtx_model_eval,
@@ -7675,12 +7670,12 @@ by
           smtx_model_eval_apply_eq_of_globals hAgree.globals,
           smtx_seq_nth_eq_of_globals hAgree.globals]
       all_goals try
-        rw [hEvalSame _ hClosed.1 (by simp; omega),
-          hEvalSame _ hClosed.2 (by simp; omega)]
+        rw [hEvalSame _ hClosed.1 (by simp <;> omega),
+          hEvalSame _ hClosed.2 (by simp <;> omega)]
       all_goals try
-        rw [hEvalSame _ hClosed.1 (by simp; omega),
-          hEvalSame _ hClosed.2.1 (by simp; omega),
-          hEvalSame _ hClosed.2.2 (by simp; omega)]
+        rw [hEvalSame _ hClosed.1 (by simp <;> omega),
+          hEvalSame _ hClosed.2.1 (by simp <;> omega),
+          hEvalSame _ hClosed.2.2 (by simp <;> omega)]
       all_goals try
         simp [smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard]
       all_goals try

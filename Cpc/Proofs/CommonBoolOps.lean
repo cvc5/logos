@@ -281,7 +281,7 @@ theorem eo_interprets_not_true_implies_false (M : SmtModel) (t : Term) :
       | Numeral n =>
           exfalso
           simp [__smtx_model_eval_not, ht] at hEval
-      | Rational q =>
+      | Real q =>
           exfalso
           simp [__smtx_model_eval_not, ht] at hEval
       | Binary w n =>
