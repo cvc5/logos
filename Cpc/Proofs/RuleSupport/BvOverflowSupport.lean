@@ -144,11 +144,11 @@ theorem extract_bit_binary_eval
 
 theorem bv1_and (x y : Bool) :
     __smtx_model_eval_bvand (bv1 x) (bv1 y) = bv1 (x && y) := by
-  cases x <;> cases y <;> native_decide
+  cases x <;> cases y <;> decide
 
 theorem bv1_or (x y : Bool) :
     __smtx_model_eval_bvor (bv1 x) (bv1 y) = bv1 (x || y) := by
-  cases x <;> cases y <;> native_decide
+  cases x <;> cases y <;> decide
 
 theorem bv1_eq_one (x : Bool) :
     __smtx_model_eval_eq (bv1 x) (SmtValue.Binary 1 1) = SmtValue.Boolean x := by

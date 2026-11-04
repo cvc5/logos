@@ -129,7 +129,6 @@ private theorem sizeOf_lt_trans_tail (t3 t4 tail : Term) :
           (Term.Apply (Term.Apply (Term.UOp UserOp.eq) t3) t4))
         tail) := by
   simp
-  omega
 
 /-- Transitivity lemma for `typed_mk`. -/
 private theorem typed_mk_trans (M : SmtModel) (t1 t2 tail : Term) :

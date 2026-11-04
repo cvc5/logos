@@ -339,7 +339,7 @@ private theorem facts___eo_prog_arith_int_geq_tighten_impl
       (toRealTerm (toIntTerm c)) c hPremNonInt
   have hPremFalseQ :
       __smtx_model_eval_eq
-        (SmtValue.Real (native_to_real (native_to_int cq)))
+        (SmtValue.Real (native_int_to_real (native_to_int cq)))
         (SmtValue.Real cq) = SmtValue.Boolean false := by
     rw [eo_to_smt_to_real_eq, smtx_eval_to_real_term_eq,
       eo_to_smt_to_int_eq, smtx_eval_to_int_term_eq, hCEval] at hPremFalse

@@ -68,11 +68,11 @@ private theorem typeof_bvand_arg_types_of_ne_stuck_local1
     exists width,
       A = Term.Apply (Term.UOp UserOp.BitVec) width /\
         B = Term.Apply (Term.UOp UserOp.BitVec) width := by
-  cases A <;> cases B <;> simp [__eo_typeof_bvand] at h |-
+  cases A <;> cases B <;> simp [__eo_typeof_bvand] at h ⊢
   case Apply.Apply f n g m =>
-    cases f <;> cases g <;> simp [__eo_typeof_bvand] at h |-
+    cases f <;> cases g <;> simp [__eo_typeof_bvand] at h ⊢
     case UOp.UOp opA opB =>
-      cases opA <;> cases opB <;> simp [__eo_typeof_bvand] at h |-
+      cases opA <;> cases opB <;> simp [__eo_typeof_bvand] at h ⊢
       have hReq :
           __eo_requires (__eo_eq n m) (Term.Boolean true)
               (Term.Apply (Term.UOp UserOp.BitVec) n) ≠
@@ -132,11 +132,11 @@ private theorem eo_typeof_concat_args_bitvec_of_ne_stuck_local
     exists wa wb,
       A = Term.Apply (Term.UOp UserOp.BitVec) wa /\
       B = Term.Apply (Term.UOp UserOp.BitVec) wb := by
-  cases A <;> cases B <;> simp [__eo_typeof_concat] at h |-
+  cases A <;> cases B <;> simp [__eo_typeof_concat] at h ⊢
   case Apply.Apply f a g b =>
-    cases f <;> cases g <;> simp [__eo_typeof_concat] at h |-
+    cases f <;> cases g <;> simp [__eo_typeof_concat] at h ⊢
     case UOp.UOp op op' =>
-      cases op <;> cases op' <;> simp [__eo_typeof_concat] at h |-
+      cases op <;> cases op' <;> simp [__eo_typeof_concat] at h ⊢
 
 private theorem smt_typeof_concat_bitvec
     (a b : Term) (wa wb : native_Nat) :
@@ -1192,11 +1192,11 @@ private theorem shift_and_true1 {a b : Term} :
   intro h
   cases a <;> cases b <;>
     simp [__eo_and, __eo_requires, native_teq, native_ite, native_not,
-      SmtEval.native_not, SmtEval.native_and] at h |-
+      SmtEval.native_not, SmtEval.native_and] at h ⊢
   case Binary.Binary w1 n1 w2 n2 =>
     by_cases hw : w1 = w2 <;> simp [hw] at h
   case Boolean.Boolean b1 b2 =>
-    cases b1 <;> cases b2 <;> simp at h |-
+    cases b1 <;> cases b2 <;> simp at h ⊢
 
 private def bvShlByConst1Guard
     (x amount en amountRef1 xRef1 enRef xRef2 amountRef2 : Term) : Term :=

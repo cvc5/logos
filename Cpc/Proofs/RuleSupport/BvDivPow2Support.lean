@@ -1299,11 +1299,11 @@ private theorem pow2_and_true {a b : Term} :
   intro h
   cases a <;> cases b <;>
     simp [__eo_and, __eo_requires, native_teq, native_ite, native_not,
-      SmtEval.native_not, SmtEval.native_and] at h |-
+      SmtEval.native_not, SmtEval.native_and] at h ⊢
   case Binary.Binary w1 n1 w2 n2 =>
     by_cases hw : w1 = w2 <;> simp [hw] at h
   case Boolean.Boolean b1 b2 =>
-    cases b1 <;> cases b2 <;> simp at h |-
+    cases b1 <;> cases b2 <;> simp at h ⊢
 
 private def bvUremPow2Guard
     (x v n nmp pm vRef1 vRef2 nmpRef nRef vRef3 pmRef vRef4 : Term) :

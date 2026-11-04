@@ -470,20 +470,20 @@ private theorem facts___eo_prog_arith_poly_norm_rel_impl_shape
   have hAtomsEq := arith_atom_denote_real_eq_of_smt_value_rel M lhs rhs hPremRel
   have hLhsScaled :
       arith_atom_denote_real M lhs =
-        SmtValue.Real (native_qmult c qx) := by
+        SmtValue.Real (native_rmult c qx) := by
     simpa [lhs] using
       arith_atom_denote_real_of_scaled_factor M hM cx x one c qx
         hLhsArith hCxDen hXDen hOneDen
   have hRhsScaled :
       arith_atom_denote_real M rhs =
-        SmtValue.Real (native_qmult d qy) := by
+        SmtValue.Real (native_rmult d qy) := by
     simpa [rhs] using
       arith_atom_denote_real_of_scaled_factor M hM cy y one d qy
         hRhsArith hCyDen hYDen hOneDen
   have hScaled : native_qmult c qx = native_qmult d qy := by
     have h :
-        SmtValue.Real (native_qmult c qx) =
-          SmtValue.Real (native_qmult d qy) := by
+        SmtValue.Real (native_rmult c qx) =
+          SmtValue.Real (native_rmult d qy) := by
       rw [← hLhsScaled, ← hRhsScaled]
       exact hAtomsEq
     injection h with hRat

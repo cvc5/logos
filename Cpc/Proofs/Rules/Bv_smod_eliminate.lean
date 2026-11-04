@@ -1055,7 +1055,6 @@ private theorem native_mod_total_zero_pow2_of_nonneg (n : native_Int) :
     have hnot : ¬ n < 0 := Int.not_lt_of_ge hn
     rw [native_int_pow2, native_zexp_total]
     simp [hnot]
-    exact Int.pow_pos (by decide : (0 : Int) < 2)
   simpa [SmtEval.native_mod_total] using
     Int.emod_eq_of_lt (by decide : (0 : Int) <= 0) hPowPos
 

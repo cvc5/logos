@@ -295,8 +295,8 @@ private theorem eval_rel (M : SmtModel) (hM : model_wf M) (x1 y1 : Term)
           (SmtTerm.ite (__eo_to_smt (geqTerm y1 zeroTerm))
             (__eo_to_smt (gtTerm (negTerm x1) y1))
             (__eo_to_smt (gtTerm (negTerm x1) (negTerm y1)))) by rfl]
-    have hEvalZero : __smtx_model_eval M (__eo_to_smt zeroTerm) = SmtValue.Real (native_mk_rational 0 1) := by
-      change __smtx_model_eval M (SmtTerm.Rational (native_mk_rational 0 1)) = SmtValue.Real (native_mk_rational 0 1)
+    have hEvalZero : __smtx_model_eval M (__eo_to_smt zeroTerm) = SmtValue.Real (native_mk_real 0 1) := by
+      change __smtx_model_eval M (SmtTerm.Rational (native_mk_rational 0 1)) = SmtValue.Real (native_mk_real 0 1)
       rw [__smtx_model_eval.eq_3]
     have hGeqX :
         __smtx_model_eval M (__eo_to_smt (geqTerm x1 zeroTerm)) =

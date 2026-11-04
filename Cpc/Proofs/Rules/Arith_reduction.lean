@@ -18,7 +18,7 @@ private theorem smt_qdiv_eval_reduction_self
        let yr := __smtx_to_real_coerce yv
        let xr := __smtx_to_real_coerce xv
        __smtx_model_eval_ite
-         (__smtx_model_eval_eq yr (SmtValue.Real (native_mk_rational 0 1)))
+         (__smtx_model_eval_eq yr (SmtValue.Real (native_mk_real 0 1)))
          (__smtx_model_eval_apply M
            (native_model_lookup M native_qdiv_by_zero_id
              (SmtType.FunType SmtType.Real SmtType.Real))

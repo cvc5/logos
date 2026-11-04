@@ -629,7 +629,7 @@ private theorem arith_one_denote
     (M : SmtModel) (m : Term) :
     (__eo_typeof m = Term.UOp UserOp.Int ∨ __eo_typeof m = Term.UOp UserOp.Real) ->
     arith_atom_denote_real M (arithOne m) =
-      SmtValue.Real (native_mk_rational 1 1) := by
+      SmtValue.Real (native_mk_real 1 1) := by
   intro hTy
   rcases hTy with hTy | hTy
   · have hToQ :
@@ -648,7 +648,7 @@ private theorem arith_zero_denote
     (M : SmtModel) (m : Term) :
     (__eo_typeof m = Term.UOp UserOp.Int ∨ __eo_typeof m = Term.UOp UserOp.Real) ->
     arith_atom_denote_real M (arithZero m) =
-      SmtValue.Real (native_mk_rational 0 1) := by
+      SmtValue.Real (native_mk_real 0 1) := by
   intro hTy
   rcases hTy with hTy | hTy
   · have hToQ :
@@ -861,7 +861,7 @@ private theorem scale_denote
     arith_atom_denote_real M m = SmtValue.Real qm ->
     arith_atom_denote_real M x = SmtValue.Real qx ->
     arith_atom_denote_real M (scale m x) =
-      SmtValue.Real (native_qmult qm qx) := by
+      SmtValue.Real (native_rmult qm qx) := by
   intro hmTrans hxTrans hMArith hxTy hmDen hxDen
   have hScaleTy :=
     scale_smt_type_of_eo_type m x hmTrans hxTrans hMArith hxTy
@@ -997,14 +997,14 @@ private theorem eval_lt_of_denotes
   · rcases smt_eval_int_of_type M hM a hTy.1 with ⟨na, hEvalA⟩
     rcases smt_eval_int_of_type M hM b hTy.2 with ⟨nb, hEvalB⟩
     have hqa : qa = native_to_real na := by
-      have h : SmtValue.Real qa = SmtValue.Real (native_to_real na) := by
+      have h : SmtValue.Real qa = SmtValue.Real (native_int_to_real na) := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
     have hqb : qb = native_to_real nb := by
-      have h : SmtValue.Real qb = SmtValue.Real (native_to_real nb) := by
+      have h : SmtValue.Real qb = SmtValue.Real (native_int_to_real nb) := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1051,14 +1051,14 @@ private theorem eval_leq_of_denotes
   · rcases smt_eval_int_of_type M hM a hTy.1 with ⟨na, hEvalA⟩
     rcases smt_eval_int_of_type M hM b hTy.2 with ⟨nb, hEvalB⟩
     have hqa : qa = native_to_real na := by
-      have h : SmtValue.Real qa = SmtValue.Real (native_to_real na) := by
+      have h : SmtValue.Real qa = SmtValue.Real (native_int_to_real na) := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
     have hqb : qb = native_to_real nb := by
-      have h : SmtValue.Real qb = SmtValue.Real (native_to_real nb) := by
+      have h : SmtValue.Real qb = SmtValue.Real (native_int_to_real nb) := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1105,14 +1105,14 @@ private theorem eval_eq_of_denotes
   · rcases smt_eval_int_of_type M hM a hTy.1 with ⟨na, hEvalA⟩
     rcases smt_eval_int_of_type M hM b hTy.2 with ⟨nb, hEvalB⟩
     have hqa : qa = native_to_real na := by
-      have h : SmtValue.Real qa = SmtValue.Real (native_to_real na) := by
+      have h : SmtValue.Real qa = SmtValue.Real (native_int_to_real na) := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
     have hqb : qb = native_to_real nb := by
-      have h : SmtValue.Real qb = SmtValue.Real (native_to_real nb) := by
+      have h : SmtValue.Real qb = SmtValue.Real (native_int_to_real nb) := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1160,14 +1160,14 @@ private theorem eval_gt_of_denotes
   · rcases smt_eval_int_of_type M hM a hTy.1 with ⟨na, hEvalA⟩
     rcases smt_eval_int_of_type M hM b hTy.2 with ⟨nb, hEvalB⟩
     have hqa : qa = native_to_real na := by
-      have h : SmtValue.Real qa = SmtValue.Real (native_to_real na) := by
+      have h : SmtValue.Real qa = SmtValue.Real (native_int_to_real na) := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
     have hqb : qb = native_to_real nb := by
-      have h : SmtValue.Real qb = SmtValue.Real (native_to_real nb) := by
+      have h : SmtValue.Real qb = SmtValue.Real (native_int_to_real nb) := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1215,14 +1215,14 @@ private theorem eval_geq_of_denotes
   · rcases smt_eval_int_of_type M hM a hTy.1 with ⟨na, hEvalA⟩
     rcases smt_eval_int_of_type M hM b hTy.2 with ⟨nb, hEvalB⟩
     have hqa : qa = native_to_real na := by
-      have h : SmtValue.Real qa = SmtValue.Real (native_to_real na) := by
+      have h : SmtValue.Real qa = SmtValue.Real (native_int_to_real na) := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
     have hqb : qb = native_to_real nb := by
-      have h : SmtValue.Real qb = SmtValue.Real (native_to_real nb) := by
+      have h : SmtValue.Real qb = SmtValue.Real (native_int_to_real nb) := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]

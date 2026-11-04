@@ -253,7 +253,6 @@ private theorem smtx_model_eval_str_in_re_sigma_rec
                         native_veq, native_seq_len,
                         nativeListInRe_sigmaState_empty_exact, hSSValid,
                         native_unpack_string_strlen_eq]
-                      exact Int.ofNat_inj
                   · exfalso
                     apply hSide
                     exact str_in_re_sigma_rec_str_to_re_nonempty_eq_stuck s str n exact hStr

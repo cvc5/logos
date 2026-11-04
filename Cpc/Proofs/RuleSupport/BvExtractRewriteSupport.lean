@@ -562,7 +562,6 @@ private theorem eval_bv_extract_not
   have hFitEq : l + d = h + 1 := by
     simp [d, SmtEval.native_zplus, SmtEval.native_zneg, Int.add_assoc,
       Int.add_comm, Int.add_left_comm]
-    omega
   have hFitZ : l + d ≤ w := by
     rw [hFitEq]
     exact Int.add_one_le_iff.mpr hhwInt
@@ -950,7 +949,6 @@ private theorem eval_bv_extract_extract
   have hOuterFitEq : kn + dOuter = ln + 1 := by
     simp [dOuter, SmtEval.native_zplus, SmtEval.native_zneg,
       Int.add_assoc, Int.add_comm, Int.add_left_comm]
-    omega
   have hOuterFitZ : kn + dOuter ≤ dInner := by
     rw [hOuterFitEq]
     exact Int.add_one_le_iff.mpr hlDIInt

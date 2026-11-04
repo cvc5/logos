@@ -165,7 +165,6 @@ private theorem native_int_pow2_pos_of_nonneg
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 private theorem native_binary_uts_mod_self_of_canonical
     {w n : native_Int}

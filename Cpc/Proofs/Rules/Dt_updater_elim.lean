@@ -1029,8 +1029,6 @@ private theorem assoc_nil_nth_cons_succ
   · rw [__eo_l_1___assoc_nil_nth.eq_3]
     · simp [__eo_requires, __eo_eq, __eo_add, native_zplus, native_ite,
         native_teq, native_not, SmtEval.native_not]
-      congr
-      exact Int.add_neg_cancel_right (rel : Int) (1 : Int)
     · intro h
       cases h
     · intro h

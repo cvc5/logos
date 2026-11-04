@@ -1561,11 +1561,11 @@ private theorem bv_mult_pow2_and_true {a b : Term} :
   intro h
   cases a <;> cases b <;>
     simp [__eo_and, __eo_requires, native_teq, native_ite, native_not,
-      SmtEval.native_not, SmtEval.native_and] at h |-
+      SmtEval.native_not, SmtEval.native_and] at h ⊢
   case Binary.Binary w1 n1 w2 n2 =>
     by_cases hw : w1 = w2 <;> simp [hw] at h
   case Boolean.Boolean b1 b2 =>
-    cases b1 <;> cases b2 <;> simp at h |-
+    cases b1 <;> cases b2 <;> simp at h ⊢
 
 theorem bv_mult_pow2_guard_refs
     {size n exponent u sizeRef1 nRef1 exponentRef sizeRef2 nRef2 uRef

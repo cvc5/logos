@@ -93,11 +93,11 @@ private theorem bv_concat_merge_const_and_true {a b : Term} :
   intro h
   cases a <;> cases b <;>
     simp [__eo_and, __eo_requires, native_teq, native_ite, native_not,
-      SmtEval.native_not, SmtEval.native_and] at h |-
+      SmtEval.native_not, SmtEval.native_and] at h ⊢
   case Binary.Binary w1 n1 w2 n2 =>
     by_cases hw : w1 = w2 <;> simp [hw] at h
   case Boolean.Boolean b1 b2 =>
-    cases b1 <;> cases b2 <;> simp at h |-
+    cases b1 <;> cases b2 <;> simp at h ⊢
 
 private theorem bv_concat_merge_const_guard_refs
     {ww w1 w2 wwRef w1Ref w2Ref body : Term} :

@@ -952,7 +952,7 @@ private theorem miniToSmt_eval_eq_of_contains_atomic_term_list_free_rec_false_ma
                     __smtx_model_eval N (miniToSmt a) :=
                 hRec (u := a) (except' := except)
                   (exceptVars' := exceptVars) (M' := M) (N' := N)
-                  (by simp; omega) hM hN hExcept hATy hANoFree hAgree
+                  (by simp) hM hN hExcept hATy hANoFree hAgree
               change
                 __smtx_model_eval M (SmtTerm.or (miniToSmt y) (miniToSmt a)) =
                   __smtx_model_eval N

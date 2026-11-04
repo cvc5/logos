@@ -3309,7 +3309,7 @@ theorem pair_first_str_strip_prefix_self_eq_pair_second (x : Term)
       pair_second_pair]
 termination_by sizeOf x
 decreasing_by
-  all_goals subst_vars; simp_wf; omega
+  all_goals subst_vars; simp_wf
 
 
 theorem eo_interprets_double_rev_intros_of_self

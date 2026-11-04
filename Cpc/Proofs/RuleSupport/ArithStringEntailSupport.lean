@@ -94,7 +94,7 @@ private theorem str_arith_entail_simple_rec_mon_denote_nonneg
                                   arith_mon_denote_real M
                                       (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon)
                                         rest) (Term.Rational c)) =
-                                    SmtValue.Real (native_qmult c qr) := by
+                                    SmtValue.Real (native_rmult c qr) := by
                                 simp [arith_mon_denote_real, hRest, __smtx_model_eval_mult,
                                   native_qmult]
                               have hRec :=
@@ -250,7 +250,7 @@ private theorem geq_zero_eval_true_of_int_denote_nonneg
   rcases int_value_canonical (by simpa [hTy] using hEvalTy) with ⟨z, hEval⟩
   have hDenEq : native_to_real z = q := by
     have h :
-        SmtValue.Real (native_to_real z) = SmtValue.Real q := by
+        SmtValue.Real (native_int_to_real z) = SmtValue.Real q := by
       simpa [arith_poly_norm_atom_denote_real, hEval, __smtx_to_real_coerce] using hDen
     simpa using h
   have hzNonneg : (0 : Int) ≤ z := by
@@ -311,7 +311,7 @@ private theorem geq_eval_true_of_diff_denote_nonneg
     have hDiffQ :
         native_to_real (native_zplus zn (native_zneg zm)) = q := by
       have h :
-          SmtValue.Real (native_to_real (native_zplus zn (native_zneg zm))) =
+          SmtValue.Real (native_int_to_real (native_zplus zn (native_zneg zm))) =
             SmtValue.Real q := by
         have hDen := hDiffDen
         change
@@ -354,7 +354,7 @@ private theorem geq_eval_true_of_diff_denote_nonneg
     have hDiffQ :
         native_qplus qn (native_qneg qm) = q := by
       have h :
-          SmtValue.Real (native_qplus qn (native_qneg qm)) =
+          SmtValue.Real (native_rplus qn (native_qneg qm)) =
             SmtValue.Real q := by
         have hDen := hDiffDen
         change
@@ -472,7 +472,7 @@ private theorem int_eval_of_int_type
 private theorem arith_poly_norm_atom_denote_real_eq_of_int_eval
     (M : SmtModel) (t : Term) (z : native_Int) :
   __smtx_model_eval M (__eo_to_smt t) = SmtValue.Numeral z ->
-  arith_poly_norm_atom_denote_real M t = SmtValue.Real (native_to_real z) := by
+  arith_poly_norm_atom_denote_real M t = SmtValue.Real (native_int_to_real z) := by
   intro hEval
   simp [arith_poly_norm_atom_denote_real, hEval, __smtx_to_real_coerce]
 
@@ -1013,11 +1013,11 @@ private theorem int_nonneg_of_simple_rec_true
     arith_poly_denote_real_of_get_arith_poly_norm_of_smt_arith_type
       M hM n (Or.inl hTy)
   have hAtomDenote :
-      arith_poly_norm_atom_denote_real M n = SmtValue.Real (native_to_real zn) :=
+      arith_poly_norm_atom_denote_real M n = SmtValue.Real (native_int_to_real zn) :=
     arith_poly_norm_atom_denote_real_eq_of_int_eval M n zn hEval
   have hPolyDenote :
       arith_poly_denote_real M (__get_arith_poly_norm n) =
-        SmtValue.Real (native_to_real zn) := by
+        SmtValue.Real (native_int_to_real zn) := by
     rw [hDenote, hAtomDenote]
   have hNonnegRat : (0 : Rat) ≤ native_to_real zn :=
     str_arith_entail_simple_rec_denote_nonneg
@@ -4383,12 +4383,12 @@ private theorem str_arith_entail_is_approx_int_denote_order
       rcases int_eval_of_int_type M hM m hMInt with ⟨zm, hMEval⟩
       have hQn : qn = native_to_real zn := by
         have h :
-            SmtValue.Real (native_to_real zn) = SmtValue.Real qn := by
+            SmtValue.Real (native_int_to_real zn) = SmtValue.Real qn := by
           simpa [arith_poly_norm_atom_denote_real, hNEval, __smtx_to_real_coerce] using hNDen
         simpa using h.symm
       have hQm : qm = native_to_real zm := by
         have h :
-            SmtValue.Real (native_to_real zm) = SmtValue.Real qm := by
+            SmtValue.Real (native_int_to_real zm) = SmtValue.Real qm := by
           simpa [arith_poly_norm_atom_denote_real, hMEval, __smtx_to_real_coerce] using hMDen
         simpa using h.symm
       have hOrder :=
@@ -4447,7 +4447,7 @@ private theorem arith_string_pred_safe_approx_left_true
     rcases int_value_canonical (by simpa [hMInt] using hEvalMTy) with ⟨zm, hEvalM⟩
     have hDenEq : native_to_real zm = qm := by
       have h :
-          SmtValue.Real (native_to_real zm) = SmtValue.Real qm := by
+          SmtValue.Real (native_int_to_real zm) = SmtValue.Real qm := by
         simpa [arith_poly_norm_atom_denote_real, hEvalM, __smtx_to_real_coerce] using hMDen
       simpa using h
     have hZle : native_zleq 0 zm = true := by

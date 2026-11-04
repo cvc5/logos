@@ -1448,11 +1448,11 @@ theorem arith_atom_denote_real_of_scaled_factor
           SmtType.Real)
     (hCx : arith_atom_denote_real M cx = SmtValue.Real c)
     (hX : arith_atom_denote_real M x = SmtValue.Real q)
-    (hOne : arith_atom_denote_real M one = SmtValue.Real (native_mk_rational 1 1)) :
+    (hOne : arith_atom_denote_real M one = SmtValue.Real (native_mk_real 1 1)) :
   arith_atom_denote_real M
       (Term.Apply (Term.Apply (Term.UOp UserOp.mult) cx)
         (Term.Apply (Term.Apply (Term.UOp UserOp.mult) x) one)) =
-    SmtValue.Real (native_qmult c q) := by
+    SmtValue.Real (native_rmult c q) := by
   let inner := Term.Apply (Term.Apply (Term.UOp UserOp.mult) x) one
   have hOuterNN : term_has_non_none_type (SmtTerm.mult (__eo_to_smt cx) (__eo_to_smt inner)) := by
     unfold term_has_non_none_type
@@ -1488,7 +1488,7 @@ theorem arith_atom_denote_real_of_scaled_factor
       exact Or.inl hOuterTyInt
     change arith_atom_denote_real M
         (Term.Apply (Term.Apply (Term.UOp UserOp.mult) cx) inner) =
-      SmtValue.Real (native_qmult c q)
+      SmtValue.Real (native_rmult c q)
     rw [arith_atom_denote_real_of_mult M hM cx inner hOuterArith]
     rw [arith_atom_denote_real_of_mult M hM x one hInnerArith]
     simp [hCx, hX, hOne, __smtx_model_eval_mult, native_qmult,
@@ -1512,7 +1512,7 @@ theorem arith_atom_denote_real_of_scaled_factor
       exact Or.inr hOuterTyReal
     change arith_atom_denote_real M
         (Term.Apply (Term.Apply (Term.UOp UserOp.mult) cx) inner) =
-      SmtValue.Real (native_qmult c q)
+      SmtValue.Real (native_rmult c q)
     rw [arith_atom_denote_real_of_mult M hM cx inner hOuterArith]
     rw [arith_atom_denote_real_of_mult M hM x one hInnerArith]
     simp [hCx, hX, hOne, __smtx_model_eval_mult, native_qmult,

@@ -642,7 +642,6 @@ private theorem eval_bv_extract_sign_extend_2
   have hFitEq : l + d = h + 1 := by
     simp [d, SmtEval.native_zplus, SmtEval.native_zneg, Int.add_assoc,
       Int.add_comm, Int.add_left_comm]
-    omega
   have hFitZ : l + d ≤ a + w := by
     rw [hFitEq]
     exact Int.add_one_le_iff.mpr hhwaInt

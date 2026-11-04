@@ -463,7 +463,6 @@ theorem native_seq_extract_to_end_nat
         (xs.drop i).take (xs.length - i) = xs.drop i := by
       apply List.take_of_length_le
       rw [List.length_drop]
-      exact Nat.le_refl _
     have hLenNotLe : ¬ xs.length <= i := Nat.not_le_of_gt hiltNat
     have hiNonneg : ¬ ((i : native_Int) < (0 : native_Int)) := by
       exact Int.not_lt_of_ge (Int.natCast_nonneg i)

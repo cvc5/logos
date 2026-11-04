@@ -7,9 +7,15 @@ import all Cpc.Proofs.RuleSupport.SequenceSupport
 
 public section
 
+noncomputable section
+
 open Eo
 open SmtEval
 open Smtm
+
+-- Mathlib's `Monad List` would make the `native_String` to `List SmtValue` coercion
+-- elaborate through `coeM` rather than `impl_native_string_to_values`.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
 
 set_option linter.unusedVariables false
 set_option linter.unnecessarySimpa false
@@ -3084,7 +3090,7 @@ theorem reUnion_singleton_elim_rel_eval
             | Numeral n =>
                 cases hTailEval : __smtx_model_eval M (__eo_to_smt tail) <;>
                   simp [__smtx_model_eval_re_union, hHeadEval, hTailEval] at hUnionEval'
-            | Rational q =>
+            | Real q =>
                 cases hTailEval : __smtx_model_eval M (__eo_to_smt tail) <;>
                   simp [__smtx_model_eval_re_union, hHeadEval, hTailEval] at hUnionEval'
             | Binary i n =>
@@ -3296,7 +3302,7 @@ theorem reInter_singleton_elim_rel_eval
             | Numeral n =>
                 cases hTailEval : __smtx_model_eval M (__eo_to_smt tail) <;>
                   simp [__smtx_model_eval_re_inter, hHeadEval, hTailEval] at hInterEval'
-            | Rational q =>
+            | Real q =>
                 cases hTailEval : __smtx_model_eval M (__eo_to_smt tail) <;>
                   simp [__smtx_model_eval_re_inter, hHeadEval, hTailEval] at hInterEval'
             | Binary i n =>

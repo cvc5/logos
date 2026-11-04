@@ -368,7 +368,6 @@ private theorem native_int_pow2_pos_of_nonneg {w : native_Int}
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 private theorem native_mod_zero_pow2
     (w : native_Int) :

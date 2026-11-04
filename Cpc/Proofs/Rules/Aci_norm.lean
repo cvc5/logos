@@ -11,6 +11,10 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Mathlib's `Monad List` would make the `native_String` to `List SmtValue` coercion
+-- elaborate through `coeM` rather than `impl_native_string_to_values`.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
@@ -5538,7 +5542,6 @@ private theorem native_int_pow2_pos_of_nonneg {w : native_Int}
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 private theorem native_int_pow2_add_of_nonneg {a b : native_Int}
     (ha : 0 <= a) (hb : 0 <= b) :
@@ -6319,7 +6322,7 @@ private theorem bvEvalCanonicalWidth_of_smt_value_rel_left
   | Numeral nval =>
       rw [hBEval] at hRel
       simp [__smtx_model_eval_eq, native_veq] at hRel
-  | Rational qval =>
+  | Real qval =>
       rw [hBEval] at hRel
       simp [__smtx_model_eval_eq, native_veq] at hRel
   | Map m =>

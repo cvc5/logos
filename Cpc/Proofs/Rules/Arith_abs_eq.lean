@@ -301,7 +301,7 @@ private theorem eval_neg_int (M : SmtModel) (x : Term) (n : native_Int)
 private theorem eval_neg_real (M : SmtModel) (x : Term) (q : native_Rat)
     (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Real q) :
     __smtx_model_eval M (__eo_to_smt (negTerm x)) =
-      SmtValue.Real (native_qneg q) := by
+      SmtValue.Real (native_rneg q) := by
   rw [show __eo_to_smt (negTerm x) = SmtTerm.uneg (__eo_to_smt x) by rfl]
   rw [eval_uneg, hx]
   simp [__smtx_model_eval_uneg]

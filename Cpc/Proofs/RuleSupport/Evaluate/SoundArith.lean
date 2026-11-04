@@ -357,7 +357,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_plus_core
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
-          (SmtValue.Real (native_qplus runA runB))
+          (SmtValue.Real (native_rplus runA runB))
           (__smtx_model_eval M
             (SmtTerm.Rational (native_qplus runA runB)))
       rw [__smtx_model_eval.eq_3]
@@ -708,7 +708,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mult_core
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
-          (SmtValue.Real (native_qmult runA runB))
+          (SmtValue.Real (native_rmult runA runB))
           (__smtx_model_eval M
             (SmtTerm.Rational (native_qmult runA runB)))
       rw [__smtx_model_eval.eq_3]
@@ -1104,7 +1104,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_neg_core
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
-          (SmtValue.Real (native_qplus runA (native_qneg runB)))
+          (SmtValue.Real (native_rplus runA (native_qneg runB)))
           (__smtx_model_eval M
             (SmtTerm.Rational (native_qplus runA (native_qneg runB))))
       rw [__smtx_model_eval.eq_3]
@@ -2687,7 +2687,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
               (__smtx_model_eval M (__eo_to_smt a))
             __smtx_model_eval_ite
               (__smtx_model_eval_eq _v0
-                (SmtValue.Real (native_mk_rational 0 1)))
+                (SmtValue.Real (native_mk_real 0 1)))
               (__smtx_model_eval_apply M
                 (native_model_lookup M native_qdiv_by_zero_id
                   (SmtType.FunType SmtType.Real SmtType.Real)) _v1)
@@ -2828,7 +2828,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
               (__smtx_model_eval M (__eo_to_smt a))
             __smtx_model_eval_ite
               (__smtx_model_eval_eq _v0
-                (SmtValue.Real (native_mk_rational 0 1)))
+                (SmtValue.Real (native_mk_real 0 1)))
               (__smtx_model_eval_apply M
                 (native_model_lookup M native_qdiv_by_zero_id
                   (SmtType.FunType SmtType.Real SmtType.Real)) _v1)
@@ -3068,7 +3068,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
             rfl]
           change
             RuleProofs.smt_value_rel
-              (SmtValue.Real (native_mk_rational evalA 0))
+              (SmtValue.Real (native_mk_real evalA 0))
               (__smtx_model_eval M
                 (SmtTerm.Rational (native_mk_rational 0 1)))
           rw [EvaluateProofInternal.native_mk_rational_zero_den, __smtx_model_eval.eq_3]
@@ -3168,7 +3168,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
             rfl]
           change
             RuleProofs.smt_value_rel
-              (SmtValue.Real (native_mk_rational runA runB))
+              (SmtValue.Real (native_mk_real runA runB))
               (__smtx_model_eval M
                 (SmtTerm.Rational (native_mk_rational runA runB)))
           rw [__smtx_model_eval.eq_3]
@@ -3431,7 +3431,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
             rfl]
           change
             RuleProofs.smt_value_rel
-              (SmtValue.Real (native_qdiv_total runA runB))
+              (SmtValue.Real (native_rdiv_total runA runB))
               (__smtx_model_eval M
                 (SmtTerm.Rational (native_qdiv_total runA runB)))
           rw [__smtx_model_eval.eq_3]
