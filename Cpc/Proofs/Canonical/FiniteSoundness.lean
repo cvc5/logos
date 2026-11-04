@@ -189,7 +189,7 @@ private theorem typeof_dtcapp_chain :
       simp [__smtx_typeof_value] at h
   | SmtValue.Numeral n, U, rest, h => by
       simp [__smtx_typeof_value] at h
-  | SmtValue.Rational q, U, rest, h => by
+  | SmtValue.Real q, U, rest, h => by
       simp [__smtx_typeof_value] at h
   | SmtValue.Binary w n, U, rest, h => by
       by_cases hc :
@@ -552,7 +552,7 @@ private theorem chain_typed_spine :
       exfalso
       exact not_chain_of_base (Eq.symm h)
         (by simp [__smtx_typeof_value]) (by simp [__smtx_typeof_value])
-  | SmtValue.Rational q, s, dd, Us, h, _ => by
+  | SmtValue.Real q, s, dd, Us, h, _ => by
       exfalso
       exact not_chain_of_base (Eq.symm h)
         (by simp [__smtx_typeof_value]) (by simp [__smtx_typeof_value])

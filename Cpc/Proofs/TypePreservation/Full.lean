@@ -1568,7 +1568,7 @@ private theorem canonical_of_supported
   case numeral n =>
       simpa [__smtx_model_eval] using value_canonical_numeral n
   case rational q =>
-      simpa [__smtx_model_eval] using value_canonical_rational q
+      simpa [__smtx_model_eval] using value_canonical_rational (native_rat_to_real q)
   case string s =>
       have hsValid : native_string_valid s = true := by
         rw [term_has_non_none_type, __smtx_typeof.eq_4] at ht

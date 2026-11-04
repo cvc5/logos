@@ -87,7 +87,7 @@ theorem vsm_spine_decomposition :
   | SmtValue.NotValue => rfl
   | SmtValue.Boolean _ => rfl
   | SmtValue.Numeral _ => rfl
-  | SmtValue.Rational _ => rfl
+  | SmtValue.Real _ => rfl
   | SmtValue.Binary _ _ => rfl
   | SmtValue.Map _ => rfl
   | SmtValue.Fun _ _ _ => rfl
@@ -107,7 +107,7 @@ theorem vsmArgs_length : ∀ v : SmtValue, (vsmArgs v).length = vsm_num_apply_ar
   | SmtValue.NotValue => rfl
   | SmtValue.Boolean _ => rfl
   | SmtValue.Numeral _ => rfl
-  | SmtValue.Rational _ => rfl
+  | SmtValue.Real _ => rfl
   | SmtValue.Binary _ _ => rfl
   | SmtValue.Map _ => rfl
   | SmtValue.Fun _ _ _ => rfl
@@ -155,7 +155,7 @@ theorem vsm_apply_arg_nth_eq_getElem :
   | SmtValue.NotValue => by intro j hj; simp [vsmArgs] at hj
   | SmtValue.Boolean _ => by intro j hj; simp [vsmArgs] at hj
   | SmtValue.Numeral _ => by intro j hj; simp [vsmArgs] at hj
-  | SmtValue.Rational _ => by intro j hj; simp [vsmArgs] at hj
+  | SmtValue.Real _ => by intro j hj; simp [vsmArgs] at hj
   | SmtValue.Binary _ _ => by intro j hj; simp [vsmArgs] at hj
   | SmtValue.Map _ => by intro j hj; simp [vsmArgs] at hj
   | SmtValue.Fun _ _ _ => by intro j hj; simp [vsmArgs] at hj
@@ -196,7 +196,7 @@ theorem vsm_canonical_spine :
   | SmtValue.NotValue => fun h => ⟨h, by intro a ha; simp [vsmArgs] at ha⟩
   | SmtValue.Boolean _ => fun h => ⟨h, by intro a ha; simp [vsmArgs] at ha⟩
   | SmtValue.Numeral _ => fun h => ⟨h, by intro a ha; simp [vsmArgs] at ha⟩
-  | SmtValue.Rational _ => fun h => ⟨h, by intro a ha; simp [vsmArgs] at ha⟩
+  | SmtValue.Real _ => fun h => ⟨h, by intro a ha; simp [vsmArgs] at ha⟩
   | SmtValue.Binary _ _ => fun h => ⟨h, by intro a ha; simp [vsmArgs] at ha⟩
   | SmtValue.Map _ => fun h => ⟨h, by intro a ha; simp [vsmArgs] at ha⟩
   | SmtValue.Fun _ _ _ => fun h => ⟨h, by intro a ha; simp [vsmArgs] at ha⟩

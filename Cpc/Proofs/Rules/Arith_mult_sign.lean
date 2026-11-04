@@ -15,17 +15,17 @@ set_option maxHeartbeats 10000000
 
 private def smtValuePos : SmtValue -> Prop
   | SmtValue.Numeral n => 0 < n
-  | SmtValue.Rational q => 0 < q
+  | SmtValue.Real q => 0 < q
   | _ => False
 
 private def smtValueNeg : SmtValue -> Prop
   | SmtValue.Numeral n => n < 0
-  | SmtValue.Rational q => q < 0
+  | SmtValue.Real q => q < 0
   | _ => False
 
 private def smtValueNonzero : SmtValue -> Prop
   | SmtValue.Numeral n => n ≠ 0
-  | SmtValue.Rational q => q ≠ 0
+  | SmtValue.Real q => q ≠ 0
   | _ => False
 
 private theorem rat_mul_pos_of_neg_neg {a b : Rat} (ha : a < 0) (hb : b < 0) :

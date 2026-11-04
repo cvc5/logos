@@ -142,7 +142,7 @@ private theorem smt_eval_int_of_type
 private theorem smt_eval_real_of_type
     (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
-    ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Rational q := by
+    ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Real q := by
   have hPres :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) := by

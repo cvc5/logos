@@ -57,7 +57,7 @@ def abs : ArithValue -> ArithValue
 
 def smtValue : ArithValue -> SmtValue
   | .int a => SmtValue.Numeral a
-  | .real a => SmtValue.Rational a
+  | .real a => SmtValue.Real a
 
 private def intAbs (n : native_Int) : native_Int :=
   ((Int.natAbs n : Nat) : Int)
@@ -480,7 +480,7 @@ def eoType : ArithProduct -> Term
 
 def smtValue : ArithProduct -> SmtValue
   | .empty .int => SmtValue.Numeral 1
-  | .empty .real => SmtValue.Rational 1
+  | .empty .real => SmtValue.Real 1
   | .value a => a.smtValue
   | .invalid => SmtValue.NotValue
 

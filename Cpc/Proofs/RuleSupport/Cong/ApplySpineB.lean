@@ -530,7 +530,7 @@ noncomputable abbrev smtEvalQdiv
   let _v1r := __smtx_to_real_coerce _v1
   __smtx_model_eval_ite
     (__smtx_model_eval_eq _v0r
-      (SmtValue.Rational (native_mk_rational 0 1)))
+      (SmtValue.Real (native_mk_rational 0 1)))
       (__smtx_model_eval_apply M
       (native_model_lookup M native_qdiv_by_zero_id
         (SmtType.FunType SmtType.Real SmtType.Real))

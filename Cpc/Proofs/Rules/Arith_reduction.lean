@@ -18,7 +18,7 @@ private theorem smt_qdiv_eval_reduction_self
        let yr := __smtx_to_real_coerce yv
        let xr := __smtx_to_real_coerce xv
        __smtx_model_eval_ite
-         (__smtx_model_eval_eq yr (SmtValue.Rational (native_mk_rational 0 1)))
+         (__smtx_model_eval_eq yr (SmtValue.Real (native_mk_rational 0 1)))
          (__smtx_model_eval_apply M
            (native_model_lookup M native_qdiv_by_zero_id
              (SmtType.FunType SmtType.Real SmtType.Real))
@@ -117,7 +117,7 @@ private theorem smt_abs_eval_reduction_int_term_rel
 
 private theorem smt_abs_eval_reduction_real_term_rel
     (M : SmtModel) (x : SmtTerm) (q : native_Rat)
-    (hx : __smtx_model_eval M x = SmtValue.Rational q) :
+    (hx : __smtx_model_eval M x = SmtValue.Real q) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M (SmtTerm.abs x))
       (__smtx_model_eval M
@@ -236,8 +236,8 @@ private theorem smt_qdiv_eval_reduction_int_term_rel
 
 private theorem smt_qdiv_eval_reduction_real_term_rel
     (M : SmtModel) (x y : SmtTerm) (q1 q2 : native_Rat)
-    (hx : __smtx_model_eval M x = SmtValue.Rational q1)
-    (hy : __smtx_model_eval M y = SmtValue.Rational q2) :
+    (hx : __smtx_model_eval M x = SmtValue.Real q1)
+    (hy : __smtx_model_eval M y = SmtValue.Real q2) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M (SmtTerm.qdiv x y))
       (__smtx_model_eval M

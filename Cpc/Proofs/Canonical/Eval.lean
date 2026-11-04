@@ -33,7 +33,7 @@ theorem model_eval_rational_canonical
     (M : SmtModel)
     (q : native_Rat) :
     value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.Rational q)) := by
-  simpa [__smtx_model_eval] using value_canonical_rational q
+  simpa [__smtx_model_eval] using value_canonical_rational (native_rat_to_real q)
 
 theorem model_eval_string_canonical
     (M : SmtModel)

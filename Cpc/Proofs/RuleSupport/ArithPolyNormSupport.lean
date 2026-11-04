@@ -205,7 +205,7 @@ noncomputable def arith_poly_norm_atom_denote_real (M : SmtModel) (t : Term) : S
   __smtx_to_real_coerce (__smtx_model_eval M (__eo_to_smt t))
 
 noncomputable def arith_mvar_denote_real (M : SmtModel) : Term -> SmtValue
-  | Term.__eo_List_nil => SmtValue.Rational (native_mk_rational 1 1)
+  | Term.__eo_List_nil => SmtValue.Real (native_mk_rational 1 1)
   | Term.Apply (Term.Apply Term.__eo_List_cons a) rest =>
       __smtx_model_eval_mult (arith_poly_norm_atom_denote_real M a)
         (arith_mvar_denote_real M rest)
@@ -213,11 +213,11 @@ noncomputable def arith_mvar_denote_real (M : SmtModel) : Term -> SmtValue
 
 noncomputable def arith_mon_denote_real (M : SmtModel) : Term -> SmtValue
   | Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) vars) (Term.Rational c) =>
-      __smtx_model_eval_mult (SmtValue.Rational c) (arith_mvar_denote_real M vars)
+      __smtx_model_eval_mult (SmtValue.Real c) (arith_mvar_denote_real M vars)
   | _ => SmtValue.NotValue
 
 noncomputable def arith_poly_denote_real (M : SmtModel) : Term -> SmtValue
-  | Term.UOp UserOp._at__at_poly_zero => SmtValue.Rational (native_mk_rational 0 1)
+  | Term.UOp UserOp._at__at_poly_zero => SmtValue.Real (native_mk_rational 0 1)
   | Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) m) p =>
       __smtx_model_eval_plus (arith_mon_denote_real M m) (arith_poly_denote_real M p)
   | _ => SmtValue.NotValue
@@ -267,7 +267,7 @@ theorem rat_div_one_intCast
 
 private theorem arith_poly_norm_atom_denote_real_rational_or_notValue
     (M : SmtModel) (t : Term) :
-  (∃ q, arith_poly_norm_atom_denote_real M t = SmtValue.Rational q) ∨
+  (∃ q, arith_poly_norm_atom_denote_real M t = SmtValue.Real q) ∨
     arith_poly_norm_atom_denote_real M t = SmtValue.NotValue := by
   unfold arith_poly_norm_atom_denote_real
   cases hEval : __smtx_model_eval M (__eo_to_smt t) <;>
@@ -277,7 +277,7 @@ theorem arith_poly_norm_atom_denote_real_rational_of_smt_arith_type
     (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Int ∨
       __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
-  ∃ q, arith_poly_norm_atom_denote_real M t = SmtValue.Rational q := by
+  ∃ q, arith_poly_norm_atom_denote_real M t = SmtValue.Real q := by
   have hNonNone : term_has_non_none_type (__eo_to_smt t) := by
     unfold term_has_non_none_type
     rcases hTy with hTy | hTy <;> simp [hTy]
@@ -301,7 +301,7 @@ theorem arith_poly_norm_atom_denote_real_rational_of_smt_arith_type
 private inductive arith_mvar_rational (M : SmtModel) : Term -> Prop where
   | nil : arith_mvar_rational M Term.__eo_List_nil
   | cons (a rest : Term) :
-      (∃ q, arith_poly_norm_atom_denote_real M a = SmtValue.Rational q) ->
+      (∃ q, arith_poly_norm_atom_denote_real M a = SmtValue.Real q) ->
       arith_mvar_rational M rest ->
       arith_mvar_rational M (Term.Apply (Term.Apply Term.__eo_List_cons a) rest)
 
@@ -370,7 +370,7 @@ private theorem arith_poly_wf_of_rational
 private theorem arith_mvar_denote_real_rational_of_rational_support
     (M : SmtModel) {vars : Term}
     (hvars : arith_mvar_rational M vars) :
-  ∃ q, arith_mvar_denote_real M vars = SmtValue.Rational q := by
+  ∃ q, arith_mvar_denote_real M vars = SmtValue.Real q := by
   induction hvars with
   | nil =>
       exact ⟨native_mk_rational 1 1, rfl⟩
@@ -383,7 +383,7 @@ private theorem arith_mvar_denote_real_rational_of_rational_support
 private theorem arith_mon_denote_real_rational_of_rational_support
     (M : SmtModel) {m : Term}
     (hm : arith_mon_rational M m) :
-  ∃ q, arith_mon_denote_real M m = SmtValue.Rational q := by
+  ∃ q, arith_mon_denote_real M m = SmtValue.Real q := by
   cases hm with
   | mk vars c hvars =>
       rcases arith_mvar_denote_real_rational_of_rational_support M hvars with ⟨qv, hVars⟩
@@ -393,7 +393,7 @@ private theorem arith_mon_denote_real_rational_of_rational_support
 private theorem arith_poly_denote_real_rational_of_rational_support
     (M : SmtModel) {p : Term}
     (hp : arith_poly_rational M p) :
-  ∃ q, arith_poly_denote_real M p = SmtValue.Rational q := by
+  ∃ q, arith_poly_denote_real M p = SmtValue.Real q := by
   induction hp with
   | zero =>
       exact ⟨native_mk_rational 0 1, rfl⟩
@@ -408,7 +408,7 @@ private def arith_const_mon (q : native_Rat) : Term :=
 
 private theorem arith_atom_ne_stuck_of_rational_support
     {M : SmtModel} {a : Term}
-    (hA : ∃ q, arith_poly_norm_atom_denote_real M a = SmtValue.Rational q) :
+    (hA : ∃ q, arith_poly_norm_atom_denote_real M a = SmtValue.Real q) :
   a ≠ Term.Stuck := by
   intro hSt
   subst a
@@ -837,7 +837,7 @@ private theorem arith_poly_rational_of_poly_mul
 
 private theorem arith_mvar_denote_real_rational_or_notValue
     (M : SmtModel) (vars : Term) :
-  (∃ q, arith_mvar_denote_real M vars = SmtValue.Rational q) ∨
+  (∃ q, arith_mvar_denote_real M vars = SmtValue.Real q) ∨
     arith_mvar_denote_real M vars = SmtValue.NotValue := by
   cases vars with
   | __eo_List_nil =>
@@ -871,7 +871,7 @@ decreasing_by
 
 private theorem arith_mon_denote_real_rational_or_notValue
     (M : SmtModel) (m : Term) :
-  (∃ q, arith_mon_denote_real M m = SmtValue.Rational q) ∨
+  (∃ q, arith_mon_denote_real M m = SmtValue.Real q) ∨
     arith_mon_denote_real M m = SmtValue.NotValue := by
   cases m with
   | Apply f c =>
@@ -903,7 +903,7 @@ private theorem arith_mon_denote_real_rational_or_notValue
 
 private theorem arith_poly_denote_real_rational_or_notValue
     (M : SmtModel) (p : Term) :
-  (∃ q, arith_poly_denote_real M p = SmtValue.Rational q) ∨
+  (∃ q, arith_poly_denote_real M p = SmtValue.Real q) ∨
     arith_poly_denote_real M p = SmtValue.NotValue := by
   cases p with
   | UOp op =>
@@ -945,36 +945,36 @@ decreasing_by
 
 private theorem smtx_model_eval_plus_zero_left_of_rational_or_notValue
     {v : SmtValue}
-    (hv : (∃ q, v = SmtValue.Rational q) ∨ v = SmtValue.NotValue) :
-  __smtx_model_eval_plus (SmtValue.Rational (native_mk_rational 0 1)) v = v := by
+    (hv : (∃ q, v = SmtValue.Real q) ∨ v = SmtValue.NotValue) :
+  __smtx_model_eval_plus (SmtValue.Real (native_mk_rational 0 1)) v = v := by
   rcases hv with ⟨q, rfl⟩ | rfl <;>
     simp [__smtx_model_eval_plus, native_qplus, native_mk_rational_zero, Rat.zero_add]
 
 private theorem smtx_model_eval_plus_zero_right_of_rational_or_notValue
     {v : SmtValue}
-    (hv : (∃ q, v = SmtValue.Rational q) ∨ v = SmtValue.NotValue) :
-  __smtx_model_eval_plus v (SmtValue.Rational (native_mk_rational 0 1)) = v := by
+    (hv : (∃ q, v = SmtValue.Real q) ∨ v = SmtValue.NotValue) :
+  __smtx_model_eval_plus v (SmtValue.Real (native_mk_rational 0 1)) = v := by
   rcases hv with ⟨q, rfl⟩ | rfl <;>
     simp [__smtx_model_eval_plus, native_qplus, native_mk_rational_zero, Rat.add_zero]
 
 private theorem smtx_model_eval_mult_one_left_of_rational_or_notValue
     {v : SmtValue}
-    (hv : (∃ q, v = SmtValue.Rational q) ∨ v = SmtValue.NotValue) :
-  __smtx_model_eval_mult (SmtValue.Rational (native_mk_rational 1 1)) v = v := by
+    (hv : (∃ q, v = SmtValue.Real q) ∨ v = SmtValue.NotValue) :
+  __smtx_model_eval_mult (SmtValue.Real (native_mk_rational 1 1)) v = v := by
   rcases hv with ⟨q, rfl⟩ | rfl <;>
     simp [__smtx_model_eval_mult, native_qmult, native_mk_rational_one]
 
 private theorem smtx_model_eval_mult_one_right_of_rational_or_notValue
     {v : SmtValue}
-    (hv : (∃ q, v = SmtValue.Rational q) ∨ v = SmtValue.NotValue) :
-  __smtx_model_eval_mult v (SmtValue.Rational (native_mk_rational 1 1)) = v := by
+    (hv : (∃ q, v = SmtValue.Real q) ∨ v = SmtValue.NotValue) :
+  __smtx_model_eval_mult v (SmtValue.Real (native_mk_rational 1 1)) = v := by
   rcases hv with ⟨q, rfl⟩ | rfl <;>
     simp [__smtx_model_eval_mult, native_qmult, native_mk_rational_one]
 
 private theorem smtx_model_eval_plus_uneg_of_rational_or_notValue
     {v1 v2 : SmtValue}
-    (h1 : (∃ q, v1 = SmtValue.Rational q) ∨ v1 = SmtValue.NotValue)
-    (h2 : (∃ q, v2 = SmtValue.Rational q) ∨ v2 = SmtValue.NotValue) :
+    (h1 : (∃ q, v1 = SmtValue.Real q) ∨ v1 = SmtValue.NotValue)
+    (h2 : (∃ q, v2 = SmtValue.Real q) ∨ v2 = SmtValue.NotValue) :
   __smtx_model_eval_plus (__smtx_model_eval_uneg v1) (__smtx_model_eval_uneg v2) =
     __smtx_model_eval_uneg (__smtx_model_eval_plus v1 v2) := by
   rcases h1 with ⟨q1, rfl⟩ | rfl <;> rcases h2 with ⟨q2, rfl⟩ | rfl <;>
@@ -983,17 +983,17 @@ private theorem smtx_model_eval_plus_uneg_of_rational_or_notValue
 
 private theorem smtx_model_eval_plus_comm_of_rational_or_notValue
     {v1 v2 : SmtValue}
-    (h1 : (∃ q, v1 = SmtValue.Rational q) ∨ v1 = SmtValue.NotValue)
-    (h2 : (∃ q, v2 = SmtValue.Rational q) ∨ v2 = SmtValue.NotValue) :
+    (h1 : (∃ q, v1 = SmtValue.Real q) ∨ v1 = SmtValue.NotValue)
+    (h2 : (∃ q, v2 = SmtValue.Real q) ∨ v2 = SmtValue.NotValue) :
   __smtx_model_eval_plus v1 v2 = __smtx_model_eval_plus v2 v1 := by
   rcases h1 with ⟨q1, rfl⟩ | rfl <;> rcases h2 with ⟨q2, rfl⟩ | rfl <;>
     simp [__smtx_model_eval_plus, native_qplus, Rat.add_comm]
 
 private theorem smtx_model_eval_plus_assoc_of_rational_or_notValue
     {v1 v2 v3 : SmtValue}
-    (h1 : (∃ q, v1 = SmtValue.Rational q) ∨ v1 = SmtValue.NotValue)
-    (h2 : (∃ q, v2 = SmtValue.Rational q) ∨ v2 = SmtValue.NotValue)
-    (h3 : (∃ q, v3 = SmtValue.Rational q) ∨ v3 = SmtValue.NotValue) :
+    (h1 : (∃ q, v1 = SmtValue.Real q) ∨ v1 = SmtValue.NotValue)
+    (h2 : (∃ q, v2 = SmtValue.Real q) ∨ v2 = SmtValue.NotValue)
+    (h3 : (∃ q, v3 = SmtValue.Real q) ∨ v3 = SmtValue.NotValue) :
   __smtx_model_eval_plus (__smtx_model_eval_plus v1 v2) v3 =
     __smtx_model_eval_plus v1 (__smtx_model_eval_plus v2 v3) := by
   rcases h1 with ⟨q1, rfl⟩ | rfl <;>
@@ -1003,17 +1003,17 @@ private theorem smtx_model_eval_plus_assoc_of_rational_or_notValue
 
 private theorem smtx_model_eval_mult_comm_of_rational_or_notValue
     {v1 v2 : SmtValue}
-    (h1 : (∃ q, v1 = SmtValue.Rational q) ∨ v1 = SmtValue.NotValue)
-    (h2 : (∃ q, v2 = SmtValue.Rational q) ∨ v2 = SmtValue.NotValue) :
+    (h1 : (∃ q, v1 = SmtValue.Real q) ∨ v1 = SmtValue.NotValue)
+    (h2 : (∃ q, v2 = SmtValue.Real q) ∨ v2 = SmtValue.NotValue) :
   __smtx_model_eval_mult v1 v2 = __smtx_model_eval_mult v2 v1 := by
   rcases h1 with ⟨q1, rfl⟩ | rfl <;> rcases h2 with ⟨q2, rfl⟩ | rfl <;>
     simp [__smtx_model_eval_mult, native_qmult, Rat.mul_comm]
 
 private theorem smtx_model_eval_mult_assoc_of_rational_or_notValue
     {v1 v2 v3 : SmtValue}
-    (h1 : (∃ q, v1 = SmtValue.Rational q) ∨ v1 = SmtValue.NotValue)
-    (h2 : (∃ q, v2 = SmtValue.Rational q) ∨ v2 = SmtValue.NotValue)
-    (h3 : (∃ q, v3 = SmtValue.Rational q) ∨ v3 = SmtValue.NotValue) :
+    (h1 : (∃ q, v1 = SmtValue.Real q) ∨ v1 = SmtValue.NotValue)
+    (h2 : (∃ q, v2 = SmtValue.Real q) ∨ v2 = SmtValue.NotValue)
+    (h3 : (∃ q, v3 = SmtValue.Real q) ∨ v3 = SmtValue.NotValue) :
   __smtx_model_eval_mult (__smtx_model_eval_mult v1 v2) v3 =
     __smtx_model_eval_mult v1 (__smtx_model_eval_mult v2 v3) := by
   rcases h1 with ⟨q1, rfl⟩ | rfl <;>
@@ -1023,22 +1023,22 @@ private theorem smtx_model_eval_mult_assoc_of_rational_or_notValue
 
 private theorem smtx_model_eval_mult_neg_left_of_rational_or_notValue
     (q : native_Rat) {v : SmtValue}
-    (hv : (∃ qv, v = SmtValue.Rational qv) ∨ v = SmtValue.NotValue) :
-  __smtx_model_eval_mult (SmtValue.Rational (native_qneg q)) v =
-    __smtx_model_eval_uneg (__smtx_model_eval_mult (SmtValue.Rational q) v) := by
+    (hv : (∃ qv, v = SmtValue.Real qv) ∨ v = SmtValue.NotValue) :
+  __smtx_model_eval_mult (SmtValue.Real (native_qneg q)) v =
+    __smtx_model_eval_uneg (__smtx_model_eval_mult (SmtValue.Real q) v) := by
   rcases hv with ⟨qv, rfl⟩ | rfl <;>
     simp [__smtx_model_eval_mult, __smtx_model_eval_uneg, native_qmult, native_qneg,
       Rat.neg_mul]
 
 private theorem smtx_model_eval_mult_rational_left_distrib_plus_of_rational_or_notValue
     (q : native_Rat) (v1 v2 : SmtValue)
-    (hv1 : (∃ q1, v1 = SmtValue.Rational q1) ∨ v1 = SmtValue.NotValue)
-    (hv2 : (∃ q2, v2 = SmtValue.Rational q2) ∨ v2 = SmtValue.NotValue) :
+    (hv1 : (∃ q1, v1 = SmtValue.Real q1) ∨ v1 = SmtValue.NotValue)
+    (hv2 : (∃ q2, v2 = SmtValue.Real q2) ∨ v2 = SmtValue.NotValue) :
   __smtx_model_eval_plus
-      (__smtx_model_eval_mult (SmtValue.Rational q) v1)
-      (__smtx_model_eval_mult (SmtValue.Rational q) v2) =
+      (__smtx_model_eval_mult (SmtValue.Real q) v1)
+      (__smtx_model_eval_mult (SmtValue.Real q) v2) =
     __smtx_model_eval_mult
-      (SmtValue.Rational q)
+      (SmtValue.Real q)
       (__smtx_model_eval_plus v1 v2) := by
   rcases hv1 with h1 | h1 <;> rcases hv2 with h2 | h2
   · rcases h1 with ⟨q1, rfl⟩
@@ -1053,14 +1053,14 @@ private theorem smtx_model_eval_mult_rational_left_distrib_plus_of_rational_or_n
 
 private theorem smtx_model_eval_mult_rational_right_distrib_plus_of_rational_or_notValue
     (q : native_Rat) (v1 v2 : SmtValue)
-    (hv1 : (∃ q1, v1 = SmtValue.Rational q1) ∨ v1 = SmtValue.NotValue)
-    (hv2 : (∃ q2, v2 = SmtValue.Rational q2) ∨ v2 = SmtValue.NotValue) :
+    (hv1 : (∃ q1, v1 = SmtValue.Real q1) ∨ v1 = SmtValue.NotValue)
+    (hv2 : (∃ q2, v2 = SmtValue.Real q2) ∨ v2 = SmtValue.NotValue) :
   __smtx_model_eval_plus
-      (__smtx_model_eval_mult v1 (SmtValue.Rational q))
-      (__smtx_model_eval_mult v2 (SmtValue.Rational q)) =
+      (__smtx_model_eval_mult v1 (SmtValue.Real q))
+      (__smtx_model_eval_mult v2 (SmtValue.Real q)) =
     __smtx_model_eval_mult
       (__smtx_model_eval_plus v1 v2)
-      (SmtValue.Rational q) := by
+      (SmtValue.Real q) := by
   rcases hv1 with h1 | h1 <;> rcases hv2 with h2 | h2
   · rcases h1 with ⟨q1, rfl⟩
     rcases h2 with ⟨q2, rfl⟩
@@ -1094,7 +1094,7 @@ private theorem arith_mon_denote_real_of_coeff_mul
       (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) vars)
         (Term.Rational (native_qmult c1 c2))) =
     __smtx_model_eval_mult
-      (SmtValue.Rational c1)
+      (SmtValue.Real c1)
       (arith_mon_denote_real M
         (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) vars) (Term.Rational c2))) := by
   rcases arith_mvar_denote_real_rational_or_notValue M vars with hVars | hVars
@@ -1123,14 +1123,14 @@ private theorem arith_mvar_denote_real_of_mvar_mul_mvar_rational
       | cons c1 rest2 hC1 hRest2 =>
           let vars1' := Term.Apply (Term.Apply Term.__eo_List_cons a1) rest1
           let vars2' := Term.Apply (Term.Apply Term.__eo_List_cons c1) rest2
-          have hRest1Val : ∃ q, arith_mvar_denote_real M rest1 = SmtValue.Rational q :=
+          have hRest1Val : ∃ q, arith_mvar_denote_real M rest1 = SmtValue.Real q :=
             arith_mvar_denote_real_rational_of_rational_support M hRest1
-          have hVars1Val : ∃ q, arith_mvar_denote_real M vars1' = SmtValue.Rational q :=
+          have hVars1Val : ∃ q, arith_mvar_denote_real M vars1' = SmtValue.Real q :=
             arith_mvar_denote_real_rational_of_rational_support M
               (arith_mvar_rational.cons (M := M) a1 rest1 hA1 hRest1)
-          have hRest2Val : ∃ q, arith_mvar_denote_real M rest2 = SmtValue.Rational q :=
+          have hRest2Val : ∃ q, arith_mvar_denote_real M rest2 = SmtValue.Real q :=
             arith_mvar_denote_real_rational_of_rational_support M hRest2
-          have hVars2Val : ∃ q, arith_mvar_denote_real M vars2' = SmtValue.Rational q :=
+          have hVars2Val : ∃ q, arith_mvar_denote_real M vars2' = SmtValue.Real q :=
             arith_mvar_denote_real_rational_of_rational_support M
               (arith_mvar_rational.cons (M := M) c1 rest2 hC1 hRest2)
           have hA1NotStuck : a1 ≠ Term.Stuck :=
@@ -1251,9 +1251,9 @@ private theorem arith_mon_denote_real_of_mon_mul_mon_rational
               __mvar_mul_mvar vars1 vars2 ≠ Term.Stuck :=
             arith_mvar_rational_ne_stuck
               (arith_mvar_rational_of_mvar_mul_mvar M hvars1 hvars2)
-          have hVars1Val : ∃ q, arith_mvar_denote_real M vars1 = SmtValue.Rational q :=
+          have hVars1Val : ∃ q, arith_mvar_denote_real M vars1 = SmtValue.Real q :=
             arith_mvar_denote_real_rational_of_rational_support M hvars1
-          have hVars2Val : ∃ q, arith_mvar_denote_real M vars2 = SmtValue.Rational q :=
+          have hVars2Val : ∃ q, arith_mvar_denote_real M vars2 = SmtValue.Real q :=
             arith_mvar_denote_real_rational_of_rational_support M hvars2
           rcases hVars1Val with ⟨q1, hVars1Val⟩
           rcases hVars2Val with ⟨q2, hVars2Val⟩
@@ -1277,11 +1277,11 @@ private theorem arith_mon_denote_real_of_mon_mul_mon_rational
 
 private theorem arith_mon_denote_real_zero_coeff_of_rational
     (M : SmtModel) (vars : Term)
-    (hVars : ∃ qv, arith_mvar_denote_real M vars = SmtValue.Rational qv) :
+    (hVars : ∃ qv, arith_mvar_denote_real M vars = SmtValue.Real qv) :
   arith_mon_denote_real M
       (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) vars)
         (Term.Rational (native_mk_rational 0 1))) =
-    SmtValue.Rational (native_mk_rational 0 1) := by
+    SmtValue.Real (native_mk_rational 0 1) := by
   rcases hVars with ⟨qv, hVars⟩
   simp [arith_mon_denote_real, hVars, __smtx_model_eval_mult, native_qmult,
     native_mk_rational_zero, Rat.zero_mul]
@@ -1489,10 +1489,10 @@ private theorem arith_poly_denote_real_of_poly_neg_wf
           have hTail : __poly_neg p ≠ Term.Stuck :=
             arith_poly_wf_ne_stuck (arith_poly_wf_of_poly_neg hp)
           have hMult :
-              __smtx_model_eval_mult (SmtValue.Rational (native_qneg c))
+              __smtx_model_eval_mult (SmtValue.Real (native_qneg c))
                   (arith_mvar_denote_real M vars) =
                 __smtx_model_eval_uneg
-                  (__smtx_model_eval_mult (SmtValue.Rational c) (arith_mvar_denote_real M vars)) :=
+                  (__smtx_model_eval_mult (SmtValue.Real c) (arith_mvar_denote_real M vars)) :=
             smtx_model_eval_mult_neg_left_of_rational_or_notValue c
               (arith_mvar_denote_real_rational_or_notValue M vars)
           simp [__poly_neg, __eo_mk_apply, __eo_neg, arith_poly_denote_real,
@@ -1520,7 +1520,7 @@ private theorem arith_poly_denote_real_of_poly_add_rational
           have hP2Val :
               ∃ q, arith_poly_denote_real M
                 (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) m2) p2) =
-                  SmtValue.Rational q :=
+                  SmtValue.Real q :=
             arith_poly_denote_real_rational_of_rational_support M
               (arith_poly_rational.cons (M := M) m2 p2 hm2 hp2)
           simpa [__poly_add, arith_poly_denote_real] using
@@ -1531,7 +1531,7 @@ private theorem arith_poly_denote_real_of_poly_add_rational
           have hP1Val :
               ∃ q, arith_poly_denote_real M
                 (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) m1) p1) =
-                  SmtValue.Rational q :=
+                  SmtValue.Real q :=
             arith_poly_denote_real_rational_of_rational_support M
               (arith_poly_rational.cons (M := M) m1 p1 hm1 hp1)
           simpa [__poly_add, arith_poly_denote_real] using
@@ -1553,27 +1553,27 @@ private theorem arith_poly_denote_real_of_poly_add_rational
                     Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) mon1) p1
                   let poly2 : Term :=
                     Term.Apply (Term.Apply (Term.UOp UserOp._at__at_poly) mon2) p2
-                  have hMon1Val : ∃ q, arith_mon_denote_real M mon1 = SmtValue.Rational q := by
+                  have hMon1Val : ∃ q, arith_mon_denote_real M mon1 = SmtValue.Real q := by
                     simpa [mon1] using
                       arith_mon_denote_real_rational_of_rational_support M
                         (arith_mon_rational.mk (M := M) vars1 c1 hvars1)
-                  have hMon2Val : ∃ q, arith_mon_denote_real M mon2 = SmtValue.Rational q := by
+                  have hMon2Val : ∃ q, arith_mon_denote_real M mon2 = SmtValue.Real q := by
                     simpa [mon2] using
                       arith_mon_denote_real_rational_of_rational_support M
                         (arith_mon_rational.mk (M := M) vars2 c2 hvars2)
-                  have hP1Val : ∃ q, arith_poly_denote_real M p1 = SmtValue.Rational q :=
+                  have hP1Val : ∃ q, arith_poly_denote_real M p1 = SmtValue.Real q :=
                     arith_poly_denote_real_rational_of_rational_support M hp1
-                  have hP2Val : ∃ q, arith_poly_denote_real M p2 = SmtValue.Rational q :=
+                  have hP2Val : ∃ q, arith_poly_denote_real M p2 = SmtValue.Real q :=
                     arith_poly_denote_real_rational_of_rational_support M hp2
                   rcases hMon1Val with ⟨qm1, hMon1Eq⟩
                   rcases hMon2Val with ⟨qm2, hMon2Eq⟩
                   rcases hP1Val with ⟨qp1, hP1Eq⟩
                   rcases hP2Val with ⟨qp2, hP2Eq⟩
-                  have hPoly1Val : ∃ q, arith_poly_denote_real M poly1 = SmtValue.Rational q := by
+                  have hPoly1Val : ∃ q, arith_poly_denote_real M poly1 = SmtValue.Real q := by
                     refine ⟨native_qplus qm1 qp1, ?_⟩
                     simp [poly1, mon1, arith_poly_denote_real, hMon1Eq, hP1Eq,
                       __smtx_model_eval_plus, native_qplus]
-                  have hPoly2Val : ∃ q, arith_poly_denote_real M poly2 = SmtValue.Rational q := by
+                  have hPoly2Val : ∃ q, arith_poly_denote_real M poly2 = SmtValue.Real q := by
                     refine ⟨native_qplus qm2 qp2, ?_⟩
                     simp [poly2, mon2, arith_poly_denote_real, hMon2Eq, hP2Eq,
                       __smtx_model_eval_plus, native_qplus]
@@ -1581,14 +1581,14 @@ private theorem arith_poly_denote_real_of_poly_add_rational
                       ∃ q,
                         __smtx_model_eval_plus
                           (arith_poly_denote_real M p1)
-                          (arith_poly_denote_real M p2) = SmtValue.Rational q := by
+                          (arith_poly_denote_real M p2) = SmtValue.Real q := by
                     refine ⟨native_qplus qp1 qp2, ?_⟩
                     simp [hP1Eq, hP2Eq, __smtx_model_eval_plus, native_qplus]
                   have hM2P1Val :
                       ∃ q,
                         __smtx_model_eval_plus
                           (arith_mon_denote_real M mon2)
-                          (arith_poly_denote_real M p1) = SmtValue.Rational q := by
+                          (arith_poly_denote_real M p1) = SmtValue.Real q := by
                     refine ⟨native_qplus qm2 qp1, ?_⟩
                     simp [hMon2Eq, hP1Eq, __smtx_model_eval_plus, native_qplus]
                   by_cases hEq : vars1 = vars2
@@ -1603,19 +1603,19 @@ private theorem arith_poly_denote_real_of_poly_add_rational
                     · have hZero' : native_mk_rational 0 1 = native_qplus c1 c2 := by
                         simpa [eq_comm] using hZero
                       have hVarsRat :
-                          ∃ qv, arith_mvar_denote_real M vars1 = SmtValue.Rational qv :=
+                          ∃ qv, arith_mvar_denote_real M vars1 = SmtValue.Real qv :=
                         arith_mvar_denote_real_rational_of_rational_support M hvars1
                       have hMonSum :
                           __smtx_model_eval_plus
                               (arith_mon_denote_real M mon1)
                               (arith_mon_denote_real M mon2) =
-                            SmtValue.Rational (native_mk_rational 0 1) := by
+                            SmtValue.Real (native_mk_rational 0 1) := by
                         have hCoeffZero :
                             arith_mon_denote_real M
                                 (Term.Apply
                                   (Term.Apply (Term.UOp UserOp._at__at_mon) vars1)
                                   (Term.Rational (native_qplus c1 c2))) =
-                              SmtValue.Rational (native_mk_rational 0 1) := by
+                              SmtValue.Real (native_mk_rational 0 1) := by
                           simpa [hZero', mon2] using
                             arith_mon_denote_real_zero_coeff_of_rational M vars1 hVarsRat
                         exact (arith_mon_denote_real_of_coeff_add M vars1 c1 c2).symm.trans
@@ -1630,7 +1630,7 @@ private theorem arith_poly_denote_real_of_poly_add_rational
                             hRec]
                         _ =
                             __smtx_model_eval_plus
-                              (SmtValue.Rational (native_mk_rational 0 1))
+                              (SmtValue.Real (native_mk_rational 0 1))
                               (__smtx_model_eval_plus
                                 (arith_poly_denote_real M p1)
                                 (arith_poly_denote_real M p2)) := by
@@ -2013,9 +2013,9 @@ private theorem arith_poly_denote_real_of_poly_mul_mon_rational
             (arith_poly_rational.zero (M := M)))
       have hMulTail : arith_poly_rational M (__poly_mul_mon m p2) :=
         arith_poly_rational_of_poly_mul_mon M hm hp2
-      have hMon2Val : ∃ q, arith_mon_denote_real M m2 = SmtValue.Rational q :=
+      have hMon2Val : ∃ q, arith_mon_denote_real M m2 = SmtValue.Real q :=
         arith_mon_denote_real_rational_of_rational_support M hm2
-      have hPoly2Val : ∃ q, arith_poly_denote_real M p2 = SmtValue.Rational q :=
+      have hPoly2Val : ∃ q, arith_poly_denote_real M p2 = SmtValue.Real q :=
         arith_poly_denote_real_rational_of_rational_support M hp2
       have hHeadEq :
           arith_poly_denote_real M
@@ -2029,7 +2029,7 @@ private theorem arith_poly_denote_real_of_poly_mul_mon_rational
         rw [arith_mon_denote_real_of_mon_mul_mon_rational M hm hm2, hMonEq, hMon2Eq]
         simpa [__smtx_model_eval_plus, __smtx_model_eval_mult, native_qmult,
           native_mk_rational_zero] using
-          congrArg SmtValue.Rational (Rat.add_zero (qm * qm2))
+          congrArg SmtValue.Real (Rat.add_zero (qm * qm2))
       have hStep :
           arith_poly_denote_real M
               (__poly_mul_mon m
@@ -2074,9 +2074,9 @@ private theorem arith_poly_denote_real_of_poly_mul_rational
               (arith_poly_denote_real M (__poly_mul_mon m p2))
               (arith_poly_denote_real M (__poly_mul p1 p2)) := by
         simpa [__poly_mul, hP2Ne] using arith_poly_denote_real_of_poly_add_rational M hMulHead hMulTail
-      have hMonVal : ∃ q, arith_mon_denote_real M m = SmtValue.Rational q :=
+      have hMonVal : ∃ q, arith_mon_denote_real M m = SmtValue.Real q :=
         arith_mon_denote_real_rational_of_rational_support M hm
-      have hPoly1Val : ∃ q, arith_poly_denote_real M p1 = SmtValue.Rational q :=
+      have hPoly1Val : ∃ q, arith_poly_denote_real M p1 = SmtValue.Real q :=
         arith_poly_denote_real_rational_of_rational_support M hp1
       rcases hMonVal with ⟨qm, hMonEq⟩
       rcases hPoly1Val with ⟨qp1, hPoly1Eq⟩
@@ -2090,7 +2090,7 @@ private theorem arith_poly_denote_real_of_poly_mul_mon_const_rational
     (M : SmtModel) (q : native_Rat) {p : Term}
     (hp : arith_poly_rational M p) :
   arith_poly_denote_real M (__poly_mul_mon (arith_const_mon q) p) =
-    __smtx_model_eval_mult (SmtValue.Rational q) (arith_poly_denote_real M p) := by
+    __smtx_model_eval_mult (SmtValue.Real q) (arith_poly_denote_real M p) := by
   induction hp with
   | zero =>
       simp [arith_const_mon, __poly_mul_mon, arith_poly_denote_real, __smtx_model_eval_mult,
@@ -2120,12 +2120,12 @@ private theorem arith_poly_denote_real_of_poly_mul_mon_const_rational
               arith_poly_rational M (__poly_mul_mon (arith_const_mon q) p) :=
             arith_poly_rational_of_poly_mul_mon_const M q hp
           have hMonVal :
-              ∃ qm, arith_mon_denote_real M mon = SmtValue.Rational qm := by
+              ∃ qm, arith_mon_denote_real M mon = SmtValue.Real qm := by
             simpa [mon] using
               arith_mon_denote_real_rational_of_rational_support M
                 (arith_mon_rational.mk (M := M) vars c hvars)
           have hPolyVal :
-              ∃ qp, arith_poly_denote_real M p = SmtValue.Rational qp :=
+              ∃ qp, arith_poly_denote_real M p = SmtValue.Real qp :=
             arith_poly_denote_real_rational_of_rational_support M hp
           have hHeadEq :
               arith_poly_denote_real M
@@ -2134,7 +2134,7 @@ private theorem arith_poly_denote_real_of_poly_mul_mon_const_rational
                       (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon) vars)
                         (Term.Rational (native_qmult q c))))
                     (Term.UOp UserOp._at__at_poly_zero)) =
-                __smtx_model_eval_mult (SmtValue.Rational q) (arith_mon_denote_real M mon) := by
+                __smtx_model_eval_mult (SmtValue.Real q) (arith_mon_denote_real M mon) := by
             rw [arith_poly_denote_real, arith_mon_denote_real_of_coeff_mul]
             rcases hMonVal with ⟨qm, hMonVal⟩
             simp [arith_poly_denote_real, mon, hMonVal, __smtx_model_eval_mult,
@@ -2188,7 +2188,7 @@ private theorem arith_poly_denote_real_of_poly_mul_mon_const_rational
 private theorem arith_poly_denote_real_of_rational
     (M : SmtModel) (q : native_Rat) :
   arith_poly_denote_real M (__get_arith_poly_norm (Term.Rational q)) =
-    SmtValue.Rational q := by
+    SmtValue.Real q := by
   by_cases hZero : q = native_mk_rational 0 1
   · subst hZero
     have hGet :
@@ -2211,8 +2211,8 @@ private theorem arith_poly_denote_real_of_rational
       simp [__get_arith_poly_norm, __eo_to_q, __eo_is_q, __eo_is_q_internal, __eo_is_eq,
         __eo_ite, native_ite, native_teq, hDec, SmtEval.native_and, SmtEval.native_not]
     rw [hGet]
-    change SmtValue.Rational (q * native_mk_rational 1 1 + native_mk_rational 0 1) =
-      SmtValue.Rational q
+    change SmtValue.Real (q * native_mk_rational 1 1 + native_mk_rational 0 1) =
+      SmtValue.Real q
     congr
     have hOne : native_mk_rational 1 1 = (1 : Rat) := by
       native_decide
@@ -2224,7 +2224,7 @@ private theorem arith_poly_denote_real_of_rational
 private theorem arith_poly_denote_real_of_numeral
     (M : SmtModel) (n : native_Int) :
   arith_poly_denote_real M (__get_arith_poly_norm (Term.Numeral n)) =
-    SmtValue.Rational (native_to_real n) := by
+    SmtValue.Real (native_to_real n) := by
   by_cases hZero : native_to_real n = native_mk_rational 0 1
   · have hGet :
         __get_arith_poly_norm (Term.Numeral n) =
@@ -2247,8 +2247,8 @@ private theorem arith_poly_denote_real_of_numeral
       simp [__get_arith_poly_norm, __eo_to_q, __eo_is_q, __eo_is_q_internal, __eo_is_eq,
         __eo_ite, native_ite, native_teq, hDec, SmtEval.native_and, SmtEval.native_not]
     rw [hGet]
-    change SmtValue.Rational (native_to_real n * native_mk_rational 1 1 + native_mk_rational 0 1) =
-      SmtValue.Rational (native_to_real n)
+    change SmtValue.Real (native_to_real n * native_mk_rational 1 1 + native_mk_rational 0 1) =
+      SmtValue.Real (native_to_real n)
     congr
     have hOne : native_mk_rational 1 1 = (1 : Rat) := by
       native_decide
@@ -2259,14 +2259,14 @@ private theorem arith_poly_denote_real_of_numeral
 
 private theorem arith_poly_norm_atom_denote_real_of_rational
     (M : SmtModel) (q : native_Rat) :
-  arith_poly_norm_atom_denote_real M (Term.Rational q) = SmtValue.Rational q := by
+  arith_poly_norm_atom_denote_real M (Term.Rational q) = SmtValue.Real q := by
   unfold arith_poly_norm_atom_denote_real
   rw [show __eo_to_smt (Term.Rational q) = SmtTerm.Rational q by rfl]
   simp [__smtx_model_eval, __smtx_to_real_coerce]
 
 private theorem arith_poly_norm_atom_denote_real_of_numeral
     (M : SmtModel) (n : native_Int) :
-  arith_poly_norm_atom_denote_real M (Term.Numeral n) = SmtValue.Rational (native_to_real n) := by
+  arith_poly_norm_atom_denote_real M (Term.Numeral n) = SmtValue.Real (native_to_real n) := by
   unfold arith_poly_norm_atom_denote_real
   rw [show __eo_to_smt (Term.Numeral n) = SmtTerm.Numeral n by rfl]
   simp [__smtx_model_eval, __smtx_to_real_coerce]
@@ -2591,13 +2591,13 @@ private theorem arith_atomic_poly_injective
 
 private theorem arith_mvar_rational_singleton
     (M : SmtModel) (t : Term)
-    (hRat : ∃ q, arith_poly_norm_atom_denote_real M t = SmtValue.Rational q) :
+    (hRat : ∃ q, arith_poly_norm_atom_denote_real M t = SmtValue.Real q) :
   arith_mvar_rational M (Term.Apply (Term.Apply Term.__eo_List_cons t) Term.__eo_List_nil) := by
   exact arith_mvar_rational.cons t Term.__eo_List_nil hRat (arith_mvar_rational.nil (M := M))
 
 private theorem arith_poly_rational_of_arith_atomic_poly
     (M : SmtModel) (t : Term)
-    (hRat : ∃ q, arith_poly_norm_atom_denote_real M t = SmtValue.Rational q) :
+    (hRat : ∃ q, arith_poly_norm_atom_denote_real M t = SmtValue.Real q) :
   arith_poly_rational M (arith_atomic_poly t) := by
   unfold arith_atomic_poly
   exact arith_poly_rational.cons
@@ -3166,7 +3166,7 @@ private theorem arith_poly_norm_atom_denote_real_of_qdiv_rational
         (Term.Rational q))) = SmtType.Real)
     (hZero : q ≠ native_mk_rational 0 1) :
   arith_poly_norm_atom_denote_real M (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv) t1) (Term.Rational q)) =
-    __smtx_model_eval_qdiv_total (arith_poly_norm_atom_denote_real M t1) (SmtValue.Rational q) := by
+    __smtx_model_eval_qdiv_total (arith_poly_norm_atom_denote_real M t1) (SmtValue.Real q) := by
   have hT1Real : __smtx_typeof (__eo_to_smt t1) = SmtType.Real :=
     smt_typeof_qdiv_left_of_rational_right t1 q hTy
   have hEval1Ty :
@@ -3177,9 +3177,9 @@ private theorem arith_poly_norm_atom_denote_real_of_qdiv_rational
   rcases real_value_canonical (by simpa [hT1Real] using hEval1Ty) with ⟨q1, hEval1⟩
   have hZero' : native_mk_rational 0 1 ≠ q := by
     simpa [eq_comm] using hZero
-  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Rational q1 := by
+  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Real q1 := by
     simp [arith_poly_norm_atom_denote_real, hEval1, __smtx_to_real_coerce]
-  have hEvalQ : __smtx_model_eval M (__eo_to_smt (Term.Rational q)) = SmtValue.Rational q := by
+  have hEvalQ : __smtx_model_eval M (__eo_to_smt (Term.Rational q)) = SmtValue.Real q := by
     rw [show __eo_to_smt (Term.Rational q) = SmtTerm.Rational q by rfl]
     simp [__smtx_model_eval]
   rw [hAtom1]
@@ -3217,7 +3217,7 @@ private theorem arith_poly_norm_atom_denote_real_of_qdiv_numeral
     (hZero : native_to_real n ≠ native_mk_rational 0 1) :
   arith_poly_norm_atom_denote_real M (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv) t1) (Term.Numeral n)) =
     __smtx_model_eval_qdiv_total (arith_poly_norm_atom_denote_real M t1)
-      (SmtValue.Rational (native_to_real n)) := by
+      (SmtValue.Real (native_to_real n)) := by
   have hT1Int : __smtx_typeof (__eo_to_smt t1) = SmtType.Int :=
     smt_typeof_qdiv_left_of_numeral_right t1 n hTy
   have hEval1Ty :
@@ -3226,14 +3226,14 @@ private theorem arith_poly_norm_atom_denote_real_of_qdiv_numeral
     exact Smtm.smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt t1)
       (by simp [term_has_non_none_type, hT1Int])
   rcases int_value_canonical (by simpa [hT1Int] using hEval1Ty) with ⟨n1, hEval1⟩
-  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Rational (native_to_real n1) := by
+  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Real (native_to_real n1) := by
     simp [arith_poly_norm_atom_denote_real, hEval1, __smtx_to_real_coerce]
   have hEvalN : __smtx_model_eval M (__eo_to_smt (Term.Numeral n)) = SmtValue.Numeral n := by
     rw [show __eo_to_smt (Term.Numeral n) = SmtTerm.Numeral n by rfl]
     simp [__smtx_model_eval]
   have hZeroTest :
-      __smtx_model_eval_eq (SmtValue.Rational (native_to_real n))
-        (SmtValue.Rational (native_mk_rational 0 1)) =
+      __smtx_model_eval_eq (SmtValue.Real (native_to_real n))
+        (SmtValue.Real (native_mk_rational 0 1)) =
         SmtValue.Boolean false := by
     simp [__smtx_model_eval_eq, native_veq, hZero]
   rw [hAtom1]
@@ -3245,9 +3245,9 @@ private theorem arith_poly_norm_atom_denote_real_of_qdiv_numeral
 private theorem smtx_model_eval_mult_const_recip_eq_qdiv_total
     (q1 q : native_Rat) :
   __smtx_model_eval_mult
-      (SmtValue.Rational (native_qdiv_total (native_mk_rational 1 1) q))
-      (SmtValue.Rational q1) =
-    __smtx_model_eval_qdiv_total (SmtValue.Rational q1) (SmtValue.Rational q) := by
+      (SmtValue.Real (native_qdiv_total (native_mk_rational 1 1) q))
+      (SmtValue.Real q1) =
+    __smtx_model_eval_qdiv_total (SmtValue.Real q1) (SmtValue.Real q) := by
   simp [__smtx_model_eval_mult, __smtx_model_eval_qdiv_total, native_qmult, native_qdiv_total,
     native_mk_rational_one, Rat.div_def, Rat.mul_comm]
 
@@ -3262,7 +3262,7 @@ private theorem arith_poly_denote_real_of_get_arith_poly_norm_qdiv_of_rational
       (__get_arith_poly_norm (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv) t1) (Term.Rational q))) =
     arith_poly_norm_atom_denote_real M (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv) t1) (Term.Rational q)) := by
   rcases arith_poly_denote_real_rational_of_rational_support M hRat1 with ⟨q1, hPoly1⟩
-  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Rational q1 := by
+  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Real q1 := by
     rw [← hRec1]
     exact hPoly1
   rw [get_arith_poly_norm_qdiv_of_rational t1 q hZero,
@@ -3283,7 +3283,7 @@ private theorem arith_poly_denote_real_of_get_arith_poly_norm_qdiv_of_numeral
       (__get_arith_poly_norm (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv) t1) (Term.Numeral n))) =
     arith_poly_norm_atom_denote_real M (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv) t1) (Term.Numeral n)) := by
   rcases arith_poly_denote_real_rational_of_rational_support M hRat1 with ⟨q1, hPoly1⟩
-  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Rational q1 := by
+  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Real q1 := by
     rw [← hRec1]
     exact hPoly1
   rw [get_arith_poly_norm_qdiv_of_numeral t1 n hZero,
@@ -3306,7 +3306,7 @@ private theorem arith_poly_denote_real_of_get_arith_poly_norm_qdiv_total_of_rati
     arith_poly_norm_atom_denote_real M
       (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv_total) t1) (Term.Rational q)) := by
   rcases arith_poly_denote_real_rational_of_rational_support M hRat1 with ⟨q1, hPoly1⟩
-  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Rational q1 := by
+  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Real q1 := by
     rw [← hRec1]
     exact hPoly1
   rw [get_arith_poly_norm_qdiv_total_of_rational t1 q hZero,
@@ -3330,7 +3330,7 @@ private theorem arith_poly_denote_real_of_get_arith_poly_norm_qdiv_total_of_nume
     arith_poly_norm_atom_denote_real M
       (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv_total) t1) (Term.Numeral n)) := by
   rcases arith_poly_denote_real_rational_of_rational_support M hRat1 with ⟨q1, hPoly1⟩
-  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Rational q1 := by
+  have hAtom1 : arith_poly_norm_atom_denote_real M t1 = SmtValue.Real q1 := by
     rw [← hRec1]
     exact hPoly1
   rw [get_arith_poly_norm_qdiv_total_of_numeral t1 n hZero,
@@ -3862,13 +3862,13 @@ private theorem smt_value_rel_of_eq_arith_poly_norm_atom_denote_real_of_smt_arit
     rcases real_value_canonical hEvalAReal with ⟨qA, hEvalA⟩
     rcases real_value_canonical hEvalBReal with ⟨qB, hEvalB⟩
     have hToRealEq :
-        __smtx_to_real_coerce (SmtValue.Rational qA) =
-          __smtx_to_real_coerce (SmtValue.Rational qB) := by
+        __smtx_to_real_coerce (SmtValue.Real qA) =
+          __smtx_to_real_coerce (SmtValue.Real qB) := by
       simpa [arith_poly_norm_atom_denote_real, hEvalA, hEvalB] using hAtomEq
-    have hValEq : SmtValue.Rational qA = SmtValue.Rational qB := by
+    have hValEq : SmtValue.Real qA = SmtValue.Real qB := by
       simpa [__smtx_to_real_coerce] using hToRealEq
     cases hValEq
-    simpa [hEvalA, hEvalB] using RuleProofs.smt_value_rel_refl (SmtValue.Rational qA)
+    simpa [hEvalA, hEvalB] using RuleProofs.smt_value_rel_refl (SmtValue.Real qA)
 
 private theorem smt_value_rel_of_equal_arith_poly_norm_of_smt_arith_type
     (M : SmtModel) (hM : model_wf M)

@@ -12,6 +12,8 @@ namespace Smtm
 
 open SmtEval
 
+noncomputable section
+
 namespace SmtValueOrder
 
 theorem Key.lt_ne : ∀ {a b}, Key.lt a b = true → a ≠ b := by
@@ -21,11 +23,24 @@ theorem Key.lt_ne : ∀ {a b}, Key.lt a b = true → a ≠ b := by
       intro b h
       cases b with
       | atom n => simp_all [Key.lt]; omega
+      | real s => simp
       | pair c d => simp_all
+  | real r =>
+      intro b h
+      cases b with
+      | atom n => simp
+      | real s =>
+          simp [Key.lt] at h
+          intro e
+          injection e with e
+          subst e
+          exact lt_irrefl _ h
+      | pair c d => simp
   | pair a b iha ihb =>
       intro c h
       cases c with
       | atom n => simp_all [Key.lt]
+      | real s => simp
       | pair c d =>
           simp only [Key.lt] at h
           split at h
@@ -42,11 +57,22 @@ theorem Key.lt_flip : ∀ {a b}, a ≠ b → Key.lt a b = false → Key.lt b a =
       intro b hne hlt
       cases b with
       | atom n => simp_all [Key.lt]; omega
+      | real s => simp_all [Key.lt]
+      | pair c d => simp_all [Key.lt]
+  | real r =>
+      intro b hne hlt
+      cases b with
+      | atom n => simp [Key.lt]
+      | real s =>
+          have hrs : s ≠ r := fun e => hne (e ▸ rfl)
+          simp [Key.lt] at hlt ⊢
+          exact lt_of_le_of_ne hlt hrs
       | pair c d => simp_all [Key.lt]
   | pair a b iha ihb =>
       intro c hne hlt
       cases c with
       | atom n => simp_all [Key.lt]
+      | real s => simp [Key.lt]
       | pair c d =>
           simp only [Key.lt] at hlt ⊢
           by_cases hac : a = c
@@ -68,11 +94,21 @@ theorem Key.lt_asymm : ∀ {a b}, Key.lt a b = true → Key.lt b a = false := by
       intro b hab
       cases b with
       | atom n => simp_all [Key.lt]; omega
+      | real s => simp [Key.lt]
+      | pair c d => simp [Key.lt]
+  | real r =>
+      intro b hab
+      cases b with
+      | atom n => simp_all [Key.lt]
+      | real s =>
+          simp [Key.lt] at hab ⊢
+          exact le_of_lt hab
       | pair c d => simp [Key.lt]
   | pair a b iha ihb =>
       intro c hab
       cases c with
       | atom n => simp_all [Key.lt]
+      | real s => simp_all [Key.lt]
       | pair c d =>
           simp only [Key.lt] at hab ⊢
           by_cases hac : a = c
@@ -89,22 +125,20 @@ theorem Key.lt_trans : ∀ {a b c}, Key.lt a b = true → Key.lt b c = true → 
   induction a with
   | atom m =>
       intro b c hab hbc
-      cases b with
-      | atom n =>
-          cases c with
-          | atom p => simp_all [Key.lt]; omega
-          | pair e f => simp [Key.lt]
-      | pair b₁ b₂ =>
-          cases c with
-          | atom p => simp_all [Key.lt]
-          | pair e f => simp [Key.lt]
+      cases b <;> cases c <;> simp_all [Key.lt] <;> omega
+  | real r =>
+      intro b c hab hbc
+      cases b <;> cases c <;> simp_all [Key.lt]
+      exact _root_.lt_trans hab hbc
   | pair a₁ a₂ ih₁ ih₂ =>
       intro b c hab hbc
       cases b with
       | atom n => simp_all [Key.lt]
+      | real s => simp_all [Key.lt]
       | pair b₁ b₂ =>
           cases c with
           | atom p => simp_all [Key.lt]
+          | real t => simp_all [Key.lt]
           | pair c₁ c₂ =>
               simp only [Key.lt] at hab hbc ⊢
               by_cases hab₁ : a₁ = b₁
@@ -135,16 +169,8 @@ theorem Key.lt_trans : ∀ {a b c}, Key.lt a b = true → Key.lt b c = true → 
   | .pair (.atom 1) (.pair (.atom n) (.atom 0)) => some (.negSucc n)
   | _ => none
 
-@[expose] def ratOfKey : Key → Option Rat
-  | .pair (.atom 0)
-      (.pair ki (.pair (.atom den) (.atom 0))) =>
-      match intOfKey ki with
-      | none => none
-      | some num =>
-          if hden : den = 0 then none
-          else if hred : num.natAbs.Coprime den then
-            some { num := num, den := den, den_nz := hden, reduced := hred }
-          else none
+@[expose] def realOfKey : Key → Option native_Real
+  | .real r => some r
   | _ => none
 
 @[expose] def stringOfKey : Key → Option native_String
@@ -155,21 +181,7 @@ theorem Key.lt_trans : ∀ {a b c}, Key.lt a b = true → Key.lt b c = true → 
 theorem intOfKey_intKey (i : Int) : intOfKey (intKey i) = some i := by
   cases i <;> rfl
 
-theorem ratOfKey_ratKey (q : Rat) : ratOfKey (ratKey q) = some q := by
-  change (match intOfKey (intKey q.num) with
-    | none => none
-    | some num =>
-        if hden : q.den = 0 then none
-        else if hred : num.natAbs.Coprime q.den then
-          some { num := num, den := q.den, den_nz := hden, reduced := hred }
-        else none) = some q
-  simp only [intOfKey_intKey]
-  split
-  · exact False.elim (q.den_nz ‹q.den = 0›)
-  · split
-    · apply congrArg some
-      apply Rat.ext <;> rfl
-    · exact False.elim (‹¬q.num.natAbs.Coprime q.den› q.reduced)
+theorem realOfKey_realKey (r : native_Real) : realOfKey (realKey r) = some r := rfl
 
 theorem stringOfKey_stringKey (s : native_String) :
     stringOfKey (stringKey s) = some s := by
@@ -206,7 +218,7 @@ mutual
   | .pair (.atom 1) (.pair (.atom 0) (.atom 0)) => some (.Boolean false)
   | .pair (.atom 1) (.pair (.atom 1) (.atom 0)) => some (.Boolean true)
   | .pair (.atom 2) (.pair ki (.atom 0)) => return .Numeral (← intOfKey ki)
-  | .pair (.atom 3) (.pair kq (.atom 0)) => return .Rational (← ratOfKey kq)
+  | .pair (.atom 3) (.pair kq (.atom 0)) => return .Real (← realOfKey kq)
   | .pair (.atom 4) (.pair kw (.pair ki (.atom 0))) =>
       return .Binary (← intOfKey kw) (← intOfKey ki)
   | .pair (.atom 5) (.pair km (.atom 0)) => return .Map (← mapOfKey km)
@@ -282,7 +294,7 @@ theorem typeOfKey_typeKey (t : SmtType) : typeOfKey (typeKey t) = some t := by
 
 theorem valueOfKey_valueKey (v : SmtValue) : valueOfKey (valueKey v) = some v := by
   cases v <;> simp [valueKey, valueOfKey, node, fields, natKey, boolKey, charKey,
-    intOfKey_intKey, ratOfKey_ratKey, stringOfKey_stringKey, regLanOfKey_regLanKey,
+    intOfKey_intKey, realOfKey_realKey, stringOfKey_stringKey, regLanOfKey_regLanKey,
     typeOfKey_typeKey, valueOfKey_valueKey, mapOfKey_mapKey, seqOfKey_seqKey,
     datatypeDeclOfKey_datatypeDeclKey]
   case Boolean b => cases b <;> rfl
@@ -339,5 +351,7 @@ theorem lt_trans {a b c : SmtValue} (hab : lt a b = true) (hbc : lt b c = true) 
     lt a c = true := Key.lt_trans hab hbc
 
 end SmtValueOrder
+
+end
 
 end Smtm

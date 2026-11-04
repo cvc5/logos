@@ -510,7 +510,7 @@ theorem arith_atom_denote_real_eq_of_smt_value_rel
 theorem arith_atom_denote_real_of_to_q
     (M : SmtModel) (t : Term) (q : native_Rat) :
   __eo_to_q t = Term.Rational q ->
-  arith_atom_denote_real M t = SmtValue.Rational q := by
+  arith_atom_denote_real M t = SmtValue.Real q := by
   intro h
   cases t <;> simp [__eo_to_q] at h
   · cases h
@@ -924,7 +924,7 @@ theorem smt_eval_int_of_type
 theorem smt_eval_real_of_type
     (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
-    ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Rational q := by
+    ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Real q := by
   have hPres :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) := by
@@ -1338,7 +1338,7 @@ theorem arith_rel_eval_bools_of_diff_type
           SmtType.Real) :
   ∃ q : native_Rat,
     arith_atom_denote_real M (Term.Apply (Term.Apply (Term.UOp UserOp.neg) x1) x2) =
-      SmtValue.Rational q ∧
+      SmtValue.Real q ∧
     __smtx_model_eval M
         (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lt) x1) x2)) =
       SmtValue.Boolean (native_qlt q (native_mk_rational 0 1)) ∧
@@ -1420,7 +1420,7 @@ theorem arith_rel_eval_bools_of_diff_type
       simp [__smtx_model_eval_leq, q, native_qsub_leq_zero_eq]
     · rw [eo_to_smt_eq_eq, smtx_eval_eq_term_eq, hEval1, hEval2]
       simp only [__smtx_model_eval_eq, native_veq]
-      rw [show decide (SmtValue.Rational q1 = SmtValue.Rational q2) = native_qeq q1 q2 by
+      rw [show decide (SmtValue.Real q1 = SmtValue.Real q2) = native_qeq q1 q2 by
         simp [native_qeq]]
       change SmtValue.Boolean (native_qeq q1 q2) =
         SmtValue.Boolean (native_qeq q (native_mk_rational 0 1))
@@ -1446,13 +1446,13 @@ theorem arith_atom_denote_real_of_scaled_factor
             (Term.Apply (Term.Apply (Term.UOp UserOp.mult) cx)
               (Term.Apply (Term.Apply (Term.UOp UserOp.mult) x) one))) =
           SmtType.Real)
-    (hCx : arith_atom_denote_real M cx = SmtValue.Rational c)
-    (hX : arith_atom_denote_real M x = SmtValue.Rational q)
-    (hOne : arith_atom_denote_real M one = SmtValue.Rational (native_mk_rational 1 1)) :
+    (hCx : arith_atom_denote_real M cx = SmtValue.Real c)
+    (hX : arith_atom_denote_real M x = SmtValue.Real q)
+    (hOne : arith_atom_denote_real M one = SmtValue.Real (native_mk_rational 1 1)) :
   arith_atom_denote_real M
       (Term.Apply (Term.Apply (Term.UOp UserOp.mult) cx)
         (Term.Apply (Term.Apply (Term.UOp UserOp.mult) x) one)) =
-    SmtValue.Rational (native_qmult c q) := by
+    SmtValue.Real (native_qmult c q) := by
   let inner := Term.Apply (Term.Apply (Term.UOp UserOp.mult) x) one
   have hOuterNN : term_has_non_none_type (SmtTerm.mult (__eo_to_smt cx) (__eo_to_smt inner)) := by
     unfold term_has_non_none_type
@@ -1488,7 +1488,7 @@ theorem arith_atom_denote_real_of_scaled_factor
       exact Or.inl hOuterTyInt
     change arith_atom_denote_real M
         (Term.Apply (Term.Apply (Term.UOp UserOp.mult) cx) inner) =
-      SmtValue.Rational (native_qmult c q)
+      SmtValue.Real (native_qmult c q)
     rw [arith_atom_denote_real_of_mult M hM cx inner hOuterArith]
     rw [arith_atom_denote_real_of_mult M hM x one hInnerArith]
     simp [hCx, hX, hOne, __smtx_model_eval_mult, native_qmult,
@@ -1512,7 +1512,7 @@ theorem arith_atom_denote_real_of_scaled_factor
       exact Or.inr hOuterTyReal
     change arith_atom_denote_real M
         (Term.Apply (Term.Apply (Term.UOp UserOp.mult) cx) inner) =
-      SmtValue.Rational (native_qmult c q)
+      SmtValue.Real (native_qmult c q)
     rw [arith_atom_denote_real_of_mult M hM cx inner hOuterArith]
     rw [arith_atom_denote_real_of_mult M hM x one hInnerArith]
     simp [hCx, hX, hOne, __smtx_model_eval_mult, native_qmult,

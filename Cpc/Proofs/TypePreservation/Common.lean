@@ -371,7 +371,7 @@ theorem type_inhabited_int : type_inhabited SmtType.Int :=
 
 /-- Shows that the SMT type `real` is inhabited. -/
 theorem type_inhabited_real : type_inhabited SmtType.Real :=
-  ⟨SmtValue.Rational (native_mk_rational 0 1), rfl⟩
+  ⟨SmtValue.Real (native_mk_rational 0 1), rfl⟩
 
 /-- Shows that the SMT type `reglan` is inhabited. -/
 theorem type_inhabited_reglan : type_inhabited SmtType.RegLan :=

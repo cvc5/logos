@@ -1231,7 +1231,7 @@ theorem congTrueSpine_qdiv_by_zero_eq_true
   congTrueSpine_non_reg_unop_eq_true M hM UserOp._at_div_by_zero
     (fun a => SmtTerm.qdiv a (SmtTerm.Rational (native_mk_rational 0 1)))
     (fun v => smtEvalQdiv M v
-      (SmtValue.Rational (native_mk_rational 0 1)))
+      (SmtValue.Real (native_mk_rational 0 1)))
     (by intro a; rfl)
     qdiv_by_zero_arg_non_reg_of_non_none
     (by

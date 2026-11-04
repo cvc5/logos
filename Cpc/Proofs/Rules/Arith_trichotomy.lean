@@ -413,8 +413,8 @@ private theorem int_gt_false_of_eval
 
 private theorem real_eq_false_of_eval
     (M : SmtModel) (a b : Term) {q r : native_Rat}
-    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Rational q)
-    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Rational r) :
+    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q)
+    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) false ->
     native_qeq q r = false := by
   intro h
@@ -427,8 +427,8 @@ private theorem real_eq_false_of_eval
 
 private theorem real_lt_false_of_eval
     (M : SmtModel) (a b : Term) {q r : native_Rat}
-    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Rational q)
-    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Rational r) :
+    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q)
+    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.lt) a) b) false ->
     native_qlt q r = false := by
   intro h
@@ -440,8 +440,8 @@ private theorem real_lt_false_of_eval
 
 private theorem real_gt_false_of_eval
     (M : SmtModel) (a b : Term) {q r : native_Rat}
-    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Rational q)
-    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Rational r) :
+    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q)
+    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.gt) a) b) false ->
     native_qlt r q = false := by
   intro h

@@ -57,7 +57,7 @@ theorem smtx_model_eval_qdiv_term_eq
        let xr := __smtx_to_real_coerce (__smtx_model_eval M x)
        __smtx_model_eval_ite
         (__smtx_model_eval_eq yr
-          (SmtValue.Rational (native_mk_rational 0 1)))
+          (SmtValue.Real (native_mk_rational 0 1)))
         (__smtx_model_eval_apply M
           (native_model_lookup M native_qdiv_by_zero_id
             (SmtType.FunType SmtType.Real SmtType.Real))

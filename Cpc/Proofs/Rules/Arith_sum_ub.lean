@@ -328,7 +328,7 @@ private theorem smt_eval_int_of_type
 private theorem smt_eval_real_of_type
     (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
-    ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Rational q := by
+    ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Real q := by
   have hPres :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) := by
@@ -400,8 +400,8 @@ private theorem real_lt_eval_of_lt_true
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Real) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.lt) a) b) true ->
     ∃ q r : native_Rat,
-      __smtx_model_eval M (__eo_to_smt a) = SmtValue.Rational q ∧
-      __smtx_model_eval M (__eo_to_smt b) = SmtValue.Rational r ∧
+      __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q ∧
+      __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r ∧
       native_qlt q r = true := by
   intro h
   rcases smt_eval_real_of_type M hM a hA with ⟨q, ha⟩
@@ -419,8 +419,8 @@ private theorem real_le_eval_of_leq_true
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Real) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.leq) a) b) true ->
     ∃ q r : native_Rat,
-      __smtx_model_eval M (__eo_to_smt a) = SmtValue.Rational q ∧
-      __smtx_model_eval M (__eo_to_smt b) = SmtValue.Rational r ∧
+      __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q ∧
+      __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r ∧
       native_qleq q r = true := by
   intro h
   rcases smt_eval_real_of_type M hM a hA with ⟨q, ha⟩
@@ -438,8 +438,8 @@ private theorem real_le_eval_of_eq_true
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Real) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) true ->
     ∃ q r : native_Rat,
-      __smtx_model_eval M (__eo_to_smt a) = SmtValue.Rational q ∧
-      __smtx_model_eval M (__eo_to_smt b) = SmtValue.Rational r ∧
+      __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q ∧
+      __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r ∧
       native_qleq q r = true := by
   intro h
   rcases smt_eval_real_of_type M hM a hA with ⟨q, ha⟩
@@ -487,10 +487,10 @@ private theorem sum_lt_true_of_real_eval
           (Term.Apply (Term.Apply (Term.UOp UserOp.plus) a1) a2))
         (Term.Apply (Term.Apply (Term.UOp UserOp.plus) b1) b2)))
     {q1 r1 q2 r2 : native_Rat}
-    (ha1 : __smtx_model_eval M (__eo_to_smt a1) = SmtValue.Rational q1)
-    (hb1 : __smtx_model_eval M (__eo_to_smt b1) = SmtValue.Rational r1)
-    (ha2 : __smtx_model_eval M (__eo_to_smt a2) = SmtValue.Rational q2)
-    (hb2 : __smtx_model_eval M (__eo_to_smt b2) = SmtValue.Rational r2)
+    (ha1 : __smtx_model_eval M (__eo_to_smt a1) = SmtValue.Real q1)
+    (hb1 : __smtx_model_eval M (__eo_to_smt b1) = SmtValue.Real r1)
+    (ha2 : __smtx_model_eval M (__eo_to_smt a2) = SmtValue.Real q2)
+    (hb2 : __smtx_model_eval M (__eo_to_smt b2) = SmtValue.Real r2)
     (hLt : native_qlt q1 r1 = true)
     (hLe : native_qleq q2 r2 = true) :
     eo_interprets M
@@ -541,10 +541,10 @@ private theorem sum_lt_true_of_real_eval_right
           (Term.Apply (Term.Apply (Term.UOp UserOp.plus) a1) a2))
         (Term.Apply (Term.Apply (Term.UOp UserOp.plus) b1) b2)))
     {q1 r1 q2 r2 : native_Rat}
-    (ha1 : __smtx_model_eval M (__eo_to_smt a1) = SmtValue.Rational q1)
-    (hb1 : __smtx_model_eval M (__eo_to_smt b1) = SmtValue.Rational r1)
-    (ha2 : __smtx_model_eval M (__eo_to_smt a2) = SmtValue.Rational q2)
-    (hb2 : __smtx_model_eval M (__eo_to_smt b2) = SmtValue.Rational r2)
+    (ha1 : __smtx_model_eval M (__eo_to_smt a1) = SmtValue.Real q1)
+    (hb1 : __smtx_model_eval M (__eo_to_smt b1) = SmtValue.Real r1)
+    (ha2 : __smtx_model_eval M (__eo_to_smt a2) = SmtValue.Real q2)
+    (hb2 : __smtx_model_eval M (__eo_to_smt b2) = SmtValue.Real r2)
     (hLe : native_qleq q1 r1 = true)
     (hLt : native_qlt q2 r2 = true) :
     eo_interprets M
@@ -595,10 +595,10 @@ private theorem sum_leq_true_of_real_eval
           (Term.Apply (Term.Apply (Term.UOp UserOp.plus) a1) a2))
         (Term.Apply (Term.Apply (Term.UOp UserOp.plus) b1) b2)))
     {q1 r1 q2 r2 : native_Rat}
-    (ha1 : __smtx_model_eval M (__eo_to_smt a1) = SmtValue.Rational q1)
-    (hb1 : __smtx_model_eval M (__eo_to_smt b1) = SmtValue.Rational r1)
-    (ha2 : __smtx_model_eval M (__eo_to_smt a2) = SmtValue.Rational q2)
-    (hb2 : __smtx_model_eval M (__eo_to_smt b2) = SmtValue.Rational r2)
+    (ha1 : __smtx_model_eval M (__eo_to_smt a1) = SmtValue.Real q1)
+    (hb1 : __smtx_model_eval M (__eo_to_smt b1) = SmtValue.Real r1)
+    (ha2 : __smtx_model_eval M (__eo_to_smt a2) = SmtValue.Real q2)
+    (hb2 : __smtx_model_eval M (__eo_to_smt b2) = SmtValue.Real r2)
     (hLe1 : native_qleq q1 r1 = true)
     (hLe2 : native_qleq q2 r2 = true) :
     eo_interprets M

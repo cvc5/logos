@@ -283,9 +283,9 @@ private theorem eval_abs_int (M : SmtModel) (x : Term) (n : native_Int)
   simp [__smtx_model_eval_abs, native_zabs, native_zneg]
 
 private theorem eval_abs_real (M : SmtModel) (x : Term) (q : native_Rat)
-    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Rational q) :
+    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Real q) :
     __smtx_model_eval M (__eo_to_smt (absTerm x)) =
-      SmtValue.Rational (if q < 0 then native_qneg q else q) := by
+      SmtValue.Real (if q < 0 then native_qneg q else q) := by
   rw [show __eo_to_smt (absTerm x) = SmtTerm.abs (__eo_to_smt x) by rfl]
   rw [eval_abs, hx]
   simp [__smtx_model_eval_abs, native_qabs, native_qneg]
@@ -299,9 +299,9 @@ private theorem eval_neg_int (M : SmtModel) (x : Term) (n : native_Int)
   simp [__smtx_model_eval_uneg]
 
 private theorem eval_neg_real (M : SmtModel) (x : Term) (q : native_Rat)
-    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Rational q) :
+    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Real q) :
     __smtx_model_eval M (__eo_to_smt (negTerm x)) =
-      SmtValue.Rational (native_qneg q) := by
+      SmtValue.Real (native_qneg q) := by
   rw [show __eo_to_smt (negTerm x) = SmtTerm.uneg (__eo_to_smt x) by rfl]
   rw [eval_uneg, hx]
   simp [__smtx_model_eval_uneg]

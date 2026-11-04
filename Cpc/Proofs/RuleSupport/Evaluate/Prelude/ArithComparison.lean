@@ -213,7 +213,7 @@ theorem EvaluateProofInternal.eo_to_z_real_arg_of_nonstuck
 theorem EvaluateProofInternal.eo_is_int_result_rel
     (M : SmtModel) (q : native_Rat) :
     RuleProofs.smt_value_rel
-      (__smtx_model_eval_is_int (SmtValue.Rational q))
+      (__smtx_model_eval_is_int (SmtValue.Real q))
       (__smtx_model_eval M
         (__eo_to_smt
           (__eo_eq (__eo_to_q (__eo_to_z (Term.Rational q)))

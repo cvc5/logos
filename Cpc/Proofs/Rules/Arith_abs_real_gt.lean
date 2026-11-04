@@ -65,9 +65,9 @@ private theorem eval_uneg (M : SmtModel) (a : SmtTerm) :
 
 /-- abs eval on an integer value. -/
 private theorem eval_abs_real (M : SmtModel) (x : Term) (n : native_Rat)
-    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Rational n) :
+    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Real n) :
     __smtx_model_eval M (__eo_to_smt (absTerm x)) =
-      SmtValue.Rational (if n < 0 then -n else n) := by
+      SmtValue.Real (if n < 0 then -n else n) := by
   rw [show __eo_to_smt (absTerm x) = SmtTerm.abs (__eo_to_smt x) by rfl]
   rw [eval_abs, hx]
   by_cases hneg : n < 0
@@ -76,8 +76,8 @@ private theorem eval_abs_real (M : SmtModel) (x : Term) (n : native_Rat)
 
 /-- uneg eval on an integer value. -/
 private theorem eval_neg_real (M : SmtModel) (x : Term) (n : native_Rat)
-    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Rational n) :
-    __smtx_model_eval M (__eo_to_smt (negTerm x)) = SmtValue.Rational (-n) := by
+    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Real n) :
+    __smtx_model_eval M (__eo_to_smt (negTerm x)) = SmtValue.Real (-n) := by
   rw [show __eo_to_smt (negTerm x) = SmtTerm.uneg (__eo_to_smt x) by rfl]
   rw [eval_uneg, hx]
   simp [__smtx_model_eval_uneg, native_qneg]
@@ -295,8 +295,8 @@ private theorem eval_rel (M : SmtModel) (hM : model_wf M) (x1 y1 : Term)
           (SmtTerm.ite (__eo_to_smt (geqTerm y1 zeroTerm))
             (__eo_to_smt (gtTerm (negTerm x1) y1))
             (__eo_to_smt (gtTerm (negTerm x1) (negTerm y1)))) by rfl]
-    have hEvalZero : __smtx_model_eval M (__eo_to_smt zeroTerm) = SmtValue.Rational (native_mk_rational 0 1) := by
-      change __smtx_model_eval M (SmtTerm.Rational (native_mk_rational 0 1)) = SmtValue.Rational (native_mk_rational 0 1)
+    have hEvalZero : __smtx_model_eval M (__eo_to_smt zeroTerm) = SmtValue.Real (native_mk_rational 0 1) := by
+      change __smtx_model_eval M (SmtTerm.Rational (native_mk_rational 0 1)) = SmtValue.Real (native_mk_rational 0 1)
       rw [__smtx_model_eval.eq_3]
     have hGeqX :
         __smtx_model_eval M (__eo_to_smt (geqTerm x1 zeroTerm)) =

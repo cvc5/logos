@@ -835,7 +835,7 @@ private theorem tuplePrependValueRecAt_size_lt_of_head_lt :
   | SmtValue.NotValue, acc, hHeadLt => by simpa [tuplePrependValueRecAt, vsm_num_apply_args, __smtx_apply_head_value] using hHeadLt
   | SmtValue.Boolean b, acc, hHeadLt => by simpa [tuplePrependValueRecAt, vsm_num_apply_args, __smtx_apply_head_value] using hHeadLt
   | SmtValue.Numeral n, acc, hHeadLt => by simpa [tuplePrependValueRecAt, vsm_num_apply_args, __smtx_apply_head_value] using hHeadLt
-  | SmtValue.Rational q, acc, hHeadLt => by simpa [tuplePrependValueRecAt, vsm_num_apply_args, __smtx_apply_head_value] using hHeadLt
+  | SmtValue.Real q, acc, hHeadLt => by simpa [tuplePrependValueRecAt, vsm_num_apply_args, __smtx_apply_head_value] using hHeadLt
   | SmtValue.Binary w n, acc, hHeadLt => by simpa [tuplePrependValueRecAt, vsm_num_apply_args, __smtx_apply_head_value] using hHeadLt
   | SmtValue.Map m, acc, hHeadLt => by simpa [tuplePrependValueRecAt, vsm_num_apply_args, __smtx_apply_head_value] using hHeadLt
   | SmtValue.Fun s T U, acc, hHeadLt => by simpa [tuplePrependValueRecAt, vsm_num_apply_args, __smtx_apply_head_value] using hHeadLt

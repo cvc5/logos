@@ -442,7 +442,7 @@ private theorem facts___eo_prog_arith_poly_norm_rel_impl_shape
     ⟨qx, hDiffXDen, hLtX, hLeX, hEqX, hGtX, hGeX⟩
   rcases arith_rel_eval_bools_of_diff_type M hM y1 y2 hDiffYTy with
     ⟨qy, hDiffYDen, hLtY, hLeY, hEqY, hGtY, hGeY⟩
-  have hXDen : arith_atom_denote_real M x = SmtValue.Rational qx := by
+  have hXDen : arith_atom_denote_real M x = SmtValue.Real qx := by
     rcases hXMaybe with hXd | hXTo
     · rw [hXd]
       exact hDiffXDen
@@ -451,7 +451,7 @@ private theorem facts___eo_prog_arith_poly_norm_rel_impl_shape
       have hXInt := diff_int_type_of_scaled_factor_to_real cx one x1 x2 hLhsArith'
       rw [hXTo, arith_atom_denote_real_of_to_real M hM _ hXInt]
       exact hDiffXDen
-  have hYDen : arith_atom_denote_real M y = SmtValue.Rational qy := by
+  have hYDen : arith_atom_denote_real M y = SmtValue.Real qy := by
     rcases hYMaybe with hYd | hYTo
     · rw [hYd]
       exact hDiffYDen
@@ -470,20 +470,20 @@ private theorem facts___eo_prog_arith_poly_norm_rel_impl_shape
   have hAtomsEq := arith_atom_denote_real_eq_of_smt_value_rel M lhs rhs hPremRel
   have hLhsScaled :
       arith_atom_denote_real M lhs =
-        SmtValue.Rational (native_qmult c qx) := by
+        SmtValue.Real (native_qmult c qx) := by
     simpa [lhs] using
       arith_atom_denote_real_of_scaled_factor M hM cx x one c qx
         hLhsArith hCxDen hXDen hOneDen
   have hRhsScaled :
       arith_atom_denote_real M rhs =
-        SmtValue.Rational (native_qmult d qy) := by
+        SmtValue.Real (native_qmult d qy) := by
     simpa [rhs] using
       arith_atom_denote_real_of_scaled_factor M hM cy y one d qy
         hRhsArith hCyDen hYDen hOneDen
   have hScaled : native_qmult c qx = native_qmult d qy := by
     have h :
-        SmtValue.Rational (native_qmult c qx) =
-          SmtValue.Rational (native_qmult d qy) := by
+        SmtValue.Real (native_qmult c qx) =
+          SmtValue.Real (native_qmult d qy) := by
       rw [← hLhsScaled, ← hRhsScaled]
       exact hAtomsEq
     injection h with hRat

@@ -1669,7 +1669,7 @@ theorem vsm_apply_arg_nth_canonical :
       simpa [__smtx_apply_arg_nth_value] using value_canonical_notValue
   | SmtValue.Numeral k, n, npos, hv => by
       simpa [__smtx_apply_arg_nth_value] using value_canonical_notValue
-  | SmtValue.Rational q, n, npos, hv => by
+  | SmtValue.Real q, n, npos, hv => by
       simpa [__smtx_apply_arg_nth_value] using value_canonical_notValue
   | SmtValue.Binary w k, n, npos, hv => by
       simpa [__smtx_apply_arg_nth_value] using value_canonical_notValue

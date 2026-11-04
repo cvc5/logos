@@ -92,8 +92,8 @@ private theorem numeral_smt_eval (M : SmtModel) (n : native_Int) :
 
 private theorem rational_smt_eval (M : SmtModel) (q : native_Rat) :
     __smtx_model_eval M (__eo_to_smt (Term.Rational q)) =
-      SmtValue.Rational q := by
-  change __smtx_model_eval M (SmtTerm.Rational q) = SmtValue.Rational q
+      SmtValue.Real q := by
+  change __smtx_model_eval M (SmtTerm.Rational q) = SmtValue.Real q
   rw [__smtx_model_eval.eq_3]
 
 private theorem native_qdiv_total_zero (q : native_Rat) :
@@ -2570,12 +2570,12 @@ private theorem eval_qdiv_total_real_zero_rel
   unfold RuleProofs.smt_value_rel
   rw [eo_to_smt_qdiv_total_eq, smtx_eval_qdiv_total_term_eq]
   rw [hEvalT, rational_smt_eval M (native_mk_rational 0 1)]
-  rw [show __smtx_model_eval_qdiv_total (SmtValue.Rational q)
-      (SmtValue.Rational (native_mk_rational 0 1)) =
-      SmtValue.Rational (native_mk_rational 0 1) by
+  rw [show __smtx_model_eval_qdiv_total (SmtValue.Real q)
+      (SmtValue.Real (native_mk_rational 0 1)) =
+      SmtValue.Real (native_mk_rational 0 1) by
     simp [__smtx_model_eval_qdiv_total, native_qdiv_total_zero]]
   exact RuleProofs.smtx_model_eval_eq_refl
-    (SmtValue.Rational (native_mk_rational 0 1))
+    (SmtValue.Real (native_mk_rational 0 1))
 
 private theorem eval_qdiv_total_int_zero_rel
     (M : SmtModel) (hM : model_wf M)
@@ -2597,10 +2597,10 @@ private theorem eval_qdiv_total_int_zero_rel
   rw [hEvalT, numeral_smt_eval M 0,
     rational_smt_eval M (native_mk_rational 0 1)]
   rw [show __smtx_model_eval_qdiv_total (SmtValue.Numeral n) (SmtValue.Numeral 0) =
-      SmtValue.Rational (native_mk_rational 0 1) by
+      SmtValue.Real (native_mk_rational 0 1) by
     simp [__smtx_model_eval_qdiv_total, native_mk_rational_zero_den]]
   exact RuleProofs.smtx_model_eval_eq_refl
-    (SmtValue.Rational (native_mk_rational 0 1))
+    (SmtValue.Real (native_mk_rational 0 1))
 
 theorem typed_arith_div_total_zero_real
     (t : Term)
