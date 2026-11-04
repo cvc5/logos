@@ -74,12 +74,6 @@ private theorem eo_to_smt_stuck_eq :
     __eo_to_smt Term.Stuck = SmtTerm.None := by
   rfl
 
-/-- Simplifies EO-to-SMT translation for `and`. -/
-private theorem eo_to_smt_and_eq (A B : Term) :
-    __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) =
-      SmtTerm.and (__eo_to_smt A) (__eo_to_smt B) := by
-  rfl
-
 /-- Characterizes EO interpretation in terms of the translated SMT interpretation. -/
 theorem eo_interprets_iff_smt_interprets (M : SmtModel) (t : Term) (b : Bool) :
   eo_interprets M t b ↔ smt_interprets M (__eo_to_smt t) b := by
@@ -162,46 +156,6 @@ theorem term_ne_stuck_of_has_smt_translation (t : Term) :
   rw [eo_has_smt_translation, eo_to_smt_stuck_eq] at hTy
   exact hTy TranslationProofs.smtx_typeof_none
 
-/-- Derives `eo_has_bool_type_and` from `bool_args`. -/
-theorem eo_has_bool_type_and_of_bool_args (A B : Term) :
-  eo_has_bool_type A ->
-  eo_has_bool_type B ->
-  eo_has_bool_type (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) := by
-  intro hA hB
-  unfold eo_has_bool_type at hA hB ⊢
-  rw [eo_to_smt_and_eq A B, typeof_and_eq]
-  simp [hA, hB, native_ite, native_Teq]
-
-/-- Left-projection lemma for `eo_has_bool_type_and`. -/
-theorem eo_has_bool_type_and_left (A B : Term) :
-  eo_has_bool_type (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) ->
-  eo_has_bool_type A := by
-  intro hTy
-  unfold eo_has_bool_type at hTy ⊢
-  rw [eo_to_smt_and_eq A B] at hTy
-  have hNN : term_has_non_none_type
-      (SmtTerm.and (__eo_to_smt A) (__eo_to_smt B)) := by
-    unfold term_has_non_none_type
-    rw [hTy]
-    simp
-  exact (bool_binop_args_bool_of_non_none (op := SmtTerm.and)
-    (typeof_and_eq (__eo_to_smt A) (__eo_to_smt B)) hNN).1
-
-/-- Right-projection lemma for `eo_has_bool_type_and`. -/
-theorem eo_has_bool_type_and_right (A B : Term) :
-  eo_has_bool_type (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) ->
-  eo_has_bool_type B := by
-  intro hTy
-  unfold eo_has_bool_type at hTy ⊢
-  rw [eo_to_smt_and_eq A B] at hTy
-  have hNN : term_has_non_none_type
-      (SmtTerm.and (__eo_to_smt A) (__eo_to_smt B)) := by
-    unfold term_has_non_none_type
-    rw [hTy]
-    simp
-  exact (bool_binop_args_bool_of_non_none (op := SmtTerm.and)
-    (typeof_and_eq (__eo_to_smt A) (__eo_to_smt B)) hNN).2
-
 /-- Derives `eo_interprets` from `bool_eval`. -/
 theorem eo_interprets_of_bool_eval
     (M : SmtModel) (t : Term) (b : Bool) :
@@ -249,79 +203,6 @@ theorem eo_interprets_true_not_false (M : SmtModel) (t : Term) :
       | intro_false hTyFalse hEvalFalse =>
           rw [hEvalTrue] at hEvalFalse
           cases hEvalFalse
-
-/-- Left-projection lemma for `eo_interprets_and`. -/
-theorem eo_interprets_and_left (M : SmtModel) (A B : Term) :
-  eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) true ->
-  eo_interprets M A true := by
-  intro h
-  rw [eo_interprets_iff_smt_interprets] at h ⊢
-  rw [eo_to_smt_and_eq A B] at h
-  cases h with
-  | intro_true hty hEval =>
-      have htyA : __smtx_typeof (__eo_to_smt A) = SmtType.Bool := by
-        have hNN : term_has_non_none_type
-            (SmtTerm.and (__eo_to_smt A) (__eo_to_smt B)) := by
-          unfold term_has_non_none_type
-          rw [hty]
-          simp
-        exact (bool_binop_args_bool_of_non_none (op := SmtTerm.and)
-          (typeof_and_eq (__eo_to_smt A) (__eo_to_smt B)) hNN).1
-      have hEvalA : __smtx_model_eval M (__eo_to_smt A) = SmtValue.Boolean true := by
-        rw [model_eval_and_eq] at hEval
-        cases hAeval : __smtx_model_eval M (__eo_to_smt A) <;>
-          cases hBeval : __smtx_model_eval M (__eo_to_smt B) <;>
-          simp [hAeval, hBeval, __smtx_model_eval_and] at hEval
-        case Boolean.Boolean a b =>
-          cases a <;> cases b <;> simp [SmtEval.native_and] at hEval
-          simp
-      exact smt_interprets.intro_true M (__eo_to_smt A) htyA hEvalA
-
-/-- Right-projection lemma for `eo_interprets_and`. -/
-theorem eo_interprets_and_right (M : SmtModel) (A B : Term) :
-  eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) true ->
-  eo_interprets M B true := by
-  intro h
-  rw [eo_interprets_iff_smt_interprets] at h ⊢
-  rw [eo_to_smt_and_eq A B] at h
-  cases h with
-  | intro_true hty hEval =>
-      have htyB : __smtx_typeof (__eo_to_smt B) = SmtType.Bool := by
-        have hNN : term_has_non_none_type
-            (SmtTerm.and (__eo_to_smt A) (__eo_to_smt B)) := by
-          unfold term_has_non_none_type
-          rw [hty]
-          simp
-        exact (bool_binop_args_bool_of_non_none (op := SmtTerm.and)
-          (typeof_and_eq (__eo_to_smt A) (__eo_to_smt B)) hNN).2
-      have hEvalB : __smtx_model_eval M (__eo_to_smt B) = SmtValue.Boolean true := by
-        rw [model_eval_and_eq] at hEval
-        cases hAeval : __smtx_model_eval M (__eo_to_smt A) <;>
-          cases hBeval : __smtx_model_eval M (__eo_to_smt B) <;>
-          simp [hAeval, hBeval, __smtx_model_eval_and] at hEval
-        case Boolean.Boolean a b =>
-          cases a <;> cases b <;> simp [SmtEval.native_and] at hEval
-          simp
-      exact smt_interprets.intro_true M (__eo_to_smt B) htyB hEvalB
-
-/-- Introduction lemma for `eo_interprets_and`. -/
-theorem eo_interprets_and_intro (M : SmtModel) (A B : Term) :
-  eo_interprets M A true ->
-  eo_interprets M B true ->
-  eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.and) A) B) true := by
-  intro hA hB
-  rw [eo_interprets_iff_smt_interprets] at hA hB ⊢
-  rw [eo_to_smt_and_eq A B]
-  cases hA with
-  | intro_true htyA hEvalA =>
-      cases hB with
-      | intro_true htyB hEvalB =>
-          apply smt_interprets.intro_true
-          · rw [typeof_and_eq]
-            simp [htyA, htyB, native_Teq, native_ite]
-          · rw [model_eval_and_eq]
-            rw [hEvalA, hEvalB]
-            simp [__smtx_model_eval_and, SmtEval.native_and]
 
 /-- Semantic equality relation on SMT values, defined by evaluation of SMT equality. -/
 def smt_value_rel (v1 v2 : SmtValue) : Prop :=

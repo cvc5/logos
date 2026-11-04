@@ -129,35 +129,35 @@ theorem stateAssumes_true_in_var_model_of_assumptionStability
     (M : SmtModel) (hM : model_wf M) :
   forall {s : CState},
     checkerAssumptionStabilityInvariant M s ->
-    eo_interprets M (stateAssumes s) true ->
+    AllInterpretedTrue M (stateAssumes s) ->
     forall (N : SmtModel),
       model_wf N ->
       model_agrees_on_globals M N ->
-      eo_interprets N (stateAssumes s) true
+      AllInterpretedTrue N (stateAssumes s)
 :=
 by
   intro s hStable hAss
   induction s with
   | nil =>
       intro N hN hAgree
-      simpa [stateAssumes] using eo_interprets_true N
+      simpa [stateAssumes] using AllInterpretedTrue.nil N
   | Stuck =>
       intro N hN hAgree
-      exact False.elim (eo_interprets_stuck_true_absurd M (by simpa [stateAssumes] using hAss))
+      exact False.elim (AllInterpretedTrue.stuck_absurd M (by simpa [stateAssumes] using hAss))
   | cons so s ih =>
       intro N hN hAgree
       cases so with
       | assume A =>
           have hA : eo_interprets M A true :=
-            eo_interprets_and_left M A (stateAssumes s) hAss
-          have hTailAss : eo_interprets M (stateAssumes s) true :=
-            eo_interprets_and_right M A (stateAssumes s) hAss
+            AllInterpretedTrue.head hAss
+          have hTailAss : AllInterpretedTrue M (stateAssumes s) :=
+            AllInterpretedTrue.tail hAss
           have hA' : eo_interprets N A true :=
             hStable.1 M hM hA N hN hAgree
-          have hTail' : eo_interprets N (stateAssumes s) true :=
+          have hTail' : AllInterpretedTrue N (stateAssumes s) :=
             ih hStable.2 hTailAss N hN hAgree
           simpa [stateAssumes] using
-            eo_interprets_and_intro N A (stateAssumes s) hA' hTail'
+            AllInterpretedTrue.cons hA' hTail'
       | assume_push A =>
           exact ih hStable.2 (by simpa [stateAssumes] using hAss) N hN hAgree
       | proven P =>
@@ -168,21 +168,21 @@ theorem statePushes_true_in_var_model_of_assumptionStability
     (M : SmtModel) (hM : model_wf M) :
   forall {s : CState},
     checkerAssumptionStabilityInvariant M s ->
-    eo_interprets M (statePushes s) true ->
+    AllInterpretedTrue M (statePushes s) ->
     forall (N : SmtModel),
       model_wf N ->
       model_agrees_on_globals M N ->
-      eo_interprets N (statePushes s) true
+      AllInterpretedTrue N (statePushes s)
 :=
 by
   intro s hStable hPush
   induction s with
   | nil =>
       intro N hN hAgree
-      simpa [statePushes] using eo_interprets_true N
+      simpa [statePushes] using AllInterpretedTrue.nil N
   | Stuck =>
       intro N hN hAgree
-      exact False.elim (eo_interprets_stuck_true_absurd M (by simpa [statePushes] using hPush))
+      exact False.elim (AllInterpretedTrue.stuck_absurd M (by simpa [statePushes] using hPush))
   | cons so s ih =>
       intro N hN hAgree
       cases so with
@@ -190,15 +190,15 @@ by
           exact ih hStable.2 (by simpa [statePushes] using hPush) N hN hAgree
       | assume_push A =>
           have hA : eo_interprets M A true :=
-            eo_interprets_and_left M A (statePushes s) hPush
-          have hTailPush : eo_interprets M (statePushes s) true :=
-            eo_interprets_and_right M A (statePushes s) hPush
+            AllInterpretedTrue.head hPush
+          have hTailPush : AllInterpretedTrue M (statePushes s) :=
+            AllInterpretedTrue.tail hPush
           have hA' : eo_interprets N A true :=
             hStable.1 M hM hA N hN hAgree
-          have hTail' : eo_interprets N (statePushes s) true :=
+          have hTail' : AllInterpretedTrue N (statePushes s) :=
             ih hStable.2 hTailPush N hN hAgree
           simpa [statePushes] using
-            eo_interprets_and_intro N A (statePushes s) hA' hTail'
+            AllInterpretedTrue.cons hA' hTail'
       | proven P =>
           exact ih (by simpa [checkerAssumptionStabilityInvariant] using hStable)
             (by simpa [statePushes] using hPush) N hN hAgree

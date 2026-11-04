@@ -25,13 +25,13 @@ import sys
 out = Path(sys.argv[sys.argv.index("--final-out-dir") + 1]) / "lean"
 files = {
     "Logos.lean": "import Cpc.LogosTerm\npartial def checker := true\n",
-    "LogosTerm.lean": "inductive UserOp where\n  | and : UserOp\n",
+    "LogosTerm.lean": "-- term datatypes\n",
     "Parser.lean": "-- parser\n",
     "SmtEval.lean": "-- evaluator\n",
     "SmtModelDefs.lean": "-- model definitions\n",
     "SmtValueOrder.lean": "-- value order\n",
     "SmtModel.lean": "-- model\n",
-    "Spec.lean": "-- (UserOp.and) => SmtTerm.and\n",
+    "Spec.lean": "-- spec\n",
     "Proofs/RuleLemmas.lean": "-- rule lemmas\n",
     "Proofs/Rules/Refl.lean": "-- generated rule stub\n",
 }

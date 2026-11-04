@@ -131,12 +131,16 @@ for pkg in Cpc CpcMini; do
   fi
 done
 
-# 5. The checker layer depends on exactly one signature symbol.
+# 5. The checker layer depends on no signature symbol.
 #
-# `and` is irreducible: the checker folds the proof state into an and-chain and
-# soundness is stated about it.  `not`, `eq` and `imp` were removed and live in
-# Proofs/CommonBoolOps.lean, which the checker does not import.  A new operator
-# appearing here is a new requirement on every consumer's signature.
+# The proof state and the input assumptions are read off as lists.  The one
+# formula soundness is stated about, `argListAssumes`, is the calculus's to
+# define (Proofs/CalculusAssumptions.lean), along with the two lemmas the checker
+# needs about it (Proofs/RuleSupport/CalculusAssumptions.lean).  So the checker
+# needs no operator of the calculus.  `and`, `not`, `eq` and `imp` were each a
+# requirement once; their lemmas live in Proofs/CommonBoolOps.lean, which only
+# the calculus side uses.  An operator appearing here is a new requirement on
+# every consumer's signature.
 echo "Checking the checker layer's operator dependency..."
 for pkg in Cpc CpcMini; do
   # `|| true` so that a file check 4 has already reported missing leaves this
@@ -144,10 +148,10 @@ for pkg in Cpc CpcMini; do
   ops=$(grep -ho 'UserOp\.[a-zA-Z_0-9]*' $(core_files "${pkg}") 2>/dev/null \
           | sort -u | sed 's/UserOp\.//' | tr '\n' ' ' || true)
   ops="${ops% }"
-  if [ "${ops}" = "and" ]; then
-    note "${pkg}: and"
+  if [ -z "${ops}" ]; then
+    note "${pkg}: none"
   else
-    bad "${pkg} checker layer depends on operators: ${ops:-<none>} (expected exactly: and)"
+    bad "${pkg} checker layer depends on operators: ${ops} (expected none)"
     bad "  A rule-only lemma probably landed in the checker layer; move it to Proofs/CommonBoolOps.lean."
   fi
 done

@@ -43,12 +43,14 @@ generates the exposed evaluator's unfolding theorem once for those imports.
 
 ```
 Proofs/Common.lean            core semantics predicates (eo_interprets, eo_has_bool_type)
+Proofs/CalculusAssumptions.lean   the calculus's argListAssumes (not checker layer)
 Proofs/Assumptions.lean       input-problem + per-command side conditions
 Proofs/RuleSupport/Contract.lean   the checker/rule contract
 Proofs/CheckerState.lean      the state machine — no invariant is named here
 Proofs/Invariants/Stability.lean   the one optional invariant
 Proofs/CheckerCore.lean       the invariants, the bundle, the rule bridge
      ↑ (generated) Proofs/RuleLemmas.lean, Proofs/Rules/*.lean
+     ↑ Proofs/RuleSupport/CalculusAssumptions.lean   the calculus's lemmas about it
 Proofs/Checker.lean           preservation + correct___eo_is_refutation
 ```
 
@@ -97,42 +99,51 @@ before its first proof, not after its second package.
 
 ### 1. Signature symbols
 
-The checker layer hard-codes a small number of SMT-LIB symbols, and Eunoia does
-not guarantee they exist.
+**The checker layer depends on no signature symbol.** `stateAssumes`,
+`statePushes` and `stateProvens` read the checker stack off as a `List Term`,
+`argListTerms` does the same for the input assumption list, and every invariant
+is stated about those lists. `__eo_invoke_assume_list` does not name an operator
+either: it walks the input problem as a `CArgList`.
 
-- **`and`.** `stateAssumes` / `statePushes` / `stateProvens` fold the checker
-  stack with it, and `argListAssumes` folds the input assumption list with it;
-  the conclusion `eo_satisfiability (argListAssumes F) false` is a statement
-  about that chain. `__eo_invoke_assume_list` itself does not name the operator:
-  it walks the input problem as a `CArgList`.
-- **`:right-assoc-nil true` on `and`, but only if the rules need it.** The core
-  does not use the attribute at all — compiling CPC with `and` as a plain binary
-  operator leaves `__eo_invoke_assume_list`, the refutation test and the SMT
-  translation byte-identical. What the attribute buys is the `__eo_nil` arm for
-  `and`, and that is reached only where a rule gathers `:list` premises with
-  `and` through `__eo_mk_premise_list`. A calculus with binary `and` and no
-  `and`-gathered premise lists is fine.
-- **The Bool literals `true` / `false`.** `Term.Boolean` is a builtin so it
-  always exists, but the checker fixes its meaning: `false` is the refutation
-  target, and `true` is the unit of the assumption conjunction.
+The one fixed meaning is that of the Bool literals. `Term.Boolean` is a builtin
+so it always exists, but the checker fixes `false` as the refutation target.
 
-`not`, `=` and `imp` are **not** required. They are used only by rule proofs and
-live in `Proofs/CommonBoolOps.lean`, outside the checker's transitive imports; a
-signature declaring none of them can delete that module without touching
-anything else. **The core of both packages depends on a single signature symbol,
-`and`.**
+**The calculus says what formula an assumption list stands for.** The conclusion
+of `correct___eo_is_refutation` is `eo_satisfiability (argListAssumes F) false`,
+and `argListAssumes` is defined by the calculus, in
+`Proofs/CalculusAssumptions.lean`. Cpc and CpcMini define it as the `and`-chain
+of the list with a `true` tail. The checker proves that no well-formed model
+makes every formula of the list true, and turns that into its conclusion using
+two lemmas that the calculus proves in
+`Proofs/RuleSupport/CalculusAssumptions.lean`:
+
+- `argListAssumes_has_bool_type`: `argListAssumes F` is Boolean-typed whenever
+  every formula of the list is;
+- `argListTerms_true_of_argListAssumes_true`: a model that interprets
+  `argListAssumes F` as `true` interprets every formula of the list as `true`.
+
+Like `eo_satisfiability` in `Spec.lean`, this definition is part of what the
+theorem says, so a reader of the theorem has to read it.
+
+`and`, `not`, `=` and `imp` are **not** required by the checker. Their lemmas
+live in `Proofs/CommonBoolOps.lean`, and only the rules and the calculus's
+`argListAssumes` lemmas use them.
+
+`:right-assoc-nil` on `and` is a requirement only of rules that gather `:list`
+premises with it, through `__eo_mk_premise_list`; the compiler refuses such a
+rule when its operator declares no nil.
 
 ### 2. The SMT semantics side
 
-`__eo_to_smt` must send `and` to `SmtTerm.and` and `Bool` to `SmtType.Bool`. The
-checker layer's entire SMT surface is `SmtTerm.and`, `SmtTerm.Boolean`,
-`SmtType.Bool` and the `None` cases.
+`__eo_to_smt` must send `Bool` to `SmtType.Bool`. The checker layer's entire SMT
+surface is `SmtTerm.Boolean`, `SmtType.Bool` and the `None` cases.
 
-This is the seam where a mistake is silent: a signature that declared `and` but
-translated it elsewhere would compile, would check proofs, and
-`correct___eo_is_refutation` would be a statement about the wrong formula. So
-`install/install-sig.sh` checks it — against what the compiler actually emitted
-rather than against the signature text — and refuses to install without it.
+Whatever `argListAssumes` is built from must translate the way its lemmas say.
+For Cpc's `and`-chain, that means `__eo_to_smt` must send `and` to `SmtTerm.and`.
+This is not checked at install time: the `and` lemmas in
+`Proofs/CommonBoolOps.lean` hold by `rfl`, so a signature that translated `and`
+elsewhere would stop `Proofs/RuleSupport/CalculusAssumptions.lean` from
+compiling, rather than leaving the theorem about the wrong formula.
 
 ### 3. The semantics layer
 
