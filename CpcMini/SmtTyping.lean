@@ -144,16 +144,6 @@ def __smtx_decl_inhabited (s : native_String) : SmtDatatypeDecl -> native_Bool
 termination_by ddF => 2 * sizeOf ddF
 
 
-def __smtx_inhabited_type : SmtType -> native_Bool
-  | SmtType.None => false
-  | (SmtType.TypeRef s) => false
-  | (SmtType.DtcAppType T U) => false
-  | (SmtType.Map T U) => (__smtx_inhabited_type U)
-  | (SmtType.Datatype s dd) => (__smtx_decl_inhabited s dd)
-  | T => true
-termination_by T => 2 * sizeOf T
-
-
 def __smtx_dtc_num_sels : SmtDatatypeCons -> native_Nat
   | (SmtDatatypeCons.cons U c) => (native_nat_succ (__smtx_dtc_num_sels c))
   | SmtDatatypeCons.unit => native_nat_zero
@@ -216,7 +206,17 @@ def __smtx_typeof : SmtTerm -> SmtType
   | x1 => SmtType.None
 
 
-end
+def __smtx_inhabited_type : SmtType -> native_Bool
+  | SmtType.None => false
+  | (SmtType.Map x1 x2) => (__smtx_inhabited_type x2)
+  | (SmtType.Datatype s1 dd2) => (__smtx_decl_inhabited s1 dd2)
+  | (SmtType.TypeRef s1) => false
+  | (SmtType.DtcAppType x1 x2) => false
+  | T => true
+termination_by T => 2 * sizeOf T
 
+
+
+end
 
 end Smtm
