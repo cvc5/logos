@@ -36,6 +36,9 @@ abbrev native_String := List native_Char
 def native_char_valid (c : native_Char) : native_Bool :=
   c < 196608
 
+def native_string_valid (s : native_String) : native_Bool :=
+  s.all native_char_valid
+
 def native_string_lit (s : String) : native_String :=
   s.toList.map Char.toNat
 
@@ -163,6 +166,12 @@ def native_binary_extract : native_Int -> native_Int -> native_Int -> native_Int
 
 def native_int_to_nat (x : native_Int) : native_Nat :=
   (Int.toNat x)
+
+def native_nat_to_int (x : native_Nat) : native_Int :=
+  (Int.ofNat x)
+
+def native_nateq : native_Nat -> native_Nat -> native_Bool
+  | x, y => decide (x = y)
 
 syntax "native_nat_zero" : term
 macro_rules

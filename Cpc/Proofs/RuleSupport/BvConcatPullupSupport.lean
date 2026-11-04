@@ -2111,32 +2111,32 @@ theorem bvConcatPullup1RhsSmtTypes
     have hsimpa :=
       (show (↑(A + B - 1) : Int) < ↑(A + B) by
         exact_mod_cast (show A + B - 1 < A + B by omega))
-    try simp [SmtEval.native_zlt, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+    try simp [SmtEval.native_zlt, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
     exact decide_eq_true hsimpa
   have hHighWidth : native_zlt 0
       (native_zplus (native_zplus (native_nat_to_int (A + B - 1)) 1)
         (native_zneg (native_nat_to_int B))) = true := by
     rw [hHighWidthEq]
     simpa [SmtEval.native_zlt, native_nat_to_int,
-      Smtm.native_nat_to_int] using hAPos
+      SmtEval.native_nat_to_int] using hAPos
   have hLowHi : native_zlt (native_nat_to_int (B - 1))
       (native_nat_to_int (A + B)) = true := by
     have hsimpa :=
       (show (↑(B - 1) : Int) < ↑(A + B) by
         exact_mod_cast (show B - 1 < A + B by omega))
-    try simp [SmtEval.native_zlt, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+    try simp [SmtEval.native_zlt, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
     exact decide_eq_true hsimpa
   have hLowWidth : native_zlt 0
       (native_zplus (native_zplus (native_nat_to_int (B - 1)) 1)
         (native_zneg 0)) = true := by
     rw [hLowWidthEq]
     simpa [SmtEval.native_zlt, native_nat_to_int,
-      Smtm.native_nat_to_int] using hBPos
+      SmtEval.native_nat_to_int] using hBPos
   have hNatWidth0 : ∀ w : Nat,
       native_zleq 0 (native_nat_to_int w) = true := by
     intro w
     simp [SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hNonStuck := bvConcatPullup1ExtractTypesNonStuck op
     xs ws y z ys nxm ny nym hBodyTy
   have hHighEoTy :
@@ -2176,14 +2176,14 @@ theorem bvConcatPullup1RhsSmtTypes
         (bvConcatPullupAggregate op xs ws)
         (native_nat_to_int (A + B))
         (native_nat_to_int (A + B - 1)) (native_nat_to_int B)
-        (by have hsimpa := hAggTy; (try simp [native_int_to_nat, SmtEval.native_int_to_nat, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢); exact hsimpa)
+        (by have hsimpa := hAggTy; (try simp [native_int_to_nat, SmtEval.native_int_to_nat, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢); exact hsimpa)
         (hNatWidth0 (A + B))
         (hNatWidth0 B)
         hHighHi hHighWidth
     rw [hHighWidthEq] at hContext
     simpa [bvConcatPullup1High, bvConcatPullupExtract, bvExtractTerm,
       native_int_to_nat, SmtEval.native_int_to_nat, native_nat_to_int,
-      Smtm.native_nat_to_int] using hContext
+      SmtEval.native_nat_to_int] using hContext
   have hLowTy : __smtx_typeof
       (__eo_to_smt (bvConcatPullup1Low op xs ws nym)) =
       SmtType.BitVec B := by
@@ -2191,14 +2191,14 @@ theorem bvConcatPullup1RhsSmtTypes
     have hContext := smt_typeof_extract_of_context
         (bvConcatPullupAggregate op xs ws)
         (native_nat_to_int (A + B)) (native_nat_to_int (B - 1)) 0
-        (by have hsimpa := hAggTy; (try simp [native_int_to_nat, SmtEval.native_int_to_nat, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢); exact hsimpa)
+        (by have hsimpa := hAggTy; (try simp [native_int_to_nat, SmtEval.native_int_to_nat, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢); exact hsimpa)
         (hNatWidth0 (A + B))
         (by simp [SmtEval.native_zleq])
         hLowHi hLowWidth
     rw [hLowWidthEq] at hContext
     simpa [bvConcatPullup1Low, bvConcatPullupExtract, bvExtractTerm,
       native_int_to_nat, SmtEval.native_int_to_nat, native_nat_to_int,
-      Smtm.native_nat_to_int] using hContext
+      SmtEval.native_nat_to_int] using hContext
   have hHighNilTy := pullup_generated_nil_smt_type op A (by
     simpa [hHighEoTy] using hNonStuck.2.2.1)
   have hLowNilTy := pullup_generated_nil_smt_type op B (by
@@ -2300,7 +2300,7 @@ theorem bvConcatPullup1RhsSmtTypesOfBody
       SmtType.BitVec A := by
     rw [hHighExtConcrete] at hHighExtMatch
     simpa [__eo_to_smt_type, native_ite, SmtEval.native_zleq,
-      native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+      native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
       SmtEval.native_int_to_nat] using hHighExtMatch
   have hHighNilNe : highNil ≠ Term.Stuck := by
     have hHighNilEo' : __eo_typeof highNil =
@@ -2367,7 +2367,7 @@ theorem bvConcatPullup1RhsSmtTypesOfBody
       SmtType.BitVec B := by
     rw [hLowExtConcrete] at hLowExtMatch
     simpa [__eo_to_smt_type, native_ite, SmtEval.native_zleq,
-      native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+      native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
       SmtEval.native_int_to_nat] using hLowExtMatch
   have hLowNilNe : lowNil ≠ Term.Stuck := by
     have hLowNilEo' : __eo_typeof lowNil =
@@ -2639,7 +2639,7 @@ theorem bvConcatPullup1Indices
     have hIntRaw : (0 : Int) < (↑wy : Int) + -1 + 1 := by
       simpa [SmtEval.native_zlt, SmtEval.native_zplus,
         SmtEval.native_zneg, native_nat_to_int,
-        Smtm.native_nat_to_int] using hLowWidth
+        SmtEval.native_nat_to_int] using hLowWidth
     have hInt : (0 : Int) < (↑wy : Int) := by omega
     exact_mod_cast hInt
   have hHighPos : 0 < wys + wz := by
@@ -2647,7 +2647,7 @@ theorem bvConcatPullup1Indices
     have hIntRaw : (0 : Int) <
         (↑wz : Int) + (↑wy + ↑wys) + -1 + 1 + -↑wy := by
       have hsimpa := hHighWidth
-      try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+      try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
       exact of_decide_eq_true hsimpa
     have hInt : (0 : Int) < (↑(wys + wz) : Int) := by
       push_cast
@@ -2738,7 +2738,7 @@ theorem eval_bvConcatPullup1
       native_zleq 0 (native_nat_to_int w) = true := by
     intro w
     simp [SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hW0 := hNatWidth0 (wys + wz + wy)
   have hA0 := hNatWidth0 (wys + wz)
   have hB0 := hNatWidth0 wy
@@ -2749,21 +2749,21 @@ theorem eval_bvConcatPullup1
   have hAgg0 : 0 ≤ pa := by exact hAggRange.1
   have hAgg1 : pa < (2 : Int) ^ (wys + wz + wy) := by
     have hsimpa := hAggRange.2
-    try simp [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   have hFull0 : 0 ≤ pf := by exact hFullRange.1
   have hFull1 : pf < (2 : Int) ^ (wys + wz + wy) := by
     have hsimpa := hFullRange.2
-    try simp [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   have hHigh0 : 0 ≤ ph := by exact hHighRange.1
   have hHigh1 : ph < (2 : Int) ^ (wys + wz) := by
     have hsimpa := hHighRange.2
-    try simp [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   have hY0 : 0 ≤ py := by exact hYRange.1
   have hY1 : py < (2 : Int) ^ wy := by
-    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int]
+    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int]
       using hYRange.2
   have hFullRelation := bvConcatPullup1FullEval M hM z y ys wz wy wys
     hYsList hZTy hYTy hYsTy
@@ -2775,7 +2775,7 @@ theorem eval_bvConcatPullup1
       (__smtx_model_eval M (__eo_to_smt highComp))
       (__smtx_model_eval M (__eo_to_smt y)) = _
     rw [hHighCompEval, hYEval]
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hFullAsConcat :
       SmtValue.Binary ↑(wys + wz + wy) pf =
         __smtx_model_eval_concat
@@ -2819,7 +2819,7 @@ theorem eval_bvConcatPullup1
     rw [smtx_eval_extract_term_eq, hAggEval]
     rw [__smtx_model_eval.eq_def] <;> simp only
     rw [__smtx_model_eval.eq_def] <;> simp only
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hLowExtEval : __smtx_model_eval M (__eo_to_smt lowExt) =
       __smtx_model_eval_extract (SmtValue.Numeral ↑(wy - 1))
         (SmtValue.Numeral 0)
@@ -2834,7 +2834,7 @@ theorem eval_bvConcatPullup1
     rw [smtx_eval_extract_term_eq, hAggEval]
     rw [__smtx_model_eval.eq_def] <;> simp only
     rw [__smtx_model_eval.eq_def] <;> simp only
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hHighTailEval : __smtx_model_eval M (__eo_to_smt highTail) =
       __smtx_model_eval M (__eo_to_smt highComp) := by
     exact bvConcatPullupEvalApplyGeneratedNil M hM op highComp
@@ -2897,7 +2897,7 @@ theorem eval_bvConcatPullup1
     _ = op.eval (SmtValue.Binary ↑(wys + wz + wy) pa)
         (SmtValue.Binary ↑(wys + wz + wy) pf) := by
           rw [hAggEval, hFullEval]
-          simp [native_nat_to_int, Smtm.native_nat_to_int]
+          simp [native_nat_to_int, SmtEval.native_nat_to_int]
     _ = _ := hSplit
     _ = __smtx_model_eval_concat
         (op.eval (__smtx_model_eval M (__eo_to_smt highExt))
@@ -2906,7 +2906,7 @@ theorem eval_bvConcatPullup1
           (__smtx_model_eval M (__eo_to_smt y))) := by
           rw [hHighExtEval, hFullHigh, hHighCompEval,
             hLowExtEval, hFullLow, hYEval]
-          simp [native_nat_to_int, Smtm.native_nat_to_int]
+          simp [native_nat_to_int, SmtEval.native_nat_to_int]
     _ = _ := hRhsEval.symm
 
 theorem facts_bvConcatPullup1Term
@@ -3899,7 +3899,7 @@ private theorem pullup_extract_segment_smt_types
   have hExtTy : __smtx_typeof (__eo_to_smt ext) = SmtType.BitVec w := by
     rw [hExtConcrete] at hExtMatch
     simpa [__eo_to_smt_type, native_ite, SmtEval.native_zleq,
-      native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+      native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
       SmtEval.native_int_to_nat] using hExtMatch
   let nil := __eo_nil op.term (__eo_typeof ext)
   have hNilNe : nil ≠ Term.Stuck := by
@@ -4178,7 +4178,7 @@ theorem eval_bvConcatPullupTwo
       native_zleq 0 (native_nat_to_int w) = true := by
     intro w
     simp [SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hW0 := hNatWidth0 (A + B)
   have hA0 := hNatWidth0 A
   have hB0 := hNatWidth0 B
@@ -4189,20 +4189,20 @@ theorem eval_bvConcatPullupTwo
   have hAgg0 : 0 ≤ pa := hAggRange.1
   have hAgg1 : pa < (2 : Int) ^ (A + B) := by
     have hsimpa := hAggRange.2
-    try simp [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   have hFull0 : 0 ≤ pf := hFullRange.1
   have hFull1 : pf < (2 : Int) ^ (A + B) := by
     have hsimpa := hFullRange.2
-    try simp [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   have hHigh0 : 0 ≤ ph := hHighRange.1
   have hHigh1 : ph < (2 : Int) ^ A := by
-    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int]
+    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int]
       using hHighRange.2
   have hLow0 : 0 ≤ pl := hLowRange.1
   have hLow1 : pl < (2 : Int) ^ B := by
-    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int]
+    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int]
       using hLowRange.2
   have hConcatEval : __smtx_model_eval M
       (__eo_to_smt (bvConcatPullupConcat highComp lowComp)) =
@@ -4212,7 +4212,7 @@ theorem eval_bvConcatPullupTwo
       (__smtx_model_eval M (__eo_to_smt highComp))
       (__smtx_model_eval M (__eo_to_smt lowComp)) = _
     rw [hHighCompEval, hLowCompEval]
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hFullAsConcat :
       SmtValue.Binary ↑(A + B) pf =
         __smtx_model_eval_concat
@@ -4253,7 +4253,7 @@ theorem eval_bvConcatPullupTwo
     rw [smtx_eval_extract_term_eq, hAggEval]
     rw [__smtx_model_eval.eq_def] <;> simp only
     rw [__smtx_model_eval.eq_def] <;> simp only
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hLowExtEval : __smtx_model_eval M (__eo_to_smt lowExt) =
       __smtx_model_eval_extract (SmtValue.Numeral ↑(B - 1))
         (SmtValue.Numeral 0) (SmtValue.Binary ↑(A + B) pa) := by
@@ -4267,7 +4267,7 @@ theorem eval_bvConcatPullupTwo
     rw [smtx_eval_extract_term_eq, hAggEval]
     rw [__smtx_model_eval.eq_def] <;> simp only
     rw [__smtx_model_eval.eq_def] <;> simp only
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hHighTailEval : __smtx_model_eval M (__eo_to_smt highTail) =
       __smtx_model_eval M (__eo_to_smt highComp) := by
     exact bvConcatPullupEvalApplyGeneratedNil M hM op highComp
@@ -4333,7 +4333,7 @@ theorem eval_bvConcatPullupTwo
     _ = op.eval (SmtValue.Binary ↑(A + B) pa)
         (SmtValue.Binary ↑(A + B) pf) := by
       rw [hAggEval, hFullEval]
-      simp [native_nat_to_int, Smtm.native_nat_to_int]
+      simp [native_nat_to_int, SmtEval.native_nat_to_int]
     _ = _ := hSplit
     _ = __smtx_model_eval_concat
         (op.eval (__smtx_model_eval M (__eo_to_smt highExt))
@@ -4342,7 +4342,7 @@ theorem eval_bvConcatPullupTwo
           (__smtx_model_eval M (__eo_to_smt lowComp))) := by
       rw [hHighExtEval, hFullHigh, hHighCompEval,
         hLowExtEval, hFullLow, hLowCompEval]
-      simp [native_nat_to_int, Smtm.native_nat_to_int]
+      simp [native_nat_to_int, SmtEval.native_nat_to_int]
     _ = _ := hRhsEval.symm
 
 theorem bvConcatPullup2Prem1Eval
@@ -4553,7 +4553,7 @@ theorem bvConcatPullup2Indices
         (↑(wz + (wy + wys)) : Int) + -↑wz + -1 + 1 := by
       simpa [SmtEval.native_zlt, SmtEval.native_zplus,
         SmtEval.native_zneg, native_nat_to_int,
-        Smtm.native_nat_to_int] using hLowWidth
+        SmtEval.native_nat_to_int] using hLowWidth
     have hInt : (0 : Int) < ↑(wy + wys) := by
       push_cast
       omega
@@ -4564,7 +4564,7 @@ theorem bvConcatPullup2Indices
         (↑(wz + (wy + wys)) : Int) + -1 + 1 +
           -((↑(wz + (wy + wys)) : Int) + -↑wz) := by
       have hsimpa := hHighWidth
-      try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+      try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
       exact of_decide_eq_true hsimpa
     have hInt : (0 : Int) < ↑wz := by
       push_cast
@@ -5954,7 +5954,7 @@ theorem bvConcatPullup3Prem1Eval
     rw [hUSize, hYSize, hZSize]
     simp [__smtx_model_eval, __smtx_model_eval__,
       __smtx_model_eval_plus, native_zplus,
-      native_zneg, native_nat_to_int, Smtm.native_nat_to_int]
+      native_zneg, native_nat_to_int, SmtEval.native_nat_to_int]
     push_cast
     omega
   have hRhsEval : __smtx_model_eval M (__eo_to_smt rhs) =
@@ -6001,7 +6001,7 @@ theorem bvConcatPullup3Prem2Eval
     rw [hYSize, hUSize]
     simp [__smtx_model_eval, __smtx_model_eval__,
       __smtx_model_eval_plus, native_zplus,
-      native_nat_to_int, Smtm.native_nat_to_int]
+      native_nat_to_int, SmtEval.native_nat_to_int]
   have hRhsEval : __smtx_model_eval M (__eo_to_smt rhs) =
       SmtValue.Numeral (native_nat_to_int (wy + wu)) := by
     have hsimpa := hRhsEvalSmt
@@ -6052,7 +6052,7 @@ theorem bvConcatPullup3Prem3Eval
     rw [hYSize, hUSize]
     simp [__smtx_model_eval, __smtx_model_eval__,
       __smtx_model_eval_plus, native_zplus,
-      native_zneg, native_nat_to_int, Smtm.native_nat_to_int]
+      native_zneg, native_nat_to_int, SmtEval.native_nat_to_int]
   have hRhsEval : __smtx_model_eval M (__eo_to_smt rhs) =
       SmtValue.Numeral
         (native_zplus (native_nat_to_int (wy + wu)) (native_zneg 1)) := by
@@ -6169,7 +6169,7 @@ theorem bvConcatPullup3Indices
     have hIntRaw : (0 : Int) < (↑wu : Int) + -1 + 1 := by
       simpa [SmtEval.native_zlt, SmtEval.native_zplus,
         SmtEval.native_zneg, native_nat_to_int,
-        Smtm.native_nat_to_int] using hLowWidth
+        SmtEval.native_nat_to_int] using hLowWidth
     have hInt : (0 : Int) < ↑wu := by
       omega
     exact_mod_cast hInt
@@ -6178,7 +6178,7 @@ theorem bvConcatPullup3Indices
     have hIntRaw : (0 : Int) <
         (↑(wy + wu) : Int) + -1 + 1 + -↑wu := by
       have hsimpa := hMidWidth
-      try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+      try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
       exact of_decide_eq_true hsimpa
     have hInt : (0 : Int) < ↑wy := by
       push_cast
@@ -6189,7 +6189,7 @@ theorem bvConcatPullup3Indices
     have hIntRaw : (0 : Int) <
         (↑(wz + wy + wu) : Int) + -1 + 1 + -↑(wy + wu) := by
       have hsimpa := hHighWidth
-      try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+      try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
       exact of_decide_eq_true hsimpa
     have hInt : (0 : Int) < ↑wz := by
       push_cast
@@ -6291,7 +6291,7 @@ theorem eval_bvConcatPullup3
       native_zleq 0 (native_nat_to_int w) = true := by
     intro w
     simp [SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hAggRange := bitvec_payload_range_of_canonical
     (hNatWidth0 (wz + wy + wu)) hAggCan
   have hFullRange := bitvec_payload_range_of_canonical
@@ -6302,24 +6302,24 @@ theorem eval_bvConcatPullup3
   have hAgg0 : 0 ≤ pa := hAggRange.1
   have hAgg1 : pa < (2 : Int) ^ (wz + wy + wu) := by
     have hsimpa := hAggRange.2
-    try simp [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   have hFull0 : 0 ≤ pf := hFullRange.1
   have hFull1 : pf < (2 : Int) ^ (wz + wy + wu) := by
     have hsimpa := hFullRange.2
-    try simp [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   have hZ0 : 0 ≤ pz := hZRange.1
   have hZ1 : pz < (2 : Int) ^ wz := by
-    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int]
+    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int]
       using hZRange.2
   have hY0 : 0 ≤ py := hYRange.1
   have hY1 : py < (2 : Int) ^ wy := by
-    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int]
+    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int]
       using hYRange.2
   have hU0 : 0 ≤ pu := hURange.1
   have hU1 : pu < (2 : Int) ^ wu := by
-    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int]
+    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int]
       using hURange.2
   have hUEmpty0 := bvConcat_eval_right_empty M hM u wu hUTy
   have hUEmpty : __smtx_model_eval M
@@ -6342,7 +6342,7 @@ theorem eval_bvConcatPullup3
         rfl
       _ = _ := by
         rw [hUEmpty, hZEval, hYEval, hUEval]
-        simp [native_nat_to_int, Smtm.native_nat_to_int]
+        simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hFullHigh :
       __smtx_model_eval_extract
           (SmtValue.Numeral ↑(wz + wy + wu - 1))
@@ -6383,7 +6383,7 @@ theorem eval_bvConcatPullup3
     rw [smtx_eval_extract_term_eq, hAggEval]
     rw [__smtx_model_eval.eq_def] <;> simp only
     rw [__smtx_model_eval.eq_def] <;> simp only
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hMidExtEval : __smtx_model_eval M (__eo_to_smt midExt) =
       __smtx_model_eval_extract (SmtValue.Numeral ↑(wy + wu - 1))
         (SmtValue.Numeral ↑wu)
@@ -6398,7 +6398,7 @@ theorem eval_bvConcatPullup3
     rw [smtx_eval_extract_term_eq, hAggEval]
     rw [__smtx_model_eval.eq_def] <;> simp only
     rw [__smtx_model_eval.eq_def] <;> simp only
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hLowExtEval : __smtx_model_eval M (__eo_to_smt lowExt) =
       __smtx_model_eval_extract (SmtValue.Numeral ↑(wu - 1))
         (SmtValue.Numeral 0)
@@ -6413,7 +6413,7 @@ theorem eval_bvConcatPullup3
     rw [smtx_eval_extract_term_eq, hAggEval]
     rw [__smtx_model_eval.eq_def] <;> simp only
     rw [__smtx_model_eval.eq_def] <;> simp only
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hHighTailEval : __smtx_model_eval M (__eo_to_smt highTail) =
       __smtx_model_eval M (__eo_to_smt z) :=
     bvConcatPullupEvalApplyGeneratedNil M hM op z
@@ -6504,7 +6504,7 @@ theorem eval_bvConcatPullup3
     _ = op.eval (SmtValue.Binary ↑(wz + wy + wu) pa)
         (SmtValue.Binary ↑(wz + wy + wu) pf) := by
       rw [hAggEval, hFullEval]
-      simp [native_nat_to_int, Smtm.native_nat_to_int]
+      simp [native_nat_to_int, SmtEval.native_nat_to_int]
     _ = _ := hSplitOuter
     _ = __smtx_model_eval_concat
         (op.eval
@@ -6542,7 +6542,7 @@ theorem eval_bvConcatPullup3
             (__smtx_model_eval M (__eo_to_smt u)))) := by
       rw [hHighExtEval, hFullHigh, hZEval, hMidExtEval, hFullMid, hYEval,
         hLowExtEval, hFullLow, hUEval]
-      simp [native_nat_to_int, Smtm.native_nat_to_int]
+      simp [native_nat_to_int, SmtEval.native_nat_to_int]
     _ = _ := hRhsEval.symm
 
 theorem facts_bvConcatPullup3Term

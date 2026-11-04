@@ -95,6 +95,7 @@ jobs:
           - regressions
           - cpc-proofs
           - cpcmini
+          - checker-boundary
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -115,10 +116,12 @@ jobs:
       - name: Restore Lake build cache
         uses: actions/cache@v5
         with:
-          path: .lake/build
-          key: lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-${{ github.sha }}
+          path: |
+            .lake/build
+            verification/.lake/build
+          key: lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'verification/lean-toolchain', 'verification/lakefile.toml', 'verification/lake-manifest.json') }}-${{ github.sha }}
           restore-keys: |
-            lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-
+            lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'verification/lean-toolchain', 'verification/lakefile.toml', 'verification/lake-manifest.json') }}-
 
       - name: Run ${{ matrix.group }} checks
         run: bash scripts/run-ci.sh "${CI_GROUP}"

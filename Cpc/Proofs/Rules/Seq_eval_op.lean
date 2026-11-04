@@ -4900,7 +4900,7 @@ private theorem smt_seq_component_ne_none_of_typeof_seq
   intro hT
   subst T
   simp [__smtx_type_wf, __smtx_type_wf_component,
-    __smtx_type_wf_rec, native_inhabited_type, native_Teq, SmtEval.native_and]
+    __smtx_type_wf_rec, __smtx_inhabited_type, SmtEval.native_and]
     at hSeqWF
 
 private theorem seq_find_empty_string_tail_contra

@@ -6,10 +6,10 @@ public import CpcMini.Logos
 import all CpcMini.Logos
 public import CpcMini.SmtEval
 import all CpcMini.SmtEval
-public import CpcMini.SmtModel
-import all CpcMini.SmtModel
-public import CpcMini.Spec
-import all CpcMini.Spec
+public import CpcMini.SmtTranslate
+import all CpcMini.SmtTranslate
+public import CpcMini.TranslationChecks
+import all CpcMini.TranslationChecks
 
 -- The proofs under `CpcMini/Proofs/` are deliberately not imported here: the
 -- `cpcmini` CI group builds them directly.

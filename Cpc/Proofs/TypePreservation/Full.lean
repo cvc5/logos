@@ -344,9 +344,9 @@ private theorem tp_result_seq_components_wf_dt_cons_rec
 private theorem tp_seq_char_wf :
     __smtx_type_wf (SmtType.Seq SmtType.Char) = true := by
   have hSeqInh :
-      native_inhabited_type (SmtType.Seq SmtType.Char) = true :=
+      __smtx_inhabited_type (SmtType.Seq SmtType.Char) = true :=
     native_inhabited_type_seq SmtType.Char
-  have hCharInh : native_inhabited_type SmtType.Char = true :=
+  have hCharInh : __smtx_inhabited_type SmtType.Char = true :=
     native_inhabited_type_char
   simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
     native_and, hSeqInh, hCharInh]
@@ -843,8 +843,8 @@ private theorem tp_smt_seq_component_wf_rec_of_non_none_type
   have hGood := tp_smt_term_result_seq_components_wf_of_non_none x hxNN
   rw [hxTy] at hGood
   have hSeqParts :
-      native_inhabited_type (SmtType.Seq T) = true ∧
-        (native_inhabited_type T = true ∧
+      __smtx_inhabited_type (SmtType.Seq T) = true ∧
+        (__smtx_inhabited_type T = true ∧
           __smtx_type_wf_rec T = true) := by
     simpa [tp_result_seq_components_wf, __smtx_type_wf, __smtx_type_wf_component,
       __smtx_type_wf_rec, native_and] using hGood
@@ -867,8 +867,8 @@ private theorem tp_smt_set_component_wf_rec_of_non_none_type
   have hGood := tp_smt_term_result_seq_components_wf_of_non_none x hxNN
   rw [hxTy] at hGood
   have hSetParts :
-      native_inhabited_type (SmtType.Set T) = true ∧
-        (native_inhabited_type T = true ∧
+      __smtx_inhabited_type (SmtType.Set T) = true ∧
+        (__smtx_inhabited_type T = true ∧
           __smtx_type_wf_rec T = true) := by
     simpa [tp_result_seq_components_wf, __smtx_type_wf, __smtx_type_wf_component,
       __smtx_type_wf_rec, native_and] using hGood
@@ -892,9 +892,9 @@ private theorem tp_smt_map_components_wf_rec_of_non_none_type
   have hGood := tp_smt_term_result_seq_components_wf_of_non_none x hxNN
   rw [hxTy] at hGood
   have hMapParts :
-      native_inhabited_type (SmtType.Map A B) = true ∧
-        ((native_inhabited_type A = true ∧ __smtx_type_wf_rec A = true) ∧
-          (native_inhabited_type B = true ∧ __smtx_type_wf_rec B = true)) := by
+      __smtx_inhabited_type (SmtType.Map A B) = true ∧
+        ((__smtx_inhabited_type A = true ∧ __smtx_type_wf_rec A = true) ∧
+          (__smtx_inhabited_type B = true ∧ __smtx_type_wf_rec B = true)) := by
     simpa [tp_result_seq_components_wf, __smtx_type_wf, __smtx_type_wf_component,
       __smtx_type_wf_rec, native_and] using hGood
   exact ⟨hMapParts.2.1.2, hMapParts.2.2.2⟩
@@ -918,7 +918,7 @@ private theorem tp_smt_fun_components_wf_rec_of_non_none_type
   have hGood := tp_smt_term_result_seq_components_wf_of_non_none x hxNN
   rw [hxTy] at hGood
   have hFunParts :
-      native_inhabited_type A = true ∧
+      __smtx_inhabited_type A = true ∧
         __smtx_type_wf_rec A = true ∧
           __smtx_type_wf B = true := by
     exact fun_type_wf_parts (by simpa [tp_result_seq_components_wf] using hGood)
@@ -1624,7 +1624,7 @@ private theorem canonical_of_supported
       have hTWf : __smtx_type_wf T = true :=
         smtx_typeof_guard_wf_wf_of_non_none T T hGuardNN
       have hRec : __smtx_type_wf_rec T = true := hElemRec h1
-      have hTInh : native_inhabited_type T = true := by
+      have hTInh : __smtx_inhabited_type T = true := by
         cases T <;>
           simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
             native_and] at hTWf hRec ⊢
@@ -2539,7 +2539,7 @@ private theorem tp_type_wf_parts_of_wf_ne_reglan
     (hWf : __smtx_type_wf T = true)
     (hNe : T ≠ SmtType.RegLan)
     (hNeFun : ∀ A B : SmtType, T ≠ SmtType.FunType A B) :
-    native_inhabited_type T = true ∧
+    __smtx_inhabited_type T = true ∧
       __smtx_type_wf_rec T = true := by
   cases T <;> simp [__smtx_type_wf, native_and] at hWf hNe ⊢
   case FunType A B =>
@@ -2643,11 +2643,11 @@ theorem dt_sel_wrong_map_type_wf_of_non_none
       tp_ret_typeof_sel_ne_funtype_of_datatype_wf
         (s := s) (d := d) (i := i) (j := j) hDTWf A B
   have hRParts :
-      native_inhabited_type R = true ∧
+      __smtx_inhabited_type R = true ∧
         __smtx_type_wf_rec R = true :=
     tp_type_wf_parts_of_wf_ne_reglan hRWf hRNe hRNeFun
   have hDTParts :
-      native_inhabited_type D = true ∧
+      __smtx_inhabited_type D = true ∧
         __smtx_type_wf_rec D = true :=
     tp_type_wf_parts_of_wf_ne_reglan hDTWf (by simp [D]) (by
       intro A B h
@@ -2656,21 +2656,21 @@ theorem dt_sel_wrong_map_type_wf_of_non_none
     type_inhabited_of_type_wf R hRWf
   have hM3Inh : type_inhabited M3 := by
     exact tp_map_type_inhabited (A := D) (B := R) hRInh
-  have hM3InhBool : native_inhabited_type M3 = true :=
+  have hM3InhBool : __smtx_inhabited_type M3 = true :=
     native_inhabited_type_map hRParts.1
   have hM3Rec : __smtx_type_wf_rec M3 = true := by
     simp [M3, __smtx_type_wf_rec, native_and, hDTParts.1,
       hDTParts.2, hRParts.1, hRParts.2]
   have hM2Inh : type_inhabited M2 := by
     exact tp_map_type_inhabited (A := SmtType.Int) (B := M3) hM3Inh
-  have hM2InhBool : native_inhabited_type M2 = true :=
+  have hM2InhBool : __smtx_inhabited_type M2 = true :=
     native_inhabited_type_map hM3InhBool
   have hM2Rec : __smtx_type_wf_rec M2 = true := by
     simp [M2, __smtx_type_wf_rec, native_and,
       hM3InhBool, hM3Rec]
   have hM1Inh : type_inhabited M1 := by
     exact tp_map_type_inhabited (A := SmtType.Int) (B := M2) hM2Inh
-  have hM1InhBool : native_inhabited_type M1 = true :=
+  have hM1InhBool : __smtx_inhabited_type M1 = true :=
     native_inhabited_type_map hM2InhBool
   have hM1Rec : __smtx_type_wf_rec M1 = true := by
     simp [M1, __smtx_type_wf_rec, native_and,
@@ -2892,22 +2892,22 @@ private theorem type_has_no_none_components_of_wf_rec :
       simp [type_has_no_none_components]
   | SmtType.Map A B, h => by
       have h' :
-          (native_inhabited_type A = true ∧
+          (__smtx_inhabited_type A = true ∧
             __smtx_type_wf_rec A = true) ∧
-            (native_inhabited_type B = true ∧
+            (__smtx_inhabited_type B = true ∧
               __smtx_type_wf_rec B = true) := by
         simpa [__smtx_type_wf_rec, native_and] using h
       exact ⟨type_has_no_none_components_of_wf_rec (U := A) h'.1.2,
         type_has_no_none_components_of_wf_rec (U := B) h'.2.2⟩
   | SmtType.Set A, h => by
       have hA :
-          native_inhabited_type A = true ∧
+          __smtx_inhabited_type A = true ∧
             __smtx_type_wf_rec A = true := by
         simpa [__smtx_type_wf_rec, native_and] using h
       exact type_has_no_none_components_of_wf_rec (U := A) hA.2
   | SmtType.Seq A, h => by
       have hA :
-          native_inhabited_type A = true ∧
+          __smtx_inhabited_type A = true ∧
             __smtx_type_wf_rec A = true := by
         simpa [__smtx_type_wf_rec, native_and] using h
       exact type_has_no_none_components_of_wf_rec (U := A) hA.2
@@ -3161,10 +3161,10 @@ private theorem type_default_typed_canonical_of_map_domain_wf
     __smtx_typeof_value (__smtx_type_default A) = A ∧
       value_canonical uc (__smtx_type_default A) := by
   have hAll :
-      native_inhabited_type (SmtType.Map A B) = true ∧
-        ((native_inhabited_type A = true ∧
+      __smtx_inhabited_type (SmtType.Map A B) = true ∧
+        ((__smtx_inhabited_type A = true ∧
           __smtx_type_wf_rec A = true) ∧
-          (native_inhabited_type B = true ∧
+          (__smtx_inhabited_type B = true ∧
             __smtx_type_wf_rec B = true)) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and] using h
@@ -3176,8 +3176,8 @@ private theorem type_default_typed_canonical_of_set_element_wf
     __smtx_typeof_value (__smtx_type_default A) = A ∧
       value_canonical uc (__smtx_type_default A) := by
   have hAll :
-      native_inhabited_type (SmtType.Set A) = true ∧
-        (native_inhabited_type A = true ∧
+      __smtx_inhabited_type (SmtType.Set A) = true ∧
+        (__smtx_inhabited_type A = true ∧
           __smtx_type_wf_rec A = true) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and] using h
@@ -3933,7 +3933,7 @@ private theorem bv_binop_type_has_no_none_components_of_non_none
     type_has_no_none_components (__smtx_typeof (op t1 t2)) := by
   rcases bv_binop_args_of_non_none hTy ht with ⟨w, h1, h2⟩
   rw [hTy]
-  simp [__smtx_typeof_bv_op_2, native_ite, native_nateq, Smtm.native_nateq,
+  simp [__smtx_typeof_bv_op_2, native_ite, native_nateq, SmtEval.native_nateq,
     h1, h2, type_has_no_none_components]
 
 private theorem bv_binop_ret_type_has_no_none_components_of_non_none
@@ -3948,7 +3948,7 @@ private theorem bv_binop_ret_type_has_no_none_components_of_non_none
     type_has_no_none_components (__smtx_typeof (op t1 t2)) := by
   rcases bv_binop_ret_args_of_non_none hTy ht with ⟨w, h1, h2⟩
   rw [hTy]
-  simpa [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq, Smtm.native_nateq,
+  simpa [__smtx_typeof_bv_op_2_ret, native_ite, native_nateq, SmtEval.native_nateq,
     h1, h2] using hRet
 
 private theorem eq_type_has_no_none_components_of_non_none

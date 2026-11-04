@@ -413,9 +413,9 @@ private theorem eo_to_smt_type_unique_of_valid_rec_apply
               smtx_type_field_wf_rec
                 (__eo_to_smt_type (Term.UOp UserOp.UnitTuple)) native_reflist_nil := by
             change smtx_type_field_wf_rec tupleTy native_reflist_nil
-            have hInh : native_inhabited_type tupleTy = true := by
+            have hInh : __smtx_inhabited_type tupleTy = true := by
               classical
-              simp [tupleTy, native_inhabited_type, native_and, native_ite, native_not,
+              simp [tupleTy, __smtx_inhabited_type, native_and, native_ite, native_not,
                 native_veq, native_Teq, __smtx_type_default, __smtx_type_default_rec,
                 __smtx_datatype_default,
                 __smtx_datatype_cons_default, __smtx_typeof_value,
@@ -491,7 +491,7 @@ private theorem eo_to_smt_type_unique_of_valid_rec_apply
       have hnNonneg : 0 <= n := by
         simpa [native_zleq, SmtEval.native_zleq] using hz
       have hNatInt : native_nat_to_int (native_int_to_nat n) = n := by
-        simp [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+        simp [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
           SmtEval.native_int_to_nat, Int.toNat_of_nonneg hnNonneg]
       rw [hNatInt]
   | Term.Apply (Term.UOp UserOp.Seq) T1, U, hValid, hEq => by
@@ -623,7 +623,7 @@ private theorem eo_to_smt_type_unique_of_valid_rec_apply
                   have hnNonneg : 0 <= n := by
                     simpa [native_zleq, SmtEval.native_zleq] using hz
                   have hNatInt : native_nat_to_int (native_int_to_nat n) = n := by
-                    simp [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+                    simp [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
                       SmtEval.native_int_to_nat, Int.toNat_of_nonneg hnNonneg]
                   rw [hNatInt]
               | _ =>
@@ -3954,7 +3954,7 @@ theorem hasFreeTy_eq_false_of_valid (sub : native_String) :
                         SmtType.None := by
                     intro hNone
                     rw [hNone] at hWf
-                    simp [__smtx_type_wf, __smtx_type_wf_component, native_inhabited_type,
+                    simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_inhabited_type,
                       native_Teq, native_and, native_not] at hWf
                   rw [native_ite, ite_eq_left hWf]
                   cases htrX : __eo_to_smt_type x with
@@ -5718,7 +5718,7 @@ theorem eo_to_smt_type_typeof_apply_bvnot_of_bitvec
   change __eo_to_smt_type (Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral (native_nat_to_int w))) =
     SmtType.BitVec w
   simp [__eo_to_smt_type, native_ite, native_zleq, SmtEval.native_zleq,
-    native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+    native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
     SmtEval.native_int_to_nat]
 
 /-- Simplifies EO-to-SMT type translation for `typeof_apply_bvneg_of_bitvec`. -/
@@ -5731,7 +5731,7 @@ theorem eo_to_smt_type_typeof_apply_bvneg_of_bitvec
   change __eo_to_smt_type (Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral (native_nat_to_int w))) =
     SmtType.BitVec w
   simp [__eo_to_smt_type, native_ite, native_zleq, SmtEval.native_zleq,
-    native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+    native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
     SmtEval.native_int_to_nat]
 
 /-- Simplifies EO-to-SMT type translation for `typeof_apply_bvnego_of_bitvec`. -/

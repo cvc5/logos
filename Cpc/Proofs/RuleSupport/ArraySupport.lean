@@ -572,7 +572,7 @@ private theorem fresh_default_lookup_for_infinite_map_domain
     (_hm2Ty : __smtx_typeof_map_value m2 = SmtType.Map A B)
     (_hm1Can : __smtx_map_canonical uc m1 = true)
     (_hm2Can : __smtx_map_canonical uc m2 = true)
-    (_hAInh : native_inhabited_type A = true)
+    (_hAInh : __smtx_inhabited_type A = true)
     (_hARec : __smtx_type_wf_rec A = true)
     (_hInfinite : __smtx_is_finite_type uc A = false) :
     ∃ i : SmtValue,
@@ -589,7 +589,7 @@ private theorem map_defaults_eq_of_no_typed_canonical_lookup_diff
     (hm2Ty : __smtx_typeof_map_value m2 = SmtType.Map A B)
     (hm1Can : __smtx_map_canonical uc m1 = true)
     (hm2Can : __smtx_map_canonical uc m2 = true)
-    (hAInh : native_inhabited_type A = true)
+    (hAInh : __smtx_inhabited_type A = true)
     (hARec : __smtx_type_wf_rec A = true)
     (hNoDiff :
       ¬ ∃ i : SmtValue,
@@ -622,7 +622,7 @@ private theorem map_diff_typed_canonical_lookup_witness
     (hm2Ty : __smtx_typeof_map_value m2 = SmtType.Map A B)
     (hm1Can : __smtx_map_canonical uc m1 = true)
     (hm2Can : __smtx_map_canonical uc m2 = true)
-    (hAInh : native_inhabited_type A = true)
+    (hAInh : __smtx_inhabited_type A = true)
     (hARec : __smtx_type_wf_rec A = true)
     (hNe : __smtx_model_eval_eq (SmtValue.Map m1) (SmtValue.Map m2) =
       SmtValue.Boolean false) :
@@ -755,7 +755,7 @@ theorem map_diff_selects_model_eval_eq_false
     (hm2Ty : __smtx_typeof_map_value m2 = SmtType.Map A B)
     (hm1Can : __smtx_map_canonical M.usortCard m1 = true)
     (hm2Can : __smtx_map_canonical M.usortCard m2 = true)
-    (hAInh : native_inhabited_type A = true)
+    (hAInh : __smtx_inhabited_type A = true)
     (hARec : __smtx_type_wf_rec A = true)
     (hBNeRegLan : B ≠ SmtType.RegLan)
     (hNe : __smtx_model_eval_eq (SmtValue.Map m1) (SmtValue.Map m2) =

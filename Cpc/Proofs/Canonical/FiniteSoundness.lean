@@ -32,7 +32,7 @@ The executable classifiers `__smtx_is_finite_type` and `__smtx_is_unit_type`
 (both instances of the `__smtx_type_bounded` fixpoint) are intended to
 characterize the cardinality of `⟦T⟧`.  Their correctness decomposes into
 four statements, all relative to the guard
-`native_inhabited_type T = true ∧ __smtx_type_wf_rec T = true`
+`__smtx_inhabited_type T = true ∧ __smtx_type_wf_rec T = true`
 (the guard is essential: e.g. a sequence type over an uninhabited element
 type has exactly one canonical value even though sequences are classified
 infinite, but such a type is not recursively well-formed):
@@ -824,7 +824,7 @@ private theorem restricted_slots_eq_defaults
 
 private theorem unit_default_spine
     (s : native_String) (dd : SmtDatatypeDecl) (c : SmtDatatypeCons)
-    (hInh : native_inhabited_type (SmtType.Datatype s dd) = true)
+    (hInh : __smtx_inhabited_type (SmtType.Datatype s dd) = true)
     (hMem : __smtx_dd_has_dt s dd = true)
     (hUniq : dd_unique dd)
     (hd : __smtx_dd_lookup s dd = SmtDatatype.sum c SmtDatatype.null) :
@@ -875,7 +875,7 @@ well-formed inhabited unit type is its default value.
 -/
 theorem unit_type_values_default
     (A : SmtType)
-    (hInh : native_inhabited_type A = true)
+    (hInh : __smtx_inhabited_type A = true)
     (hRec : __smtx_type_wf_rec A = true)
     (hUnit : __smtx_is_unit_type uc A = true) :
     ∀ v : SmtValue,
@@ -956,9 +956,9 @@ theorem unit_type_values_default
           · simp [__smtx_typeof_value, native_ite, hc] at hTy
   | Map T U =>
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true ∧
-              native_inhabited_type U = true ∧
+              __smtx_inhabited_type U = true ∧
                 __smtx_type_wf_rec U = true := by
         have h := hRec
         simp [__smtx_type_wf_rec, native_and] at h
@@ -1034,7 +1034,7 @@ theorem unit_type_values_default
       have hConsWf : __smtx_dt_cons_wf_rec dd c = true := by
         rw [hdLk] at hDtWf
         simpa [__smtx_dt_wf_rec, native_and] using hDtWf
-      have hInhT : native_inhabited_type (SmtType.Datatype t dd) = true :=
+      have hInhT : __smtx_inhabited_type (SmtType.Datatype t dd) = true :=
         decl_wf_rec_inh t dd dd hMemDD hRecParts.2
       rcases datatype_typed_canonical_spine w t dd hwTy hwCan with
         ⟨k, cr, vs, hnth, hSpine, hTyped⟩
@@ -1544,7 +1544,7 @@ private theorem cons_covers_exist
     (hGround : ∀ F : SmtType,
       (∀ r : native_String, F ≠ SmtType.TypeRef r) →
       sizeOf F < sizeOf dd →
-      native_inhabited_type F = true →
+      __smtx_inhabited_type F = true →
       __smtx_type_wf_rec F = true →
       __smtx_is_finite_type uc F = true →
       ∃ l : List SmtValue, ∀ v : SmtValue,
@@ -1617,7 +1617,7 @@ private theorem dt_spine_covers
     (hGround : ∀ F : SmtType,
       (∀ r : native_String, F ≠ SmtType.TypeRef r) →
       sizeOf F < sizeOf dd →
-      native_inhabited_type F = true →
+      __smtx_inhabited_type F = true →
       __smtx_type_wf_rec F = true →
       __smtx_is_finite_type uc F = true →
       ∃ l : List SmtValue, ∀ v : SmtValue,
@@ -1683,7 +1683,7 @@ well-formed inhabited finite type are covered by a list.
 -/
 theorem finite_type_enumerable
     (A : SmtType)
-    (hInh : native_inhabited_type A = true)
+    (hInh : __smtx_inhabited_type A = true)
     (hRec : __smtx_type_wf_rec A = true)
     (hFin : __smtx_is_finite_type uc A = true) :
     ∃ l : List SmtValue, ∀ v : SmtValue,
@@ -1787,7 +1787,7 @@ theorem finite_type_enumerable
       · simp [__smtx_typeof_value, native_ite, hc] at hTy
   | Set T =>
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true := by
         have h := hRec
         simp [__smtx_type_wf_rec, native_and] at h
@@ -1800,9 +1800,9 @@ theorem finite_type_enumerable
       exact set_cover_exists T lT hlT
   | Map T U =>
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true ∧
-              native_inhabited_type U = true ∧
+              __smtx_inhabited_type U = true ∧
                 __smtx_type_wf_rec U = true := by
         have h := hRec
         simp [__smtx_type_wf_rec, native_and] at h
@@ -1862,7 +1862,7 @@ theorem finite_type_enumerable
       have hGround : ∀ F : SmtType,
           (∀ r : native_String, F ≠ SmtType.TypeRef r) →
           sizeOf F < sizeOf dd →
-          native_inhabited_type F = true →
+          __smtx_inhabited_type F = true →
           __smtx_type_wf_rec F = true →
           __smtx_is_finite_type uc F = true →
           ∃ l : List SmtValue, ∀ v : SmtValue,

@@ -280,7 +280,7 @@ private theorem vsm_apply_ext_aux :
             hArgs (vsm_num_apply_args f) (by simp [vsm_num_apply_args])
           have hab : a = b := by
             simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, hCountFG,
-              Smtm.native_nateq, native_ite] using hLast
+              SmtEval.native_nateq, native_ite] using hLast
           have hfg : f = g := by
             apply ih f g hv
             · simpa [__smtx_apply_head_value] using hHead
@@ -296,7 +296,7 @@ private theorem vsm_apply_ext_aux :
                 apply hNeF
                 rw [hCountFG, hEq]
               simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, hCountFG,
-                Smtm.native_nateq, hNeF, hNeG, native_ite] using hArg
+                SmtEval.native_nateq, hNeF, hNeG, native_ite] using hArg
           subst hfg
           subst hab
           rfl
@@ -390,7 +390,7 @@ private theorem vsm_apply_arg_nth_ne_notvalue_of_non_none_aux :
             rw [← hA]
             simp [hNot, __smtx_typeof_value]
           subst j
-          simpa [__smtx_apply_arg_nth_value, hCountF, Smtm.native_nateq,
+          simpa [__smtx_apply_arg_nth_value, hCountF, SmtEval.native_nateq,
             native_ite] using hAValue
         · have hjF : j < vsm_num_apply_args f := by omega
           have hFNN : __smtx_typeof_value f ≠ SmtType.None := by
@@ -398,7 +398,7 @@ private theorem vsm_apply_arg_nth_ne_notvalue_of_non_none_aux :
             simp 
           have hRec := ih f hCountF hFNN j (by simpa [hCountF] using hjF)
           have hNe : j ≠ n := by omega
-          simpa [__smtx_apply_arg_nth_value, hCountF, Smtm.native_nateq, hLast,
+          simpa [__smtx_apply_arg_nth_value, hCountF, SmtEval.native_nateq, hLast,
             hNe, native_ite] using hRec
 
 private theorem vsm_apply_arg_nth_ne_notvalue_of_non_none
@@ -810,7 +810,7 @@ private theorem tuplePrependValueRecAt_apply_prefix
       have hArg :
           __smtx_apply_arg_nth_value (SmtValue.Apply v a) n (Nat.succ total) =
             __smtx_apply_arg_nth_value v n total := by
-        simp [__smtx_apply_arg_nth_value, Smtm.native_nateq, native_ite, hnNe]
+        simp [__smtx_apply_arg_nth_value, SmtEval.native_nateq, native_ite, hnNe]
       simp [tuplePrependValueRecAt,
         tuplePrependValueRecAt_apply_prefix v a acc hnLe, hArg]
 
@@ -829,7 +829,7 @@ private theorem tuplePrependValueRecAt_size_lt_of_head_lt :
           (n := vsm_num_apply_args f) (total := vsm_num_apply_args f)
           (Nat.le_refl _)
       simp [tuplePrependValueRecAt, vsm_num_apply_args,
-        __smtx_apply_arg_nth_value, Smtm.native_nateq, native_ite,
+        __smtx_apply_arg_nth_value, SmtEval.native_nateq, native_ite,
         hPrefix]
       omega
   | SmtValue.NotValue, acc, hHeadLt => by simpa [tuplePrependValueRecAt, vsm_num_apply_args, __smtx_apply_head_value] using hHeadLt

@@ -1074,20 +1074,20 @@ private theorem eval_repeat_rec_zero_bit :
         SmtValue.Binary (native_nat_to_int n) 0
   | Nat.zero => by
       simp [__smtx_repeat_rec, native_nat_to_int,
-        Smtm.native_nat_to_int]
+        SmtEval.native_nat_to_int]
   | Nat.succ n => by
       rw [__smtx_repeat_rec, eval_repeat_rec_zero_bit n]
       have hWidth :
           native_zplus (1 : native_Int) (native_nat_to_int n) =
             native_nat_to_int (Nat.succ n) := by
         simp [SmtEval.native_zplus, native_nat_to_int,
-          Smtm.native_nat_to_int]
+          SmtEval.native_nat_to_int]
         rw [Int.add_comm]
       have hWidthInt : (1 : Int) + ↑n = ↑n + 1 := by
         rw [Int.add_comm]
       simp [__smtx_model_eval_concat, native_binary_concat,
         SmtEval.native_zplus, SmtEval.native_zmult,
-        native_nat_to_int, Smtm.native_nat_to_int,
+        native_nat_to_int, SmtEval.native_nat_to_int,
         native_mod_total, hWidth, hWidthInt]
 
 private theorem eval_repeat_rec_one_bit :
@@ -1097,13 +1097,13 @@ private theorem eval_repeat_rec_one_bit :
           (native_int_pow2 (native_nat_to_int n) - 1)
   | Nat.zero => by
       simp [__smtx_repeat_rec, native_nat_to_int,
-        Smtm.native_nat_to_int, native_int_pow2, native_zexp_total]
+        SmtEval.native_nat_to_int, native_int_pow2, native_zexp_total]
   | Nat.succ n => by
       rw [__smtx_repeat_rec, eval_repeat_rec_one_bit n]
       have hPowSucc :
           native_int_pow2 (native_nat_to_int (Nat.succ n)) =
             2 * native_int_pow2 (native_nat_to_int n) := by
-        simpa [native_nat_to_int, Smtm.native_nat_to_int] using
+        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
           native_int_pow2_nat_succ_local n
       have hRaw :
           native_int_pow2 (native_nat_to_int n) +
@@ -1130,7 +1130,7 @@ private theorem eval_repeat_rec_one_bit :
           native_zplus (1 : native_Int) (native_nat_to_int n) =
             native_nat_to_int (Nat.succ n) := by
         simp [SmtEval.native_zplus, native_nat_to_int,
-          Smtm.native_nat_to_int]
+          SmtEval.native_nat_to_int]
         rw [Int.add_comm]
       have hWidthInt : (1 : Int) + ↑n = ↑n + 1 := by
         rw [Int.add_comm]
@@ -1141,10 +1141,10 @@ private theorem eval_repeat_rec_one_bit :
               (native_int_pow2 (↑n + 1)) =
             native_int_pow2 (↑n + 1) - 1 := by
         rw [hRaw]
-        simpa [native_nat_to_int, Smtm.native_nat_to_int] using hMod
+        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hMod
       simpa [__smtx_model_eval_concat, native_binary_concat,
         SmtEval.native_zplus, SmtEval.native_zmult,
-        native_nat_to_int, Smtm.native_nat_to_int, hWidthInt]
+        native_nat_to_int, SmtEval.native_nat_to_int, hWidthInt]
         using hPayload
 
 def bvAshrByConst2Lhs (x amount sz : Term) : Term :=
@@ -1334,7 +1334,7 @@ private theorem typed_bv_ashr_by_const_2_term
           (Term.Numeral N)))) = _
     rw [typeof_repeat_eq, hSignTy]
     simp [__smtx_typeof_repeat, native_ite, hROne,
-      SmtEval.native_zmult, native_nat_to_int, Smtm.native_nat_to_int]
+      SmtEval.native_zmult, native_nat_to_int, SmtEval.native_nat_to_int]
   have hLhsTrans : RuleProofs.eo_has_smt_translation
       (bvAshrByConst2Lhs x amount (Term.Numeral W)) := by
     unfold RuleProofs.eo_has_smt_translation
@@ -1384,11 +1384,11 @@ private theorem eval_repeat_bit_local2 (A : Nat) (b : Bool) :
   | false =>
       simp [__smtx_model_eval_repeat, hAToNat,
         eval_repeat_rec_zero_bit, BitVec.fill_toNat,
-        native_nat_to_int, Smtm.native_nat_to_int]
+        native_nat_to_int, SmtEval.native_nat_to_int]
   | true =>
       simp [__smtx_model_eval_repeat, hAToNat,
         eval_repeat_rec_one_bit, BitVec.fill_toNat,
-        native_nat_to_int, Smtm.native_nat_to_int, natpow2_eq]
+        native_nat_to_int, SmtEval.native_nat_to_int, natpow2_eq]
       exact hOnesCast.symm
 
 private theorem bvlshr_bitvec_value_local2 (x : BitVec W) (A : Nat) :

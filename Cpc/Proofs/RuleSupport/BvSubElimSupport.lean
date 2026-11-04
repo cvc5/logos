@@ -131,14 +131,14 @@ private theorem native_nat_to_int_of_int_to_nat_of_nonneg (n : native_Int) :
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hn
-  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem smt_typeof_binary_nat_to_int_zero_local (w : native_Nat) :
     __smtx_typeof (SmtTerm.Binary (native_nat_to_int w) 0) =
       SmtType.BitVec w := by
   have hWidth : native_zleq 0 (native_nat_to_int w) = true := by
-    simp [SmtEval.native_zleq, Smtm.native_nat_to_int]
+    simp [SmtEval.native_zleq, SmtEval.native_nat_to_int]
   have hMod0 :
       native_mod_total 0 (native_int_pow2 (native_nat_to_int w)) = 0 := by
     simp [SmtEval.native_mod_total]
@@ -152,7 +152,7 @@ private theorem smt_typeof_binary_nat_to_int_zero_local (w : native_Nat) :
         SmtType.None := by
     unfold __smtx_typeof
     simp [SmtEval.native_and, hWidth, hMod, native_ite]
-  simpa [SmtEval.native_int_to_nat, Smtm.native_nat_to_int] using
+  simpa [SmtEval.native_int_to_nat, SmtEval.native_nat_to_int] using
     TranslationProofs.smtx_typeof_binary_of_non_none
       (native_nat_to_int w) 0 hNN
 

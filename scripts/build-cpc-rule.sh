@@ -123,7 +123,7 @@ cd "${repo_root}"
 source "${script_dir}/lean-toolchain-env.sh"
 logos_configure_lean_toolchain
 
-lake --verbose --no-ansi build "${module}" 2>&1 | awk '
+lake -d verification --verbose --no-ansi build "${module}" 2>&1 | awk '
   {
     line = $0
 

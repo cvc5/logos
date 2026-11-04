@@ -1,5 +1,5 @@
 import Cpc.Parser
-import Cpc.Spec
+import Cpc.SmtTranslate
 
 namespace Cpc.Parser.Tests
 

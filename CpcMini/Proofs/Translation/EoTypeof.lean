@@ -1429,7 +1429,7 @@ private theorem smtx_type_wf_rec_seq_component
     (h : __smtx_type_wf_rec (SmtType.Seq T) (SmtType.Seq T) = true) :
     __smtx_type_wf_rec T T = true := by
   have hPair :
-      (native_inhabited_type T = true ∧ __smtx_type_wf_rec T T = true) ∧
+      (__smtx_inhabited_type T = true ∧ __smtx_type_wf_rec T T = true) ∧
         __smtx_type_no_alias_rec native_reflist_nil T = true := by
     simpa [__smtx_type_wf_rec, native_and] using h
   exact hPair.1.2
@@ -2114,15 +2114,15 @@ theorem eo_to_smt_type_ne_reglan (T : Term) :
 private theorem smtx_fun_type_wf_parts
     {A B : SmtType}
     (h : __smtx_type_wf (SmtType.FunType A B) = true) :
-    native_inhabited_type A = true ∧
+    __smtx_inhabited_type A = true ∧
       __smtx_type_wf_rec A A = true ∧
-        native_inhabited_type B = true ∧
+        __smtx_inhabited_type B = true ∧
           __smtx_type_wf_rec B B = true := by
   have hAll :
-      ((native_inhabited_type A = true ∧
+      ((__smtx_inhabited_type A = true ∧
         __smtx_type_wf_rec A A = true) ∧
           __smtx_type_no_alias_rec native_reflist_nil A = true) ∧
-          ((native_inhabited_type B = true ∧
+          ((__smtx_inhabited_type B = true ∧
             __smtx_type_wf_rec B B = true) ∧
               __smtx_type_no_alias_rec native_reflist_nil B = true) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, native_and] using h
@@ -2145,9 +2145,9 @@ theorem eo_type_valid_of_guard_wf_non_none
       ⟨T1, T2, hTerm, hT1, hT2, _hT1NN, _hT2NN⟩
     subst T
     have hParts :
-        native_inhabited_type A = true ∧
+        __smtx_inhabited_type A = true ∧
           __smtx_type_wf_rec A A = true ∧
-            native_inhabited_type B = true ∧
+            __smtx_inhabited_type B = true ∧
               __smtx_type_wf_rec B B = true := by
       exact smtx_fun_type_wf_parts (by simpa [hTy] using hWf)
     simp [eo_type_valid_rec]
@@ -2155,7 +2155,7 @@ theorem eo_type_valid_of_guard_wf_non_none
       eo_type_valid_of_smt_wf_rec [] (by simpa [hT1] using hParts.2.1),
       eo_type_valid_of_smt_wf_rec [] (by simpa [hT2] using hParts.2.2.2)⟩
   · have hPair :
-        native_inhabited_type (__eo_to_smt_type T) = true ∧
+        __smtx_inhabited_type (__eo_to_smt_type T) = true ∧
           __smtx_type_wf_rec (__eo_to_smt_type T) (__eo_to_smt_type T) = true := by
         cases hTy : __eo_to_smt_type T <;> simp [__smtx_type_wf, native_and, hTy] at hWf ⊢
         case RegLan =>
@@ -2750,7 +2750,7 @@ private theorem smtx_datatype_cons_wf_generic_parts
     (h : __smtx_dt_cons_wf_rec base (SmtDatatypeCons.cons T c) = true) :
     __smtx_type_wf_rec T = true ∧ __smtx_dt_cons_wf_rec base c = true := by
   cases T <;>
-    simp_all [__smtx_dt_cons_wf_rec, native_and, native_inhabited_type,
+    simp_all [__smtx_dt_cons_wf_rec, native_and, __smtx_inhabited_type,
       __smtx_type_wf_rec]
 
 /- Recover proof-side validity from the declaration-aware SMT well-formedness
@@ -2993,7 +2993,7 @@ theorem eo_type_valid_of_smt_wf
             __smtx_type_wf B = true := by
         simpa [__smtx_type_wf, native_and, hTy] using h
       have hA :
-          native_inhabited_type A = true ∧ __smtx_type_wf_rec A = true := by
+          __smtx_inhabited_type A = true ∧ __smtx_type_wf_rec A = true := by
         simpa [__smtx_type_wf_component, native_and] using hComponents.1
       exact ⟨
         eo_type_valid_of_smt_wf_rec_aux [] T1 (by simpa [hT1] using hA.2),
@@ -3006,7 +3006,7 @@ theorem eo_type_valid_of_smt_wf
             __smtx_type_wf_component (__eo_to_smt_type T) = true := by
           simpa [__smtx_type_wf, hTy] using h
         have hParts :
-            native_inhabited_type (__eo_to_smt_type T) = true ∧
+            __smtx_inhabited_type (__eo_to_smt_type T) = true ∧
               __smtx_type_wf_rec (__eo_to_smt_type T) = true := by
           simpa [__smtx_type_wf_component, native_and] using hComponent
         exact hParts.2

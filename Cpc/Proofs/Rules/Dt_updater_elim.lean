@@ -1217,7 +1217,7 @@ private theorem dt_updater_elim_update_rel
                 (__eo_to_smt_datatype (__eo_dd_lookup s d0)) i : Int) := by
           apply of_decide_eq_true
           simpa [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-            Smtm.native_nat_to_int, D,
+            SmtEval.native_nat_to_int, D,
             TranslationProofs.eo_to_smt_dd_lookup] using hIdx
         exact Int.ofNat_lt.mp hInt
       have hIteNN :

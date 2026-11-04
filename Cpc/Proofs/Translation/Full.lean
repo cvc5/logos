@@ -1668,7 +1668,7 @@ private theorem eo_type_valid_of_tuple_select_eq_dtcapp_full
               have hNatInt :
                   native_nat_to_int (native_int_to_nat n) = n := by
                 simp [native_nat_to_int, native_int_to_nat,
-                  Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+                  SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
                   Int.toNat_of_nonneg hnNonneg]
               have hSelectedValid :
                   eo_type_valid_rec []
@@ -4660,7 +4660,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                                       simpa [__eo_to_smt_nat_is_valid, native_zleq,
                                         SmtEval.native_zleq] using hIdxValid)
                                   simp [native_nat_to_int, native_int_to_nat,
-                                    Smtm.native_nat_to_int, SmtEval.native_int_to_nat]
+                                    SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]
                                   exact Int.max_eq_left hNonneg
                                 have hEoSk :
                                     __eo_to_smt_type
@@ -4775,7 +4775,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                                       simpa [__eo_to_smt_nat_is_valid, native_zleq,
                                         SmtEval.native_zleq] using hIdxValid)
                                   simp [native_nat_to_int, native_int_to_nat,
-                                    Smtm.native_nat_to_int, SmtEval.native_int_to_nat]
+                                    SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]
                                   exact Int.max_eq_left hNonneg
                                 have hSkValid :=
                                   eo_to_smt_quantifiers_skolemize_var_type_valid_of_non_none xs

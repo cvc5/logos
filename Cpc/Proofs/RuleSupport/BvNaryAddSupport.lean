@@ -75,7 +75,7 @@ theorem addArgsOfBitvecType (x y : Term) (w : Nat) :
               (__smtx_typeof (__eo_to_smt y)) by
           rw [__smtx_typeof.eq_def] <;> simp only] at hTy'
       simpa [__smtx_typeof_bv_op_2, hXTy, hYTy, native_ite,
-        native_nateq, Smtm.native_nateq] using hTy'
+        native_nateq, SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -90,7 +90,7 @@ theorem addSmtType (x y : Term) (w : Nat) :
       (SmtTerm.bvadd (__eo_to_smt x) (__eo_to_smt y)) = _
   rw [__smtx_typeof.eq_def] <;> simp only
   simp [__smtx_typeof_bv_op_2, hXTy, hYTy, native_ite,
-    native_nateq, Smtm.native_nateq]
+    native_nateq, SmtEval.native_nateq]
 
 private theorem emod_add_left_congr
     (a b m : Int) : ((a % m) + b) % m = (a + b) % m := by

@@ -371,7 +371,7 @@ theorem EvaluateProofInternal.eo_repeat_typeof_bitvec_of_arg_bitvec_and_ne_stuck
   have hIntNat :
       native_nat_to_int (native_int_to_nat i) = i := by
     simpa [native_nat_to_int, native_int_to_nat,
-      Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       Int.toNat_of_nonneg hi0Int]
   have hNatNeZero : native_int_to_nat i ≠ 0 := by
     intro hZero
@@ -379,7 +379,7 @@ theorem EvaluateProofInternal.eo_repeat_typeof_bitvec_of_arg_bitvec_and_ne_stuck
       calc
         i = native_nat_to_int (native_int_to_nat i) := hIntNat.symm
         _ = native_nat_to_int 0 := by rw [hZero]
-        _ = 0 := by simp [native_nat_to_int, Smtm.native_nat_to_int]
+        _ = 0 := by simp [native_nat_to_int, SmtEval.native_nat_to_int]
     have hBad : (1 : Int) <= 0 := by
       simpa [hIeq0] using hi
     exact (by decide : ¬ (1 : Int) <= 0) hBad

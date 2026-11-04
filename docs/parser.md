@@ -106,8 +106,8 @@ not change how those names are written in proof files.
 it does not instantiate parametric datatypes. Clients constructing EO terms without the
 parser must supply the instantiated declarations themselves.
 The order of a `declare-datatypes` block matters: the specification witnesses a datatype only
-through references to entries declared *later* in its block (`smt_type_default`,
-`docs/smt-model-definitions.tex`), so a block declaring a datatype before the ones witnessing
+through references to entries declared *later* in its block (`smt_type_default` and
+`smt_inhabited_type`, `docs/smt-model-definitions.tex`), so a block declaring a datatype before the ones witnessing
 it has no well-formed type at all.  The parser therefore reorders a block that was not written
 that way, by decreasing rank in the saturation `productiveOrder` describes, which leaves a
 block that is already productive exactly as it was.  A block denotes the same datatypes

@@ -1,7 +1,7 @@
 module
 
-public import Cpc.SmtModel
-import all Cpc.SmtModel
+public import Cpc.Proofs.StaticTyping
+import all Cpc.Proofs.StaticTyping
 
 public section
 

@@ -321,7 +321,7 @@ private theorem bv_ult_one_prem_width_pos
   have hWidthEq : native_nat_to_int (native_int_to_nat n) = n := by
     have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
       Int.toNat_of_nonneg hnNonneg
-    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   have hEvalSize := eval_bvsize_eq M x n hNonneg hXSmt
   have hEvalPrem :
@@ -455,7 +455,7 @@ private theorem eval_bvult_one_matches_eq_zero
   have hWidthEq : native_nat_to_int (native_int_to_nat i) = i := by
     have hInt : (Int.ofNat (Int.toNat i) : Int) = i :=
       Int.toNat_of_nonneg hiNonneg
-    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   rw [hWidthEq] at hEvalX
   have hEvalTyI :

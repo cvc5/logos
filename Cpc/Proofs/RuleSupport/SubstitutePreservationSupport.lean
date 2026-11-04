@@ -5200,7 +5200,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                               __smtx_typeof.eq_2,
                                                               native_ite, native_zleq,
                                                               SmtEval.native_zleq,
-                                                              Smtm.native_nat_to_int])
+                                                              SmtEval.native_nat_to_int])
                                                           (fun hATrans hATy =>
                                                             hRec
                                                               (G := a)
@@ -5277,7 +5277,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                 __smtx_typeof_bv_op_2_ret,
                                                                 native_ite,
                                                                 native_nateq,
-                                                                Smtm.native_nateq])
+                                                                SmtEval.native_nateq])
                                                             (fun hATrans hATy =>
                                                               hRec
                                                                 (G := a)
@@ -5355,7 +5355,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                   __smtx_typeof_bv_op_2_ret,
                                                                   native_ite,
                                                                   native_nateq,
-                                                                  Smtm.native_nateq])
+                                                                  SmtEval.native_nateq])
                                                               (fun hATrans hATy =>
                                                                 hRec
                                                                   (G := a)

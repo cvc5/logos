@@ -251,7 +251,7 @@ private theorem eval_bv_eq_not_solve_lhs
       simpa [SmtEval.native_zleq] using hNonneg
     have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
       Int.toNat_of_nonneg hnNonneg
-    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   have hEvalTyX :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt x)) =

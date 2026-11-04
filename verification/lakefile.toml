@@ -1,0 +1,23 @@
+name = "LogosVerification"
+version = "0.1.0"
+srcDir = ".."
+defaultTargets = ["Cpc.ApiChecks", "Cpc.Proofs.StaticTyping", "CpcMini.Proofs.Checker"]
+weakLeanArgs = ["-j1"]
+
+# Future mathlib dependencies belong here. The checker package has no
+# dependency on this project, and can be built with no verification checkout.
+[[require]]
+name = "Cpc"
+path = ".."
+
+[[lean_lib]]
+name = "CpcVerification"
+roots = []
+globs = ["Cpc.Spec", "Cpc.SmtModelDefs", "Cpc.SmtValueOrder", "Cpc.SmtModel", "Cpc.ApiChecks", "Cpc.ApiCorrect", "Cpc.Native.Correct", "Cpc.Proofs.*"]
+moreLeanArgs = ["-DmaxHeartbeats=10000000", "-DwarningAsError=true"]
+
+[[lean_lib]]
+name = "CpcMiniVerification"
+roots = []
+globs = ["CpcMini.Spec", "CpcMini.SmtModelDefs", "CpcMini.SmtValueOrder", "CpcMini.SmtModel", "CpcMini.Proofs.*"]
+moreLeanArgs = ["-DwarningAsError=true"]

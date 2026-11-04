@@ -92,11 +92,11 @@ theorem EvaluateProofInternal.bv_eval_concat_list_repeat_rec_binary
       refine ⟨0, ?_, ?_, ?_⟩
       · change Term.Binary 0 0 =
           Term.Binary (native_zmult (native_nat_to_int 0) w) 0
-        simp [SmtEval.native_zmult, Smtm.native_nat_to_int]
+        simp [SmtEval.native_zmult, SmtEval.native_nat_to_int]
       · simp [__smtx_repeat_rec, SmtEval.native_zmult,
-          Smtm.native_nat_to_int]
+          SmtEval.native_nat_to_int]
       · simp [SmtEval.native_zeq, SmtEval.native_mod_total,
-          SmtEval.native_zmult, Smtm.native_nat_to_int]
+          SmtEval.native_zmult, SmtEval.native_nat_to_int]
   | Nat.succ k => by
       rcases EvaluateProofInternal.bv_eval_concat_list_repeat_rec_binary w n hWNonneg k with
         ⟨m, hTerm, hEval, _hCanon⟩
@@ -113,13 +113,13 @@ theorem EvaluateProofInternal.bv_eval_concat_list_repeat_rec_binary
             _ = (1 + ↑k) * w := by rw [Int.add_mul]
             _ = (↑k + 1) * w := by simp [Int.add_comm]
         simpa [recW, newW, SmtEval.native_zplus, SmtEval.native_zmult,
-          Smtm.native_nat_to_int] using hWidthEqInt
+          SmtEval.native_nat_to_int] using hWidthEqInt
       have hWidthNonneg :
           native_zleq 0 (native_zplus w recW) = true := by
         have hw : 0 <= w := by
           simpa [SmtEval.native_zleq] using hWNonneg
         have hk : 0 <= native_nat_to_int k := by
-          simp [Smtm.native_nat_to_int]
+          simp [SmtEval.native_nat_to_int]
         have hRecW : 0 <= recW := by
           simpa [recW, SmtEval.native_zmult] using Int.mul_nonneg hk hw
         have hAdd : 0 <= w + recW := Int.add_nonneg hw hRecW
@@ -621,7 +621,7 @@ theorem EvaluateProofInternal.eo_repeat_literal_arg_binary_of_typeof_bitvec
   have hIntNat :
       native_nat_to_int (native_int_to_nat i) = i := by
     simpa [native_nat_to_int, native_int_to_nat,
-      Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       Int.toNat_of_nonneg hi0Int]
   have hNatNeZero : native_int_to_nat i ≠ 0 := by
     intro hZero
@@ -629,7 +629,7 @@ theorem EvaluateProofInternal.eo_repeat_literal_arg_binary_of_typeof_bitvec
       calc
         i = native_nat_to_int (native_int_to_nat i) := hIntNat.symm
         _ = native_nat_to_int 0 := by rw [hZero]
-        _ = 0 := by simp [native_nat_to_int, Smtm.native_nat_to_int]
+        _ = 0 := by simp [native_nat_to_int, SmtEval.native_nat_to_int]
     have hBad : (0 : Int) < 0 := by
       simpa [hIeq0] using hiPos
     exact (by decide : ¬ (0 : Int) < 0) hBad

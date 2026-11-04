@@ -235,7 +235,7 @@ private theorem vsm_apply_ext_aux :
             hArgs (vsm_num_apply_args f) (by simp [vsm_num_apply_args])
           have hab : a = b := by
             simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, hCountFG,
-              Smtm.native_nateq] using hLast
+              SmtEval.native_nateq] using hLast
           have hfg : f = g := by
             apply ih f g hv
             · simpa [__smtx_apply_head_value] using hHead
@@ -251,7 +251,7 @@ private theorem vsm_apply_ext_aux :
                 apply hNeF
                 rw [hCountFG, hEq]
               simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, hCountFG,
-                Smtm.native_nateq, hNeF, hNeG] using hArg
+                SmtEval.native_nateq, hNeF, hNeG] using hArg
           subst hfg
           subst hab
           rfl
@@ -455,13 +455,13 @@ private theorem updater_rec_eval_components
         by_cases hLast : q = k
         · subst q
           have hEqBool : native_nateq k k = true := by
-            simp [native_nateq, Smtm.native_nateq]
+            simp [native_nateq, SmtEval.native_nateq]
           rw [hEval]
           simp [__smtx_apply_arg_nth_value,hEqBool, argTerm]
         · have hqk : q < k := by
             exact Nat.lt_of_le_of_ne (Nat.lt_succ_iff.mp hq) hLast
           have hNeBool : native_nateq q k = false := by
-            simp [native_nateq, Smtm.native_nateq, hLast]
+            simp [native_nateq, SmtEval.native_nateq, hLast]
           rw [hEval]
           simp [__smtx_apply_arg_nth_value,hNeBool]
           exact hArgsRec q hqk
@@ -552,7 +552,7 @@ private theorem tuple_update_shape_of_non_none
                     (__smtx_dt_num_sels body native_nat_zero : Int) := by
                 apply of_decide_eq_true
                 simpa [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-                  Smtm.native_nat_to_int] using hIdxBoundBool
+                  SmtEval.native_nat_to_int] using hIdxBoundBool
               exact Int.ofNat_lt.mp hInt
             exact ⟨body, n, rfl, hIdxEq, hNonneg, hLt⟩
           · exfalso
@@ -642,7 +642,7 @@ private theorem tuple_update_rec_non_none_of_shape
             (__eo_to_smt t)) ≠
         SmtType.None := by
     simpa [__eo_to_smt_updater, native_ite, hIdxBool, native_zlt,
-      SmtEval.native_zlt, native_nat_to_int, Smtm.native_nat_to_int,
+      SmtEval.native_zlt, native_nat_to_int, SmtEval.native_nat_to_int,
       hIdxProp, __eo_to_smt_tuple_decl, __smtx_dd_lookup, native_streq,
       SmtEval.native_streq] using hUpdaterNN
   exact smtx_ite_then_non_none _ _ _ hIteNN
@@ -716,7 +716,7 @@ private theorem tuple_update_eval_eq_rec_of_tuple_type
         native_nat_to_int
           (__smtx_dt_num_sels (SmtDatatype.sum c SmtDatatype.null)
             native_nat_zero) := by
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hIdxProp
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hIdxProp
   have hTNN : __smtx_typeof (__eo_to_smt t) ≠ SmtType.None := by
     rw [hT]
     simp
@@ -790,7 +790,7 @@ private theorem tuple_update_type_eq_tuple_type_of_shape
   have hIdxLt :
       native_nat_to_int (native_int_to_nat n) <
         native_nat_to_int (__smtx_dt_num_sels d native_nat_zero) := by
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hIdxProp
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hIdxProp
   have hRecNN :=
     tuple_update_rec_non_none_of_shape (Term.Numeral n) t a d n
       hT rfl hNonneg hLt hNN
@@ -1170,7 +1170,7 @@ private theorem tuple_collapse_updater_rhs_projection
                         tailSmt) ≠ SmtType.None
                 have hsimpa := hRhsBaseNN; (try simp [aSmt, tailSmt] at hsimpa ⊢); exact hsimpa)
           have hsimpa := hProj
-          try simp [fullD, fullC, aSmt, native_nateq, Smtm.native_nateq] at hsimpa ⊢
+          try simp [fullD, fullC, aSmt, native_nateq, SmtEval.native_nateq] at hsimpa ⊢
           exact hsimpa
       | succ j =>
           have hjTail :
@@ -1228,7 +1228,7 @@ private theorem tuple_collapse_updater_rhs_projection
           rw [hRhsSucc']
           have hsimpa :=
             (hSelEval.trans hOrigSucc).symm
-          try simp [fullD, fullC, native_nateq, Smtm.native_nateq] at hsimpa ⊢
+          try simp [fullD, fullC, native_nateq, SmtEval.native_nateq] at hsimpa ⊢
           exact hsimpa
     · let pred := native_zplus n (-1 : native_Int)
       let tailRhs := __tuple_collapse_updater_rhs tail a (Term.Numeral pred)
@@ -1376,7 +1376,7 @@ private theorem tuple_collapse_updater_rhs_projection
             exact hsimpa
           rw [hRhsZero']
           simpa [fullD, fullC, hNatSucc, native_nateq,
-            Smtm.native_nateq] using
+            SmtEval.native_nateq] using
             (hSelEval.trans hOrigZero).symm
       | succ j =>
           have hjTail :
@@ -1457,7 +1457,7 @@ private theorem tuple_collapse_updater_rhs_projection
               native_nateq (native_int_to_nat n) (Nat.succ j) =
                 native_nateq (native_int_to_nat pred) j := by
             rw [hNatSucc]
-            simp [native_nateq, Smtm.native_nateq]
+            simp [native_nateq, SmtEval.native_nateq]
           have hRhsSucc' :
               __smtx_apply_arg_nth_value
                   (__smtx_model_eval M
@@ -1795,7 +1795,7 @@ private theorem tuple_collapse_updater_eval_eq
                     (__smtx_model_eval M tailSmt) j
                     (__smtx_dt_num_sels tailD native_nat_zero) := by
               have hNe : native_nateq native_nat_zero (Nat.succ j) = false := by
-                simp [native_nateq, Smtm.native_nateq]
+                simp [native_nateq, SmtEval.native_nateq]
               have hLhsSel :
                   __smtx_apply_arg_nth_value
                       (__smtx_model_eval M

@@ -3356,10 +3356,10 @@ private theorem eval_bv_sign_extend_eq_const_1_lhs_eq_rhs
   let AN : Nat := native_int_to_nat A
   have hWCast : (↑WN : Int) = W := by
     have h := native_int_to_nat_roundtrip W hW0
-    simpa [WN, Smtm.native_nat_to_int, native_nat_to_int] using h
+    simpa [WN, SmtEval.native_nat_to_int, native_nat_to_int] using h
   have hACast : (↑AN : Int) = A := by
     have h := native_int_to_nat_roundtrip A hA0
-    simpa [AN, Smtm.native_nat_to_int, native_nat_to_int] using h
+    simpa [AN, SmtEval.native_nat_to_int, native_nat_to_int] using h
   have hWNatPos : 0 < WN := by
     apply Int.ofNat_lt.mp
     change (0 : Int) < (↑WN : Int)
@@ -3374,7 +3374,7 @@ private theorem eval_bv_sign_extend_eq_const_1_lhs_eq_rhs
       native_int_to_nat (native_zplus W A) = WN + AN := by
     apply Int.ofNat.inj
     have h := native_int_to_nat_roundtrip (native_zplus W A) hWide0
-    simpa [Smtm.native_nat_to_int, native_nat_to_int,
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int,
       SmtEval.native_zplus, WN, AN, hWCast, hACast] using h
   have hPCastA1 : P = (↑(AN + 1) : Int) := by
     calc
@@ -3403,14 +3403,14 @@ private theorem eval_bv_sign_extend_eq_const_1_lhs_eq_rhs
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (↑WN : Int) px := by
-    simpa [Smtm.native_nat_to_int, native_nat_to_int] using hXEval
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hXEval
   have hXRange := bitvec_payload_range_of_canonical
     (w := native_nat_to_int WN) (n := px)
-    (by simp [SmtEval.native_zleq, Smtm.native_nat_to_int,
+    (by simp [SmtEval.native_zleq, SmtEval.native_nat_to_int,
       native_nat_to_int]) hXCan
   have hPx0 : (0 : Int) ≤ px := hXRange.1
   have hPx1 : px < (2 : Int) ^ WN := by
-    simpa [natpow2_eq, Smtm.native_nat_to_int, native_nat_to_int]
+    simpa [natpow2_eq, SmtEval.native_nat_to_int, native_nat_to_int]
       using hXRange.2
   rcases _root_.smt_eval_binary_of_smt_type_bitvec M hM
       (__eo_to_smt
@@ -3424,17 +3424,17 @@ private theorem eval_bv_sign_extend_eq_const_1_lhs_eq_rhs
             (bvZeroExtendUltConstConst c
               (Term.Numeral (native_zplus W A)))) =
         SmtValue.Binary (↑(WN + AN) : Int) pc := by
-    simpa [Smtm.native_nat_to_int, native_nat_to_int] using hConstEval
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hConstEval
   have hConstRange := bitvec_payload_range_of_canonical
     (w := native_nat_to_int (WN + AN)) (n := pc)
     (by
       have hnn : (0 : Int) ≤ (↑(WN + AN) : Int) :=
         Int.natCast_nonneg _
-      have hsimpa := hnn; (try simp [SmtEval.native_zleq, Smtm.native_nat_to_int, native_nat_to_int] at hsimpa ⊢); exact decide_eq_true hsimpa) hConstCan
+      have hsimpa := hnn; (try simp [SmtEval.native_zleq, SmtEval.native_nat_to_int, native_nat_to_int] at hsimpa ⊢); exact decide_eq_true hsimpa) hConstCan
   have hPc0 : (0 : Int) ≤ pc := hConstRange.1
   have hPc1 : pc < (2 : Int) ^ (WN + AN) := by
     have hsimpa := hConstRange.2
-    try simp [natpow2_eq, Smtm.native_nat_to_int, native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, SmtEval.native_nat_to_int, native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   let xBV : BitVec WN := BitVec.ofInt WN px
   let cBV : BitVec (WN + AN) := BitVec.ofInt (WN + AN) pc
@@ -3716,10 +3716,10 @@ private theorem eval_bv_sign_extend_eq_const_2_lhs_eq_1_lhs
   let AN : Nat := native_int_to_nat A
   have hWCast : (↑WN : Int) = W := by
     have h := native_int_to_nat_roundtrip W hW0
-    simpa [WN, Smtm.native_nat_to_int, native_nat_to_int] using h
+    simpa [WN, SmtEval.native_nat_to_int, native_nat_to_int] using h
   have hACast : (↑AN : Int) = A := by
     have h := native_int_to_nat_roundtrip A hA0
-    simpa [AN, Smtm.native_nat_to_int, native_nat_to_int] using h
+    simpa [AN, SmtEval.native_nat_to_int, native_nat_to_int] using h
   have hWide0 : native_zleq 0 (native_zplus W A) = true := by
     have hWNonneg : (0 : Int) ≤ W := by
       simpa [SmtEval.native_zleq] using hW0
@@ -3733,7 +3733,7 @@ private theorem eval_bv_sign_extend_eq_const_2_lhs_eq_1_lhs
       native_int_to_nat (native_zplus W A) = WN + AN := by
     apply Int.ofNat.inj
     have h := native_int_to_nat_roundtrip (native_zplus W A) hWide0
-    simpa [Smtm.native_nat_to_int, native_nat_to_int,
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int,
       SmtEval.native_zplus, WN, AN, hWCast, hACast] using h
   rcases _root_.smt_eval_binary_of_smt_type_bitvec M hM (__eo_to_smt x) WN
       (by simpa [WN] using hXSmtTy) with
@@ -3741,14 +3741,14 @@ private theorem eval_bv_sign_extend_eq_const_2_lhs_eq_1_lhs
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (↑WN : Int) px := by
-    simpa [Smtm.native_nat_to_int, native_nat_to_int] using hXEval
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hXEval
   have hXRange := bitvec_payload_range_of_canonical
     (w := native_nat_to_int WN) (n := px)
-    (by simp [SmtEval.native_zleq, Smtm.native_nat_to_int,
+    (by simp [SmtEval.native_zleq, SmtEval.native_nat_to_int,
       native_nat_to_int]) hXCan
   have hPx0 : (0 : Int) ≤ px := hXRange.1
   have hPx1 : px < (2 : Int) ^ WN := by
-    simpa [natpow2_eq, Smtm.native_nat_to_int, native_nat_to_int]
+    simpa [natpow2_eq, SmtEval.native_nat_to_int, native_nat_to_int]
       using hXRange.2
   rcases _root_.smt_eval_binary_of_smt_type_bitvec M hM
       (__eo_to_smt
@@ -3762,17 +3762,17 @@ private theorem eval_bv_sign_extend_eq_const_2_lhs_eq_1_lhs
             (bvZeroExtendUltConstConst c
               (Term.Numeral (native_zplus W A)))) =
         SmtValue.Binary (↑(WN + AN) : Int) pc := by
-    simpa [Smtm.native_nat_to_int, native_nat_to_int] using hConstEval
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hConstEval
   have hConstRange := bitvec_payload_range_of_canonical
     (w := native_nat_to_int (WN + AN)) (n := pc)
     (by
       have hnn : (0 : Int) ≤ (↑(WN + AN) : Int) :=
         Int.natCast_nonneg _
-      have hsimpa := hnn; (try simp [SmtEval.native_zleq, Smtm.native_nat_to_int, native_nat_to_int] at hsimpa ⊢); exact decide_eq_true hsimpa) hConstCan
+      have hsimpa := hnn; (try simp [SmtEval.native_zleq, SmtEval.native_nat_to_int, native_nat_to_int] at hsimpa ⊢); exact decide_eq_true hsimpa) hConstCan
   have hPc0 : (0 : Int) ≤ pc := hConstRange.1
   have hPc1 : pc < (2 : Int) ^ (WN + AN) := by
     have hsimpa := hConstRange.2
-    try simp [natpow2_eq, Smtm.native_nat_to_int, native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, SmtEval.native_nat_to_int, native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   let xBV : BitVec WN := BitVec.ofInt WN px
   let cBV : BitVec (WN + AN) := BitVec.ofInt (WN + AN) pc
@@ -4922,10 +4922,10 @@ private theorem sign_extend_ult_const_2_eval_eq
   let AN : Nat := native_int_to_nat A
   have hWRound : (Int.ofNat WN : Int) = W := by
     have h := native_int_to_nat_roundtrip W hW0
-    simpa [WN, Smtm.native_nat_to_int, native_nat_to_int] using h
+    simpa [WN, SmtEval.native_nat_to_int, native_nat_to_int] using h
   have hARound : (Int.ofNat AN : Int) = A := by
     have h := native_int_to_nat_roundtrip A hA0
-    simpa [AN, Smtm.native_nat_to_int, native_nat_to_int] using h
+    simpa [AN, SmtEval.native_nat_to_int, native_nat_to_int] using h
   have hWNatPos : 0 < WN := by
     have hHNonneg : (0 : Int) ≤ H := by
       change decide ((0 : Int) ≤ H) = true at hH0
@@ -4966,7 +4966,7 @@ private theorem sign_extend_ult_const_2_eval_eq
     have hRound' :
         (Int.ofNat (native_int_to_nat (native_zplus W A)) : Int) =
           native_zplus W A := by
-      simpa [Smtm.native_nat_to_int, native_nat_to_int] using hRound
+      simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hRound
     exact Int.ofNat.inj (hRound'.trans hWideCast.symm)
   have hXSmtTyNat : __smtx_typeof (__eo_to_smt x) = SmtType.BitVec WN := by
     simpa [WN] using hXSmtTy
@@ -4983,14 +4983,14 @@ private theorem sign_extend_ult_const_2_eval_eq
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (Int.ofNat WN) px := by
-    simpa [Smtm.native_nat_to_int, native_nat_to_int] using hXEval
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hXEval
   have hXRange := bitvec_payload_range_of_canonical
     (w := native_nat_to_int WN) (n := px)
-    (by simp [SmtEval.native_zleq, Smtm.native_nat_to_int,
+    (by simp [SmtEval.native_zleq, SmtEval.native_nat_to_int,
       native_nat_to_int]) hXCan
   have hPx0 : (0 : Int) ≤ px := hXRange.1
   have hPx1 : px < (2 : Int) ^ WN := by
-    simpa [natpow2_eq, Smtm.native_nat_to_int, native_nat_to_int] using
+    simpa [natpow2_eq, SmtEval.native_nat_to_int, native_nat_to_int] using
       hXRange.2
   rcases _root_.smt_eval_binary_of_smt_type_bitvec M hM
       (__eo_to_smt
@@ -5003,18 +5003,18 @@ private theorem sign_extend_ult_const_2_eval_eq
             (bvZeroExtendUltConstConst c
               (Term.Numeral (Int.ofNat (WN + AN))))) =
         SmtValue.Binary (Int.ofNat (WN + AN)) pc := by
-    simpa [Smtm.native_nat_to_int, native_nat_to_int] using hConstEval
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hConstEval
   have hConstRange := bitvec_payload_range_of_canonical
     (w := native_nat_to_int (WN + AN)) (n := pc)
     (by
       have hnn : (0 : Int) ≤ (Int.ofNat (WN + AN) : Int) :=
         Int.natCast_nonneg _
-      have hsimpa := hnn; (try simp [SmtEval.native_zleq, Smtm.native_nat_to_int, native_nat_to_int] at hsimpa ⊢); exact decide_eq_true hsimpa) hConstCan
+      have hsimpa := hnn; (try simp [SmtEval.native_zleq, SmtEval.native_nat_to_int, native_nat_to_int] at hsimpa ⊢); exact decide_eq_true hsimpa) hConstCan
   have hPc0 : (0 : Int) ≤ pc := hConstRange.1
   have hPc1 : pc < (2 : Int) ^ (WN + AN) := by
     have hsimpa :=
       hConstRange.2
-    try simp [natpow2_eq, Smtm.native_nat_to_int, native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, SmtEval.native_nat_to_int, native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   let xBV : BitVec WN := BitVec.ofInt WN px
   let cBV : BitVec (WN + AN) := BitVec.ofInt (WN + AN) pc
@@ -5959,10 +5959,10 @@ private theorem sign_extend_ult_const_4_eval_eq
   let AN : Nat := native_int_to_nat A
   have hWRound : (Int.ofNat WN : Int) = W := by
     have h := native_int_to_nat_roundtrip W hW0
-    simpa [WN, Smtm.native_nat_to_int, native_nat_to_int] using h
+    simpa [WN, SmtEval.native_nat_to_int, native_nat_to_int] using h
   have hARound : (Int.ofNat AN : Int) = A := by
     have h := native_int_to_nat_roundtrip A hA0
-    simpa [AN, Smtm.native_nat_to_int, native_nat_to_int] using h
+    simpa [AN, SmtEval.native_nat_to_int, native_nat_to_int] using h
   have hWNatPos : 0 < WN := by
     have hHNonneg : (0 : Int) ≤ H := by
       change decide ((0 : Int) ≤ H) = true at hH0
@@ -6003,7 +6003,7 @@ private theorem sign_extend_ult_const_4_eval_eq
     have hRound' :
         (Int.ofNat (native_int_to_nat (native_zplus W A)) : Int) =
           native_zplus W A := by
-      simpa [Smtm.native_nat_to_int, native_nat_to_int] using hRound
+      simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hRound
     exact Int.ofNat.inj (hRound'.trans hWideCast.symm)
   have hXSmtTyNat : __smtx_typeof (__eo_to_smt x) = SmtType.BitVec WN := by
     simpa [WN] using hXSmtTy
@@ -6020,14 +6020,14 @@ private theorem sign_extend_ult_const_4_eval_eq
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (Int.ofNat WN) px := by
-    simpa [Smtm.native_nat_to_int, native_nat_to_int] using hXEval
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hXEval
   have hXRange := bitvec_payload_range_of_canonical
     (w := native_nat_to_int WN) (n := px)
-    (by simp [SmtEval.native_zleq, Smtm.native_nat_to_int,
+    (by simp [SmtEval.native_zleq, SmtEval.native_nat_to_int,
       native_nat_to_int]) hXCan
   have hPx0 : (0 : Int) ≤ px := hXRange.1
   have hPx1 : px < (2 : Int) ^ WN := by
-    simpa [natpow2_eq, Smtm.native_nat_to_int, native_nat_to_int] using
+    simpa [natpow2_eq, SmtEval.native_nat_to_int, native_nat_to_int] using
       hXRange.2
   rcases _root_.smt_eval_binary_of_smt_type_bitvec M hM
       (__eo_to_smt
@@ -6040,18 +6040,18 @@ private theorem sign_extend_ult_const_4_eval_eq
             (bvZeroExtendUltConstConst c
               (Term.Numeral (Int.ofNat (WN + AN))))) =
         SmtValue.Binary (Int.ofNat (WN + AN)) pc := by
-    simpa [Smtm.native_nat_to_int, native_nat_to_int] using hConstEval
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hConstEval
   have hConstRange := bitvec_payload_range_of_canonical
     (w := native_nat_to_int (WN + AN)) (n := pc)
     (by
       have hnn : (0 : Int) ≤ (Int.ofNat (WN + AN) : Int) :=
         Int.natCast_nonneg _
-      have hsimpa := hnn; (try simp [SmtEval.native_zleq, Smtm.native_nat_to_int, native_nat_to_int] at hsimpa ⊢); exact decide_eq_true hsimpa) hConstCan
+      have hsimpa := hnn; (try simp [SmtEval.native_zleq, SmtEval.native_nat_to_int, native_nat_to_int] at hsimpa ⊢); exact decide_eq_true hsimpa) hConstCan
   have hPc0 : (0 : Int) ≤ pc := hConstRange.1
   have hPc1 : pc < (2 : Int) ^ (WN + AN) := by
     have hsimpa :=
       hConstRange.2
-    try simp [natpow2_eq, Smtm.native_nat_to_int, native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, SmtEval.native_nat_to_int, native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   let xBV : BitVec WN := BitVec.ofInt WN px
   let cBV : BitVec (WN + AN) := BitVec.ofInt (WN + AN) pc
@@ -7076,10 +7076,10 @@ private theorem sign_extend_ult_const_outside_values
   let AN : Nat := native_int_to_nat A
   have hWRound : (Int.ofNat WN : Int) = W := by
     have h := native_int_to_nat_roundtrip W hW0
-    simpa [WN, Smtm.native_nat_to_int, native_nat_to_int] using h
+    simpa [WN, SmtEval.native_nat_to_int, native_nat_to_int] using h
   have hARound : (Int.ofNat AN : Int) = A := by
     have h := native_int_to_nat_roundtrip A hA0
-    simpa [AN, Smtm.native_nat_to_int, native_nat_to_int] using h
+    simpa [AN, SmtEval.native_nat_to_int, native_nat_to_int] using h
   have hSub : H = W - 1 := by
     have hsimpa := hHEq
     try simp [SmtEval.native_zplus, SmtEval.native_zneg] at hsimpa ⊢
@@ -7116,7 +7116,7 @@ private theorem sign_extend_ult_const_outside_values
     have hRound' :
         (Int.ofNat (native_int_to_nat (native_zplus W A)) : Int) =
           native_zplus W A := by
-      simpa [Smtm.native_nat_to_int, native_nat_to_int] using hRound
+      simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hRound
     exact Int.ofNat.inj (hRound'.trans hWideCast.symm)
   have hXSmtTyNat : __smtx_typeof (__eo_to_smt x) = SmtType.BitVec WN := by
     simpa [WN] using hXSmtTy
@@ -7132,14 +7132,14 @@ private theorem sign_extend_ult_const_outside_values
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (Int.ofNat WN) px := by
-    simpa [Smtm.native_nat_to_int, native_nat_to_int] using hXEval
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hXEval
   have hXRange := bitvec_payload_range_of_canonical
     (w := native_nat_to_int WN) (n := px)
-    (by simp [SmtEval.native_zleq, Smtm.native_nat_to_int,
+    (by simp [SmtEval.native_zleq, SmtEval.native_nat_to_int,
       native_nat_to_int]) hXCan
   have hPx0 : (0 : Int) ≤ px := hXRange.1
   have hPx1 : px < (2 : Int) ^ WN := by
-    simpa [natpow2_eq, Smtm.native_nat_to_int, native_nat_to_int] using
+    simpa [natpow2_eq, SmtEval.native_nat_to_int, native_nat_to_int] using
       hXRange.2
   rcases _root_.smt_eval_binary_of_smt_type_bitvec M hM
       (__eo_to_smt
@@ -7152,18 +7152,18 @@ private theorem sign_extend_ult_const_outside_values
             (bvZeroExtendUltConstConst c
               (Term.Numeral (native_zplus W A)))) =
         SmtValue.Binary (Int.ofNat (WN + AN)) pc := by
-    simpa [Smtm.native_nat_to_int, native_nat_to_int] using hConstEval
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int] using hConstEval
   have hConstRange := bitvec_payload_range_of_canonical
     (w := native_nat_to_int (WN + AN)) (n := pc)
     (by
       have hnn : (0 : Int) ≤ (Int.ofNat (WN + AN) : Int) :=
         Int.natCast_nonneg _
-      have hsimpa := hnn; (try simp [SmtEval.native_zleq, Smtm.native_nat_to_int, native_nat_to_int] at hsimpa ⊢); exact decide_eq_true hsimpa) hConstCan
+      have hsimpa := hnn; (try simp [SmtEval.native_zleq, SmtEval.native_nat_to_int, native_nat_to_int] at hsimpa ⊢); exact decide_eq_true hsimpa) hConstCan
   have hPc0 : (0 : Int) ≤ pc := hConstRange.1
   have hPc1 : pc < (2 : Int) ^ (WN + AN) := by
     have hsimpa :=
       hConstRange.2
-    try simp [natpow2_eq, Smtm.native_nat_to_int, native_nat_to_int] at hsimpa ⊢
+    try simp [natpow2_eq, SmtEval.native_nat_to_int, native_nat_to_int] at hsimpa ⊢
     exact hsimpa
   let xBV : BitVec WN := BitVec.ofInt WN px
   let cBV : BitVec (WN + AN) := BitVec.ofInt (WN + AN) pc
@@ -7222,7 +7222,7 @@ private theorem sign_extend_ult_const_outside_values
               (Term.Numeral (native_zplus W A)))
             (Term.Numeral H) (Term.Numeral 0))) = _
     rw [eval_extract_term, hConstEval]
-    simpa [Smtm.native_nat_to_int, native_nat_to_int, cBV] using
+    simpa [SmtEval.native_nat_to_int, native_nat_to_int, cBV] using
       extract_val_bitvec_start_len (WN + AN) 0 WN pc H 0
         hPc0 hPc1 hLowStart hLowLen
   have hLowerEval :=

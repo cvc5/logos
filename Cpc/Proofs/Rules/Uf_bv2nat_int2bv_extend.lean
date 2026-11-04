@@ -482,7 +482,7 @@ private theorem width_nat_to_int_eq
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hnNonneg
-  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem smt_typeof_lhs_eq
@@ -549,15 +549,15 @@ private theorem smt_typeof_concat_zero_right
       simpa [SmtEval.native_zleq] using hTiNonneg
     have hMax : max ti 0 = ti := Int.max_eq_left hTiNonnegInt
     simp [native_int_to_nat, native_nat_to_int, SmtEval.native_int_to_nat,
-      Smtm.native_nat_to_int, hMax]
+      SmtEval.native_nat_to_int, hMax]
   have hNatIntNat' :
       native_int_to_nat ((native_int_to_nat ti : native_Nat) : native_Int) =
         native_int_to_nat ti := by
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hNatIntNat
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hNatIntNat
   simp [__smtx_typeof_concat, SmtEval.native_and, SmtEval.native_zleq,
     SmtEval.native_zeq, SmtEval.native_mod_total, SmtEval.native_int_pow2,
     SmtEval.native_zexp_total, width_nat_to_int_eq ti hTiNonneg,
-    SmtEval.native_zplus, Smtm.native_nat_to_int, native_nat_to_int,
+    SmtEval.native_zplus, SmtEval.native_nat_to_int, native_nat_to_int,
     hNatIntNat, hNatIntNat']
 
 private theorem smt_typeof_rhs_eq

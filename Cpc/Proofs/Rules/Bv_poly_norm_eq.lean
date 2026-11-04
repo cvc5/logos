@@ -281,7 +281,7 @@ private theorem bvmul_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
         rw [__smtx_typeof.eq_49]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-        Smtm.native_nateq] using hTy'
+        SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -316,7 +316,7 @@ private theorem bvsub_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
         rw [__smtx_typeof.eq_52]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-        Smtm.native_nateq] using hTy'
+        SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -346,7 +346,7 @@ private theorem bvmul_info_of_non_none (y x : Term) :
         SmtType.BitVec w := by
     rw [__smtx_typeof.eq_49]
     simp [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-      Smtm.native_nateq]
+      SmtEval.native_nateq]
   have hRes :
       __smtx_typeof (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvmul) y) x)) =
         SmtType.BitVec w := by

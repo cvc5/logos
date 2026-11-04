@@ -2111,7 +2111,7 @@ theorem dt_eq_cons_false_of_find_neg_dt_sel_of_updater_non_none
             (__eo_to_smt_datatype (__eo_dd_lookup s d)) i : Int) := by
       apply of_decide_eq_true
       simpa [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-        Smtm.native_nat_to_int,
+        SmtEval.native_nat_to_int,
         TranslationProofs.eo_to_smt_dd_lookup] using hIdx
     exact Int.ofNat_lt.mp hInt
   have hBoundResolved :

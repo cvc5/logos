@@ -137,7 +137,7 @@ theorem model_total_typed_push
 theorem datatype_type_default_typed_canonical_of_inhabited
     (s : native_String)
     (d : SmtDatatypeDecl)
-    (_hInh : native_inhabited_type (SmtType.Datatype s d) = true)
+    (_hInh : __smtx_inhabited_type (SmtType.Datatype s d) = true)
     (_hRec : __smtx_type_wf_rec (SmtType.Datatype s d) = true) :
       __smtx_typeof_value (__smtx_type_default (SmtType.Datatype s d)) =
         SmtType.Datatype s d ∧
@@ -146,7 +146,7 @@ theorem datatype_type_default_typed_canonical_of_inhabited
     (SmtType.Datatype s d) _hInh _hRec
 
 private theorem type_default_typed_canonical_of_wf_rec
-    (T : SmtType) (hInh : native_inhabited_type T = true)
+    (T : SmtType) (hInh : __smtx_inhabited_type T = true)
     (_hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
       value_canonical uc (__smtx_type_default T) :=
@@ -168,7 +168,7 @@ theorem type_default_typed_canonical_of_type_wf
       simp [__smtx_type_default, __smtx_typeof_value, value_canonical,
         __smtx_value_canonical]
     · have hParts :
-        native_inhabited_type T = true ∧
+        __smtx_inhabited_type T = true ∧
           __smtx_type_wf_rec T = true := by
         cases T <;>
           simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
@@ -186,7 +186,7 @@ theorem canonical_type_inhabited_of_type_wf
 /-- The syntactic default is typed and canonical for recursively well-formed inhabited types. -/
 theorem type_default_typed_canonical_of_inhabited_wf_rec
     (T : SmtType)
-    (hInh : native_inhabited_type T = true)
+    (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
       value_canonical uc (__smtx_type_default T) :=
@@ -195,9 +195,9 @@ theorem type_default_typed_canonical_of_inhabited_wf_rec
 /-- The syntactic default is typed for recursively well-formed inhabited types. -/
 theorem type_default_typed_of_inhabited_wf_rec
     (T : SmtType)
-    (hInh : native_inhabited_type T = true)
-    (_hRec : __smtx_type_wf_rec T = true) :
+    (hInh : __smtx_inhabited_type T = true)
+    (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T :=
-  type_default_typed_of_inhabited T hInh
+  type_default_typed T hInh hRec
 
 end Smtm
