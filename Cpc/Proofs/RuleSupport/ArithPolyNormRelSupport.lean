@@ -1,5 +1,8 @@
 module
 
+public import Cpc.Proofs.RealBridge
+import all Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 public import Cpc.Proofs.RuleSupport.Support
 import all Cpc.Proofs.RuleSupport.Support
 public import Cpc.Proofs.TypePreservation.CoreArith
@@ -289,7 +292,7 @@ theorem native_to_real_add
   rw [native_to_real, native_to_real, native_to_real, native_qplus, native_zplus,
     native_mk_rational, native_mk_rational, native_mk_rational]
   rw [← Rat.divInt_eq_div, ← Rat.divInt_eq_div, ← Rat.divInt_eq_div]
-  simp [Int.mul_one]
+  simp
 
 theorem native_to_real_sub
     (n1 n2 : native_Int) :
@@ -303,8 +306,7 @@ theorem native_to_real_mul
     native_qmult (native_to_real n1) (native_to_real n2) := by
   rw [native_to_real, native_to_real, native_to_real, native_qmult, native_zmult,
     native_mk_rational, native_mk_rational, native_mk_rational]
-  simpa [Rat.divInt_eq_div, Int.mul_one, Int.one_mul] using
-    (Rat.divInt_mul_divInt n1 n2 (d₁ := 1) (d₂ := 1)).symm
+  simp
 
 theorem arith_atom_denote_real_of_to_real
     (M : SmtModel) (hM : model_wf M) (t : Term)
@@ -373,7 +375,7 @@ theorem arith_atom_denote_real_of_neg
     unfold arith_atom_denote_real
     rw [eo_to_smt_neg_eq, __smtx_model_eval.eq_15, hEval1, hEval2]
     simp only [__smtx_to_real_coerce, __smtx_model_eval_plus, __smtx_model_eval_uneg,
-      __smtx_model_eval__, native_to_real_sub]
+      __smtx_model_eval__] <;> simp
   · have hEval1Ty :
         __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t1)) =
           __smtx_typeof (__eo_to_smt t1) := by
@@ -403,7 +405,7 @@ theorem arith_atom_denote_real_of_neg
     unfold arith_atom_denote_real
     rw [eo_to_smt_neg_eq, __smtx_model_eval.eq_15, hEval1, hEval2]
     simp only [__smtx_to_real_coerce, __smtx_model_eval_plus, __smtx_model_eval_uneg,
-      __smtx_model_eval__]
+      __smtx_model_eval__] <;> simp
 
 theorem arith_atom_denote_real_of_mult
     (M : SmtModel) (hM : model_wf M) (t1 t2 : Term)
@@ -456,7 +458,7 @@ theorem arith_atom_denote_real_of_mult
     rw [eo_to_smt_mult_eq]
     rw [__smtx_model_eval.eq_16, hEval1, hEval2]
     simp only [__smtx_to_real_coerce,
-      __smtx_model_eval_mult, native_to_real_mul]
+      __smtx_model_eval_mult] <;> simp
   · have hEval1Ty :
         __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t1)) =
           __smtx_typeof (__eo_to_smt t1) := by
@@ -487,7 +489,7 @@ theorem arith_atom_denote_real_of_mult
     rw [eo_to_smt_mult_eq]
     rw [__smtx_model_eval.eq_16, hEval1, hEval2]
     simp only [__smtx_to_real_coerce,
-      __smtx_model_eval_mult]
+      __smtx_model_eval_mult] <;> simp
 
 theorem arith_atom_denote_real_eq_of_smt_value_rel
     (M : SmtModel) (a b : Term) :
@@ -516,11 +518,11 @@ theorem arith_atom_denote_real_of_to_q
   · cases h
     unfold arith_atom_denote_real
     rw [eo_to_smt_numeral_eq, __smtx_model_eval.eq_2]
-    rfl
+    simp [__smtx_to_real_coerce]
   · cases h
     unfold arith_atom_denote_real
     rw [eo_to_smt_rational_eq, __smtx_model_eval.eq_3]
-    rfl
+    simp [__smtx_to_real_coerce]
 
 def arith_poly_norm_rel_const_sign (t : Term) : Term :=
   __eo_ite (__eo_is_neg t)
@@ -571,9 +573,9 @@ theorem intCast_lt_zero_iff
     (n : native_Int) :
   ((n : Rat) < 0) ↔ n < 0 := by
   have hCast : (0 < (-(n : Rat)) ↔ 0 < -n) := by
-    simpa [Rat.intCast_neg] using (Rat.intCast_pos (a := -n))
+    simp
   have hRat : (0 < (-(n : Rat)) ↔ (n : Rat) < 0) := by
-    simpa using (Rat.lt_neg_iff (a := (0 : Rat)) (b := (n : Rat)))
+    simp
   calc
     (n : Rat) < 0 ↔ 0 < -(n : Rat) := hRat.symm
     _ ↔ 0 < -n := hCast
@@ -589,9 +591,9 @@ theorem native_to_real_lt_zero_eq
     exact intCast_lt_zero_iff n
   by_cases hL : ((n : Rat) / (1 : Rat)) < ((0 : Rat) / (1 : Rat))
   · have hR : n < 0 := hiff.mp hL
-    simp [hL, hR]
+    simp [hR]
   · have hR : ¬ n < 0 := fun h => hL (hiff.mpr h)
-    simp [hL, hR]
+    simp [hR]
 
 theorem native_to_real_neg_lt_zero_eq
     (n : native_Int) :
@@ -821,94 +823,62 @@ theorem same_sign_of_is_poly_norm_rel_consts_rel_true_geq
     (cx := cx) (cy := cy) (c := c) (d := d)
     (by simpa [__is_poly_norm_rel_consts_rel] using hRel) hcx hcy hc0 hd0
 
-theorem rat_scaled_zero_iff {c x : Rat} (hc : c ≠ 0) : c * x = 0 ↔ x = 0 := by
-  constructor
-  · intro h
-    rcases Rat.mul_eq_zero.mp h with h | h
-    · contradiction
-    · exact h
-  · intro h
-    simp [h, Rat.mul_zero]
+theorem rat_scaled_zero_iff {c x : native_Real} (hc : c ≠ 0) : c * x = 0 ↔ x = 0 := by
+  simp [hc]
 
-theorem rat_same_sign_core_pos {c d x y : Rat}
+theorem rat_same_sign_core_pos {c d x y : native_Real}
     (h : c * x = d * y) (hc : 0 < c) (hd : 0 < d) :
     (x < 0 ↔ y < 0) ∧ (0 < x ↔ 0 < y) ∧ (x = 0 ↔ y = 0) := by
+  have hneg : ∀ {c d x y : native_Real}, c * x = d * y → 0 < c → 0 < d → x < 0 → y < 0 := by
+    intro c d x y h hc hd hx
+    by_contra hy
+    have h1 : 0 ≤ d * y := mul_nonneg hd.le (not_lt.mp hy)
+    have h2 : c * x < 0 := mul_neg_of_pos_of_neg hc hx
+    linarith
+  have hpos : ∀ {c d x y : native_Real}, c * x = d * y → 0 < c → 0 < d → 0 < x → 0 < y := by
+    intro c d x y h hc hd hx
+    by_contra hy
+    have h1 : d * y ≤ 0 := mul_nonpos_of_nonneg_of_nonpos hd.le (not_lt.mp hy)
+    have h2 : 0 < c * x := mul_pos hc hx
+    linarith
+  refine ⟨⟨hneg h hc hd, hneg h.symm hd hc⟩, ⟨hpos h hc hd, hpos h.symm hd hc⟩, ?_⟩
   constructor
-  · constructor
-    · intro hx
-      have hcx : c * x < 0 := (Rat.mul_neg_iff_of_pos_left hc).mpr hx
-      have hdy : d * y < 0 := by rwa [h] at hcx
-      exact (Rat.mul_neg_iff_of_pos_left hd).mp hdy
-    · intro hy
-      have hdy : d * y < 0 := (Rat.mul_neg_iff_of_pos_left hd).mpr hy
-      have hcx : c * x < 0 := by rwa [← h] at hdy
-      exact (Rat.mul_neg_iff_of_pos_left hc).mp hcx
-  constructor
-  · constructor
-    · intro hx
-      have hcx : 0 < c * x := (Rat.mul_pos_iff_of_pos_left hc).mpr hx
-      have hdy : 0 < d * y := by rwa [h] at hcx
-      exact (Rat.mul_pos_iff_of_pos_left hd).mp hdy
-    · intro hy
-      have hdy : 0 < d * y := (Rat.mul_pos_iff_of_pos_left hd).mpr hy
-      have hcx : 0 < c * x := by rwa [← h] at hdy
-      exact (Rat.mul_pos_iff_of_pos_left hc).mp hcx
-  · constructor
-    · intro hx
-      have hcx : c * x = 0 := by simp [hx, Rat.mul_zero]
-      have hdy : d * y = 0 := by rwa [h] at hcx
-      rcases Rat.mul_eq_zero.mp hdy with hd0 | hy0
-      · exact False.elim (Rat.ne_of_gt hd hd0)
-      · exact hy0
-    · intro hy
-      have hdy : d * y = 0 := by simp [hy, Rat.mul_zero]
-      have hcx : c * x = 0 := by rwa [← h] at hdy
-      rcases Rat.mul_eq_zero.mp hcx with hc0 | hx0
-      · exact False.elim (Rat.ne_of_gt hc hc0)
-      · exact hx0
+  · intro hx
+    rw [hx, mul_zero] at h
+    exact (mul_eq_zero.mp h.symm).resolve_left hd.ne'
+  · intro hy
+    rw [hy, mul_zero] at h
+    exact (mul_eq_zero.mp h).resolve_left hc.ne'
 
-theorem rat_same_sign_core_neg {c d x y : Rat}
+theorem rat_same_sign_core_neg {c d x y : native_Real}
     (h : c * x = d * y) (hc : c < 0) (hd : d < 0) :
     (x < 0 ↔ y < 0) ∧ (0 < x ↔ 0 < y) ∧ (x = 0 ↔ y = 0) := by
-  have hposc : 0 < -c := by
-    exact (Rat.lt_neg_iff (a := 0) (b := c)).mpr (by simpa using hc)
-  have hposd : 0 < -d := by
-    exact (Rat.lt_neg_iff (a := 0) (b := d)).mpr (by simpa using hd)
-  have hneg : (-c) * x = (-d) * y := by rw [Rat.neg_mul, Rat.neg_mul, h]
-  exact rat_same_sign_core_pos hneg hposc hposd
+  have hneg : (-c) * x = (-d) * y := by rw [neg_mul, neg_mul, h]
+  exact rat_same_sign_core_pos hneg (neg_pos.mpr hc) (neg_pos.mpr hd)
 
-theorem native_qlt_zero_eq_of_iff {x y : Rat} (h : (x < 0 ↔ y < 0)) :
-    native_qlt x 0 = native_qlt y 0 := by
-  unfold native_qlt
-  grind
+theorem native_qlt_zero_eq_of_iff {x y : native_Real} (h : (x < 0 ↔ y < 0)) :
+    native_rlt x 0 = native_rlt y 0 :=
+  decide_eq_decide.mpr h
 
-theorem native_qgt_zero_eq_of_iff {x y : Rat} (h : (0 < x ↔ 0 < y)) :
-    native_qlt 0 x = native_qlt 0 y := by
-  unfold native_qlt
-  grind
+theorem native_qgt_zero_eq_of_iff {x y : native_Real} (h : (0 < x ↔ 0 < y)) :
+    native_rlt 0 x = native_rlt 0 y :=
+  decide_eq_decide.mpr h
 
-theorem native_qeq_zero_eq_of_iff {x y : Rat} (h : (x = 0 ↔ y = 0)) :
-    native_qeq x 0 = native_qeq y 0 := by
-  unfold native_qeq
-  grind
+theorem native_qeq_zero_eq_of_iff {x y : native_Real} (h : (x = 0 ↔ y = 0)) :
+    native_req x 0 = native_req y 0 :=
+  decide_eq_decide.mpr h
 
-theorem native_qleq_zero_eq_of_sign {x y : Rat}
+theorem native_qleq_zero_eq_of_sign {x y : native_Real}
     (hlt : (x < 0 ↔ y < 0)) (heq : (x = 0 ↔ y = 0)) :
-    native_qleq x 0 = native_qleq y 0 := by
-  unfold native_qleq
-  have hle : (x ≤ 0 ↔ y ≤ 0) := by
-    rw [Rat.le_iff_lt_or_eq, Rat.le_iff_lt_or_eq]
-    grind
-  grind
+    native_rleq x 0 = native_rleq y 0 :=
+  decide_eq_decide.mpr (by
+    rw [le_iff_lt_or_eq, le_iff_lt_or_eq, hlt, heq])
 
-theorem native_qgeq_zero_eq_of_sign {x y : Rat}
+theorem native_qgeq_zero_eq_of_sign {x y : native_Real}
     (hgt : (0 < x ↔ 0 < y)) (heq : (x = 0 ↔ y = 0)) :
-    native_qleq 0 x = native_qleq 0 y := by
-  unfold native_qleq
-  have hle : (0 ≤ x ↔ 0 ≤ y) := by
-    rw [Rat.le_iff_lt_or_eq, Rat.le_iff_lt_or_eq]
-    grind
-  grind
+    native_rleq 0 x = native_rleq 0 y :=
+  decide_eq_decide.mpr (by
+    rw [le_iff_lt_or_eq, le_iff_lt_or_eq, hgt, eq_comm, heq, eq_comm])
 
 theorem smt_eval_int_of_type
     (M : SmtModel) (hM : model_wf M) (t : Term)
@@ -924,7 +894,7 @@ theorem smt_eval_int_of_type
 theorem smt_eval_real_of_type
     (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
-    ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Real q := by
+    ∃ q : native_Real, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Real q := by
   have hPres :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) := by
@@ -989,79 +959,94 @@ theorem native_zsub_eq_zero_eq
   by_cases hL : n1 + -n2 = 0
   · have hR : n1 = n2 := hiff.mp hL
     subst n1
-    simp [Int.add_right_neg]
+    simp
   · have hR : ¬ n1 = n2 := fun h => hL (hiff.mpr h)
     simp [hL, hR]
 
+theorem native_qsub_lt_zero_eq
+    (q1 q2 : native_Real) :
+  native_rlt (native_rplus q1 (native_rneg q2)) (native_mk_real 0 1) =
+    native_rlt q1 q2 := by
+  rw [native_mk_real_zero]
+  exact decide_eq_decide.mpr (by
+    change q1 + -q2 < 0 ↔ q1 < q2
+    constructor <;> intro h <;> linarith)
+
+theorem native_qsub_gt_zero_eq
+    (q1 q2 : native_Real) :
+  native_rlt (native_mk_real 0 1) (native_rplus q1 (native_rneg q2)) =
+    native_rlt q2 q1 := by
+  rw [native_mk_real_zero]
+  exact decide_eq_decide.mpr (by
+    change 0 < q1 + -q2 ↔ q2 < q1
+    constructor <;> intro h <;> linarith)
+
+theorem native_qsub_leq_zero_eq
+    (q1 q2 : native_Real) :
+  native_rleq (native_rplus q1 (native_rneg q2)) (native_mk_real 0 1) =
+    native_rleq q1 q2 := by
+  rw [native_mk_real_zero]
+  exact decide_eq_decide.mpr (by
+    change q1 + -q2 ≤ 0 ↔ q1 ≤ q2
+    constructor <;> intro h <;> linarith)
+
+theorem native_qsub_geq_zero_eq
+    (q1 q2 : native_Real) :
+  native_rleq (native_mk_real 0 1) (native_rplus q1 (native_rneg q2)) =
+    native_rleq q2 q1 := by
+  rw [native_mk_real_zero]
+  exact decide_eq_decide.mpr (by
+    change 0 ≤ q1 + -q2 ↔ q2 ≤ q1
+    constructor <;> intro h <;> linarith)
+
+theorem native_qsub_eq_zero_eq
+    (q1 q2 : native_Real) :
+  native_req (native_rplus q1 (native_rneg q2)) (native_mk_real 0 1) =
+    native_req q1 q2 := by
+  rw [native_mk_real_zero]
+  exact decide_eq_decide.mpr (by
+    change q1 + -q2 = 0 ↔ q1 = q2
+    constructor <;> intro h <;> linarith)
+
 theorem native_to_real_sub_lt_zero_eq
     (n1 n2 : Int) :
-  native_qlt (native_qplus (native_to_real n1) (native_qneg (native_to_real n2)))
-      (native_mk_rational 0 1) =
+  native_rlt (native_rplus (native_int_to_real n1) (native_rneg (native_int_to_real n2)))
+      (native_mk_real 0 1) =
     native_zlt n1 n2 := by
-  rw [← native_to_real_sub, native_to_real_lt_zero_eq, native_zsub_lt_zero_eq]
-
-theorem native_to_real_gt_zero_eq
-    (n : Int) :
-  native_qlt (native_mk_rational 0 1) (native_to_real n) =
-    native_zlt 0 n := by
-  unfold native_qlt native_to_real native_mk_rational native_zlt
-  have hiff : (((0 : Rat) / (1 : Rat)) < ((n : Rat) / (1 : Rat)) ↔ 0 < n) := by
-    rw [rat_zero_div_one, rat_div_one_intCast n]
-    exact Rat.intCast_pos
-  by_cases hL : ((0 : Rat) / (1 : Rat)) < ((n : Rat) / (1 : Rat))
-  · have hR : 0 < n := hiff.mp hL
-    simp [hL, hR]
-  · have hR : ¬ 0 < n := fun h => hL (hiff.mpr h)
-    simp [hL, hR]
+  rw [native_qsub_lt_zero_eq]
+  exact decide_eq_decide.mpr Int.cast_lt
 
 theorem native_to_real_sub_gt_zero_eq
     (n1 n2 : Int) :
-  native_qlt (native_mk_rational 0 1)
-      (native_qplus (native_to_real n1) (native_qneg (native_to_real n2))) =
+  native_rlt (native_mk_real 0 1)
+      (native_rplus (native_int_to_real n1) (native_rneg (native_int_to_real n2))) =
     native_zlt n2 n1 := by
-  rw [← native_to_real_sub, native_to_real_gt_zero_eq, native_zsub_gt_zero_eq]
-
-theorem native_to_real_eq_zero_eq
-    (n : Int) :
-  native_qeq (native_to_real n) (native_mk_rational 0 1) =
-    native_zeq n 0 := by
-  unfold native_qeq native_to_real native_mk_rational native_zeq
-  have hiff : (((n : Rat) / (1 : Rat)) = ((0 : Rat) / (1 : Rat)) ↔ n = 0) := by
-    rw [rat_div_one_intCast n, rat_zero_div_one]
-    rw [show (0 : Rat) = ((0 : Int) : Rat) by rfl]
-    exact Rat.intCast_inj
-  by_cases hL : ((n : Rat) / (1 : Rat)) = ((0 : Rat) / (1 : Rat))
-  · have hR : n = 0 := hiff.mp hL
-    simp [hR]
-  · have hR : ¬ n = 0 := fun h => hL (hiff.mpr h)
-    simp [hL, hR]
+  rw [native_qsub_gt_zero_eq]
+  exact decide_eq_decide.mpr Int.cast_lt
 
 theorem native_to_real_sub_eq_zero_eq
     (n1 n2 : Int) :
-  native_qeq (native_qplus (native_to_real n1) (native_qneg (native_to_real n2)))
-      (native_mk_rational 0 1) =
+  native_req (native_rplus (native_int_to_real n1) (native_rneg (native_int_to_real n2)))
+      (native_mk_real 0 1) =
     native_zeq n1 n2 := by
-  rw [← native_to_real_sub, native_to_real_eq_zero_eq, native_zsub_eq_zero_eq]
+  rw [native_qsub_eq_zero_eq]
+  exact decide_eq_decide.mpr Int.cast_inj
 
-theorem native_qleq_zero_eq_not_gt
-    (q : native_Rat) :
-  native_qleq q (native_mk_rational 0 1) =
-    Bool.not (native_qlt (native_mk_rational 0 1) q) := by
-  unfold native_qleq native_qlt
-  rw [show native_mk_rational 0 1 = (0 : Rat) by
-    unfold native_mk_rational
-    exact rat_zero_div_one]
-  grind
+theorem native_to_real_sub_leq_zero_eq
+    (n1 n2 : Int) :
+  native_rleq (native_rplus (native_int_to_real n1) (native_rneg (native_int_to_real n2)))
+      (native_mk_real 0 1) =
+    native_zleq n1 n2 := by
+  rw [native_qsub_leq_zero_eq]
+  exact decide_eq_decide.mpr Int.cast_le
 
-theorem native_qgeq_zero_eq_not_lt
-    (q : native_Rat) :
-  native_qleq (native_mk_rational 0 1) q =
-    Bool.not (native_qlt q (native_mk_rational 0 1)) := by
-  unfold native_qleq native_qlt
-  rw [show native_mk_rational 0 1 = (0 : Rat) by
-    unfold native_mk_rational
-    exact rat_zero_div_one]
-  grind
+theorem native_to_real_sub_geq_zero_eq
+    (n1 n2 : Int) :
+  native_rleq (native_mk_real 0 1)
+      (native_rplus (native_int_to_real n1) (native_rneg (native_int_to_real n2))) =
+    native_zleq n2 n1 := by
+  rw [native_qsub_geq_zero_eq]
+  exact decide_eq_decide.mpr Int.cast_le
 
 theorem native_zleq_eq_not_gt
     (n1 n2 : Int) :
@@ -1073,70 +1058,6 @@ theorem native_zleq_eq_not_gt
     simp [hL, hR]
   · have hR : n2 < n1 := by omega
     simp [hL, hR]
-
-theorem native_to_real_sub_leq_zero_eq
-    (n1 n2 : Int) :
-  native_qleq (native_qplus (native_to_real n1) (native_qneg (native_to_real n2)))
-      (native_mk_rational 0 1) =
-    native_zleq n1 n2 := by
-  rw [native_qleq_zero_eq_not_gt,
-    native_to_real_sub_gt_zero_eq,
-    native_zleq_eq_not_gt]
-
-theorem native_to_real_sub_geq_zero_eq
-    (n1 n2 : Int) :
-  native_qleq (native_mk_rational 0 1)
-      (native_qplus (native_to_real n1) (native_qneg (native_to_real n2))) =
-    native_zleq n2 n1 := by
-  rw [native_qgeq_zero_eq_not_lt,
-    native_to_real_sub_lt_zero_eq,
-    native_zleq_eq_not_gt]
-
-theorem native_qsub_lt_zero_eq
-    (q1 q2 : native_Rat) :
-  native_qlt (native_qplus q1 (native_qneg q2)) (native_mk_rational 0 1) =
-    native_qlt q1 q2 := by
-  unfold native_qlt native_qplus native_qneg
-  rw [show native_mk_rational 0 1 = (0 : Rat) by
-    unfold native_mk_rational
-    exact rat_zero_div_one]
-  grind
-
-theorem native_qsub_gt_zero_eq
-    (q1 q2 : native_Rat) :
-  native_qlt (native_mk_rational 0 1) (native_qplus q1 (native_qneg q2)) =
-    native_qlt q2 q1 := by
-  unfold native_qlt native_qplus native_qneg
-  rw [show native_mk_rational 0 1 = (0 : Rat) by
-    unfold native_mk_rational
-    exact rat_zero_div_one]
-  grind
-
-theorem native_qsub_leq_zero_eq
-    (q1 q2 : native_Rat) :
-  native_qleq (native_qplus q1 (native_qneg q2)) (native_mk_rational 0 1) =
-    native_qleq q1 q2 := by
-  rw [native_qleq_zero_eq_not_gt, native_qsub_gt_zero_eq]
-  unfold native_qleq native_qlt
-  grind
-
-theorem native_qsub_geq_zero_eq
-    (q1 q2 : native_Rat) :
-  native_qleq (native_mk_rational 0 1) (native_qplus q1 (native_qneg q2)) =
-    native_qleq q2 q1 := by
-  rw [native_qgeq_zero_eq_not_lt, native_qsub_lt_zero_eq]
-  unfold native_qleq native_qlt
-  grind
-
-theorem native_qsub_eq_zero_eq
-    (q1 q2 : native_Rat) :
-  native_qeq (native_qplus q1 (native_qneg q2)) (native_mk_rational 0 1) =
-    native_qeq q1 q2 := by
-  unfold native_qeq native_qplus native_qneg
-  rw [show native_mk_rational 0 1 = (0 : Rat) by
-    unfold native_mk_rational
-    exact rat_zero_div_one]
-  grind
 
 theorem mult_term_arith_type_of_non_none
     (x y : Term) :
@@ -1336,24 +1257,24 @@ theorem arith_rel_eval_bools_of_diff_type
         __smtx_typeof
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.neg) x1) x2)) =
           SmtType.Real) :
-  ∃ q : native_Rat,
+  ∃ q : native_Real,
     arith_atom_denote_real M (Term.Apply (Term.Apply (Term.UOp UserOp.neg) x1) x2) =
       SmtValue.Real q ∧
     __smtx_model_eval M
         (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lt) x1) x2)) =
-      SmtValue.Boolean (native_qlt q (native_mk_rational 0 1)) ∧
+      SmtValue.Boolean (native_rlt q (native_mk_real 0 1)) ∧
     __smtx_model_eval M
         (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.leq) x1) x2)) =
-      SmtValue.Boolean (native_qleq q (native_mk_rational 0 1)) ∧
+      SmtValue.Boolean (native_rleq q (native_mk_real 0 1)) ∧
     __smtx_model_eval M
         (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x1) x2)) =
-      SmtValue.Boolean (native_qeq q (native_mk_rational 0 1)) ∧
+      SmtValue.Boolean (native_req q (native_mk_real 0 1)) ∧
     __smtx_model_eval M
         (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.gt) x1) x2)) =
-      SmtValue.Boolean (native_qlt (native_mk_rational 0 1) q) ∧
+      SmtValue.Boolean (native_rlt (native_mk_real 0 1) q) ∧
     __smtx_model_eval M
         (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.geq) x1) x2)) =
-      SmtValue.Boolean (native_qleq (native_mk_rational 0 1) q) := by
+      SmtValue.Boolean (native_rleq (native_mk_real 0 1) q) := by
   let diff := Term.Apply (Term.Apply (Term.UOp UserOp.neg) x1) x2
   have hNN : term_has_non_none_type (SmtTerm.neg (__eo_to_smt x1) (__eo_to_smt x2)) := by
     unfold term_has_non_none_type
@@ -1379,22 +1300,25 @@ theorem arith_rel_eval_bools_of_diff_type
         cases hDiffTy
     rcases smt_eval_int_of_type M hM x1 hArgs.1 with ⟨n1, hEval1⟩
     rcases smt_eval_int_of_type M hM x2 hArgs.2 with ⟨n2, hEval2⟩
-    let q := native_qplus (native_to_real n1) (native_qneg (native_to_real n2))
+    let q := native_rplus (native_int_to_real n1) (native_rneg (native_int_to_real n2))
     refine ⟨q, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · unfold arith_atom_denote_real
       rw [show __eo_to_smt diff = SmtTerm.neg (__eo_to_smt x1) (__eo_to_smt x2) by rfl]
       rw [__smtx_model_eval.eq_15, hEval1, hEval2]
-      simp [__smtx_to_real_coerce, __smtx_model_eval__, q, native_to_real_sub]
+      simp [__smtx_to_real_coerce, __smtx_model_eval__, q]
     · rw [eo_to_smt_lt_eq, __smtx_model_eval.eq_17, hEval1, hEval2]
-      simp [__smtx_model_eval_lt, q, native_to_real_sub_lt_zero_eq]
+      exact congrArg SmtValue.Boolean (native_to_real_sub_lt_zero_eq _ _).symm
     · rw [eo_to_smt_leq_eq, __smtx_model_eval.eq_18, hEval1, hEval2]
-      simp [__smtx_model_eval_leq, q, native_to_real_sub_leq_zero_eq]
+      exact congrArg SmtValue.Boolean (native_to_real_sub_leq_zero_eq _ _).symm
     · rw [eo_to_smt_eq_eq, smtx_eval_eq_term_eq, hEval1, hEval2]
-      simp [__smtx_model_eval_eq, native_veq, native_zeq, q, native_to_real_sub_eq_zero_eq]
+      simp only [__smtx_model_eval_eq, native_veq]
+      rw [show decide (SmtValue.Numeral n1 = SmtValue.Numeral n2) = native_zeq n1 n2 by
+        simp [native_zeq]]
+      exact congrArg SmtValue.Boolean (native_to_real_sub_eq_zero_eq n1 n2).symm
     · rw [eo_to_smt_gt_eq, __smtx_model_eval.eq_19, hEval1, hEval2]
-      simp [__smtx_model_eval_gt, __smtx_model_eval_lt, q, native_to_real_sub_gt_zero_eq]
+      exact congrArg SmtValue.Boolean (native_to_real_sub_gt_zero_eq _ _).symm
     · rw [eo_to_smt_geq_eq, __smtx_model_eval.eq_20, hEval1, hEval2]
-      simp [__smtx_model_eval_geq, __smtx_model_eval_leq, q, native_to_real_sub_geq_zero_eq]
+      exact congrArg SmtValue.Boolean (native_to_real_sub_geq_zero_eq _ _).symm
   · have hDiffTyReal :
         __smtx_typeof (__eo_to_smt diff) = SmtType.Real := by
       rw [show __eo_to_smt diff = SmtTerm.neg (__eo_to_smt x1) (__eo_to_smt x2) by rfl]
@@ -1408,33 +1332,32 @@ theorem arith_rel_eval_bools_of_diff_type
       · exact hDiffTy
     rcases smt_eval_real_of_type M hM x1 hArgs.1 with ⟨q1, hEval1⟩
     rcases smt_eval_real_of_type M hM x2 hArgs.2 with ⟨q2, hEval2⟩
-    let q := native_qplus q1 (native_qneg q2)
+    let q := native_rplus q1 (native_rneg q2)
     refine ⟨q, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · unfold arith_atom_denote_real
       rw [show __eo_to_smt diff = SmtTerm.neg (__eo_to_smt x1) (__eo_to_smt x2) by rfl]
       rw [__smtx_model_eval.eq_15, hEval1, hEval2]
       simp [__smtx_to_real_coerce, __smtx_model_eval__, q]
     · rw [eo_to_smt_lt_eq, __smtx_model_eval.eq_17, hEval1, hEval2]
-      simp [__smtx_model_eval_lt, q, native_qsub_lt_zero_eq]
+      exact congrArg SmtValue.Boolean (native_qsub_lt_zero_eq _ _).symm
     · rw [eo_to_smt_leq_eq, __smtx_model_eval.eq_18, hEval1, hEval2]
-      simp [__smtx_model_eval_leq, q, native_qsub_leq_zero_eq]
+      exact congrArg SmtValue.Boolean (native_qsub_leq_zero_eq _ _).symm
     · rw [eo_to_smt_eq_eq, smtx_eval_eq_term_eq, hEval1, hEval2]
       simp only [__smtx_model_eval_eq, native_veq]
-      rw [show decide (SmtValue.Real q1 = SmtValue.Real q2) = native_qeq q1 q2 by
-        simp [native_qeq]]
-      change SmtValue.Boolean (native_qeq q1 q2) =
-        SmtValue.Boolean (native_qeq q (native_mk_rational 0 1))
-      rw [show native_qeq q (native_mk_rational 0 1) = native_qeq q1 q2 by
-        dsimp [q]
-        rw [native_qsub_eq_zero_eq]]
+      rw [show decide (SmtValue.Real q1 = SmtValue.Real q2) = native_req q1 q2 by
+        simp [native_req]]
+      change SmtValue.Boolean (native_req q1 q2) =
+        SmtValue.Boolean (native_req q (native_mk_real 0 1))
+      rw [show native_req q (native_mk_real 0 1) = native_req q1 q2 by
+        exact native_qsub_eq_zero_eq q1 q2]
     · rw [eo_to_smt_gt_eq, __smtx_model_eval.eq_19, hEval1, hEval2]
-      simp [__smtx_model_eval_gt, __smtx_model_eval_lt, q, native_qsub_gt_zero_eq]
+      exact congrArg SmtValue.Boolean (native_qsub_gt_zero_eq _ _).symm
     · rw [eo_to_smt_geq_eq, __smtx_model_eval.eq_20, hEval1, hEval2]
-      simp [__smtx_model_eval_geq, __smtx_model_eval_leq, q, native_qsub_geq_zero_eq]
+      exact congrArg SmtValue.Boolean (native_qsub_geq_zero_eq _ _).symm
 
 theorem arith_atom_denote_real_of_scaled_factor
     (M : SmtModel) (hM : model_wf M)
-    (cx x one : Term) (c q : native_Rat)
+    (cx x one : Term) (c q : native_Real)
     (hOuterTy :
       __smtx_typeof
           (__eo_to_smt
@@ -1491,8 +1414,8 @@ theorem arith_atom_denote_real_of_scaled_factor
       SmtValue.Real (native_rmult c q)
     rw [arith_atom_denote_real_of_mult M hM cx inner hOuterArith]
     rw [arith_atom_denote_real_of_mult M hM x one hInnerArith]
-    simp [hCx, hX, hOne, __smtx_model_eval_mult, native_qmult,
-      native_mk_rational_one, Rat.mul_one]
+    simp [hCx, hX, hOne, __smtx_model_eval_mult, 
+      ]
   · have hInnerTy :
         __smtx_typeof (__eo_to_smt inner) = SmtType.Real := hOuterArgs.2
     have hInnerArith :
@@ -1515,82 +1438,84 @@ theorem arith_atom_denote_real_of_scaled_factor
       SmtValue.Real (native_rmult c q)
     rw [arith_atom_denote_real_of_mult M hM cx inner hOuterArith]
     rw [arith_atom_denote_real_of_mult M hM x one hInnerArith]
-    simp [hCx, hX, hOne, __smtx_model_eval_mult, native_qmult,
-      native_mk_rational_one, Rat.mul_one]
+    simp [hCx, hX, hOne, __smtx_model_eval_mult, 
+      ]
 
 theorem arith_rel_smt_value_rel_of_scaled
     (M : SmtModel)
-    (r cx cy x1 x2 y1 y2 : Term) (c d qx qy : native_Rat)
+    (r cx cy x1 x2 y1 y2 : Term) (c d : native_Rat) (qx qy : native_Real)
     (hCx : __eo_to_q cx = Term.Rational c)
     (hCy : __eo_to_q cy = Term.Rational d)
     (hc0 : c ≠ 0) (hd0 : d ≠ 0)
     (hConstsRel :
       __is_poly_norm_rel_consts_rel (Term.Apply (Term.Apply r cx) cy) =
         Term.Boolean true)
-    (hScaled : native_qmult c qx = native_qmult d qy)
+    (hScaled : native_rmult c qx = native_rmult d qy)
     (hLtX :
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lt) x1) x2)) =
-        SmtValue.Boolean (native_qlt qx (native_mk_rational 0 1)))
+        SmtValue.Boolean (native_rlt qx (native_mk_real 0 1)))
     (hLeX :
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.leq) x1) x2)) =
-        SmtValue.Boolean (native_qleq qx (native_mk_rational 0 1)))
+        SmtValue.Boolean (native_rleq qx (native_mk_real 0 1)))
     (hEqX :
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x1) x2)) =
-        SmtValue.Boolean (native_qeq qx (native_mk_rational 0 1)))
+        SmtValue.Boolean (native_req qx (native_mk_real 0 1)))
     (hGtX :
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.gt) x1) x2)) =
-        SmtValue.Boolean (native_qlt (native_mk_rational 0 1) qx))
+        SmtValue.Boolean (native_rlt (native_mk_real 0 1) qx))
     (hGeX :
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.geq) x1) x2)) =
-        SmtValue.Boolean (native_qleq (native_mk_rational 0 1) qx))
+        SmtValue.Boolean (native_rleq (native_mk_real 0 1) qx))
     (hLtY :
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lt) y1) y2)) =
-        SmtValue.Boolean (native_qlt qy (native_mk_rational 0 1)))
+        SmtValue.Boolean (native_rlt qy (native_mk_real 0 1)))
     (hLeY :
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.leq) y1) y2)) =
-        SmtValue.Boolean (native_qleq qy (native_mk_rational 0 1)))
+        SmtValue.Boolean (native_rleq qy (native_mk_real 0 1)))
     (hEqY :
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.eq) y1) y2)) =
-        SmtValue.Boolean (native_qeq qy (native_mk_rational 0 1)))
+        SmtValue.Boolean (native_req qy (native_mk_real 0 1)))
     (hGtY :
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.gt) y1) y2)) =
-        SmtValue.Boolean (native_qlt (native_mk_rational 0 1) qy))
+        SmtValue.Boolean (native_rlt (native_mk_real 0 1) qy))
     (hGeY :
       __smtx_model_eval M
           (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.geq) y1) y2)) =
-        SmtValue.Boolean (native_qleq (native_mk_rational 0 1) qy)) :
+        SmtValue.Boolean (native_rleq (native_mk_real 0 1) qy)) :
   RuleProofs.smt_value_rel
     (__smtx_model_eval M (__eo_to_smt (Term.Apply (Term.Apply r x1) x2)))
     (__smtx_model_eval M (__eo_to_smt (Term.Apply (Term.Apply r y1) y2))) := by
-  have hScaled' : c * qx = d * qy := by
-    simpa [native_qmult] using hScaled
+  have hScaled' : (c : native_Real) * qx = (d : native_Real) * qy := hScaled
+  have hc0' : (c : native_Real) ≠ 0 := by exact_mod_cast hc0
+  have hd0' : (d : native_Real) ≠ 0 := by exact_mod_cast hd0
   have hZeroIff : qx = 0 ↔ qy = 0 := by
     constructor
     · intro hx0
-      have hdy : d * qy = 0 := by
-        rw [← hScaled', hx0, Rat.mul_zero]
-      exact (rat_scaled_zero_iff hd0).mp hdy
+      have hdy : (d : native_Real) * qy = 0 := by
+        rw [← hScaled', hx0, mul_zero]
+      exact (rat_scaled_zero_iff hd0').mp hdy
     · intro hy0
-      have hcx : c * qx = 0 := by
-        rw [hScaled', hy0, Rat.mul_zero]
-      exact (rat_scaled_zero_iff hc0).mp hcx
+      have hcx : (c : native_Real) * qx = 0 := by
+        rw [hScaled', hy0, mul_zero]
+      exact (rat_scaled_zero_iff hc0').mp hcx
   cases r
   case UOp op =>
     cases op
     case eq =>
       have hBool :
-          native_qeq qx (native_mk_rational 0 1) =
-            native_qeq qy (native_mk_rational 0 1) := by
-        simpa [native_mk_rational_zero] using native_qeq_zero_eq_of_iff hZeroIff
+          native_req qx (native_mk_real 0 1) =
+            native_req qy (native_mk_real 0 1) := by
+        rw [native_mk_real_zero]
+        exact native_qeq_zero_eq_of_iff hZeroIff
       rw [hEqX, hEqY, hBool]
       exact RuleProofs.smt_value_rel_refl _
     case lt =>
@@ -1600,12 +1525,13 @@ theorem arith_rel_smt_value_rel_of_scaled
       have hSigns :
           (qx < 0 ↔ qy < 0) ∧ (0 < qx ↔ 0 < qy) ∧ (qx = 0 ↔ qy = 0) := by
         rcases hSameSign with hPos | hNeg
-        · exact rat_same_sign_core_pos hScaled' hPos.1 hPos.2
-        · exact rat_same_sign_core_neg hScaled' hNeg.1 hNeg.2
+        · exact rat_same_sign_core_pos hScaled' (Rat.cast_pos.mpr hPos.1) (Rat.cast_pos.mpr hPos.2)
+        · exact rat_same_sign_core_neg hScaled' (Rat.cast_lt_zero.mpr hNeg.1) (Rat.cast_lt_zero.mpr hNeg.2)
       have hBool :
-          native_qlt qx (native_mk_rational 0 1) =
-            native_qlt qy (native_mk_rational 0 1) := by
-        simpa [native_mk_rational_zero] using native_qlt_zero_eq_of_iff hSigns.1
+          native_rlt qx (native_mk_real 0 1) =
+            native_rlt qy (native_mk_real 0 1) := by
+        rw [native_mk_real_zero]
+        exact native_qlt_zero_eq_of_iff hSigns.1
       rw [hLtX, hLtY, hBool]
       exact RuleProofs.smt_value_rel_refl _
     case leq =>
@@ -1615,13 +1541,13 @@ theorem arith_rel_smt_value_rel_of_scaled
       have hSigns :
           (qx < 0 ↔ qy < 0) ∧ (0 < qx ↔ 0 < qy) ∧ (qx = 0 ↔ qy = 0) := by
         rcases hSameSign with hPos | hNeg
-        · exact rat_same_sign_core_pos hScaled' hPos.1 hPos.2
-        · exact rat_same_sign_core_neg hScaled' hNeg.1 hNeg.2
+        · exact rat_same_sign_core_pos hScaled' (Rat.cast_pos.mpr hPos.1) (Rat.cast_pos.mpr hPos.2)
+        · exact rat_same_sign_core_neg hScaled' (Rat.cast_lt_zero.mpr hNeg.1) (Rat.cast_lt_zero.mpr hNeg.2)
       have hBool :
-          native_qleq qx (native_mk_rational 0 1) =
-            native_qleq qy (native_mk_rational 0 1) := by
-        simpa [native_mk_rational_zero] using
-          native_qleq_zero_eq_of_sign hSigns.1 hSigns.2.2
+          native_rleq qx (native_mk_real 0 1) =
+            native_rleq qy (native_mk_real 0 1) := by
+        rw [native_mk_real_zero]
+        exact native_qleq_zero_eq_of_sign hSigns.1 hSigns.2.2
       rw [hLeX, hLeY, hBool]
       exact RuleProofs.smt_value_rel_refl _
     case gt =>
@@ -1631,12 +1557,13 @@ theorem arith_rel_smt_value_rel_of_scaled
       have hSigns :
           (qx < 0 ↔ qy < 0) ∧ (0 < qx ↔ 0 < qy) ∧ (qx = 0 ↔ qy = 0) := by
         rcases hSameSign with hPos | hNeg
-        · exact rat_same_sign_core_pos hScaled' hPos.1 hPos.2
-        · exact rat_same_sign_core_neg hScaled' hNeg.1 hNeg.2
+        · exact rat_same_sign_core_pos hScaled' (Rat.cast_pos.mpr hPos.1) (Rat.cast_pos.mpr hPos.2)
+        · exact rat_same_sign_core_neg hScaled' (Rat.cast_lt_zero.mpr hNeg.1) (Rat.cast_lt_zero.mpr hNeg.2)
       have hBool :
-          native_qlt (native_mk_rational 0 1) qx =
-            native_qlt (native_mk_rational 0 1) qy := by
-        simpa [native_mk_rational_zero] using native_qgt_zero_eq_of_iff hSigns.2.1
+          native_rlt (native_mk_real 0 1) qx =
+            native_rlt (native_mk_real 0 1) qy := by
+        rw [native_mk_real_zero]
+        exact native_qgt_zero_eq_of_iff hSigns.2.1
       rw [hGtX, hGtY, hBool]
       exact RuleProofs.smt_value_rel_refl _
     case geq =>
@@ -1646,13 +1573,13 @@ theorem arith_rel_smt_value_rel_of_scaled
       have hSigns :
           (qx < 0 ↔ qy < 0) ∧ (0 < qx ↔ 0 < qy) ∧ (qx = 0 ↔ qy = 0) := by
         rcases hSameSign with hPos | hNeg
-        · exact rat_same_sign_core_pos hScaled' hPos.1 hPos.2
-        · exact rat_same_sign_core_neg hScaled' hNeg.1 hNeg.2
+        · exact rat_same_sign_core_pos hScaled' (Rat.cast_pos.mpr hPos.1) (Rat.cast_pos.mpr hPos.2)
+        · exact rat_same_sign_core_neg hScaled' (Rat.cast_lt_zero.mpr hNeg.1) (Rat.cast_lt_zero.mpr hNeg.2)
       have hBool :
-          native_qleq (native_mk_rational 0 1) qx =
-            native_qleq (native_mk_rational 0 1) qy := by
-        simpa [native_mk_rational_zero] using
-          native_qgeq_zero_eq_of_sign hSigns.2.1 hSigns.2.2
+          native_rleq (native_mk_real 0 1) qx =
+            native_rleq (native_mk_real 0 1) qy := by
+        rw [native_mk_real_zero]
+        exact native_qgeq_zero_eq_of_sign hSigns.2.1 hSigns.2.2
       rw [hGeX, hGeY, hBool]
       exact RuleProofs.smt_value_rel_refl _
     all_goals

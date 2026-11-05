@@ -797,7 +797,7 @@ theorem extractString_zero_cons
   have hnot : ¬ ((cs.length : Int) + 1 ≤ 0) := by omega
   have hmin : min (1 : Int) ((cs.length : Int) + 1) = 1 := by omega
   simp [extractString, native_str_substr, native_str_len, native_zplus,
-    native_zneg, hnot, hmin]
+    native_zneg, hnot]
 
 private theorem eo_extract_zero_zero_cons
     (c : native_Char) (cs : native_String) :
@@ -806,7 +806,7 @@ private theorem eo_extract_zero_zero_cons
   have hnot : ¬ ((cs.length : Int) + 1 ≤ 0) := by omega
   have hmin : min (1 : Int) ((cs.length : Int) + 1) = 1 := by omega
   simp [__eo_extract, native_str_substr, native_str_len, native_zplus,
-    native_zneg, hnot, hmin]
+    native_zneg, hnot]
 
 private theorem native_str_substr_tail_cons
     (c : native_Char) (cs : native_String) :
@@ -831,7 +831,6 @@ private theorem native_str_substr_tail_cons
           omega
         simp
       simp [native_str_substr, native_str_len]
-      omega
 
 private theorem eo_extract_tail_cons
     (c : native_Char) (cs : native_String) :
@@ -848,7 +847,6 @@ private theorem eo_extract_tail_cons
     change ((-1 : Int) + Int.ofNat (List.length (c :: cs)) + -1 + 1) =
       Int.ofNat cs.length
     simp
-    omega
   simp only [__eo_extract, __eo_add, __eo_len]
   rw [hLen]
   exact congrArg Term.String (native_str_substr_tail_cons c cs)
@@ -866,46 +864,10 @@ private theorem extractString_cons_succ_nat
     have hRightNonneg :
         ¬ (((i : Int) < 0) ∨ ((i : Int) + -(i : Int) + 1 ≤ 0)) := by
       omega
-    have hMinLeft :
-        (min ((i : Int) + 1 + -((i : Int) + 1) + 1)
-            ((cs.length : Int) + 1 - ((i : Int) + 1))).toNat = 1 := by
-      have h :
-          min ((i : Int) + 1 + -((i : Int) + 1) + 1)
-              ((cs.length : Int) + 1 - ((i : Int) + 1)) =
-            1 := by
-        omega
-      simp [h]
-    have hMinRight :
-        (min ((i : Int) + -(i : Int) + 1)
-            ((cs.length : Int) - (i : Int))).toNat = 1 := by
-      have h :
-          min ((i : Int) + -(i : Int) + 1)
-              ((cs.length : Int) - (i : Int)) =
-            1 := by
-        omega
-      simp [h]
     have hLeftLt : ¬ ((i : Int) + 1 < 0) := by omega
     have hRightLt : ¬ ((i : Int) < 0) := by omega
     simp [extractString, native_str_substr, native_str_len, native_zplus,
-      native_zneg, hLeftLt, hRightLt, hLenNotLe, hMinLeft,
-      hMinRight, List.drop_succ_cons]
-    -- v4.33 `simp` rewrites inside `decide`'s proposition without refreshing the
-    -- `Decidable` instance, so the remaining guards cannot be rewritten; split
-    -- on them instead.
-    split <;> split
-    case isTrue.isTrue => rfl
-    case isFalse.isFalse => rfl
-    case isTrue.isFalse h1 _ =>
-        exfalso
-        -- ascribe the cast form `omega` understands (`↑i`, not `Int.ofNat i`)
-        have h : ((i : Int) + 1 + -((i : Int) + 1) + 1) ≤ 0 :=
-          of_decide_eq_true h1
-        omega
-    case isFalse.isTrue _ h2 =>
-        exfalso
-        have h : ((i : Int) + -(i : Int) + 1) ≤ 0 :=
-          of_decide_eq_true h2
-        omega
+      native_zneg, hLeftLt, hRightLt, hLenNotLe, List.drop_succ_cons]
   · have hLeft : ((i : Int) + 1) >= ((cs.length : Int) + 1) := by
       omega
     have hLenLe : cs.length ≤ i := Nat.le_of_not_gt hLt
@@ -7119,13 +7081,14 @@ private theorem re_range_lower_cond_true
       intro hEq
       exact hNe (Int.ofNat.inj hEq)
     have hLtInt : native_zlt (Int.ofNat lo) (Int.ofNat c) = true := by
-      simp [native_zlt, Int.ofNat_lt, hLt]
+      simp [native_zlt, hLt]
     have hEqFalse :
         __eo_eq (Term.Numeral (Int.ofNat c))
             (Term.Numeral (Int.ofNat lo)) =
           Term.Boolean false := by
       simp [__eo_eq, native_teq]
-      exact hNeInt
+      intro h
+      exact hNeInt (by rw [h])
     rw [hEqFalse]
     change Term.Boolean (native_zlt (Int.ofNat lo) (Int.ofNat c)) =
       Term.Boolean true
@@ -7150,13 +7113,14 @@ private theorem re_range_lower_cond_false
     intro hLt
     exact h (Nat.le_of_lt hLt)
   have hLtInt : native_zlt (Int.ofNat lo) (Int.ofNat c) = false := by
-    simp [native_zlt, Int.ofNat_lt, hNotLt]
+    simp [native_zlt, hNotLt]
   have hEqFalse :
       __eo_eq (Term.Numeral (Int.ofNat c))
           (Term.Numeral (Int.ofNat lo)) =
         Term.Boolean false := by
     simp [__eo_eq, native_teq]
-    exact hNeInt
+    intro h
+    exact hNeInt (by rw [h])
   rw [hEqFalse]
   change Term.Boolean (native_zlt (Int.ofNat lo) (Int.ofNat c)) =
     Term.Boolean false
@@ -7178,13 +7142,14 @@ private theorem re_range_upper_cond_true
       intro hEq
       exact hNe (Int.ofNat.inj hEq)
     have hLtInt : native_zlt (Int.ofNat c) (Int.ofNat hi) = true := by
-      simp [native_zlt, Int.ofNat_lt, hLt]
+      simp [native_zlt, hLt]
     have hEqFalse :
         __eo_eq (Term.Numeral (Int.ofNat hi))
             (Term.Numeral (Int.ofNat c)) =
           Term.Boolean false := by
       simp [__eo_eq, native_teq]
-      exact hNeInt
+      intro h
+      exact hNeInt (by rw [h])
     rw [hEqFalse]
     change Term.Boolean (native_zlt (Int.ofNat c) (Int.ofNat hi)) =
       Term.Boolean true
@@ -7209,13 +7174,14 @@ private theorem re_range_upper_cond_false
     intro hLt
     exact h (Nat.le_of_lt hLt)
   have hLtInt : native_zlt (Int.ofNat c) (Int.ofNat hi) = false := by
-    simp [native_zlt, Int.ofNat_lt, hNotLt]
+    simp [native_zlt, hNotLt]
   have hEqFalse :
       __eo_eq (Term.Numeral (Int.ofNat hi))
           (Term.Numeral (Int.ofNat c)) =
         Term.Boolean false := by
     simp [__eo_eq, native_teq]
-    exact hNeInt
+    intro h
+    exact hNeInt (by rw [h])
   rw [hEqFalse]
   change Term.Boolean (native_zlt (Int.ofNat c) (Int.ofNat hi)) =
     Term.Boolean false

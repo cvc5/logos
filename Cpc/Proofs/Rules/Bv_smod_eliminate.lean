@@ -1184,12 +1184,6 @@ private theorem smt_typeof_extract_diag
   have hLen :
       native_zplus (native_zplus wmv 1) (native_zneg wmv) = 1 := by
     simp [native_zplus, native_zneg]
-    calc
-      wmv + 1 + -wmv = (wmv + -wmv) + 1 := by
-        ac_rfl
-      _ = 1 := by
-        rw [Int.add_right_neg]
-        rfl
   have hOnePos : native_zlt 0 (1 : native_Int) = true := by
     simp [SmtEval.native_zlt]
   simp [__smtx_typeof_extract, hZTy, hWmNonneg, hWmHi, hWidth,

@@ -220,10 +220,7 @@ private theorem native_seq_extract_zero_nat
       simp
     have hminNat : min n xs.length = n := Nat.min_eq_left hle
     simp [hn, hxsNe]
-    change
-      min ((min (Int.ofNat n) (Int.ofNat xs.length)).toNat) xs.length =
-        min n xs.length
-    rw [hminToNat, hminNat]
+    omega
 
 private theorem native_seq_extract_to_end_nat
     (xs : List SmtValue) (i : Nat) (hle : i <= xs.length) :

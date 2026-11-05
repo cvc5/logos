@@ -1,5 +1,8 @@
 module
 
+public import Cpc.Proofs.RealBridge
+import all Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 public import Cpc.Proofs.RuleSupport.TypeInversionSupport
 import all Cpc.Proofs.RuleSupport.TypeInversionSupport
 
@@ -222,13 +225,13 @@ private theorem native_zleq_of_zlt_true {a b : native_Int} :
   have hLe : a <= b := Int.le_of_lt hLt
   simpa [native_zleq, SmtEval.native_zleq] using hLe
 
-private theorem native_qleq_of_qlt_true {a b : native_Rat} :
-    native_qlt a b = true -> native_qleq a b = true := by
+private theorem native_qleq_of_qlt_true {a b : native_Real} :
+    native_rlt a b = true -> native_rleq a b = true := by
   intro h
   have hLt : a < b := by
-    simpa [native_qlt, SmtEval.native_qlt] using h
-  have hLe : a <= b := Rat.le_of_lt hLt
-  simpa [native_qleq, Smtm.native_qleq] using hLe
+    simpa [native_rlt, native_rlt] using h
+  have hLe : a <= b := le_of_lt hLt
+  simpa [native_rleq, native_rleq] using hLe
 
 private theorem native_zlt_add_of_zlt_of_zle {a b c d : native_Int} :
     native_zlt a b = true ->
@@ -272,47 +275,26 @@ private theorem native_zleq_add_of_zle_of_zle {a b c d : native_Int} :
   simp only [native_zleq, SmtEval.native_zleq, native_zplus, SmtEval.native_zplus]
   exact decide_eq_true hres
 
-private theorem native_qlt_add_of_qlt_of_qle {a b c d : native_Rat} :
-    native_qlt a b = true ->
-    native_qleq c d = true ->
-    native_qlt (native_qplus a c) (native_qplus b d) = true := by
-  intro hlt hle
-  have hltp : a < b := by
-    simpa [native_qlt, SmtEval.native_qlt] using hlt
-  have hlep : c <= d := by
-    simpa [native_qleq, Smtm.native_qleq] using hle
-  have hres : a + c < b + d := by
-    grind
-  simp only [native_qlt, SmtEval.native_qlt, native_qplus, SmtEval.native_qplus]
-  exact decide_eq_true hres
+private theorem native_qlt_add_of_qlt_of_qle {a b c d : native_Real} :
+    native_rlt a b = true ->
+    native_rleq c d = true ->
+    native_rlt (native_rplus a c) (native_rplus b d) = true := by
+  simp only [native_rlt, native_rleq, native_rplus, decide_eq_true_eq]
+  exact fun h1 h2 => add_lt_add_of_lt_of_le h1 h2
 
-private theorem native_qlt_add_of_qle_of_qlt {a b c d : native_Rat} :
-    native_qleq a b = true ->
-    native_qlt c d = true ->
-    native_qlt (native_qplus a c) (native_qplus b d) = true := by
-  intro hle hlt
-  have hlep : a <= b := by
-    simpa [native_qleq, Smtm.native_qleq] using hle
-  have hltp : c < d := by
-    simpa [native_qlt, SmtEval.native_qlt] using hlt
-  have hres : a + c < b + d := by
-    grind
-  simp only [native_qlt, SmtEval.native_qlt, native_qplus, SmtEval.native_qplus]
-  exact decide_eq_true hres
+private theorem native_qlt_add_of_qle_of_qlt {a b c d : native_Real} :
+    native_rleq a b = true ->
+    native_rlt c d = true ->
+    native_rlt (native_rplus a c) (native_rplus b d) = true := by
+  simp only [native_rlt, native_rleq, native_rplus, decide_eq_true_eq]
+  exact fun h1 h2 => add_lt_add_of_le_of_lt h1 h2
 
-private theorem native_qleq_add_of_qle_of_qle {a b c d : native_Rat} :
-    native_qleq a b = true ->
-    native_qleq c d = true ->
-    native_qleq (native_qplus a c) (native_qplus b d) = true := by
-  intro hle1 hle2
-  have hle1p : a <= b := by
-    simpa [native_qleq, Smtm.native_qleq] using hle1
-  have hle2p : c <= d := by
-    simpa [native_qleq, Smtm.native_qleq] using hle2
-  have hres : a + c <= b + d := by
-    grind
-  simp only [native_qleq, Smtm.native_qleq, native_qplus, SmtEval.native_qplus]
-  exact decide_eq_true hres
+private theorem native_qleq_add_of_qle_of_qle {a b c d : native_Real} :
+    native_rleq a b = true ->
+    native_rleq c d = true ->
+    native_rleq (native_rplus a c) (native_rplus b d) = true := by
+  simp only [native_rleq, native_rplus, decide_eq_true_eq]
+  exact fun h1 h2 => add_le_add h1 h2
 
 private theorem smt_eval_int_of_type
     (M : SmtModel) (hM : model_wf M) (t : Term)
@@ -328,7 +310,7 @@ private theorem smt_eval_int_of_type
 private theorem smt_eval_real_of_type
     (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
-    ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Real q := by
+    ∃ q : native_Real, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Real q := by
   have hPres :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) := by
@@ -399,10 +381,10 @@ private theorem real_lt_eval_of_lt_true
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Real)
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Real) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.lt) a) b) true ->
-    ∃ q r : native_Rat,
+    ∃ q r : native_Real,
       __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q ∧
       __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r ∧
-      native_qlt q r = true := by
+      native_rlt q r = true := by
   intro h
   rcases smt_eval_real_of_type M hM a hA with ⟨q, ha⟩
   rcases smt_eval_real_of_type M hM b hB with ⟨r, hb⟩
@@ -418,10 +400,10 @@ private theorem real_le_eval_of_leq_true
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Real)
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Real) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.leq) a) b) true ->
-    ∃ q r : native_Rat,
+    ∃ q r : native_Real,
       __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q ∧
       __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r ∧
-      native_qleq q r = true := by
+      native_rleq q r = true := by
   intro h
   rcases smt_eval_real_of_type M hM a hA with ⟨q, ha⟩
   rcases smt_eval_real_of_type M hM b hB with ⟨r, hb⟩
@@ -437,10 +419,10 @@ private theorem real_le_eval_of_eq_true
     (hA : __smtx_typeof (__eo_to_smt a) = SmtType.Real)
     (hB : __smtx_typeof (__eo_to_smt b) = SmtType.Real) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) true ->
-    ∃ q r : native_Rat,
+    ∃ q r : native_Real,
       __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q ∧
       __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r ∧
-      native_qleq q r = true := by
+      native_rleq q r = true := by
   intro h
   rcases smt_eval_real_of_type M hM a hA with ⟨q, ha⟩
   rcases smt_eval_real_of_type M hM b hB with ⟨r, hb⟩
@@ -450,7 +432,7 @@ private theorem real_le_eval_of_eq_true
       rw [smtx_eval_eq_term_eq, ha, hb] at hEval
       simp [__smtx_model_eval_eq, native_veq] at hEval
       subst r
-      exact ⟨q, q, ha, hb, by simp [native_qleq, Smtm.native_qleq]⟩
+      exact ⟨q, q, ha, hb, by simp [native_rleq, native_rleq]⟩
 
 private theorem sum_lt_true_of_int_eval
     (M : SmtModel) (a1 b1 a2 b2 : Term)
@@ -486,13 +468,13 @@ private theorem sum_lt_true_of_real_eval
         (Term.Apply (Term.UOp UserOp.lt)
           (Term.Apply (Term.Apply (Term.UOp UserOp.plus) a1) a2))
         (Term.Apply (Term.Apply (Term.UOp UserOp.plus) b1) b2)))
-    {q1 r1 q2 r2 : native_Rat}
+    {q1 r1 q2 r2 : native_Real}
     (ha1 : __smtx_model_eval M (__eo_to_smt a1) = SmtValue.Real q1)
     (hb1 : __smtx_model_eval M (__eo_to_smt b1) = SmtValue.Real r1)
     (ha2 : __smtx_model_eval M (__eo_to_smt a2) = SmtValue.Real q2)
     (hb2 : __smtx_model_eval M (__eo_to_smt b2) = SmtValue.Real r2)
-    (hLt : native_qlt q1 r1 = true)
-    (hLe : native_qleq q2 r2 = true) :
+    (hLt : native_rlt q1 r1 = true)
+    (hLe : native_rleq q2 r2 = true) :
     eo_interprets M
       (Term.Apply
         (Term.Apply (Term.UOp UserOp.lt)
@@ -540,13 +522,13 @@ private theorem sum_lt_true_of_real_eval_right
         (Term.Apply (Term.UOp UserOp.lt)
           (Term.Apply (Term.Apply (Term.UOp UserOp.plus) a1) a2))
         (Term.Apply (Term.Apply (Term.UOp UserOp.plus) b1) b2)))
-    {q1 r1 q2 r2 : native_Rat}
+    {q1 r1 q2 r2 : native_Real}
     (ha1 : __smtx_model_eval M (__eo_to_smt a1) = SmtValue.Real q1)
     (hb1 : __smtx_model_eval M (__eo_to_smt b1) = SmtValue.Real r1)
     (ha2 : __smtx_model_eval M (__eo_to_smt a2) = SmtValue.Real q2)
     (hb2 : __smtx_model_eval M (__eo_to_smt b2) = SmtValue.Real r2)
-    (hLe : native_qleq q1 r1 = true)
-    (hLt : native_qlt q2 r2 = true) :
+    (hLe : native_rleq q1 r1 = true)
+    (hLt : native_rlt q2 r2 = true) :
     eo_interprets M
       (Term.Apply
         (Term.Apply (Term.UOp UserOp.lt)
@@ -594,13 +576,13 @@ private theorem sum_leq_true_of_real_eval
         (Term.Apply (Term.UOp UserOp.leq)
           (Term.Apply (Term.Apply (Term.UOp UserOp.plus) a1) a2))
         (Term.Apply (Term.Apply (Term.UOp UserOp.plus) b1) b2)))
-    {q1 r1 q2 r2 : native_Rat}
+    {q1 r1 q2 r2 : native_Real}
     (ha1 : __smtx_model_eval M (__eo_to_smt a1) = SmtValue.Real q1)
     (hb1 : __smtx_model_eval M (__eo_to_smt b1) = SmtValue.Real r1)
     (ha2 : __smtx_model_eval M (__eo_to_smt a2) = SmtValue.Real q2)
     (hb2 : __smtx_model_eval M (__eo_to_smt b2) = SmtValue.Real r2)
-    (hLe1 : native_qleq q1 r1 = true)
-    (hLe2 : native_qleq q2 r2 = true) :
+    (hLe1 : native_rleq q1 r1 = true)
+    (hLe2 : native_rleq q2 r2 = true) :
     eo_interprets M
       (Term.Apply
         (Term.Apply (Term.UOp UserOp.leq)

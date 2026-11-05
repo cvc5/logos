@@ -113,8 +113,6 @@ theorem extract_bit_binary_eval
       bv1 ((Int.toNat pa).testBit i) := by
   simp [__smtx_model_eval_extract, native_binary_extract, native_zplus,
     native_zneg, native_nat_to_int]
-  have hWidth : (↑i + 1 + -↑i : Int) = 1 := by omega
-  rw [hWidth]
   change SmtValue.Binary 1 (native_mod_total (pa / native_int_pow2 (↑i)) (native_int_pow2 1)) =
     bv1 (pa.toNat.testBit i)
   have hpowi : native_int_pow2 (↑i) = (2 ^ i : Int) := by

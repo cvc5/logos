@@ -1,5 +1,8 @@
 module
 
+public import Cpc.Proofs.RealBridge
+import all Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 public import Cpc.Proofs.RuleSupport.CoreSupport
 import all Cpc.Proofs.RuleSupport.CoreSupport
 
@@ -69,54 +72,31 @@ private theorem smtx_typeof_of_eo_type
   exact (TranslationProofs.eo_to_smt_well_typed_and_typeof_implies_smt_type
     a T (__eo_to_smt a) rfl hTrans hTy).trans hSTy
 
-private theorem native_to_real_eq_intCast (n : native_Int) :
-    native_to_real n = (n : Rat) := by
-  rw [native_to_real, native_mk_rational]
-  change (n : Rat) / (1 : Rat) = (n : Rat)
-  change (n : Rat) * ((1 : Rat)⁻¹) = (n : Rat)
-  rw [Rat.inv_def]
-  change (n : Rat) * Rat.divInt 1 1 = (n : Rat)
-  rw [show Rat.divInt 1 1 = (1 : Rat) by rfl]
-  exact Rat.mul_one _
-
-private theorem rat_le_int_iff_floor_add_one_le_of_nonint
-    (q : Rat) (n : Int)
-    (hNonInt : native_to_real (native_to_int q) ≠ q) :
-    q ≤ native_to_real n ↔ native_to_int q + 1 ≤ n := by
-  have hNonInt' : (q.floor : Rat) ≠ q := by
-    simpa [native_to_int, native_to_real_eq_intCast] using hNonInt
-  rw [native_to_real_eq_intCast n]
-  change q ≤ (n : Rat) ↔ native_to_int q + 1 ≤ n
-  rw [native_to_int]
+private theorem real_le_int_iff_floor_add_one_le_of_nonint
+    (q : native_Real) (n : Int)
+    (hNonInt : native_int_to_real (native_real_to_int q) ≠ q) :
+    q ≤ native_int_to_real n ↔ native_real_to_int q + 1 ≤ n := by
+  simp only [native_int_to_real, native_real_to_int] at hNonInt ⊢
   constructor
   · intro hqle
-    have hqNe : q ≠ (n : Rat) := by
+    have hqNe : q ≠ (n : _root_.Real) := by
       intro hqEq
-      have hFloorEq : (q.floor : Rat) = q := by
-        rw [hqEq, Rat.floor_intCast]
-      exact hNonInt' hFloorEq
-    have hqLt : q < (n : Rat) := Rat.lt_of_le_of_ne hqle hqNe
-    exact (Int.add_one_le_iff).mpr ((Rat.floor_lt_iff).mpr hqLt)
+      exact hNonInt (by rw [hqEq, Int.floor_intCast])
+    exact Int.add_one_le_iff.mpr (Int.floor_lt.mpr (lt_of_le_of_ne hqle hqNe))
   · intro hle
-    exact Rat.le_trans (Rat.le_of_lt (Rat.lt_floor_add_one q))
-      ((Rat.intCast_le_intCast).mpr hle)
+    exact (Int.lt_floor_add_one q).le.trans (by exact_mod_cast hle)
 
-private theorem native_qleq_to_real_eq_floor_add_one
-    (q : Rat) (n : Int)
-    (hNonInt : native_to_real (native_to_int q) ≠ q) :
-    native_qleq q (native_to_real n) =
-      native_zleq (native_to_int q + 1) n := by
-  unfold native_qleq native_zleq
-  change decide (q ≤ native_to_real n) =
-    decide (native_to_int q + 1 ≤ n)
-  have hIff := rat_le_int_iff_floor_add_one_le_of_nonint q n hNonInt
-  by_cases hL : q ≤ native_to_real n
-  · have hR : native_to_int q + 1 ≤ n := hIff.mp hL
-    simp [hL, hR]
-  · have hR : ¬ native_to_int q + 1 ≤ n := by
-      intro h
-      exact hL (hIff.mpr h)
-    simp [hL, hR]
+private theorem native_rleq_to_real_eq_floor_add_one
+    (q : native_Real) (n : Int)
+    (hNonInt : native_int_to_real (native_real_to_int q) ≠ q) :
+    native_rleq q (native_int_to_real n) =
+      native_zleq (native_real_to_int q + 1) n := by
+  have hIff := real_le_int_iff_floor_add_one_le_of_nonint q n hNonInt
+  by_cases hL : q ≤ native_int_to_real n
+  · have hR : native_real_to_int q + 1 ≤ n := hIff.mp hL
+    simp [native_rleq, native_zleq, hL, hR]
+  · have hR : ¬ native_real_to_int q + 1 ≤ n := fun h => hL (hIff.mpr h)
+    simp [native_rleq, native_zleq, hL, hR]
 
 private theorem requires_guard_true_of_not_stuck (A B : Term) :
     __eo_requires A (Term.Boolean true) B ≠ Term.Stuck ->
@@ -339,37 +319,37 @@ private theorem facts___eo_prog_arith_int_geq_tighten_impl
       (toRealTerm (toIntTerm c)) c hPremNonInt
   have hPremFalseQ :
       __smtx_model_eval_eq
-        (SmtValue.Real (native_int_to_real (native_to_int cq)))
+        (SmtValue.Real (native_int_to_real (native_real_to_int cq)))
         (SmtValue.Real cq) = SmtValue.Boolean false := by
     rw [eo_to_smt_to_real_eq, smtx_eval_to_real_term_eq,
       eo_to_smt_to_int_eq, smtx_eval_to_int_term_eq, hCEval] at hPremFalse
     simpa [__smtx_model_eval_to_int, __smtx_model_eval_to_real] using hPremFalse
-  have hCNonInt : native_to_real (native_to_int cq) ≠ cq := by
+  have hCNonInt : native_int_to_real (native_real_to_int cq) ≠ cq := by
     intro hEq
     rw [hEq] at hPremFalseQ
-    simp [__smtx_model_eval_eq, native_veq, native_qeq] at hPremFalseQ
+    simp [__smtx_model_eval_eq, native_veq] at hPremFalseQ
   have hEvalCcRhs :
       __smtx_model_eval M (__eo_to_smt (ccRhs c)) =
-        SmtValue.Numeral (native_to_int cq + 1) := by
+        SmtValue.Numeral (native_real_to_int cq + 1) := by
     change __smtx_model_eval M
         (SmtTerm.plus (SmtTerm.to_int (__eo_to_smt c))
           (SmtTerm.plus (SmtTerm.Numeral 1) (SmtTerm.Numeral 0))) =
-      SmtValue.Numeral (native_to_int cq + 1)
+      SmtValue.Numeral (native_real_to_int cq + 1)
     rw [smtx_eval_plus_term_eq, smtx_eval_to_int_term_eq,
       smtx_eval_plus_term_eq, hCEval]
     simp [__smtx_model_eval_to_int, __smtx_model_eval_plus,
       __smtx_model_eval.eq_2, native_zplus]
   have hRelCc := RuleProofs.eo_interprets_eq_rel M cc (ccRhs c) hPremCc
-  have hCcEq : cci = native_to_int cq + 1 := by
+  have hCcEq : cci = native_real_to_int cq + 1 := by
     unfold RuleProofs.smt_value_rel at hRelCc
     rw [hCCEval, hEvalCcRhs] at hRelCc
     simpa [__smtx_model_eval_eq, native_veq, native_zeq] using hRelCc
   have hEvalLhs :
       __smtx_model_eval M (__eo_to_smt (geqTerm (toRealTerm t) c)) =
-        SmtValue.Boolean (native_qleq cq (native_to_real ti)) := by
+        SmtValue.Boolean (native_rleq cq (native_int_to_real ti)) := by
     change __smtx_model_eval M
         (SmtTerm.geq (SmtTerm.to_real (__eo_to_smt t)) (__eo_to_smt c)) =
-      SmtValue.Boolean (native_qleq cq (native_to_real ti))
+      SmtValue.Boolean (native_rleq cq (native_int_to_real ti))
     rw [smtx_eval_geq_term_eq, smtx_eval_to_real_term_eq, hTEval, hCEval]
     simp [__smtx_model_eval_to_real, __smtx_model_eval_geq,
       __smtx_model_eval_leq]
@@ -382,9 +362,9 @@ private theorem facts___eo_prog_arith_int_geq_tighten_impl
     rw [smtx_eval_geq_term_eq, hTEval, hCCEval]
     simp [__smtx_model_eval_geq, __smtx_model_eval_leq]
   have hBoolEq :
-      native_qleq cq (native_to_real ti) = native_zleq cci ti := by
+      native_rleq cq (native_int_to_real ti) = native_zleq cci ti := by
     rw [hCcEq]
-    exact native_qleq_to_real_eq_floor_add_one cq ti hCNonInt
+    exact native_rleq_to_real_eq_floor_add_one cq ti hCNonInt
   rw [hProgEq]
   exact RuleProofs.eo_interprets_eq_of_rel M
     (geqTerm (toRealTerm t) c) (geqTerm t cc) hProgBool' <| by

@@ -1055,7 +1055,7 @@ private theorem eo_to_smt_updater_rec_update_arg_non_reg_of_non_none
         have h := hIdx
         simp [native_zlt, SmtEval.native_zlt, native_nat_to_int,
           SmtEval.native_nat_to_int] at h
-        exact of_decide_eq_true h
+        omega
       have hjNonneg : (0 : Int) ≤ j := Int.natCast_nonneg j
       omega
   | succ k ih =>
@@ -1088,7 +1088,7 @@ private theorem eo_to_smt_updater_rec_update_arg_non_reg_of_non_none
                 have h := hIdx
                 simp [native_zlt, SmtEval.native_zlt, native_nat_to_int,
                   SmtEval.native_nat_to_int] at h
-                exact of_decide_eq_true h
+                exact_mod_cast h
               exact Int.ofNat_lt.mp hjSuccInt
             have hne : j ≠ k := by
               intro h

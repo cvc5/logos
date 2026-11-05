@@ -13,6 +13,7 @@ weakLeanArgs = [
   "-Dweak.linter.unusedTactic=false",
   "-Dweak.linter.unreachableTactic=false",
   "-Dweak.linter.tacticAnalysis=false",
+  "-Dweak.linter.auxLemma=false",
   "-Dweak.linter.tacticAnalysis.introMerge=false",
 ]
 

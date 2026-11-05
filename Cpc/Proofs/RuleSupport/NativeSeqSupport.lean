@@ -359,10 +359,7 @@ theorem native_seq_extract_zero_nat
       simp
     have hminNat : min n xs.length = n := Nat.min_eq_left hle
     simp [hn, hxsNe]
-    change
-      min ((min (Int.ofNat n) (Int.ofNat xs.length)).toNat) xs.length =
-        min n xs.length
-    rw [hminToNat, hminNat]
+    omega
 
 theorem native_seq_extract_empty_of_len_nonpos
     (xs : List SmtValue) (i n : native_Int) (h : n ≤ 0) :
@@ -538,14 +535,7 @@ theorem native_seq_extract_len_tail_of_bounds
     by_cases hLenLeI : (↑xs.length : native_Int) ≤ i
     · exact False.elim (hLenNotLeI (by simpa using hLenLeI))
     · simp [hLenLeI]
-      change
-        (xs.drop (Int.toNat i)).take
-            ((min (Int.ofNat xs.length) (Int.ofNat xs.length - i)).toNat) =
-          xs.drop (Int.toNat i)
-      rw [hMin, hTailCast]
-      apply List.take_of_length_le
-      rw [List.length_drop]
-      simp
+      omega
 
 theorem native_seq_prefix_eq_append_drop
     (pat xs : List SmtValue) :

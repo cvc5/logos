@@ -197,7 +197,7 @@ private theorem typed_mk_trans (M : SmtModel) (t1 t2 tail : Term) :
       exact typed_mk_trans M t1 t4 tail' hCompressedTrue hRecNotStuck
 termination_by sizeOf tail
 decreasing_by
-  simpa [hTail] using sizeOf_lt_trans_tail t3 t4 tail'
+  simp [hTail]
 
 /-- Derives `typed_mk_trans` from `bool_chain`. -/
 private theorem typed_mk_trans_of_bool_chain (t1 t2 tail : Term) :
@@ -269,7 +269,7 @@ private theorem typed_mk_trans_of_bool_chain (t1 t2 tail : Term) :
       exact typed_mk_trans_of_bool_chain t1 t4 tail' hCompressedBool hRecNotStuck
 termination_by sizeOf tail
 decreasing_by
-  simpa [hTail] using sizeOf_lt_trans_tail t3 t4 tail'
+  simp [hTail]
 
 /-- Transitivity lemma for `correct_mk`. -/
 private theorem correct_mk_trans (M : SmtModel) (t1 t2 tail : Term) :
@@ -338,7 +338,7 @@ private theorem correct_mk_trans (M : SmtModel) (t1 t2 tail : Term) :
       exact correct_mk_trans M t1 t4 tail' hCompressedTrue hRecNotStuck
 termination_by sizeOf tail
 decreasing_by
-  simpa [hTail] using sizeOf_lt_trans_tail t3 t4 tail'
+  simp [hTail]
 
 /-- Shows that the EO program for `trans_impl` is well typed. -/
 theorem typed___eo_prog_trans_impl (x1 : Term) :

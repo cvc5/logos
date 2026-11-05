@@ -412,7 +412,7 @@ decreasing_by
   all_goals
     subst_vars
     change Term._sizeOf_1 _ < Term._sizeOf_1 _
-    simp [Term._sizeOf_1]
+    simp [Term._sizeOf_1] <;> omega
 
 private theorem eo_interprets_and_left_false_intro
     (M : SmtModel) (hM : model_wf M) (A B : Term) :

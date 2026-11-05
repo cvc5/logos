@@ -565,8 +565,6 @@ theorem eval_bvnego_matches_eq_min
     eval_bv_nego_min M i hNonneg]
   have hSub : native_zplus (native_zplus 1 i) (native_zneg 1) = i := by
     simp [SmtEval.native_zplus, SmtEval.native_zneg]
-    rw [Int.add_comm 1 i]
-    exact Int.add_sub_cancel i 1
   simp [__smtx_model_eval_bvnego, __smtx_model_eval_eq, native_veq,
     hSub, SmtEval.native_zeq]
 
