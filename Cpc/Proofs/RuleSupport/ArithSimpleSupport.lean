@@ -1,5 +1,8 @@
 module
 
+public import Cpc.Proofs.RealBridge
+import all Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 public import Cpc.Proofs.RuleSupport.ArithPolyNormRelSupport
 import all Cpc.Proofs.RuleSupport.ArithPolyNormRelSupport
 public import Cpc.Proofs.RuleSupport.TypeInversionSupport
@@ -95,21 +98,20 @@ private theorem rational_smt_eval (M : SmtModel) (q : native_Rat) :
       SmtValue.Real q := by
   change __smtx_model_eval M (SmtTerm.Rational q) = SmtValue.Real q
   rw [__smtx_model_eval.eq_3]
+  rfl
 
-private theorem native_qdiv_total_zero (q : native_Rat) :
-    native_qdiv_total q (native_mk_rational 0 1) =
-      native_mk_rational 0 1 := by
-  unfold native_qdiv_total
-  rw [native_mk_rational_zero]
-  change q / (0 : Rat) = (0 : Rat)
-  rw [Rat.div_def, Rat.inv_zero, Rat.mul_zero]
+private theorem cast_mk_rational_zero :
+    ((native_mk_rational 0 1 : native_Rat) : native_Real) = native_mk_real 0 1 := by
+  simp
+
+private theorem native_qdiv_total_zero (q : native_Real) :
+    native_rdiv_total q (native_mk_real 0 1) =
+      native_mk_real 0 1 := by
+  simp
 
 private theorem native_mk_rational_zero_den (n : native_Int) :
-    native_mk_rational n 0 = native_mk_rational 0 1 := by
-  unfold native_mk_rational
-  change ((n : Rat) / (0 : Rat)) = ((0 : Rat) / (1 : Rat))
-  rw [rat_zero_div_one]
-  rw [Rat.div_def, Rat.inv_zero, Rat.mul_zero]
+    native_mk_real n 0 = native_mk_real 0 1 := by
+  simp
 
 private theorem true_has_bool_type :
     RuleProofs.eo_has_bool_type (Term.Boolean true) := by
@@ -260,12 +262,12 @@ private theorem int_decide_lt_eq_not_decide_ge (a b : native_Int) :
   · have hLt : a < b := Int.lt_of_not_ge h
     simp [native_not, h, hLt]
 
-private theorem rat_decide_lt_eq_not_decide_ge (a b : native_Rat) :
+private theorem rat_decide_lt_eq_not_decide_ge (a b : native_Real) :
     decide (a < b) = native_not (decide (b ≤ a)) := by
   by_cases h : b ≤ a
-  · have hNot : ¬ a < b := Rat.not_lt.mpr h
+  · have hNot : ¬ a < b := not_lt.mpr h
     simp [native_not, h, hNot]
-  · have hLt : a < b := Rat.not_le.mp h
+  · have hLt : a < b := not_le.mp h
     simp [native_not, h, hLt]
 
 private theorem int_decide_lt_eq_decide_succ_le (a b : native_Int) :
@@ -314,7 +316,7 @@ private theorem int_decide_eq_eq_and_ge_le (a b : native_Int) :
       simp [hEq, hBA, hAB, native_and]
     · simp [hEq, hBA, native_and]
 
-private theorem rat_decide_eq_eq_and_ge_le (a b : native_Rat) :
+private theorem rat_decide_eq_eq_and_ge_le (a b : native_Real) :
     decide (a = b) =
       native_and (decide (b ≤ a)) (native_and (decide (a ≤ b)) true) := by
   by_cases hEq : a = b
@@ -323,7 +325,7 @@ private theorem rat_decide_eq_eq_and_ge_le (a b : native_Rat) :
   · by_cases hBA : b ≤ a
     · have hAB : ¬ a ≤ b := by
         intro hAB
-        exact hEq (Rat.le_antisymm hAB hBA)
+        exact hEq (le_antisymm hAB hBA)
       simp [hEq, hBA, hAB, native_and]
     · simp [hEq, hBA, native_and]
 
@@ -331,9 +333,9 @@ private theorem native_zleq_refl_true (a : native_Int) :
     native_zleq a a = true := by
   simp [native_zleq]
 
-private theorem native_qleq_refl_true (a : native_Rat) :
-    native_qleq a a = true := by
-  simp [native_qleq]
+private theorem native_qleq_refl_true (a : native_Real) :
+    native_rleq a a = true := by
+  simp [native_rleq]
 
 private theorem native_zlt_true_leq (a b : native_Int) :
     native_zlt a b = true -> native_zleq a b = true := by
@@ -344,12 +346,12 @@ private theorem native_zlt_true_leq (a b : native_Int) :
     simp [hlt, hle]
   · simp [hlt] at h
 
-private theorem native_qlt_true_leq (a b : native_Rat) :
-    native_qlt a b = true -> native_qleq a b = true := by
-  unfold native_qlt native_qleq
+private theorem native_qlt_true_leq (a b : native_Real) :
+    native_rlt a b = true -> native_rleq a b = true := by
+  unfold native_rlt native_rleq
   intro h
   by_cases hlt : a < b
-  · have hle : a ≤ b := Rat.le_of_lt hlt
+  · have hle : a ≤ b := le_of_lt hlt
     simp [hlt, hle]
   · simp [hlt] at h
 
@@ -362,13 +364,13 @@ private theorem native_zlt_false_leq_swap (a b : native_Int) :
   · have hle : b ≤ a := Int.le_of_not_gt hlt
     simp [hlt, hle]
 
-private theorem native_qlt_false_leq_swap (a b : native_Rat) :
-    native_qlt a b = false -> native_qleq b a = true := by
-  unfold native_qlt native_qleq
+private theorem native_qlt_false_leq_swap (a b : native_Real) :
+    native_rlt a b = false -> native_rleq b a = true := by
+  unfold native_rlt native_rleq
   intro h
   by_cases hlt : a < b
   · simp [hlt] at h
-  · have hle : b ≤ a := Rat.not_lt.mp hlt
+  · have hle : b ≤ a := not_lt.mp hlt
     simp [hlt, hle]
 
 private theorem native_zleq_false_leq_swap (a b : native_Int) :
@@ -381,14 +383,14 @@ private theorem native_zleq_false_leq_swap (a b : native_Int) :
     have hle' : b ≤ a := Int.le_of_lt hlt'
     simp [hle, hle']
 
-private theorem native_qleq_false_leq_swap (a b : native_Rat) :
-    native_qleq a b = false -> native_qleq b a = true := by
-  unfold native_qleq
+private theorem native_qleq_false_leq_swap (a b : native_Real) :
+    native_rleq a b = false -> native_rleq b a = true := by
+  unfold native_rleq
   intro h
   by_cases hle : a ≤ b
   · simp [hle] at h
-  · have hlt' : b < a := Rat.not_le.mp hle
-    have hle' : b ≤ a := Rat.le_of_lt hlt'
+  · have hlt' : b < a := not_le.mp hle
+    have hle' : b ≤ a := le_of_lt hlt'
     simp [hle, hle']
 
 private theorem intSucc_typeof_eq_stuck_of_real
@@ -576,7 +578,7 @@ private theorem eval_lt_not_geq_rel
     rw [__smtx_model_eval.eq_17, __smtx_model_eval.eq_7, __smtx_model_eval.eq_20]
     rw [hEvalT, hEvalS]
     simp [__smtx_model_eval_lt, __smtx_model_eval_geq, __smtx_model_eval_leq,
-      __smtx_model_eval_not, native_qlt, native_qleq,
+      __smtx_model_eval_not, native_rlt, native_rleq,
       rat_decide_lt_eq_not_decide_ge]
     exact RuleProofs.smtx_model_eval_eq_refl
       (SmtValue.Boolean (native_not (decide (qs ≤ qt))))
@@ -640,7 +642,7 @@ private theorem eval_gt_not_geq_swap_rel
     rw [__smtx_model_eval.eq_19, __smtx_model_eval.eq_7, __smtx_model_eval.eq_20]
     rw [hEvalT, hEvalS]
     simp [__smtx_model_eval_gt, __smtx_model_eval_lt, __smtx_model_eval_geq,
-      __smtx_model_eval_leq, __smtx_model_eval_not, native_qlt, native_qleq,
+      __smtx_model_eval_leq, __smtx_model_eval_not, native_rlt, native_rleq,
       rat_decide_lt_eq_not_decide_ge]
     exact RuleProofs.smtx_model_eval_eq_refl
       (SmtValue.Boolean (native_not (decide (qt ≤ qs))))
@@ -900,7 +902,7 @@ private theorem eval_eq_geq_leq_and_rel
       __smtx_model_eval.eq_18, __smtx_model_eval.eq_1]
     rw [hEvalT, hEvalS]
     simp [__smtx_model_eval_eq, __smtx_model_eval_geq, __smtx_model_eval_leq,
-      __smtx_model_eval_and, native_veq, native_qeq, native_qleq, native_and,
+      __smtx_model_eval_and, native_veq, native_req, native_rleq, native_and,
       rat_decide_eq_eq_and_ge_le]
 
 private theorem prog_arith_elim_leq_eq_of_nonstuck
@@ -2216,13 +2218,10 @@ private theorem eval_geq_sub_zero_real_rel
     __smtx_model_eval.eq_15, __smtx_model_eval.eq_3]
   rw [hEvalT, hEvalS]
   simp [__smtx_model_eval_geq, __smtx_model_eval_leq, __smtx_model_eval__]
-  change __smtx_model_eval_eq
-      (SmtValue.Boolean (native_qleq qs qt))
-      (SmtValue.Boolean
-        (native_qleq (native_mk_rational 0 1)
-          (native_qplus qt (native_qneg qs)))) =
-    SmtValue.Boolean true
-  rw [native_qsub_geq_zero_eq qt qs]
+  have hSub := native_qsub_geq_zero_eq qt qs
+  rw [native_mk_real_zero] at hSub
+  change native_rleq 0 (qt + -qs) = _ at hSub
+  rw [hSub]
   simp [__smtx_model_eval_eq, native_veq]
 
 theorem typed_arith_geq_norm1_int
@@ -2401,16 +2400,8 @@ private theorem smtx_model_eval_to_int_to_real_of_numeral
     (n : native_Int) :
     __smtx_model_eval_to_int (__smtx_model_eval_to_real (SmtValue.Numeral n)) =
       SmtValue.Numeral n := by
-  change SmtValue.Numeral (Rat.floor ((n : Rat) / 1)) = SmtValue.Numeral n
-  congr
-  have hDiv : ((n : Rat) / 1 : Rat) = (n : Rat) := by
-    change ((n : Rat) * ((1 : Rat)⁻¹)) = (n : Rat)
-    rw [Rat.inv_def]
-    change (n : Rat) * Rat.divInt 1 1 = (n : Rat)
-    rw [show Rat.divInt 1 1 = (1 : Rat) by rfl]
-    exact Rat.mul_one _
-  rw [hDiv]
-  exact Rat.floor_intCast n
+  change SmtValue.Numeral (native_real_to_int (native_int_to_real n)) = SmtValue.Numeral n
+  rw [native_real_to_int_int_to_real]
 
 private theorem eval_to_int_to_real_rel
     (M : SmtModel) (hM : model_wf M)
@@ -2569,7 +2560,7 @@ private theorem eval_qdiv_total_real_zero_rel
   rcases smt_eval_real_of_type M hM t hSmtT with ⟨q, hEvalT⟩
   unfold RuleProofs.smt_value_rel
   rw [eo_to_smt_qdiv_total_eq, smtx_eval_qdiv_total_term_eq]
-  rw [hEvalT, rational_smt_eval M (native_mk_rational 0 1)]
+  rw [hEvalT, rational_smt_eval M (native_mk_rational 0 1), cast_mk_rational_zero]
   rw [show __smtx_model_eval_qdiv_total (SmtValue.Real q)
       (SmtValue.Real (native_mk_real 0 1)) =
       SmtValue.Real (native_mk_real 0 1) by
@@ -2595,7 +2586,7 @@ private theorem eval_qdiv_total_int_zero_rel
   unfold RuleProofs.smt_value_rel
   rw [eo_to_smt_qdiv_total_eq, smtx_eval_qdiv_total_term_eq]
   rw [hEvalT, numeral_smt_eval M 0,
-    rational_smt_eval M (native_mk_rational 0 1)]
+    rational_smt_eval M (native_mk_rational 0 1), cast_mk_rational_zero]
   rw [show __smtx_model_eval_qdiv_total (SmtValue.Numeral n) (SmtValue.Numeral 0) =
       SmtValue.Real (native_mk_real 0 1) by
     simp [__smtx_model_eval_qdiv_total, native_mk_rational_zero_den]]
@@ -2878,7 +2869,7 @@ private theorem eval_min_lt1_rel
     rw [__smtx_model_eval.eq_18, smtx_eval_ite_term_eq,
       __smtx_model_eval.eq_17, __smtx_model_eval.eq_1]
     rw [hEvalT, hEvalS]
-    cases hLt : native_qlt qt qs
+    cases hLt : native_rlt qt qs
     · have hLe := native_qlt_false_leq_swap qt qs hLt
       simp [__smtx_model_eval_ite, __smtx_model_eval_lt,
         __smtx_model_eval_leq, __smtx_model_eval_eq, hLt, hLe, native_veq]
@@ -3077,7 +3068,7 @@ private theorem eval_min_lt2_rel
     rw [__smtx_model_eval.eq_18, smtx_eval_ite_term_eq,
       __smtx_model_eval.eq_17, __smtx_model_eval.eq_1]
     rw [hEvalT, hEvalS]
-    cases hLt : native_qlt qt qs
+    cases hLt : native_rlt qt qs
     · simp [__smtx_model_eval_ite, __smtx_model_eval_lt,
         __smtx_model_eval_leq, __smtx_model_eval_eq, hLt,
         native_qleq_refl_true, native_veq]
@@ -3346,7 +3337,7 @@ private theorem eval_max_geq1_rel
     rw [__smtx_model_eval.eq_20, smtx_eval_ite_term_eq,
       __smtx_model_eval.eq_20, __smtx_model_eval.eq_1]
     rw [hEvalT, hEvalS]
-    cases hGeq : native_qleq qs qt
+    cases hGeq : native_rleq qs qt
     · have hLe := native_qleq_false_leq_swap qs qt hGeq
       simp [__smtx_model_eval_ite, __smtx_model_eval_geq,
         __smtx_model_eval_leq, __smtx_model_eval_eq, hGeq, hLe, native_veq]
@@ -3408,7 +3399,7 @@ private theorem eval_max_geq2_rel
     rw [__smtx_model_eval.eq_20, smtx_eval_ite_term_eq,
       __smtx_model_eval.eq_20, __smtx_model_eval.eq_1]
     rw [hEvalT, hEvalS]
-    cases hGeq : native_qleq qs qt
+    cases hGeq : native_rleq qs qt
     · simp [__smtx_model_eval_ite, __smtx_model_eval_geq,
         __smtx_model_eval_leq, __smtx_model_eval_eq, hGeq,
         native_qleq_refl_true, native_veq]

@@ -1,5 +1,8 @@
 module
 
+public import Cpc.Proofs.RealBridge
+import all Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 public import Cpc.Proofs.RuleSupport.TypeInversionSupport
 import all Cpc.Proofs.RuleSupport.TypeInversionSupport
 
@@ -142,7 +145,7 @@ private theorem smt_eval_int_of_type
 private theorem smt_eval_real_of_type
     (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTy : __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
-    ∃ q : native_Rat, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Real q := by
+    ∃ q : native_Real, __smtx_model_eval M (__eo_to_smt t) = SmtValue.Real q := by
   have hPres :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) := by
@@ -240,7 +243,7 @@ private theorem int_tangent_leq_prop (x y a b : Int) :
       have hprod : 0 <= (x - a) * (b - y) := Int.mul_nonneg hxa hby
       grind
 
-private theorem rat_tangent_geq_prop (x y a b : Rat) :
+private theorem rat_tangent_geq_prop (x y a b : native_Real) :
     (b*x + a*y + -(a*b) <= x*y) ↔
       ((x <= a ∧ y <= b) ∨ (a <= x ∧ b <= y)) := by
   constructor
@@ -253,7 +256,7 @@ private theorem rat_tangent_geq_prop (x y a b : Rat) :
         · exact Or.inr ⟨hax, hby⟩
         · have hposx : 0 < a - x := by grind
           have hposy : 0 < y - b := by grind
-          have hprod : 0 < (a - x) * (y - b) := Rat.mul_pos hposx hposy
+          have hprod : 0 < (a - x) * (y - b) := mul_pos hposx hposy
           have hlt : x*y < b*x + a*y + -(a*b) := by grind
           grind
     · have hax : a <= x := by grind
@@ -264,21 +267,21 @@ private theorem rat_tangent_geq_prop (x y a b : Rat) :
         · exact Or.inl ⟨hx', hy⟩
         · have hposx : 0 < x - a := by grind
           have hposy : 0 < b - y := by grind
-          have hprod : 0 < (x - a) * (b - y) := Rat.mul_pos hposx hposy
+          have hprod : 0 < (x - a) * (b - y) := mul_pos hposx hposy
           have hlt : x*y < b*x + a*y + -(a*b) := by grind
           grind
   · intro h
     rcases h with h | h
     · have hax : 0 <= a - x := by grind
       have hby : 0 <= b - y := by grind
-      have hprod : 0 <= (a - x) * (b - y) := Rat.mul_nonneg hax hby
+      have hprod : 0 <= (a - x) * (b - y) := mul_nonneg hax hby
       grind
     · have hxa : 0 <= x - a := by grind
       have hyb : 0 <= y - b := by grind
-      have hprod : 0 <= (x - a) * (y - b) := Rat.mul_nonneg hxa hyb
+      have hprod : 0 <= (x - a) * (y - b) := mul_nonneg hxa hyb
       grind
 
-private theorem rat_tangent_leq_prop (x y a b : Rat) :
+private theorem rat_tangent_leq_prop (x y a b : native_Real) :
     (x*y <= b*x + a*y + -(a*b)) ↔
       ((x <= a ∧ b <= y) ∨ (a <= x ∧ y <= b)) := by
   constructor
@@ -291,7 +294,7 @@ private theorem rat_tangent_leq_prop (x y a b : Rat) :
           exact Or.inr ⟨hax, hy⟩
         · have hposx : 0 < a - x := by grind
           have hposy : 0 < b - y := by grind
-          have hprod : 0 < (a - x) * (b - y) := Rat.mul_pos hposx hposy
+          have hprod : 0 < (a - x) * (b - y) := mul_pos hposx hposy
           have hlt : b*x + a*y + -(a*b) < x*y := by grind
           grind
     · have hax : a <= x := by grind
@@ -299,18 +302,18 @@ private theorem rat_tangent_leq_prop (x y a b : Rat) :
       · exact Or.inr ⟨hax, hy⟩
       · have hposx : 0 < x - a := by grind
         have hposy : 0 < y - b := by grind
-        have hprod : 0 < (x - a) * (y - b) := Rat.mul_pos hposx hposy
+        have hprod : 0 < (x - a) * (y - b) := mul_pos hposx hposy
         have hlt : b*x + a*y + -(a*b) < x*y := by grind
         grind
   · intro h
     rcases h with h | h
     · have hax : 0 <= a - x := by grind
       have hyb : 0 <= y - b := by grind
-      have hprod : 0 <= (a - x) * (y - b) := Rat.mul_nonneg hax hyb
+      have hprod : 0 <= (a - x) * (y - b) := mul_nonneg hax hyb
       grind
     · have hxa : 0 <= x - a := by grind
       have hby : 0 <= b - y := by grind
-      have hprod : 0 <= (x - a) * (b - y) := Rat.mul_nonneg hxa hby
+      have hprod : 0 <= (x - a) * (b - y) := mul_nonneg hxa hby
       grind
 
 private theorem native_z_tangent_geq (x y a b : native_Int) :
@@ -319,13 +322,11 @@ private theorem native_z_tangent_geq (x y a b : native_Int) :
       native_or (native_and (native_zleq x a) (native_zleq y b))
         (native_and (native_zleq a x) (native_zleq b y)) := by
   have hiff := int_tangent_geq_prop x y a b
-  simp [native_zleq, SmtEval.native_zleq, native_zplus, SmtEval.native_zplus,
-    native_zmult, SmtEval.native_zmult, native_zneg, SmtEval.native_zneg,
-    native_and, SmtEval.native_and, native_or, SmtEval.native_or]
-  -- v4.33 keeps the goal's `decide _ = true` shape (stale `Decidable`
-  -- instance), so bridge it explicitly rather than via `simpa`.
-  exact Bool.eq_iff_iff.mpr
-    (Iff.trans (Iff.trans decide_eq_true_iff hiff) (by simp))
+  refine Bool.eq_iff_iff.mpr ?_
+  change decide (b*x + a*y + -(a*b) ≤ x*y) = true ↔
+    ((decide (x ≤ a) && decide (y ≤ b)) || (decide (a ≤ x) && decide (b ≤ y))) = true
+  simp only [Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq]
+  exact hiff
 
 private theorem native_z_tangent_leq (x y a b : native_Int) :
     native_zleq (native_zmult x y)
@@ -334,50 +335,42 @@ private theorem native_z_tangent_leq (x y a b : native_Int) :
       native_or (native_and (native_zleq x a) (native_zleq b y))
         (native_and (native_zleq a x) (native_zleq y b)) := by
   have hiff := int_tangent_leq_prop x y a b
-  simp [native_zleq, SmtEval.native_zleq, native_zplus, SmtEval.native_zplus,
-    native_zmult, SmtEval.native_zmult, native_zneg, SmtEval.native_zneg,
-    native_and, SmtEval.native_and, native_or, SmtEval.native_or]
-  -- v4.33 keeps the goal's `decide _ = true` shape (stale `Decidable`
-  -- instance), so bridge it explicitly rather than via `simpa`.
-  exact Bool.eq_iff_iff.mpr
-    (Iff.trans (Iff.trans decide_eq_true_iff hiff) (by simp))
+  refine Bool.eq_iff_iff.mpr ?_
+  change decide (x*y ≤ b*x + a*y + -(a*b)) = true ↔
+    ((decide (x ≤ a) && decide (b ≤ y)) || (decide (a ≤ x) && decide (y ≤ b))) = true
+  simp only [Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq]
+  exact hiff
 
-private theorem native_q_tangent_geq (x y a b : native_Rat) :
-    native_qleq (native_qplus (native_qplus (native_qmult b x) (native_qmult a y))
-      (native_qneg (native_qmult a b))) (native_qmult x y) =
-      native_or (native_and (native_qleq x a) (native_qleq y b))
-        (native_and (native_qleq a x) (native_qleq b y)) := by
+private theorem native_q_tangent_geq (x y a b : native_Real) :
+    native_rleq (native_rplus (native_rplus (native_rmult b x) (native_rmult a y))
+      (native_rneg (native_rmult a b))) (native_rmult x y) =
+      native_or (native_and (native_rleq x a) (native_rleq y b))
+        (native_and (native_rleq a x) (native_rleq b y)) := by
   have hiff := rat_tangent_geq_prop x y a b
-  simp [native_qleq, Smtm.native_qleq, native_qplus, SmtEval.native_qplus,
-    native_qmult, SmtEval.native_qmult, native_qneg, SmtEval.native_qneg,
-    native_and, SmtEval.native_and, native_or, SmtEval.native_or]
-  -- v4.33 keeps the goal's `decide _ = true` shape (stale `Decidable`
-  -- instance), so bridge it explicitly rather than via `simpa`.
-  exact Bool.eq_iff_iff.mpr
-    (Iff.trans (Iff.trans decide_eq_true_iff hiff) (by simp))
+  refine Bool.eq_iff_iff.mpr ?_
+  change decide (b*x + a*y + -(a*b) ≤ x*y) = true ↔
+    ((decide (x ≤ a) && decide (y ≤ b)) || (decide (a ≤ x) && decide (b ≤ y))) = true
+  simp only [Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq]
+  exact hiff
 
-private theorem native_q_tangent_leq (x y a b : native_Rat) :
-    native_qleq (native_qmult x y)
-      (native_qplus (native_qplus (native_qmult b x) (native_qmult a y))
-        (native_qneg (native_qmult a b))) =
-      native_or (native_and (native_qleq x a) (native_qleq b y))
-        (native_and (native_qleq a x) (native_qleq y b)) := by
+private theorem native_q_tangent_leq (x y a b : native_Real) :
+    native_rleq (native_rmult x y)
+      (native_rplus (native_rplus (native_rmult b x) (native_rmult a y))
+        (native_rneg (native_rmult a b))) =
+      native_or (native_and (native_rleq x a) (native_rleq b y))
+        (native_and (native_rleq a x) (native_rleq y b)) := by
   have hiff := rat_tangent_leq_prop x y a b
-  simp [native_qleq, Smtm.native_qleq, native_qplus, SmtEval.native_qplus,
-    native_qmult, SmtEval.native_qmult, native_qneg, SmtEval.native_qneg,
-    native_and, SmtEval.native_and, native_or, SmtEval.native_or]
-  -- v4.33 keeps the goal's `decide _ = true` shape (stale `Decidable`
-  -- instance), so bridge it explicitly rather than via `simpa`.
-  exact Bool.eq_iff_iff.mpr
-    (Iff.trans (Iff.trans decide_eq_true_iff hiff) (by simp))
+  refine Bool.eq_iff_iff.mpr ?_
+  change decide (x*y ≤ b*x + a*y + -(a*b)) = true ↔
+    ((decide (x ≤ a) && decide (b ≤ y)) || (decide (a ≤ x) && decide (y ≤ b))) = true
+  simp only [Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq]
+  exact hiff
 
 private theorem native_mk_rational_zero :
-    native_mk_rational 0 1 = (0 : Rat) := by
-  native_decide
+    native_mk_real 0 1 = (0 : native_Real) := native_mk_real_zero
 
 private theorem native_mk_rational_one :
-    native_mk_rational 1 1 = (1 : Rat) := by
-  native_decide
+    native_mk_real 1 1 = (1 : native_Real) := native_mk_real_one
 
 private theorem mtTangent_true_has_bool_type_of_smt_type
     (one zero x y a b : Term) (T : SmtType)
@@ -495,9 +488,9 @@ private theorem mtTangent_true_real_eval
     __smtx_model_eval_plus, __smtx_model_eval__, __smtx_model_eval_and,
     __smtx_model_eval_or, native_veq, hxv, hyv, hav, hbv,
     native_mk_rational_zero, native_mk_rational_one,
-    Rat.one_mul, Rat.mul_one, Rat.add_zero,
-    native_qplus, SmtEval.native_qplus, native_qmult, SmtEval.native_qmult,
-    native_qneg, SmtEval.native_qneg, native_and, SmtEval.native_and,
+    one_mul, mul_one, add_zero,
+    native_rplus, native_rmult,
+    native_rneg, native_and, SmtEval.native_and,
     native_or, SmtEval.native_or] using native_q_tangent_geq xv yv av bv
 
 private theorem mtTangent_false_real_eval
@@ -522,9 +515,9 @@ private theorem mtTangent_false_real_eval
     __smtx_model_eval_plus, __smtx_model_eval__, __smtx_model_eval_and,
     __smtx_model_eval_or, native_veq, hxv, hyv, hav, hbv,
     native_mk_rational_zero, native_mk_rational_one,
-    Rat.one_mul, Rat.mul_one, Rat.add_zero,
-    native_qplus, SmtEval.native_qplus, native_qmult, SmtEval.native_qmult,
-    native_qneg, SmtEval.native_qneg, native_and, SmtEval.native_and,
+    one_mul, mul_one, add_zero,
+    native_rplus, native_rmult,
+    native_rneg, native_and, SmtEval.native_and,
     native_or, SmtEval.native_or] using native_q_tangent_leq xv yv av bv
 
 private def mtMkRel (op : UserOp) (u v : Term) : Term :=
