@@ -727,15 +727,10 @@ deriving Repr, DecidableEq, Inhabited
 
 abbrev ModelId := Real
 
-structure SmtUSort where
-  dom : Set ModelId
-  zero_mem : (0 : ModelId) ∈ dom
-  infinite_unbounded : dom.Infinite -> ∀ n : Nat, ∃ r ∈ dom, (n : ModelId) ≤ |r|
-
 structure SmtModel where
   values : SmtModelKey -> SmtValue
   nativeFuns : ModelId -> SmtType -> SmtType -> (SmtValue -> SmtValue)
-  usortDom : Nat -> SmtUSort
+  usortDom : Nat -> Set ModelId
 deriving Inhabited
 
 def model_push (M : SmtModel) (s : String) (T : SmtType) (v : SmtValue) : SmtModel :=
@@ -987,11 +982,12 @@ The second is the identifier for the value, of type \code{ModelId},
 where we assume that \code{(UValue n i)} and \code{(UValue n j)} are distinct
 when $i$ and $j$ are distinct.
 The domain of each uninterpreted sort is chosen by the model:
-\code{(M.usortDom n).dom} is a set of identifiers,
+\code{(M.usortDom n)} is a set of identifiers,
 and the values of \code{(USort n)} are exactly \code{(UValue n r)} for $r$ in that
 set, so its size is the cardinality of the sort.
-It must contain $0$, so that the sort is nonempty and has a default value, and it
-must be unbounded if it is infinite. Since identifiers are only labels, neither
+The definition of a well-formed model requires it to contain $0$, so that the sort
+is nonempty and has a default value, and to be unbounded if it is infinite.
+Since identifiers are only labels, neither
 condition rules out a cardinality:
 every nonzero cardinality up to the size of \code{Real} is available.
 SMT-LIB has no upper limit, but as far as we can tell a larger sort can only be
@@ -1596,7 +1592,7 @@ def smt_value_canonical (uc : Nat -> Nat) : SmtValue -> Bool
   | (SmtValue.Map m) => (smt_map_canonical uc m)
   | (SmtValue.Set m) => (smt_map_canonical uc m) && (veq (smt_map_get_default m) (SmtValue.Boolean false))
   | (SmtValue.Seq s) => (smt_seq_canonical uc s)
-  | (SmtValue.UValue i r) => decide (r ∈ (uc i).dom)
+  | (SmtValue.UValue i r) => decide (r ∈ uc i)
   | (SmtValue.RegLan r) => (re_canonical r)
   | (SmtValue.Apply f v) => (smt_value_canonical uc f) && (smt_value_canonical uc v)
   | v => true
@@ -1865,6 +1861,10 @@ def model_fun_lookup (M : SmtModel) (fid : ModelId) (T U : SmtType) : SmtValue -
 def eval_fun_apply (M : SmtModel) (fid : ModelId) (T U : SmtType) (i : SmtValue) : SmtValue :=
   if (fid = 0) then (smt_type_default U) else (model_fun_lookup M fid T U i)
 
+def usort_dom_wf (uc : Nat -> Set ModelId) : Prop :=
+  ∀ i, (0 : ModelId) ∈ uc i ∧
+    ((uc i).Infinite -> ∀ n : Nat, ∃ r ∈ uc i, (n : ModelId) ≤ |r|)
+
 def model_wf (M : SmtModel) : Prop :=
   (∀ isVar s T, smt_type_wf T = true ->
     smt_typeof_value (model_lookup M isVar s T) = T ∧
@@ -1873,7 +1873,8 @@ def model_wf (M : SmtModel) : Prop :=
     smt_type_wf (SmtType.FunType A B) = true ->
     smt_typeof_value i = A ->
     smt_typeof_value (eval_fun_apply M fid A B i) = B ∧
-      smt_value_canonical M.usortDom (eval_fun_apply M fid A B i) = true)
+      smt_value_canonical M.usortDom (eval_fun_apply M fid A B i) = true) ∧
+  usort_dom_wf M.usortDom
 \end{lstlisting}
 \caption{Total typed model conditions.}
 \label{fig:model-typed}
@@ -1908,7 +1909,10 @@ for all inputs \code{i} whose type is \code{A},
 applying \code{(eval_fun_apply M fid A B)}
 to \code{i} results in a value of type \code{B}, and moreover the returned value is canonical.
 
-Notice that for both clauses, we insist that the respective components of \code{M} are total mappings.
+The third clause restricts the domains of uninterpreted sorts,
+as described in Section~\ref{sec:values}.
+
+Notice that for the first two clauses, we insist that the respective components of \code{M} are total mappings.
 
 \subsection{Terms}
 \label{sec:terms}

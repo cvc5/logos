@@ -732,7 +732,7 @@ theorem texists_true_push_tchoice
 
 /-- The choice value at a well-formed type is always typed and canonical. -/
 theorem tchoice_typed_canonical_of_wf
-    (N : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm)
+    (N : SmtModel) (huc : usort_dom_wf N.usortDom) (s : native_String) (T : SmtType) (body : SmtTerm)
     (hWf : __smtx_type_wf T = true) :
     __smtx_typeof_value (native_eval_choice N s T body) = T ∧
       __smtx_value_canonical N.usortDom (native_eval_choice N s T body) = true := by
@@ -747,7 +747,7 @@ theorem tchoice_typed_canonical_of_wf
     exact ⟨(Classical.choose_spec hSat).1, (Classical.choose_spec hSat).2.1⟩
   · have hTy : ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧ __smtx_value_canonical N.usortDom v := by
-      rcases canonical_type_inhabited_of_type_wf T hWf with ⟨v, hvTy, hvCan⟩
+      rcases canonical_type_inhabited_of_type_wf huc T hWf with ⟨v, hvTy, hvCan⟩
       exact ⟨v, hvTy, by simpa using canonical_bool_of_canonical hvCan⟩
     rw [dite_eq_right hSat, dite_eq_left hTy]
     refine ⟨(Classical.choose_spec hTy).1, ?_⟩

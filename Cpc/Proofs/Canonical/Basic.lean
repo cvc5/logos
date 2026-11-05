@@ -91,7 +91,7 @@ theorem value_canonical_reglan_all :
 
 /-- A value of an uninterpreted sort is canonical when its identifier is in the
 sort's domain. -/
-theorem value_canonical_uvalue (u : native_Nat) (r : ModelId) (h : r ∈ (uc u).dom) :
+theorem value_canonical_uvalue (u : native_Nat) (r : ModelId) (h : r ∈ uc u) :
     value_canonical uc (SmtValue.UValue u r) := by
   simp [value_canonical, __smtx_value_canonical, native_usort_mem, h]
 

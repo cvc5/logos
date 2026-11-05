@@ -539,7 +539,7 @@ theorem typeof_value_model_eval_forall
   · simp [dite_eq_right h, __smtx_typeof_value]
 
 /-- Provides a witness for a `choice` term whose typing is non-`None`. -/
-theorem choice_term_has_witness
+theorem choice_term_has_witness (huc : usort_dom_wf uc)
     {s : native_String}
     {T : SmtType}
     {body : SmtTerm}
@@ -560,7 +560,7 @@ theorem choice_term_has_witness
     simpa [hEq, native_ite] using ht
   have hWF : __smtx_type_wf T = true :=
     smtx_typeof_guard_wf_wf_of_non_none T T hGuardNN
-  exact canonical_type_inhabited_of_type_wf T hWF
+  exact canonical_type_inhabited_of_type_wf huc T hWF
 
 /-- Derives the `choice` type as the self-guarded choice type from `non_none`. -/
 theorem choice_term_guard_type_of_non_none
@@ -684,9 +684,8 @@ theorem choice_term_fun_components_non_none
 
 /-- Shows that evaluating `choice` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_choice
-    (Mw : SmtModel)
-    (hMw : model_wf Mw)
     (M : SmtModel)
+    (hM : model_wf M)
     (s : native_String)
     (T : SmtType)
     (body : SmtTerm)
@@ -696,7 +695,7 @@ theorem typeof_value_model_eval_choice
   classical
   have hTy : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
       __smtx_value_canonical M.usortDom v = true := by
-    rcases choice_term_has_witness (uc := M.usortDom) ht with ⟨v, hvTy, hvCanon⟩
+    rcases choice_term_has_witness hM.2.2.2 ht with ⟨v, hvTy, hvCanon⟩
     exact ⟨v, hvTy, by simpa [value_canonical] using hvCanon⟩
   have hTyIf : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
       __smtx_value_canonical M.usortDom v := by
@@ -725,7 +724,7 @@ theorem choice_term_inhabited_of_non_none
     (ht : term_has_non_none_type (SmtTerm.choice s T body)) :
     type_inhabited (__smtx_typeof (SmtTerm.choice s T body)) := by
   refine ⟨__smtx_model_eval Mw (SmtTerm.choice s T body), ?_⟩
-  simpa using typeof_value_model_eval_choice Mw hMw Mw s T body ht
+  simpa using typeof_value_model_eval_choice Mw hMw s T body ht
 
 /-- Type of a `bind` term equals the (guarded) type of its body when well-typed. -/
 theorem bind_term_typeof_of_non_none

@@ -507,7 +507,7 @@ private theorem map_default_leaf_eq_of_get_default_eq
   rw [map_default_leaf_eq_default_of_type h1,
     map_default_leaf_eq_default_of_type h2, hDef]
 
-private theorem map_lookup_eq_default_of_not_typed_canonical :
+private theorem map_lookup_eq_default_of_not_typed_canonical (huc : usort_dom_wf uc) :
     ∀ {m : SmtMap} {A B : SmtType} {v : SmtValue},
       __smtx_typeof_map_value m = SmtType.Map A B ->
         __smtx_map_canonical uc m = true ->
@@ -554,7 +554,7 @@ private theorem map_lookup_eq_default_of_not_typed_canonical :
       · have hivFalse : native_veq i v = false := by
           cases hBool : native_veq i v <;> simp [hBool] at hivTrue ⊢
         have hRec :=
-          map_lookup_eq_default_of_not_typed_canonical hmTy hmCan hNot
+          map_lookup_eq_default_of_not_typed_canonical huc hmTy hmCan hNot
         simpa [__smtx_map_lookup, __smtx_map_get_default, native_ite,
           hivFalse] using hRec
 
@@ -565,7 +565,7 @@ residual datatype obligations live behind
 `Smtm.infinite_datatype_large_witness` /
 `Smtm.finite_nonunit_datatype_nondefault_value`.
 -/
-private theorem fresh_default_lookup_for_infinite_map_domain
+private theorem fresh_default_lookup_for_infinite_map_domain (huc : usort_dom_wf uc)
     (m1 m2 : SmtMap)
     (A B : SmtType)
     (_hm1Ty : __smtx_typeof_map_value m1 = SmtType.Map A B)
@@ -580,10 +580,10 @@ private theorem fresh_default_lookup_for_infinite_map_domain
         __smtx_value_canonical uc i = true ∧
           __smtx_map_lookup m1 i = __smtx_map_get_default m1 ∧
             __smtx_map_lookup m2 i = __smtx_map_get_default m2 :=
-  Smtm.fresh_default_lookup_for_infinite_map_domain m1 m2 A B
+  Smtm.fresh_default_lookup_for_infinite_map_domain huc m1 m2 A B
     _hm1Ty _hm2Ty _hm1Can _hm2Can _hAInh _hARec _hInfinite
 
-private theorem map_defaults_eq_of_no_typed_canonical_lookup_diff
+private theorem map_defaults_eq_of_no_typed_canonical_lookup_diff (huc : usort_dom_wf uc)
     {m1 m2 : SmtMap} {A B : SmtType}
     (hm1Ty : __smtx_typeof_map_value m1 = SmtType.Map A B)
     (hm2Ty : __smtx_typeof_map_value m2 = SmtType.Map A B)
@@ -599,7 +599,7 @@ private theorem map_defaults_eq_of_no_typed_canonical_lookup_diff
               (__smtx_map_lookup m2 i) = false) :
     __smtx_map_get_default m1 = __smtx_map_get_default m2 := by
   cases hFin : __smtx_is_finite_type uc A
-  · rcases fresh_default_lookup_for_infinite_map_domain
+  · rcases fresh_default_lookup_for_infinite_map_domain huc
         m1 m2 A B hm1Ty hm2Ty hm1Can hm2Can hAInh hARec hFin with
       ⟨i, hiTy, hiCan, hiLookup1, hiLookup2⟩
     cases hVeq :
@@ -615,7 +615,7 @@ private theorem map_defaults_eq_of_no_typed_canonical_lookup_diff
       _ = __smtx_map_get_default m2 :=
         (map_default_eq_type_default_of_finite_domain hm2Ty hm2Can hFin).symm
 
-private theorem map_diff_typed_canonical_lookup_witness
+private theorem map_diff_typed_canonical_lookup_witness (huc : usort_dom_wf uc)
     (m1 m2 : SmtMap)
     (A B : SmtType)
     (hm1Ty : __smtx_typeof_map_value m1 = SmtType.Map A B)
@@ -641,7 +641,7 @@ private theorem map_diff_typed_canonical_lookup_witness
   · exfalso
     have hDefaultEq :
         __smtx_map_get_default m1 = __smtx_map_get_default m2 :=
-      map_defaults_eq_of_no_typed_canonical_lookup_diff
+      map_defaults_eq_of_no_typed_canonical_lookup_diff huc
         hm1Ty hm2Ty hm1Can hm2Can hAInh hARec hDiff
     have hLeafEq :
         Smtm.smt_map_default_leaf m1 = Smtm.smt_map_default_leaf m2 :=
@@ -662,17 +662,17 @@ private theorem map_diff_typed_canonical_lookup_witness
         · exact Smtm.eq_of_native_veq_true hVeq
       · calc
           __smtx_map_lookup m1 v = __smtx_map_get_default m1 :=
-            map_lookup_eq_default_of_not_typed_canonical hm1Ty hm1Can hv
+            map_lookup_eq_default_of_not_typed_canonical huc hm1Ty hm1Can hv
           _ = __smtx_map_get_default m2 := hDefaultEq
           _ = __smtx_map_lookup m2 v :=
-            (map_lookup_eq_default_of_not_typed_canonical hm2Ty hm2Can hv).symm
+            (map_lookup_eq_default_of_not_typed_canonical huc hm2Ty hm2Can hv).symm
     have hEq : m1 = m2 :=
       Smtm.map_ext_of_lookup_eq hm1Can hm2Can hLeafEq hLookupEq
     subst m2
     simp [__smtx_model_eval_eq, native_veq] at hNe
 
 theorem map_diff_selects_model_eval_eq_false_of_default_eq
-    {M : SmtModel}
+    {M : SmtModel} (huc : usort_dom_wf M.usortDom)
     (m1 m2 : SmtMap)
     (A B : SmtType)
     (hm1Ty : __smtx_typeof_map_value m1 = SmtType.Map A B)
@@ -738,17 +738,17 @@ theorem map_diff_selects_model_eval_eq_false_of_default_eq
         · exact Smtm.eq_of_native_veq_true hVeq
       · calc
           __smtx_map_lookup m1 v = __smtx_map_get_default m1 :=
-            map_lookup_eq_default_of_not_typed_canonical hm1Ty hm1Can hv
+            map_lookup_eq_default_of_not_typed_canonical huc hm1Ty hm1Can hv
           _ = __smtx_map_get_default m2 := hDefaultEq
           _ = __smtx_map_lookup m2 v :=
-            (map_lookup_eq_default_of_not_typed_canonical hm2Ty hm2Can hv).symm
+            (map_lookup_eq_default_of_not_typed_canonical huc hm2Ty hm2Can hv).symm
     have hEq : m1 = m2 :=
       Smtm.map_ext_of_lookup_eq hm1Can hm2Can hLeafEq hLookupEq
     subst m2
     simp [__smtx_model_eval_eq, native_veq] at hNe
 
 theorem map_diff_selects_model_eval_eq_false
-    {M : SmtModel}
+    {M : SmtModel} (huc : usort_dom_wf M.usortDom)
     (m1 m2 : SmtMap)
     (A B : SmtType)
     (hm1Ty : __smtx_typeof_map_value m1 = SmtType.Map A B)
@@ -796,7 +796,7 @@ theorem map_diff_selects_model_eval_eq_false
         hLookup1Ty hLookup2Ty hBNeRegLan hSpec.2.2
     simpa [hDiff] using hFalse
   · exact False.elim (hDiff
-      (map_diff_typed_canonical_lookup_witness
+      (map_diff_typed_canonical_lookup_witness huc
         m1 m2 A B hm1Ty hm2Ty hm1Can hm2Can hAInh hARec hNe))
 
 end RuleProofs

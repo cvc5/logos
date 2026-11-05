@@ -26,24 +26,10 @@ noncomputable section
 
 abbrev SmtNativeFun := SmtValue -> SmtValue
 
--- The domain of an uninterpreted sort: its values are exactly the `UValue`s
--- whose identifier is in `dom`, so the sort's cardinality is the size of `dom`.
--- Identifiers are only labels, so the two conditions lose no generality: any
--- nonempty set of at most continuum size can be relabelled to satisfy them.
--- `zero_mem` makes the sort nonempty, with `UValue _ 0` as its default value,
--- and `infinite_unbounded` provides identifiers of arbitrarily large `sizeOf`.
-structure SmtUSort where
-  dom : _root_.Set ModelId
-  zero_mem : (0 : ModelId) ∈ dom
-  infinite_unbounded : dom.Infinite -> ∀ n : native_Nat, ∃ r ∈ dom, (n : ModelId) ≤ |r|
-
-instance : Inhabited SmtUSort :=
-  ⟨{ dom := {0}
-     zero_mem := rfl
-     infinite_unbounded := fun h => absurd (_root_.Set.finite_singleton _) h }⟩
-
--- The domain of each uninterpreted sort, by its index.
-abbrev SmtUSortDom := native_Nat -> SmtUSort
+-- The identifiers of each uninterpreted sort, by its index: the sort's values
+-- are exactly the `UValue`s with one of them, so its cardinality is the size of
+-- the set. `model_wf` says which sets a model may choose.
+abbrev SmtUSortDom := native_Nat -> _root_.Set ModelId
 
 -- The primitive operations no module above this one uses, together with those
 -- written over the values of this embedding, which cannot stand above it.
@@ -585,15 +571,15 @@ def native_model_push (M : SmtModel) (s : native_String) (T : SmtType) (v : SmtV
 
 open Classical in
 noncomputable def native_usort_mem (uc : SmtUSortDom) (n : native_Nat) (r : ModelId) : native_Bool :=
-  decide (r ∈ (uc n).dom)
+  decide (r ∈ uc n)
 
 open Classical in
 noncomputable def native_usort_finite (uc : SmtUSortDom) (n : native_Nat) : native_Bool :=
-  decide (uc n).dom.Finite
+  decide (uc n).Finite
 
 open Classical in
 noncomputable def native_usort_unit (uc : SmtUSortDom) (n : native_Nat) : native_Bool :=
-  decide ((uc n).dom = {0})
+  decide (uc n = {0})
 
 /- Definition of SMT-LIB model semantics -/
 
@@ -1690,13 +1676,21 @@ def model_fun_wf (M : SmtModel) : Prop :=
     __smtx_typeof_value (native_eval_fun_apply M fid A B i) = B ∧
       __smtx_value_canonical M.usortDom (native_eval_fun_apply M fid A B i) = true
 
+-- Every sort has the value `UValue _ 0`, which is its default, and an infinite
+-- sort has identifiers of arbitrarily large `sizeOf`. Identifiers are only labels,
+-- so this rules out no cardinality up to the size of `Real`.
+def usort_dom_wf (uc : SmtUSortDom) : Prop :=
+  ∀ i, (0 : ModelId) ∈ uc i ∧
+    ((uc i).Infinite -> ∀ n : native_Nat, ∃ r ∈ uc i, (n : ModelId) ≤ |r|)
+
 def model_wf (M : SmtModel) : Prop :=
   (∀ isVar s T, __smtx_type_wf T = true ->
     __smtx_typeof_value (M.values { isVar := isVar, name := s, ty := T }) = T) ∧
   (∀ isVar s T, __smtx_type_wf T = true ->
     __smtx_value_canonical M.usortDom
       (M.values { isVar := isVar, name := s, ty := T }) = true) ∧
-  model_fun_wf M
+  model_fun_wf M ∧
+  usort_dom_wf M.usortDom
 
 /-
 SMT interpretation is satisfiability, i.e. the existence of a model

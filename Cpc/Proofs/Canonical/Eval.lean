@@ -566,7 +566,7 @@ theorem model_eval_canonical_of_supported
         (ih1 M hM ht1) (ih2 M hM ht2) (ih3 M hM ht3)
   case map_diff ht1 hs1 ht2 hs2 hDefault ih1 ih2 =>
       exact model_eval_map_diff_canonical M _ _ hTy
-        (fun {A} hA => (hDefault (A := A) hA).2)
+        (fun {A} hA => (hDefault (A := A) hM.2.2.2 hA).2)
         (smt_model_eval_preserves_type_of_non_none M hM _ ht1)
         (smt_model_eval_preserves_type_of_non_none M hM _ ht2)
   case seq_diff ht1 hs1 ht2 hs2 ih1 ih2 =>
@@ -828,7 +828,7 @@ theorem model_eval_canonical_of_supported
         model_eval_re_diff_canonical (ih1 M hM ht1) (ih2 M hM ht2)
   case re_loop n1 n2 ht hs ih =>
       simpa [__smtx_model_eval] using
-        model_eval_re_loop_canonical (SmtValue.Numeral _) (SmtValue.Numeral _)
+        model_eval_re_loop_canonical hM.2.2.2 (SmtValue.Numeral _) (SmtValue.Numeral _)
           (ih M hM ht)
   case str_in_re ht1 hs1 ht2 hs2 ih1 ih2 =>
       simpa [__smtx_model_eval] using

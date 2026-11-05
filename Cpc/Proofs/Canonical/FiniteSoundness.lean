@@ -907,10 +907,10 @@ theorem unit_type_values_default
       simp [__smtx_is_unit_type, __smtx_type_bounded, native_and,
         native_not] at hUnit
   | USort u =>
-      have hOne : (uc u).dom = {0} := (smtx_is_unit_type_usort_iff u).mp hUnit
+      have hOne : uc u = {0} := (smtx_is_unit_type_usort_iff u).mp hUnit
       intro v hTy hCan
       rcases typed_usort_shape v u hTy with ⟨r, rfl⟩
-      have hMem : r ∈ (uc u).dom := (smtx_value_canonical_uvalue_iff u r).mp hCan
+      have hMem : r ∈ uc u := (smtx_value_canonical_uvalue_iff u r).mp hCan
       rw [hOne] at hMem
       have hZero : r = 0 := Set.mem_singleton_iff.mp hMem
       subst hZero
@@ -1709,7 +1709,7 @@ theorem finite_type_enumerable
       refine ⟨hDomFin.toFinset.toList.map (fun r => SmtValue.UValue u r), ?_⟩
       intro v hTy hCan
       rcases typed_usort_shape v u hTy with ⟨r, rfl⟩
-      have hMem : r ∈ (uc u).dom := (smtx_value_canonical_uvalue_iff u r).mp hCan
+      have hMem : r ∈ uc u := (smtx_value_canonical_uvalue_iff u r).mp hCan
       simp [hMem]
   | Bool =>
       refine ⟨[SmtValue.Boolean false, SmtValue.Boolean true], ?_⟩

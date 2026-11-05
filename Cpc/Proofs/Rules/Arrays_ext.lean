@@ -335,7 +335,7 @@ private theorem facts___eo_prog_arrays_ext_impl
           (__smtx_map_lookup m1 (native_eval_map_diff M m1 m2))
           (__smtx_map_lookup m2 (native_eval_map_diff M m1 m2)) =
         SmtValue.Boolean false :=
-    RuleProofs.map_diff_selects_model_eval_eq_false
+    RuleProofs.map_diff_selects_model_eval_eq_false hM.2.2.2
       m1 m2 (__eo_to_smt_type I) (__eo_to_smt_type E)
       hm1Ty hm2Ty hm1Can hm2Can hADomain.1 hADomain.2 hENeRegLan hMapsEqFalse
   have hEqEvalFalse :

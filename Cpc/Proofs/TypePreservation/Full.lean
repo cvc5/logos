@@ -1052,7 +1052,7 @@ private theorem supported_type_preservation
         (supported_type_preservation M hM _ ht3 hs3)
   | map_diff ht1 hs1 ht2 hs2 hDefault =>
       exact typeof_value_model_eval_map_diff M _ _ ht
-        (fun {A} hA => (hDefault (A := A) (uc := M.usortDom) hA).1)
+        (fun {A} hA => (hDefault (A := A) (uc := M.usortDom) hM.2.2.2 hA).1)
         (supported_type_preservation M hM _ ht1 hs1)
         (supported_type_preservation M hM _ ht2 hs2)
   | seq_diff ht1 hs1 ht2 hs2 =>
@@ -1069,7 +1069,7 @@ private theorem supported_type_preservation
   | «forall» s T body =>
       exact typeof_value_model_eval_forall M s T body ht
   | choice s T body hChoice =>
-      exact typeof_value_model_eval_choice M hM M s T body ht
+      exact typeof_value_model_eval_choice M hM s T body ht
   | bind s T x1 x2 hbt hs1 hs2 =>
       have ht1 : term_has_non_none_type x1 := bind_arg1_non_none_of_non_none ht
       have ht2 : term_has_non_none_type x2 := bind_arg2_non_none_of_non_none ht
@@ -1679,7 +1679,7 @@ private theorem canonical_of_supported
           (canonical_of_supported M hM _ ht3 hs3)
   case map_diff ht1 hs1 ht2 hs2 hDefault =>
       exact model_eval_map_diff_canonical M _ _ ht
-        (fun {A} hA => (hDefault (A := A) hA).2)
+        (fun {A} hA => (hDefault (A := A) hM.2.2.2 hA).2)
         (supported_type_preservation M hM _ ht1 hs1)
         (supported_type_preservation M hM _ ht2 hs2)
   case seq_diff ht1 hs1 ht2 hs2 =>
@@ -1994,7 +1994,7 @@ private theorem canonical_of_supported
           (canonical_of_supported M hM _ ht2 hs2)
   case re_loop n1 n2 ht1 hs1 =>
       simpa [__smtx_model_eval] using
-        model_eval_re_loop_canonical (SmtValue.Numeral _) (SmtValue.Numeral _)
+        model_eval_re_loop_canonical hM.2.2.2 (SmtValue.Numeral _) (SmtValue.Numeral _)
           (canonical_of_supported M hM _ ht1 hs1)
   case str_in_re ht1 hs1 ht2 hs2 =>
       simpa [__smtx_model_eval] using
@@ -3155,7 +3155,7 @@ private theorem supported_store_of_non_none
     term_has_non_none_of_type_eq h3 hMapNN.2
   exact supported_preservation_term.store ht1 hs1 ht2 hs2 ht3 hs3
 
-private theorem type_default_typed_canonical_of_map_domain_wf
+private theorem type_default_typed_canonical_of_map_domain_wf (huc : usort_dom_wf uc)
     {A B : SmtType}
     (h : __smtx_type_wf (SmtType.Map A B) = true) :
     __smtx_typeof_value (__smtx_type_default A) = A ∧
@@ -3168,9 +3168,9 @@ private theorem type_default_typed_canonical_of_map_domain_wf
             __smtx_type_wf_rec B = true)) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and] using h
-  exact type_default_typed_canonical_of_inhabited_wf_rec A hAll.2.1.1 hAll.2.1.2
+  exact type_default_typed_canonical_of_inhabited_wf_rec huc A hAll.2.1.1 hAll.2.1.2
 
-private theorem type_default_typed_canonical_of_set_element_wf
+private theorem type_default_typed_canonical_of_set_element_wf (huc : usort_dom_wf uc)
     {A : SmtType}
     (h : __smtx_type_wf (SmtType.Set A) = true) :
     __smtx_typeof_value (__smtx_type_default A) = A ∧
@@ -3181,9 +3181,9 @@ private theorem type_default_typed_canonical_of_set_element_wf
           __smtx_type_wf_rec A = true) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and] using h
-  exact type_default_typed_canonical_of_inhabited_wf_rec A hAll.2.1 hAll.2.2
+  exact type_default_typed_canonical_of_inhabited_wf_rec huc A hAll.2.1 hAll.2.2
 
-private theorem map_diff_default_typed_canonical_of_non_none
+private theorem map_diff_default_typed_canonical_of_non_none (huc : usort_dom_wf uc)
     {t1 t2 : SmtTerm}
     (ht : term_has_non_none_type (SmtTerm.map_diff t1 t2)) :
     ∀ {A : SmtType},
@@ -3200,7 +3200,7 @@ private theorem map_diff_default_typed_canonical_of_non_none
       simpa [h1, tp_result_seq_components_wf] using hGood
     have hDA : D = A := hRes.symm.trans hA
     rw [← hDA]
-    exact type_default_typed_canonical_of_map_domain_wf hMapWf
+    exact type_default_typed_canonical_of_map_domain_wf huc hMapWf
   · rcases hSet with ⟨D, h1, h2, hRes⟩
     have ht1 : term_has_non_none_type t1 :=
       term_has_non_none_of_type_eq h1 (by simp)
@@ -3209,7 +3209,7 @@ private theorem map_diff_default_typed_canonical_of_non_none
       simpa [h1, tp_result_seq_components_wf] using hGood
     have hDA : D = A := hRes.symm.trans hA
     rw [← hDA]
-    exact type_default_typed_canonical_of_set_element_wf hSetWf
+    exact type_default_typed_canonical_of_set_element_wf huc hSetWf
 
 private theorem binary_type_has_no_none_components_of_non_none
     {w n : native_Int}
@@ -4937,7 +4937,7 @@ theorem supported_preservation_term_of_non_none :
           · rcases hSet with ⟨A, h1, h2, hRes⟩
             exact term_has_non_none_of_type_eq h2 (by simp)
         exact supported_preservation_term.map_diff ht1 (go t1 ht1) ht2 (go t2 ht2)
-          (map_diff_default_typed_canonical_of_non_none ht)
+          (fun huc hA => map_diff_default_typed_canonical_of_non_none huc ht hA)
     | SmtTerm.seq_diff t1 t2 =>
         rcases seq_binop_args_of_non_none_ret (op := SmtTerm.seq_diff)
             (typeof_seq_diff_eq t1 t2) ht with ⟨T, h1, h2⟩

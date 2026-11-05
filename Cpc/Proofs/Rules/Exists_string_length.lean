@@ -283,7 +283,7 @@ private theorem eslFormula_has_bool_type
     (by rw [hLenTy]; simp)
 
 private theorem eslFormula_true
-    (M : SmtModel) (U id : Term) (A : SmtType) (k : native_Int)
+    (M : SmtModel) (huc : usort_dom_wf M.usortDom) (U id : Term) (A : SmtType) (k : native_Int)
     (hIdGt : __eo_gt id (Term.Numeral (-1 : native_Int)) =
       Term.Boolean true)
     (hSeqTy : __eo_to_smt_type (Term.Apply (Term.UOp UserOp.Seq) U) =
@@ -301,7 +301,7 @@ private theorem eslFormula_true
     exact Int.add_one_le_iff.mpr hkLt
   have hAParts := seq_elem_wf_parts_of_seq_wf hSeqWF
   have hDef :=
-    Smtm.type_default_typed_canonical_of_native_inhabited_type (uc := M.usortDom)
+    Smtm.type_default_typed_canonical_of_native_inhabited_type huc (uc := M.usortDom)
       A hAParts.1 hAParts.2
   let xs : List SmtValue :=
     List.replicate (native_int_to_nat k) (__smtx_type_default A)
@@ -508,7 +508,7 @@ by
                             (Term.Apply (Term.UOp UserOp.Seq) U)
                             (Term.Numeral k) id) true
                         rw [hFormulaEq]
-                        exact eslFormula_true M U id A k hIdGt
+                        exact eslFormula_true M hM.2.2.2 U id A k hIdGt
                           hSeqTy hSeqWF' hkGt
                       · change RuleProofs.eo_has_smt_translation
                           (__eo_prog_exists_string_length

@@ -17,7 +17,7 @@ set_option maxHeartbeats 10000000
 
 /-- Choosing from a nonempty canonical set finds a true entry. -/
 private theorem choose_mem_of_ne_empty
-    {M : SmtModel}
+    {M : SmtModel} (huc : usort_dom_wf M.usortDom)
     (m : SmtMap) (A : SmtType)
     (hTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool)
     (hCan : __smtx_map_canonical M.usortDom m = true)
@@ -26,7 +26,7 @@ private theorem choose_mem_of_ne_empty
     __smtx_map_lookup m
       (native_eval_map_diff M m (SmtMap.default A (SmtValue.Boolean false))) =
         SmtValue.Boolean true := by
-  have hDiff := RuleProofs.map_diff_selects_model_eval_eq_false_of_default_eq
+  have hDiff := RuleProofs.map_diff_selects_model_eval_eq_false_of_default_eq huc
     m (SmtMap.default A (SmtValue.Boolean false)) A SmtType.Bool
     hTy (by simp [__smtx_typeof_map_value, __smtx_typeof_value])
     hCan (set_empty_map_canonical A) hDef (by decide)
@@ -134,7 +134,7 @@ private theorem choose_member_properties
   · rw [hb, hEmpty]
     cases b <;> simp [__smtx_model_eval_eq, native_veq, __smtx_model_eval_or,
       __smtx_model_eval, native_or]
-  · rw [choose_mem_of_ne_empty m A hmTy hmCan hmDef hEmpty]
+  · rw [choose_mem_of_ne_empty hM.2.2.2 m A hmTy hmCan hmDef hEmpty]
     simp [__smtx_model_eval_eq, native_veq, hEmpty, __smtx_model_eval_or,
       __smtx_model_eval, native_or]
 

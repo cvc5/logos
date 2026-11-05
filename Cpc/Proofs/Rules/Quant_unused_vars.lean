@@ -2041,7 +2041,7 @@ by
   classical
   rcases smt_model_eval_bool_is_boolean M hM body hBodyTy with
     ⟨b, hEvalBody⟩
-  rcases canonical_type_inhabited_of_type_wf (uc := M.usortDom) T hWF with
+  rcases canonical_type_inhabited_of_type_wf hM.2.2.2 (uc := M.usortDom) T hWF with
     ⟨w, hwTy, hwCan⟩
   have hwCanBool : __smtx_value_canonical M.usortDom w = true := by
     simpa [value_canonical] using hwCan

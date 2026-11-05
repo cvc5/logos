@@ -1342,7 +1342,7 @@ theorem model_eval_re_loop_rec_canonical :
       | _ =>
           simp [__smtx_re_loop_rec, value_canonical_notValue]
 
-theorem model_eval_re_loop_canonical
+theorem model_eval_re_loop_canonical (huc : usort_dom_wf uc)
     (v1 v2 : SmtValue)
     {v3 : SmtValue}
     (hv3 : value_canonical uc v3) :
