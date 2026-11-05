@@ -7,7 +7,7 @@ import all Cpc.Proofs.TypePreservation.Common
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -475,7 +475,7 @@ theorem typeof_value_model_eval_exists
   by_cases h :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical M.usortCard v = true ∧
+          __smtx_value_canonical M.usortDom v = true ∧
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   · simp [h, __smtx_typeof_value]
   · simp [h, __smtx_typeof_value]
@@ -533,7 +533,7 @@ theorem typeof_value_model_eval_forall
   by_cases h :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T ->
-          __smtx_value_canonical M.usortCard v = true ->
+          __smtx_value_canonical M.usortDom v = true ->
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   · simp [dite_eq_left h, __smtx_typeof_value]
   · simp [dite_eq_right h, __smtx_typeof_value]
@@ -695,18 +695,18 @@ theorem typeof_value_model_eval_choice
       __smtx_typeof (SmtTerm.choice s T body) := by
   classical
   have hTy : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-      __smtx_value_canonical M.usortCard v = true := by
-    rcases choice_term_has_witness (uc := M.usortCard) ht with ⟨v, hvTy, hvCanon⟩
+      __smtx_value_canonical M.usortDom v = true := by
+    rcases choice_term_has_witness (uc := M.usortDom) ht with ⟨v, hvTy, hvCanon⟩
     exact ⟨v, hvTy, by simpa [value_canonical] using hvCanon⟩
   have hTyIf : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-      __smtx_value_canonical M.usortCard v := by
+      __smtx_value_canonical M.usortDom v := by
     rcases hTy with ⟨v, hvTy, hvCanon⟩
     exact ⟨v, hvTy, by simp [hvCanon]⟩
   rw [choice_term_typeof_of_non_none ht]
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical M.usortCard v = true ∧
+          __smtx_value_canonical M.usortDom v = true ∧
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   · rw [smtx_model_eval_choice_eq]
     simp [hSat]

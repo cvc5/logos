@@ -5,7 +5,7 @@ import all Cpc.Proofs.TypePreservation.Helpers
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -89,13 +89,11 @@ theorem value_canonical_reglan_all :
     value_canonical uc (SmtValue.RegLan native_re_all) := by
   exact value_canonical_reglan native_re_all (by native_decide)
 
-/-- A value of an uninterpreted sort is canonical when it is within the sort's
-cardinality, where `0` means the sort is infinite. -/
-theorem value_canonical_uvalue (u n : native_Nat) (h : uc u = 0 ∨ n < uc u) :
-    value_canonical uc (SmtValue.UValue u n) := by
-  rcases h with h | h <;>
-    simp [value_canonical, __smtx_value_canonical, native_usort_card, native_or, native_nateq,
-      native_natlt, h]
+/-- A value of an uninterpreted sort is canonical when its identifier is in the
+sort's domain. -/
+theorem value_canonical_uvalue (u : native_Nat) (r : ModelId) (h : r ∈ (uc u).dom) :
+    value_canonical uc (SmtValue.UValue u r) := by
+  simp [value_canonical, __smtx_value_canonical, native_usort_mem, h]
 
 theorem value_canonical_dt_cons (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
     value_canonical uc (SmtValue.DtCons s d i) := by

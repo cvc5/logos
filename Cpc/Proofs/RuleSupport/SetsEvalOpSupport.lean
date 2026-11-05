@@ -9,7 +9,7 @@ import all Cpc.Proofs.RuleSupport.DistinctTermsSupport
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval
@@ -109,10 +109,10 @@ theorem set_value_facts
     (hTyA : __smtx_typeof (__eo_to_smt t) = SmtType.Set A) :
     ∃ m : SmtMap,
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Set m ∧
-        __smtx_map_canonical M.usortCard m = true ∧
+        __smtx_map_canonical M.usortDom m = true ∧
           __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool ∧
             __smtx_map_get_default m = SmtValue.Boolean false := by
-  have hCanEval : value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t)) :=
+  have hCanEval : value_canonical M.usortDom (__smtx_model_eval M (__eo_to_smt t)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t hTrans
   have hEvalTy :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) = SmtType.Set A := by
@@ -122,9 +122,9 @@ theorem set_value_facts
           simpa [term_has_non_none_type, RuleProofs.eo_has_smt_translation]
             using hTrans)
   rcases set_value_canonical hEvalTy with ⟨m, hm⟩
-  have hCanSet : value_canonical M.usortCard (SmtValue.Set m) := by
+  have hCanSet : value_canonical M.usortDom (SmtValue.Set m) := by
     simpa [hm] using hCanEval
-  have hmCan : __smtx_map_canonical M.usortCard m = true := by
+  have hmCan : __smtx_map_canonical M.usortDom m = true := by
     have hParts := hCanSet
     simp [value_canonical, __smtx_value_canonical, SmtEval.native_and]
       at hParts

@@ -9,7 +9,7 @@ public section
 
 noncomputable section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -176,56 +176,6 @@ private theorem fresh_rational_veq_false_of_mem (xs : List SmtValue) :
     intro hEq
     subst j
     exact fresh_rational_not_mem xs hj)
-
-private def fresh_usort_index (sort : native_Nat) : List SmtValue -> Nat
-  | [] => 0
-  | SmtValue.UValue i n :: xs =>
-      if i = sort then Nat.max (n + 1) (fresh_usort_index sort xs)
-      else fresh_usort_index sort xs
-  | _ :: xs => fresh_usort_index sort xs
-
-private theorem fresh_usort_index_gt_of_mem (sort : native_Nat) :
-    ∀ {xs : List SmtValue} {n : native_Nat},
-      SmtValue.UValue sort n ∈ xs ->
-        n < fresh_usort_index sort xs := by
-  intro xs
-  induction xs with
-  | nil =>
-      intro n h
-      cases h
-  | cons v xs ih =>
-      intro n h
-      cases v
-      case UValue i m =>
-        by_cases hi : i = sort
-        · subst i
-          simp [fresh_usort_index] at h ⊢
-          rcases h with hEq | hTail
-          · subst n
-            exact Or.inl (Nat.lt_succ_self _)
-          · exact Or.inr (ih hTail)
-        · have hNe : sort ≠ i := fun hEq => hi hEq.symm
-          simp [fresh_usort_index, hi, hNe] at h ⊢
-          exact ih h
-      all_goals
-        simp [fresh_usort_index] at h ⊢
-        exact ih h
-
-private theorem fresh_usort_not_mem (sort : native_Nat) (xs : List SmtValue) :
-    SmtValue.UValue sort (fresh_usort_index sort xs) ∉ xs := by
-  intro h
-  have hlt := fresh_usort_index_gt_of_mem sort
-    (xs := xs) (n := fresh_usort_index sort xs) h
-  exact Nat.lt_irrefl _ hlt
-
-private theorem fresh_usort_veq_false_of_mem (sort : native_Nat) (xs : List SmtValue) :
-    ∀ j : SmtValue, j ∈ xs ->
-      native_veq j (SmtValue.UValue sort (fresh_usort_index sort xs)) = false := by
-  intro j hj
-  exact native_veq_eq_false_of_ne (by
-    intro hEq
-    subst j
-    exact fresh_usort_not_mem sort xs hj)
 
 private noncomputable def smt_value_size_bound : List SmtValue -> Nat
   | [] => 0
@@ -631,15 +581,10 @@ theorem nonunit_typed_canonical_nondefault_value
   | TypeRef s =>
       simp [__smtx_type_wf_rec] at _hRec
   | USort u =>
-      have hNe1 : uc u ≠ 1 := fun h =>
-        by simp [(smtx_is_unit_type_usort_iff u).mpr h] at _hNonUnit
-      refine ⟨SmtValue.UValue u 1, ?_, ?_, ?_⟩
-      · simp [__smtx_typeof_value]
-      · refine (smtx_value_canonical_uvalue_iff u 1).mpr ?_
-        by_cases h0 : uc u = 0
-        · exact Or.inl h0
-        · exact Or.inr (Nat.lt_of_le_of_ne (Nat.pos_of_ne_zero h0) (Ne.symm hNe1))
-      · simp [__smtx_type_default, native_veq]
+      exact usort_nondefault_witness u (by
+        cases hUnit : __smtx_is_unit_type uc (SmtType.USort u)
+        · rfl
+        · simp [hUnit] at _hNonUnit)
   | FunType T U =>
       simp [__smtx_type_wf_rec] at _hRec
   | DtcAppType T U =>
@@ -823,14 +768,13 @@ theorem fresh_typed_canonical_value_for_infinite_type
   | TypeRef s =>
       simp [__smtx_type_wf_rec] at _hRec
   | USort u =>
-      refine ⟨SmtValue.UValue u (fresh_usort_index u avoid), ?_, ?_, ?_⟩
-      · simp [__smtx_typeof_value]
-      · refine (smtx_value_canonical_uvalue_iff u _).mpr (Or.inl ?_)
-        by_cases h0 : uc u = 0
-        · exact h0
-        · have hFin := (smtx_is_finite_type_usort_iff (uc := uc) u).mpr h0
-          simp [hFin] at _hInfinite
-      · exact fresh_usort_veq_false_of_mem u avoid
+      rcases usort_large_witness u (smt_value_size_bound avoid) (by
+          cases hFin : __smtx_is_finite_type uc (SmtType.USort u)
+          · rfl
+          · simp [hFin] at _hInfinite) with ⟨i, hiTy, hiCan, hiSize⟩
+      refine ⟨i, hiTy, hiCan, ?_⟩
+      intro j hj
+      exact native_veq_false_of_mem_and_size_bound hj hiSize
   | FunType T U =>
       simp [__smtx_type_wf_rec] at _hRec
   | DtcAppType T U =>

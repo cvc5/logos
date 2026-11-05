@@ -20,7 +20,7 @@ private theorem choose_mem_of_ne_empty
     {M : SmtModel}
     (m : SmtMap) (A : SmtType)
     (hTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool)
-    (hCan : __smtx_map_canonical M.usortCard m = true)
+    (hCan : __smtx_map_canonical M.usortDom m = true)
     (hDef : __smtx_map_get_default m = SmtValue.Boolean false)
     (hNe : m ≠ SmtMap.default A (SmtValue.Boolean false)) :
     __smtx_map_lookup m
@@ -104,7 +104,7 @@ private theorem choose_member_properties
   have hmTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool :=
     set_map_value_typed (by simpa [hm] using hValTy)
   have hCan := RuleProofs.model_eval_eo_to_smt_canonical M hM a haTrans
-  have hParts : __smtx_map_canonical M.usortCard m = true ∧
+  have hParts : __smtx_map_canonical M.usortDom m = true ∧
       native_veq (__smtx_map_get_default m) (SmtValue.Boolean false) = true := by
     simpa [hm, value_canonical, __smtx_value_canonical, SmtEval.native_and] using hCan
   have hmCan := hParts.1

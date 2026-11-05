@@ -19,7 +19,7 @@ import all Cpc.Proofs.TypePreservation
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval
@@ -432,7 +432,7 @@ theorem forall_encoding_true_of_all_inst
         hWf s T (List.Mem.head _)
       have hnP : ¬ (∃ v : SmtValue,
           __smtx_typeof_value v = __eo_to_smt_type T ∧
-            __smtx_value_canonical M.usortCard v = true ∧
+            __smtx_value_canonical M.usortDom v = true ∧
               __smtx_model_eval
                 (native_model_push M s (__eo_to_smt_type T) v)
                 (__eo_to_smt_exists env (SmtTerm.not body)) =
@@ -468,7 +468,7 @@ theorem forall_encoding_true_of_all_inst
             SmtValue.Boolean false := by
         show (if _ : (∃ v : SmtValue,
             __smtx_typeof_value v = __eo_to_smt_type T ∧
-              __smtx_value_canonical M.usortCard v = true ∧
+              __smtx_value_canonical M.usortDom v = true ∧
                 __smtx_model_eval
                   (native_model_push M s (__eo_to_smt_type T) v)
                   (__eo_to_smt_exists env (SmtTerm.not body)) =
@@ -636,7 +636,7 @@ def CtorInst (x F : Term) {c ys g : Term}
       ∃ (s : native_String) (T : Term) (u : SmtValue),
         y = Term.Var (Term.String s) T ∧
         __smtx_typeof_value u = __eo_to_smt_type T ∧
-        __smtx_value_canonical M.usortCard u = true ∧
+        __smtx_value_canonical M.usortDom u = true ∧
         CtorInst x F tail
           (native_model_push M s (__eo_to_smt_type T) u) v
   | @ConjRel.unwrap _ _ c _ _ _ =>
@@ -843,7 +843,7 @@ theorem ctorInst_of_one_absorbed
       (u : SmtValue),
       conjAbsorbed rel = [Term.Var (Term.String s) T] ->
       __smtx_typeof_value u = __eo_to_smt_type T ->
-      __smtx_value_canonical M.usortCard u = true ->
+      __smtx_value_canonical M.usortDom u = true ->
       __smtx_model_eval
           (native_model_push M s (__eo_to_smt_type T) u)
           (__eo_to_smt (conjFinal rel)) = v ->
@@ -878,9 +878,9 @@ theorem ctorInst_of_two_absorbed
       conjAbsorbed rel =
         [Term.Var (Term.String s₁) T₁, Term.Var (Term.String s₂) T₂] ->
       __smtx_typeof_value u₁ = __eo_to_smt_type T₁ ->
-      __smtx_value_canonical M.usortCard u₁ = true ->
+      __smtx_value_canonical M.usortDom u₁ = true ->
       __smtx_typeof_value u₂ = __eo_to_smt_type T₂ ->
-      __smtx_value_canonical M.usortCard u₂ = true ->
+      __smtx_value_canonical M.usortDom u₂ = true ->
       __smtx_model_eval
           (native_model_push
             (native_model_push M s₁ (__eo_to_smt_type T₁) u₁)
@@ -1121,7 +1121,7 @@ theorem forall_encoding_step_iff
     __smtx_model_eval M (SmtTerm.not (SmtTerm.exists s T tail)) =
         SmtValue.Boolean true ↔
       ∀ v : SmtValue, __smtx_typeof_value v = T ->
-        __smtx_value_canonical M.usortCard v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval (native_model_push M s T v) (SmtTerm.not tail) =
           SmtValue.Boolean true := by
   classical
@@ -1133,7 +1133,7 @@ theorem forall_encoding_step_iff
       (InstantiateRule.smtx_model_eval_not_true_iff _).1 h
     have hNoSat : ¬ (∃ w : SmtValue,
         __smtx_typeof_value w = T ∧
-          __smtx_value_canonical M.usortCard w = true ∧
+          __smtx_value_canonical M.usortDom w = true ∧
             __smtx_model_eval (native_model_push M s T w) tail =
               SmtValue.Boolean true) := by
       intro hSat
@@ -1141,7 +1141,7 @@ theorem forall_encoding_step_iff
           SmtValue.Boolean true := by
         show (if _ : (∃ w : SmtValue,
             __smtx_typeof_value w = T ∧
-              __smtx_value_canonical M.usortCard w = true ∧
+              __smtx_value_canonical M.usortDom w = true ∧
                 __smtx_model_eval (native_model_push M s T w) tail =
                   SmtValue.Boolean true)
           then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -1162,7 +1162,7 @@ theorem forall_encoding_step_iff
   · intro h
     have hNoSat : ¬ (∃ w : SmtValue,
         __smtx_typeof_value w = T ∧
-          __smtx_value_canonical M.usortCard w = true ∧
+          __smtx_value_canonical M.usortDom w = true ∧
             __smtx_model_eval (native_model_push M s T w) tail =
               SmtValue.Boolean true) := by
       rintro ⟨w, hwT, hwC, hwE⟩
@@ -1173,7 +1173,7 @@ theorem forall_encoding_step_iff
         SmtValue.Boolean false := by
       show (if _ : (∃ w : SmtValue,
           __smtx_typeof_value w = T ∧
-            __smtx_value_canonical M.usortCard w = true ∧
+            __smtx_value_canonical M.usortDom w = true ∧
               __smtx_model_eval (native_model_push M s T w) tail =
                 SmtValue.Boolean true)
         then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -1195,7 +1195,7 @@ theorem inst_push_last_bridge
     (hvC : __smtx_value_canonical uc v = true) :
     ∀ {M N : SmtModel} {ys : Term},
       ForallInstantiationModel M ys N ->
-      M.usortCard = uc ->
+      M.usortDom = uc ->
       (∀ K, ForallInstantiationModel (native_model_push M sx Tx v) ys K ->
         __smtx_model_eval K body = SmtValue.Boolean true) ->
       __smtx_model_eval (native_model_push N sx Tx v) body =
@@ -1231,7 +1231,7 @@ theorem inst_push_last_bridge
           · exact hKey.symm
           · cases hKey; rfl
         refine h K (ForallInstantiationModel.cons hWf (by rw [hTeq]; exact hvT)
-          (show __smtx_value_canonical M.usortCard v = true by rw [hc]; exact hvC) ?_)
+          (show __smtx_value_canonical M.usortDom v = true by rw [hc]; exact hvC) ?_)
         rw [hBase2]
         exact hK
       · have hSwap :
@@ -1335,7 +1335,7 @@ theorem lhs_gives_push_last
     ∀ N, ForallInstantiationModel M ys N ->
     ∀ v : SmtValue,
       __smtx_typeof_value v = __eo_to_smt_type xT ->
-      __smtx_value_canonical M.usortCard v = true ->
+      __smtx_value_canonical M.usortDom v = true ->
       __smtx_model_eval
           (native_model_push N sx (__eo_to_smt_type xT) v) (__eo_to_smt F) =
         SmtValue.Boolean true := by
@@ -1347,8 +1347,8 @@ theorem lhs_gives_push_last
 
 /-- An instantiation only pushes variables, so it keeps the base model's
 cardinalities of uninterpreted sorts. -/
-private theorem forallInstantiationModel_usortCard {M N : SmtModel} {xs : Term}
-    (h : ForallInstantiationModel M xs N) : N.usortCard = M.usortCard := by
+private theorem forallInstantiationModel_usortDom {M N : SmtModel} {xs : Term}
+    (h : ForallInstantiationModel M xs N) : N.usortDom = M.usortDom := by
   induction h with
   | nil M => rfl
   | cons _ _ _ _ ih => exact ih
@@ -1360,24 +1360,24 @@ theorem inst_rebase_push_last
     (sx : native_String) (Tx : SmtType) :
     ∀ {M N : SmtModel} {ys : Term} {v : SmtValue},
       __smtx_typeof_value v = Tx ->
-      __smtx_value_canonical M.usortCard v = true ->
+      __smtx_value_canonical M.usortDom v = true ->
       ForallInstantiationModel (native_model_push M sx Tx v) ys N ->
       ∃ (N₀ : SmtModel) (w : SmtValue),
         ForallInstantiationModel M ys N₀ ∧
         __smtx_typeof_value w = Tx ∧
-        __smtx_value_canonical M.usortCard w = true ∧
+        __smtx_value_canonical M.usortDom w = true ∧
         N = native_model_push N₀ sx Tx w := by
   intro M N ys v hvTy hvCanon hInst
   have aux : ∀ {K N : SmtModel} {ys : Term},
       ForallInstantiationModel K ys N ->
       ∀ (M : SmtModel) (v : SmtValue),
         __smtx_typeof_value v = Tx ->
-        __smtx_value_canonical M.usortCard v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         K = native_model_push M sx Tx v ->
         ∃ (N₀ : SmtModel) (w : SmtValue),
           ForallInstantiationModel M ys N₀ ∧
           __smtx_typeof_value w = Tx ∧
-          __smtx_value_canonical M.usortCard w = true ∧
+          __smtx_value_canonical M.usortDom w = true ∧
           N = native_model_push N₀ sx Tx w := by
     intro K N ys hKN
     induction hKN with
@@ -1387,7 +1387,7 @@ theorem inst_rebase_push_last
     | cons hWf huTy huCanon hTail ih =>
       rename_i K N sy Ty env u
       intro M v hvTy hvCanon hK
-      have huCanonM : __smtx_value_canonical M.usortCard u = true := by
+      have huCanonM : __smtx_value_canonical M.usortDom u = true := by
         rw [hK] at huCanon; exact huCanon
       by_cases hKey :
           ({ isVar := true, name := sy, ty := __eo_to_smt_type Ty } :
@@ -1672,7 +1672,7 @@ private theorem conj_final_forward_core
     (hH : ∀ N, ForallInstantiationModel M₀ Term.__eo_List_nil N →
       ∀ v : SmtValue,
         __smtx_typeof_value v = __eo_to_smt_type xT →
-        __smtx_value_canonical M₀.usortCard v = true →
+        __smtx_value_canonical M₀.usortDom v = true →
         __smtx_model_eval
             (native_model_push N sx (__eo_to_smt_type xT) v)
             (__eo_to_smt F) = SmtValue.Boolean true) :
@@ -1740,7 +1740,7 @@ theorem conj_forward_aux
       (∀ N, ForallInstantiationModel M₀ ysRem N ->
         ∀ v : SmtValue,
           __smtx_typeof_value v = __eo_to_smt_type xT ->
-          __smtx_value_canonical M₀.usortCard v = true ->
+          __smtx_value_canonical M₀.usortDom v = true ->
           __smtx_model_eval
               (native_model_push N sx (__eo_to_smt_type xT) v)
               (__eo_to_smt F) = SmtValue.Boolean true) ->
@@ -2197,7 +2197,7 @@ private theorem conj_ctor_inst_from_values_aux
       (∀ j, j < args.length ->
         __smtx_typeof_value args[j]! =
           __smtx_typeof (__eo_to_smt (conjAbsorbed rel)[j]!)) ->
-      (∀ u ∈ args, __smtx_value_canonical M.usortCard u = true) ->
+      (∀ u ∈ args, __smtx_value_canonical M.usortDom u = true) ->
       __smtx_apply_head_value (__smtx_model_eval M (__eo_to_smt c)) =
         SmtValue.DtCons s (__eo_to_smt_datatype_decl d) i ->
       v = vsmMkSpine (__smtx_model_eval M (__eo_to_smt c)) args ->
@@ -2261,7 +2261,7 @@ private theorem conj_ctor_inst_from_values_aux
             (__eo_to_smt (Term.Var (Term.String sy) Ty)) at huTyRaw
           rw [hVarTy] at huTyRaw
           exact huTyRaw
-        have huCanon : __smtx_value_canonical M.usortCard u = true :=
+        have huCanon : __smtx_value_canonical M.usortDom u = true :=
           hCanon u (by simp)
         have huNN : u ≠ SmtValue.NotValue := by
           intro hu
@@ -2450,7 +2450,7 @@ theorem conj_ctor_inst_from_values
       (∀ j, j < args.length ->
         __smtx_typeof_value args[j]! =
           __smtx_typeof (__eo_to_smt (conjAbsorbed rel)[j]!)) ->
-      (∀ u ∈ args, __smtx_value_canonical M.usortCard u = true) ->
+      (∀ u ∈ args, __smtx_value_canonical M.usortDom u = true) ->
       __smtx_apply_head_value
           (__smtx_model_eval M (__eo_to_smt (Term.DtCons s d i))) =
         SmtValue.DtCons s (__eo_to_smt_datatype_decl d) i ->
@@ -2800,7 +2800,7 @@ theorem split_forward_nondatatype
     (hH : ∀ N, ForallInstantiationModel M ys N ->
       ∀ v : SmtValue,
         __smtx_typeof_value v = __eo_to_smt_type xT ->
-        __smtx_value_canonical M.usortCard v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval
             (native_model_push N sx (__eo_to_smt_type xT) v)
             (__eo_to_smt F) = SmtValue.Boolean true) :
@@ -2891,7 +2891,7 @@ theorem split_forward_chain
     (hH : ∀ N, ForallInstantiationModel M ys N ->
       ∀ v : SmtValue,
         __smtx_typeof_value v = __eo_to_smt_type xT ->
-        __smtx_value_canonical M.usortCard v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval
             (native_model_push N sx (__eo_to_smt_type xT) v)
             (__eo_to_smt F) = SmtValue.Boolean true) :
@@ -3136,7 +3136,7 @@ theorem split_backward
   | cons hWfX' hvTy hvCanon hTailInst =>
     obtain ⟨N₀, w, hN₀, hwTy, hwCanon, hN⟩ :=
       inst_rebase_push_last sx (__eo_to_smt_type xT) hvTy hvCanon hTailInst
-    have hN₀Card : N₀.usortCard = M.usortCard := forallInstantiationModel_usortCard hN₀
+    have hN₀Card : N₀.usortDom = M.usortDom := forallInstantiationModel_usortDom hN₀
     by_cases hDt : ∃ s d, xT = Term.DatatypeType s d
     · obtain ⟨sD, dD, rfl⟩ := hDt
       have hReserved := datatype_name_not_reserved_of_type_wf sD dD hWfX
@@ -3256,7 +3256,7 @@ theorem split_backward
         rw [hRootTo]
         exact hW
       have hArgsCanon' : ∀ a ∈ args,
-          __smtx_value_canonical M.usortCard a = true := by
+          __smtx_value_canonical M.usortDom a = true := by
         intro a ha
         apply hArgsCanon a
         have hArgs : vsmArgs w = args := by
@@ -3386,10 +3386,10 @@ theorem split_backward
               rw [hW, vsmArgs_vsmMkSpine]
               rfl
             obtain ⟨hRootCanon, hArgsCanon⟩ := vsm_canonical_spine w hwCanon
-            have huCanon : __smtx_value_canonical M.usortCard u = true :=
+            have huCanon : __smtx_value_canonical M.usortDom u = true :=
               hArgsCanon u (by rw [hArgsView]; simp)
             have hRestCanon : ∀ a ∈ rest,
-                __smtx_value_canonical M.usortCard a = true := by
+                __smtx_value_canonical M.usortDom a = true := by
               intro a ha
               exact hArgsCanon a (by rw [hArgsView]; simp [ha])
             let tailRoot := SmtValue.DtCons
@@ -3417,7 +3417,7 @@ theorem split_backward
               rw [show tailVal = vsmMkSpine tailRoot rest from rfl,
                 hTailValTyRaw, hRestLen,
                 qds_dtc_full_arity (native_string_lit "@Tuple") tailDD c]
-            have hTailValCanon : __smtx_value_canonical M.usortCard tailVal = true := by
+            have hTailValCanon : __smtx_value_canonical M.usortDom tailVal = true := by
               apply vsm_canonical_of_spine rest tailRoot
               · rfl
               · exact hRestCanon

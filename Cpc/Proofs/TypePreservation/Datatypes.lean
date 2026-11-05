@@ -1181,7 +1181,7 @@ theorem typeof_apply_non_none_cases
 theorem typeof_value_model_eval_apply_fun
     (M : SmtModel)
     (hM : model_wf M)
-    {fid : native_String}
+    {fid : ModelId}
     {i : SmtValue}
     {A B : SmtType}
     (hA : A ≠ SmtType.None)

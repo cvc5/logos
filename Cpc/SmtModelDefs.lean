@@ -35,11 +35,11 @@ inductive SmtValue : Type where
   | Real : native_Real -> SmtValue
   | Binary : native_Int -> native_Int -> SmtValue
   | Map : SmtMap -> SmtValue
-  | Fun : native_String -> SmtType -> SmtType -> SmtValue
+  | Fun : ModelId -> SmtType -> SmtType -> SmtValue
   | Set : SmtMap -> SmtValue
   | Seq : SmtSeq -> SmtValue
   | Char : native_Char -> SmtValue
-  | UValue : native_Nat -> native_Nat -> SmtValue
+  | UValue : native_Nat -> ModelId -> SmtValue
   | RegLan : SmtRegLan -> SmtValue
   | DtCons : native_String -> SmtDatatypeDecl -> native_Nat -> SmtValue
   | Apply : SmtValue -> SmtValue -> SmtValue

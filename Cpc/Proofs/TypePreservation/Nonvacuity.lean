@@ -5,7 +5,7 @@ import all Cpc.Proofs.TypePreservation.Model
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -26,11 +26,8 @@ noncomputable def default_typed_model_of
           Classical.choose (hCan k.ty hWF)
         else
           SmtValue.NotValue
-      nativeFuns := fun k =>
-        match k.ty with
-        | SmtType.FunType _ U => fun _ => __smtx_type_default U
-        | _ => fun _ => SmtValue.NotValue
-      usortCard := uc }
+      nativeFuns := fun _ _ U _ => __smtx_type_default U
+      usortDom := uc }
 
 private theorem default_typed_model_of_native_fun_typed
     (hCan :
@@ -50,7 +47,7 @@ private theorem default_typed_model_of_native_fun_typed
   · simp [native_eval_fun_apply, default_typed_model_of, hDefaultId, hDefault.1,
       hDefaultCan]
   · simp [native_eval_fun_apply, model_fun_lookup,
-      default_typed_model_of, model_key, hDefaultId, hDefault.1, hDefaultCan]
+      default_typed_model_of, hDefaultId, hDefault.1, hDefaultCan]
 
 /--
 Reduces nonvacuity of total typed models to the canonical-inhabitant theorem
@@ -75,12 +72,16 @@ theorem exists_total_typed_model_of_canonical_type_inhabited
         using hSpec.2
     · exact default_typed_model_of_native_fun_typed hCan
 
-/-- Every uninterpreted sort of `default_typed_model` is infinite. -/
-def default_usort_card : native_Nat -> native_Nat := fun _ => native_nat_zero
+/-- Every uninterpreted sort of `default_typed_model` has the size of the reals. -/
+def default_usort_dom : SmtUSortDom := fun _ =>
+  { dom := Set.univ
+    zero_mem := Set.mem_univ _
+    infinite_unbounded := fun _ n =>
+      ⟨(n : ModelId), Set.mem_univ _, le_abs_self _⟩ }
 
 /-- Choice-based model that returns a canonical inhabitant for every well-formed SMT type. -/
 noncomputable def default_typed_model : SmtModel :=
-  default_typed_model_of (uc := default_usort_card) canonical_type_inhabited_of_type_wf
+  default_typed_model_of (uc := default_usort_dom) canonical_type_inhabited_of_type_wf
 
 /-- Shows that `default_typed_model` is total and type-correct on every well-formed SMT type. -/
 theorem default_typed_model_total_typed :
@@ -91,15 +92,15 @@ theorem default_typed_model_total_typed :
   · intro isVar s T hT
     simp [default_typed_model_of, hT,
       (Classical.choose_spec
-        (canonical_type_inhabited_of_type_wf (uc := default_usort_card) T hT)).1]
+        (canonical_type_inhabited_of_type_wf (uc := default_usort_dom) T hT)).1]
   · constructor
     · intro isVar s T hT
       have hSpec := Classical.choose_spec
-        (canonical_type_inhabited_of_type_wf (uc := default_usort_card) T hT)
+        (canonical_type_inhabited_of_type_wf (uc := default_usort_dom) T hT)
       simpa [default_typed_model_of, hT, value_canonical]
         using hSpec.2
     · exact default_typed_model_of_native_fun_typed
-        (uc := default_usort_card) canonical_type_inhabited_of_type_wf
+        (uc := default_usort_dom) canonical_type_inhabited_of_type_wf
 
 /-- Constructs a total typed SMT model. -/
 theorem exists_total_typed_model :

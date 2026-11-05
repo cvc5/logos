@@ -10,7 +10,7 @@ import all Cpc.Proofs.TypePreservation.Common
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -956,19 +956,19 @@ private theorem tp_native_eval_tchoice_canonical
     (s : native_String)
     (T : SmtType)
     (body : SmtTerm) :
-    value_canonical M.usortCard (native_eval_choice M s T body) := by
+    value_canonical M.usortDom (native_eval_choice M s T body) := by
   classical
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical M.usortCard v = true ∧
+          __smtx_value_canonical M.usortDom v = true ∧
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
-  · have hCan : value_canonical M.usortCard (Classical.choose hSat) := by
+  · have hCan : value_canonical M.usortDom (Classical.choose hSat) := by
       simpa [value_canonical] using (Classical.choose_spec hSat).2.1
     simpa [hSat] using hCan
   · by_cases hTy :
-        ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical M.usortCard v
-    · have hCan : value_canonical M.usortCard (Classical.choose hTy) := by
+        ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical M.usortDom v
+    · have hCan : value_canonical M.usortDom (Classical.choose hTy) := by
         simpa [value_canonical] using (Classical.choose_spec hTy).2
       simpa [hSat, hTy] using hCan
     · simpa [hSat, hTy] using value_canonical_notValue
@@ -1052,7 +1052,7 @@ private theorem supported_type_preservation
         (supported_type_preservation M hM _ ht3 hs3)
   | map_diff ht1 hs1 ht2 hs2 hDefault =>
       exact typeof_value_model_eval_map_diff M _ _ ht
-        (fun {A} hA => (hDefault (A := A) (uc := M.usortCard) hA).1)
+        (fun {A} hA => (hDefault (A := A) (uc := M.usortDom) hA).1)
         (supported_type_preservation M hM _ ht1 hs1)
         (supported_type_preservation M hM _ ht2 hs2)
   | seq_diff ht1 hs1 ht2 hs2 =>
@@ -1077,7 +1077,7 @@ private theorem supported_type_preservation
       have hWf : __smtx_type_wf T = true := bind_binder_type_wf_of_non_none ht
       have hx1ty : __smtx_typeof_value (__smtx_model_eval M x1) = __smtx_typeof x1 :=
         supported_type_preservation M hM x1 ht1 hs1
-      have hx1canon : value_canonical M.usortCard (__smtx_model_eval M x1) :=
+      have hx1canon : value_canonical M.usortDom (__smtx_model_eval M x1) :=
         canonical_of_supported M hM x1 ht1 hs1
       have hM' : model_wf (native_model_push M s T (__smtx_model_eval M x1)) :=
         model_total_typed_push hM s T (__smtx_model_eval M x1) hWf (hx1ty.trans hTx1) hx1canon
@@ -1548,7 +1548,7 @@ private theorem canonical_of_supported
     (t : SmtTerm)
     (ht : term_has_non_none_type t)
     (hs : supported_preservation_term t) :
-    value_canonical M.usortCard (__smtx_model_eval M t) := by
+    value_canonical M.usortDom (__smtx_model_eval M t) := by
   cases hs
   case bind s T x1 x2 hbt hs1 hs2 =>
       have ht1 : term_has_non_none_type x1 := bind_arg1_non_none_of_non_none ht
@@ -1557,7 +1557,7 @@ private theorem canonical_of_supported
       have hWf : __smtx_type_wf T = true := bind_binder_type_wf_of_non_none ht
       have hx1ty : __smtx_typeof_value (__smtx_model_eval M x1) = __smtx_typeof x1 :=
         supported_type_preservation M hM x1 ht1 hs1
-      have hx1canon : value_canonical M.usortCard (__smtx_model_eval M x1) :=
+      have hx1canon : value_canonical M.usortDom (__smtx_model_eval M x1) :=
         canonical_of_supported M hM x1 ht1 hs1
       have hM' : model_wf (native_model_push M s T (__smtx_model_eval M x1)) :=
         model_total_typed_push hM s T (__smtx_model_eval M x1) hWf (hx1ty.trans hTx1) hx1canon

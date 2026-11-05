@@ -9,7 +9,7 @@ import all Cpc.Proofs.Canonical.TypeDefaultBasic
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm

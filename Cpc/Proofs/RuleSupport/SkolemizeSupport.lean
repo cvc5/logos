@@ -74,7 +74,7 @@ Proof plan (mirrors `Instantiate.lean` where possible):
 
 namespace SkolemizeRule
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 /-- SMT-level keys of a reflected binder environment. -/
 abbrev smtKeys (vars : List EoVarKey) : List SmtVarKey :=
@@ -719,7 +719,7 @@ theorem texists_true_push_tchoice
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical N.usortCard v = true ∧
+          __smtx_value_canonical N.usortDom v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true
   · have hChoice :
@@ -735,18 +735,18 @@ theorem tchoice_typed_canonical_of_wf
     (N : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm)
     (hWf : __smtx_type_wf T = true) :
     __smtx_typeof_value (native_eval_choice N s T body) = T ∧
-      __smtx_value_canonical N.usortCard (native_eval_choice N s T body) = true := by
+      __smtx_value_canonical N.usortDom (native_eval_choice N s T body) = true := by
   classical
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical N.usortCard v = true ∧
+          __smtx_value_canonical N.usortDom v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true
   · rw [dite_eq_left hSat]
     exact ⟨(Classical.choose_spec hSat).1, (Classical.choose_spec hSat).2.1⟩
   · have hTy : ∃ v : SmtValue,
-        __smtx_typeof_value v = T ∧ __smtx_value_canonical N.usortCard v := by
+        __smtx_typeof_value v = T ∧ __smtx_value_canonical N.usortDom v := by
       rcases canonical_type_inhabited_of_type_wf T hWf with ⟨v, hvTy, hvCan⟩
       exact ⟨v, hvTy, by simpa using canonical_bool_of_canonical hvCan⟩
     rw [dite_eq_right hSat, dite_eq_left hTy]
@@ -757,10 +757,10 @@ theorem tchoice_typed_canonical_of_wf
 only at values passing the evaluator's guards. -/
 theorem native_eval_tchoice_eq_of_body_eval_eq_diff_typed
     {M N : SmtModel} {s : native_String} {T : SmtType} {bodyM bodyN : SmtTerm}
-    (hCard : M.usortCard = N.usortCard)
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical M.usortCard v = true ->
+      __smtx_value_canonical M.usortDom v = true ->
       __smtx_model_eval (native_model_push M s T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     native_eval_choice M s T bodyM = native_eval_choice N s T bodyN := by
@@ -769,12 +769,12 @@ theorem native_eval_tchoice_eq_of_body_eval_eq_diff_typed
   have hPredEq :
       (fun v : SmtValue =>
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical M.usortCard v = true ∧
+          __smtx_value_canonical M.usortDom v = true ∧
           __smtx_model_eval (native_model_push M s T v) bodyM =
             SmtValue.Boolean true) =
       (fun v : SmtValue =>
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical M.usortCard v = true ∧
+          __smtx_value_canonical M.usortDom v = true ∧
           __smtx_model_eval (native_model_push N s T v) bodyN =
             SmtValue.Boolean true) := by
     funext v
@@ -1086,7 +1086,7 @@ theorem existsList_eval_congr
       rw [eval_exists_eq P s (__eo_to_smt_type T) (smtExistsList vs B1),
         eval_exists_eq Q s (__eo_to_smt_type T) (smtExistsList vs B2)]
       apply InstantiateRule.native_eval_texists_eq_of_body_eval_eq_diff_typed
-        (hMP.usortCard.symm.trans hMQ.usortCard)
+        (hMP.usortDom.symm.trans hMQ.usortDom)
       intro w hwTy hwCan
       have hPushP : model_wf
           (native_model_push P s (__eo_to_smt_type T) w) :=
@@ -1096,7 +1096,7 @@ theorem existsList_eval_congr
           (native_model_push Q s (__eo_to_smt_type T) w) :=
         model_total_typed_push hQ s _ w hWfHead hwTy
           (canonical_of_canonical_bool
-            ((hMP.usortCard.symm.trans hMQ.usortCard) ▸ hwCan))
+            ((hMP.usortDom.symm.trans hMQ.usortDom) ▸ hwCan))
       refine ih ((s, __eo_to_smt_type T) :: E)
         (native_model_push P s (__eo_to_smt_type T) w)
         (native_model_push Q s (__eo_to_smt_type T) w)
@@ -1134,7 +1134,7 @@ theorem existsList_eval_congr
 
 private theorem globals_symm {M N : SmtModel}
     (h : model_agrees_on_globals M N) : model_agrees_on_globals N M :=
-  ⟨fun s T => (h.1 s T).symm, fun f T U => (h.2 f T U).symm, h.usortCard.symm⟩
+  ⟨fun s T => (h.1 s T).symm, fun f T U => (h.2 f T U).symm, h.usortDom.symm⟩
 
 /-- The head choice of a skolem agrees between any pin-respecting model pair. -/
 private theorem qskol_head_choice_eq
@@ -1157,7 +1157,7 @@ private theorem qskol_head_choice_eq
     native_eval_choice P s (__eo_to_smt_type T) (smtExistsList vs B) =
       native_eval_choice L s (__eo_to_smt_type T) (smtExistsList vs H) := by
   apply native_eval_tchoice_eq_of_body_eval_eq_diff_typed
-    (hMP.usortCard.symm.trans hML.usortCard)
+    (hMP.usortDom.symm.trans hML.usortDom)
   intro w hwTy hwCan
   refine existsList_eval_congr M pins B H vs [(s, __eo_to_smt_type T)]
     (native_model_push P s (__eo_to_smt_type T) w)
@@ -1166,7 +1166,7 @@ private theorem qskol_head_choice_eq
       (canonical_of_canonical_bool hwCan))
     (model_total_typed_push hL s _ w hWfHead hwTy
       (canonical_of_canonical_bool
-        ((hMP.usortCard.symm.trans hML.usortCard) ▸ hwCan)))
+        ((hMP.usortDom.symm.trans hML.usortDom) ▸ hwCan)))
     (model_agrees_on_globals_trans hMP
       (model_agrees_on_globals_push P s _ w))
     (model_agrees_on_globals_trans hML
@@ -1330,7 +1330,7 @@ theorem qskol_eval_eq_chainValue (M : SmtModel) (H : SmtTerm) :
               Q
               (model_total_typed_push hP s _ _ hWfHead hCTy
                 (canonical_of_canonical_bool
-                  (by rw [← hMP.usortCard, hML.usortCard]; exact hCCan)))
+                  (by rw [← hMP.usortDom, hML.usortDom]; exact hCCan)))
               hQ
               (model_agrees_on_globals_trans hMP
                 (model_agrees_on_globals_push P s _ _))

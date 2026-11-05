@@ -13,7 +13,7 @@ public import Cpc.Proofs.TypePreservation.SeqStringRegex
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval

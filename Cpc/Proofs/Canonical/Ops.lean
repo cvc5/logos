@@ -9,7 +9,7 @@ import all Cpc.Proofs.TypePreservation.Datatypes
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -190,12 +190,12 @@ theorem model_eval_qdiv_total_canonical
 theorem model_eval_apply_fun_canonical
     (M : SmtModel)
     (hM : model_wf M)
-    (fid : native_String)
+    (fid : ModelId)
     (A B : SmtType)
     (x : SmtValue)
     (hxTy : __smtx_typeof_value x = A)
     (hFunWF : __smtx_type_wf (SmtType.FunType A B) = true) :
-    value_canonical M.usortCard (__smtx_model_eval_apply M (SmtValue.Fun fid A B) x) := by
+    value_canonical M.usortDom (__smtx_model_eval_apply M (SmtValue.Fun fid A B) x) := by
   by_cases hxNot : x = SmtValue.NotValue
   · subst x
     have hAWF : __smtx_type_wf A = true := (fun_type_wf_components_of_wf hFunWF).1
@@ -203,7 +203,7 @@ theorem model_eval_apply_fun_canonical
     simp [__smtx_typeof_value] at hxTy
     exact False.elim (hANN hxTy.symm)
   · have hCan :
-        value_canonical M.usortCard (native_eval_fun_apply M fid A B x) :=
+        value_canonical M.usortDom (native_eval_fun_apply M fid A B x) :=
       (model_total_typed_native_fun_typed hM fid A B x hFunWF hxTy).2
     have hApply :
         __smtx_model_eval_apply M (SmtValue.Fun fid A B) x =
@@ -213,7 +213,7 @@ theorem model_eval_apply_fun_canonical
 
 private theorem model_eval_apply_not_value_canonical
     (M : SmtModel) (x : SmtValue) :
-    value_canonical M.usortCard (__smtx_model_eval_apply M SmtValue.NotValue x) := by
+    value_canonical M.usortDom (__smtx_model_eval_apply M SmtValue.NotValue x) := by
   cases x <;>
     simp [__smtx_model_eval_apply, value_canonical,
       __smtx_value_canonical]
@@ -226,7 +226,7 @@ theorem model_eval_apply_lookup_fun_canonical
     (x : SmtValue)
     (hFunWF : __smtx_type_wf (SmtType.FunType A B) = true)
     (hxTy : __smtx_typeof_value x = A) :
-    value_canonical M.usortCard
+    value_canonical M.usortDom
       (__smtx_model_eval_apply M
         (native_model_lookup M s (SmtType.FunType A B)) x) := by
   have hLookupTy :
@@ -234,7 +234,7 @@ theorem model_eval_apply_lookup_fun_canonical
         SmtType.FunType A B :=
     model_total_typed_lookup hM s (SmtType.FunType A B) hFunWF
   have hLookupCan :
-      value_canonical M.usortCard (native_model_lookup M s (SmtType.FunType A B)) :=
+      value_canonical M.usortDom (native_model_lookup M s (SmtType.FunType A B)) :=
     model_total_typed_lookup_canonical hM s (SmtType.FunType A B) hFunWF
   rcases fun_value_canonical hLookupTy with ⟨fid, hLookupEq⟩
   rw [hLookupEq] at hLookupCan ⊢
@@ -252,9 +252,9 @@ theorem model_eval_apply_canonical
       __smtx_typeof_value f = SmtType.FunType A B ->
         __smtx_type_wf (SmtType.FunType A B) = true)
     (hxTy : __smtx_typeof_value x = A)
-    (hf : value_canonical M.usortCard f)
-    (hx : value_canonical M.usortCard x) :
-    value_canonical M.usortCard (__smtx_model_eval_apply M f x) := by
+    (hf : value_canonical M.usortDom f)
+    (hx : value_canonical M.usortDom x) :
+    value_canonical M.usortDom (__smtx_model_eval_apply M f x) := by
   cases hHead with
   | inl hFun =>
       rcases fun_value_canonical hFun with ⟨fid, rfl⟩
@@ -1571,18 +1571,18 @@ theorem model_eval_seq_nth_wrong_canonical
     (hMapWF :
       __smtx_type_wf
         (SmtType.Map (SmtType.Seq T) (SmtType.Map SmtType.Int T)) = true) :
-    value_canonical M.usortCard (__smtx_seq_nth_wrong M s n (SmtType.Seq T)) := by
+    value_canonical M.usortDom (__smtx_seq_nth_wrong M s n (SmtType.Seq T)) := by
   let mapTy := SmtType.Map (SmtType.Seq T) (SmtType.Map SmtType.Int T)
-  have hLookup : value_canonical M.usortCard
+  have hLookup : value_canonical M.usortDom
         (native_model_lookup M native_oob_seq_nth_id mapTy) :=
     model_total_typed_lookup_canonical hM native_oob_seq_nth_id mapTy
       (by simpa [mapTy] using hMapWF)
-  have hFirst : value_canonical M.usortCard
+  have hFirst : value_canonical M.usortDom
       (__smtx_model_eval_select
         (native_model_lookup M native_oob_seq_nth_id mapTy)
         (SmtValue.Seq s)) :=
     model_eval_select_canonical hLookup
-  have hSecond : value_canonical M.usortCard
+  have hSecond : value_canonical M.usortDom
       (__smtx_model_eval_select
         (__smtx_model_eval_select
           (native_model_lookup M native_oob_seq_nth_id mapTy)
@@ -1620,18 +1620,18 @@ theorem model_eval_seq_nth_canonical
     (M : SmtModel)
     (hM : model_wf M)
     {v i : SmtValue}
-    (hv : value_canonical M.usortCard v)
+    (hv : value_canonical M.usortDom v)
     (T : SmtType)
     (hvTy : __smtx_typeof_value v = SmtType.Seq T)
     (hMapWF :
       __smtx_type_wf
         (SmtType.Map (SmtType.Seq T) (SmtType.Map SmtType.Int T)) = true) :
-    value_canonical M.usortCard (__smtx_seq_nth M v i) := by
+    value_canonical M.usortDom (__smtx_seq_nth M v i) := by
   cases v <;> cases i <;>
     try
       simpa [__smtx_seq_nth] using value_canonical_notValue
   case Seq.Numeral s n =>
-    have hs : __smtx_seq_canonical M.usortCard s = true := by
+    have hs : __smtx_seq_canonical M.usortDom s = true := by
       simpa [value_canonical, __smtx_value_canonical] using hv
     have hsTy : __smtx_typeof_seq_value s = SmtType.Seq T := by
       simpa [__smtx_typeof_value] using hvTy
@@ -1703,7 +1703,7 @@ theorem model_eval_dt_sel_wrong_canonical
           (SmtType.Map SmtType.Int
             (SmtType.Map (SmtType.Datatype s d) (__smtx_ret_typeof_sel s d n m)))) = true)
     (hvTy : __smtx_typeof_value v = SmtType.Datatype s d) :
-    value_canonical M.usortCard
+    value_canonical M.usortDom
       (__smtx_model_eval_apply M
         (native_model_lookup M (native_wrong_apply_sel_id n m)
           (SmtType.FunType (SmtType.Datatype s d) (__smtx_ret_typeof_sel s d n m)))
@@ -1726,8 +1726,8 @@ theorem model_eval_dt_sel_canonical
           (SmtType.Map SmtType.Int
             (SmtType.Map (SmtType.Datatype s d) (__smtx_ret_typeof_sel s d n m)))) = true)
     (hvTy : __smtx_typeof_value v = SmtType.Datatype s d)
-    (hv : value_canonical M.usortCard v) :
-    value_canonical M.usortCard (__smtx_model_eval_dt_sel M s d n m v) := by
+    (hv : value_canonical M.usortDom v) :
+    value_canonical M.usortDom (__smtx_model_eval_dt_sel M s d n m v) := by
   unfold __smtx_model_eval_dt_sel
   cases hEq : native_veq (__smtx_apply_head_value v) (SmtValue.DtCons s d n)
   · simpa [native_ite, hEq] using

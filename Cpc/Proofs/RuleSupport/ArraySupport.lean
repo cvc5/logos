@@ -7,7 +7,7 @@ import all Cpc.Proofs.Canonical.Fresh
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval
@@ -677,8 +677,8 @@ theorem map_diff_selects_model_eval_eq_false_of_default_eq
     (A B : SmtType)
     (hm1Ty : __smtx_typeof_map_value m1 = SmtType.Map A B)
     (hm2Ty : __smtx_typeof_map_value m2 = SmtType.Map A B)
-    (hm1Can : __smtx_map_canonical M.usortCard m1 = true)
-    (hm2Can : __smtx_map_canonical M.usortCard m2 = true)
+    (hm1Can : __smtx_map_canonical M.usortDom m1 = true)
+    (hm2Can : __smtx_map_canonical M.usortDom m2 = true)
     (hDefaultEq : __smtx_map_get_default m1 = __smtx_map_get_default m2)
     (hBNeRegLan : B ≠ SmtType.RegLan)
     (hNe : __smtx_model_eval_eq (SmtValue.Map m1) (SmtValue.Map m2) =
@@ -698,7 +698,7 @@ theorem map_diff_selects_model_eval_eq_false_of_default_eq
   by_cases hDiff :
       ∃ i : SmtValue,
         __smtx_typeof_value i = A ∧
-          __smtx_value_canonical M.usortCard i = true ∧
+          __smtx_value_canonical M.usortDom i = true ∧
             native_veq (__smtx_map_lookup m1 i)
               (__smtx_map_lookup m2 i) = false
   · have hSpec := Classical.choose_spec hDiff
@@ -726,7 +726,7 @@ theorem map_diff_selects_model_eval_eq_false_of_default_eq
         ∀ v : SmtValue, __smtx_map_lookup m1 v = __smtx_map_lookup m2 v := by
       intro v
       by_cases hv :
-          __smtx_typeof_value v = A ∧ __smtx_value_canonical M.usortCard v = true
+          __smtx_typeof_value v = A ∧ __smtx_value_canonical M.usortDom v = true
       · have hNotFalse :
             native_veq (__smtx_map_lookup m1 v)
               (__smtx_map_lookup m2 v) ≠ false := by
@@ -753,8 +753,8 @@ theorem map_diff_selects_model_eval_eq_false
     (A B : SmtType)
     (hm1Ty : __smtx_typeof_map_value m1 = SmtType.Map A B)
     (hm2Ty : __smtx_typeof_map_value m2 = SmtType.Map A B)
-    (hm1Can : __smtx_map_canonical M.usortCard m1 = true)
-    (hm2Can : __smtx_map_canonical M.usortCard m2 = true)
+    (hm1Can : __smtx_map_canonical M.usortDom m1 = true)
+    (hm2Can : __smtx_map_canonical M.usortDom m2 = true)
     (hAInh : __smtx_inhabited_type A = true)
     (hARec : __smtx_type_wf_rec A = true)
     (hBNeRegLan : B ≠ SmtType.RegLan)
@@ -775,7 +775,7 @@ theorem map_diff_selects_model_eval_eq_false
   by_cases hDiff :
       ∃ i : SmtValue,
         __smtx_typeof_value i = A ∧
-          __smtx_value_canonical M.usortCard i = true ∧
+          __smtx_value_canonical M.usortDom i = true ∧
             native_veq (__smtx_map_lookup m1 i)
               (__smtx_map_lookup m2 i) = false
   · have hSpec := Classical.choose_spec hDiff

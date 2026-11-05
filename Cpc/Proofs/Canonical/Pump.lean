@@ -7,7 +7,7 @@ public section
 
 noncomputable section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -38,27 +38,50 @@ bounded body would have been added (monotonicity), and conclude.
 
 -- === uninterpreted sorts ===
 
-/-- A value of an uninterpreted sort is canonical when it is within the sort's
-cardinality, where `0` means the sort is infinite. -/
-theorem smtx_value_canonical_uvalue_iff (u n : native_Nat) :
-    __smtx_value_canonical uc (SmtValue.UValue u n) = true ↔ (uc u = 0 ∨ n < uc u) := by
-  by_cases h0 : uc u = 0 <;> by_cases h1 : n < uc u <;>
-    simp [__smtx_value_canonical, native_usort_card, native_or, native_nateq,
-      native_natlt, h0, h1]
+/-- A value of an uninterpreted sort is canonical when its identifier is in the
+sort's domain. -/
+theorem smtx_value_canonical_uvalue_iff (u : native_Nat) (r : ModelId) :
+    __smtx_value_canonical uc (SmtValue.UValue u r) = true ↔ r ∈ (uc u).dom := by
+  simp [__smtx_value_canonical, native_usort_mem]
 
-/-- An uninterpreted sort is finite exactly when its cardinality is not `0`. -/
+/-- An uninterpreted sort is finite exactly when its domain is. -/
 theorem smtx_is_finite_type_usort_iff (u : native_Nat) :
-    __smtx_is_finite_type uc (SmtType.USort u) = true ↔ uc u ≠ 0 := by
-  by_cases h0 : uc u = 0 <;>
-    simp [__smtx_is_finite_type, __smtx_type_bounded, native_usort_card, native_ite,
-      native_not, native_nateq, h0]
+    __smtx_is_finite_type uc (SmtType.USort u) = true ↔ (uc u).dom.Finite := by
+  simp [__smtx_is_finite_type, __smtx_type_bounded, native_usort_finite, native_ite]
 
-/-- An uninterpreted sort has one element exactly when its cardinality is `1`. -/
+/-- An uninterpreted sort has one element exactly when its domain is `{0}`. -/
 theorem smtx_is_unit_type_usort_iff (u : native_Nat) :
-    __smtx_is_unit_type uc (SmtType.USort u) = true ↔ uc u = 1 := by
-  by_cases h1 : uc u = 1 <;>
-    simp [__smtx_is_unit_type, __smtx_type_bounded, native_usort_card, native_ite,
-      native_nateq, h1]
+    __smtx_is_unit_type uc (SmtType.USort u) = true ↔ (uc u).dom = {0} := by
+  simp [__smtx_is_unit_type, __smtx_type_bounded, native_usort_unit, native_ite]
+
+/-- A sort that is not a unit has a value other than its default. -/
+theorem usort_exists_nonzero_of_not_unit (u : native_Nat)
+    (hNonUnit : __smtx_is_unit_type uc (SmtType.USort u) = false) :
+    ∃ r ∈ (uc u).dom, r ≠ 0 := by
+  by_contra hNone
+  have hEq : (uc u).dom = {0} := by
+    ext r
+    constructor
+    · intro hr
+      by_contra hne
+      exact hNone ⟨r, hr, hne⟩
+    · intro hr
+      rw [Set.mem_singleton_iff.mp hr]
+      exact (uc u).zero_mem
+  simp [(smtx_is_unit_type_usort_iff u).mpr hEq] at hNonUnit
+
+/-- The non-default witness of a non-unit uninterpreted sort. -/
+theorem usort_nondefault_witness (u : native_Nat)
+    (hNonUnit : __smtx_is_unit_type uc (SmtType.USort u) = false) :
+    ∃ i : SmtValue,
+      __smtx_typeof_value i = SmtType.USort u ∧
+        __smtx_value_canonical uc i = true ∧
+          native_veq i (__smtx_type_default (SmtType.USort u)) = false := by
+  rcases usort_exists_nonzero_of_not_unit u hNonUnit with ⟨r, hr, hne⟩
+  refine ⟨SmtValue.UValue u r, ?_, ?_, ?_⟩
+  · simp [__smtx_typeof_value]
+  · exact (smtx_value_canonical_uvalue_iff u r).mpr hr
+  · simp [__smtx_type_default, native_veq, hne]
 
 -- === subset order on accumulators (via name membership) ===
 
@@ -348,7 +371,7 @@ private theorem dd_count_lt {B B' : SmtDatatypeDecl} (hSub : SubDD B B')
         · by_cases hsB' : __smtx_dd_has_dt s B' = true <;>
             simp [dd_count, hsB, hsB'] <;> omega
 
-private def StableDD (uc : native_Nat -> native_Nat) (u : native_Bool) (dd B : SmtDatatypeDecl) : Prop :=
+private def StableDD (uc : SmtUSortDom) (u : native_Bool) (dd B : SmtDatatypeDecl) : Prop :=
   EqDD (__smtx_datatype_decl_bounded_step uc u dd B) B
 
 private theorem stable_congr {u : native_Bool} {dd B B' : SmtDatatypeDecl}
@@ -702,7 +725,7 @@ theorem resolved_field_inh_wf
         exact resolved_field_inh_wf dd hDecl c hTail F hFc
 
 /-- The finiteness fixpoint of a declaration. -/
-def bounded_fix (uc : native_Nat -> native_Nat) (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
+def bounded_fix (uc : SmtUSortDom) (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
   __smtx_datatype_decl_bounded uc false dd dd SmtDatatypeDecl.nil
 
 theorem is_finite_datatype_eq (s : native_String) (dd : SmtDatatypeDecl) :
@@ -775,7 +798,7 @@ def build_spine : SmtValue -> List SmtValue -> SmtValue
   | f, [] => f
   | f, v :: vs => build_spine (SmtValue.Apply f v) vs
 
-def list_typed_canonical (uc : native_Nat -> native_Nat) : List SmtValue -> List SmtType -> Prop
+def list_typed_canonical (uc : SmtUSortDom) : List SmtValue -> List SmtType -> Prop
   | [], [] => True
   | v :: vs, U :: Us =>
       (__smtx_typeof_value v = U ∧ U ≠ SmtType.None ∧
@@ -991,7 +1014,7 @@ of the previous level (`type_large` handles ground field types structurally),
 and pads the remaining fields with defaults.
 -/
 
-private def LargeOracle (uc : native_Nat -> native_Nat) (n : Nat) : Prop :=
+private def LargeOracle (uc : SmtUSortDom) (n : Nat) : Prop :=
   ∀ (s : native_String) (dd : SmtDatatypeDecl),
     __smtx_inhabited_type (SmtType.Datatype s dd) = true →
     __smtx_type_wf_rec (SmtType.Datatype s dd) = true →
@@ -1051,18 +1074,23 @@ private theorem real_large_witness_p (minSize : Nat) :
     show minSize ≤ 1 + ⌊|(minSize : _root_.Real)|⌋₊
     simp
 
-private theorem usort_large_witness_p (u : native_Nat) (minSize : Nat)
-    (hInf : uc u = 0) :
+theorem usort_large_witness (u : native_Nat) (minSize : Nat)
+    (hInf : __smtx_is_finite_type uc (SmtType.USort u) = false) :
     ∃ i : SmtValue,
       __smtx_typeof_value i = SmtType.USort u ∧
         __smtx_value_canonical uc i = true ∧
           minSize ≤ sizeOf i := by
-  refine ⟨SmtValue.UValue u minSize, ?_, ?_, ?_⟩
+  have hDomInf : (uc u).dom.Infinite := fun hFin => by
+    simp [(smtx_is_finite_type_usort_iff u).mpr hFin] at hInf
+  rcases (uc u).infinite_unbounded hDomInf minSize with ⟨r, hr, hLe⟩
+  refine ⟨SmtValue.UValue u r, ?_, ?_, ?_⟩
   · simp [__smtx_typeof_value]
-  · exact (smtx_value_canonical_uvalue_iff u minSize).mpr (Or.inl hInf)
-  · rw [show sizeOf (SmtValue.UValue u minSize) =
-        1 + sizeOf u + sizeOf minSize by rfl]
-    simp [sizeOf]
+  · exact (smtx_value_canonical_uvalue_iff u r).mpr hr
+  · rw [show sizeOf (SmtValue.UValue u r) = 1 + sizeOf u + sizeOf r by rfl]
+    have hSize : minSize ≤ sizeOf r := by
+      show minSize ≤ ⌊|r|⌋₊
+      exact Nat.le_floor hLe
+    omega
 
 -- === large seq witnesses ===
 
@@ -1581,7 +1609,7 @@ theorem bounded_field_finite
     exact hBnd
 
 /-- The unit fixpoint of a declaration. -/
-def unit_fix (uc : native_Nat -> native_Nat) (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
+def unit_fix (uc : SmtUSortDom) (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
   __smtx_datatype_decl_bounded uc true dd dd SmtDatatypeDecl.nil
 
 theorem is_unit_datatype_eq (s : native_String) (dd : SmtDatatypeDecl) :
@@ -2253,14 +2281,7 @@ private theorem ty_nondefault
   | TypeRef s2 =>
       simp [__smtx_type_wf_rec] at _hRec
   | USort u =>
-      have hNe0 : uc u ≠ 0 := (smtx_is_finite_type_usort_iff u).mp _hFinite
-      have hNe1 : uc u ≠ 1 := fun h =>
-        by simp [(smtx_is_unit_type_usort_iff u).mpr h] at _hNonUnit
-      refine ⟨SmtValue.UValue u 1, ?_, ?_, ?_⟩
-      · simp [__smtx_typeof_value]
-      · exact (smtx_value_canonical_uvalue_iff u 1).mpr
-          (Or.inr (Nat.lt_of_le_of_ne (Nat.pos_of_ne_zero hNe0) (Ne.symm hNe1)))
-      · simp [__smtx_type_default, native_veq]
+      exact usort_nondefault_witness u _hNonUnit
   | FunType T U =>
       simp [__smtx_type_wf_rec] at _hRec
   | DtcAppType T U =>
@@ -2415,14 +2436,7 @@ private theorem finite_nonunit_nondefault
   | TypeRef s =>
       simp [__smtx_type_wf_rec] at _hRec
   | USort u =>
-      have hNe0 : uc u ≠ 0 := (smtx_is_finite_type_usort_iff u).mp _hFinite
-      have hNe1 : uc u ≠ 1 := fun h =>
-        by simp [(smtx_is_unit_type_usort_iff u).mpr h] at _hNonUnit
-      refine ⟨SmtValue.UValue u 1, ?_, ?_, ?_⟩
-      · simp [__smtx_typeof_value]
-      · exact (smtx_value_canonical_uvalue_iff u 1).mpr
-          (Or.inr (Nat.lt_of_le_of_ne (Nat.pos_of_ne_zero hNe0) (Ne.symm hNe1)))
-      · simp [__smtx_type_default, native_veq]
+      exact usort_nondefault_witness u _hNonUnit
   | FunType T U =>
       simp [__smtx_type_wf_rec] at _hRec
   | DtcAppType T U =>
@@ -2613,11 +2627,7 @@ private theorem type_large
       simp [__smtx_type_wf_rec] at hRec
   | USort u =>
       intro _ _ hInf
-      refine usort_large_witness_p u n ?_
-      by_cases h : uc u = 0
-      · exact h
-      · have hFin := (smtx_is_finite_type_usort_iff (uc := uc) u).mpr h
-        simp [hFin] at hInf
+      exact usort_large_witness u n hInf
   | FunType T U =>
       intro _hInh hRec _hInf
       simp [__smtx_type_wf_rec] at hRec

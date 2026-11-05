@@ -223,12 +223,12 @@ mutual
       return .Binary (← intOfKey kw) (← intOfKey ki)
   | .pair (.atom 5) (.pair km (.atom 0)) => return .Map (← mapOfKey km)
   | .pair (.atom 6) (.pair ks (.pair kt (.pair ku (.atom 0)))) =>
-      return .Fun (← stringOfKey ks) (← typeOfKey kt) (← typeOfKey ku)
+      return .Fun (← realOfKey ks) (← typeOfKey kt) (← typeOfKey ku)
   | .pair (.atom 7) (.pair km (.atom 0)) => return .Set (← mapOfKey km)
   | .pair (.atom 8) (.pair ks (.atom 0)) => return .Seq (← seqOfKey ks)
   | .pair (.atom 9) (.pair (.atom c) (.atom 0)) => some (.Char c)
-  | .pair (.atom 10) (.pair (.atom i) (.pair (.atom n) (.atom 0))) =>
-      some (.UValue i n)
+  | .pair (.atom 10) (.pair (.atom i) (.pair kr (.atom 0))) =>
+      return .UValue i (← realOfKey kr)
   | .pair (.atom 11) (.pair kr (.atom 0)) => return .RegLan (← regLanOfKey kr)
   | .pair (.atom 12) (.pair ks (.pair kdd (.pair (.atom n) (.atom 0)))) =>
       return .DtCons (← stringOfKey ks) (← datatypeDeclOfKey kdd) n
