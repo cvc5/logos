@@ -30,12 +30,13 @@ path = ".."
 
 [[lean_lib]]
 name = "CpcVerification"
+# Proof namespaces contain submodules without a Proofs.lean umbrella module.
 roots = []
-globs = ["Cpc.Spec", "Cpc.SmtReal", "Cpc.SmtModelDefs", "Cpc.SmtValueOrder", "Cpc.SmtModel", "Cpc.ApiChecks", "Cpc.ApiCorrect", "Cpc.Native.Correct", "Cpc.Proofs.*"]
+globs = ["Cpc.Spec", "Cpc.SmtReal", "Cpc.SmtModelDefs", "Cpc.SmtValueOrder", "Cpc.SmtModel", "Cpc.ApiChecks", "Cpc.ApiCorrect", "Cpc.Native.Correct", "Cpc.Proofs.+"]
 moreLeanArgs = ["-DmaxHeartbeats=10000000", "-DwarningAsError=true"]
 
 [[lean_lib]]
 name = "CpcMiniVerification"
 roots = []
-globs = ["CpcMini.Spec", "CpcMini.SmtReal", "CpcMini.SmtModelDefs", "CpcMini.SmtValueOrder", "CpcMini.SmtModel", "CpcMini.Proofs.*"]
+globs = ["CpcMini.Spec", "CpcMini.SmtReal", "CpcMini.SmtModelDefs", "CpcMini.SmtValueOrder", "CpcMini.SmtModel", "CpcMini.Proofs.+"]
 moreLeanArgs = ["-DwarningAsError=true"]
