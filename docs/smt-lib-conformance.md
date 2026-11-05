@@ -4,9 +4,9 @@ Logos's soundness theorem is stated against `Cpc/SmtModel.lean`, a formalization
 of SMT-LIB semantics written independently of the checker. It parts company with
 SMT-LIB in five ways, and they are different kinds of thing:
 
-- **Narrowings.** On three standard theories — arrays, `Real`, and uninterpreted
-  sorts — the semantics admits fewer models than SMT-LIB does. These change what
-  `correct` claims, and are most of this page.
+- **Narrowings.** The semantics admits fewer models than SMT-LIB does in three
+  places: arrays, uninterpreted sorts, and uninterpreted functions of more than
+  one argument. These change what `correct` claims, and are most of this page.
 - **Extensions.** Sets and sequences are not in SMT-LIB at all, and neither are
   the auxiliary operators the semantics adds. Conformance is not defined for
   them, so nothing here is measured against the standard.
@@ -23,9 +23,9 @@ SMT-LIB in five ways, and they are different kinds of thing:
 it says about the semantics it is stated against. What the narrowings record is
 that the model class is slightly smaller than SMT-LIB's, so `correct` claims
 slightly less than the words *these assumptions are unsatisfiable* are normally
-taken to mean. Each is confined to quantified or nonlinear reasoning; on the
-quantifier-free linear fragments the two agree. The higher-order difference is
-confined to input that is not first-order, which SMT-LIB 2.6 does not have.
+taken to mean. Each takes quantifiers to reach; on quantifier-free input the two
+agree. The higher-order difference is confined to input that is not first-order,
+which SMT-LIB 2.6 does not have.
 
 ## What `correct` means, exactly
 
@@ -51,8 +51,8 @@ through, and proofs using it would be accepted.
 | narrowing | this semantics | SMT-LIB | where it bites |
 | --- | --- | --- | --- |
 | arrays are almost constant | a default plus finitely many overrides | the full function space | quantifiers over arrays or indices |
-| `Real` is the rationals | ℚ | ℝ | nonlinear real arithmetic |
-| uninterpreted sorts are infinite | one countably infinite domain per sort | any nonempty cardinality | quantified cardinality constraints |
+| uninterpreted sorts are countable | any finite size, or countably infinite | any nonempty cardinality | quantifiers forcing a sort to be as large as `Real` |
+| partial applications are countable | countably many at each function sort | one for each argument | quantifiers over a function's non-final `Real` argument |
 
 ## Arrays are almost-constant maps
 
@@ -74,45 +74,59 @@ It does not bite on quantifier-free array formulas, where a satisfiable formula
 has an almost-constant model — the same property array decision procedures are
 built on.
 
-## `Real` is interpreted as the rationals
+## Uninterpreted sorts are at most countable
 
-`SmtValue.Rational` (`Cpc/SmtModelDefs.lean`) carries a `native_Rat`, which is
-Lean's `Rat` (`Cpc/SmtEval.lean`), and it is the only numeric value at type
-`Real`. The reals of every model are therefore exactly ℚ, and quantification
-over `Real` ranges over ℚ.
-
-It bites in nonlinear arithmetic, where a solution may be irrational:
-
-```smt2
-(declare-const x Real)
-(assert (= (* x x) 2.0))
-```
-
-satisfiable in SMT-LIB, and false under every model here.
-
-It does not bite on linear real arithmetic, where a satisfiable formula always
-has a rational solution.
-
-## Uninterpreted sorts are assumed infinite
-
-A value of an uninterpreted sort is `UValue i n` for a natural `n`
-(`Cpc/SmtModelDefs.lean`), and every such value has type `USort i`
-(`__smtx_typeof` in `Cpc/SmtModel.lean`), so each uninterpreted sort is
-interpreted as a countably infinite domain. SMT-LIB allows any nonempty
-cardinality, finite included. The write-up states the assumption; nothing
-enforces or checks it.
-
-It bites on quantified cardinality constraints:
+A model chooses the size of each uninterpreted sort (`usortCard`, in
+`Cpc/SmtModel.lean`): a positive number gives a finite sort, and `0` gives a
+countably infinite one. Every such size SMT-LIB allows is available, so a
+formula bounding a sort is satisfiable here as it is there:
 
 ```smt2
 (declare-sort U 0)
-(declare-const x U) (declare-const y U) (declare-const z U)
 (assert (forall ((a U) (b U) (c U)) (or (= a b) (= a c) (= b c))))
 ```
 
-which bounds `U` at two elements: satisfiable in SMT-LIB, false under every model
-here. Quantifier-free formulas are unaffected, since a satisfiable one always has
-an infinite model.
+What is missing is the uncountable sizes. A value of a sort is `UValue i n` for a
+natural `n` (`Cpc/SmtModelDefs.lean`), so there are never more values than
+naturals, while `Real` has more than that. That bites where a formula forces a
+sort to be as large as `Real`:
+
+```smt2
+(declare-sort U 0)
+(declare-fun g (U) Real)
+(assert (forall ((r Real)) (exists ((u U)) (= (g u) r))))
+```
+
+satisfiable in SMT-LIB, taking `U` to be the reals and `g` the identity, and
+false under every model here: the image of a countable sort is countable. A
+quantifier-free formula is unaffected, since it only ever constrains finitely
+many values of a sort.
+
+## Partial applications are countable
+
+An uninterpreted function of several arguments is curried: `(declare-fun f (A B)
+C)` has the type `(FunType A (FunType B C))`. Applying it to one argument
+therefore has to produce a value of a function type, and the only such value is a
+name, `SmtValue.Fun` (`Cpc/SmtModelDefs.lean`). There are countably many names, so
+`f` can produce only countably many different functions of its second argument,
+however many values its first argument ranges over.
+
+It bites where a formula forces uncountably many of them:
+
+```smt2
+(declare-fun lt (Real Real) Bool)
+(assert (forall ((x Real) (y Real)) (= (lt x y) (< x y))))
+```
+
+satisfiable in SMT-LIB, with `lt` being `<`, and false under every model here:
+`(lt x)` must be a different function for each real `x`, which would need more
+names than exist.
+
+The final argument is never affected, so a unary function may be any
+type-respecting function, as may `(declare-fun f (Int Real) Bool)`. It takes a
+sort with uncountably many values in a non-final position, which means `Real` or
+a sort built from it. A quantifier-free formula is unaffected, since it only ever
+applies a function at finitely many arguments.
 
 ## Extensions: what the standard does not define
 
@@ -148,6 +162,14 @@ and nothing else: a proof over such a datatype is not checked, rather than
 checked against the wrong meaning. Every other parametric datatype SMT-LIB
 allows is accepted, including blocks mixing arities and datatypes whose own
 datatypes appear in their fields at permuted or ground arguments.
+
+## A coverage limit: string escapes naming a surrogate
+
+SMT-LIB's alphabet includes the surrogate code points, so `"\u{d800}"` is a string
+literal of one character. The parser rejects such an escape, since Lean has no
+`Char` for it (see [`parser.md`](parser.md)). This costs coverage and nothing
+else. The semantics itself has these characters, and `(str.from_code 55296)`
+denotes one.
 
 ## Uninterpreted sort constructors
 
@@ -201,7 +223,10 @@ That second direction is the one that matters for `correct`.
 None of this is reachable from first-order input. A first-order formula applies
 declared functions but never uses one as an argument: it does not compare
 functions, quantify over them or partially apply them. On such a formula a
-function value is only ever applied, and evaluation sees only its behaviour.
+function value is only ever applied, and evaluation sees only its behaviour. That
+names are countable does still reach first-order input by one route, the
+partial applications evaluation makes internally, which is listed above as a
+narrowing.
 
 ## Lenient typing
 
@@ -233,6 +258,10 @@ coverage and nothing else.
 
 ## What is faithful, and is easy to assume otherwise
 
+- **`Real` is the real numbers.** `SmtValue.Real` carries Mathlib's `Real`
+  (`Cpc/SmtReal.lean`), and quantification over `Real` ranges over all of it, so
+  `(assert (= (* x x) 2.0))` is satisfiable. Only the literals of the term language
+  are rational, as they are in SMT-LIB, and each denotes its image in the reals.
 - **Division by zero, `mod` by zero and real division by zero** are
   underspecified exactly as SMT-LIB requires: each evaluates by applying a
   model-dependent function (`@div_by_zero`, `@mod_by_zero`, `@qdiv_by_zero`), so
@@ -240,17 +269,18 @@ coverage and nothing else.
   value for it.
 - **The character alphabet** is SMT-LIB's, code points `0` to `196607`
   (`native_char_valid`, `Cpc/SmtEval.lean`).
-- **Uninterpreted functions** may be any type-respecting function, not the
-  almost-constant restriction arrays carry. That is what first-order input
-  sees; quantifying over a function sort is the higher-order case above.
+- **Uninterpreted functions** are not subject to the almost-constant restriction
+  arrays carry. A unary one may be any type-respecting function; one of more
+  arguments may be too, apart from the limit on partial applications above.
+  Quantifying over a function sort is the higher-order case above.
 
 ## Where this is written down elsewhere
 
 The write-up, [`smt-model-definitions.pdf`](smt-model-definitions.pdf), states the
 same three kinds in its introduction and then each narrowing again at the
 definition that introduces it — arrays under the type constructors and again
-where maps are defined, the rational assumption where values are introduced, and
-the cardinality assumption where uninterpreted sort values are. The parser's
-refusal is in [`parser.md`](parser.md). This page is the list as it matters to
+where maps are defined, partial applications where function values are, and the
+cardinality of a sort where uninterpreted sort values are. The parser's refusals
+are in [`parser.md`](parser.md). This page is the list as it matters to
 somebody running the checker; the write-up is where the definitions and their
 reasoning are.

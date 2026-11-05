@@ -183,17 +183,17 @@ assumptions the theorem talks about are whatever they read out of the file, and 
 compare them against an original input problem (`include` and `reference` are
 ignored).
 
-**Where the semantics is narrower than SMT-LIB.** On three standard theories the
-model semantics admits a smaller class of models than SMT-LIB does: arrays are
-almost-constant maps, `Real` is interpreted as the rationals, and uninterpreted
-sorts are assumed infinite. Each is confined to quantified or nonlinear
-reasoning — on the quantifier-free linear fragments the two agree — and on the
-fragments it touches it makes `correct` claim slightly less than *unsatisfiable
-in SMT-LIB*. Separately, the semantics extends SMT-LIB with sorts and operators
+**Where the semantics is narrower than SMT-LIB.** In three places the model
+semantics admits a smaller class of models than SMT-LIB does: arrays are
+almost-constant maps, uninterpreted sorts are at most countable, and a function
+of several arguments has only countably many partial applications. Each takes
+quantifiers to reach — on quantifier-free input the two agree — and on the
+input it touches it makes `correct` claim slightly less than *unsatisfiable in
+SMT-LIB*. Separately, the semantics extends SMT-LIB with sorts and operators
 the standard does not define, sets and sequences among them, where conformance is
 not a question that arises; and parametric datatypes needing infinitely many
 instances are refused outright rather than mismodeled.
-[docs/smt-lib-conformance.md](docs/smt-lib-conformance.md) has all three kinds
+[docs/smt-lib-conformance.md](docs/smt-lib-conformance.md) has all of these
 and what each costs.
 
 The proof of the core checker is agnostic to the proof rules being used, i.e.

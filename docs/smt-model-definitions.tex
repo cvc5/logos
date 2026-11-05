@@ -181,16 +181,17 @@ supports non-standard extensions of theories, and defines non-standard internal 
 The formalization that follows departs from SMT-LIB in three ways, which are
 different in kind.
 
-First, on two standard theories it admits fewer models than SMT-LIB does:
-arrays are interpreted as almost-constant maps, and values of type \code{Real}
-are assumed to be rational. Each restriction is stated again at the definition that introduces
+First, in three places it admits fewer models than SMT-LIB does:
+arrays are interpreted as almost-constant maps, uninterpreted sorts are at most
+countable, and a function of several arguments has only countably many partial
+applications. Each restriction is stated again at the definition that introduces
 it, and they are collected here so that the list can be read in one place. Read
 on the standard theories alone, every model of this semantics is an SMT-LIB
 model and the converse does not hold, so unsatisfiability as defined here is
 implied by unsatisfiability in SMT-LIB and does not imply it: a formula
 satisfiable in SMT-LIB only by a model this semantics cannot express is treated
-here as unsatisfiable. Both are confined to quantified or nonlinear
-reasoning, and on the quantifier-free linear fragments the two notions agree.
+here as unsatisfiable. Each takes quantifiers to reach, and on quantifier-free
+input the two notions agree.
 
 Second, the semantics interprets sorts and operators that SMT-LIB does not
 define, including the theories of sets and sequences and the auxiliary operators
@@ -778,7 +779,7 @@ inductive SmtValue : Type where
   | NotValue : SmtValue
   | Boolean : Bool -> SmtValue
   | Numeral : Int -> SmtValue
-  | Rational : Rat -> SmtValue
+  | Real : Real -> SmtValue
   | Binary : Int -> Int -> SmtValue
   | Map : SmtMap -> SmtValue
   | Fun : String -> SmtType -> SmtType -> SmtValue
@@ -841,8 +842,9 @@ a further subset of these will be considered \emph{canonical} values.
 Like types, we use an error constructor \code{NotValue} to denote a failure in model evaluation.
 We then have the atomic constructors for Booleans, integers and reals.
 The constructor for the first takes native Lean Booleans and integers respectively.
-Presently we assume that all values of type Real are rational (\code{Rational}),
-which make use of Lean's builtin Rat utility.
+The values of type Real (\code{Real}) are the real numbers, given by Mathlib's
+\code{Real}. Only the literals of the term language are rational, and each
+denotes its image in the reals.
 For bitvectors, we use a constructor (called \code{Binary})
 that takes two integers as input denoting the bitwidth and the value.
 We assume that the bitwidth $w$ is non-negative and the value is in the range $[0, 2^w)$.
@@ -892,6 +894,11 @@ Given a model $M$, the behavior of a function value
 is the Lean function stored in \code{M.nativeFuns} at the (constant) key
 with name \code{s} and type \code{(FunType T U)}.
 In other words, function values use a level of indirection for their definition.
+Since functions of several arguments are curried, a partial application is such
+a value too, and so there are only countably many of them at each type.
+This is a divergence from SMT-LIB where a non-final argument has uncountably many
+values: no model here interprets a binary function on \code{Real} as $<$,
+for instance, since that would need a different name for each real.
 As a downside, this means that we cannot do computations over function values,
 nor can we define equality over function values in a manner that preserves
 extensionality.
@@ -978,8 +985,10 @@ The cardinality of each uninterpreted sort is chosen by the model:
 \code{(M.usortCard n)} is either $0$, in which case \code{(USort n)} is
 countably infinite and every \code{(UValue n i)} is one of its values,
 or some $k > 0$, in which case its values are \code{(UValue n i)} for $i < k$.
-Since a satisfiable first-order formula that has an infinite model also has a
-countable one, this admits every cardinality SMT-LIB allows.
+This admits every finite and countable cardinality, but not the uncountable ones
+SMT-LIB also allows. That is a divergence where a formula forces a sort to be as
+large as \code{Real}, for instance by asserting a surjection from the sort
+onto \code{Real}.
 The restriction to the values of the sort is enforced by canonicity,
 described below.
 
@@ -989,7 +998,7 @@ We will additionally require an (arbitrary strict total) ordering over values,
 which we define as \code{vcmp}.
 Note that this definition requires an instantiation over the native Lean
 types that are used within this datatype.
-In practice, this required us to define a strict total ordering over Lean rationals (\code{Rat}) for this
+In practice, this required us to define a strict total ordering over the reals for this
 purpose; the ordering for all other types were automatic.
 
 Recall that the primary purpose of values is to represent the
