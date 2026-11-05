@@ -314,7 +314,6 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                   (G := a) (bvs' := bvs)
                   (by
                     simp
-                    omega)
                   hXsEnv hBvsEnv hATrans hTs hActuals
                   (by simpa [aSub] using hATy)
             refine ⟨?_, ?_⟩
@@ -407,7 +406,6 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                     (G := a) (bvs' := bvs)
                     (by
                       simp
-                      omega)
                     hXsEnv hBvsEnv hATrans hTs hActuals
                     (by simpa [aSub] using hATy)
               refine ⟨?_, ?_⟩
@@ -513,7 +511,6 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                       (G := a) (bvs' := bvs)
                       (by
                         simp
-                        omega)
                       hXsEnv hBvsEnv hATrans hTs hActuals
                       (by simpa [aSub] using hATy)
                 refine ⟨?_, ?_⟩
@@ -587,7 +584,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                         (fun hATrans hATy =>
                           hRec
                             (G := a) (bvs' := bvs)
-                            (by simp; omega)
+                            (by simp)
                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                   · by_cases hHeadOr : g = Term.UOp UserOp.or
                     · subst g
@@ -641,7 +638,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                           (fun hATrans hATy =>
                             hRec
                               (G := a) (bvs' := bvs)
-                              (by simp; omega)
+                              (by simp)
                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                     · by_cases hHeadImp : g = Term.UOp UserOp.imp
                       · subst g
@@ -695,7 +692,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                             (fun hATrans hATy =>
                               hRec
                                 (G := a) (bvs' := bvs)
-                                (by simp; omega)
+                                (by simp)
                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                       · by_cases hHeadXor : g = Term.UOp UserOp.xor
                         · subst g
@@ -749,7 +746,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                               (fun hATrans hATy =>
                                 hRec
                                   (G := a) (bvs' := bvs)
-                                  (by simp; omega)
+                                  (by simp)
                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                         · by_cases hHeadEq : g = Term.UOp UserOp.eq
                           · subst g
@@ -815,7 +812,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                 (fun hATrans hATy =>
                                   hRec
                                     (G := a) (bvs' := bvs)
-                                    (by simp; omega)
+                                    (by simp)
                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                           · by_cases hHeadPlus : g = Term.UOp UserOp.plus
                             · subst g
@@ -880,7 +877,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                   (fun hATrans hATy =>
                                     hRec
                                       (G := a) (bvs' := bvs)
-                                      (by simp; omega)
+                                      (by simp)
                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                             · by_cases hHeadNeg : g = Term.UOp UserOp.neg
                               · subst g
@@ -945,7 +942,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                     (fun hATrans hATy =>
                                       hRec
                                         (G := a) (bvs' := bvs)
-                                        (by simp; omega)
+                                        (by simp)
                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                               · by_cases hHeadMult : g = Term.UOp UserOp.mult
                                 · subst g
@@ -1010,7 +1007,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                       (fun hATrans hATy =>
                                         hRec
                                           (G := a) (bvs' := bvs)
-                                          (by simp; omega)
+                                          (by simp)
                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                 · by_cases hHeadLt : g = Term.UOp UserOp.lt
                                   · subst g
@@ -1053,7 +1050,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                         (fun hATrans hATy =>
                                           hRec
                                             (G := a) (bvs' := bvs)
-                                            (by simp; omega)
+                                            (by simp)
                                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                   · by_cases hHeadLeq : g = Term.UOp UserOp.leq
                                     · subst g
@@ -1096,7 +1093,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                           (fun hATrans hATy =>
                                             hRec
                                               (G := a) (bvs' := bvs)
-                                              (by simp; omega)
+                                              (by simp)
                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                     · by_cases hHeadGt : g = Term.UOp UserOp.gt
                                       · subst g
@@ -1139,7 +1136,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                             (fun hATrans hATy =>
                                               hRec
                                                 (G := a) (bvs' := bvs)
-                                                (by simp; omega)
+                                                (by simp)
                                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                       · by_cases hHeadGeq : g = Term.UOp UserOp.geq
                                         · subst g
@@ -1182,7 +1179,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                               (fun hATrans hATy =>
                                                 hRec
                                                   (G := a) (bvs' := bvs)
-                                                  (by simp; omega)
+                                                  (by simp)
                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                         · by_cases hHeadDiv : g = Term.UOp UserOp.div
                                           · subst g
@@ -1232,7 +1229,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                 (fun hATrans hATy =>
                                                   hRec
                                                     (G := a) (bvs' := bvs)
-                                                    (by simp; omega)
+                                                    (by simp)
                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                           · by_cases hHeadMod : g = Term.UOp UserOp.mod
                                             · subst g
@@ -1282,7 +1279,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                   (fun hATrans hATy =>
                                                     hRec
                                                       (G := a) (bvs' := bvs)
-                                                      (by simp; omega)
+                                                      (by simp)
                                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                             · first
                                               | by_cases hHeadDivisible :
@@ -1334,7 +1331,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                       (fun hATrans hATy =>
                                                         hRec
                                                           (G := a) (bvs' := bvs)
-                                                          (by simp; omega)
+                                                          (by simp)
                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                 · by_cases hHeadDivTotal :
                                                     g = Term.UOp UserOp.div_total
@@ -1385,7 +1382,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                         (fun hATrans hATy =>
                                                           hRec
                                                             (G := a) (bvs' := bvs)
-                                                            (by simp; omega)
+                                                            (by simp)
                                                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                   · by_cases hHeadModTotal :
                                                       g = Term.UOp UserOp.mod_total
@@ -1436,7 +1433,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                           (fun hATrans hATy =>
                                                             hRec
                                                               (G := a) (bvs' := bvs)
-                                                              (by simp; omega)
+                                                              (by simp)
                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                     · first
                                                       | by_cases hHeadQdiv :
@@ -1481,7 +1478,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                               (fun hATrans hATy =>
                                                                 hRec
                                                                   (G := a) (bvs' := bvs)
-                                                                  (by simp; omega)
+                                                                  (by simp)
                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                         · by_cases hHeadQdivTotal :
                                                             g = Term.UOp UserOp.qdiv_total
@@ -1525,7 +1522,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                 (fun hATrans hATy =>
                                                                   hRec
                                                                     (G := a) (bvs' := bvs)
-                                                                    (by simp; omega)
+                                                                    (by simp)
                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                           · by_cases hHeadConcat :
                                                               g = Term.UOp UserOp.concat
@@ -1571,7 +1568,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                   (fun hATrans hATy =>
                                                                     hRec
                                                                       (G := a) (bvs' := bvs)
-                                                                      (by simp; omega)
+                                                                      (by simp)
                                                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                             · by_cases hHeadBvand :
                                                                 g = Term.UOp UserOp.bvand
@@ -1621,7 +1618,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                     (fun hATrans hATy =>
                                                                       hRec
                                                                         (G := a) (bvs' := bvs)
-                                                                        (by simp; omega)
+                                                                        (by simp)
                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                               · by_cases hHeadBvor :
                                                                   g = Term.UOp UserOp.bvor
@@ -1671,7 +1668,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                       (fun hATrans hATy =>
                                                                         hRec
                                                                           (G := a) (bvs' := bvs)
-                                                                          (by simp; omega)
+                                                                          (by simp)
                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                 · by_cases hHeadBvnand :
                                                                     g = Term.UOp UserOp.bvnand
@@ -1693,7 +1690,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                         (fun hATrans hATy =>
                                                                           hRec
                                                                             (G := a) (bvs' := bvs)
-                                                                            (by simp; omega)
+                                                                            (by simp)
                                                                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                   · by_cases hHeadBvnor :
                                                                       g = Term.UOp UserOp.bvnor
@@ -1715,7 +1712,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                           (fun hATrans hATy =>
                                                                             hRec
                                                                               (G := a) (bvs' := bvs)
-                                                                              (by simp; omega)
+                                                                              (by simp)
                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                     · by_cases hHeadBvxor :
                                                                         g = Term.UOp UserOp.bvxor
@@ -1737,7 +1734,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                             (fun hATrans hATy =>
                                                                               hRec
                                                                                 (G := a) (bvs' := bvs)
-                                                                                (by simp; omega)
+                                                                                (by simp)
                                                                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                       · by_cases hHeadBvxnor :
                                                                           g = Term.UOp UserOp.bvxnor
@@ -1759,7 +1756,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                               (fun hATrans hATy =>
                                                                                 hRec
                                                                                   (G := a) (bvs' := bvs)
-                                                                                  (by simp; omega)
+                                                                                  (by simp)
                                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                         · by_cases hHeadBvadd :
                                                                             g = Term.UOp UserOp.bvadd
@@ -1781,7 +1778,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                 (fun hATrans hATy =>
                                                                                   hRec
                                                                                     (G := a) (bvs' := bvs)
-                                                                                    (by simp; omega)
+                                                                                    (by simp)
                                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                           · by_cases hHeadBvmul :
                                                                               g = Term.UOp UserOp.bvmul
@@ -1803,7 +1800,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                   (fun hATrans hATy =>
                                                                                     hRec
                                                                                       (G := a) (bvs' := bvs)
-                                                                                      (by simp; omega)
+                                                                                      (by simp)
                                                                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                             · by_cases hHeadBvudiv :
                                                                                 g = Term.UOp UserOp.bvudiv
@@ -1825,7 +1822,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                     (fun hATrans hATy =>
                                                                                       hRec
                                                                                         (G := a) (bvs' := bvs)
-                                                                                        (by simp; omega)
+                                                                                        (by simp)
                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                               · by_cases hHeadBvurem :
                                                                                   g = Term.UOp UserOp.bvurem
@@ -1847,7 +1844,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                       (fun hATrans hATy =>
                                                                                         hRec
                                                                                           (G := a) (bvs' := bvs)
-                                                                                          (by simp; omega)
+                                                                                          (by simp)
                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                 · by_cases hHeadBvsub :
                                                                                     g = Term.UOp UserOp.bvsub
@@ -1869,7 +1866,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                         (fun hATrans hATy =>
                                                                                           hRec
                                                                                             (G := a) (bvs' := bvs)
-                                                                                            (by simp; omega)
+                                                                                            (by simp)
                                                                                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                   · by_cases hHeadBvsdiv :
                                                                                       g = Term.UOp UserOp.bvsdiv
@@ -1891,7 +1888,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                           (fun hATrans hATy =>
                                                                                             hRec
                                                                                               (G := a) (bvs' := bvs)
-                                                                                              (by simp; omega)
+                                                                                              (by simp)
                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                     · by_cases hHeadBvsrem :
                                                                                         g = Term.UOp UserOp.bvsrem
@@ -1913,7 +1910,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                             (fun hATrans hATy =>
                                                                                               hRec
                                                                                                 (G := a) (bvs' := bvs)
-                                                                                                (by simp; omega)
+                                                                                                (by simp)
                                                                                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                       · by_cases hHeadBvsmod :
                                                                                           g = Term.UOp UserOp.bvsmod
@@ -1935,7 +1932,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                               (fun hATrans hATy =>
                                                                                                 hRec
                                                                                                   (G := a) (bvs' := bvs)
-                                                                                                  (by simp; omega)
+                                                                                                  (by simp)
                                                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                         · by_cases hHeadBvshl :
                                                                                             g = Term.UOp UserOp.bvshl
@@ -1957,7 +1954,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                 (fun hATrans hATy =>
                                                                                                   hRec
                                                                                                     (G := a) (bvs' := bvs)
-                                                                                                    (by simp; omega)
+                                                                                                    (by simp)
                                                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                           · by_cases hHeadBvlshr :
                                                                                               g = Term.UOp UserOp.bvlshr
@@ -1979,7 +1976,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                   (fun hATrans hATy =>
                                                                                                     hRec
                                                                                                       (G := a) (bvs' := bvs)
-                                                                                                      (by simp; omega)
+                                                                                                      (by simp)
                                                                                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                             · by_cases hHeadBvashr :
                                                                                                 g = Term.UOp UserOp.bvashr
@@ -2001,7 +1998,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                     (fun hATrans hATy =>
                                                                                                       hRec
                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                        (by simp; omega)
+                                                                                                        (by simp)
                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                               · by_cases hHeadBvcomp :
                                                                                                   g = Term.UOp UserOp.bvcomp
@@ -2026,7 +2023,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                       (fun hATrans hATy =>
                                                                                                         hRec
                                                                                                           (G := a) (bvs' := bvs)
-                                                                                                          (by simp; omega)
+                                                                                                          (by simp)
                                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                 · by_cases hHeadBvult :
                                                                                                     g = Term.UOp UserOp.bvult
@@ -2051,7 +2048,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                         (fun hATrans hATy =>
                                                                                                           hRec
                                                                                                             (G := a) (bvs' := bvs)
-                                                                                                            (by simp; omega)
+                                                                                                            (by simp)
                                                                                                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                   · by_cases hHeadBvule :
                                                                                                       g = Term.UOp UserOp.bvule
@@ -2076,7 +2073,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                           (fun hATrans hATy =>
                                                                                                             hRec
                                                                                                               (G := a) (bvs' := bvs)
-                                                                                                              (by simp; omega)
+                                                                                                              (by simp)
                                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                     · by_cases hHeadBvugt :
                                                                                                         g = Term.UOp UserOp.bvugt
@@ -2101,7 +2098,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                             (fun hATrans hATy =>
                                                                                                               hRec
                                                                                                                 (G := a) (bvs' := bvs)
-                                                                                                                (by simp; omega)
+                                                                                                                (by simp)
                                                                                                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                       · by_cases hHeadBvuge :
                                                                                                           g = Term.UOp UserOp.bvuge
@@ -2126,7 +2123,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                               (fun hATrans hATy =>
                                                                                                                 hRec
                                                                                                                   (G := a) (bvs' := bvs)
-                                                                                                                  (by simp; omega)
+                                                                                                                  (by simp)
                                                                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                         · by_cases hHeadBvslt :
                                                                                                             g = Term.UOp UserOp.bvslt
@@ -2151,7 +2148,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                 (fun hATrans hATy =>
                                                                                                                   hRec
                                                                                                                     (G := a) (bvs' := bvs)
-                                                                                                                    (by simp; omega)
+                                                                                                                    (by simp)
                                                                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                           · by_cases hHeadBvsle :
                                                                                                               g = Term.UOp UserOp.bvsle
@@ -2176,7 +2173,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                   (fun hATrans hATy =>
                                                                                                                     hRec
                                                                                                                       (G := a) (bvs' := bvs)
-                                                                                                                      (by simp; omega)
+                                                                                                                      (by simp)
                                                                                                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                             · by_cases hHeadBvsgt :
                                                                                                                 g = Term.UOp UserOp.bvsgt
@@ -2201,7 +2198,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                     (fun hATrans hATy =>
                                                                                                                       hRec
                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                        (by simp; omega)
+                                                                                                                        (by simp)
                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                               · by_cases hHeadBvsge :
                                                                                                                   g = Term.UOp UserOp.bvsge
@@ -2226,7 +2223,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                       (fun hATrans hATy =>
                                                                                                                         hRec
                                                                                                                           (G := a) (bvs' := bvs)
-                                                                                                                          (by simp; omega)
+                                                                                                                          (by simp)
                                                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                 · by_cases hHeadBvuaddo :
                                                                                                                     g = Term.UOp UserOp.bvuaddo
@@ -2251,7 +2248,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                         (fun hATrans hATy =>
                                                                                                                           hRec
                                                                                                                             (G := a) (bvs' := bvs)
-                                                                                                                            (by simp; omega)
+                                                                                                                            (by simp)
                                                                                                                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                   · by_cases hHeadBvsaddo :
                                                                                                                       g = Term.UOp UserOp.bvsaddo
@@ -2276,7 +2273,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                           (fun hATrans hATy =>
                                                                                                                             hRec
                                                                                                                               (G := a) (bvs' := bvs)
-                                                                                                                              (by simp; omega)
+                                                                                                                              (by simp)
                                                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                     · by_cases hHeadBvumulo :
                                                                                                                         g = Term.UOp UserOp.bvumulo
@@ -2301,7 +2298,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                             (fun hATrans hATy =>
                                                                                                                               hRec
                                                                                                                                 (G := a) (bvs' := bvs)
-                                                                                                                                (by simp; omega)
+                                                                                                                                (by simp)
                                                                                                                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                       · by_cases hHeadBvsmulo :
                                                                                                                           g = Term.UOp UserOp.bvsmulo
@@ -2326,7 +2323,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                               (fun hATrans hATy =>
                                                                                                                                 hRec
                                                                                                                                   (G := a) (bvs' := bvs)
-                                                                                                                                  (by simp; omega)
+                                                                                                                                  (by simp)
                                                                                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                         · by_cases hHeadBvusubo :
                                                                                                                             g = Term.UOp UserOp.bvusubo
@@ -2351,7 +2348,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                   hRec
                                                                                                                                     (G := a) (bvs' := bvs)
-                                                                                                                                    (by simp; omega)
+                                                                                                                                    (by simp)
                                                                                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                           · by_cases hHeadBvssubo :
                                                                                                                               g = Term.UOp UserOp.bvssubo
@@ -2376,7 +2373,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                     hRec
                                                                                                                                       (G := a) (bvs' := bvs)
-                                                                                                                                      (by simp; omega)
+                                                                                                                                      (by simp)
                                                                                                                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                             · by_cases hHeadBvsdivo :
                                                                                                                                 g = Term.UOp UserOp.bvsdivo
@@ -2401,7 +2398,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                       hRec
                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                        (by simp; omega)
+                                                                                                                                        (by simp)
                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                               · by_cases hHeadBvultbv :
                                                                                                                                   g = Term.UOp UserOp.bvultbv
@@ -2456,7 +2453,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                         hRec
                                                                                                                                           (G := a) (bvs' := bvs)
-                                                                                                                                          (by simp; omega)
+                                                                                                                                          (by simp)
                                                                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                 · by_cases hHeadBvsltbv :
                                                                                                                                     g = Term.UOp UserOp.bvsltbv
@@ -2511,7 +2508,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                         (fun hATrans hATy =>
                                                                                                                                           hRec
                                                                                                                                             (G := a) (bvs' := bvs)
-                                                                                                                                            (by simp; omega)
+                                                                                                                                            (by simp)
                                                                                                                                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                   · by_cases hHeadSelect :
                                                                                                                                       g = Term.UOp UserOp.select
@@ -2555,7 +2552,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                             hRec
                                                                                                                                               (G := a) (bvs' := bvs)
-                                                                                                                                              (by simp; omega)
+                                                                                                                                              (by simp)
                                                                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                     · by_cases hHeadStrConcat :
                                                                                                                                         g = Term.UOp UserOp.str_concat
@@ -2606,7 +2603,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                             (fun hATrans hATy =>
                                                                                                                                               hRec
                                                                                                                                                 (G := a) (bvs' := bvs)
-                                                                                                                                                (by simp; omega)
+                                                                                                                                                (by simp)
                                                                                                                                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                       · by_cases hHeadStrContains :
                                                                                                                                           g = Term.UOp UserOp.str_contains
@@ -2658,7 +2655,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                 hRec
                                                                                                                                                   (G := a) (bvs' := bvs)
-                                                                                                                                                  (by simp; omega)
+                                                                                                                                                  (by simp)
                                                                                                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                         · by_cases hHeadStrPrefixof :
                                                                                                                                             g = Term.UOp UserOp.str_prefixof
@@ -2676,7 +2673,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                   hRec
                                                                                                                                                     (G := a) (bvs' := bvs)
-                                                                                                                                                    (by simp; omega)
+                                                                                                                                                    (by simp)
                                                                                                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                           · by_cases hHeadStrSuffixof :
                                                                                                                                               g = Term.UOp UserOp.str_suffixof
@@ -2694,7 +2691,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                                     hRec
                                                                                                                                                       (G := a) (bvs' := bvs)
-                                                                                                                                                      (by simp; omega)
+                                                                                                                                                      (by simp)
                                                                                                                                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                             · by_cases hHeadStrAt :
                                                                                                                                                 g = Term.UOp UserOp.str_at
@@ -2743,7 +2740,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                       hRec
                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                        (by simp; omega)
+                                                                                                                                                        (by simp)
                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                               · by_cases hHeadStrLt :
                                                                                                                                                   g = Term.UOp UserOp.str_lt
@@ -2797,7 +2794,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                         hRec
                                                                                                                                                           (G := a) (bvs' := bvs)
-                                                                                                                                                          (by simp; omega)
+                                                                                                                                                          (by simp)
                                                                                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                 · by_cases hHeadStrLeq :
                                                                                                                                                     g = Term.UOp UserOp.str_leq
@@ -2851,7 +2848,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                         (fun hATrans hATy =>
                                                                                                                                                           hRec
                                                                                                                                                             (G := a) (bvs' := bvs)
-                                                                                                                                                            (by simp; omega)
+                                                                                                                                                            (by simp)
                                                                                                                                                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                   · by_cases hHeadReRange :
                                                                                                                                                       g = Term.UOp UserOp.re_range
@@ -2870,7 +2867,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                             hRec
                                                                                                                                                               (G := a) (bvs' := bvs)
-                                                                                                                                                              (by simp; omega)
+                                                                                                                                                              (by simp)
                                                                                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                     · by_cases hHeadReConcat :
                                                                                                                                                         g = Term.UOp UserOp.re_concat
@@ -2892,7 +2889,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                             (fun hATrans hATy =>
                                                                                                                                                               hRec
                                                                                                                                                                 (G := a) (bvs' := bvs)
-                                                                                                                                                                (by simp; omega)
+                                                                                                                                                                (by simp)
                                                                                                                                                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                       · by_cases hHeadReInter :
                                                                                                                                                           g = Term.UOp UserOp.re_inter
@@ -2914,7 +2911,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                                 hRec
                                                                                                                                                                   (G := a) (bvs' := bvs)
-                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                  (by simp)
                                                                                                                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                         · by_cases hHeadReUnion :
                                                                                                                                                             g = Term.UOp UserOp.re_union
@@ -2936,7 +2933,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                                   hRec
                                                                                                                                                                     (G := a) (bvs' := bvs)
-                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                    (by simp)
                                                                                                                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                           · by_cases hHeadReDiff :
                                                                                                                                                               g = Term.UOp UserOp.re_diff
@@ -2958,7 +2955,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                                                     hRec
                                                                                                                                                                       (G := a) (bvs' := bvs)
-                                                                                                                                                                      (by simp; omega)
+                                                                                                                                                                      (by simp)
                                                                                                                                                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                             · by_cases hHeadStrInRe :
                                                                                                                                                                 g = Term.UOp UserOp.str_in_re
@@ -2977,7 +2974,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                       hRec
                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                        (by simp)
                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                               · by_cases hHeadSeqNth :
                                                                                                                                                                   g = Term.UOp UserOp.seq_nth
@@ -2996,7 +2993,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                                         hRec
                                                                                                                                                                           (G := a) (bvs' := bvs)
-                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                          (by simp)
                                                                                                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                 · by_cases hHeadSetUnion :
                                                                                                                                                                     g = Term.UOp UserOp.set_union
@@ -3018,7 +3015,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                         (fun hATrans hATy =>
                                                                                                                                                                           hRec
                                                                                                                                                                             (G := a) (bvs' := bvs)
-                                                                                                                                                                            (by simp; omega)
+                                                                                                                                                                            (by simp)
                                                                                                                                                                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                   · by_cases hHeadSetInter :
                                                                                                                                                                       g = Term.UOp UserOp.set_inter
@@ -3040,7 +3037,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                                             hRec
                                                                                                                                                                               (G := a) (bvs' := bvs)
-                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                              (by simp)
                                                                                                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                     · by_cases hHeadSetMinus :
                                                                                                                                                                         g = Term.UOp UserOp.set_minus
@@ -3062,7 +3059,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                             (fun hATrans hATy =>
                                                                                                                                                                               hRec
                                                                                                                                                                                 (G := a) (bvs' := bvs)
-                                                                                                                                                                                (by simp; omega)
+                                                                                                                                                                                (by simp)
                                                                                                                                                                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                       · by_cases hHeadSetMember :
                                                                                                                                                                           g = Term.UOp UserOp.set_member
@@ -3081,7 +3078,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                                                 hRec
                                                                                                                                                                                   (G := a) (bvs' := bvs)
-                                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                                  (by simp)
                                                                                                                                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                         · by_cases hHeadSetSubset :
                                                                                                                                                                             g = Term.UOp UserOp.set_subset
@@ -3100,7 +3097,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                                                   hRec
                                                                                                                                                                                     (G := a) (bvs' := bvs)
-                                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                                    (by simp)
                                                                                                                                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                           · by_cases hHeadSetsDeqDiff :
                                                                                                                                                                               g =
@@ -3120,7 +3117,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                                                                       hRec
                                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                        (by simp)
                                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                             · by_cases hHeadStringsDeqDiff :
                                                                                                                                                                                 g =
@@ -3140,7 +3137,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                       hRec
                                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                        (by simp)
                                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                               · by_cases hHeadStringsStoiResult :
                                                                                                                                                                                   g =
@@ -3160,7 +3157,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                                                         hRec
                                                                                                                                                                                           (G := a) (bvs' := bvs)
-                                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                                          (by simp)
                                                                                                                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                 · by_cases hHeadStringsItosResult :
                                                                                                                                                                                     g =
@@ -3180,7 +3177,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                         (fun hATrans hATy =>
                                                                                                                                                                                           hRec
                                                                                                                                                                                           (G := a) (bvs' := bvs)
-                                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                                          (by simp)
                                                                                                                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                   · by_cases hHeadArrayDeqDiff :
                                                                                                                                                                                       g =
@@ -3200,7 +3197,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                                                             hRec
                                                                                                                                                                                               (G := a) (bvs' := bvs)
-                                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                                              (by simp)
                                                                                                                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                     · by_cases hHeadFromBools :
                                                                                                                                                                                         g =
@@ -3220,7 +3217,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                             (fun hATrans hATy =>
                                                                                                                                                                                               hRec
                                                                                                                                                                                                 (G := a) (bvs' := bvs)
-                                                                                                                                                                                                (by simp; omega)
+                                                                                                                                                                                                (by simp)
                                                                                                                                                                                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                       · by_cases hHeadStringsNumOccur :
                                                                                                                                                                                           g =
@@ -3240,7 +3237,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                                                                 hRec
                                                                                                                                                                                                   (G := a) (bvs' := bvs)
-                                                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                                                  (by simp)
                                                                                                                                                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                         · by_cases hHeadIte :
                                                                                                                                                                                             ∃ c,
@@ -3265,7 +3262,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                                                                   hRec
                                                                                                                                                                                                     (G := a) (bvs' := bvs)
-                                                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                                                    (by simp)
                                                                                                                                                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                           · by_cases hHeadBvite :
                                                                                                                                                                                               ∃ c,
@@ -3290,7 +3287,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                                                                                     hRec
                                                                                                                                                                                                       (G := a) (bvs' := bvs)
-                                                                                                                                                                                                      (by simp; omega)
+                                                                                                                                                                                                      (by simp)
                                                                                                                                                                                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                             · by_cases hHeadStore :
                                                                                                                                                                                                 ∃ arr,
@@ -3315,7 +3312,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                                       hRec
                                                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                        (by simp)
                                                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                               · by_cases hHeadStrSubstr :
                                                                                                                                                                                                   ∃ s,
@@ -3340,7 +3337,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                                                                         hRec
                                                                                                                                                                                                           (G := a) (bvs' := bvs)
-                                                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                                                          (by simp)
                                                                                                                                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                 · by_cases hHeadStrReplace :
                                                                                                                                                                                                     ∃ s,
@@ -3365,7 +3362,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                                                                             hRec
                                                                                                                                                                                                               (G := a) (bvs' := bvs)
-                                                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                                                              (by simp)
                                                                                                                                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                   · by_cases hHeadStrReplaceAll :
                                                                                                                                                                                                       ∃ s,
@@ -3390,7 +3387,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                                                                             hRec
                                                                                                                                                                                                               (G := a) (bvs' := bvs)
-                                                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                                                              (by simp)
                                                                                                                                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                     · by_cases hHeadStrIndexof :
                                                                                                                                                                                                         ∃ s,
@@ -3415,7 +3412,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                             (fun hATrans hATy =>
                                                                                                                                                                                                               hRec
                                                                                                                                                                                                                 (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                (by simp; omega)
+                                                                                                                                                                                                                (by simp)
                                                                                                                                                                                                                 hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                       · by_cases hHeadStrUpdate :
                                                                                                                                                                                                           ∃ s,
@@ -3440,7 +3437,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                                                                                 hRec
                                                                                                                                                                                                                   (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                                                                  (by simp)
                                                                                                                                                                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                         · by_cases hHeadStrReplaceRe :
                                                                                                                                                                                                             ∃ s,
@@ -3465,7 +3462,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                                                                                   hRec
                                                                                                                                                                                                                     (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                                                                    (by simp)
                                                                                                                                                                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                           · by_cases hHeadStrReplaceReAll :
                                                                                                                                                                                                               ∃ s,
@@ -3490,7 +3487,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                                                                                                     hRec
                                                                                                                                                                                                                       (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                      (by simp; omega)
+                                                                                                                                                                                                                      (by simp)
                                                                                                                                                                                                                       hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                             · by_cases hHeadStrIndexofRe :
                                                                                                                                                                                                                 ∃ s,
@@ -3515,7 +3512,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                        (by simp)
                                                                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                               · by_cases hHeadSetInsert :
                                                                                                                                                                                                                   g = Term.UOp UserOp.set_insert
@@ -3532,7 +3529,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                                                                                         hRec
                                                                                                                                                                                                                           (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                                                                          (by simp)
                                                                                                                                                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                 · by_cases hHeadTuple :
                                                                                                                                                                                                                     g = Term.UOp UserOp.tuple
@@ -3551,7 +3548,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                         (fun hATrans hATy =>
                                                                                                                                                                                                                           hRec
                                                                                                                                                                                                                             (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                            (by simp; omega)
+                                                                                                                                                                                                                            (by simp)
                                                                                                                                                                                                                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                   · by_cases hHeadForall :
                                                                                                                                                                                                                       g = Term.UOp UserOp.forall
@@ -3620,7 +3617,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                                                                                                 hRec
                                                                                                                                                                                                                                   (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                                                                                  (by simp)
                                                                                                                                                                                                                                   hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                         · by_cases hHeadTupleUpdate :
                                                                                                                                                                                                                             ∃ idx,
@@ -3641,7 +3638,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                                                                                                   hRec
                                                                                                                                                                                                                                     (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                                                                                    (by simp)
                                                                                                                                                                                                                                     hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                           · by_cases hStringSkolem :
                                                                                                                                                                                                                               g =

@@ -46,7 +46,6 @@ private theorem native_str_to_code_singleton_bounds
           simp [native_string_valid] at hValid
           have hc : c < 196608 := by simpa [native_char_valid] using hValid
           simp [native_str_to_code, native_char_valid, hc]
-          exact Int.ofNat_lt.mpr hc
       | cons d ds =>
           simp at hLen
 

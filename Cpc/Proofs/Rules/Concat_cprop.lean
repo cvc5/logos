@@ -240,7 +240,6 @@ decreasing_by
   all_goals
     subst_vars
     simp_wf
-    omega
 
 private def strConcatDrop : Term → Nat → Term
   | a, 0 => a
@@ -371,7 +370,6 @@ decreasing_by
   all_goals
     subst_vars
     simp_wf
-    omega
 
 private theorem str_overlap_rec_compatible_drop_false_of_lt :
     ∀ (a b : Term) (m n : Nat),
@@ -476,7 +474,6 @@ decreasing_by
   all_goals
     subst_vars
     simp_wf
-    omega
 
 private theorem eo_list_nth_one_str_concat_cons_eq_tail_zero
     (head tail : Term)
@@ -668,7 +665,7 @@ private theorem native_str_substr_prefix_dropLast (s : native_String) :
               exact Int.min_eq_left (by omega)
             rw [h]
             simp
-          simp [native_str_substr, native_str_len, hIf, hMin]
+          simp [native_str_substr, native_str_len, hIf]
           simpa using take_length_sub_one_eq_dropLast (c :: d :: ds)
 
 private theorem eo_extract_prefix_dropLast (s : native_String) :
@@ -848,7 +845,7 @@ private theorem native_str_substr_tail_len_cons
           exact Int.min_eq_right (by omega)
         rw [h]
         simp
-      simp [native_str_substr, native_str_len, hIf]
+      simp [native_str_substr, native_str_len]
       rw [hMin]
       simp
 
@@ -864,7 +861,6 @@ private theorem eo_extract_tail_len_cons
         change ((Int.ofNat (List.length (c :: cs)) : Int) + -1 + 1) =
           Int.ofNat (cs.length + 1)
         simp
-        omega]
   exact congrArg Term.String (native_str_substr_tail_len_cons c cs)
 
 private theorem extractString_cons_succ_nat_local
@@ -888,7 +884,7 @@ private theorem extractString_cons_succ_nat_local
               ((cs.length : Int) + 1 - ((i : Int) + 1)) =
             1 := by
         omega
-      simp [h]
+      simp
     have hMinRight :
         (min ((i : Int) + -(i : Int) + 1)
             ((cs.length : Int) - (i : Int))).toNat = 1 := by
@@ -897,10 +893,10 @@ private theorem extractString_cons_succ_nat_local
               ((cs.length : Int) - (i : Int)) =
             1 := by
         omega
-      simp [h]
+      simp
     simp [RuleProofs.extractString, native_str_substr, native_str_len,
       native_zplus, native_zneg, hLenNotLe,
-      hMinLeft, hMinRight, List.drop_succ_cons]
+      List.drop_succ_cons]
     -- both guards are false and both branches agree.  `rw [ite_eq_right ..]` cannot
     -- be used: it must match the goal's `Decidable` instance syntactically,
     -- while `refine` unifies it up to defeq and hands us the exact conditions.
@@ -908,10 +904,8 @@ private theorem extractString_cons_succ_nat_local
     -- reuse the negations proved above; the goal's disjunct is the `Bool`
     -- form `decide _ = true`, which is only propositionally equal to theirs
     · rintro (h | h)
-      · exact hLeftNonneg (Or.inl h)
       · exact hLeftNonneg (Or.inr (of_decide_eq_true h))
     · rintro (h | h)
-      · exact hRightNonneg (Or.inl h)
       · exact hRightNonneg (Or.inr (of_decide_eq_true h))
   · have hLeft : ((i : Int) + 1) >= ((cs.length : Int) + 1) := by
       omega
@@ -6298,7 +6292,6 @@ private theorem cprop_false_formula_of_overlap_bounds
     let p := ((native_unpack_seq ss).take n).length
     have hpSs : p <= (native_unpack_seq ss).length := by
       simp [p, List.length_take]
-      exact Nat.min_le_right n (native_unpack_seq ss).length
     have hTakeSsP :
         (native_unpack_seq ss).take p = (native_unpack_seq ss).take n := by
       let xs := native_unpack_seq ss
@@ -6693,7 +6686,6 @@ private theorem facts_concat_cprop_false_formula
           ((native_unpack_seq ss).take (m + 1)).length <=
             (native_unpack_seq ss).length := by
         simp [List.length_take]
-        exact Nat.min_le_right (m + 1) (native_unpack_seq ss).length
       exact Nat.le_trans hTakeLeSS hleSS
     · by_cases hGoal :
           ((native_unpack_seq ss).take (m + 1)).length <=

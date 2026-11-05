@@ -92,7 +92,7 @@ private theorem native_rleq_to_real_eq_floor_add_one
     native_rleq q (native_int_to_real n) =
       native_zleq (native_real_to_int q + 1) n := by
   have hIff := real_le_int_iff_floor_add_one_le_of_nonint q n hNonInt
-  by_cases hL : q ≤ native_int_to_real n
+  by_cases hL : q ≤ (n : native_Real)
   · have hR : native_real_to_int q + 1 ≤ n := hIff.mp hL
     simp [native_rleq, native_zleq, hL, hR]
   · have hR : ¬ native_real_to_int q + 1 ≤ n := fun h => hL (hIff.mpr h)

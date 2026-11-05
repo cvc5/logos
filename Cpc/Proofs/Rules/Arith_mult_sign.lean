@@ -82,7 +82,7 @@ private theorem smtValueNonzero_of_pos {v : SmtValue} :
       simp [smtValuePos, smtValueNonzero]
       intro h
       exact Int.ne_of_gt h
-  | Rational q =>
+  | Real q =>
       simp [smtValuePos, smtValueNonzero]
       intro h hz
       exact Rat.ne_of_gt h hz
@@ -95,7 +95,7 @@ private theorem smtValueNonzero_of_neg {v : SmtValue} :
       simp [smtValueNeg, smtValueNonzero]
       intro h
       exact Int.ne_of_lt h
-  | Rational q =>
+  | Real q =>
       simp [smtValueNeg, smtValueNonzero]
       intro h hz
       exact Rat.ne_of_lt h hz
@@ -110,7 +110,7 @@ private theorem smtValue_pos_or_neg_of_nonzero {v : SmtValue} :
       rcases Int.lt_or_gt_of_ne hn with hneg | hpos
       · exact Or.inr hneg
       · exact Or.inl hpos
-  | Rational q =>
+  | Real q =>
       simp [smtValueNonzero, smtValuePos, smtValueNeg]
       intro hq
       by_cases hpos : 0 < q
@@ -180,7 +180,6 @@ private theorem smtValuePos_of_one_term
     change smtValuePos (__smtx_model_eval M (SmtTerm.Rational (native_mk_rational 1 1)))
     rw [__smtx_model_eval.eq_3]
     simp [smtValuePos, native_mk_rational_one]
-    native_decide
 
 private theorem requires_rational_bool_result {x r : Term} {q : Rat} {out : Bool} :
     __eo_requires x (Term.Rational q) r = Term.Boolean out ->
@@ -219,7 +218,7 @@ private theorem smtValuePos_of_gt_zero
         rw [__smtx_model_eval.eq_19, __smtx_model_eval.eq_3] at hEval
         cases hv : __smtx_model_eval M (__eo_to_smt t) <;>
           simp [smtValuePos, hv, __smtx_model_eval_gt, __smtx_model_eval_lt,
-            native_qlt, SmtEval.native_qlt, native_mk_rational_zero] at hEval ⊢
+            native_mk_rational_zero] at hEval ⊢
         exact hEval
 
 private theorem smtValueNeg_of_lt_zero
@@ -247,7 +246,7 @@ private theorem smtValueNeg_of_lt_zero
         rw [__smtx_model_eval.eq_17, __smtx_model_eval.eq_3] at hEval
         cases hv : __smtx_model_eval M (__eo_to_smt t) <;>
           simp [smtValueNeg, hv, __smtx_model_eval_lt,
-            native_qlt, SmtEval.native_qlt, native_mk_rational_zero] at hEval ⊢
+            native_mk_rational_zero] at hEval ⊢
         exact hEval
 
 private theorem smtValueNonzero_of_not_eq_zero
@@ -1142,7 +1141,7 @@ private theorem eo_interprets_gt_zero_of_smtValuePos
         rw [__smtx_model_eval.eq_2, hEval]
         simpa [__smtx_model_eval_gt, __smtx_model_eval_lt, native_zlt,
           SmtEval.native_zlt] using hPos
-  | Rational q =>
+  | Real q =>
       rw [hEval] at hPos
       simp [smtValuePos] at hPos
       have hPres :=
@@ -1213,7 +1212,7 @@ private theorem eo_interprets_lt_zero_of_smtValueNeg
           (__smtx_model_eval M (SmtTerm.Numeral 0)) = SmtValue.Boolean true
         rw [__smtx_model_eval.eq_2, hEval]
         simpa [__smtx_model_eval_lt, native_zlt, SmtEval.native_zlt] using hNeg
-  | Rational q =>
+  | Real q =>
       rw [hEval] at hNeg
       simp [smtValueNeg] at hNeg
       have hPres :=

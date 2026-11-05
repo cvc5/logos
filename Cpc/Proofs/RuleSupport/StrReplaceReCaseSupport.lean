@@ -1314,7 +1314,6 @@ theorem str_replace_re_reduction_pred_true
                 SmtValue.Numeral (Int.ofNat matchLen) := by
             simp [__smtx_model_eval, __smtx_model_eval__,
               hFinishEval, hFirstEval, native_zplus, native_zneg]
-            exact hEndDiff
           have hSuffixLenEval :
               __smtx_model_eval M (SmtTerm.neg sourceLen finish) =
                 SmtValue.Numeral

@@ -229,6 +229,7 @@ private theorem facts___eo_prog_arith_int_eq_conflict_impl
     have hFloor : native_real_to_int cq = ti := by
       rw [← hEq, native_real_to_int_int_to_real]
     exact hCNonInt (by rw [hFloor]; exact hEq)
+  have hTargetNe' : (ti : native_Real) ≠ cq := hTargetNe
   have hEvalInner :
       __smtx_model_eval M (__eo_to_smt (eqTerm (toRealTerm t) c)) =
         SmtValue.Boolean false := by
@@ -238,7 +239,7 @@ private theorem facts___eo_prog_arith_int_eq_conflict_impl
     rw [smtx_eval_eq_term_eq, eo_to_smt_to_real_eq,
       smtx_eval_to_real_term_eq, hTEval, hCEval]
     simp [__smtx_model_eval_to_real, __smtx_model_eval_eq, native_veq,
-      native_req, hTargetNe]
+      native_req, hTargetNe']
   rw [hProgEq]
   exact RuleProofs.eo_interprets_eq_of_rel M
     (eqTerm (toRealTerm t) c) (Term.Boolean false) hProgBool' <| by

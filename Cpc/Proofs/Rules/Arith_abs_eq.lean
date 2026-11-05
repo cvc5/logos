@@ -328,7 +328,7 @@ private theorem real_abs_eq_bool (x y : native_Real) :
     native_or (native_req x y)
       (native_or (native_req x (native_rneg y)) false) := by
   show decide (|x| = |y|) = (decide (x = y) || (decide (x = -y) || false))
-  rw [Bool.or_false, ← decide_or, decide_eq_decide]
+  rw [Bool.or_false, ← Bool.decide_or, decide_eq_decide]
   exact abs_eq_abs
 
 private theorem eval_result_int
@@ -438,6 +438,7 @@ private theorem eval_result_real
         SmtTerm.eq (__eo_to_smt (absTerm x)) (__eo_to_smt (absTerm y)) by rfl]
     rw [smtx_eval_eq_term_eq, hxAbs, hyAbs]
     simp [__smtx_model_eval_eq, native_veq, native_req]
+    exact decide_eq_decide.mpr Iff.rfl
   have hEqXY :
       __smtx_model_eval M (__eo_to_smt (eqTerm x y)) =
         SmtValue.Boolean (native_req xq yq) := by
@@ -452,6 +453,7 @@ private theorem eval_result_real
         SmtTerm.eq (__eo_to_smt x) (__eo_to_smt (negTerm y)) by rfl]
     rw [smtx_eval_eq_term_eq, hxEval, hyNeg]
     simp [__smtx_model_eval_eq, native_veq, native_req]
+    exact decide_eq_decide.mpr Iff.rfl
   have hOrTail :
       __smtx_model_eval M
           (__eo_to_smt (orTerm (eqTerm x (negTerm y)) (Term.Boolean false))) =

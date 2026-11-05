@@ -634,7 +634,7 @@ theorem reConcat_nil_eval_empty_of_is_list_nil_true
                 SmtValue.RegLan (native_str_to_re ([] : native_String))
               simp [__smtx_model_eval, __smtx_model_eval_str_to_re,
                 native_str_to_re, impl_native_re_of_list, native_pack_string,
-                impl_native_string_to_values, native_pack_seq, native_unpack_seq]
+                native_pack_seq, native_unpack_seq]
           | cons c cs =>
               simp at hNil
 
@@ -753,7 +753,7 @@ theorem reConcat_singleton_elim_rel_eval
             | Numeral n =>
                 cases hTailEval : __smtx_model_eval M (__eo_to_smt tail) <;>
                   simp [__smtx_model_eval_re_concat, hHeadEval, hTailEval] at hConcatEval'
-            | Rational q =>
+            | Real q =>
                 cases hTailEval : __smtx_model_eval M (__eo_to_smt tail) <;>
                   simp [__smtx_model_eval_re_concat, hHeadEval, hTailEval] at hConcatEval'
             | Binary i n =>

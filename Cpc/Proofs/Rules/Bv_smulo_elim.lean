@@ -273,7 +273,6 @@ private theorem signed_formula_value {W X Y : Nat} {sx sy scan : Bool}
     dsimp [P, inc]
     cases sx <;> cases sy <;> simp
     · exact Nat.mul_le_mul (Nat.le_succ X) (Nat.le_succ Y)
-    · exact Nat.mul_le_mul_right (Y + 1) (Nat.le_succ X)
     · exact Nat.mul_le_mul_left (X + 1) (Nat.le_succ Y)
   by_cases hp : highPair W X Y
   · have hscanTrue : scan = true := hscan.2 hp
@@ -371,7 +370,7 @@ private theorem nil_bvxor_bitvec_succ_of_ne_stuck
 
 private theorem bv1_xor (x y : Bool) :
     __smtx_model_eval_bvxor (bv1 x) (bv1 y) = bv1 (x ^^ y) := by
-  cases x <;> cases y <;> native_decide
+  cases x <;> cases y <;> decide
 
 private theorem smulo_bv_toInt_emod (w : Nat) (x : BitVec w) :
     x.toInt % (2 ^ w : Int) = (x.toNat : Int) := by
@@ -841,7 +840,7 @@ private theorem binary_one_eq_bv1_of_lt_two
     (A : Nat) (hA : A < 2) :
     SmtValue.Binary 1 (A : Int) = bv1 (A.testBit 0) := by
   have hA01 : A = 0 ∨ A = 1 := by omega
-  rcases hA01 with rfl | rfl <;> native_decide
+  rcases hA01 with rfl | rfl <;> decide
 
 private theorem signedMag_eq_xor_sign_mask
     (W A : Nat) (hA : A < 2 ^ (W + 1)) :

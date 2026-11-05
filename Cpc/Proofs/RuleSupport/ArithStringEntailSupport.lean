@@ -69,7 +69,7 @@ private theorem str_arith_entail_simple_rec_mon_denote_nonneg
                 native_teq, hNeg] at hSimple ⊢
             exact hSimple
           simp [arith_mon_denote_real, arith_mvar_denote_real, __smtx_model_eval_mult,
-            native_qmult, native_mk_rational_one, Rat.mul_one] at hDen
+            ] at hDen
           subst qm
           exact ⟨native_qlt_false_nonneg hParts.1, hParts.2⟩
       | Apply f rest =>
@@ -88,8 +88,8 @@ private theorem str_arith_entail_simple_rec_mon_denote_nonneg
                                   (Term.Apply (Term.UOp UserOp.str_len) s) <;>
                               cases hRest : arith_mvar_denote_real M rest <;>
                               simp [arith_mon_denote_real, arith_mvar_denote_real, hAtom,
-                                hRest, __smtx_model_eval_mult, native_qmult] at hDen
-                            case Rational.Rational qa qr =>
+                                hRest, __smtx_model_eval_mult] at hDen
+                            case Real.Rational qa qr =>
                               have hRestMon :
                                   arith_mon_denote_real M
                                       (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_mon)
@@ -166,8 +166,8 @@ private theorem str_arith_entail_simple_rec_denote_nonneg
                                                   (Term.Rational c)) <;>
                                             cases hTail : arith_poly_denote_real M tail <;>
                                             simp [arith_poly_denote_real, hMon, hTail,
-                                              __smtx_model_eval_plus, native_qplus] at hDen
-                                          case Rational.Rational qm qp =>
+                                              __smtx_model_eval_plus] at hDen
+                                          case Real.Rational qm qp =>
                                             have hMonTail :=
                                               str_arith_entail_simple_rec_mon_denote_nonneg
                                                 M tail
@@ -376,7 +376,7 @@ private theorem geq_eval_true_of_diff_denote_nonneg
         __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.geq) n) m) =
           SmtTerm.geq (__eo_to_smt n) (__eo_to_smt m) by rfl]
     rw [__smtx_model_eval.eq_20, hEvalN, hEvalM]
-    simp [__smtx_model_eval_geq, __smtx_model_eval_leq, hQle]
+    simp [__smtx_model_eval_geq, __smtx_model_eval_leq]
 
 theorem arith_string_pred_simple_geq_true
     (M : SmtModel) (hM : model_wf M) (n m : Term) :
@@ -1290,7 +1290,6 @@ private theorem int_eval_le_of_eo_eq_true
   have hEqTerms := eo_eq_true_eq hEq
   have hZEq := int_eval_eq_of_term_eq M hEqTerms hNEval hMEval
   rw [hZEq]
-  exact Int.le_refl zm
 
 private theorem int_eval_ge_of_eo_eq_true
     (M : SmtModel) {n m : Term} {zn zm : native_Int} :
@@ -1302,7 +1301,6 @@ private theorem int_eval_ge_of_eo_eq_true
   have hEqTerms := eo_eq_true_eq hEq
   have hZEq := int_eval_eq_of_term_eq M hEqTerms hNEval hMEval
   rw [hZEq]
-  exact Int.le_refl zm
 
 private theorem l1_str_to_int_true
     (s m : Term) :
@@ -1693,7 +1691,6 @@ private theorem native_seq_extract_len_ge_arg_of_in_range
         omega
       rw [hTakeNat, List.length_take, Nat.min_eq_left hNLeDrop]
       rw [hnCast]
-      exact Int.le_refl _
 
 private theorem native_seq_extract_len_ge_len_sub_start_of_covers_end
     (xs : List SmtValue) (i n : native_Int) :
@@ -1756,10 +1753,8 @@ private theorem native_seq_extract_len_ge_len_sub_start_of_covers_end
             Int.ofNat (xs.drop (Int.toNat i)).length <=
               Int.ofNat (Int.toNat (Int.ofNat xs.length - i))
           rw [hDropLenCast, hDiffCast]
-          exact Int.le_refl _)
       rw [hTakeNat, hTakeEq]
       rw [hDropLen, hSubCast, hiCast]
-      exact Int.le_refl _
 
 private theorem native_seq_extract_len_le_len_sub_start_of_start_le_len
     (xs : List SmtValue) (i n : native_Int) :
@@ -1848,7 +1843,6 @@ private theorem native_seq_replace_len_le_len_add_repl
       let idx := native_seq_indexof xs (p :: ps) 0
       by_cases hIdxNeg : idx < 0
       · simp [idx, hIdxNeg]
-        omega
       · have hIdxNonneg : 0 <= idx := Int.le_of_not_gt hIdxNeg
         have hBound :
             Int.toNat idx + (p :: ps).length <= xs.length := by
@@ -1875,7 +1869,6 @@ private theorem native_seq_replace_len_ge_len_sub_pat
   | nil =>
       simp [StrEqReplSupport.native_seq_replace_eq_indexof,
         StrEqReplSupport.native_seq_indexof_nil_zero, List.length_append]
-      omega
   | cons p ps =>
       rw [StrEqReplSupport.native_seq_replace_eq_indexof]
       let idx := native_seq_indexof xs (p :: ps) 0
@@ -1959,7 +1952,6 @@ private theorem native_seq_replace_len_ge_len_of_pat_le_repl_or_len_le_repl
   | nil =>
       simp [StrEqReplSupport.native_seq_replace_eq_indexof,
         StrEqReplSupport.native_seq_indexof_nil_zero, List.length_append]
-      omega
   | cons p ps =>
       rw [StrEqReplSupport.native_seq_replace_eq_indexof]
       let idx := native_seq_indexof xs (p :: ps) 0
@@ -3039,7 +3031,6 @@ private theorem str_arith_entail_is_approx_int_eval_order_bool
           have hEqTerms := eo_eq_true_eq hEqCond
           have hZEq := int_eval_eq_of_term_eq M hEqTerms hNEval hMEval
           rw [hZEq]
-          exact Int.le_refl zm
         · rcases hL1Branch with ⟨_, hAnd⟩
           rcases eo_and_true hAnd with ⟨hA, hB⟩
           rcases plus_int_eval_decomp M hM n1 n2 zn hNInt hNEval with
@@ -3075,7 +3066,6 @@ private theorem str_arith_entail_is_approx_int_eval_order_bool
           have hEqTerms := eo_eq_true_eq hEqCond
           have hZEq := int_eval_eq_of_term_eq M hEqTerms hNEval hMEval
           rw [hZEq]
-          exact Int.le_refl zm
         · rcases hL1Branch with ⟨_, hAnd⟩
           rcases eo_and_true hAnd with ⟨hA, hB⟩
           rcases plus_int_eval_decomp M hM n1 n2 zn hNInt hNEval with
@@ -3105,7 +3095,6 @@ private theorem str_arith_entail_is_approx_int_eval_order_bool
         · have hEqTerms := eo_eq_true_eq hEqBranch
           have hZEq := int_eval_eq_of_term_eq M hEqTerms hNEval hMEval
           rw [hZEq]
-          exact Int.le_refl zm
         · have hReq :
               __eo_requires (__eo_eq n1 n1') (Term.Boolean true)
                   (__eo_ite (__eo_is_neg n1)
@@ -3161,7 +3150,6 @@ private theorem str_arith_entail_is_approx_int_eval_order_bool
         · have hEqTerms := eo_eq_true_eq hEqBranch
           have hZEq := int_eval_eq_of_term_eq M hEqTerms hNEval hMEval
           rw [hZEq]
-          exact Int.le_refl zm
         · have hReq :
               __eo_requires (__eo_eq n1 n1') (Term.Boolean true)
                   (__eo_ite (__eo_is_neg n1)

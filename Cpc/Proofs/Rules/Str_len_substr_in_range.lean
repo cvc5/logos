@@ -214,7 +214,6 @@ private theorem native_seq_extract_len_ge_arg_of_in_range
         omega
       rw [hTakeNat, List.length_take, Nat.min_eq_left hNLeDrop]
       rw [hnCast]
-      exact Int.le_refl _
 
 private theorem native_seq_extract_length_eq_of_in_range
     (xs : List SmtValue) (i n : native_Int)

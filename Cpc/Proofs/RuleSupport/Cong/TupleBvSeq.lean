@@ -5,6 +5,8 @@ import all Cpc.Proofs.RuleSupport.Cong.ApplySpineB
 
 public section
 
+noncomputable section
+
 open Eo
 open SmtEval
 open Smtm

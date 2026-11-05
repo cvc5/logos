@@ -1775,8 +1775,7 @@ private theorem facts_arith_reduction_is_int
       __smtx_model_eval_to_int, __smtx_model_eval_to_real,
       __smtx_model_eval_is_int, __smtx_model_eval_eq,
       __smtx_model_eval__, __smtx_model_eval_leq, __smtx_model_eval_lt,
-      __smtx_model_eval_and, native_veq, native_floor_remainder_nonneg,
-      native_floor_remainder_lt_one, native_and, eq_comm]
+      __smtx_model_eval_and, native_veq, native_and]
 
 private theorem facts_arith_reduction_to_int
     (M : SmtModel) (hM : model_wf M) (u : Term)
@@ -1834,8 +1833,9 @@ private theorem facts_arith_reduction_to_int
       __smtx_model_eval_to_int, __smtx_model_eval_to_real,
       __smtx_model_eval_eq, __smtx_model_eval__,
       __smtx_model_eval_leq, __smtx_model_eval_lt, __smtx_model_eval_and,
-      native_veq, 
-      native_and]
+      native_veq, native_and]
+    exact ⟨by simpa using native_floor_remainder_nonneg q,
+      by simpa using native_floor_remainder_lt_one q⟩
 
 private theorem facts_arith_reduction_qdiv
     (M : SmtModel) (hM : model_wf M) (u v : Term)
@@ -2074,12 +2074,13 @@ private theorem facts_arith_reduction_qdiv_total
           __smtx_model_eval.eq_10, __smtx_model_eval.eq_13,
           __smtx_model_eval.eq_16, __smtx_model_eval.eq_21,
           smtx_eval_qdiv_total_term_eq, smtx_eval_eq_term_eq,
-          hEvalU, hEvalV, hZero, hN2, __smtx_model_eval__at_purify,
+          hEvalU, hEvalV, hN2, __smtx_model_eval__at_purify,
           __smtx_model_eval_to_real, __smtx_model_eval_qdiv_total,
           __smtx_model_eval_mult, __smtx_model_eval_eq,
           __smtx_model_eval_not, __smtx_model_eval_or,
           __smtx_model_eval_imp, __smtx_model_eval_and, native_veq,
           native_not, native_or, native_and]
+        rw [← mul_div_assoc, mul_div_cancel_left₀ _ hN2]
   · have hEvalUTy :
         __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt u)) =
           SmtType.Real := by
@@ -2155,7 +2156,7 @@ private theorem facts_arith_reduction_qdiv_total
           __smtx_model_eval_not, __smtx_model_eval_or,
           __smtx_model_eval_imp, __smtx_model_eval_and, native_veq,
           native_not, native_or, native_and]
-        simp [__smtx_model_eval.eq_1, __smtx_model_eval.eq_3,
+      · simp [__smtx_model_eval.eq_1, __smtx_model_eval.eq_3,
           __smtx_model_eval.eq_7, __smtx_model_eval.eq_9,
           __smtx_model_eval.eq_10, __smtx_model_eval.eq_13,
           __smtx_model_eval.eq_16, smtx_eval_qdiv_total_term_eq,
@@ -2165,6 +2166,7 @@ private theorem facts_arith_reduction_qdiv_total
           __smtx_model_eval_not, __smtx_model_eval_or,
           __smtx_model_eval_imp, __smtx_model_eval_and, native_veq,
           native_not, native_or, native_and]
+        rw [← mul_div_assoc, mul_div_cancel_left₀ _ hZero]
 
 private theorem facts_arith_reduction_div
     (M : SmtModel) (a b : Term)

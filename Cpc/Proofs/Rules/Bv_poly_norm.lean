@@ -116,10 +116,10 @@ private theorem emod_neg_congr
     rcases hDvd with ⟨k, hk⟩
     refine ⟨-k, ?_⟩
     rw [hk]
-    simp [Int.mul_neg]
+    simp
   have hZeroNeg : ((-a) - (-b)) % m = 0 := by
     have hEq : (-a) - (-b) = - (a - b) := by
-      simp [Int.sub_eq_add_neg, Int.neg_add, Int.add_comm]
+      simp [Int.sub_eq_add_neg, Int.add_comm]
     rw [hEq]
     exact Int.emod_eq_zero_of_dvd hDvdNeg
   exact (Int.emod_eq_emod_iff_emod_sub_eq_zero).mpr hZeroNeg
@@ -323,7 +323,6 @@ decreasing_by
         sizeOf rest1 <
           sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons a1) rest1) := by
         simp
-        omega
     omega
   · have hSize :
         sizeOf rest2 <
@@ -388,7 +387,6 @@ decreasing_by
         sizeOf rest1 <
           sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons a1) rest1) := by
         simp
-        omega
     omega
   · have hSize :
         sizeOf rest2 <
@@ -639,7 +637,6 @@ decreasing_by
                   (Term.Rational (native_to_real c1))))
               p1) := by
         simp
-        omega
     omega
   · have hSize :
         sizeOf p2 <
@@ -650,7 +647,6 @@ decreasing_by
                   (Term.Rational (native_to_real c2))))
               p2) := by
         simp
-        omega
     omega
 
 private theorem bv_poly_denote_of_poly_add
@@ -832,7 +828,6 @@ decreasing_by
                   (Term.Rational (native_to_real c1))))
               p1) := by
         simp
-        omega
     omega
   · have hSize :
         sizeOf p2 <
@@ -843,7 +838,6 @@ decreasing_by
                   (Term.Rational (native_to_real c2))))
               p2) := by
         simp
-        omega
     omega
 
 private theorem bv_poly_int_wf_of_poly_mul_mon

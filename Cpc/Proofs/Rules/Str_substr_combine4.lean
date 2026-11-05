@@ -65,7 +65,6 @@ private theorem native_seq_extract_nested_of_actual_cover
             Int.toNat m := List.length_take_le _ _
         apply Int.le_trans (Int.ofNat_le.mpr hLen)
         rw [Int.toNat_of_nonneg (Int.le_of_lt hm)]
-        exact Int.le_refl m
       have hStart : native_seq_len (native_seq_extract xs i m) ≤ j := by
         simpa [native_seq_len] using Int.le_trans hInnerLen hMLeJ
       exact native_seq_extract_empty_of_start_ge_len_local
