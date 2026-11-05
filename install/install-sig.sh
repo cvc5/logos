@@ -486,6 +486,7 @@ LEAN_OUTPUTS=(
   "LogosTerm.lean"
   "Parser.lean"
   "SmtEval.lean"
+  "SmtReal.lean"
   "SmtSyntax.lean"
   "SmtTyping.lean"
   "SmtTranslate.lean"
