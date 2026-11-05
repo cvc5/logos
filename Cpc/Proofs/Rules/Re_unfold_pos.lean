@@ -9,6 +9,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
@@ -1845,7 +1848,6 @@ termination_by r idx curS ss rv hComponent hCurTy hCurEval hrTy hrEval hMem
     hRecNe => sizeOf r
 decreasing_by
   simp_wf
-  omega
 
 private theorem re_unfold_pos_concat_rec_types
     (t ro : Term) :
@@ -2236,7 +2238,6 @@ private theorem re_unfold_pos_concat_rec_types
 termination_by r idx curS hComponent hCurTy hrTy hRecNe => sizeOf r
 decreasing_by
   simp_wf
-  omega
 
 
 theorem re_unfold_pos_nonstuck_shape (p : Term) :
