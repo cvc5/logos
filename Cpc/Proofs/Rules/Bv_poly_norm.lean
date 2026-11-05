@@ -319,17 +319,11 @@ private theorem bv_mvar_wf_of_mvar_mul_mvar
 termination_by sizeOf vars1 + sizeOf vars2
 decreasing_by
   simp_wf
-  · have hSize :
-        sizeOf rest1 <
-          sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons a1) rest1) := by
-        simp
-    omega
-  · have hSize :
-        sizeOf rest2 <
-          sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons c1) rest2) := by
-        simp
-        omega
-    omega
+  have hSize :
+      sizeOf rest2 <
+        sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons c1) rest2) := by
+    simp <;> omega
+  omega
 
 private theorem bv_mvar_denote_of_mvar_mul_mvar
     (M : SmtModel) {vars1 vars2 : Term}
@@ -383,17 +377,11 @@ private theorem bv_mvar_denote_of_mvar_mul_mvar
 termination_by sizeOf vars1 + sizeOf vars2
 decreasing_by
   simp_wf
-  · have hSize :
-        sizeOf rest1 <
-          sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons a1) rest1) := by
-        simp
-    omega
-  · have hSize :
-        sizeOf rest2 <
-          sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons c1) rest2) := by
-        simp
-        omega
-    omega
+  have hSize :
+      sizeOf rest2 <
+        sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons c1) rest2) := by
+    simp <;> omega
+  omega
 
 private theorem bv_mon_int_wf_of_mon_mul_mon
     {m1 m2 : Term}
@@ -482,7 +470,7 @@ private theorem bv_poly_denote_of_poly_neg
           simp [__poly_neg, __eo_mk_apply, __eo_neg, bv_poly_denote,
             bv_mon_denote, native_to_int_to_real, native_to_int_qneg_to_real, ih,
             SmtEval.native_zneg]
-          simp [Int.neg_add, Int.neg_mul]
+          ac_rfl
 
 private theorem bv_poly_int_wf_of_poly_add
     {P1 P2 : Term}

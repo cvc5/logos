@@ -827,91 +827,30 @@ private theorem native_str_substr_tail_len_cons
     (c : native_Char) (cs : native_String) :
     native_str_substr (c :: cs) 1 (Int.ofNat (cs.length + 1)) = cs := by
   cases cs with
-  | nil =>
-      simp [native_str_substr, native_str_len]
+  | nil => simp [native_str_substr, native_str_len]
   | cons d ds =>
-      have hIf :
-          ¬ (((↑(List.length ds) : Int) + 1 + 1) <= 0 ∨
-              ((↑(List.length ds) : Int) + 1 + 1) <= 1) := by
-        omega
-      have hMin :
-          (min (((↑(List.length ds) : Int) + 1))
-              (↑(List.length ds) : Int) + 1).toNat =
-            ds.length + 1 := by
-        have h :
-            min (((↑(List.length ds) : Int) + 1))
-              (↑(List.length ds) : Int) =
-              (↑(List.length ds) : Int) := by
-          exact Int.min_eq_right (by omega)
-        rw [h]
-        simp
-      simp [native_str_substr, native_str_len]
-      rw [hMin]
-      simp
-
+      have hPos : (0 : Int) < (ds.length : Int) + 1 + 1 := by omega
+      simp [native_str_substr, native_str_len, hPos]
 private theorem eo_extract_tail_len_cons
     (c : native_Char) (cs : native_String) :
     __eo_extract (Term.String (c :: cs)) (Term.Numeral 1)
-        (__eo_len (Term.String (c :: cs))) =
-      Term.String cs := by
+        (__eo_len (Term.String (c :: cs))) = Term.String cs := by
   simp only [__eo_extract, __eo_len, native_str_len]
   rw [show native_zplus
         (native_zplus (Int.ofNat ((c :: cs).length)) (native_zneg 1)) 1 =
       Int.ofNat (cs.length + 1) by
         change ((Int.ofNat (List.length (c :: cs)) : Int) + -1 + 1) =
           Int.ofNat (cs.length + 1)
-        simp
+        simp]
   exact congrArg Term.String (native_str_substr_tail_len_cons c cs)
-
 private theorem extractString_cons_succ_nat_local
     (c : native_Char) (cs : native_String) (i : Nat) :
     RuleProofs.extractString (c :: cs) ((i : Int) + 1) =
       RuleProofs.extractString cs (i : Int) := by
-  by_cases hLt : i < cs.length
-  · have hLenNotLe : ¬ cs.length <= i := Nat.not_le_of_gt hLt
-    have hLeftNonneg :
-        ¬ (((i : Int) + 1 < 0) ∨
-          ((i : Int) + 1 + -((i : Int) + 1) + 1 <= 0)) := by
-      omega
-    have hRightNonneg :
-        ¬ (((i : Int) < 0) ∨ ((i : Int) + -(i : Int) + 1 <= 0)) := by
-      omega
-    have hMinLeft :
-        (min ((i : Int) + 1 + -((i : Int) + 1) + 1)
-            ((cs.length : Int) + 1 - ((i : Int) + 1))).toNat = 1 := by
-      have h :
-          min ((i : Int) + 1 + -((i : Int) + 1) + 1)
-              ((cs.length : Int) + 1 - ((i : Int) + 1)) =
-            1 := by
-        omega
-      simp
-    have hMinRight :
-        (min ((i : Int) + -(i : Int) + 1)
-            ((cs.length : Int) - (i : Int))).toNat = 1 := by
-      have h :
-          min ((i : Int) + -(i : Int) + 1)
-              ((cs.length : Int) - (i : Int)) =
-            1 := by
-        omega
-      simp
-    simp [RuleProofs.extractString, native_str_substr, native_str_len,
-      native_zplus, native_zneg, hLenNotLe,
-      List.drop_succ_cons]
-    -- both guards are false and both branches agree.  `rw [ite_eq_right ..]` cannot
-    -- be used: it must match the goal's `Decidable` instance syntactically,
-    -- while `refine` unifies it up to defeq and hands us the exact conditions.
-    refine Eq.trans (ite_eq_right ?_) (Eq.symm (ite_eq_right ?_))
-    -- reuse the negations proved above; the goal's disjunct is the `Bool`
-    -- form `decide _ = true`, which is only propositionally equal to theirs
-    · rintro (h | h)
-      · exact hLeftNonneg (Or.inr (of_decide_eq_true h))
-    · rintro (h | h)
-      · exact hRightNonneg (Or.inr (of_decide_eq_true h))
-  · have hLeft : ((i : Int) + 1) >= ((cs.length : Int) + 1) := by
-      omega
-    have hLenLe : cs.length <= i := Nat.le_of_not_gt hLt
-    simp [RuleProofs.extractString, native_str_substr, native_str_len,
-      native_zplus, native_zneg, hLeft, hLenLe]
+  have hi : ¬ (i : Int) < 0 := by omega
+  have hi1 : ¬ (i : Int) + 1 < 0 := by omega
+  simp [RuleProofs.extractString, native_str_substr, native_str_len, hi, hi1,
+    native_zplus, native_zneg, List.drop_succ_cons]
 
 private theorem substrWord_cons_succ_nat_local
     (c : native_Char) (cs : native_String) :
