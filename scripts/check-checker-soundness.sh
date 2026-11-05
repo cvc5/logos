@@ -116,7 +116,14 @@ lake -d verification build "${PKG}.Proofs.CheckerCore" >/dev/null
 run_lean() {
   # Lake supplies per-module artifact paths across the two projects. A plain
   # `lake env lean` search stops at the first Cpc namespace directory.
-  lake -d verification lean "${scratch}" 2>&1 | grep -v "declaration uses \`sorry\`" || true
+  #
+  # The scratch file is in no library, so it does not get the settings the
+  # lakefile gives the modules it was assembled from, and any output is a failure
+  # here. Pass the lakefile's list, so Mathlib's linters stay off in both places.
+  local weak_args
+  mapfile -t weak_args < <(grep -o '"-Dweak\.[^"]*"' verification/lakefile.toml | tr -d '"')
+  lake -d verification lean "${scratch}" -- "${weak_args[@]}" 2>&1 \
+    | grep -v "declaration uses \`sorry\`" || true
 }
 
 echo "Typechecking ${CHECKER}$([ -f "${API_CORRECT}" ] && echo " and ${API_CORRECT}") with the rule bridge stubbed..."
