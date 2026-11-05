@@ -279,22 +279,28 @@ private theorem native_qlt_add_of_qlt_of_qle {a b c d : native_Real} :
     native_rlt a b = true ->
     native_rleq c d = true ->
     native_rlt (native_rplus a c) (native_rplus b d) = true := by
-  simp only [native_rlt, native_rleq, native_rplus, decide_eq_true_eq]
-  exact fun h1 h2 => add_lt_add_of_lt_of_le h1 h2
+  intro h1 h2
+  have h1' : a < b := of_decide_eq_true h1
+  have h2' : c ≤ d := of_decide_eq_true h2
+  exact decide_eq_true (add_lt_add_of_lt_of_le h1' h2')
 
 private theorem native_qlt_add_of_qle_of_qlt {a b c d : native_Real} :
     native_rleq a b = true ->
     native_rlt c d = true ->
     native_rlt (native_rplus a c) (native_rplus b d) = true := by
-  simp only [native_rlt, native_rleq, native_rplus, decide_eq_true_eq]
-  exact fun h1 h2 => add_lt_add_of_le_of_lt h1 h2
+  intro h1 h2
+  have h1' : a ≤ b := of_decide_eq_true h1
+  have h2' : c < d := of_decide_eq_true h2
+  exact decide_eq_true (add_lt_add_of_le_of_lt h1' h2')
 
 private theorem native_qleq_add_of_qle_of_qle {a b c d : native_Real} :
     native_rleq a b = true ->
     native_rleq c d = true ->
     native_rleq (native_rplus a c) (native_rplus b d) = true := by
-  simp only [native_rleq, native_rplus, decide_eq_true_eq]
-  exact fun h1 h2 => add_le_add h1 h2
+  intro h1 h2
+  have h1' : a ≤ b := of_decide_eq_true h1
+  have h2' : c ≤ d := of_decide_eq_true h2
+  exact decide_eq_true (add_le_add h1' h2')
 
 private theorem smt_eval_int_of_type
     (M : SmtModel) (hM : model_wf M) (t : Term)

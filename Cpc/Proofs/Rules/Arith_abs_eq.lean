@@ -327,8 +327,9 @@ private theorem real_abs_eq_bool (x y : native_Real) :
     native_req (native_rabs x) (native_rabs y) =
     native_or (native_req x y)
       (native_or (native_req x (native_rneg y)) false) := by
-  rw [Bool.eq_iff_iff]
-  simp [native_req, native_rabs, native_rneg, native_or, abs_eq_abs]
+  show decide (|x| = |y|) = (decide (x = y) || (decide (x = -y) || false))
+  rw [Bool.or_false, ← decide_or, decide_eq_decide]
+  exact abs_eq_abs
 
 private theorem eval_result_int
     (M : SmtModel) (hM : model_wf M) (x y : Term)
