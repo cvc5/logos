@@ -59,7 +59,7 @@ expand_tilde() {
 # The pinned commit of cvc5/ethos used to build the Eunoia compiler.
 # scripts/bump-eoc-version.py advances this pin to the latest Ethos main.
 # Keep an exact commit so compiler output changes only on an explicit bump.
-ETHOS_VERSION="edb256fea3b541f201e6e87a54006c96c762068a"
+ETHOS_VERSION="cf9701278e18fedd2eed3ed132e6423bc2b9da8a"
 DEPS_DIR=""
 JOBS=""
 KEEP_TMP=0
