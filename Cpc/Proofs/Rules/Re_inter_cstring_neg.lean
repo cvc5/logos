@@ -188,7 +188,8 @@ private theorem smt_value_rel_inter_cstring_neg
   cases hSg : RuleProofs.native_str_in_re str (native_str_to_re pat)
   · simp [hSg]
   · have hStrEq : str = pat :=
-      RuleProofs.native_str_in_re_str_to_re_eq hValid hSg
+      RuleProofs.native_str_in_re_str_to_re_eq hValid (by
+        simpa [impl_native_string_to_values, List.map_eq_flatMap] using hSg)
     have hFullAtStr :
         (RuleProofs.native_str_in_re str (native_str_to_re pat) &&
             RuleProofs.native_str_in_re str (native_re_inter xv ysv)) =

@@ -257,7 +257,8 @@ private theorem smt_value_rel_union_const_elim
       cases hSg : RuleProofs.native_str_in_re str (native_str_to_re pat)
       · rfl
       · have hStrEq : str = pat :=
-          RuleProofs.native_str_in_re_str_to_re_eq hValid hSg
+          RuleProofs.native_str_in_re_str_to_re_eq hValid (by
+            simpa [impl_native_string_to_values, List.map_eq_flatMap] using hSg)
         rw [hStrEq, hPatMem] at hRv
         cases hRv
     simp [hRv, hSingletonFalse]

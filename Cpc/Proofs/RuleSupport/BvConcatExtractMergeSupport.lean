@@ -748,11 +748,11 @@ private theorem eval_bv_concat_extract_merge_core
   have hDHighInt : 0 < kv + 1 + -j2v := by
     have hsimpa := hDHigh0
     try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg] at hsimpa ⊢
-    exact of_decide_eq_true hsimpa
+    exact hsimpa
   have hDLowInt : 0 < j1v + 1 + -iv := by
     have hsimpa := hDLow0
     try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg] at hsimpa ⊢
-    exact of_decide_eq_true hsimpa
+    exact hsimpa
   have hJ2LtK1 : j2v < kv + 1 := by
     have hSub : 0 < (kv + 1 - j2v) := by
       rw [Int.sub_eq_add_neg]

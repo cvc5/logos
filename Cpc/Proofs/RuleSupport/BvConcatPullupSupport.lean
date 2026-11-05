@@ -2112,7 +2112,7 @@ theorem bvConcatPullup1RhsSmtTypes
       (show (↑(A + B - 1) : Int) < ↑(A + B) by
         exact_mod_cast (show A + B - 1 < A + B by omega))
     try simp [SmtEval.native_zlt, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
-    exact decide_eq_true hsimpa
+    exact hsimpa
   have hHighWidth : native_zlt 0
       (native_zplus (native_zplus (native_nat_to_int (A + B - 1)) 1)
         (native_zneg (native_nat_to_int B))) = true := by
@@ -2125,7 +2125,7 @@ theorem bvConcatPullup1RhsSmtTypes
       (show (↑(B - 1) : Int) < ↑(A + B) by
         exact_mod_cast (show B - 1 < A + B by omega))
     try simp [SmtEval.native_zlt, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
-    exact decide_eq_true hsimpa
+    exact hsimpa
   have hLowWidth : native_zlt 0
       (native_zplus (native_zplus (native_nat_to_int (B - 1)) 1)
         (native_zneg 0)) = true := by
@@ -2648,7 +2648,7 @@ theorem bvConcatPullup1Indices
         (↑wz : Int) + (↑wy + ↑wys) + -1 + 1 + -↑wy := by
       have hsimpa := hHighWidth
       try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
-      exact of_decide_eq_true hsimpa
+      exact hsimpa
     have hInt : (0 : Int) < (↑(wys + wz) : Int) := by
       push_cast
       omega
@@ -4565,7 +4565,7 @@ theorem bvConcatPullup2Indices
           -((↑(wz + (wy + wys)) : Int) + -↑wz) := by
       have hsimpa := hHighWidth
       try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
-      exact of_decide_eq_true hsimpa
+      exact hsimpa
     have hInt : (0 : Int) < ↑wz := by
       push_cast
       omega
@@ -5955,8 +5955,7 @@ theorem bvConcatPullup3Prem1Eval
     simp [__smtx_model_eval, __smtx_model_eval__,
       __smtx_model_eval_plus, native_zplus,
       native_zneg, native_nat_to_int, SmtEval.native_nat_to_int]
-    push_cast
-    omega
+    ac_rfl
   have hRhsEval : __smtx_model_eval M (__eo_to_smt rhs) =
       SmtValue.Numeral
         (native_zplus (native_nat_to_int (wz + wy + wu))
@@ -6179,7 +6178,7 @@ theorem bvConcatPullup3Indices
         (↑(wy + wu) : Int) + -1 + 1 + -↑wu := by
       have hsimpa := hMidWidth
       try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
-      exact of_decide_eq_true hsimpa
+      exact hsimpa
     have hInt : (0 : Int) < ↑wy := by
       push_cast
       omega
@@ -6190,7 +6189,7 @@ theorem bvConcatPullup3Indices
         (↑(wz + wy + wu) : Int) + -1 + 1 + -↑(wy + wu) := by
       have hsimpa := hHighWidth
       try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg, native_nat_to_int, SmtEval.native_nat_to_int] at hsimpa ⊢
-      exact of_decide_eq_true hsimpa
+      exact hsimpa
     have hInt : (0 : Int) < ↑wz := by
       push_cast
       omega

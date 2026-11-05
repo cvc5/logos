@@ -527,7 +527,6 @@ private theorem extract_full_drop (ss : List SmtValue) (b : Nat)
       rw [hMin, Int.toNat_natCast]
       apply List.take_of_length_le
       rw [List.length_drop]
-      exact Nat.le_refl _
     · simp only [Bool.or_eq_true, decide_eq_true_eq, Int.ofNat_eq_natCast]
       intro hAbs
       unfold native_Int at hAbs

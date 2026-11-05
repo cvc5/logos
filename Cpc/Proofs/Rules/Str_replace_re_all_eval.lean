@@ -532,7 +532,7 @@ private theorem str_eval_replace_re_all_rec_properties
             change Term.Numeral ((Int.ofNat (k + 1)) + (-1 : Int)) =
               Term.Numeral (Int.ofNat k)
             congr
-            simp [Int.ofNat_eq_natCast, Int.natCast_succ]
+            simp [Int.ofNat_eq_natCast]
           have hRawEq :
               __str_eval_replace_re_all_rec
                   (substrWord (c :: cs) 0 (c :: cs).length) (Term.String acc)
@@ -768,7 +768,7 @@ private theorem str_eval_replace_re_all_rec_properties
                         change Term.Numeral ((Int.ofNat (n + 1)) + (-1 : Int)) =
                           Term.Numeral (Int.ofNat n)
                         congr
-                        simp [Int.ofNat_eq_natCast, Int.natCast_succ]
+                        simp [Int.ofNat_eq_natCast]
                       have hRawMatch :
                           __str_eval_replace_re_all_rec word (Term.String acc) r t
                               (Term.Numeral 0) = matchBranch := by

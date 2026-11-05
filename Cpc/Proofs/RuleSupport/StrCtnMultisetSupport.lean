@@ -653,7 +653,6 @@ theorem str_multiset_overapprox_sound
           constructor
           · rwa [hOver]
           · rw [hOver, hWordCount, valueCount_string_eval M v w S hEval]
-            omega
         · obtain ⟨bStr, hStrBool⟩ := eo_is_str_boolean_of_ne_stuck s hsNe
           have hStrFalse : __eo_is_str s = Term.Boolean false := by
             cases bStr <;> simp_all
@@ -1454,7 +1453,6 @@ theorem str_is_multiset_subset_strict_done_count_lt
         refine ⟨v, ?_⟩
         rw [hXsZero]
         simp [eoListSeqValueCount, hsOne]
-        omega
       · exact finishRec hRec
   | case2 U =>
       rw [str_multiset_subset_strict_done_nil_eq xs U
@@ -3112,7 +3110,6 @@ theorem scratch_flatSeqValueCount_str_flatten_le_eval
       · simp [flatSeqValueCount, hEmpty]
       · simp [flatSeqValueCount, hEmpty]
         rw [seqTermValueCount_of_eval_seq M v t S hEval]
-        exact Nat.le_refl _
 
 theorem scratch_str_is_multiset_subset_strict_flat_count_lt
     (M : SmtModel) (hM : model_wf M)
