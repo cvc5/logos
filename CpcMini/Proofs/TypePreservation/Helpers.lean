@@ -734,7 +734,6 @@ theorem bitvec_payload_range_of_canonical
   have hPowPos : 0 < native_int_pow2 w := by
     have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
     simp [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hnot]
-    exact Int.pow_pos (by decide)
   have hEq : n = native_mod_total n (native_int_pow2 w) := by
     simpa [SmtEval.native_zeq] using hMod
   constructor
