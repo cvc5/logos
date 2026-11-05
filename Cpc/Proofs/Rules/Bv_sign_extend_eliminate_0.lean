@@ -257,7 +257,7 @@ private theorem native_binary_uts_mod_self_of_canonical
         change native_zplus (native_zmult 2 (native_mod_total (p + r) p))
             (native_zneg (p + r)) = r - p
         rw [hPAddMod]
-        simp [native_zplus, native_zmult, native_zneg]
+        change (2 : Int) * r + -(p + r) = r - p
         omega
       have hMod :
           native_mod_total (r - p) (2 * p) = p + r := by
