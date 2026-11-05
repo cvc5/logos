@@ -7,6 +7,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 10000000
@@ -168,7 +171,8 @@ private theorem smtx_model_eval_re_in_cstring_eq
         have hStrEq :
             native_unpack_string st = native_unpack_string ss :=
           RuleProofs.native_str_in_re_str_to_re_eq
-            (native_unpack_string_valid_of_typeof_seq_char hStTy) hMemStr
+            (native_unpack_string_valid_of_typeof_seq_char hStTy) (by
+              simpa [impl_native_string_to_values, List.map_eq_flatMap] using hMemStr)
         have hPackSt :
             native_pack_string (native_unpack_string st) = st :=
           native_pack_string_unpack_string_of_typeof_seq_char st hStTy
