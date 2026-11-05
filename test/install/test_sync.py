@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -28,6 +29,7 @@ files = {
     "LogosTerm.lean": "inductive UserOp where\n  | and : UserOp\n",
     "Parser.lean": "-- parser\n",
     "SmtEval.lean": "-- evaluator\n",
+    "SmtReal.lean": "-- real numbers\n",
     "SmtSyntax.lean": "-- syntax\n",
     "SmtTyping.lean": "-- static typing\n",
     "SmtTranslate.lean": "-- (UserOp.and) => SmtTerm.and\n",
@@ -78,7 +80,13 @@ class SynchronizationTests(unittest.TestCase):
         self.driver.write_text(DRIVER)
         self.tmp = self.root / "tmp"
         self.tmp.mkdir()
-        self.env = dict(os.environ, TMPDIR=str(self.tmp))
+        # macOS's /usr/bin tool launchers write an xcrun cache in TMPDIR.
+        # Prefer the running Python's tools directory to avoid those launchers.
+        python_bin = str(Path(sys.executable).parent)
+        self.env = dict(
+            os.environ, TMPDIR=str(self.tmp),
+            PATH=os.pathsep.join((python_bin, os.environ.get("PATH", os.defpath))),
+        )
         self.install()
         # Hand-written proofs must survive checks as well as real installs.
         (self.repo / "Cpc" / "Proofs" / "Rules" / "Refl.lean").write_text(
