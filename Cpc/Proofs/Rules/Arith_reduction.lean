@@ -1776,6 +1776,8 @@ private theorem facts_arith_reduction_is_int
       __smtx_model_eval_is_int, __smtx_model_eval_eq,
       __smtx_model_eval__, __smtx_model_eval_leq, __smtx_model_eval_lt,
       __smtx_model_eval_and, native_veq, native_and]
+    exact ⟨eq_comm, by simpa using native_floor_remainder_nonneg q,
+      by simpa using native_floor_remainder_lt_one q⟩
 
 private theorem facts_arith_reduction_to_int
     (M : SmtModel) (hM : model_wf M) (u : Term)
