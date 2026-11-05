@@ -37,5 +37,5 @@ moreLeanArgs = ["-DmaxHeartbeats=10000000", "-DwarningAsError=true"]
 [[lean_lib]]
 name = "CpcMiniVerification"
 roots = []
-globs = ["CpcMini.Spec", "CpcMini.SmtModelDefs", "CpcMini.SmtValueOrder", "CpcMini.SmtModel", "CpcMini.Proofs.*"]
+globs = ["CpcMini.Spec", "CpcMini.SmtReal", "CpcMini.SmtModelDefs", "CpcMini.SmtValueOrder", "CpcMini.SmtModel", "CpcMini.Proofs.*"]
 moreLeanArgs = ["-DwarningAsError=true"]
