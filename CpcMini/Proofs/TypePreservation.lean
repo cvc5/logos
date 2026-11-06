@@ -7,7 +7,7 @@ import all CpcMini.Proofs.TypePreservation.Datatypes
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -284,16 +284,16 @@ canonical value. -/
 private theorem mini_model_eval_apply_fun_canonical
     (M : SmtModel)
     (hM : model_wf M)
-    (fid : native_String)
+    (fid : ModelId)
     (A B : SmtType)
     (x : SmtValue)
     (hxTy : __smtx_typeof_value x = A)
     (hFunWF : __smtx_type_wf (SmtType.FunType A B) = true) :
-    value_canonical M.usortCard (__smtx_model_eval_apply M (SmtValue.Fun fid A B) x) := by
+    value_canonical M.usortDom (__smtx_model_eval_apply M (SmtValue.Fun fid A B) x) := by
   by_cases hxNot : x = SmtValue.NotValue
   · subst x
     simp [__smtx_model_eval_apply, value_canonical, __smtx_value_canonical]
-  · have hCan : value_canonical M.usortCard (native_eval_fun_apply M fid A B x) := by
+  · have hCan : value_canonical M.usortDom (native_eval_fun_apply M fid A B x) := by
       have hRaw := (model_total_typed_native_fun_typed hM fid A B x hFunWF hxTy).2
       simpa [value_canonical] using hRaw
     have hApply :
@@ -305,7 +305,7 @@ private theorem mini_model_eval_apply_fun_canonical
 /-- Applying `NotValue` yields a canonical value. -/
 private theorem mini_model_eval_apply_not_value_canonical
     (M : SmtModel) (x : SmtValue) :
-    value_canonical M.usortCard (__smtx_model_eval_apply M SmtValue.NotValue x) := by
+    value_canonical M.usortDom (__smtx_model_eval_apply M SmtValue.NotValue x) := by
   cases x <;>
     simp [__smtx_model_eval_apply, value_canonical, __smtx_value_canonical]
 
@@ -318,7 +318,7 @@ private theorem mini_model_eval_apply_lookup_fun_canonical
     (x : SmtValue)
     (hFunWF : __smtx_type_wf (SmtType.FunType A B) = true)
     (hxTy : __smtx_typeof_value x = A) :
-    value_canonical M.usortCard
+    value_canonical M.usortDom
       (__smtx_model_eval_apply M
         (native_model_lookup M s (SmtType.FunType A B)) x) := by
   have hLookupTy :
@@ -342,9 +342,9 @@ private theorem mini_model_eval_apply_canonical
       __smtx_typeof_value f = SmtType.FunType A B ->
         __smtx_type_wf (SmtType.FunType A B) = true)
     (hxTy : __smtx_typeof_value x = A)
-    (hf : value_canonical M.usortCard f)
-    (hx : value_canonical M.usortCard x) :
-    value_canonical M.usortCard (__smtx_model_eval_apply M f x) := by
+    (hf : value_canonical M.usortDom f)
+    (hx : value_canonical M.usortDom x) :
+    value_canonical M.usortDom (__smtx_model_eval_apply M f x) := by
   cases hHead with
   | inl hFun =>
       rcases fun_value_canonical hFun with ⟨fid, rfl⟩
@@ -424,7 +424,7 @@ private theorem mini_model_eval_dt_sel_wrong_canonical
           (SmtType.Map SmtType.Int
             (SmtType.Map (SmtType.Datatype s d) (__smtx_ret_typeof_sel s d n m)))) = true)
     (hvTy : __smtx_typeof_value v = SmtType.Datatype s d) :
-    value_canonical M.usortCard
+    value_canonical M.usortDom
       (__smtx_model_eval_apply M
         (native_model_lookup M (native_wrong_apply_sel_id n m)
           (SmtType.FunType (SmtType.Datatype s d) (__smtx_ret_typeof_sel s d n m)))
@@ -447,8 +447,8 @@ private theorem mini_model_eval_dt_sel_canonical
           (SmtType.Map SmtType.Int
             (SmtType.Map (SmtType.Datatype s d) (__smtx_ret_typeof_sel s d n m)))) = true)
     (hvTy : __smtx_typeof_value v = SmtType.Datatype s d)
-    (hv : value_canonical M.usortCard v) :
-    value_canonical M.usortCard (__smtx_model_eval_dt_sel M s d n m v) := by
+    (hv : value_canonical M.usortDom v) :
+    value_canonical M.usortDom (__smtx_model_eval_dt_sel M s d n m v) := by
   unfold __smtx_model_eval_dt_sel
   cases hEq : native_veq (__smtx_apply_head_value v) (SmtValue.DtCons s d n)
   · simpa [native_ite, hEq] using
@@ -540,7 +540,7 @@ private theorem canonical_of_supported
     (t : SmtTerm)
     (ht : term_has_non_none_type t)
     (hs : supported_preservation_term t) :
-    value_canonical M.usortCard (__smtx_model_eval M t) := by
+    value_canonical M.usortDom (__smtx_model_eval M t) := by
   cases hs
   case boolean b =>
       simp [__smtx_model_eval, value_canonical, __smtx_value_canonical]
@@ -558,7 +558,7 @@ private theorem canonical_of_supported
             cases h : native_string_valid s <;> simp [h] at hV ⊢
           rw [__smtx_typeof.eq_4]
           simp [SmtEval.native_ite, hVF]
-      have hCan : value_canonical M.usortCard (SmtValue.Seq (native_pack_string s)) := by
+      have hCan : value_canonical M.usortDom (SmtValue.Seq (native_pack_string s)) := by
         simpa [value_canonical, __smtx_value_canonical] using
           mini_seq_canonical_pack_string s hsValid
       rw [__smtx_model_eval.eq_4]

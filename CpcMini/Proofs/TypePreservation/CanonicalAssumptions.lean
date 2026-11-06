@@ -7,7 +7,7 @@ import all CpcMini.Proofs.Canonical.TypeDefaultBasic
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -21,7 +21,7 @@ The theorem keeps the historical `_assumption` name used by the downstream
 proof skeleton. Typing and canonicity both follow from inhabitation together with the
 recursive datatype well-formedness hypothesis.
 -/
-theorem cpcmini_datatype_type_default_typed_canonical_assumption
+theorem cpcmini_datatype_type_default_typed_canonical_assumption (huc : usort_dom_wf uc)
     (s : native_String)
     (d : SmtDatatypeDecl)
     (_hInh : __smtx_inhabited_type (SmtType.Datatype s d) = true)
@@ -32,7 +32,7 @@ theorem cpcmini_datatype_type_default_typed_canonical_assumption
   refine ⟨type_default_typed _ _hInh _hRec, ?_⟩
   -- Canonicity follows from recursive well-formedness of the datatype block.
   simpa [value_canonical] using
-    type_default_canonical_of_inhabited_wf_rec
+    type_default_canonical_of_inhabited_wf_rec huc
       (SmtType.Datatype s d) _hInh _hRec
 
 end Smtm
