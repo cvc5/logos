@@ -5147,24 +5147,22 @@ by
             | __eo_List_cons =>
                 have hOuter := eo_is_closed_rec_apply_eq_true_cases_of_not_quantifier
                   (by intro vs h; cases h) (by intro vs h; cases h) hEnv hClosed
-                have hInner := eo_is_closed_rec_apply_eq_true_cases_of_not_quantifier
-                  (by intro vs h; cases h) (by intro vs h; cases h) hEnv hOuter.1
-                have hEq :
-                    __eo_to_smt_coeffs_at
-                        (Term.Apply (Term.Apply Term.__eo_List_cons c) cs) v =
-                      SmtTerm.plus (__eo_to_smt c)
-                        (SmtTerm.mult v (__eo_to_smt_coeffs_at cs v)) := by
-                  rw [__eo_to_smt_coeffs_at]
-                rw [hEq]
-                have hcLt : sizeOf c < sizeOf
-                    (Term.Apply (Term.Apply Term.__eo_List_cons c) cs) := by
-                  simp; omega
-                have hcsLt : sizeOf cs < sizeOf
-                    (Term.Apply (Term.Apply Term.__eo_List_cons c) cs) := by
-                  simp
-                exact ⟨hLift (hRec hcLt hEnv hInner.2), hv,
-                  ih (sizeOf cs) (by omega)
-                    (fun hLt hE hC => hRec (Nat.lt_trans hLt hcsLt) hE hC) hOuter.2 rfl⟩
+                cases c with
+                | Rational r =>
+                    have hEq :
+                        __eo_to_smt_coeffs_at
+                            (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Rational r)) cs) v =
+                          SmtTerm.plus (SmtTerm.Rational r)
+                            (SmtTerm.mult v (__eo_to_smt_coeffs_at cs v)) := by
+                      rw [__eo_to_smt_coeffs_at]
+                    rw [hEq]
+                    have hcsLt : sizeOf cs < sizeOf
+                        (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Rational r)) cs) := by
+                      simp
+                    exact ⟨trivial, hv,
+                      ih (sizeOf cs) (by omega)
+                        (fun hLt hE hC => hRec (Nat.lt_trans hLt hcsLt) hE hC) hOuter.2 rfl⟩
+                | _ => simp [__eo_to_smt_coeffs_at, SmtTermClosedIn]
             | _ => simp [__eo_to_smt_coeffs_at, SmtTermClosedIn]
         | _ => simp [__eo_to_smt_coeffs_at, SmtTermClosedIn]
     | _ => simp [__eo_to_smt_coeffs_at, SmtTermClosedIn]
@@ -5237,14 +5235,10 @@ by
       (fun hLt hE hC' => hRec (Nat.lt_trans hLt hZLt) hE hC') hC.1
   have hAbove : SmtTermClosedIn W (__eo_to_smt_cov_above y (__eo_to_smt y)) := by
     unfold __eo_to_smt_cov_above
-    split
-    · trivial
-    · exact ⟨hAtX, SmtTermClosedIn.weaken_cons hy⟩
+    split <;> first | trivial | exact ⟨hAtX, SmtTermClosedIn.weaken_cons hy⟩
   have hBelow : SmtTermClosedIn W (__eo_to_smt_cov_below x (__eo_to_smt x)) := by
     unfold __eo_to_smt_cov_below
-    split
-    · trivial
-    · exact ⟨hAtX, SmtTermClosedIn.weaken_cons hx⟩
+    split <;> first | trivial | exact ⟨hAtX, SmtTermClosedIn.weaken_cons hx⟩
   have hI : SmtTermClosedIn W
       (SmtTerm.and (__eo_to_smt_cov_above y (__eo_to_smt y))
         (__eo_to_smt_cov_below x (__eo_to_smt x))) := ⟨hAbove, hBelow⟩
@@ -5273,12 +5267,6 @@ by
   have hC := eo_is_closed_rec_uop4_eq_true_cases hEnv hClosed
   have hQLt : sizeOf q < sizeOf (Term.UOp4 UserOp4._at_ran q lo hi s) := by
     simp; omega
-  have hLoLt : sizeOf lo < sizeOf (Term.UOp4 UserOp4._at_ran q lo hi s) := by
-    simp; omega
-  have hHiLt : sizeOf hi < sizeOf (Term.UOp4 UserOp4._at_ran q lo hi s) := by
-    simp; omega
-  have hLo := hRec hLoLt hEnv hC.2.1
-  have hHi := hRec hHiLt hEnv hC.2.2.1
   let W : List SmtVarKey := (native_string_lit "@x", SmtType.Real) :: vars
   have hAtX : SmtTermClosedIn W (SmtTerm.Var (native_string_lit "@x") SmtType.Real) :=
     List.Mem.head _
@@ -5286,21 +5274,11 @@ by
       (__eo_to_smt_coeffs_at q (SmtTerm.Var (native_string_lit "@x") SmtType.Real)) :=
     smtTermClosedIn_eo_to_smt_coeffs_at (fun h => SmtTermClosedIn.weaken_cons h) hAtX hEnv
       (fun hLt hE hC' => hRec (Nat.lt_trans hLt hQLt) hE hC') hC.1
-  change SmtTermClosedIn vars
-    (native_ite (__eo_to_smt_is_list s)
-      (SmtTerm.choice (native_string_lit "@x") SmtType.Real
-        (SmtTerm.and
-          (SmtTerm.eq
-            (__eo_to_smt_coeffs_at q (SmtTerm.Var (native_string_lit "@x") SmtType.Real))
-            (SmtTerm.Rational (native_mk_rational 0 1)))
-          (SmtTerm.and
-            (SmtTerm.lt (__eo_to_smt lo) (SmtTerm.Var (native_string_lit "@x") SmtType.Real))
-            (SmtTerm.lt (SmtTerm.Var (native_string_lit "@x") SmtType.Real) (__eo_to_smt hi)))))
-      SmtTerm.None)
-  cases __eo_to_smt_is_list s
-  · trivial
-  · exact ⟨⟨hV, trivial⟩, ⟨SmtTermClosedIn.weaken_cons hLo, hAtX⟩,
-      ⟨hAtX, SmtTermClosedIn.weaken_cons hHi⟩⟩
+  rcases TranslationProofs.eo_to_smt_ran_cases q lo hi s with h | ⟨rl, rh, _, _, _, h⟩
+  · rw [h]
+    trivial
+  · rw [h]
+    exact ⟨⟨hV, trivial⟩, ⟨trivial, hAtX⟩, ⟨hAtX, trivial⟩⟩
 
 theorem smtTermClosedIn_eo_to_smt_apply_uop1_any_of_closed_rec_using
     {op : UserOp1} {x y env : Term} {vars : List SmtVarKey}

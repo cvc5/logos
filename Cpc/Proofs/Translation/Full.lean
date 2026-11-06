@@ -4849,8 +4849,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
     | Term.USort i, hNonNone => by
         exact false_of_smtx_typeof_none_non_none_full hNonNone
     | Term.UOp4 UserOp4._at_ran q lo hi r, hNonNone => by
-        have hEq := eo_to_smt_typeof_matches_translation_ran q lo hi r
-          (fun h => (go lo h).1) (fun h => (go hi h).1) hNonNone
+        have hEq := eo_to_smt_typeof_matches_translation_ran q lo hi r hNonNone
         refine ⟨hEq, ?_⟩
         change eo_type_valid
           (__eo_typeof__at_ran (__eo_typeof q) (__eo_typeof lo) (__eo_typeof hi) (__eo_typeof r))

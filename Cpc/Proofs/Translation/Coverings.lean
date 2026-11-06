@@ -131,28 +131,36 @@ theorem eo_typeof_eq_list_of_coeffs_at_non_none (v : SmtTerm) (q : Term)
         | Apply g c =>
             cases g with
             | __eo_List_cons =>
-                have hEq :
-                    __eo_to_smt_coeffs_at
-                        (Term.Apply (Term.Apply Term.__eo_List_cons c) cs) v =
-                      SmtTerm.plus (__eo_to_smt c)
-                        (SmtTerm.mult v (__eo_to_smt_coeffs_at cs v)) := by
-                  rw [__eo_to_smt_coeffs_at]
-                rw [hEq, typeof_plus_eq] at h
-                have hMult := arith_op2_arg_non_none h
-                rw [typeof_mult_eq] at hMult
-                have hCs := ih (sizeOf cs) (by simp at hn; omega) cs
-                  (arith_op2_arg_non_none hMult) rfl
-                rw [show __eo_typeof (Term.Apply (Term.Apply Term.__eo_List_cons c) cs) =
-                  __eo_typeof_apply (Term.Apply (Term.Apply Term.FunType Term.__eo_List) Term.__eo_List)
-                    (__eo_typeof cs) from rfl, hCs]
-                rfl
+                cases c with
+                | Rational r =>
+                    have hEq :
+                        __eo_to_smt_coeffs_at
+                            (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Rational r)) cs) v =
+                          SmtTerm.plus (SmtTerm.Rational r)
+                            (SmtTerm.mult v (__eo_to_smt_coeffs_at cs v)) := by
+                      rw [__eo_to_smt_coeffs_at]
+                    rw [hEq, typeof_plus_eq] at h
+                    have hMult := arith_op2_arg_non_none h
+                    rw [typeof_mult_eq] at hMult
+                    have hCs := ih (sizeOf cs) (by simp at hn; omega) cs
+                      (arith_op2_arg_non_none hMult) rfl
+                    rw [show __eo_typeof (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Rational r)) cs) =
+                      __eo_typeof_apply (Term.Apply (Term.Apply Term.FunType Term.__eo_List) Term.__eo_List)
+                        (__eo_typeof cs) from rfl, hCs]
+                    rfl
+                | _ => exact False.elim (h (by simp [__eo_to_smt_coeffs_at, __smtx_typeof]))
             | _ => exact False.elim (h (by simp [__eo_to_smt_coeffs_at, __smtx_typeof]))
         | _ => exact False.elim (h (by simp [__eo_to_smt_coeffs_at, __smtx_typeof]))
     | _ => exact False.elim (h (by simp [__eo_to_smt_coeffs_at, __smtx_typeof]))
 
-/-- What `$eo_to_smt_is_list` accepts has the type of a list. -/
-theorem eo_typeof_eq_list_of_is_list (s : Term)
-    (h : __eo_to_smt_is_list s = true) :
+private theorem is_literal_list_tail {c cs : Term}
+    (h : __eo_to_smt_is_literal_list (Term.Apply (Term.Apply Term.__eo_List_cons c) cs) = true) :
+    __eo_to_smt_is_literal_list cs = true := by
+  cases c <;> simp_all [__eo_to_smt_is_literal_list, native_and]
+
+/-- What `$eo_to_smt_is_literal_list` accepts has the type of a list. -/
+theorem eo_typeof_eq_list_of_is_literal_list (s : Term)
+    (h : __eo_to_smt_is_literal_list s = true) :
     __eo_typeof s = Term.__eo_List := by
   induction hn : sizeOf s using Nat.strong_induction_on generalizing s with
   | _ n ih =>
@@ -163,15 +171,14 @@ theorem eo_typeof_eq_list_of_is_list (s : Term)
         | Apply g c =>
             cases g with
             | __eo_List_cons =>
-                have hCs := ih (sizeOf cs) (by simp at hn; omega) cs
-                  (by simpa [__eo_to_smt_is_list] using h) rfl
+                have hCs := ih (sizeOf cs) (by simp at hn; omega) cs (is_literal_list_tail h) rfl
                 rw [show __eo_typeof (Term.Apply (Term.Apply Term.__eo_List_cons c) cs) =
                   __eo_typeof_apply (Term.Apply (Term.Apply Term.FunType Term.__eo_List) Term.__eo_List)
                     (__eo_typeof cs) from rfl, hCs]
                 rfl
-            | _ => simp [__eo_to_smt_is_list] at h
-        | _ => simp [__eo_to_smt_is_list] at h
-    | _ => simp [__eo_to_smt_is_list] at h
+            | _ => simp [__eo_to_smt_is_literal_list] at h
+        | _ => simp [__eo_to_smt_is_literal_list] at h
+    | _ => simp [__eo_to_smt_is_literal_list] at h
 
 /-- A lower endpoint that `cov.x` can be compared against is a marker or has type `Real`. -/
 private theorem eo_typeof_real_of_cov_above (l : Term)
@@ -183,18 +190,24 @@ private theorem eo_typeof_real_of_cov_above (l : Term)
   by_cases hl : l = Term.UOp UserOp._at__at_cov_minus_inf
   · subst hl
     rfl
-  · have hEq :
+  · have hCases :
         __eo_to_smt_cov_above l (__eo_to_smt l) =
-          SmtTerm.gt (SmtTerm.Var (native_string_lit "@x") SmtType.Real) (__eo_to_smt l) := by
+            SmtTerm.gt (SmtTerm.Var (native_string_lit "@x") SmtType.Real) (__eo_to_smt l) ∨
+          __eo_to_smt_cov_above l (__eo_to_smt l) = SmtTerm.None := by
       unfold __eo_to_smt_cov_above
       split
       · exact absurd rfl hl
-      · rfl
-    rw [hEq, typeof_gt_eq, typeof_at_x] at h
-    have hNN : __smtx_typeof_arith_overload_op_2_ret SmtType.Real (__smtx_typeof (__eo_to_smt l))
-        SmtType.Bool ≠ SmtType.None := by
-      rw [h]; simp
-    exact eo_typeof_eq_real_of_smt_real_from_ih l ih (arith_ret_right_real hNN)
+      · exact Or.inl rfl
+      · exact Or.inl rfl
+      · exact Or.inr rfl
+    rcases hCases with hEq | hEq
+    · rw [hEq, typeof_gt_eq, typeof_at_x] at h
+      have hNN : __smtx_typeof_arith_overload_op_2_ret SmtType.Real (__smtx_typeof (__eo_to_smt l))
+          SmtType.Bool ≠ SmtType.None := by
+        rw [h]; simp
+      exact eo_typeof_eq_real_of_smt_real_from_ih l ih (arith_ret_right_real hNN)
+    · rw [hEq] at h
+      rw [__smtx_typeof.eq_def] at h <;> simp at h
 
 /-- An upper endpoint that `cov.x` can be compared against is a marker or has type `Real`. -/
 private theorem eo_typeof_real_of_cov_below (r : Term)
@@ -206,18 +219,24 @@ private theorem eo_typeof_real_of_cov_below (r : Term)
   by_cases hr : r = Term.UOp UserOp._at__at_cov_plus_inf
   · subst hr
     rfl
-  · have hEq :
+  · have hCases :
         __eo_to_smt_cov_below r (__eo_to_smt r) =
-          SmtTerm.lt (SmtTerm.Var (native_string_lit "@x") SmtType.Real) (__eo_to_smt r) := by
+            SmtTerm.lt (SmtTerm.Var (native_string_lit "@x") SmtType.Real) (__eo_to_smt r) ∨
+          __eo_to_smt_cov_below r (__eo_to_smt r) = SmtTerm.None := by
       unfold __eo_to_smt_cov_below
       split
       · exact absurd rfl hr
-      · rfl
-    rw [hEq, typeof_lt_eq, typeof_at_x] at h
-    have hNN : __smtx_typeof_arith_overload_op_2_ret SmtType.Real (__smtx_typeof (__eo_to_smt r))
-        SmtType.Bool ≠ SmtType.None := by
-      rw [h]; simp
-    exact eo_typeof_eq_real_of_smt_real_from_ih r ih (arith_ret_right_real hNN)
+      · exact Or.inl rfl
+      · exact Or.inl rfl
+      · exact Or.inr rfl
+    rcases hCases with hEq | hEq
+    · rw [hEq, typeof_lt_eq, typeof_at_x] at h
+      have hNN : __smtx_typeof_arith_overload_op_2_ret SmtType.Real (__smtx_typeof (__eo_to_smt r))
+          SmtType.Bool ≠ SmtType.None := by
+        rw [h]; simp
+      exact eo_typeof_eq_real_of_smt_real_from_ih r ih (arith_ret_right_real hNN)
+    · rw [hEq] at h
+      rw [__smtx_typeof.eq_def] at h <;> simp at h
 
 /-- `@is_root` has a translation only where its Eunoia type is `Bool`. -/
 theorem eo_to_smt_typeof_matches_translation_is_root (y x : Term)
@@ -331,57 +350,59 @@ theorem eo_to_smt_typeof_matches_translation_sgn_inv (z y x : Term)
   rw [hEo, eo_to_smt_type_bool, typeof_or_eq, hOr.1, hOr.2]
   simp [native_ite, native_Teq]
 
-/-- `@ran` has a translation only where its Eunoia type is `Real`. -/
-theorem eo_to_smt_typeof_matches_translation_ran (q lo hi s : Term)
-    (ihLo :
-      __smtx_typeof (__eo_to_smt lo) ≠ SmtType.None ->
-      __smtx_typeof (__eo_to_smt lo) = __eo_to_smt_type (__eo_typeof lo))
-    (ihHi :
-      __smtx_typeof (__eo_to_smt hi) ≠ SmtType.None ->
-      __smtx_typeof (__eo_to_smt hi) = __eo_to_smt_type (__eo_typeof hi))
-    (hNonNone :
-      __smtx_typeof (__eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi s)) ≠ SmtType.None) :
-    __smtx_typeof (__eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi s)) =
-      __eo_to_smt_type (__eo_typeof (Term.UOp4 UserOp4._at_ran q lo hi s)) := by
-  have hTranslate :
-      __eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi s) =
-        native_ite (__eo_to_smt_is_list s)
-          (SmtTerm.choice (native_string_lit "@x") SmtType.Real
+/-- `@ran` either has no meaning, or its bounds are rational and its evidence is literal. -/
+theorem eo_to_smt_ran_cases (q lo hi s : Term) :
+    __eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi s) = SmtTerm.None ∨
+      ∃ rl rh, lo = Term.Rational rl ∧ hi = Term.Rational rh ∧
+        __eo_to_smt_is_literal_list s = true ∧
+        __eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi s) =
+          SmtTerm.choice (native_string_lit "@x") SmtType.Real
             (SmtTerm.and
               (SmtTerm.eq
                 (__eo_to_smt_coeffs_at q (SmtTerm.Var (native_string_lit "@x") SmtType.Real))
                 (SmtTerm.Rational (native_mk_rational 0 1)))
               (SmtTerm.and
-                (SmtTerm.lt (__eo_to_smt lo) (SmtTerm.Var (native_string_lit "@x") SmtType.Real))
-                (SmtTerm.lt (SmtTerm.Var (native_string_lit "@x") SmtType.Real) (__eo_to_smt hi)))))
-          SmtTerm.None := by
-    rfl
-  rw [hTranslate] at hNonNone ⊢
-  cases hS : __eo_to_smt_is_list s
-  · rw [hS] at hNonNone
-    exact False.elim (hNonNone (by
-      change __smtx_typeof SmtTerm.None = SmtType.None
-      rw [__smtx_typeof.eq_def] <;> simp only))
-  · rw [hS] at hNonNone
-    rw [native_ite_true] at hNonNone ⊢
+                (SmtTerm.lt (SmtTerm.Rational rl)
+                  (SmtTerm.Var (native_string_lit "@x") SmtType.Real))
+                (SmtTerm.lt (SmtTerm.Var (native_string_lit "@x") SmtType.Real)
+                  (SmtTerm.Rational rh)))) := by
+  change __eo_to_smt_ran q lo hi s = SmtTerm.None ∨ _
+  cases lo with
+  | Rational rl =>
+      cases hi with
+      | Rational rh =>
+          cases hS : __eo_to_smt_is_literal_list s
+          · left
+            simp [__eo_to_smt_ran, hS, native_ite]
+          · right
+            exact ⟨rl, rh, rfl, rfl, hS, by
+              change __eo_to_smt_ran q _ _ s = _
+              simp [__eo_to_smt_ran, hS, native_ite]⟩
+      | _ => left; simp [__eo_to_smt_ran]
+  | _ => left; simp [__eo_to_smt_ran]
+
+/-- `@ran` has a translation only where its Eunoia type is `Real`. -/
+theorem eo_to_smt_typeof_matches_translation_ran (q lo hi s : Term)
+    (hNonNone :
+      __smtx_typeof (__eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi s)) ≠ SmtType.None) :
+    __smtx_typeof (__eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi s)) =
+      __eo_to_smt_type (__eo_typeof (Term.UOp4 UserOp4._at_ran q lo hi s)) := by
+  rcases eo_to_smt_ran_cases q lo hi s with h | ⟨rl, rh, rfl, rfl, hS, h⟩
+  · rw [h] at hNonNone
+    exact False.elim (hNonNone (by rw [__smtx_typeof.eq_def] <;> simp only))
+  · rw [h] at hNonNone ⊢
     rw [typeof_choice_eq'] at hNonNone ⊢
     have hF := native_ite_bool_of_non_none hNonNone
     have hParts := typeof_and_parts (non_none_of_bool hF)
-    have hRange := typeof_and_parts (non_none_of_bool hParts.2)
-    have hLoBool := hRange.1
-    have hHiBool := hRange.2
-    rw [typeof_lt_eq, typeof_at_x] at hLoBool hHiBool
-    have hLoR := arith_ret_left_real (non_none_of_bool hLoBool)
-    have hHiR := arith_ret_right_real (non_none_of_bool hHiBool)
-    have hLoEo := eo_typeof_eq_real_of_smt_real_from_ih lo ihLo hLoR
-    have hHiEo := eo_typeof_eq_real_of_smt_real_from_ih hi ihHi hHiR
-    have hSEo := eo_typeof_eq_list_of_is_list s hS
     have hCoeffsNN := typeof_eq_left_real typeof_cov_zero (non_none_of_bool hParts.1)
     have hQEo := eo_typeof_eq_list_of_coeffs_at_non_none _ q hCoeffsNN
-    have hEo : __eo_typeof (Term.UOp4 UserOp4._at_ran q lo hi s) = Term.UOp UserOp.Real := by
-      rw [show __eo_typeof (Term.UOp4 UserOp4._at_ran q lo hi s) =
-        __eo_typeof__at_ran (__eo_typeof q) (__eo_typeof lo) (__eo_typeof hi) (__eo_typeof s)
-          from rfl, hQEo, hLoEo, hHiEo, hSEo]
+    have hSEo := eo_typeof_eq_list_of_is_literal_list s hS
+    have hEo :
+        __eo_typeof (Term.UOp4 UserOp4._at_ran q (Term.Rational rl) (Term.Rational rh) s) =
+          Term.UOp UserOp.Real := by
+      rw [show __eo_typeof (Term.UOp4 UserOp4._at_ran q (Term.Rational rl) (Term.Rational rh) s) =
+        __eo_typeof__at_ran (__eo_typeof q) (__eo_typeof (Term.Rational rl))
+          (__eo_typeof (Term.Rational rh)) (__eo_typeof s) from rfl, hQEo, hSEo]
       rfl
     rw [hEo, eo_to_smt_type_real, hF]
     simp [native_ite, native_Teq, __smtx_typeof_guard_wf, __smtx_type_wf,
@@ -404,23 +425,9 @@ theorem eo_to_smt_ran_head_cases (q lo hi s : Term) :
     __eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi s) = SmtTerm.None ∨
       ∃ F, __eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi s) =
         SmtTerm.choice (native_string_lit "@x") SmtType.Real F := by
-  have hTranslate :
-      __eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi s) =
-        native_ite (__eo_to_smt_is_list s)
-          (SmtTerm.choice (native_string_lit "@x") SmtType.Real
-            (SmtTerm.and
-              (SmtTerm.eq
-                (__eo_to_smt_coeffs_at q (SmtTerm.Var (native_string_lit "@x") SmtType.Real))
-                (SmtTerm.Rational (native_mk_rational 0 1)))
-              (SmtTerm.and
-                (SmtTerm.lt (__eo_to_smt lo) (SmtTerm.Var (native_string_lit "@x") SmtType.Real))
-                (SmtTerm.lt (SmtTerm.Var (native_string_lit "@x") SmtType.Real) (__eo_to_smt hi)))))
-          SmtTerm.None := by
-    rfl
-  rw [hTranslate]
-  cases __eo_to_smt_is_list s
-  · exact Or.inl rfl
-  · exact Or.inr ⟨_, rfl⟩
+  rcases eo_to_smt_ran_cases q lo hi s with h | ⟨_, _, _, _, _, h⟩
+  · exact Or.inl h
+  · exact Or.inr ⟨_, h⟩
 
 /-- What `@is_root` translates to, as far as its head is concerned. -/
 theorem eo_to_smt_is_root_cases (y x : Term) :
