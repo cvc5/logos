@@ -1825,6 +1825,12 @@ def __upoly_of_list : Term -> Term
   | _ => Term.Stuck
 
 
+def __upoly_to_list : Term -> Term
+  | (Term.UOp UserOp._at__at_upoly_zero) => Term.__eo_List_nil
+  | (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_upoly) a) p) => (__eo_cons Term.__eo_List_cons a (__upoly_to_list p))
+  | _ => Term.Stuck
+
+
 def __upoly_add : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | _ , Term.Stuck  => Term.Stuck
@@ -2089,19 +2095,21 @@ def __eo_prog_sgn_inv_intro : Term -> Term -> Term -> Term -> Term -> Term -> Te
   | _ , _ , _ , _ , _ , _ , Term.Stuck , _  => Term.Stuck
   | _ , _ , _ , _ , _ , _ , _ , Term.Stuck  => Term.Stuck
   | p, l, r, lo, hi, s, sl, sr =>
-    let _v0 := (__eo_is_eq r (Term.UOp UserOp._at_cov_minus_inf))
-    let _v1 := (__eo_or _v0 (__eo_is_eq r (Term.UOp UserOp._at_cov_plus_inf)))
-    let _v2 := (__eo_is_eq l (Term.UOp UserOp._at_cov_minus_inf))
-    let _v3 := (__eo_or _v2 (__eo_is_eq l (Term.UOp UserOp._at_cov_plus_inf)))
-    let _v4 := (__upoly_of_term (__upoly_term_var p) p)
-    (__eo_requires (__eo_ite (__upoly_rem_seq_check _v4 (__upoly_derivative _v4) s) (__eo_ite (__eo_and (__eo_ite _v3 (__eo_and (__eo_and (__eo_is_eq lo l) (__eo_is_eq sl Term.__eo_List_nil)) (__eo_is_eq (Term.Boolean true) _v2)) (__eo_ite (__eo_is_q lo) (__eo_and (__eo_and (__cov_is_root _v4 l sl) (__eo_not (__eo_is_eq (__upoly_eval _v4 lo) (Term.Rational (native_mk_rational 0 1))))) (__cov_lt lo l)) (Term.Boolean false))) (__eo_ite _v1 (__eo_and (__eo_and (__eo_is_eq hi r) (__eo_is_eq sr Term.__eo_List_nil)) (__eo_is_eq (Term.Boolean false) _v0)) (__eo_ite (__eo_is_q hi) (__eo_and (__eo_and (__cov_is_root _v4 r sr) (__eo_not (__eo_is_eq (__upoly_eval _v4 hi) (Term.Rational (native_mk_rational 0 1))))) (__cov_lt r hi)) (Term.Boolean false)))) (__eo_is_eq (__eo_add (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s lo)) (__eo_neg (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s hi)))) (__eo_add (__eo_ite _v3 (Term.Numeral 0) (Term.Numeral 1)) (__eo_ite _v1 (Term.Numeral 0) (Term.Numeral 1)))) (Term.Boolean false)) (Term.Boolean false)) (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv p) l) r))
+    let _v0 := (__upoly_of_term (__upoly_term_var p) p)
+    let _v1 := (__eo_is_eq r (Term.UOp UserOp._at_cov_minus_inf))
+    let _v2 := (__eo_or _v1 (__eo_is_eq r (Term.UOp UserOp._at_cov_plus_inf)))
+    let _v3 := (__eo_is_eq l (Term.UOp UserOp._at_cov_minus_inf))
+    let _v4 := (__eo_or _v3 (__eo_is_eq l (Term.UOp UserOp._at_cov_plus_inf)))
+    (__eo_requires (__eo_ite (__upoly_rem_seq_check _v0 (__upoly_derivative _v0) s) (__eo_ite (__eo_and (__eo_ite _v4 (__eo_and (__eo_and (__eo_is_eq lo l) (__eo_is_eq sl Term.__eo_List_nil)) (__eo_is_eq (Term.Boolean true) _v3)) (__eo_ite (__eo_is_q lo) (__eo_and (__eo_and (__cov_is_root _v0 l sl) (__eo_not (__eo_is_eq (__upoly_eval _v0 lo) (Term.Rational (native_mk_rational 0 1))))) (__cov_lt lo l)) (Term.Boolean false))) (__eo_ite _v2 (__eo_and (__eo_and (__eo_is_eq hi r) (__eo_is_eq sr Term.__eo_List_nil)) (__eo_is_eq (Term.Boolean false) _v1)) (__eo_ite (__eo_is_q hi) (__eo_and (__eo_and (__cov_is_root _v0 r sr) (__eo_not (__eo_is_eq (__upoly_eval _v0 hi) (Term.Rational (native_mk_rational 0 1))))) (__cov_lt r hi)) (Term.Boolean false)))) (__eo_is_eq (__eo_add (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s lo)) (__eo_neg (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s hi)))) (__eo_add (__eo_ite _v4 (Term.Numeral 0) (Term.Numeral 1)) (__eo_ite _v2 (Term.Numeral 0) (Term.Numeral 1)))) (Term.Boolean false)) (Term.Boolean false)) (Term.Boolean true) (__eo_mk_apply (__eo_mk_apply (Term.UOp1 UserOp1._at_sgn_inv (__upoly_to_list _v0)) l) r))
 
 
 def __eo_prog_is_root_intro : Term -> Term -> Term -> Term
   | Term.Stuck , _ , _  => Term.Stuck
   | _ , Term.Stuck , _  => Term.Stuck
   | _ , _ , Term.Stuck  => Term.Stuck
-  | p, r, st => (__eo_requires (__cov_is_root (__upoly_of_term (__upoly_term_var p) p) r st) (Term.Boolean true) (Term.Apply (Term.UOp1 UserOp1._at_is_root p) r))
+  | p, r, st =>
+    let _v0 := (__upoly_of_term (__upoly_term_var p) p)
+    (__eo_requires (__cov_is_root _v0 r st) (Term.Boolean true) (__eo_mk_apply (Term.UOp1 UserOp1._at_is_root (__upoly_to_list _v0)) r))
 
 
 def __cov_atom_poly : Term -> Term
@@ -2140,7 +2148,7 @@ def __eo_prog_ran_eval : Term -> Term -> Term -> Proof -> Proof -> Term
   | Term.Stuck , _ , _ , _ , _  => Term.Stuck
   | _ , Term.Stuck , _ , _ , _  => Term.Stuck
   | _ , _ , Term.Stuck , _ , _  => Term.Stuck
-  | x, r, p, (Proof.pf (Term.Apply (Term.UOp1 UserOp1._at_is_root __eo_lv_p_2) __eo_lv_r_2)), (Proof.pf F) => (__eo_requires (__eo_and (__eo_eq p __eo_lv_p_2) (__eo_eq r __eo_lv_r_2)) (Term.Boolean true) (__eo_requires (__cov_lit_poly F) p (__eo_requires (__cov_lit_holds F (Term.Rational (native_mk_rational 0 1))) (Term.Boolean false) (__eo_requires (__eo_is_ok (__upoly_of_term x p)) (Term.Boolean true) (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) r))))))
+  | x, r, p, (Proof.pf (Term.Apply (Term.UOp1 UserOp1._at_is_root q) __eo_lv_r_2)), (Proof.pf F) => (__eo_requires (__eo_eq r __eo_lv_r_2) (Term.Boolean true) (__eo_requires (__cov_lit_poly F) p (__eo_requires (__cov_lit_holds F (Term.Rational (native_mk_rational 0 1))) (Term.Boolean false) (__eo_requires (__upoly_to_list (__upoly_of_term x p)) q (Term.Apply (Term.UOp UserOp.not) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) r))))))
   | _, _, _, _, _ => Term.Stuck
 
 
@@ -2150,10 +2158,10 @@ def __eo_prog_sgn_inv_elim : Term -> Term -> Term -> Term -> Term -> Proof -> Pr
   | _ , _ , Term.Stuck , _ , _ , _ , _  => Term.Stuck
   | _ , _ , _ , Term.Stuck , _ , _ , _  => Term.Stuck
   | _ , _ , _ , _ , Term.Stuck , _ , _  => Term.Stuck
-  | x, p, s, l, r, (Proof.pf (Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv __eo_lv_p_2) __eo_lv_l_2) __eo_lv_r_2)), (Proof.pf F) =>
+  | x, p, s, l, r, (Proof.pf (Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv q) __eo_lv_l_2) __eo_lv_r_2)), (Proof.pf F) =>
     let _v0 := (__mk_cover_piece x l r)
     let _v1 := (__upoly_of_term x p)
-    (__eo_requires (__eo_and (__eo_and (__eo_eq p __eo_lv_p_2) (__eo_eq l __eo_lv_l_2)) (__eo_eq r __eo_lv_r_2)) (Term.Boolean true) (__eo_requires (__cov_lit_poly F) p (__eo_requires (__eo_is_ok _v1) (Term.Boolean true) (__eo_requires (__eo_is_q s) (Term.Boolean true) (__eo_requires (__cov_bound_lt l s) (Term.Boolean true) (__eo_requires (__cov_bound_lt s r) (Term.Boolean true) (__eo_requires (__cov_lit_holds F (__upoly_eval _v1 s)) (Term.Boolean false) (__eo_ite (__eo_is_eq _v0 (Term.Boolean true)) (Term.Boolean false) (__eo_mk_apply (Term.UOp UserOp.not) _v0)))))))))
+    (__eo_requires (__eo_and (__eo_eq l __eo_lv_l_2) (__eo_eq r __eo_lv_r_2)) (Term.Boolean true) (__eo_requires (__cov_lit_poly F) p (__eo_requires (__upoly_to_list _v1) q (__eo_requires (__eo_is_q s) (Term.Boolean true) (__eo_requires (__cov_bound_lt l s) (Term.Boolean true) (__eo_requires (__cov_bound_lt s r) (Term.Boolean true) (__eo_requires (__cov_lit_holds F (__upoly_eval _v1 s)) (Term.Boolean false) (__eo_ite (__eo_is_eq _v0 (Term.Boolean true)) (Term.Boolean false) (__eo_mk_apply (Term.UOp UserOp.not) _v0)))))))))
   | _, _, _, _, _, _, _ => Term.Stuck
 
 
@@ -9371,12 +9379,12 @@ def __eo_typeof__at_ran : Term -> Term -> Term -> Term -> Term -> Term -> Term -
 
 
 def __eo_typeof__at_sgn_inv : Term -> Term -> Term -> Term
-  | (Term.UOp UserOp.Real), (Term.UOp UserOp.Real), (Term.UOp UserOp.Real) => Term.Bool
+  | Term.__eo_List, (Term.UOp UserOp.Real), (Term.UOp UserOp.Real) => Term.Bool
   | _, _, _ => Term.Stuck
 
 
 def __eo_typeof__at_is_root : Term -> Term -> Term
-  | (Term.UOp UserOp.Real), (Term.UOp UserOp.Real) => Term.Bool
+  | Term.__eo_List, (Term.UOp UserOp.Real) => Term.Bool
   | _, _ => Term.Stuck
 
 
