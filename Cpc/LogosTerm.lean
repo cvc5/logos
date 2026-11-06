@@ -190,8 +190,8 @@ inductive UserOp : Type where
   | _at__at_UPoly : UserOp
   | _at__at_upoly_zero : UserOp
   | _at__at_upoly : UserOp
-  | _at_cov_minus_inf : UserOp
-  | _at_cov_plus_inf : UserOp
+  | _at__at_cov_minus_inf : UserOp
+  | _at__at_cov_plus_inf : UserOp
   | forall : UserOp
   | exists : UserOp
   | ubv_to_int : UserOp

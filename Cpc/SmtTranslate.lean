@@ -112,12 +112,12 @@ def __eo_to_smt_sets_deq_diff (a : SmtTerm) : SmtType -> SmtTerm -> SmtType -> S
 
 
 def __eo_to_smt_cov_above : Term -> SmtTerm -> SmtTerm
-  | (Term.UOp UserOp._at_cov_minus_inf), sl => (SmtTerm.Boolean true)
+  | (Term.UOp UserOp._at__at_cov_minus_inf), sl => (SmtTerm.Boolean true)
   | l, sl => (SmtTerm.gt (SmtTerm.Var (native_string_lit "@x") SmtType.Real) sl)
 
 
 def __eo_to_smt_cov_below : Term -> SmtTerm -> SmtTerm
-  | (Term.UOp UserOp._at_cov_plus_inf), sr => (SmtTerm.Boolean true)
+  | (Term.UOp UserOp._at__at_cov_plus_inf), sr => (SmtTerm.Boolean true)
   | r, sr => (SmtTerm.lt (SmtTerm.Var (native_string_lit "@x") SmtType.Real) sr)
 
 
@@ -460,8 +460,6 @@ def __eo_to_smt : Term -> SmtTerm
   | (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv) x1) x2) => (SmtTerm.qdiv (__eo_to_smt x1) (__eo_to_smt x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv_total) x1) x2) => (SmtTerm.qdiv_total (__eo_to_smt x1) (__eo_to_smt x2))
   | (Term.Apply (Term.UOp UserOp._at_div_by_zero) x1) => (SmtTerm.qdiv (__eo_to_smt x1) (SmtTerm.Rational (native_mk_rational 0 1)))
-  | (Term.UOp UserOp._at_cov_minus_inf) => SmtTerm.None
-  | (Term.UOp UserOp._at_cov_plus_inf) => SmtTerm.None
   | (Term.UOp4 UserOp4._at_ran x1 x2 x3 x4) =>
     let _v1 := (SmtTerm.Var (native_string_lit "@x") SmtType.Real)
     (SmtTerm.choice (native_string_lit "@x") SmtType.Real (SmtTerm.and (SmtTerm.eq (__eo_to_smt_coeffs_at x1 _v1) (SmtTerm.Rational (native_mk_rational 0 1))) (SmtTerm.and (SmtTerm.lt (__eo_to_smt x2) _v1) (SmtTerm.lt _v1 (__eo_to_smt x3)))))

@@ -1906,8 +1906,10 @@
 (define $upoly_sign_at_inf ((p @UPoly) (pos Bool))
   (eo::define ((c ($upoly_lc p)))
   (eo::ite (eo::or pos (eo::is_eq (eo::zmod ($upoly_deg p) 2) 0)) c (eo::neg c))))
-(declare-const @cov_minus_inf Real)
-(declare-const @cov_plus_inf Real)
+(declare-const @@cov_minus_inf Real)
+(define @cov_minus_inf () @@cov_minus_inf)
+(declare-const @@cov_plus_inf Real)
+(define @cov_plus_inf () @@cov_plus_inf)
 (program $cov_seq_values ((ql @List) (cl @List) (s @List :list) (v Real))
   :signature (@List Real) @List
   (
@@ -2006,7 +2008,8 @@
   (($mk_cover_piece x @cov_minus_inf r)              (< x r))
   (($mk_cover_piece x l @cov_plus_inf)               (> x l))
   (($mk_cover_piece x l r)
-    (eo::ite (eo::is_eq l r) (= x l) (and (> x l) (< x r))))
+    (eo::requires (eo::or (eo::is_eq l @cov_plus_inf) (eo::is_eq r @cov_minus_inf)) false
+      (eo::ite (eo::is_eq l r) (= x l) (and (> x l) (< x r)))))
   )
 )
 (program $mk_cover_rec ((T Type) (x T) (l Real) (r Real) (ps @List :list))

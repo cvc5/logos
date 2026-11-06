@@ -899,14 +899,14 @@
 (program $eo_to_smt_cov_above ((l $eo_Term) (sl SmtTerm))
   :signature ($eo_Term SmtTerm) SmtTerm
   (
-  (($eo_to_smt_cov_above @cov_minus_inf sl) true)
+  (($eo_to_smt_cov_above @@cov_minus_inf sl) true)
   (($eo_to_smt_cov_above l sl) (> cov.x sl))
   )
 )
 (program $eo_to_smt_cov_below ((r $eo_Term) (sr SmtTerm))
   :signature ($eo_Term SmtTerm) SmtTerm
   (
-  (($eo_to_smt_cov_below @cov_plus_inf sr) true)
+  (($eo_to_smt_cov_below @@cov_plus_inf sr) true)
   (($eo_to_smt_cov_below r sr) (< cov.x sr))
   )
 )
@@ -919,14 +919,6 @@
     (not (exists "str_vname" Real (and I (not F)))))
   )
 )
-
-; The markers of an infinite endpoint are not numbers, so alone they have no
-; meaning. @sgn_inv reads its endpoints before they are transformed.
-(define-symbol @cov_minus_inf ()
-  :term @cov_minus_inf none)
-
-(define-symbol @cov_plus_inf ()
-  :term @cov_plus_inf none)
 
 ; -- @ran
 ; The root of q between lo and hi. The type of @ran requires that there is

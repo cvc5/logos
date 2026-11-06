@@ -1995,7 +1995,7 @@ def __cov_seq_values : Term -> Term -> Term
     let _v1 := (__upoly_lc _v0)
     let _v2 := (__eo_neg _v1)
     let _v3 := (__eo_is_eq (__eo_zmod (__upoly_deg _v0) (Term.Numeral 2)) (Term.Numeral 0))
-    (__eo_cons Term.__eo_List_cons (__eo_ite (__eo_is_eq v (Term.UOp UserOp._at_cov_minus_inf)) (__eo_ite (__eo_or (Term.Boolean false) _v3) _v1 _v2) (__eo_ite (__eo_is_eq v (Term.UOp UserOp._at_cov_plus_inf)) (__eo_ite (__eo_or (Term.Boolean true) _v3) _v1 _v2) (__upoly_eval _v0 v))) (__cov_seq_values s v))
+    (__eo_cons Term.__eo_List_cons (__eo_ite (__eo_is_eq v (Term.UOp UserOp._at__at_cov_minus_inf)) (__eo_ite (__eo_or (Term.Boolean false) _v3) _v1 _v2) (__eo_ite (__eo_is_eq v (Term.UOp UserOp._at__at_cov_plus_inf)) (__eo_ite (__eo_or (Term.Boolean true) _v3) _v1 _v2) (__upoly_eval _v0 v))) (__cov_seq_values s v))
   | _, _ => Term.Stuck
 
 
@@ -2011,39 +2011,39 @@ def __cov_lt : Term -> Term -> Term
 def __cov_bound_lt : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | _ , Term.Stuck  => Term.Stuck
-  | (Term.UOp UserOp._at_cov_minus_inf), (Term.UOp UserOp._at_cov_minus_inf) => (Term.Boolean false)
-  | (Term.UOp UserOp._at_cov_minus_inf), b => (Term.Boolean true)
-  | a, (Term.UOp UserOp._at_cov_minus_inf) => (Term.Boolean false)
-  | (Term.UOp UserOp._at_cov_plus_inf), b => (Term.Boolean false)
-  | a, (Term.UOp UserOp._at_cov_plus_inf) => (Term.Boolean true)
+  | (Term.UOp UserOp._at__at_cov_minus_inf), (Term.UOp UserOp._at__at_cov_minus_inf) => (Term.Boolean false)
+  | (Term.UOp UserOp._at__at_cov_minus_inf), b => (Term.Boolean true)
+  | a, (Term.UOp UserOp._at__at_cov_minus_inf) => (Term.Boolean false)
+  | (Term.UOp UserOp._at__at_cov_plus_inf), b => (Term.Boolean false)
+  | a, (Term.UOp UserOp._at__at_cov_plus_inf) => (Term.Boolean true)
   | a, b => (__cov_lt a b)
 
 
 def __cov_attach : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | _ , Term.Stuck  => Term.Stuck
-  | (Term.UOp UserOp._at_cov_minus_inf), c => (Term.Boolean true)
-  | (Term.UOp UserOp._at_cov_plus_inf), c => (Term.Boolean false)
-  | l, (Term.UOp UserOp._at_cov_minus_inf) => (Term.Boolean false)
-  | l, (Term.UOp UserOp._at_cov_plus_inf) => (Term.Boolean true)
+  | (Term.UOp UserOp._at__at_cov_minus_inf), c => (Term.Boolean true)
+  | (Term.UOp UserOp._at__at_cov_plus_inf), c => (Term.Boolean false)
+  | l, (Term.UOp UserOp._at__at_cov_minus_inf) => (Term.Boolean false)
+  | l, (Term.UOp UserOp._at__at_cov_plus_inf) => (Term.Boolean true)
   | l, c => (__cov_lt l c)
 
 
 def __cov_attach_incl : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | _ , Term.Stuck  => Term.Stuck
-  | (Term.UOp UserOp._at_cov_minus_inf), c => (Term.Boolean true)
-  | (Term.UOp UserOp._at_cov_plus_inf), c => (Term.Boolean false)
+  | (Term.UOp UserOp._at__at_cov_minus_inf), c => (Term.Boolean true)
+  | (Term.UOp UserOp._at__at_cov_plus_inf), c => (Term.Boolean false)
   | l, c => (__eo_ite (__eo_is_eq l c) (Term.Boolean true) (__cov_lt l c))
 
 
 def __cov_sweep : Term -> Term -> Term -> Term
   | Term.Stuck , _ , _  => Term.Stuck
   | _ , Term.Stuck , _  => Term.Stuck
-  | incl, c, Term.__eo_List_nil => (__eo_and (__eo_not incl) (__eo_is_eq c (Term.UOp UserOp._at_cov_plus_inf)))
+  | incl, c, Term.__eo_List_nil => (__eo_and (__eo_not incl) (__eo_is_eq c (Term.UOp UserOp._at__at_cov_plus_inf)))
   | incl, c, (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Apply (Term.Apply Term.__eo_List_cons l) (Term.Apply (Term.Apply Term.__eo_List_cons r) Term.__eo_List_nil))) ps) =>
     let _v0 := (__cov_sweep incl c ps)
-    (__eo_ite (__eo_is_eq l r) (__eo_ite (__eo_or (__eo_is_eq l (Term.UOp UserOp._at_cov_minus_inf)) (__eo_is_eq l (Term.UOp UserOp._at_cov_plus_inf))) (Term.Boolean false) (__eo_ite (__eo_and (__eo_not incl) (__eo_is_eq l c)) (__cov_sweep (Term.Boolean true) c ps) _v0)) (__eo_ite (__eo_and (__eo_ite incl (__cov_attach_incl l c) (__cov_attach l c)) (__cov_bound_lt c r)) (__cov_sweep (Term.Boolean false) r ps) _v0))
+    (__eo_ite (__eo_is_eq l r) (__eo_ite (__eo_or (__eo_is_eq l (Term.UOp UserOp._at__at_cov_minus_inf)) (__eo_is_eq l (Term.UOp UserOp._at__at_cov_plus_inf))) (Term.Boolean false) (__eo_ite (__eo_and (__eo_not incl) (__eo_is_eq l c)) (__cov_sweep (Term.Boolean true) c ps) _v0)) (__eo_ite (__eo_and (__eo_ite incl (__cov_attach_incl l c) (__cov_attach l c)) (__cov_bound_lt c r)) (__cov_sweep (Term.Boolean false) r ps) _v0))
   | _, _, _ => Term.Stuck
 
 
@@ -2051,10 +2051,10 @@ def __mk_cover_piece : Term -> Term -> Term -> Term
   | Term.Stuck , _ , _  => Term.Stuck
   | _ , Term.Stuck , _  => Term.Stuck
   | _ , _ , Term.Stuck  => Term.Stuck
-  | x, (Term.UOp UserOp._at_cov_minus_inf), (Term.UOp UserOp._at_cov_plus_inf) => (Term.Boolean true)
-  | x, (Term.UOp UserOp._at_cov_minus_inf), r => (Term.Apply (Term.Apply (Term.UOp UserOp.lt) x) r)
-  | x, l, (Term.UOp UserOp._at_cov_plus_inf) => (Term.Apply (Term.Apply (Term.UOp UserOp.gt) x) l)
-  | x, l, r => (__eo_ite (__eo_is_eq l r) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) l) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.gt) x) l)) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.lt) x) r)) (Term.Boolean true))))
+  | x, (Term.UOp UserOp._at__at_cov_minus_inf), (Term.UOp UserOp._at__at_cov_plus_inf) => (Term.Boolean true)
+  | x, (Term.UOp UserOp._at__at_cov_minus_inf), r => (Term.Apply (Term.Apply (Term.UOp UserOp.lt) x) r)
+  | x, l, (Term.UOp UserOp._at__at_cov_plus_inf) => (Term.Apply (Term.Apply (Term.UOp UserOp.gt) x) l)
+  | x, l, r => (__eo_requires (__eo_or (__eo_is_eq l (Term.UOp UserOp._at__at_cov_plus_inf)) (__eo_is_eq r (Term.UOp UserOp._at__at_cov_minus_inf))) (Term.Boolean false) (__eo_ite (__eo_is_eq l r) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) l) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.gt) x) l)) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.lt) x) r)) (Term.Boolean true)))))
 
 
 def __mk_cover_rec : Term -> Term -> Term
@@ -2072,7 +2072,7 @@ def __eo_prog_cover : Term -> Term -> Term
   | _ , Term.Stuck  => Term.Stuck
   | x, ps =>
     let _v0 := (__mk_cover_rec x ps)
-    (__eo_requires (__cov_sweep (Term.Boolean false) (Term.UOp UserOp._at_cov_minus_inf) ps) (Term.Boolean true) (__eo_ite (__eo_is_eq _v0 (Term.Boolean true)) (Term.Boolean true) (__eo_list_singleton_elim (Term.UOp UserOp.or) _v0)))
+    (__eo_requires (__cov_sweep (Term.Boolean false) (Term.UOp UserOp._at__at_cov_minus_inf) ps) (Term.Boolean true) (__eo_ite (__eo_is_eq _v0 (Term.Boolean true)) (Term.Boolean true) (__eo_list_singleton_elim (Term.UOp UserOp.or) _v0)))
 
 
 def __cov_is_root : Term -> Term -> Term -> Term
@@ -2096,10 +2096,10 @@ def __eo_prog_sgn_inv_intro : Term -> Term -> Term -> Term -> Term -> Term -> Te
   | _ , _ , _ , _ , _ , _ , _ , Term.Stuck  => Term.Stuck
   | p, l, r, lo, hi, s, sl, sr =>
     let _v0 := (__upoly_of_term (__upoly_term_var p) p)
-    let _v1 := (__eo_is_eq r (Term.UOp UserOp._at_cov_minus_inf))
-    let _v2 := (__eo_or _v1 (__eo_is_eq r (Term.UOp UserOp._at_cov_plus_inf)))
-    let _v3 := (__eo_is_eq l (Term.UOp UserOp._at_cov_minus_inf))
-    let _v4 := (__eo_or _v3 (__eo_is_eq l (Term.UOp UserOp._at_cov_plus_inf)))
+    let _v1 := (__eo_is_eq r (Term.UOp UserOp._at__at_cov_minus_inf))
+    let _v2 := (__eo_or _v1 (__eo_is_eq r (Term.UOp UserOp._at__at_cov_plus_inf)))
+    let _v3 := (__eo_is_eq l (Term.UOp UserOp._at__at_cov_minus_inf))
+    let _v4 := (__eo_or _v3 (__eo_is_eq l (Term.UOp UserOp._at__at_cov_plus_inf)))
     (__eo_requires (__eo_ite (__upoly_rem_seq_check _v0 (__upoly_derivative _v0) s) (__eo_ite (__eo_and (__eo_ite _v4 (__eo_and (__eo_and (__eo_is_eq lo l) (__eo_is_eq sl Term.__eo_List_nil)) (__eo_is_eq (Term.Boolean true) _v3)) (__eo_ite (__eo_is_q lo) (__eo_and (__eo_and (__cov_is_root _v0 l sl) (__eo_not (__eo_is_eq (__upoly_eval _v0 lo) (Term.Rational (native_mk_rational 0 1))))) (__cov_lt lo l)) (Term.Boolean false))) (__eo_ite _v2 (__eo_and (__eo_and (__eo_is_eq hi r) (__eo_is_eq sr Term.__eo_List_nil)) (__eo_is_eq (Term.Boolean false) _v1)) (__eo_ite (__eo_is_q hi) (__eo_and (__eo_and (__cov_is_root _v0 r sr) (__eo_not (__eo_is_eq (__upoly_eval _v0 hi) (Term.Rational (native_mk_rational 0 1))))) (__cov_lt r hi)) (Term.Boolean false)))) (__eo_is_eq (__eo_add (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s lo)) (__eo_neg (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s hi)))) (__eo_add (__eo_ite _v4 (Term.Numeral 0) (Term.Numeral 1)) (__eo_ite _v2 (Term.Numeral 0) (Term.Numeral 1)))) (Term.Boolean false)) (Term.Boolean false)) (Term.Boolean true) (__eo_mk_apply (__eo_mk_apply (Term.UOp1 UserOp1._at_sgn_inv (__upoly_to_list _v0)) l) r))
 
 
@@ -9620,8 +9620,8 @@ def __eo_typeof : Term -> Term
   | (Term.UOp UserOp._at__at_UPoly) => Term.Type
   | (Term.UOp UserOp._at__at_upoly_zero) => (Term.UOp UserOp._at__at_UPoly)
   | (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_upoly) __eo_x1) __eo_x2) => (__eo_typeof__at__at_upoly (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
-  | (Term.UOp UserOp._at_cov_minus_inf) => (Term.UOp UserOp.Real)
-  | (Term.UOp UserOp._at_cov_plus_inf) => (Term.UOp UserOp.Real)
+  | (Term.UOp UserOp._at__at_cov_minus_inf) => (Term.UOp UserOp.Real)
+  | (Term.UOp UserOp._at__at_cov_plus_inf) => (Term.UOp UserOp.Real)
   | (Term.UOp4 UserOp4._at_ran __eo_x1 __eo_x2 __eo_x3 __eo_x4) => (__eo_typeof__at_ran (__eo_typeof __eo_x1) __eo_x1 (__eo_typeof __eo_x2) __eo_x2 (__eo_typeof __eo_x3) __eo_x3 (__eo_typeof __eo_x4) __eo_x4)
   | (Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv __eo_x1) __eo_x2) __eo_x3) => (__eo_typeof__at_sgn_inv (__eo_typeof __eo_x1) (__eo_typeof __eo_x2) (__eo_typeof __eo_x3))
   | (Term.Apply (Term.UOp1 UserOp1._at_is_root __eo_x1) __eo_x2) => (__eo_typeof__at_is_root (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
