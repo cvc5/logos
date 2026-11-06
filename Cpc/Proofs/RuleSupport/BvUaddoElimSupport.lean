@@ -352,8 +352,6 @@ theorem typed_uaddo_term (x y n : Term) :
       simpa [W] using hiLt
     have hOne : native_zplus (native_zplus i 1) (native_zneg i) = 1 := by
       simp [SmtEval.native_zplus, SmtEval.native_zneg]
-      rw [Int.add_comm i 1]
-      exact Int.add_neg_cancel_right 1 i
     unfold __smtx_typeof_extract
     simp only
     rw [hi0, hiLtW, hOne]

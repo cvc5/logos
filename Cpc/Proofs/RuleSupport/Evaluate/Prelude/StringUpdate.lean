@@ -228,12 +228,8 @@ theorem EvaluateProofInternal.str_update_result_strings_in_bounds
             (Term.Numeral (-1 : native_Int))) =
         Term.String (s.take idx) by
     simp [__eo_add, __eo_extract, native_zplus, native_zneg]
-    change native_str_substr s 0
-        ((Int.ofNat idx : native_Int) + (-1 : native_Int) + 1) =
-      s.take idx
-    rw [show (Int.ofNat idx + (-1 : native_Int) + 1) =
-        Int.ofNat idx by omega]
-    exact EvaluateProofInternal.native_str_substr_prefix_take_local s idx]
+    simpa only [Int.ofNat_eq_natCast] using
+      EvaluateProofInternal.native_str_substr_prefix_take_local s idx]
   rw [show
       __eo_extract (Term.String repl) (Term.Numeral 0)
           (__eo_add
@@ -243,19 +239,11 @@ theorem EvaluateProofInternal.str_update_result_strings_in_bounds
         Term.String (repl.take (s.length - idx)) by
     simp [__eo_add, __eo_neg, __eo_len, __eo_extract, native_zplus,
       native_zneg, native_str_len]
-    change native_str_substr repl 0
-        (-(Int.ofNat idx : native_Int) + Int.ofNat s.length +
-          (-1 : native_Int) + 1) =
-      repl.take (s.length - idx)
-    rw [show
-        -Int.ofNat idx + Int.ofNat s.length + (-1 : native_Int) + 1 =
-          Int.ofNat (s.length - idx) by
-      calc
-        -Int.ofNat idx + Int.ofNat s.length + (-1 : native_Int) + 1 =
-            Int.ofNat s.length - Int.ofNat idx := by omega
-        _ = Int.ofNat (s.length - idx) :=
-            (Int.ofNat_sub hIdxLe).symm]
-    exact EvaluateProofInternal.native_str_substr_prefix_take_local repl (s.length - idx)]
+    have hLength : -(idx : Int) + (s.length : Int) =
+        ((s.length - idx : Nat) : Int) := by omega
+    rw [hLength]
+    simpa only [Int.ofNat_eq_natCast] using
+      EvaluateProofInternal.native_str_substr_prefix_take_local repl (s.length - idx)]
   rw [show
       __eo_extract (Term.String s)
           (__eo_add (Term.Numeral (Int.ofNat idx))
@@ -264,18 +252,9 @@ theorem EvaluateProofInternal.str_update_result_strings_in_bounds
         Term.String (s.drop (idx + repl.length)) by
     simp [__eo_add, __eo_len, __eo_extract, native_zplus, native_zneg,
       native_str_len]
-    change native_str_substr s
-        ((Int.ofNat idx : native_Int) + Int.ofNat repl.length)
-        (Int.ofNat s.length -
-            ((Int.ofNat idx : native_Int) + Int.ofNat repl.length) + 1) =
-      s.drop (idx + repl.length)
-    rw [show
-        Int.ofNat idx + Int.ofNat repl.length =
-          Int.ofNat (idx + repl.length) by
-      simp]
-    exact by
-      simpa [native_str_len] using
-        EvaluateProofInternal.native_str_substr_suffix_drop_local s (idx + repl.length)]
+    simpa only [Int.ofNat_eq_natCast, Int.natCast_add, Int.sub_eq_add_neg,
+      Int.neg_add, Int.add_comm] using
+      EvaluateProofInternal.native_str_substr_suffix_drop_local s (idx + repl.length)]
   simp [__eo_concat, native_str_concat, List.append_assoc]
 
 theorem EvaluateProofInternal.str_update_result_strings
@@ -476,17 +455,7 @@ theorem EvaluateProofInternal.eo_extract_string_substr_window
         (__eo_add (__eo_add (Term.Numeral i) (Term.Numeral n))
           (Term.Numeral (-1 : native_Int))) =
       Term.String (native_str_substr s i n) := by
-  simp [__eo_extract, __eo_add, native_zplus, native_zneg]
-  rw [show i + n + -1 + -i + 1 = n by
-    simp [Int.add_assoc]
-    rw [show -1 + (-i + 1) = -i by
-      rw [Int.add_comm (-i) 1]
-      rw [← Int.add_assoc]
-      simp]
-    rw [Int.add_comm n (-i)]
-    rw [← Int.add_assoc]
-    rw [Int.add_right_neg]
-    simp]
+  simp [__eo_extract, __eo_add, native_zplus, native_zneg, Int.add_assoc]
 
 theorem EvaluateProofInternal.eo_substr_len_arg_of_end_numeral
     (i j : native_Int) (m : Term)
@@ -506,10 +475,6 @@ theorem EvaluateProofInternal.eo_extract_string_zero_len_minus_one
           (Term.Numeral (-1 : native_Int))) =
       Term.String (native_str_substr subject 0 (native_str_len pfx)) := by
   simp [__eo_extract, __eo_len, __eo_add, native_zplus, native_zneg]
-  rw [show native_str_len pfx + (-1 : native_Int) + 1 =
-      native_str_len pfx by
-    rw [Int.add_assoc]
-    simp]
 
 theorem EvaluateProofInternal.eo_extract_string_suffix_window
     (suffix subject : native_String) :
@@ -523,14 +488,7 @@ theorem EvaluateProofInternal.eo_extract_string_suffix_window
           (native_str_len subject + -native_str_len suffix)
           (native_str_len suffix)) := by
   simp [__eo_extract, __eo_len, __eo_add, __eo_neg, native_zplus,
-    native_zneg]
-  rw [show
-      native_str_len subject + -1 +
-          -(native_str_len subject + -native_str_len suffix) + 1 =
-        native_str_len suffix by
-    simp [Int.neg_add, Int.add_assoc, Int.add_comm, Int.add_left_comm]
-    rw [Int.add_right_neg]
-    rw [Int.add_zero]]
+    native_zneg, Int.add_assoc, Int.add_comm, Int.add_left_comm]
 
 theorem EvaluateProofInternal.smt_value_rel_seq_right_local
     {v : SmtValue} {s : SmtSeq} :

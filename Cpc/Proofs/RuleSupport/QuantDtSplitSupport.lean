@@ -1563,7 +1563,7 @@ theorem eoVarEnv_of_exists_bool {zs : Term} {body : SmtTerm}
     intro hTy
     simp [__smtx_typeof] at hTy
 termination_by sizeOf zs
-decreasing_by subst zs; simp_wf; omega
+decreasing_by subst zs; simp_wf <;> omega
 
 theorem conjAbsorbed_nodup_of_typed {x F c ys g : Term}
     (rel : ConjRel x F c ys g)

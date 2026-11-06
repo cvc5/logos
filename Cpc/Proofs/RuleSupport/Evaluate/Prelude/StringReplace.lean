@@ -74,23 +74,7 @@ theorem EvaluateProofInternal.native_str_substr_suffix_drop_local
     have hnot2 : ¬((↑s.length : Int) - ↑start + 1 <= 0) := by omega
     have hnot3 : ¬((↑start : Int) >= ↑s.length) := by omega
     simp [hnot1, hnot2, hnot3]
-    have hMin :
-        min ((↑s.length : Int) - ↑start + 1)
-            ((↑s.length : Int) - ↑start) =
-          (↑s.length : Int) - ↑start := by
-      apply Int.min_eq_right
-      omega
-    rw [hMin]
-    have hToNat :
-        Int.toNat ((↑s.length : Int) - ↑start) = s.length - start := by
-      apply Int.ofNat.inj
-      change (↑(((↑s.length : Int) - ↑start).toNat) : Int) =
-        ↑(s.length - start)
-      rw [Int.toNat_of_nonneg]
-      · rw [Int.ofNat_sub (Nat.le_of_lt hlt)]
-      · omega
-    rw [hToNat]
-    exact List.take_of_length_le (by rw [List.length_drop]; omega)
+
   · have hge : s.length ≤ start := Nat.le_of_not_gt hlt
     have hdrop : s.drop start = [] := List.drop_eq_nil_of_le hge
     simp [hdrop]
@@ -168,8 +152,6 @@ theorem EvaluateProofInternal.native_str_indexof_suffix_offset
     rw [show s.length - start - t.length + 1 = fuel by omega]
     rw [← hHead, hOffset', hTail']
     simp [Int.add_comm]
-    intro hBad _
-    exact False.elim (hStartNotNeg hBad)
   · have hDropBound : ¬ t.length ≤ (s.drop start).length := by
       rw [List.length_drop]
       omega
@@ -380,10 +362,6 @@ theorem EvaluateProofInternal.str_replace_result_strings
     rw [hGuard, eo_ite_false]
     simp [__eo_extract, __eo_add, __eo_len, __eo_concat,
       native_zplus, native_zneg, native_str_len]
-    rw [show native_str_indexof s pat 0 + -1 + 1 =
-        native_str_indexof s pat 0 by
-      rw [Int.add_assoc]
-      simp]
     rw [show native_str_substr s 0 (native_str_indexof s pat 0) =
         s.take n by
       change native_str_substr s 0 idx = s.take n
@@ -392,16 +370,16 @@ theorem EvaluateProofInternal.str_replace_result_strings
     rw [show
         native_str_substr s
             (native_str_indexof s pat 0 + ↑pat.length)
-            (↑s.length + -(native_str_indexof s pat 0 + ↑pat.length) + 1) =
+            (↑s.length + (-↑pat.length + -native_str_indexof s pat 0) + 1) =
           s.drop (n + pat.length) by
-      rw [show native_str_indexof s pat 0 + ↑pat.length =
-          Int.ofNat (n + pat.length) by
-        simpa [idx, native_str_len] using hStart]
-      change
-        native_str_substr s (Int.ofNat (n + pat.length))
-            (Int.ofNat s.length - Int.ofNat (n + pat.length) + 1) =
-          s.drop (n + pat.length)
-      exact EvaluateProofInternal.native_str_substr_suffix_drop_local s (n + pat.length)]
+      have hSuffix :=
+        EvaluateProofInternal.native_str_substr_suffix_drop_local s (n + pat.length)
+      have hStart' : native_str_indexof s pat 0 + (pat.length : Int) =
+          Int.ofNat (n + pat.length) := by
+        simpa [idx, native_str_len] using hStart
+      rw [← hStart'] at hSuffix
+      simpa only [Int.ofNat_eq_natCast, Int.sub_eq_add_neg, Int.neg_add,
+        Int.add_comm] using hSuffix]
     rw [ite_eq_right (by simpa [idx] using hNeg)]
     simp [n, idx, native_str_concat, List.append_assoc]
 

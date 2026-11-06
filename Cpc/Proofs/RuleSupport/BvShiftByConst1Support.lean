@@ -785,7 +785,6 @@ private theorem native_int_pow2_pos_of_nonneg_local1
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 private theorem lshr_const1_value_local
     (W A N p : native_Int)
@@ -1739,7 +1738,6 @@ private theorem typed_bv_ashr_by_const_1_term
     have hOne :
         native_zplus (native_zplus N 1) (native_zneg N) = 1 := by
       simp [SmtEval.native_zplus, SmtEval.native_zneg]
-      grind
     have hSignD0 :
         native_zlt 0
             (native_zplus (native_zplus N 1) (native_zneg N)) = true := by
@@ -1873,7 +1871,7 @@ private theorem eval_extract_msb_bitvec_local1
     (by exact Int.natCast_nonneg _)
     (by norm_cast; exact x.isLt) rfl (by push_cast; omega)]
   rw [bitvec_ofInt_natCast_toNat, extractLsb_sign_bit_local1 hW]
-  cases x.msb <;> native_decide
+  cases x.msb <;> decide
 
 private theorem bvashr_bitvec_value_local1
     (x : BitVec W) (A : Nat) (hW : 0 < W) :
@@ -2063,7 +2061,6 @@ private theorem eval_repeat_bit_local1 (A : Nat) (b : Bool) :
       simp [__smtx_model_eval_repeat, hAToNat,
         eval_repeat_rec_one_bit_local1, BitVec.fill_toNat,
         native_nat_to_int, SmtEval.native_nat_to_int, natpow2_eq]
-      exact hOnesCast.symm
 
 private theorem ashr_const1_value_local1
     (W A N p : native_Int)

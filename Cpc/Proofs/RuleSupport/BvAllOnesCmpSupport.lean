@@ -340,7 +340,6 @@ private theorem native_pow2_minus_one_mod_local
   have hPowPos : 0 < native_int_pow2 w := by
     have hNot : ¬ w < 0 := Int.not_lt_of_ge hw
     simp [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hNot]
-    exact Int.pow_pos (by decide)
   have hLo : 0 <= native_int_pow2 w - 1 := by
     exact Int.sub_nonneg.mpr (Int.add_one_le_iff.mpr hPowPos)
   have hHi : native_int_pow2 w - 1 < native_int_pow2 w := by

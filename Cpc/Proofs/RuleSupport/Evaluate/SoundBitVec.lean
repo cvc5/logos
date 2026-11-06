@@ -12,6 +12,10 @@ set_option linter.unusedSimpArgs false
 set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
 
+private theorem native_real_to_int_cast_rat (q : native_Rat) :
+    native_real_to_int (q : native_Real) = native_to_int q := by
+  simpa only [native_rat_to_real] using native_real_to_int_rat_to_real q
+
 theorem EvaluateProofInternal.run_evaluate_sound_apply_not_core
     (M : SmtModel) (hM : model_wf M)
     (b : Term)
@@ -577,7 +581,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_to_real_core
           (SmtValue.Real (native_int_to_real runN))
           (__smtx_model_eval M
             (SmtTerm.Rational (native_to_real runN)))
-      rw [__smtx_model_eval.eq_3]
+      rw [__smtx_model_eval.eq_3, native_rat_to_real_to_real]
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_to_int_core
@@ -662,6 +666,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_to_int_core
             (__smtx_model_eval M (__eo_to_smt x)) by
       rw [__smtx_model_eval.eq_def] <;> simp only]
     rw [hXEval]
+    simp only [__smtx_model_eval_to_int, native_real_to_int_cast_rat]
     change
       RuleProofs.smt_value_rel
         (SmtValue.Numeral (native_to_int runQ))
@@ -1026,7 +1031,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_uneg_core
         RuleProofs.smt_value_rel
           (SmtValue.Real (native_rneg runQ))
           (__smtx_model_eval M (SmtTerm.Rational (native_qneg runQ)))
-      rw [__smtx_model_eval.eq_3]
+      rw [__smtx_model_eval.eq_3, native_rat_to_real_qneg]
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_abs_core
@@ -1356,10 +1361,13 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_abs_core
           native_ite, native_teq, RuleProofs.smt_value_rel,
           __smtx_model_eval_eq, native_veq, native_qabs, native_qneg,
           native_qlt, native_mk_rational, rat_zero_div_one, hLt]
+        have hRealLt : (runQ : native_Real) < 0 := by exact_mod_cast hLt
+        rw [abs_of_neg hRealLt]
         change
           SmtValue.Real (native_rneg runQ) =
             __smtx_model_eval M (SmtTerm.Rational (native_qneg runQ))
-        rw [__smtx_model_eval.eq_3]
+        rw [__smtx_model_eval.eq_3, native_rat_to_real_qneg]
+        simp only [native_rat_to_real]
       · have hNeg : native_qlt runQ (native_mk_rational 0 1) = false := by
           unfold native_qlt native_mk_rational
           rw [decide_eq_false_iff_not]
@@ -1369,10 +1377,14 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_abs_core
           native_ite, native_teq, RuleProofs.smt_value_rel,
           __smtx_model_eval_eq, native_veq, native_qabs, native_qneg,
           native_qlt, native_mk_rational, rat_zero_div_one, hLt]
+        have hRealNonneg : (0 : native_Real) ≤ runQ := by
+          exact_mod_cast (not_lt.mp hLt)
+        rw [abs_of_nonneg hRealNonneg]
         change
           SmtValue.Real runQ =
             __smtx_model_eval M (SmtTerm.Rational runQ)
         rw [__smtx_model_eval.eq_3]
+        simp only [native_rat_to_real]
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_int_pow2_core
     (M : SmtModel) (hM : model_wf M)

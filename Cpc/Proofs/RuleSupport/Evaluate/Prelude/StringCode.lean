@@ -301,11 +301,10 @@ theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_numeral_invalid_guard
         intro hEq
         have hnle : n ≤ 196608 := by
           rw [← hEq]
-          exact Int.le_refl 196608
         exact hBad ⟨h0, hnle⟩)
     have hNe : n ≠ 196608 := by
       intro hn
-      exact hBad ⟨h0, by rw [hn]; exact Int.le_refl 196608⟩
+      exact hBad ⟨h0, by rw [hn]⟩
     have hNeSymm : (196608 : Int) ≠ n := by
       intro hn
       exact hNe hn.symm
@@ -357,11 +356,10 @@ theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral_invalid_guar
         intro hEq
         have hnle : n ≤ 196608 := by
           rw [← hEq]
-          exact Int.le_refl 196608
         exact hBad ⟨h0, hnle⟩)
     have hNe : n ≠ 196608 := by
       intro hn
-      exact hBad ⟨h0, by rw [hn]; exact Int.le_refl 196608⟩
+      exact hBad ⟨h0, by rw [hn]⟩
     have hNeSymm : (196608 : Int) ≠ n := by
       intro hn
       exact hNe hn.symm

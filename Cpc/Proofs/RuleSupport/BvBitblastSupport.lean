@@ -586,7 +586,6 @@ theorem bitblast_ult_shape (a b orEqual : Term)
       BitListsSameLength xtail ytail := by
   unfold __bv_bitblast_ult at h
   split at h <;> simp_all
-  refine ⟨_, _, ⟨rfl, rfl⟩, _, _, ⟨rfl, rfl⟩, ?_⟩
   exact bitblast_ult_rec_same_length _ _ _ h
 
 private theorem bitlist_rev_is_list (a : Term)
@@ -1922,8 +1921,10 @@ theorem eval_bitnot {M : SmtModel}
         (↑(2 ^ xs.length) : Int) =
       (↑(2 ^ xs.length - 1 - bitsValue xs) : Int)
   rw [Int.emod_eq_of_lt hnonneg hupper]
-  norm_cast
-  omega
+  have hBound : 1 + bitsValue xs ≤ 2 ^ xs.length := by omega
+  simp only [Nat.sub_sub, Nat.cast_sub hBound, Nat.cast_add, Nat.cast_one,
+    Nat.cast_pow, Nat.cast_ofNat]
+  ring
 
 theorem BitListEval.eval_bvxnor {M : SmtModel}
     {a b : Term} {xs ys : List Bool}
@@ -2395,7 +2396,7 @@ theorem bvslt_bitvec_values {W : Nat} (x y : BitVec W) :
         (by exact_mod_cast x.isLt)
     have hsimpa := hMod.symm
     try simp [SmtEval.native_zeq, SmtEval.native_mod_total] at hsimpa ⊢
-    exact decide_eq_true hsimpa
+    exact hsimpa
   have hYCanon : native_zeq (y.toNat : Int)
       (native_mod_total (y.toNat : Int)
         (native_int_pow2 (W : Int))) = true := by
@@ -2406,7 +2407,7 @@ theorem bvslt_bitvec_values {W : Nat} (x y : BitVec W) :
         (by exact_mod_cast y.isLt)
     have hsimpa := hMod.symm
     try simp [SmtEval.native_zeq, SmtEval.native_mod_total] at hsimpa ⊢
-    exact decide_eq_true hsimpa
+    exact hsimpa
   unfold __smtx_model_eval_bvslt
   rw [EvaluateProofInternal.smtx_model_eval_bvsgt_binary_eq_uts
     hW0 hYCanon hXCanon]
@@ -2435,7 +2436,7 @@ private theorem eval_bvsle_not_bvslt_swap_binary
     __smtx_model_eval_or, __smtx_model_eval_extract,
     __smtx_model_eval__, __smtx_bv_sizeof_value,
     native_binary_extract, native_zlt, native_veq, native_not,
-    native_and, native_or, native_zplus, native_zneg, hWExpr]
+    native_and, native_or, native_zplus, native_zneg]
   generalize hsx :
       decide
         (native_mod_total
@@ -3191,13 +3192,9 @@ theorem eval_step_bvule (M : SmtModel) (hM : model_wf M)
             · have hnle :
                   ¬ bitsValue (xb :: xbs) ≤ bitsValue (yb :: ybs) := by
                 omega
-              have hneI :
-                  ¬ (bitsValue (yb :: ybs) : Int) =
-                    (bitsValue (xb :: xbs) : Int) := by
-                intro h
-                apply heq
-                exact_mod_cast h.symm
-              simp [hlt, hnle, htail, hneI]
+              have hneN :
+                  bitsValue (yb :: ybs) ≠ bitsValue (xb :: xbs) := Ne.symm heq
+              simp [hlt, hnle, htail, hneN]
 
 theorem eval_step_eq (M : SmtModel) (hM : model_wf M)
     (a b : Term)
@@ -4060,7 +4057,7 @@ private theorem smt_typeof_bitsValue (xs : List Bool) :
         (by exact_mod_cast BvBitblast.bitsValue_lt xs)
     have hsimpa := hMod.symm
     try simp [SmtEval.native_zeq, SmtEval.native_mod_total] at hsimpa ⊢
-    exact decide_eq_true hsimpa
+    exact hsimpa
   change
     __smtx_typeof
         (SmtTerm.Binary (xs.length : Int)
@@ -5315,7 +5312,7 @@ private theorem add_smt_typeof_bitsValue (xs : List Bool) :
         (by exact_mod_cast BvBitblast.bitsValue_lt xs)
     have hsimpa := hMod.symm
     try simp [SmtEval.native_zeq, SmtEval.native_mod_total] at hsimpa ⊢
-    exact decide_eq_true hsimpa
+    exact hsimpa
   change
     __smtx_typeof
         (SmtTerm.Binary (xs.length : Int)
@@ -5844,7 +5841,6 @@ private theorem prefix_eval_typed
                 (Term.Numeral (-1 : Int)) =
               Term.Numeral (n : Int) := by
           simp [__eo_add, native_zplus]
-          simp [Int.add_assoc]
         rw [hsub] at hne ⊢
         rcases bitCons_type_info hTy with
           ⟨wt, hW, htailTy, hbTy⟩
@@ -5958,14 +5954,14 @@ private theorem subsequence_eval_typed
                 (Term.Numeral ((l : Int) + 1))
                 (Term.Numeral (-1 : Int)) =
               Term.Numeral (l : Int) := by
-          simp [__eo_add, native_zplus, Int.add_assoc]
+          simp [__eo_add, native_zplus]
         have husub :
             __eo_add
                 (Term.Numeral ((l : Int) + 1 + (d : Int)))
                 (Term.Numeral (-1 : Int)) =
               Term.Numeral ((l + d : Nat) : Int) := by
           simp [__eo_add, native_zplus]
-          simp [Int.add_assoc, Int.add_left_comm]
+          simp [Int.add_assoc]
         rw [hlsub, husub] at hne ⊢
         rcases bitCons_type_info hTy with
           ⟨wt, hW, htailTy, hbTy⟩
@@ -6008,7 +6004,7 @@ private theorem eval_step_extract
   have hwidth' : (0 : Int) < ui + 1 + -li := by
     have hsimpa := hwidth
     try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg] at hsimpa ⊢
-    exact of_decide_eq_true hsimpa
+    exact hsimpa
   have hliui : li ≤ ui := by
     apply Int.le_of_lt_add_one
     omega
@@ -6070,16 +6066,7 @@ private theorem eval_step_extract
       ui + 1 + -li = (((U - L) + 1 : Nat) : Int) := by
     rw [← hU, ← hL]
     rw [show U = L + (U - L) by omega]
-    simp [Int.add_assoc, Int.add_comm, Int.add_left_comm]
-    clear hout hout' hx hp0 hp1 x
-    calc
-      (L : Int) + ((U - L : Nat) + (-(L : Int) + 1)) =
-          ((L : Int) + -(L : Int)) + ((U - L : Nat) + 1) := by
-        simp [Int.add_assoc, Int.add_left_comm]
-      _ = (U - L : Nat) + 1 := by
-        rw [show (L : Int) + -(L : Int) = 0 by
-          simpa using Int.add_neg_cancel_left (L : Int) 0]
-        exact Int.zero_add _
+    simp [Int.add_assoc]
   rw [extract_val_bitvec_start_len W L ((U - L) + 1)
     (x.toNat : Int) ui li hp0 hp1 hL.symm hd]
   rw [bitvec_ofInt_natCast_toNat]
@@ -9252,13 +9239,12 @@ private theorem bvudiv_binary_values
       rw [native_int_pow2_nat, Int.ofNat_sub hp]
       rw [Int.sub_eq_add_neg, Int.natCast_one]]
     simp only [native_mod_total]
-    change
-      ((2 ^ xs.length - 1 : Nat) : Int) %
-          (2 ^ xs.length : Nat) =
-        ((2 ^ xs.length - 1 : Nat) : Int)
-    exact Int.emod_eq_of_lt (Int.natCast_nonneg _)
-      (by exact_mod_cast (by omega :
-        2 ^ xs.length - 1 < 2 ^ xs.length))
+    have hMod :
+        ((2 ^ xs.length - 1 : Nat) : Int) % (2 ^ xs.length : Nat) =
+          ((2 ^ xs.length - 1 : Nat) : Int) :=
+      Int.emod_eq_of_lt (Int.natCast_nonneg _)
+        (by exact_mod_cast (by omega : 2 ^ xs.length - 1 < 2 ^ xs.length))
+    simpa only [Nat.cast_sub hp, Nat.cast_pow, Nat.cast_ofNat, Nat.cast_one] using hMod
   · have hyI : ¬(bitsValue ys : Int) = 0 := by
       exact_mod_cast hy
     simp [native_zeq, native_ite, hy,
@@ -11124,8 +11110,10 @@ private theorem bvnot_binary_values (xs : List Bool) :
         (↑(2 ^ xs.length) : Int) =
       (↑(2 ^ xs.length - 1 - bitsValue xs) : Int)
   rw [Int.emod_eq_of_lt hnonneg hupper]
-  norm_cast
-  omega
+  have hBound : 1 + bitsValue xs ≤ 2 ^ xs.length := by omega
+  simp only [Nat.sub_sub, Nat.cast_sub hBound, Nat.cast_add, Nat.cast_one,
+    Nat.cast_pow, Nat.cast_ofNat]
+  ring
 
 private theorem extractLsb_sign_bit_bitblast
     {W : Nat} {x : BitVec W} (hW : 0 < W) :
@@ -11151,7 +11139,7 @@ private theorem eval_extract_msb_bitvec_bitblast
     (by norm_cast; exact x.isLt) rfl (by push_cast; omega)]
   rw [bitvec_ofInt_natCast_toNat,
     extractLsb_sign_bit_bitblast hW]
-  cases x.msb <;> native_decide
+  cases x.msb <;> decide
 
 private theorem bvashr_binary_branch
     (pre : List Bool) (s : Bool) (amount : List Bool) :

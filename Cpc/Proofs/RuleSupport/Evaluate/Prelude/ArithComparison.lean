@@ -35,7 +35,8 @@ theorem EvaluateProofInternal.native_qsub_lt_zero_eq_eval
     native_qlt (native_qplus q1 (native_qneg q2))
         (native_mk_rational 0 1) =
       native_qlt q1 q2 := by
-  exact native_qsub_lt_zero_eq q1 q2
+  simp [native_qlt, native_qplus, native_qneg, native_mk_rational,
+    ← sub_eq_add_neg]
 
 theorem EvaluateProofInternal.eo_leq_int_result_eq
     (n1 n2 : native_Int) :
@@ -88,7 +89,8 @@ theorem EvaluateProofInternal.eo_leq_int_result_eq
           injection hTerm with hRat
           exact h hRat
         simp only [hTerm, h', decide_false]]
-    rw [native_to_real_eq_zero_eq, native_zsub_eq_zero_eq]
+    simp [native_qeq, native_to_real, native_mk_rational, native_zeq,
+      native_zplus, native_zneg, ← sub_eq_add_neg, sub_eq_zero]
   rw [hEq]
   unfold native_zlt native_zeq native_zleq
   by_cases hlt : n1 < n2
@@ -112,7 +114,7 @@ theorem EvaluateProofInternal.eo_leq_real_result_eq
       Term.Boolean (native_qleq q1 q2) := by
   unfold __eo_neg __eo_add __eo_is_neg __eo_to_q __eo_eq __eo_or
   simp only [native_teq, native_or]
-  rw [native_qsub_lt_zero_eq]
+  rw [EvaluateProofInternal.native_qsub_lt_zero_eq_eval]
   have hEq :
       decide
           (Term.Rational (native_mk_rational 0 1) =
@@ -146,7 +148,8 @@ theorem EvaluateProofInternal.eo_leq_real_result_eq
           injection hTerm with hRat
           exact h hRat
         simp only [hTerm, h', decide_false]]
-    rw [native_qsub_eq_zero_eq]
+    simp [native_qeq, native_qplus, native_qneg, native_mk_rational,
+      ← sub_eq_add_neg, sub_eq_zero]
   rw [hEq]
   unfold native_qlt native_qeq native_qleq
   by_cases hlt : q1 < q2
@@ -218,11 +221,18 @@ theorem EvaluateProofInternal.eo_is_int_result_rel
         (__eo_to_smt
           (__eo_eq (__eo_to_q (__eo_to_z (Term.Rational q)))
             (__eo_to_q (Term.Rational q))))) := by
+  have hFloor := native_real_to_int_rat_to_real q
+  simp only [native_rat_to_real] at hFloor
+  have hCastWhole :
+      native_int_to_real (native_to_int q) = native_rat_to_real q ↔
+        native_to_real (native_to_int q) = q := by
+    rw [native_int_to_real_eq_rat, native_rat_to_real_inj]
+  simp only [native_int_to_real, native_rat_to_real] at hCastWhole
   by_cases hWhole : native_to_real (native_to_int q) = q
   · simp [RuleProofs.smt_value_rel, __smtx_model_eval_is_int,
       __smtx_model_eval_to_int, __smtx_model_eval_to_real,
       __smtx_model_eval_eq, native_veq, __eo_to_z, __eo_to_q,
-      __eo_eq, native_teq, hWhole]
+      __eo_eq, native_teq, hFloor, hCastWhole, hWhole]
     rw [__smtx_model_eval.eq_1]
   · have hWhole' : q ≠ native_to_real (native_to_int q) := by
       intro h
@@ -230,7 +240,7 @@ theorem EvaluateProofInternal.eo_is_int_result_rel
     simp [RuleProofs.smt_value_rel, __smtx_model_eval_is_int,
       __smtx_model_eval_to_int, __smtx_model_eval_to_real,
       __smtx_model_eval_eq, native_veq, __eo_to_z, __eo_to_q,
-      __eo_eq, native_teq, hWhole, hWhole']
+      __eo_eq, native_teq, hFloor, hCastWhole, hWhole, hWhole']
     rw [__smtx_model_eval.eq_1]
 
 theorem EvaluateProofInternal.eo_lt_int_run_args_of_nonstuck

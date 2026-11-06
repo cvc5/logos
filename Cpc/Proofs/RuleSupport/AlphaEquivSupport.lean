@@ -1098,9 +1098,7 @@ theorem alpha_binder_preserves
   have hBodyBoth :=
     hRec
       (G := a) (bvs' := bvs)
-      (by
-        simp
-        omega)
+      (by simp <;> omega)
       hVsEnv hBvsPerm hBodyTrans hTs hActuals
       (by
         simpa [SubstitutePreservationSupport.substResult, bodySub] using
@@ -1627,7 +1625,7 @@ theorem alpha_eval_gen_lt
                 (fun {M' N'} hM' hN' hRel' => by
                   have hBodyEq := hRec
                     (G := a) (bound' := fullBound)
-                    (by simp; omega) hFullBoundEnv hFullDisjoint
+                    (by simp <;> omega) hFullBoundEnv hFullDisjoint
                     hBodyTrans hBodySubTrans hBodyNoSource hBodyNoTarget
                     hM' hN' hRel'
                   have hBodyEq' :
@@ -1657,7 +1655,7 @@ theorem alpha_eval_gen_lt
               hTargetDistinct hBinderRename hM hN hRel hBinderWf
               (fun {M' N'} hM' hN' hRel' =>
                 hRec (G := a) (bound' := fullBound)
-                  (by simp; omega) hFullBoundEnv hFullDisjoint
+                  (by simp <;> omega) hFullBoundEnv hFullDisjoint
                   hBodyTrans hBodySubTrans hBodyNoSource hBodyNoTarget
                   hM' hN' hRel')
         · have hRecArg :

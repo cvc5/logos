@@ -1006,8 +1006,7 @@ private theorem extractLead_low_of_premise
       bvExtractMultLeadingZerosInt, hIz, hJz, SmtEval.native_zleq,
       SmtEval.native_zplus, SmtEval.native_zmult, SmtEval.native_zneg]
       at hEval ⊢ <;>
-    simpa [Int.sub_eq_add_neg, Int.add_comm, Int.add_left_comm,
-      Int.add_assoc] using hEval
+    unfold native_Int at * <;> omega
 
 private theorem bvExtractMultLeadingZeros_le (i n : Nat) :
     bvExtractMultLeadingZeros i n ≤ n := by
