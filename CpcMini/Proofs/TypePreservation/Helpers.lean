@@ -816,7 +816,7 @@ theorem fun_value_canonical
     {v : SmtValue}
     {A B : SmtType}
     (h : __smtx_typeof_value v = SmtType.FunType A B) :
-    ∃ fid : native_String, v = SmtValue.Fun fid A B := by
+    ∃ fid : ModelId, v = SmtValue.Fun fid A B := by
   cases v with
   | Fun fid A' B' =>
       simp [__smtx_typeof_value] at h

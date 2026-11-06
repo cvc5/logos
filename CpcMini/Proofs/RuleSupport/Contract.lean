@@ -41,14 +41,14 @@ def AllInterpretedTrue (M : SmtModel) (ts : List Term) : Prop :=
 Two models agree on the global part of the interpretation.
 
 Variables may vary, but user constants, native function interpretations and
-the cardinalities of uninterpreted sorts are kept fixed. This is the model
+the domains of uninterpreted sorts are kept fixed. This is the model
 relation used when a binder pushes fresh variable assignments.
 -/
 structure model_agrees_on_globals (M N : SmtModel) : Prop where
   consts : ∀ s T, native_model_lookup M s T = native_model_lookup N s T
   funs : ∀ fid T U, model_fun_lookup M fid T U =
     model_fun_lookup N fid T U
-  usortCard : M.usortCard = N.usortCard
+  usortDom : M.usortDom = N.usortDom
 
 theorem model_agrees_on_globals_refl (M : SmtModel) :
   model_agrees_on_globals M M :=
@@ -63,7 +63,7 @@ by
   exact
     ⟨by intro s T; exact (h.1 s T).symm,
       by intro fid T U; exact (h.2 fid T U).symm,
-      h.usortCard.symm⟩
+      h.usortDom.symm⟩
 
 theorem model_agrees_on_globals_trans {M N K : SmtModel} :
   model_agrees_on_globals M N ->
@@ -78,7 +78,7 @@ by
     by
       intro fid T U
       exact (hMN.2 fid T U).trans (hNK.2 fid T U),
-    hMN.usortCard.trans hNK.usortCard⟩
+    hMN.usortDom.trans hNK.usortDom⟩
 
 /--
 Contextual truth for a derived formula.
