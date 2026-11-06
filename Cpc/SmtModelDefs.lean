@@ -7,6 +7,8 @@
 
 module
 
+public import Cpc.SmtReal
+import all Cpc.SmtReal
 public import Cpc.SmtSyntax
 import all Cpc.SmtSyntax
 
@@ -19,6 +21,8 @@ namespace Smtm
 
 open SmtEval
 
+noncomputable section
+
 mutual
 
 /-
@@ -28,7 +32,7 @@ inductive SmtValue : Type where
   | NotValue : SmtValue
   | Boolean : native_Bool -> SmtValue
   | Numeral : native_Int -> SmtValue
-  | Rational : native_Rat -> SmtValue
+  | Real : native_Real -> SmtValue
   | Binary : native_Int -> native_Int -> SmtValue
   | Map : SmtMap -> SmtValue
   | Fun : native_String -> SmtType -> SmtType -> SmtValue
@@ -40,7 +44,7 @@ inductive SmtValue : Type where
   | DtCons : native_String -> SmtDatatypeDecl -> native_Nat -> SmtValue
   | Apply : SmtValue -> SmtValue -> SmtValue
 
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving DecidableEq, Inhabited
 
 /-
 The SmtMap of the embedding.
@@ -48,7 +52,7 @@ The SmtMap of the embedding.
 inductive SmtMap : Type where
   | cons : SmtValue -> SmtValue -> SmtMap -> SmtMap
   | default : SmtType -> SmtValue -> SmtMap
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving DecidableEq, Inhabited
 
 /-
 The SmtRegLan of the embedding.
@@ -64,7 +68,7 @@ inductive SmtRegLan : Type where
   | inter : SmtRegLan -> SmtRegLan -> SmtRegLan
   | star : SmtRegLan -> SmtRegLan
   | comp : SmtRegLan -> SmtRegLan
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving DecidableEq, Inhabited
 
 /-
 The SmtSeq of the embedding.
@@ -72,7 +76,7 @@ The SmtSeq of the embedding.
 inductive SmtSeq : Type where
   | cons : SmtValue -> SmtSeq -> SmtSeq
   | empty : SmtType -> SmtSeq
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving DecidableEq, Inhabited
 
 
 
@@ -85,5 +89,7 @@ end
 /- Value equality -/
 def native_veq : SmtValue -> SmtValue -> native_Bool
   | x, y => decide (x = y)
+
+end
 
 end Smtm

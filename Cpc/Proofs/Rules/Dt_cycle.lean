@@ -292,7 +292,6 @@ private theorem dt_cycle_path_eval_proper_or_tuple_tail
               have hASize : sizeOf a < n := by
                 rw [← hSize]
                 simp
-                omega
               rcases ih _ hASize rfl hSub hArgCons hSTrans hATrans with
                 hProper | hTail
               · left
@@ -344,7 +343,6 @@ private theorem dt_cycle_tuple_tail_path_eval_size_lt
             · have hTailSize : sizeOf tail < n := by
                 rw [← hSize]
                 simp
-                omega
               have hSTailSize :=
                 ih _ hTailSize rfl hTailPath hTailCons hSTrans hTailTrans
               omega
@@ -398,7 +396,6 @@ private theorem dt_cycle_tuple_tail_path_eval_size_lt
               have hASize : sizeOf a < n := by
                 rw [← hSize]
                 simp
-                omega
               have hSASize :=
                 ih _ hASize rfl hTail hArgCons hSTrans hATrans
               omega
@@ -411,7 +408,6 @@ private theorem dt_cycle_tuple_tail_path_eval_size_lt
               have hASize : sizeOf a < n := by
                 rw [← hSize]
                 simp
-                omega
               have hSASize :=
                 ih _ hASize rfl hTail hArgCons hSTrans hATrans
               have hEval :=
@@ -641,8 +637,7 @@ private theorem dt_find_cycle_path_or_eq_of_true
 termination_by sizeOf c
 decreasing_by
   all_goals
-    simp_wf
-    omega
+    simp_wf <;> omega
 
 private theorem dt_find_cycle_cons_path_of_false_rec
     (c s : Term) :

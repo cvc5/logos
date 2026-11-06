@@ -417,7 +417,7 @@ theorem EoVarEnv.find_rec_succ_pred_of_mem
               Term.Boolean true := by
           simp [__eo_eq, native_teq, hVarEq.symm]
         simp [__eo_list_find_rec, hFindEq, __eo_ite, __eo_add,
-          native_ite, native_teq, native_zplus, Int.add_assoc]
+          native_ite, native_teq, native_zplus]
       · have hVarEqSymm :
             Term.Var (Term.String s) T ≠
               Term.Var (Term.String s0) T0 := by
@@ -490,9 +490,7 @@ theorem EoVarEnv.find_rec_numeral_ne_zero_of_mem_pos
               exact hTailMem
         have hSuccPos : 0 < native_zplus n 1 := by
           have hLe : n ≤ native_zplus n 1 := by
-            simpa [native_zplus] using
-              (Int.le_add_of_nonneg_right
-                (a := n) (by decide : (0 : native_Int) ≤ 1))
+            simp [native_zplus]
           exact Int.lt_of_lt_of_le hPos hLe
         rcases ih hTailMem (native_zplus n 1) hSuccPos with
           ⟨k, hFind, hNeZero⟩
@@ -1013,7 +1011,6 @@ theorem smt_typeof_binary_nat_to_int_zero (w : native_Nat) :
       simp [SmtEval.native_nat_to_int]
     have hnot : ¬ native_nat_to_int w < 0 := Int.not_lt_of_ge hNonneg
     simp [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hnot]
-    exact Int.pow_pos (by decide : (0 : Int) < 2)
   have hMod0 :
       native_mod_total 0 (native_int_pow2 (native_nat_to_int w)) = 0 := by
     simp [SmtEval.native_mod_total]

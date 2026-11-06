@@ -838,7 +838,6 @@ private theorem native_int_pow2_pos_of_nonneg_div
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 private theorem native_int_pow2_lt_of_lt_nonneg_div
     {w k : native_Int} (hw : 0 ≤ w) (hlt : w < k) :
@@ -1299,11 +1298,11 @@ private theorem pow2_and_true {a b : Term} :
   intro h
   cases a <;> cases b <;>
     simp [__eo_and, __eo_requires, native_teq, native_ite, native_not,
-      SmtEval.native_not, SmtEval.native_and] at h |-
+      SmtEval.native_not, SmtEval.native_and] at h ⊢
   case Binary.Binary w1 n1 w2 n2 =>
     by_cases hw : w1 = w2 <;> simp [hw] at h
   case Boolean.Boolean b1 b2 =>
-    cases b1 <;> cases b2 <;> simp at h |-
+    cases b1 <;> cases b2 <;> simp at h ⊢
 
 private def bvUremPow2Guard
     (x v n nmp pm vRef1 vRef2 nmpRef nRef vRef3 pmRef vRef4 : Term) :

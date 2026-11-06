@@ -5,6 +5,8 @@ import all Cpc.Proofs.Canonical.TypeDefaultBasic
 
 public section
 
+noncomputable section
+
 variable {uc : native_Nat -> native_Nat}
 
 open SmtEval
@@ -1041,16 +1043,13 @@ private theorem real_large_witness_p (minSize : Nat) :
       __smtx_typeof_value i = SmtType.Real ∧
         __smtx_value_canonical uc i = true ∧
           minSize ≤ sizeOf i := by
-  refine ⟨SmtValue.Rational (Int.ofNat minSize : native_Rat), ?_, ?_, ?_⟩
+  refine ⟨SmtValue.Real (minSize : native_Real), ?_, ?_, ?_⟩
   · simp [__smtx_typeof_value]
   · simp [__smtx_value_canonical]
-  · rw [show sizeOf (SmtValue.Rational (Int.ofNat minSize : native_Rat)) =
-        1 + sizeOf (Int.ofNat minSize : native_Rat) by rfl]
-    rw [show sizeOf (Int.ofNat minSize : native_Rat) =
-        1 + sizeOf (Int.ofNat minSize) + sizeOf (1 : Nat) +
-          sizeOf (by decide : (1 : Nat) ≠ 0) by rfl]
-    rw [show sizeOf (Int.ofNat minSize) = 1 + minSize by rfl]
-    omega
+  · rw [show sizeOf (SmtValue.Real (minSize : native_Real)) =
+        1 + sizeOf (minSize : native_Real) by rfl]
+    show minSize ≤ 1 + ⌊|(minSize : _root_.Real)|⌋₊
+    simp
 
 private theorem usort_large_witness_p (u : native_Nat) (minSize : Nat)
     (hInf : uc u = 0) :

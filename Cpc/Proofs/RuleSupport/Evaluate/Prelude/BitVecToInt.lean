@@ -48,7 +48,6 @@ theorem EvaluateProofInternal.sbv_to_int_payload_eq_uts_core
       have hwp0 : 0 <= w - 1 := Int.sub_nonneg.mpr hw1
       have hnot : ¬ w - 1 < 0 := Int.not_lt_of_ge hwp0
       simp [p, native_int_pow2, native_zexp_total, hnot]
-      exact Int.pow_pos (by decide)
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow : native_int_pow2 w = 2 * p := by
       simpa [p] using EvaluateProofInternal.native_int_pow2_succ_pred (w := w) hwpos
@@ -124,40 +123,8 @@ theorem EvaluateProofInternal.sbv_to_int_payload_eq_uts_core
             (native_zneg n)
       rw [hnEq] at hNMod
       rw [hnEq, hNMod]
-      simp [native_zplus, native_zmult, native_zneg]
-      have hLeftCancel :
-          p + r + (-p + -p) = r + -p := by
-        have hCancel : p + r + -p = r := by
-          calc
-            p + r + -p = p + (r + -p) := by rw [Int.add_assoc]
-            _ = p + (-p + r) := by rw [Int.add_comm r (-p)]
-            _ = p + -p + r := by rw [← Int.add_assoc]
-            _ = r := by rw [Int.add_right_neg, Int.zero_add]
-        calc
-          p + r + (-p + -p) = p + r + -p + -p := by
-            rw [← Int.add_assoc]
-          _ = r + -p := by rw [hCancel]
-      have hRightCancel :
-          r + r + (-p + -r) = r + -p := by
-        have hCancel : r + r + -r = r := by
-          calc
-            r + r + -r = r + (r + -r) := by rw [Int.add_assoc]
-            _ = r := by rw [Int.add_right_neg, Int.add_zero]
-        calc
-          r + r + (-p + -r) = r + r + (-r + -p) := by
-            rw [Int.add_comm (-p) (-r)]
-          _ = r + r + -r + -p := by
-            rw [← Int.add_assoc]
-          _ = r + -p := by rw [hCancel]
-      calc
-        p + r + -(2 * p) = p + r + -(p + p) := by
-          rw [Int.two_mul]
-        _ = p + r + (-p + -p) := by
-          rw [Int.neg_add]
-        _ = r + -p := hLeftCancel
-        _ = r + r + (-p + -r) := hRightCancel.symm
-        _ = 2 * r + -(p + r) := by
-          rw [Int.two_mul, Int.neg_add]
+      change p + r + -(2 * p) = 2 * r + -(p + r)
+      ring
   · have hw : 0 <= w := by
       simpa [native_zleq, SmtEval.native_zleq] using hw0
     have hwEq : w = 0 :=

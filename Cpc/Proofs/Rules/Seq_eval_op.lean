@@ -681,42 +681,14 @@ private theorem native_seq_extract_cons_pos_nat
         have hOutNat : (x :: xs).length <= Nat.succ k := by
           simpa using Nat.succ_le_succ hRightOutNat
         exact Int.ofNat_le.mpr hOutNat
-      have hLen :
-          (Int.ofNat xs.length + 1) - (Int.ofNat k + 1) =
-            Int.ofNat xs.length - Int.ofNat k := by
-        omega
       have hRightLtNat : k < xs.length := by
         apply Nat.lt_of_not_ge
         intro hRightOutNat
         exact hRightIn (Int.ofNat_le.mpr hRightOutNat)
       have hNotRightOutNat : ¬ xs.length <= k :=
         Nat.not_le_of_gt hRightLtNat
-      have hSuccIdxNonneg :
-          ¬ (Int.ofNat k + 1 < 0) := by
-        intro h
-        have hkNonneg : (0 : Int) <= Int.ofNat k :=
-          Int.natCast_nonneg k
-        omega
-      have hIdxNonneg :
-          ¬ ((Int.ofNat k : Int) < 0) := by
-        intro h
-        have hkNonneg : (0 : Int) <= Int.ofNat k :=
-          Int.natCast_nonneg k
-        omega
-      simp [hn, hNotRightOutNat]
-      change
-        (if (Int.ofNat k + 1 < 0) then ([] : List SmtValue)
-          else
-            List.take
-              (Int.toNat (min n
-                (Int.ofNat xs.length + 1 - (Int.ofNat k + 1))))
-              (List.drop k xs)) =
-          (if ((Int.ofNat k : Int) < 0) then ([] : List SmtValue)
-            else
-              List.take
-                (Int.toNat (min n (Int.ofNat xs.length - Int.ofNat k)))
-                (List.drop k xs))
-      rw [ite_eq_right hSuccIdxNonneg, ite_eq_right hIdxNonneg, hLen]
+      have hSuccIdxNonneg : ¬ ((k : Int) + 1 < 0) := by omega
+      simp [hn, hNotRightOutNat, hSuccIdxNonneg]
 
 private theorem native_seq_extract_cons_nonzero
     (x : SmtValue) (xs : List SmtValue) (i n : native_Int)
@@ -787,7 +759,7 @@ private theorem int_sub_one_sub_sub_one (e i : native_Int) :
     (e - 1) - (i - 1) = e - i := by
   rw [Int.sub_eq_add_neg, Int.sub_eq_add_neg, Int.sub_eq_add_neg]
   rw [Int.neg_add]
-  simp [Int.add_assoc, Int.add_comm, Int.add_left_comm]
+  simp [Int.add_comm, Int.add_left_comm]
   rw [Int.sub_eq_add_neg]
 
 private theorem eo_add_int_args_numerals_of_ne_stuck
@@ -1662,7 +1634,6 @@ private theorem smt_value_rel_seq_subsequence_rec_str_substr_of_numerals
           native_seq_extract (native_unpack_seq sa) i (-i) = [] := by
         apply native_seq_extract_empty_of_end_nonpos
         rw [Int.add_right_neg]
-        exact Int.le_refl 0
       simp [__smtx_model_eval_str_substr, __smtx_model_eval_eq,
         native_veq, hElem]
       rw [hExtract]
@@ -3237,7 +3208,6 @@ private theorem native_seq_extract_suffix_eq_of_append
       Int.ofNat (pre ++ xs).length + -Int.ofNat xs.length =
         Int.ofNat pre.length := by
     simp
-    omega
   have hSub :=
     native_seq_extract_to_end_nat (pre ++ xs) pre.length
       (by simp)
@@ -3467,7 +3437,7 @@ private theorem native_seq_indexof_zero_of_prefix
   rw [ite_eq_left hPref]
   simp
 
-private def native_seq_indexof_offset
+private noncomputable def native_seq_indexof_offset
     (xs pat : List SmtValue) (off : Nat) : native_Int :=
   let r := native_seq_indexof xs pat 0
   if r = (-1 : native_Int) then (-1 : native_Int) else r + Int.ofNat off
@@ -3569,7 +3539,7 @@ private theorem native_seq_indexof_offset_nil_of_ne_empty
   rw [native_seq_indexof_nil_zero pat]
   simp [hPat]
 
-private def native_seq_replace_all_chain (pat repl : List SmtValue) :
+private noncomputable def native_seq_replace_all_chain (pat repl : List SmtValue) :
     Nat -> List SmtValue -> List SmtValue
   | _, [] => []
   | 0, x :: xs =>
@@ -3580,7 +3550,7 @@ private def native_seq_replace_all_chain (pat repl : List SmtValue) :
   | skip + 1, _ :: xs =>
       native_seq_replace_all_chain pat repl skip xs
 
-private def native_seq_replace_all_aux (fuel : Nat)
+private noncomputable def native_seq_replace_all_aux (fuel : Nat)
     (pat repl : List SmtValue) : List SmtValue -> List SmtValue
   | xs =>
       match fuel with
@@ -4137,8 +4107,6 @@ private theorem seq_eval_replace_all_rec_unpack_eq_chain
               | succ n =>
                   rw [hLent]
                   simp [hLen, __eo_add, native_zplus]
-                  simpa [Int.ofNat_eq_natCast, Int.natCast_succ]
-                    using Int.add_neg_cancel_right (Int.ofNat n) 1
             have hNextUnp :
                 native_unpack_seq sNext =
                   native_seq_replace_all_chain (native_unpack_seq sb)
@@ -4303,8 +4271,7 @@ private theorem seq_eval_replace_all_rec_unpack_eq_chain
                 ((Int.ofNat (skipNat + 1)) + (-1 : Int)) =
               Term.Numeral (Int.ofNat skipNat)
             congr
-            simpa [Int.ofNat_eq_natCast, Int.natCast_succ]
-              using Int.add_neg_cancel_right (Int.ofNat skipNat) 1
+            simp [Int.ofNat_eq_natCast]
           have hNextUnp :
               native_unpack_seq sout =
                 native_seq_replace_all_chain (native_unpack_seq sb)

@@ -7,6 +7,8 @@ import all Cpc.Proofs.Canonical.Pump
 
 public section
 
+noncomputable section
+
 variable {uc : native_Nat -> native_Nat}
 
 open SmtEval
@@ -112,8 +114,8 @@ private theorem fresh_numeral_index_gt_of_mem :
       case Numeral m =>
         rcases h with hEq | hTail
         · subst n
-          exact Nat.lt_of_lt_of_le (Nat.lt_succ_self _) (Nat.le_max_left _ _)
-        · exact Nat.lt_of_lt_of_le (ih hTail) (Nat.le_max_right _ _)
+          omega
+        · exact Or.inr (ih hTail)
       all_goals
         exact ih h
 
@@ -135,13 +137,13 @@ private theorem fresh_numeral_veq_false_of_mem (xs : List SmtValue) :
 
 private def fresh_rational_index : List SmtValue -> Nat
   | [] => 0
-  | SmtValue.Rational q :: xs => Nat.max (Int.toNat (Rat.floor q) + 1) (fresh_rational_index xs)
+  | SmtValue.Real q :: xs => Nat.max (Int.toNat ⌊q⌋ + 1) (fresh_rational_index xs)
   | _ :: xs => fresh_rational_index xs
 
 private theorem fresh_rational_index_gt_of_mem :
-    ∀ {xs : List SmtValue} {q : native_Rat},
-      SmtValue.Rational q ∈ xs ->
-        Int.toNat (Rat.floor q) < fresh_rational_index xs := by
+    ∀ {xs : List SmtValue} {q : native_Real},
+      SmtValue.Real q ∈ xs ->
+        Int.toNat ⌊q⌋ < fresh_rational_index xs := by
   intro xs
   induction xs with
   | nil =>
@@ -150,25 +152,25 @@ private theorem fresh_rational_index_gt_of_mem :
   | cons v xs ih =>
       intro q h
       cases v <;> simp [fresh_rational_index] at h ⊢
-      case Rational r =>
+      case Real r =>
         rcases h with hEq | hTail
         · subst q
-          exact Nat.lt_of_lt_of_le (Nat.lt_succ_self _) (Nat.le_max_left _ _)
-        · exact Nat.lt_of_lt_of_le (ih hTail) (Nat.le_max_right _ _)
+          omega
+        · exact Or.inr (ih hTail)
       all_goals
         exact ih h
 
 private theorem fresh_rational_not_mem (xs : List SmtValue) :
-    SmtValue.Rational (Int.ofNat (fresh_rational_index xs)) ∉ xs := by
+    SmtValue.Real ((fresh_rational_index xs : Nat) : native_Real) ∉ xs := by
   intro h
   have hlt := fresh_rational_index_gt_of_mem
-    (xs := xs) (q := (Int.ofNat (fresh_rational_index xs) : native_Rat)) h
+    (xs := xs) (q := ((fresh_rational_index xs : Nat) : native_Real)) h
   simp at hlt
 
 private theorem fresh_rational_veq_false_of_mem (xs : List SmtValue) :
     ∀ j : SmtValue, j ∈ xs ->
       native_veq j
-        (SmtValue.Rational (Int.ofNat (fresh_rational_index xs))) = false := by
+        (SmtValue.Real ((fresh_rational_index xs : Nat) : native_Real)) = false := by
   intro j hj
   exact native_veq_eq_false_of_ne (by
     intro hEq
@@ -200,8 +202,8 @@ private theorem fresh_usort_index_gt_of_mem (sort : native_Nat) :
           simp [fresh_usort_index] at h ⊢
           rcases h with hEq | hTail
           · subst n
-            exact Nat.lt_of_lt_of_le (Nat.lt_succ_self _) (Nat.le_max_left _ _)
-          · exact Nat.lt_of_lt_of_le (ih hTail) (Nat.le_max_right _ _)
+            exact Or.inl (Nat.lt_succ_self _)
+          · exact Or.inr (ih hTail)
         · have hNe : sort ≠ i := fun hEq => hi hEq.symm
           simp [fresh_usort_index, hi, hNe] at h ⊢
           exact ih h
@@ -242,8 +244,8 @@ private theorem smt_value_size_lt_bound_of_mem :
       simp [smt_value_size_bound] at h ⊢
       rcases h with hEq | hTail
       · subst v
-        exact Nat.lt_of_lt_of_le (Nat.lt_succ_self _) (Nat.le_max_left _ _)
-      · exact Nat.lt_of_lt_of_le (ih hTail) (Nat.le_max_right _ _)
+        omega
+      · exact Or.inr (ih hTail)
 
 private theorem native_veq_false_of_mem_and_size_bound
     {xs : List SmtValue}
@@ -508,12 +510,11 @@ theorem nonunit_typed_canonical_nondefault_value
         simp [__smtx_typeof_value, __smtx_value_canonical,
           __smtx_type_default, native_veq]
   | Real =>
-      refine ⟨SmtValue.Rational (1 : native_Rat), ?_, ?_, ?_⟩
+      refine ⟨SmtValue.Real (1 : native_Real), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value]
       · simp [__smtx_value_canonical]
       · exact native_veq_eq_false_of_ne (by
-          simp [__smtx_type_default, native_mk_rational]
-          native_decide)
+          simp [__smtx_type_default, native_mk_real])
   | RegLan =>
       simp [__smtx_type_wf_rec] at _hRec
   | BitVec w =>
@@ -674,7 +675,7 @@ theorem fresh_typed_canonical_value_for_infinite_type
       · simp [__smtx_value_canonical]
       · exact fresh_numeral_veq_false_of_mem avoid
   | Real =>
-      refine ⟨SmtValue.Rational (Int.ofNat (fresh_rational_index avoid)), ?_, ?_, ?_⟩
+      refine ⟨SmtValue.Real ((fresh_rational_index avoid : Nat) : native_Real), ?_, ?_, ?_⟩
       · simp [__smtx_typeof_value]
       · simp [__smtx_value_canonical]
       · exact fresh_rational_veq_false_of_mem avoid

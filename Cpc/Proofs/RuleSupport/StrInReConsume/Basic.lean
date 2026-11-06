@@ -7,6 +7,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
@@ -2752,7 +2755,8 @@ theorem smt_value_rel_str_to_re_append_consume_local
       (SmtValue.RegLan
         (native_re_concat (native_str_to_re xs) (native_str_to_re ys)))
       (SmtValue.RegLan (native_str_to_re (xs ++ ys))) := by
-  exact smt_value_rel_str_to_re_append xs ys
+  simpa [impl_native_string_to_values, List.map_eq_flatMap] using
+    smt_value_rel_str_to_re_append xs ys
 
 theorem native_str_in_re_str_to_re_concat_left_local
     (xs ys : native_String) (r : SmtRegLan)
@@ -2780,7 +2784,8 @@ theorem native_str_in_re_str_to_re_concat_left_local
           native_str_in_re left (native_str_to_re xs) = true := by
         simpa [native_str_in_re, hLeftValid, nativeListInRe] using hLeft
       have hLeftEq : left = xs :=
-        native_str_in_re_str_to_re_eq hLeftValid hLeftMem
+        native_str_in_re_str_to_re_eq hLeftValid (by
+          simpa [impl_native_string_to_values, List.map_eq_flatMap] using hLeftMem)
       subst left
       have hRightEq : right = ys := by
         exact List.append_cancel_left hAppend
@@ -2831,7 +2836,8 @@ theorem native_str_in_re_str_to_re_concat_prefix_false_of_tail_no_prefix_local
         native_str_in_re left (native_str_to_re xs) = true := by
       simpa [native_str_in_re, hLeftValid, nativeListInRe] using hLeft
     have hLeftEq : left = xs :=
-      native_str_in_re_str_to_re_eq hLeftValid hLeftMem
+      native_str_in_re_str_to_re_eq hLeftValid (by
+        simpa [impl_native_string_to_values, List.map_eq_flatMap] using hLeftMem)
     subst left
     have hRightAppend : right ++ suf = ys := by
       have hEq :
@@ -3196,9 +3202,11 @@ theorem native_str_in_re_re_concat_inter_same_residual_local
           native_str_in_re sufR (native_str_to_re tail) = true := by
         simpa [native_str_in_re, hSufRValid, nativeListInRe] using hSufR
       have hSufLEq : sufL = tail :=
-        native_str_in_re_str_to_re_eq hSufLValid hSufLMem
+        native_str_in_re_str_to_re_eq hSufLValid (by
+          simpa [impl_native_string_to_values, List.map_eq_flatMap] using hSufLMem)
       have hSufREq : sufR = tail :=
-        native_str_in_re_str_to_re_eq hSufRValid hSufRMem
+        native_str_in_re_str_to_re_eq hSufRValid (by
+          simpa [impl_native_string_to_values, List.map_eq_flatMap] using hSufRMem)
       subst sufL
       subst sufR
       have hPreEq : preL = preR := by
@@ -3390,7 +3398,8 @@ theorem StrInReConsumeInternal.native_str_in_re_reverse_str_to_re_consume_local
     · intro hMem
       have hEqRev :
           xs.reverse = pat.reverse :=
-        native_str_in_re_str_to_re_eq hRevValid hMem
+        native_str_in_re_str_to_re_eq hRevValid (by
+          simpa [impl_native_string_to_values, List.map_eq_flatMap] using hMem)
       have hEq : xs = pat := by
         have h := congrArg List.reverse hEqRev
         simpa using h
@@ -3398,7 +3407,8 @@ theorem StrInReConsumeInternal.native_str_in_re_reverse_str_to_re_consume_local
       exact native_str_in_re_str_to_re_self_local pat hValid
     · intro hMem
       have hEq : xs = pat :=
-        native_str_in_re_str_to_re_eq hValid hMem
+        native_str_in_re_str_to_re_eq hValid (by
+          simpa [impl_native_string_to_values, List.map_eq_flatMap] using hMem)
       subst xs
       exact native_str_in_re_str_to_re_self_local pat.reverse hRevValid
   · have hRevInvalid : native_string_valid xs.reverse = false := by

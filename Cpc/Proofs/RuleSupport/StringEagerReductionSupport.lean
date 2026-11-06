@@ -13,6 +13,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
 
@@ -46,7 +49,6 @@ private theorem native_str_to_code_singleton_bounds
           simp [native_string_valid] at hValid
           have hc : c < 196608 := by simpa [native_char_valid] using hValid
           simp [native_str_to_code, native_char_valid, hc]
-          exact Int.ofNat_lt.mpr hc
       | cons d ds =>
           simp at hLen
 
@@ -313,7 +315,7 @@ private theorem reglan_eval_of_reglan_type
       (by simp [term_has_non_none_type, hTy])
   exact reglan_value_canonical (by simpa [hTy] using hEvalTy)
 
-private abbrev nativeListInRe := RuleProofs.nativeListInRe
+private noncomputable abbrev nativeListInRe := RuleProofs.nativeListInRe
 
 /- The definitions and algebraic proofs in this block are retained as historical
    context.  RegexSupport now owns these facts; the wrappers following the block
@@ -1729,25 +1731,12 @@ theorem string_eager_reduction_true
             exact hLen (by simpa [native_unpack_string_length_eq ss] using h)
           have hCode : native_str_to_code (native_unpack_string ss) = -1 :=
             native_str_to_code_non_singleton (native_unpack_string ss) hLenString
-          have hLenInt :
-              (Int.ofNat (native_unpack_seq ss).length) ≠ (1 : Int) := by
-            intro hEq
-            exact hLen (Int.ofNat.inj hEq)
-          have hCondFalse :
-              (decide ((Int.ofNat (native_unpack_seq ss).length : Int) = 1)) = false := by
-            exact decide_eq_false hLenInt
           simp [tx, code, thenTerm, elseTerm, cond, __smtx_model_eval, hSEval,
             __smtx_model_eval_str_len, __smtx_model_eval_str_to_code,
             __smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_model_eval_geq,
             __smtx_model_eval_leq, __smtx_model_eval_lt, __smtx_model_eval_and,
             native_seq_len, native_veq, native_zleq, native_zlt, native_and,
-            hCode]
-          cases hCond :
-              decide ((Int.ofNat (native_unpack_seq ss).length : Int) = 1) with
-          | false =>
-              rfl
-          | true =>
-              exact False.elim (hLenInt (of_decide_eq_true hCond))
+            hCode, hLen]
       case str_from_code =>
         let tx := __eo_to_smt x
         let strFrom := SmtTerm._at_purify (SmtTerm.str_from_code tx)
@@ -2048,9 +2037,9 @@ theorem string_eager_reduction_true
               hElemY, hContains, native_zplus, native_zneg, native_veq]
             apply Eq.trans hPackSy.symm
             apply congrArg (native_pack_seq U)
-            dsimp [ys, xs, idxVal] at hSplit hStartEq hLenEq ⊢
+            dsimp [ys, xs, idxVal] at hSplit hStartEq hLenEq hPrefixLen ⊢
             rw [hStartEq]
-            simpa [native_unpack_seq, List.append_assoc, Int.sub_eq_add_neg] using hSplit.symm
+            simpa [native_unpack_seq, List.append_assoc, Int.sub_eq_add_neg, hPrefixLen] using hSplit.symm
           · have hContainsFalse : native_seq_contains ys xs = false := by
               cases h : native_seq_contains ys xs
               · rfl

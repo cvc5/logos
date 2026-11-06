@@ -65,7 +65,7 @@ private theorem eo_typeof_eq_bool_of_ne_stuck_bv_extract
     __eo_typeof_eq A B = Term.Bool := by
   cases A <;> cases B <;>
     simp [__eo_typeof_eq, __eo_requires, __eo_eq, native_ite, native_teq,
-      native_not] at h |-
+      native_not] at h ⊢
   all_goals assumption
 
 private theorem eo_typeof_concat_args_bitvec_of_ne_stuck_bv_extract
@@ -73,11 +73,11 @@ private theorem eo_typeof_concat_args_bitvec_of_ne_stuck_bv_extract
     ∃ wa wb,
       A = Term.Apply (Term.UOp UserOp.BitVec) wa ∧
       B = Term.Apply (Term.UOp UserOp.BitVec) wb := by
-  cases A <;> cases B <;> simp [__eo_typeof_concat] at h |-
+  cases A <;> cases B <;> simp [__eo_typeof_concat] at h ⊢
   case Apply.Apply f a g b =>
-    cases f <;> cases g <;> simp [__eo_typeof_concat] at h |-
+    cases f <;> cases g <;> simp [__eo_typeof_concat] at h ⊢
     case UOp.UOp op op' =>
-      cases op <;> cases op' <;> simp [__eo_typeof_concat] at h |-
+      cases op <;> cases op' <;> simp [__eo_typeof_concat] at h ⊢
 
 private theorem smt_typeof_concat_bitvec_extract
     (a b : Term) (wa wb : native_Nat) :

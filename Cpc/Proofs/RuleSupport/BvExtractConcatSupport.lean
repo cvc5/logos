@@ -1165,16 +1165,10 @@ private theorem bvExtractConcat4Prem_bound
       native_zplus (native_nat_to_int (wx + (wy + wxs)))
           (native_zneg (native_nat_to_int wx)) =
         native_nat_to_int (wxs + wy) := by
-    simp [SmtEval.native_zplus, SmtEval.native_zneg,
+    simp only [SmtEval.native_zplus, SmtEval.native_zneg,
       native_nat_to_int, SmtEval.native_nat_to_int]
-    calc
-      (↑wx : Int) + (↑wy + ↑wxs) + -↑wx =
-          ((↑wy + ↑wxs) + ↑wx) + -↑wx := by
-        simp [Int.add_assoc, Int.add_comm, Int.add_left_comm]
-      _ = ↑wy + ↑wxs :=
-          Int.add_neg_cancel_right ((↑wy : Int) + ↑wxs) (↑wx : Int)
-      _ = ↑wxs + ↑wy := by
-          rw [Int.add_comm]
+    change ((wx + (wy + wxs) : Nat) : Int) + -(wx : Int) = ((wxs + wy : Nat) : Int)
+    omega
   have hEqEval :=
     model_eval_eq_true_of_eo_eq_true M
       (Term.Apply

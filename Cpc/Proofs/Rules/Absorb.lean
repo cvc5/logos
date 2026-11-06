@@ -9,6 +9,10 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Mathlib's `Monad List` would make the `native_String` to `List SmtValue` coercion
+-- elaborate through `coeM` rather than `impl_native_string_to_values`.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
 
@@ -408,8 +412,7 @@ decreasing_by
   all_goals
     subst_vars
     change Term._sizeOf_1 _ < Term._sizeOf_1 _
-    simp [Term._sizeOf_1]
-    omega
+    simp [Term._sizeOf_1] <;> omega
 
 private theorem eo_interprets_and_left_false_intro
     (M : SmtModel) (hM : model_wf M) (A B : Term) :

@@ -55,8 +55,8 @@ theorem value_canonical_numeral (n : native_Int) :
     value_canonical uc (SmtValue.Numeral n) := by
   simp [value_canonical, __smtx_value_canonical]
 
-theorem value_canonical_rational (q : native_Rat) :
-    value_canonical uc (SmtValue.Rational q) := by
+theorem value_canonical_rational (q : native_Real) :
+    value_canonical uc (SmtValue.Real q) := by
   simp [value_canonical, __smtx_value_canonical]
 
 theorem value_canonical_char (c : native_Char)

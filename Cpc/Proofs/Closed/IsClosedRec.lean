@@ -16392,40 +16392,40 @@ by
         case UOp op =>
           exact
             is_closed_rec_apply_uop_any_eq_and_bool_of_has_smt_translation
-              (Term.Apply (Term.UOp op) x) hEnv (by simp; omega)
+              (Term.Apply (Term.UOp op) x) hEnv (by simp)
               hTrans hRec
         case UOp1 op idx =>
           exact
             is_closed_rec_apply_uop1_any_eq_and_bool_of_has_smt_translation
-              (Term.Apply (Term.UOp1 op idx) x) hEnv (by simp; omega)
+              (Term.Apply (Term.UOp1 op idx) x) hEnv (by simp)
               hTrans hRec
         case UOp2 op i j =>
           exact
             is_closed_rec_apply_uop2_any_eq_and_bool_of_has_smt_translation
               (Term.Apply (Term.UOp2 op i j) x) hEnv (by simp; omega)
-              (by simp; omega) hTrans hRec
+              (by simp) hTrans hRec
         case UOp3 op a b c =>
           exact
             is_closed_rec_apply_uop3_any_eq_and_bool_of_has_smt_translation
               (Term.Apply (Term.UOp3 op a b c) x) hEnv
-              (by simp; omega) (by simp; omega) hTrans hRec
+              (by simp; omega) (by simp) hTrans hRec
         case DtSel s d i j =>
           exact
             is_closed_rec_apply_dt_sel_eq_and_bool_of_has_smt_translation
               (Term.Apply (Term.DtSel s d i j) x) hEnv
-              (by simp; omega) hTrans hRec
+              (by simp) hTrans hRec
         case Apply g y =>
           cases g
           case UOp op =>
             exact
               is_closed_rec_apply_apply_uop_any_eq_and_bool_of_has_smt_translation
                 (Term.Apply (Term.Apply (Term.UOp op) y) x) hEnv
-                (by simp; omega) (by simp; omega) hTrans hRec
+                (by simp; omega) (by simp) hTrans hRec
           case UOp1 op idx =>
             exact
               is_closed_rec_apply_apply_uop1_any_eq_and_bool_of_has_smt_translation
                 (Term.Apply (Term.Apply (Term.UOp1 op idx) y) x) hEnv
-                (by simp; omega) (by simp; omega) hTrans hRec
+                (by simp; omega) (by simp) hTrans hRec
           case Apply h z =>
             cases h
             case UOp op =>
@@ -16434,7 +16434,7 @@ by
                   (Term.Apply
                     (Term.Apply (Term.Apply (Term.UOp op) z) y) x)
                   hEnv (by simp; omega) (by simp; omega)
-                  (by simp; omega) hTrans hRec
+                  (by simp) hTrans hRec
             case Apply k w =>
               cases k
               case UOp op =>
@@ -16446,7 +16446,7 @@ by
                         y)
                       x)
                     hEnv (by simp; omega) (by simp; omega)
-                    (by simp; omega) (by simp; omega) hTrans hRec
+                    (by simp; omega) (by simp) hTrans hRec
               all_goals
                 exact
                   is_closed_rec_apply_generic_eq_and_bool_of_has_smt_translation
@@ -16476,7 +16476,7 @@ by
                             _ _ s d i hTester))
                     hTrans
                     (fun hFTrans => hRec (by simp; omega) hEnv hFTrans)
-                    (fun hXTrans => hRec (by simp; omega) hEnv hXTrans)
+                    (fun hXTrans => hRec (by simp) hEnv hXTrans)
             all_goals
               exact
                 is_closed_rec_apply_generic_eq_and_bool_of_has_smt_translation
@@ -16505,7 +16505,7 @@ by
                           _ _ s d i hTester))
                   hTrans
                   (fun hFTrans => hRec (by simp; omega) hEnv hFTrans)
-                  (fun hXTrans => hRec (by simp; omega) hEnv hXTrans)
+                  (fun hXTrans => hRec (by simp) hEnv hXTrans)
           all_goals
             exact
               is_closed_rec_apply_generic_eq_and_bool_of_has_smt_translation
@@ -16534,7 +16534,7 @@ by
                         _ _ s d i hTester))
                 hTrans
                 (fun hFTrans => hRec (by simp; omega) hEnv hFTrans)
-                (fun hXTrans => hRec (by simp; omega) hEnv hXTrans)
+                (fun hXTrans => hRec (by simp) hEnv hXTrans)
         all_goals
           exact
             is_closed_rec_apply_generic_eq_and_bool_of_has_smt_translation

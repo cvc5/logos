@@ -548,16 +548,6 @@ theorem model_eval_rotate_left_step_binary
       (native_int_pow2 w), ?_, ?_⟩
   · simp [__smtx_model_eval_concat, __smtx_model_eval_extract, w1, w2, hi,
       SmtEval.native_zplus, SmtEval.native_zneg]
-    have hWidthEq : w + -1 + -1 + 1 + (w + -1 + 1 + -(w + -1)) = w := by
-      rw [Int.neg_add]
-      calc
-        w + -1 + -1 + 1 + (w + -1 + 1 + (-w + 1)) = w + (w + -w) := by
-          simp [Int.add_assoc, Int.add_left_comm, Int.add_comm]
-        _ = w := by
-          simpa [Int.add_assoc] using (Int.add_neg_cancel_right w w)
-    constructor
-    · exact hWidthEq
-    · simp [hWidthEq]
   · exact native_mod_total_canonical w
       (native_binary_concat w1
         (native_mod_total
@@ -639,11 +629,6 @@ theorem model_eval_rotate_right_step_binary
       (native_int_pow2 w), ?_, ?_⟩
   · simp [__smtx_model_eval_concat, __smtx_model_eval_extract, w1, w2, hi,
       SmtEval.native_zplus, SmtEval.native_zneg]
-    have hWidthEq : 1 + (w + -1 + 1 + -1) = w := by
-      simp [Int.add_left_comm, Int.add_comm]
-    constructor
-    · exact hWidthEq
-    · simp [hWidthEq]
   · exact native_mod_total_canonical w
       (native_binary_concat w1
         (native_mod_total (native_binary_extract w x 0 0) (native_int_pow2 w1))

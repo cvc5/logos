@@ -866,7 +866,7 @@ theorem typeof_value_model_eval_is_int
   rw [hq]
   simpa [__smtx_model_eval_is_int, __smtx_model_eval_to_int, __smtx_model_eval_to_real] using
     typeof_value_model_eval_eq_value
-      (SmtValue.Rational (native_to_real (native_to_int q))) (SmtValue.Rational q)
+      (SmtValue.Real (native_int_to_real (native_real_to_int q))) (SmtValue.Real q)
 
 /-- Shows that evaluating `abs` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_abs
@@ -1180,12 +1180,12 @@ theorem typeof_value_model_eval_qdiv
     rcases int_value_canonical (by simpa [hArgs.1] using hpres1) with ⟨n1, hn1⟩
     rcases int_value_canonical (by simpa [hArgs.2] using hpres2) with ⟨n2, hn2⟩
     rw [hn1, hn2]
-    by_cases hZero : native_to_real n2 = native_mk_rational 0 1
+    by_cases hZero : native_int_to_real n2 = native_mk_real 0 1
     · simpa [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_to_real_coerce,
         __smtx_model_eval_qdiv_total, native_veq, hZero] using
         typeof_value_model_eval_apply_lookup_fun M hM
           native_qdiv_by_zero_id SmtType.Real SmtType.Real (by simp) type_inhabited_real fun_type_wf_real_real
-          (SmtValue.Rational (native_to_real n1)) rfl
+          (SmtValue.Real (native_int_to_real n1)) rfl
     · simp [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_to_real_coerce,
         __smtx_model_eval_qdiv_total, __smtx_typeof_value, native_veq, hZero]
   · rw [show __smtx_typeof (SmtTerm.qdiv t1 t2) = SmtType.Real by
@@ -1195,12 +1195,12 @@ theorem typeof_value_model_eval_qdiv
     rcases real_value_canonical (by simpa [hArgs.1] using hpres1) with ⟨q1, hq1⟩
     rcases real_value_canonical (by simpa [hArgs.2] using hpres2) with ⟨q2, hq2⟩
     rw [hq1, hq2]
-    by_cases hZero : q2 = native_mk_rational 0 1
+    by_cases hZero : q2 = native_mk_real 0 1
     · simpa [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_to_real_coerce,
         __smtx_model_eval_qdiv_total, native_veq, hZero] using
         typeof_value_model_eval_apply_lookup_fun M hM
           native_qdiv_by_zero_id SmtType.Real SmtType.Real (by simp) type_inhabited_real fun_type_wf_real_real
-          (SmtValue.Rational q1) rfl
+          (SmtValue.Real q1) rfl
     · simp [__smtx_model_eval_ite, __smtx_model_eval_eq, __smtx_to_real_coerce,
         __smtx_model_eval_qdiv_total, __smtx_typeof_value, native_veq, hZero]
 

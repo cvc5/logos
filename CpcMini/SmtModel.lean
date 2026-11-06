@@ -21,6 +21,8 @@ namespace Smtm
 
 open SmtEval
 
+noncomputable section
+
 abbrev SmtNativeFun := SmtValue -> SmtValue
 
 -- The number of elements of each uninterpreted sort, by its index, where 0
@@ -29,6 +31,30 @@ abbrev SmtUSortCard := native_Nat -> native_Nat
 
 -- The primitive operations no module above this one uses, together with those
 -- written over the values of this embedding, which cannot stand above it.
+def native_qplus : native_Rat -> native_Rat -> native_Rat
+  | x, y => x+y
+
+def native_qmult : native_Rat -> native_Rat -> native_Rat
+  | x, y => x*y
+
+def native_qneg : native_Rat -> native_Rat
+  | x => -x
+
+def native_qleq : native_Rat -> native_Rat -> native_Bool
+  | x, y => decide (x <= y)
+
+def native_qlt : native_Rat -> native_Rat -> native_Bool
+  | x, y => decide (x < y)
+
+def native_qdiv_total : native_Rat -> native_Rat -> native_Rat
+  | x, y => x/y
+
+def native_to_int : native_Rat -> native_Int
+  | x => (Rat.floor x)
+
+def native_to_real : native_Int -> native_Rat
+  | x => (native_mk_rational x 1)
+
 def native_nat_to_int (x : native_Nat) : native_Int :=
   (Int.ofNat x)
 
@@ -37,6 +63,9 @@ def native_nateq : native_Nat -> native_Nat -> native_Bool
 
 def native_natlt : native_Nat -> native_Nat -> native_Bool
   | x, y => decide (x < y)
+
+def native_qabs : native_Rat -> native_Rat
+  | x => if x < 0 then -x else x
 
 def native_wrong_apply_sel_id (n m : native_Nat) : native_String :=
   (native_string_lit "@wrong_apply_sel_") ++ (native_string_lit (toString n)) ++ (native_string_lit "_") ++ (native_string_lit (toString m))
@@ -337,7 +366,7 @@ def __smtx_model_eval_ite : SmtValue -> SmtValue -> SmtValue -> SmtValue
 def __smtx_typeof_value : SmtValue -> SmtType
   | (SmtValue.Boolean b1) => SmtType.Bool
   | (SmtValue.Numeral i1) => SmtType.Int
-  | (SmtValue.Rational r1) => SmtType.Real
+  | (SmtValue.Real r1) => SmtType.Real
   | (SmtValue.Binary i1 i2) => (native_ite (native_and (native_zleq 0 i1) (native_zeq i2 (native_mod_total i2 (native_int_pow2 i1)))) (SmtType.BitVec (native_int_to_nat i1)) SmtType.None)
   | (SmtValue.Map m1) => (__smtx_typeof_map_value m1)
   | (SmtValue.Fun s1 T2 T3) => (SmtType.FunType T2 T3)
@@ -382,7 +411,7 @@ termination_by T => (sizeOf T, 0)
 def __smtx_type_default : SmtType -> SmtValue
   | SmtType.Bool => (SmtValue.Boolean false)
   | SmtType.Int => (SmtValue.Numeral 0)
-  | SmtType.Real => (SmtValue.Rational (native_mk_rational 0 1))
+  | SmtType.Real => (SmtValue.Real (native_mk_real 0 1))
   | SmtType.RegLan => (SmtValue.RegLan native_re_none)
   | (SmtType.BitVec n1) => (SmtValue.Binary (native_nat_to_int n1) 0)
   | (SmtType.Map x1 x2) =>
@@ -454,7 +483,7 @@ end
 noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.Boolean b1) => (SmtValue.Boolean b1)
   | (SmtTerm.Numeral i1) => (SmtValue.Numeral i1)
-  | (SmtTerm.Rational r1) => (SmtValue.Rational r1)
+  | (SmtTerm.Rational r1) => (SmtValue.Real (native_rat_to_real r1))
   | (SmtTerm.String s1) => (SmtValue.Seq (native_pack_string s1))
   | (SmtTerm.Binary i1 i2) => (SmtValue.Binary i1 i2)
   | (SmtTerm.not x1) => (__smtx_model_eval_not (__smtx_model_eval M x1))
@@ -503,5 +532,7 @@ inductive smt_satisfiability : SmtTerm -> Bool -> Prop
       smt_satisfiability t false
 
 /- ---------------------------------------------- -/
+
+end
 
 end Smtm

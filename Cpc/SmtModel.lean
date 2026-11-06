@@ -21,6 +21,8 @@ namespace Smtm
 
 open SmtEval
 
+noncomputable section
+
 abbrev SmtNativeFun := SmtValue -> SmtValue
 
 -- The number of elements of each uninterpreted sort, by its index, where 0
@@ -618,31 +620,31 @@ def __smtx_model_eval__at_purify (x : SmtValue) : SmtValue :=
 
 def __smtx_model_eval_plus : SmtValue -> SmtValue -> SmtValue
   | (SmtValue.Numeral x), (SmtValue.Numeral y) => (SmtValue.Numeral (native_zplus x y))
-  | (SmtValue.Rational qx), (SmtValue.Rational qy) => (SmtValue.Rational (native_qplus qx qy))
+  | (SmtValue.Real qx), (SmtValue.Real qy) => (SmtValue.Real (native_rplus qx qy))
   | t1, t2 => SmtValue.NotValue
 
 
 def __smtx_model_eval__ : SmtValue -> SmtValue -> SmtValue
   | (SmtValue.Numeral x), (SmtValue.Numeral y) => (SmtValue.Numeral (native_zplus x (native_zneg y)))
-  | (SmtValue.Rational qx), (SmtValue.Rational qy) => (SmtValue.Rational (native_qplus qx (native_qneg qy)))
+  | (SmtValue.Real qx), (SmtValue.Real qy) => (SmtValue.Real (native_rplus qx (native_rneg qy)))
   | t1, t2 => SmtValue.NotValue
 
 
 def __smtx_model_eval_mult : SmtValue -> SmtValue -> SmtValue
   | (SmtValue.Numeral x), (SmtValue.Numeral y) => (SmtValue.Numeral (native_zmult x y))
-  | (SmtValue.Rational qx), (SmtValue.Rational qy) => (SmtValue.Rational (native_qmult qx qy))
+  | (SmtValue.Real qx), (SmtValue.Real qy) => (SmtValue.Real (native_rmult qx qy))
   | t1, t2 => SmtValue.NotValue
 
 
 def __smtx_model_eval_lt : SmtValue -> SmtValue -> SmtValue
   | (SmtValue.Numeral x), (SmtValue.Numeral y) => (SmtValue.Boolean (native_zlt x y))
-  | (SmtValue.Rational qx), (SmtValue.Rational qy) => (SmtValue.Boolean (native_qlt qx qy))
+  | (SmtValue.Real qx), (SmtValue.Real qy) => (SmtValue.Boolean (native_rlt qx qy))
   | t1, t2 => SmtValue.NotValue
 
 
 def __smtx_model_eval_leq : SmtValue -> SmtValue -> SmtValue
   | (SmtValue.Numeral x), (SmtValue.Numeral y) => (SmtValue.Boolean (native_zleq x y))
-  | (SmtValue.Rational qx), (SmtValue.Rational qy) => (SmtValue.Boolean (native_qleq qx qy))
+  | (SmtValue.Real qx), (SmtValue.Real qy) => (SmtValue.Boolean (native_rleq qx qy))
   | t1, t2 => SmtValue.NotValue
 
 
@@ -653,12 +655,12 @@ def __smtx_model_eval_geq (x : SmtValue) (y : SmtValue) : SmtValue :=
   (__smtx_model_eval_leq y x)
 
 def __smtx_model_eval_to_real : SmtValue -> SmtValue
-  | (SmtValue.Numeral x) => (SmtValue.Rational (native_to_real x))
+  | (SmtValue.Numeral x) => (SmtValue.Real (native_int_to_real x))
   | t1 => SmtValue.NotValue
 
 
 def __smtx_model_eval_to_int : SmtValue -> SmtValue
-  | (SmtValue.Rational x) => (SmtValue.Numeral (native_to_int x))
+  | (SmtValue.Real x) => (SmtValue.Numeral (native_real_to_int x))
   | t1 => SmtValue.NotValue
 
 
@@ -667,13 +669,13 @@ def __smtx_model_eval_is_int (x : SmtValue) : SmtValue :=
 
 def __smtx_model_eval_abs : SmtValue -> SmtValue
   | (SmtValue.Numeral x) => (SmtValue.Numeral (native_zabs x))
-  | (SmtValue.Rational qx) => (SmtValue.Rational (native_qabs qx))
+  | (SmtValue.Real qx) => (SmtValue.Real (native_rabs qx))
   | t1 => SmtValue.NotValue
 
 
 def __smtx_model_eval_uneg : SmtValue -> SmtValue
   | (SmtValue.Numeral x) => (SmtValue.Numeral (native_zneg x))
-  | (SmtValue.Rational qx) => (SmtValue.Rational (native_qneg qx))
+  | (SmtValue.Real qx) => (SmtValue.Real (native_rneg qx))
   | t1 => SmtValue.NotValue
 
 
@@ -1339,14 +1341,14 @@ def __smtx_model_eval_set_subset (a : SmtValue) (b : SmtValue) : SmtValue :=
   (__smtx_model_eval_eq (__smtx_model_eval_set_inter a b) a)
 
 def __smtx_to_real_coerce : SmtValue -> SmtValue
-  | (SmtValue.Numeral x1) => (SmtValue.Rational (native_to_real x1))
-  | (SmtValue.Rational x2) => (SmtValue.Rational x2)
+  | (SmtValue.Numeral x1) => (SmtValue.Real (native_int_to_real x1))
+  | (SmtValue.Real x2) => (SmtValue.Real x2)
   | v => SmtValue.NotValue
 
 
 def __smtx_model_eval_qdiv_total : SmtValue -> SmtValue -> SmtValue
-  | (SmtValue.Numeral x), (SmtValue.Numeral y) => (SmtValue.Rational (native_mk_rational x y))
-  | (SmtValue.Rational qx), (SmtValue.Rational qy) => (SmtValue.Rational (native_qdiv_total qx qy))
+  | (SmtValue.Numeral x), (SmtValue.Numeral y) => (SmtValue.Real (native_mk_real x y))
+  | (SmtValue.Real qx), (SmtValue.Real qy) => (SmtValue.Real (native_rdiv_total qx qy))
   | t1, t2 => SmtValue.NotValue
 
 
@@ -1381,7 +1383,7 @@ def __smtx_apply_arg_nth_value : SmtValue -> native_Nat -> native_Nat -> SmtValu
 def __smtx_typeof_value : SmtValue -> SmtType
   | (SmtValue.Boolean b1) => SmtType.Bool
   | (SmtValue.Numeral i1) => SmtType.Int
-  | (SmtValue.Rational r1) => SmtType.Real
+  | (SmtValue.Real r1) => SmtType.Real
   | (SmtValue.Binary i1 i2) => (native_ite (native_and (native_zleq 0 i1) (native_zeq i2 (native_mod_total i2 (native_int_pow2 i1)))) (SmtType.BitVec (native_int_to_nat i1)) SmtType.None)
   | (SmtValue.Map m1) => (__smtx_typeof_map_value m1)
   | (SmtValue.Fun s1 T2 T3) => (SmtType.FunType T2 T3)
@@ -1426,7 +1428,7 @@ termination_by T => (sizeOf T, 0)
 def __smtx_type_default : SmtType -> SmtValue
   | SmtType.Bool => (SmtValue.Boolean false)
   | SmtType.Int => (SmtValue.Numeral 0)
-  | SmtType.Real => (SmtValue.Rational (native_mk_rational 0 1))
+  | SmtType.Real => (SmtValue.Real (native_mk_real 0 1))
   | SmtType.RegLan => (SmtValue.RegLan native_re_none)
   | (SmtType.BitVec n1) => (SmtValue.Binary (native_nat_to_int n1) 0)
   | (SmtType.Map x1 x2) =>
@@ -1498,7 +1500,7 @@ end
 noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.Boolean b1) => (SmtValue.Boolean b1)
   | (SmtTerm.Numeral i1) => (SmtValue.Numeral i1)
-  | (SmtTerm.Rational r1) => (SmtValue.Rational r1)
+  | (SmtTerm.Rational r1) => (SmtValue.Real (native_rat_to_real r1))
   | (SmtTerm.String s1) => (SmtValue.Seq (native_pack_string s1))
   | (SmtTerm.Binary i1 i2) => (SmtValue.Binary i1 i2)
   | (SmtTerm.ite x1 x2 x3) => (__smtx_model_eval_ite (__smtx_model_eval M x1) (__smtx_model_eval M x2) (__smtx_model_eval M x3))
@@ -1640,7 +1642,7 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.qdiv x1 x2) =>
     let _v0 := (__smtx_to_real_coerce (__smtx_model_eval M x2))
     let _v1 := (__smtx_to_real_coerce (__smtx_model_eval M x1))
-    (__smtx_model_eval_ite (__smtx_model_eval_eq _v0 (SmtValue.Rational (native_mk_rational 0 1))) (__smtx_model_eval_apply M (native_model_lookup M native_qdiv_by_zero_id (SmtType.FunType SmtType.Real SmtType.Real)) _v1) (__smtx_model_eval_qdiv_total _v1 _v0))
+    (__smtx_model_eval_ite (__smtx_model_eval_eq _v0 (SmtValue.Real (native_mk_real 0 1))) (__smtx_model_eval_apply M (native_model_lookup M native_qdiv_by_zero_id (SmtType.FunType SmtType.Real SmtType.Real)) _v1) (__smtx_model_eval_qdiv_total _v1 _v0))
   | (SmtTerm.qdiv_total x1 x2) => (__smtx_model_eval_qdiv_total (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.forall s1 T2 x3) => (native_eval_forall M s1 T2 x3)
   | (SmtTerm.exists s1 T2 x3) => (native_eval_exists M s1 T2 x3)
@@ -1688,5 +1690,7 @@ inductive smt_satisfiability : SmtTerm -> Bool -> Prop
       smt_satisfiability t false
 
 /- ---------------------------------------------- -/
+
+end
 
 end Smtm

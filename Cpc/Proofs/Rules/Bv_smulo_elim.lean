@@ -272,9 +272,7 @@ private theorem signed_formula_value {W X Y : Nat} {sx sy scan : Bool}
   have hPleMax : P ≤ (X + 1) * (Y + 1) := by
     dsimp [P, inc]
     cases sx <;> cases sy <;> simp
-    · exact Nat.mul_le_mul (Nat.le_succ X) (Nat.le_succ Y)
-    · exact Nat.mul_le_mul_right (Y + 1) (Nat.le_succ X)
-    · exact Nat.mul_le_mul_left (X + 1) (Nat.le_succ Y)
+    exact Nat.mul_le_mul (Nat.le_succ X) (Nat.le_succ Y)
   by_cases hp : highPair W X Y
   · have hscanTrue : scan = true := hscan.2 hp
     have hXYov : 2 ^ W ≤ X * Y := highPair_overflow hp
@@ -371,7 +369,7 @@ private theorem nil_bvxor_bitvec_succ_of_ne_stuck
 
 private theorem bv1_xor (x y : Bool) :
     __smtx_model_eval_bvxor (bv1 x) (bv1 y) = bv1 (x ^^ y) := by
-  cases x <;> cases y <;> native_decide
+  cases x <;> cases y <;> decide
 
 private theorem smulo_bv_toInt_emod (w : Nat) (x : BitVec w) :
     x.toInt % (2 ^ w : Int) = (x.toNat : Int) := by
@@ -510,6 +508,8 @@ private theorem sign_extend_bit_value (W : Nat) (bit : Bool) :
       native_zplus, native_nat_to_int]
     rw [hWidth]
     rw [native_mod_neg_one_pow2_nat (W + 1)]
+    rw [Int.natCast_sub (by have := Nat.two_pow_pos (W + 1); omega)]
+    norm_cast
 
 private theorem smtx_eval_bvxor_term_eq
     (M : SmtModel) (x y : SmtTerm) :
@@ -841,7 +841,7 @@ private theorem binary_one_eq_bv1_of_lt_two
     (A : Nat) (hA : A < 2) :
     SmtValue.Binary 1 (A : Int) = bv1 (A.testBit 0) := by
   have hA01 : A = 0 ∨ A = 1 := by omega
-  rcases hA01 with rfl | rfl <;> native_decide
+  rcases hA01 with rfl | rfl <;> decide
 
 private theorem signedMag_eq_xor_sign_mask
     (W A : Nat) (hA : A < 2 ^ (W + 1)) :
@@ -1066,7 +1066,7 @@ private theorem native_binary_uts_signedMag
     simpa [native_zplus, native_zneg, native_nat_to_int] using hEq
   cases hs : A.testBit W
   · have hlt : A < 2 ^ W := lt_two_pow_of_top_bit_false hA hs
-    simp [signedMag, hs]
+    simp only [signedMag, hs, ↓reduceIte]
     rw [native_binary_uts]
     change
       native_zplus
@@ -1113,7 +1113,7 @@ private theorem native_binary_uts_signedMag
         rw [Nat.add_comm] at h
         rw [h, Nat.mod_eq_of_lt hlowLt]
       exact hmodNat
-    simp [signedMag, hs]
+    simp only [signedMag, hs, ↓reduceIte]
     rw [native_binary_uts]
     change
       native_zplus
@@ -1124,7 +1124,7 @@ private theorem native_binary_uts_signedMag
           (native_zneg (A : Int)) =
         -(((2 ^ (W + 1) - 1 - A + 1 : Nat) : Int))
     rw [hPred, native_int_pow2_nat W, hmod]
-    simp [native_zplus, native_zmult, native_zneg]
+    simp only [native_zplus, native_zmult, native_zneg, Int.natCast_add, Int.natCast_one]
     have hMagCast :
         ((2 ^ (W + 1) - 1 - A : Nat) : Int) + 1 =
           ((2 ^ (W + 1) : Nat) : Int) - (A : Int) :=
@@ -1170,6 +1170,7 @@ private theorem bvsmulo_value
     norm_cast
   have hUtsA := native_binary_uts_signedMag W A hA
   have hUtsB := native_binary_uts_signedMag W B hB
+  have hNeg (n : Nat) : (-1 : Int) + -(n : Int) = -((n : Int) + 1) := by omega
   change
     SmtValue.Boolean
         (native_or
@@ -1222,6 +1223,7 @@ private theorem bvsmulo_value
       simp
   · simp [signedOverflowMag, X, Y, hsa, hsb, inc, native_or,
       native_zleq, native_zlt, native_zmult, native_zneg]
+    simp only [hNeg]
     have hMul :
         (signedMag W A : Int) * -((signedMag W B : Int) + 1) =
           -((signedMag W A : Int) * ((signedMag W B + 1 : Nat) : Int)) := by
@@ -1263,6 +1265,7 @@ private theorem bvsmulo_value
       simp
   · simp [signedOverflowMag, X, Y, hsa, hsb, inc, native_or,
       native_zleq, native_zlt, native_zmult, native_zneg]
+    simp only [hNeg]
     have hMul :
         -((signedMag W A : Int) + 1) * (signedMag W B : Int) =
           -(((signedMag W A + 1 : Nat) : Int) * (signedMag W B : Int)) := by
@@ -1304,6 +1307,7 @@ private theorem bvsmulo_value
       simp
   · simp [signedOverflowMag, X, Y, hsa, hsb, inc, native_or,
       native_zleq, native_zlt, native_zmult, native_zneg]
+    simp only [hNeg]
     have hMul :
         -((signedMag W A : Int) + 1) * -((signedMag W B : Int) + 1) =
           ((signedMag W A + 1 : Nat) : Int) *
@@ -1410,7 +1414,7 @@ private theorem sign_extend_one_value
         (Nat.pow_lt_pow_right (by decide : 1 < 2) (by omega : W < W + 2)))
   · rw [hUts]
     simp [hs, signedExtPayload]
-    exact native_mod_neg_nat_of_pos_lt
+    simpa using native_mod_neg_nat_of_pos_lt
       (Nat.succ_pos (signedMag W A))
       (Nat.lt_of_le_of_lt (Nat.succ_le_of_lt hMag)
         (Nat.pow_lt_pow_right (by decide : 1 < 2)

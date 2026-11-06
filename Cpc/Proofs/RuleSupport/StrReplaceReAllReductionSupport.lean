@@ -13,6 +13,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 40000000
@@ -58,15 +61,15 @@ namespace StrReplaceReAllReduction
 
 /-- The regex with its empty word removed, as used by the generated
 `str_replace_re_all` predicate. -/
-@[expose] def nonemptyRe (r : SmtRegLan) : SmtRegLan :=
+@[expose] noncomputable def nonemptyRe (r : SmtRegLan) : SmtRegLan :=
   native_re_diff r SmtRegLan.epsilon
 
 /-- End positions of the nonempty-match scan. -/
-@[expose] def reEnds (r : SmtRegLan) (s : native_String) : List Nat :=
+@[expose] noncomputable def reEnds (r : SmtRegLan) (s : native_String) : List Nat :=
   impl_native_re_scan_ends_aux (s.length + 1) r (impl_native_string_to_values s) 0
 
 /-- Scan boundary zero is `0`; later boundaries are elements of `reEnds`. -/
-@[expose] def reBound (r : SmtRegLan) (s : native_String) (n : Nat) : Nat :=
+@[expose] noncomputable def reBound (r : SmtRegLan) (s : native_String) (n : Nat) : Nat :=
   (0 :: reEnds r s).getD n 0
 
 theorem reBound_zero (r : SmtRegLan) (s : native_String) :

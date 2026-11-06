@@ -185,12 +185,12 @@ private theorem leftStep_eq_rotateLeft_one
   | zero =>
       have hp : p = 0 := by simp at hp1; omega
       subst p
-      native_decide
+      decide
   | succ W =>
       cases W with
       | zero =>
           have hp : p = 0 ∨ p = 1 := by simp at hp1; omega
-          rcases hp with rfl | rfl <;> native_decide
+          rcases hp with rfl | rfl <;> decide
       | succ W =>
           have hNat : W + 1 + 1 = W + 2 := by omega
           rw [hNat] at hp1 ⊢
@@ -258,12 +258,12 @@ private theorem rightStep_eq_rotateRight_one
   | zero =>
       have hp : p = 0 := by simp at hp1; omega
       subst p
-      native_decide
+      decide
   | succ W =>
       cases W with
       | zero =>
           have hp : p = 0 ∨ p = 1 := by simp at hp1; omega
-          rcases hp with rfl | rfl <;> native_decide
+          rcases hp with rfl | rfl <;> decide
       | succ W =>
           have hNat : W + 1 + 1 = W + 2 := by omega
           rw [hNat] at hp1 ⊢

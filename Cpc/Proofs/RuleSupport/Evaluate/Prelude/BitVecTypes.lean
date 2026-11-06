@@ -480,7 +480,7 @@ theorem EvaluateProofInternal.eo_extract_typeof_bitvec_of_arg_bitvec_and_ne_stuc
     · have hDeltaNotLt : ¬ i + -j < 0 := by
         have hsimpa := hDeltaNeg
         try simp [native_zlt, SmtEval.native_zlt, native_zplus, SmtEval.native_zplus, native_zneg, SmtEval.native_zneg] at hsimpa ⊢
-        exact Int.not_lt.mp (of_decide_eq_false hsimpa)
+        exact hsimpa
       have hDeltaNonneg : 0 <= i + -j :=
         Int.le_of_not_gt hDeltaNotLt
       have hWidthNonneg :
@@ -498,7 +498,7 @@ theorem EvaluateProofInternal.eo_extract_typeof_bitvec_of_arg_bitvec_and_ne_stuc
     · have hDeltaLt : i + -j < 0 := by
         have hsimpa := hDeltaNeg
         try simp [native_zlt, SmtEval.native_zlt, native_zplus, SmtEval.native_zplus, native_zneg, SmtEval.native_zneg] at hsimpa ⊢
-        exact of_decide_eq_true hsimpa
+        exact hsimpa
       have hWidthGe : 0 <= i + -j + 1 := by
         simpa [native_zleq, SmtEval.native_zleq, native_zplus,
           SmtEval.native_zplus, native_zneg, SmtEval.native_zneg,

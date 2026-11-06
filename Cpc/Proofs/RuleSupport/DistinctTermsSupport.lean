@@ -191,7 +191,7 @@ private theorem model_eval_eq_false_of_literal_ne
   · change __smtx_model_eval_eq (__smtx_model_eval M (SmtTerm.Rational q))
         (__smtx_model_eval M (SmtTerm.Rational r)) = SmtValue.Boolean false
     rw [__smtx_model_eval.eq_3, __smtx_model_eval.eq_3]
-    simpa [__smtx_model_eval_eq, native_veq] using ha
+    simpa [__smtx_model_eval_eq, native_veq, native_rat_to_real] using ha
   · change __smtx_model_eval_eq (__smtx_model_eval M (SmtTerm.String s))
         (__smtx_model_eval M (SmtTerm.String t)) = SmtValue.Boolean false
     rw [__smtx_model_eval.eq_4, __smtx_model_eval.eq_4]
@@ -1385,7 +1385,6 @@ private theorem set_is_not_subset_lookup_witness
                     (Term.Apply
                       (Term.Apply (Term.UOp UserOp.set_union) head₂) ss) := by
             simp [head₂]
-            omega
           rcases set_is_not_subset_lookup_witness
               M hM (Term.Apply (Term.UOp UserOp.set_singleton) e₁) ss U
               haTrans hssTrans
@@ -1556,7 +1555,6 @@ private theorem set_is_not_subset_lookup_witness
                     (Term.Apply (Term.UOp UserOp.set_union) head₁) ts) +
                     sizeOf b := by
               simp [head₁]
-              omega
             rcases set_is_not_subset_lookup_witness
                 M hM ts b U htsTrans hbTrans
                 (fun x y hSmall hxTrans hyTrans hEqFalse hDistinct =>

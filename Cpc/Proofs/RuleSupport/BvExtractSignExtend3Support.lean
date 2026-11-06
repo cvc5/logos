@@ -528,7 +528,6 @@ private theorem native_pow2_minus_one_mod_self_3 (w : native_Int) :
   have hPowPos : 0 < native_int_pow2 w := by
     have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
     simp [native_int_pow2, native_zexp_total, hnot]
-    exact Int.pow_pos (by decide)
   have hLo : 0 ≤ native_int_pow2 w - 1 :=
     Int.sub_nonneg.mpr (Int.add_one_le_iff.mpr hPowPos)
   have hHi : native_int_pow2 w - 1 < native_int_pow2 w :=
@@ -680,7 +679,6 @@ private theorem extract_sign_extend_above_val
       simp [__smtx_model_eval_repeat,
         eval_repeat_rec_one_bit_3, hRToNat,
         native_nat_to_int, SmtEval.native_nat_to_int, natpow2_eq]
-      exact hOnesCast
 
 private theorem eval_bv_extract_sign_extend_3
     (M : SmtModel) (hM : model_wf M)

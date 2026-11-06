@@ -137,7 +137,7 @@ theorem native_seq_prefix_eq_at_index_of_nonneg
   exact native_seq_prefix_eq_append_self pat _
 
 /-- End positions of the greedy leftmost occurrences of `pat` in `xs`. -/
-@[expose] def occEndsAux (fuel : Nat) (pat : List SmtValue) :
+@[expose] noncomputable def occEndsAux (fuel : Nat) (pat : List SmtValue) :
     List SmtValue -> List Nat
   | xs =>
       match fuel with
@@ -156,7 +156,7 @@ theorem native_seq_prefix_eq_at_index_of_nonneg
                     (· + (n + pat.length))
 
 /-- End positions of the greedy leftmost occurrences of `pat` in `xs`. -/
-@[expose] def occEnds (pat xs : List SmtValue) : List Nat :=
+@[expose] noncomputable def occEnds (pat xs : List SmtValue) : List Nat :=
   occEndsAux (xs.length + 1) pat xs
 
 theorem occEndsAux_nil_pat (fuel : Nat) (xs : List SmtValue) :
@@ -1130,7 +1130,7 @@ theorem filter_lt_getD_length (L : List Nat) (hPW : L.Pairwise (· < ·)) :
 
 /-- Scan boundaries: `bound pat xs 0 = 0`, and `bound pat xs (n + 1)` is the
 end position of the `(n + 1)`-st greedy occurrence of `pat` in `xs`. -/
-@[expose] def bound (pat xs : List SmtValue) (n : Nat) : Nat :=
+@[expose] noncomputable def bound (pat xs : List SmtValue) (n : Nat) : Nat :=
   (0 :: occEnds pat xs).getD n 0
 
 theorem bound_zero (pat xs : List SmtValue) : bound pat xs 0 = 0 := rfl

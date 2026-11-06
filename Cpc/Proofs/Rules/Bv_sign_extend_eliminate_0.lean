@@ -165,7 +165,6 @@ private theorem native_int_pow2_pos_of_nonneg
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 private theorem native_binary_uts_mod_self_of_canonical
     {w n : native_Int}
@@ -258,16 +257,8 @@ private theorem native_binary_uts_mod_self_of_canonical
         change native_zplus (native_zmult 2 (native_mod_total (p + r) p))
             (native_zneg (p + r)) = r - p
         rw [hPAddMod]
-        simp [native_zplus, native_zmult, native_zneg]
-        rw [Int.two_mul, Int.neg_add]
-        change r + r + (-p + -r) = r + -p
-        calc
-          r + r + (-p + -r) = r + (r + (-p + -r)) := by rw [Int.add_assoc]
-          _ = r + (r + (-r + -p)) := by rw [Int.add_comm (-p) (-r)]
-          _ = r + ((r + -r) + -p) := by
-            exact congrArg (fun t => r + t) (Int.add_assoc r (-r) (-p)).symm
-          _ = r + (0 + -p) := by rw [Int.add_right_neg]
-          _ = r + -p := by rw [Int.zero_add]
+        change (2 : Int) * r + -(p + r) = r - p
+        omega
       have hMod :
           native_mod_total (r - p) (2 * p) = p + r := by
         have hTargetRange : 0 <= p + r ∧ p + r < 2 * p := by
@@ -283,7 +274,6 @@ private theorem native_binary_uts_mod_self_of_canonical
           have hSub : (r - p) - (p + r) = -(2 * p) := by
             simp [Int.sub_eq_add_neg, Int.neg_add, Int.two_mul, Int.add_assoc,
               Int.add_comm, Int.add_left_comm]
-            rw [Int.add_right_neg, Int.add_zero]
           rw [hSub]
           exact Int.emod_eq_zero_of_dvd ⟨-1, by simp⟩
         change (r - p) % (2 * p) = p + r

@@ -2487,7 +2487,7 @@ private theorem smtx_value_dt_context_substitute_apply_num_args
   | SmtValue.NotValue => rfl
   | SmtValue.Boolean _ => rfl
   | SmtValue.Numeral _ => rfl
-  | SmtValue.Rational _ => rfl
+  | SmtValue.Real _ => rfl
   | SmtValue.Binary _ _ => rfl
   | SmtValue.Map _ => rfl
   | SmtValue.Fun _ _ _ => rfl
@@ -2531,7 +2531,7 @@ private theorem smtx_value_dt_context_substitute_apply_head
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral n, s, d, i, hHead => by
       simp [__smtx_apply_head_value] at hHead
-  | SmtValue.Rational q, s, d, i, hHead => by
+  | SmtValue.Real q, s, d, i, hHead => by
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary w n, s, d, i, hHead => by
       simp [__smtx_apply_head_value] at hHead
@@ -2577,7 +2577,7 @@ private theorem smtx_value_dt_context_substitute_apply_head_of_root
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral _, i, hHead => by
       simp [__smtx_apply_head_value] at hHead
-  | SmtValue.Rational _, i, hHead => by
+  | SmtValue.Real _, i, hHead => by
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary _ _, i, hHead => by
       simp [__smtx_apply_head_value] at hHead
@@ -2624,7 +2624,7 @@ private theorem smtx_value_dt_context_substitute_apply_arg_nth
   | SmtValue.NotValue, _ => rfl
   | SmtValue.Boolean _, _ => rfl
   | SmtValue.Numeral _, _ => rfl
-  | SmtValue.Rational _, _ => rfl
+  | SmtValue.Real _, _ => rfl
   | SmtValue.Binary _ _, _ => rfl
   | SmtValue.Map _, _ => rfl
   | SmtValue.Fun _ _ _, _ => rfl
@@ -3513,7 +3513,7 @@ private theorem smtx_value_dt_substitute_apply_num_args
   | SmtValue.NotValue => rfl
   | SmtValue.Boolean _ => rfl
   | SmtValue.Numeral _ => rfl
-  | SmtValue.Rational _ => rfl
+  | SmtValue.Real _ => rfl
   | SmtValue.Binary _ _ => rfl
   | SmtValue.Map _ => rfl
   | SmtValue.Fun _ _ _ => rfl
@@ -3550,7 +3550,7 @@ private theorem smtx_value_dt_substitute_apply_head_of_dt_cons
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral _, s, d, i, hHead => by
       simp [__smtx_apply_head_value] at hHead
-  | SmtValue.Rational _, s, d, i, hHead => by
+  | SmtValue.Real _, s, d, i, hHead => by
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary _ _, s, d, i, hHead => by
       simp [__smtx_apply_head_value] at hHead
@@ -3612,7 +3612,7 @@ private theorem smtx_value_dt_substitute_apply_arg_nth
   | SmtValue.NotValue, _, _ => rfl
   | SmtValue.Boolean _, _, _ => rfl
   | SmtValue.Numeral _, _, _ => rfl
-  | SmtValue.Rational _, _, _ => rfl
+  | SmtValue.Real _, _, _ => rfl
   | SmtValue.Binary _ _, _, _ => rfl
   | SmtValue.Map _, _, _ => rfl
   | SmtValue.Fun _ _ _, _, _ => rfl
@@ -3633,7 +3633,7 @@ private theorem smtx_value_dtc_app_type_head_exists_apply :
       simp [__smtx_typeof_value] at h
   | SmtValue.Numeral _, A, B, h => by
       simp [__smtx_typeof_value] at h
-  | SmtValue.Rational _, A, B, h => by
+  | SmtValue.Real _, A, B, h => by
       simp [__smtx_typeof_value] at h
   | SmtValue.Binary w n, A, B, h => by
       cases hWidth : native_zleq 0 w <;>
@@ -8686,10 +8686,8 @@ private theorem smtx_ret_typeof_tuple_sel_rec_eq_eo_list_nth_rec_nat :
             have hStep :
                 native_zplus (native_nat_to_int (native_nat_succ j)) (-1 : native_Int) =
                   native_nat_to_int j := by
-              have hInt : ((j : Int) + 1) + (-1 : Int) = j := by
-                omega
-              simpa [native_zplus, SmtEval.native_zplus, native_nat_to_int,
-                SmtEval.native_nat_to_int] using hInt
+              simp [native_zplus, SmtEval.native_zplus, native_nat_to_int,
+                SmtEval.native_nat_to_int]
             have hNe :
                 native_nat_to_int (native_nat_succ j) ≠ (0 : native_Int) := by
               have hInt : ((j : Int) + 1) ≠ 0 := by
@@ -8946,10 +8944,8 @@ theorem eo_type_valid_rec_tuple_list_nth_rec_nat :
             have hStep :
                 native_zplus (native_nat_to_int (native_nat_succ j)) (-1 : native_Int) =
                   native_nat_to_int j := by
-              have hInt : ((j : Int) + 1) + (-1 : Int) = j := by
-                omega
-              simpa [native_zplus, SmtEval.native_zplus, native_nat_to_int,
-                SmtEval.native_nat_to_int] using hInt
+              simp [native_zplus, SmtEval.native_zplus, native_nat_to_int,
+                SmtEval.native_nat_to_int]
             have hNe :
                 native_nat_to_int (native_nat_succ j) ≠ (0 : native_Int) := by
               have hInt : ((j : Int) + 1) ≠ 0 := by

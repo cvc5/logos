@@ -462,7 +462,7 @@ theorem dt_cons_chain_type_of_non_none :
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral n, s, d, i, hHead, hNN => by
       simp [__smtx_apply_head_value] at hHead
-  | SmtValue.Rational q, s, d, i, hHead, hNN => by
+  | SmtValue.Real q, s, d, i, hHead, hNN => by
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary w n, s, d, i, hHead, hNN => by
       simp [__smtx_apply_head_value] at hHead
@@ -572,7 +572,7 @@ theorem no_value_of_empty_datatype
       simp [__smtx_typeof_value] at hv
   | Numeral _ =>
       simp [__smtx_typeof_value] at hv
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at hv
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
@@ -748,7 +748,7 @@ theorem apply_arg_nth_type_of_non_none :
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral n, s, d, i, j, hHead, hNN, hj => by
       simp [__smtx_apply_head_value] at hHead
-  | SmtValue.Rational q, s, d, i, j, hHead, hNN, hj => by
+  | SmtValue.Real q, s, d, i, j, hHead, hNN, hj => by
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary w n, s, d, i, j, hHead, hNN, hj => by
       simp [__smtx_apply_head_value] at hHead
@@ -1246,7 +1246,7 @@ theorem typeof_value_model_eval_apply_dt
   | NotValue => simp [__smtx_typeof_value] at hf
   | Boolean b => simp [__smtx_typeof_value] at hf
   | Numeral n => simp [__smtx_typeof_value] at hf
-  | Rational q => simp [__smtx_typeof_value] at hf
+  | Real q => simp [__smtx_typeof_value] at hf
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
         cases hMod : native_zeq n (native_mod_total n (native_int_pow2 w)) <;>

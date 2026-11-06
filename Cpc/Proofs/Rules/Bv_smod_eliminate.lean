@@ -1055,7 +1055,6 @@ private theorem native_mod_total_zero_pow2_of_nonneg (n : native_Int) :
     have hnot : ¬ n < 0 := Int.not_lt_of_ge hn
     rw [native_int_pow2, native_zexp_total]
     simp [hnot]
-    exact Int.pow_pos (by decide : (0 : Int) < 2)
   simpa [SmtEval.native_mod_total] using
     Int.emod_eq_of_lt (by decide : (0 : Int) <= 0) hPowPos
 
@@ -1185,12 +1184,6 @@ private theorem smt_typeof_extract_diag
   have hLen :
       native_zplus (native_zplus wmv 1) (native_zneg wmv) = 1 := by
     simp [native_zplus, native_zneg]
-    calc
-      wmv + 1 + -wmv = (wmv + -wmv) + 1 := by
-        ac_rfl
-      _ = 1 := by
-        rw [Int.add_right_neg]
-        rfl
   have hOnePos : native_zlt 0 (1 : native_Int) = true := by
     simp [SmtEval.native_zlt]
   simp [__smtx_typeof_extract, hZTy, hWmNonneg, hWmHi, hWidth,

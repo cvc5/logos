@@ -642,7 +642,6 @@ private theorem eval_bv_extract_sign_extend_2
   have hFitEq : l + d = h + 1 := by
     simp [d, SmtEval.native_zplus, SmtEval.native_zneg, Int.add_assoc,
       Int.add_comm, Int.add_left_comm]
-    omega
   have hFitZ : l + d ≤ a + w := by
     rw [hFitEq]
     exact Int.add_one_le_iff.mpr hhwaInt
@@ -662,8 +661,8 @@ private theorem eval_bv_extract_sign_extend_2
   have hCross : W ≤ L + D := by exact_mod_cast hCrossInt
   have hWidthZ : s + (w - l) = d := by
     rw [hs]
-    simp [d, SmtEval.native_zplus, SmtEval.native_zneg,
-      Int.add_assoc, Int.add_comm, Int.add_left_comm]
+    simp only [d, SmtEval.native_zplus, SmtEval.native_zneg]
+    change (_ : Int) = _
     omega
   have hWidthInt : (↑S : Int) + (↑(W - L) : Int) = (↑D : Int) := by
     rw [hSRound, hDRound]

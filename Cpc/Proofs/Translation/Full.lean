@@ -2291,10 +2291,7 @@ private theorem get_var_type_list_nth_succ_cons_var_of_exists_bool
       __get_var_type (__eo_list_nth_rec a (Term.Numeral (native_nat_to_int n)))
   rw [show native_zplus (native_nat_to_int n.succ) (-1 : native_Int) =
       native_nat_to_int n by
-    simp [native_zplus, native_nat_to_int]
-    calc
-      (↑n + 1 + -1 : Int) = ↑n + (1 + -1) := by ac_rfl
-      _ = ↑n := by rfl]
+    simp [native_zplus, native_nat_to_int]]
 
 private theorem smtx_typeof_eo_to_smt_exists_cons_bool_of_tail_bool
     (s : native_String) (T a : Term) (body : SmtTerm)
@@ -4661,7 +4658,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                                         SmtEval.native_zleq] using hIdxValid)
                                   simp [native_nat_to_int, native_int_to_nat,
                                     SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]
-                                  exact Int.max_eq_left hNonneg
+                                  exact hNonneg
                                 have hEoSk :
                                     __eo_to_smt_type
                                         (__eo_typeof
@@ -4776,7 +4773,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                                         SmtEval.native_zleq] using hIdxValid)
                                   simp [native_nat_to_int, native_int_to_nat,
                                     SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]
-                                  exact Int.max_eq_left hNonneg
+                                  exact hNonneg
                                 have hSkValid :=
                                   eo_to_smt_quantifiers_skolemize_var_type_valid_of_non_none xs
                                     (SmtTerm.not (__eo_to_smt body)) (native_int_to_nat n)

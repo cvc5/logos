@@ -113,8 +113,6 @@ theorem extract_bit_binary_eval
       bv1 ((Int.toNat pa).testBit i) := by
   simp [__smtx_model_eval_extract, native_binary_extract, native_zplus,
     native_zneg, native_nat_to_int]
-  have hWidth : (↑i + 1 + -↑i : Int) = 1 := by omega
-  rw [hWidth]
   change SmtValue.Binary 1 (native_mod_total (pa / native_int_pow2 (↑i)) (native_int_pow2 1)) =
     bv1 (pa.toNat.testBit i)
   have hpowi : native_int_pow2 (↑i) = (2 ^ i : Int) := by
@@ -144,11 +142,11 @@ theorem extract_bit_binary_eval
 
 theorem bv1_and (x y : Bool) :
     __smtx_model_eval_bvand (bv1 x) (bv1 y) = bv1 (x && y) := by
-  cases x <;> cases y <;> native_decide
+  cases x <;> cases y <;> decide
 
 theorem bv1_or (x y : Bool) :
     __smtx_model_eval_bvor (bv1 x) (bv1 y) = bv1 (x || y) := by
-  cases x <;> cases y <;> native_decide
+  cases x <;> cases y <;> decide
 
 theorem bv1_eq_one (x : Bool) :
     __smtx_model_eval_eq (bv1 x) (SmtValue.Binary 1 1) = SmtValue.Boolean x := by

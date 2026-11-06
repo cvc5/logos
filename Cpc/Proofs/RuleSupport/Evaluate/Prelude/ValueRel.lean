@@ -430,11 +430,11 @@ theorem EvaluateProofInternal.smt_value_rel_numeral_eq
 
 theorem EvaluateProofInternal.smt_value_rel_rational_eq
     (v : SmtValue) (q : native_Rat) :
-    RuleProofs.smt_value_rel v (SmtValue.Rational q) ->
-    v = SmtValue.Rational q := by
+    RuleProofs.smt_value_rel v (SmtValue.Real q) ->
+    v = SmtValue.Real q := by
   intro hRel
   exact (RuleProofs.smt_value_rel_iff_eq
-    v (SmtValue.Rational q) (by
+    v (SmtValue.Real q) (by
       rintro ⟨r1, r2, _hv, hRat⟩
       cases hRat)).mp hRel
 

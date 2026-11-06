@@ -2,8 +2,12 @@ module
 
 public import Cpc.Proofs.RuleSupport.Support
 import all Cpc.Proofs.RuleSupport.Support
+public import Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 
 public section
+
+noncomputable section
 
 open Eo
 open SmtEval
@@ -22,7 +26,7 @@ deriving DecidableEq
 /-- A scalar arithmetic model value, retaining whether it is integral or real. -/
 inductive ArithValue where
   | int (n : native_Int)
-  | real (q : native_Rat)
+  | real (q : native_Real)
 
 namespace ArithValue
 
@@ -48,33 +52,33 @@ def zero : ArithKind -> ArithValue
 
 def mul : ArithValue -> ArithValue -> ArithValue
   | .int a, .int b => .int (a * b)
-  | .real a, .real b => .real (a * b)
+  | .real a, .real b => .real (native_rmult a b)
   | a, _ => a
 
 def abs : ArithValue -> ArithValue
   | .int a => .int (native_zabs a)
-  | .real a => .real (native_qabs a)
+  | .real a => .real (native_rabs a)
 
 def smtValue : ArithValue -> SmtValue
   | .int a => SmtValue.Numeral a
-  | .real a => SmtValue.Rational a
+  | .real a => SmtValue.Real a
 
 private def intAbs (n : native_Int) : native_Int :=
   ((Int.natAbs n : Nat) : Int)
 
-/-- A common nonnegative rational magnitude for integer and real values. -/
-def magnitude : ArithValue -> Rat
-  | .int a => (intAbs a : Rat)
-  | .real a => native_qabs a
+/-- A common nonnegative real magnitude for integer and real values. -/
+def magnitude : ArithValue -> native_Real
+  | .int a => ((intAbs a : Int) : native_Real)
+  | .real a => native_rabs a
 
 def ltBool : ArithValue -> ArithValue -> native_Bool
   | .int a, .int b => native_zlt a b
-  | .real a, .real b => native_qlt a b
+  | .real a, .real b => native_rlt a b
   | _, _ => false
 
 def eqBool : ArithValue -> ArithValue -> native_Bool
   | .int a, .int b => native_zeq a b
-  | .real a, .real b => native_qeq a b
+  | .real a, .real b => decide (a = b)
   | _, _ => false
 
 private theorem intAbs_nonneg (n : native_Int) : 0 <= intAbs n := by
@@ -82,7 +86,7 @@ private theorem intAbs_nonneg (n : native_Int) : 0 <= intAbs n := by
 
 private theorem intAbs_mul (a b : native_Int) :
     intAbs (a * b) = intAbs a * intAbs b := by
-  simp [intAbs, Int.natAbs_mul, Int.natCast_mul]
+  simp [intAbs, Int.natAbs_mul]
 
 private theorem native_zabs_eq_intAbs (n : native_Int) :
     native_zabs n = intAbs n := by
@@ -95,46 +99,13 @@ private theorem native_zabs_eq_intAbs (n : native_Int) :
 theorem magnitude_nonneg (a : ArithValue) : 0 <= magnitude a := by
   cases a with
   | int a =>
-      exact Rat.intCast_nonneg.mpr (intAbs_nonneg a)
-  | real a =>
       simp only [magnitude]
-      unfold native_qabs
-      by_cases hneg : a < 0
-      · simp [hneg, Rat.le_of_lt (by simpa using Rat.neg_lt_neg hneg)]
-      · simpa [hneg] using Rat.not_lt.mp hneg
+      exact_mod_cast intAbs_nonneg a
+  | real a =>
+      exact abs_nonneg a
 
 @[simp] theorem magnitude_one (k : ArithKind) : magnitude (one k) = 1 := by
-  cases k <;> native_decide
-
-private theorem native_qabs_mul (a b : native_Rat) :
-    native_qabs (a * b) = native_qabs a * native_qabs b := by
-  by_cases ha : a < 0
-  · by_cases hb : b < 0
-    · have hna : 0 < -a := by simpa using Rat.neg_lt_neg ha
-      have hnb : 0 < -b := by simpa using Rat.neg_lt_neg hb
-      have habPos : 0 < a * b := by
-        have := Rat.mul_pos hna hnb
-        simpa [Rat.neg_mul, Rat.mul_neg] using this
-      have hab : ¬ a * b < 0 := Rat.not_lt.mpr (Rat.le_of_lt habPos)
-      simp [native_qabs, ha, hb, hab, Rat.neg_mul, Rat.mul_neg]
-    · have hb0 : 0 <= b := Rat.not_lt.mp hb
-      by_cases hbZero : b = 0
-      · subst b
-        simp [native_qabs]
-      · have hbPos : 0 < b := Rat.lt_of_le_of_ne hb0 (Ne.symm hbZero)
-        have hab : a * b < 0 := (Rat.mul_neg_iff_of_pos_right hbPos).mpr ha
-        simp [native_qabs, ha, hb, hab, Rat.neg_mul]
-  · have ha0 : 0 <= a := Rat.not_lt.mp ha
-    by_cases hb : b < 0
-    · by_cases haZero : a = 0
-      · subst a
-        simp [native_qabs]
-      · have haPos : 0 < a := Rat.lt_of_le_of_ne ha0 (Ne.symm haZero)
-        have hab : a * b < 0 := (Rat.mul_neg_iff_of_pos_left haPos).mpr hb
-        simp [native_qabs, ha, hb, hab, Rat.mul_neg]
-    · have hb0 : 0 <= b := Rat.not_lt.mp hb
-      have hab : ¬ a * b < 0 := Rat.not_lt.mpr (Rat.mul_nonneg ha0 hb0)
-      simp [native_qabs, ha, hb, hab]
+  cases k <;> simp [magnitude, one, intAbs, native_rabs]
 
 theorem kind_mul_of_same_kind {a b : ArithValue}
     (h : kind a = kind b) : kind (mul a b) = kind a := by
@@ -148,8 +119,7 @@ theorem modelEval_mul_of_same_kind {a b : ArithValue}
     (h : kind a = kind b) :
     __smtx_model_eval_mult a.smtValue b.smtValue = (mul a b).smtValue := by
   cases a <;> cases b <;>
-    simp [kind, smtValue, mul, __smtx_model_eval_mult, native_zmult,
-      native_qmult] at h ⊢
+    simp [kind, smtValue, mul, __smtx_model_eval_mult, native_zmult] at h ⊢
 
 theorem magnitude_mul_of_same_kind {a b : ArithValue}
     (h : kind a = kind b) :
@@ -163,8 +133,7 @@ theorem magnitude_mul_of_same_kind {a b : ArithValue}
       cases b with
       | int b => simp [kind] at h
       | real b =>
-          simp only [magnitude, mul]
-          exact native_qabs_mul a b
+          exact abs_mul a b
 
 theorem ltBool_abs_true_iff_same_kind {a b : ArithValue}
     (h : kind a = kind b) :
@@ -174,15 +143,12 @@ theorem ltBool_abs_true_iff_same_kind {a b : ArithValue}
       cases b with
       | real b => simp [kind] at h
       | int b =>
-          simp [ltBool, abs, magnitude, native_zlt, native_zabs_eq_intAbs,
-            Rat.intCast_lt_intCast]
+          simp [ltBool, abs, magnitude, native_zlt, native_zabs_eq_intAbs]
   | real a =>
       cases b with
       | int b => simp [kind] at h
       | real b =>
-          change decide (native_qabs a < native_qabs b) = true ↔
-            native_qabs a < native_qabs b
-          simp
+          simp [ltBool, abs, magnitude, native_rlt]
 
 theorem eqBool_abs_true_iff_same_kind {a b : ArithValue}
     (h : kind a = kind b) :
@@ -197,9 +163,7 @@ theorem eqBool_abs_true_iff_same_kind {a b : ArithValue}
       cases b with
       | int b => simp [kind] at h
       | real b =>
-          change decide (native_qabs a = native_qabs b) = true ↔
-            native_qabs a = native_qabs b
-          simp
+          simp [eqBool, abs, magnitude]
 
 theorem magnitude_pos_of_eqBool_zero_false {a : ArithValue} :
     eqBool a (zero (kind a)) = false → 0 < magnitude a := by
@@ -211,17 +175,11 @@ theorem magnitude_pos_of_eqBool_zero_false {a : ArithValue} :
       have ha : a ≠ 0 := by simpa using h
       have hpos : 0 < intAbs a := by
         exact Int.natCast_pos.mpr (Int.natAbs_pos.mpr ha)
-      exact (Rat.intCast_lt_intCast).mpr hpos
+      exact_mod_cast hpos
   | real a =>
       simp only [eqBool, zero, kind, magnitude] at h ⊢
-      unfold native_qeq at h
       have ha : a ≠ 0 := by simpa using h
-      by_cases hneg : a < 0
-      · have hpos : 0 < -a := by simpa using Rat.neg_lt_neg hneg
-        simpa [native_qabs, hneg] using hpos
-      · have ha0 : 0 <= a := Rat.not_lt.mp hneg
-        have hpos : 0 < a := Rat.lt_of_le_of_ne ha0 (Ne.symm ha)
-        simpa [native_qabs, hneg] using hpos
+      exact abs_pos.mpr ha
 
 theorem magnitude_mul_lt_mul_of_lt_lt {a b c d : ArithValue}
     (hAB : magnitude b < magnitude a)
@@ -232,24 +190,7 @@ theorem magnitude_mul_lt_mul_of_lt_lt {a b c d : ArithValue}
     magnitude (mul b d) < magnitude (mul a c) := by
   rw [magnitude_mul_of_same_kind (hABK.symm.trans hAC |>.trans hCDK),
     magnitude_mul_of_same_kind hAC]
-  have hb := magnitude_nonneg b
-  have hd := magnitude_nonneg d
-  have hcNe : magnitude c ≠ 0 := by
-    intro hc
-    rw [hc] at hCD
-    exact (Rat.not_lt.mpr hd) hCD
-  have hcPos : 0 < magnitude c :=
-    Rat.lt_of_le_of_ne (magnitude_nonneg c) (Ne.symm hcNe)
-  have h1 : magnitude b * magnitude d <= magnitude b * magnitude c :=
-    Rat.mul_le_mul_of_nonneg_left (Rat.le_of_lt hCD) hb
-  have h2 : magnitude b * magnitude c < magnitude a * magnitude c :=
-    Rat.mul_lt_mul_of_pos_right hAB hcPos
-  apply Rat.lt_of_le_of_ne (Rat.le_trans h1 (Rat.le_of_lt h2))
-  intro heq
-  have hle : magnitude a * magnitude c <= magnitude b * magnitude c := by
-    rw [← heq]
-    exact h1
-  exact (Rat.not_lt.mpr hle) h2
+  exact mul_lt_mul'' hAB hCD (magnitude_nonneg b) (magnitude_nonneg d)
 
 theorem magnitude_mul_eq_of_eq_eq {a b c d : ArithValue}
     (hAB : magnitude a = magnitude b)
@@ -271,7 +212,7 @@ theorem magnitude_mul_lt_mul_of_lt_eq_pos {a b c d : ArithValue}
     magnitude (mul b d) < magnitude (mul a c) := by
   rw [magnitude_mul_of_same_kind (hABK.symm.trans hAC |>.trans hCDK),
     magnitude_mul_of_same_kind hAC, ← hCD]
-  exact Rat.mul_lt_mul_of_pos_right hAB hPos
+  exact mul_lt_mul_of_pos_right hAB hPos
 
 end ArithValue
 
@@ -480,7 +421,7 @@ def eoType : ArithProduct -> Term
 
 def smtValue : ArithProduct -> SmtValue
   | .empty .int => SmtValue.Numeral 1
-  | .empty .real => SmtValue.Rational 1
+  | .empty .real => SmtValue.Real 1
   | .value a => a.smtValue
   | .invalid => SmtValue.NotValue
 

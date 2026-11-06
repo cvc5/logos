@@ -2,22 +2,41 @@ name = "LogosVerification"
 version = "0.1.0"
 srcDir = ".."
 defaultTargets = ["Cpc.ApiChecks", "Cpc.Proofs.StaticTyping", "CpcMini.Proofs.Checker"]
-weakLeanArgs = ["-j1"]
+# Mathlib's linters are for Mathlib's own style; they do not apply to this project,
+# whose generated code breaks several and whose build treats warnings as errors.
+weakLeanArgs = [
+  "-j1",
+  "-Dweak.linter.mathlibStandardSet=false",
+  "-Dweak.linter.internalConstructors=false",
+  "-Dweak.linter.style.nameCheck=false",
+  "-Dweak.linter.unnecessarySeqFocus=false",
+  "-Dweak.linter.unusedTactic=false",
+  "-Dweak.linter.unreachableTactic=false",
+  "-Dweak.linter.tacticAnalysis=false",
+  "-Dweak.linter.auxLemma=false",
+  "-Dweak.linter.tacticAnalysis.introMerge=false",
+]
 
-# Future mathlib dependencies belong here. The checker package has no
-# dependency on this project, and can be built with no verification checkout.
+# Mathlib provides the real numbers of the SMT-LIB semantics. The checker package
+# has no dependency on this project, and can be built with no verification checkout.
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.34.0"
+
 [[require]]
 name = "Cpc"
 path = ".."
 
 [[lean_lib]]
 name = "CpcVerification"
+# Proof namespaces contain submodules without a Proofs.lean umbrella module.
 roots = []
-globs = ["Cpc.Spec", "Cpc.SmtModelDefs", "Cpc.SmtValueOrder", "Cpc.SmtModel", "Cpc.ApiChecks", "Cpc.ApiCorrect", "Cpc.Native.Correct", "Cpc.Proofs.*"]
+globs = ["Cpc.Spec", "Cpc.SmtReal", "Cpc.SmtModelDefs", "Cpc.SmtValueOrder", "Cpc.SmtModel", "Cpc.ApiChecks", "Cpc.ApiCorrect", "Cpc.Native.Correct", "Cpc.Proofs.+"]
 moreLeanArgs = ["-DmaxHeartbeats=10000000", "-DwarningAsError=true"]
 
 [[lean_lib]]
 name = "CpcMiniVerification"
 roots = []
-globs = ["CpcMini.Spec", "CpcMini.SmtModelDefs", "CpcMini.SmtValueOrder", "CpcMini.SmtModel", "CpcMini.Proofs.*"]
+globs = ["CpcMini.Spec", "CpcMini.SmtReal", "CpcMini.SmtModelDefs", "CpcMini.SmtValueOrder", "CpcMini.SmtModel", "CpcMini.Proofs.+"]
 moreLeanArgs = ["-DwarningAsError=true"]

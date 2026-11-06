@@ -11,7 +11,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 ENTRIES = ("Main", "MainNative", "Cpc", "CpcMini")
-SEMANTIC = {"SmtModel", "SmtModelDefs", "SmtValueOrder", "Spec", "ApiChecks", "ApiCorrect", "Proofs"}
+SEMANTIC = {"SmtReal", "SmtModel", "SmtModelDefs", "SmtValueOrder", "Spec", "ApiChecks", "ApiCorrect", "Proofs"}
 
 
 def checker_sources():

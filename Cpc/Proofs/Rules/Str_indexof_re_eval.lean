@@ -14,6 +14,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
@@ -342,22 +345,9 @@ private theorem native_str_substr_to_end
         (min (Int.ofNat s.length + -i + 1) (Int.ofNat s.length - i)).toNat =
           s.length - Int.toNat i := by
       simpa [native_str_len, native_zplus, native_zneg] using hMinToNat
-    have hTake :
-        (s.drop (Int.toNat i)).take (s.length - Int.toNat i) =
-          s.drop (Int.toNat i) := by
-      apply List.take_of_length_le
-      rw [List.length_drop]
-      exact Nat.le_refl _
     have hNotNeg : ¬ i < 0 := Int.not_lt_of_ge hNonneg
     simp [native_str_len, native_zplus, native_zneg, hNotNeg, hLenSubNotLe,
-      hNotGeLen]
-    change
-      List.take
-          ((min (Int.ofNat s.length + -i + 1) (Int.ofNat s.length - i)).toNat)
-          (List.drop (Int.toNat i) s) =
-        List.drop (Int.toNat i) s
-    rw [hMinToNat']
-    exact hTake
+      hNotGeLen] <;> omega
 
 private theorem str_indexof_re_eval_prefix_condition_eq
     (M : SmtModel) (hM : model_wf M)
