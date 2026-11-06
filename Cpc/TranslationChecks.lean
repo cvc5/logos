@@ -40,6 +40,25 @@ def EoListAllHaveSmtTranslation : Term -> Prop
       eoHasSmtTranslation t ∧ EoListAllHaveSmtTranslation ts
   | _ => False
 
+/--
+An endpoint of an interval of the coverings calculus: an infinity marker, or a term
+with an SMT translation. A marker has no translation of its own, and is read by
+`@sgn_inv` and dropped by `$mk_cover_piece`.
+-/
+def CovEndpointOk : Term -> Prop
+  | Term.UOp UserOp._at__at_cov_minus_inf => True
+  | Term.UOp UserOp._at__at_cov_plus_inf => True
+  | t => eoHasSmtTranslation t
+
+/-- A list of the intervals `(@list l r)` of the `cover` rule, with each endpoint `CovEndpointOk`. -/
+def CovIntervalsOk : Term -> Prop
+  | Term.__eo_List_nil => True
+  | Term.Apply (Term.Apply Term.__eo_List_cons
+      (Term.Apply (Term.Apply Term.__eo_List_cons l)
+        (Term.Apply (Term.Apply Term.__eo_List_cons r) Term.__eo_List_nil))) ps =>
+      CovEndpointOk l ∧ CovEndpointOk r ∧ CovIntervalsOk ps
+  | _ => False
+
 /-- Classifies checker rule arguments by the translation side condition they require. -/
 inductive ArgTranslationKind where
   | term
@@ -55,6 +74,13 @@ inductive ArgTranslationKind where
       strictly stronger than `term`: it additionally rules out element types such as
       `RegLan` that have a translation but cannot inhabit a `Set`/`Seq`. -/
   | wfElem
+  /-- An argument only the rule's own computation reads, which never reaches its
+      conclusion: a Sturm sequence, for instance. It needs no translation. -/
+  | any
+  /-- An endpoint of an interval of the coverings calculus; see `CovEndpointOk`. -/
+  | covEndpoint
+  /-- The intervals of the `cover` rule; see `CovIntervalsOk`. -/
+  | covIntervals
 
 /-- Interprets a command-argument mask entry. -/
 def argTranslationOkMasked : ArgTranslationKind -> Term -> Prop
@@ -65,6 +91,9 @@ def argTranslationOkMasked : ArgTranslationKind -> Term -> Prop
       eoHasSmtTranslation t ∧ __smtx_type_wf (__smtx_typeof (__eo_to_smt t)) = true
   | ArgTranslationKind.wfElem, t =>
       __smtx_type_wf_component (__smtx_typeof (__eo_to_smt t)) = true
+  | ArgTranslationKind.any, _ => True
+  | ArgTranslationKind.covEndpoint, t => CovEndpointOk t
+  | ArgTranslationKind.covIntervals, t => CovIntervalsOk t
 
 /-- Predicate asserting that every argument in a checker argument list is translation-safe. -/
 def cArgListTranslationOk : CArgList -> Prop
@@ -167,6 +196,19 @@ def cmdTranslationOk : CCmd -> Prop
       cArgListTranslationOkMask [ArgTranslationKind.wfElem] args
   | CCmd.step CRule.seq_nth_unit args _ =>
       cArgListTranslationOkMask [ArgTranslationKind.wfElem] args
+  | CCmd.step CRule.cover args _ =>
+      cArgListTranslationOkMask [ArgTranslationKind.term, ArgTranslationKind.covIntervals] args
+  | CCmd.step CRule.sgn_inv_intro args _ =>
+      cArgListTranslationOkMask [ArgTranslationKind.any, ArgTranslationKind.covEndpoint,
+        ArgTranslationKind.covEndpoint, ArgTranslationKind.any, ArgTranslationKind.any,
+        ArgTranslationKind.any, ArgTranslationKind.any, ArgTranslationKind.any] args
+  | CCmd.step CRule.is_root_intro args _ =>
+      cArgListTranslationOkMask [ArgTranslationKind.any, ArgTranslationKind.term,
+        ArgTranslationKind.any] args
+  | CCmd.step CRule.sgn_inv_elim args _ =>
+      cArgListTranslationOkMask [ArgTranslationKind.term, ArgTranslationKind.any,
+        ArgTranslationKind.any, ArgTranslationKind.covEndpoint,
+        ArgTranslationKind.covEndpoint] args
   | CCmd.step _ args _ => cArgListTranslationOk args
   | _ => True
 
@@ -230,6 +272,27 @@ theorem eoListAllHaveSmtTranslationB_iff :
 instance instDecidableEoListAllHaveSmtTranslation (t : Term) :
     Decidable (EoListAllHaveSmtTranslation t) :=
   decidable_of_iff _ (eoListAllHaveSmtTranslationB_iff t)
+
+/-- Decides `CovEndpointOk`. -/
+instance instDecidableCovEndpointOk (t : Term) : Decidable (CovEndpointOk t) := by
+  unfold CovEndpointOk; split <;> infer_instance
+
+/-- Decides `CovIntervalsOk`, as `eoListAllHaveSmtTranslationB` decides its predicate. -/
+def covIntervalsOkB : Term -> Bool
+  | Term.__eo_List_nil => true
+  | Term.Apply (Term.Apply Term.__eo_List_cons
+      (Term.Apply (Term.Apply Term.__eo_List_cons l)
+        (Term.Apply (Term.Apply Term.__eo_List_cons r) Term.__eo_List_nil))) ps =>
+      decide (CovEndpointOk l) && decide (CovEndpointOk r) && covIntervalsOkB ps
+  | _ => false
+
+theorem covIntervalsOkB_iff :
+    ∀ t : Term, covIntervalsOkB t = true ↔ CovIntervalsOk t := by
+  intro t
+  fun_induction covIntervalsOkB t <;> simp_all [CovIntervalsOk, and_assoc]
+
+instance instDecidableCovIntervalsOk (t : Term) : Decidable (CovIntervalsOk t) :=
+  decidable_of_iff _ (covIntervalsOkB_iff t)
 
 /-- Decides `argTranslationOkMasked`, one case per kind. -/
 instance instDecidableArgTranslationOkMasked (k : ArgTranslationKind) (t : Term) :

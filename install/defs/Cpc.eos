@@ -31,6 +31,7 @@
 (define-macro eo.var (s T)         ($eot_Var s T))
 (define-macro eo.string (x)        ($eot_string x))
 (define-macro eo.numeral (x)       ($eot_numeral x))
+(define-macro eo.rational (x)      ($eot_rational x))
 
 ; -- the methods of the target
 ; What a transformation asks of the SMT-LIB signature it transforms into: the
@@ -870,6 +871,117 @@
 
 (define-symbol tuple.update (n t u)
   :term ($eo_to_smt_tuple_update (smt.typeof t) n t u))
+
+;-----------------------------------------------------------------------------
+(section "Coverings")
+;-----------------------------------------------------------------------------
+
+; The nonlinear coverings calculus is not in SMT-LIB. Its formulas speak of a
+; polynomial as a function rather than at the value a model gives a variable, so
+; each gives the polynomial by its coefficients, and it is evaluated at a point.
+
+(define-macro cov.zero () (Rational ("mk_rational" 0 1)))
+(define-macro cov.x ()    (Var "str_vname" Real))
+
+; The polynomial with the coefficients cs, lowest degree first, at the term v. A
+; coefficient has to be a rational literal, which is all a rule produces.
+(program $eo_to_smt_coeffs_at ((q <rational>) (cs $eo_List) (v SmtTerm))
+  :signature ($eo_List SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_coeffs_at (eo.list_cons (eo.rational q) cs) v)
+    (+ (Rational q) (* v ($eo_to_smt_coeffs_at cs v))))
+  (($eo_to_smt_coeffs_at eo.list_nil v) cov.zero)
+  (($eo_to_smt_coeffs_at cs v) none)
+  )
+)
+
+; Whether xs is a list whose elements are rational literals or such lists, which is
+; the shape of the evidence of @ran. No variable can hide in it, which matters since
+; it is opaque.
+(program $eo_to_smt_is_literal_list ((q <rational>) (x $eo_Term) (xs $eo_List))
+  :signature ($eo_List) <bool>
+  (
+  (($eo_to_smt_is_literal_list eo.list_nil) "true")
+  (($eo_to_smt_is_literal_list (eo.list_cons (eo.rational q) xs))
+    ($eo_to_smt_is_literal_list xs))
+  (($eo_to_smt_is_literal_list (eo.list_cons x xs))
+    ("and" ($eo_to_smt_is_literal_list x) ($eo_to_smt_is_literal_list xs)))
+  (($eo_to_smt_is_literal_list xs) "false")
+  )
+)
+
+; A root of q between the rationals lo and hi. That there is exactly one is what a
+; rule relying on it checks, and s is the evidence for that, so it has no part in the
+; value. Only literals are accepted, so no variable can hide in these opaque arguments
+; or be placed under the binder cov.x.
+(program $eo_to_smt_ran
+  ((q $eo_List) (lo <rational>) (hi <rational>) (s $eo_List) (l $eo_Term) (h $eo_Term))
+  :signature ($eo_List $eo_Term $eo_Term $eo_List) SmtTerm
+  (
+  (($eo_to_smt_ran q (eo.rational lo) (eo.rational hi) s)
+    ("ite" ($eo_to_smt_is_literal_list s)
+      (choice "str_vname" Real
+        (and (= ($eo_to_smt_coeffs_at q cov.x) cov.zero)
+        (and (< (Rational lo) cov.x) (< cov.x (Rational hi)))))
+      none))
+  (($eo_to_smt_ran q l h s) none)
+  )
+)
+
+; That cov.x is above the lower endpoint, and below the upper one. An infinite
+; endpoint is no constraint, as in $mk_cover_piece, and otherwise an endpoint is a
+; rational or a real algebraic number, so each program is given the endpoint as
+; written, to recognize one, and the term it was transformed into.
+(program $eo_to_smt_cov_above
+  ((l $eo_Term) (sl SmtTerm) (q <rational>) (c $eo_List) (a Real) (b Real) (d $eo_List))
+  :signature ($eo_Term SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_cov_above @@cov_minus_inf sl) true)
+  (($eo_to_smt_cov_above (eo.rational q) sl) (> cov.x sl))
+  (($eo_to_smt_cov_above (@ran c a b d) sl) (> cov.x sl))
+  (($eo_to_smt_cov_above l sl) none)
+  )
+)
+(program $eo_to_smt_cov_below
+  ((r $eo_Term) (sr SmtTerm) (q <rational>) (c $eo_List) (a Real) (b Real) (d $eo_List))
+  :signature ($eo_Term SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_cov_below @@cov_plus_inf sr) true)
+  (($eo_to_smt_cov_below (eo.rational q) sr) (< cov.x sr))
+  (($eo_to_smt_cov_below (@ran c a b d) sr) (< cov.x sr))
+  (($eo_to_smt_cov_below r sr) none)
+  )
+)
+
+; That F, which is written over cov.x, holds wherever cov.x satisfies I.
+(program $eo_to_smt_cov_throughout ((I SmtTerm) (F SmtTerm))
+  :signature (SmtTerm SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_cov_throughout I F)
+    (not (exists "str_vname" Real (and I (not F)))))
+  )
+)
+
+; -- @ran
+(define-symbol @ran ((! q :raw) (! lo :raw) (! hi :raw) (! s :raw))
+  :term ($eo_to_smt_ran q lo hi s))
+
+; -- @is_root
+; An empty q never reaches r, so that r is a number is said separately.
+(define-symbol @is_root ((! q :raw) r)
+  :term ("ite" ("Teq" (smt.typeof r) Real)
+          (= ($eo_to_smt_coeffs_at q r) cov.zero)
+          none))
+
+; -- @sgn_inv
+; q is positive throughout (l, r), or negative throughout it, or zero throughout
+; it.
+(define-symbol @sgn_inv ((! q :raw) (! l :raw) (! r :raw))
+  :term (eo::define ((I (and ($eo_to_smt_cov_above l l) ($eo_to_smt_cov_below r r))))
+        (eo::define ((v ($eo_to_smt_coeffs_at q cov.x)))
+          (or ($eo_to_smt_cov_throughout I (> v cov.zero))
+          (or ($eo_to_smt_cov_throughout I (< v cov.zero))
+              ($eo_to_smt_cov_throughout I (= v cov.zero)))))))
 
 ;-----------------------------------------------------------------------------
 (section "Quantifiers, skolems, and the binder left out")
