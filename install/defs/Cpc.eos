@@ -893,6 +893,16 @@
   )
 )
 
+; Whether xs is a list, which is what the type of @ran asks of its evidence.
+(program $eo_to_smt_is_list ((x $eo_Term) (xs $eo_List))
+  :signature ($eo_List) <bool>
+  (
+  (($eo_to_smt_is_list (eo.list_cons x xs)) ($eo_to_smt_is_list xs))
+  (($eo_to_smt_is_list eo.list_nil) "true")
+  (($eo_to_smt_is_list xs) "false")
+  )
+)
+
 ; That cov.x is above the lower endpoint, and below the upper one. An infinite
 ; endpoint is no constraint, as in $mk_cover_piece, so each program is given the
 ; endpoint as written, to recognize one, and the term it was transformed into.
@@ -921,16 +931,22 @@
 )
 
 ; -- @ran
-; The root of q between lo and hi. The type of @ran requires that there is
-; exactly one, and s is the evidence for that, so it has no part in the value.
+; A root of q between lo and hi. That there is exactly one is what a rule relying
+; on it checks, and s is the evidence for that, so it has no part in the value and
+; only has to be of the type @ran asks for.
 (define-symbol @ran ((! q :raw) lo hi (! s :raw))
-  :term (choice "str_vname" Real
-          (and (= ($eo_to_smt_coeffs_at q cov.x) cov.zero)
-          (and (< lo cov.x) (< cov.x hi)))))
+  :term ("ite" ($eo_to_smt_is_list s)
+          (choice "str_vname" Real
+            (and (= ($eo_to_smt_coeffs_at q cov.x) cov.zero)
+            (and (< lo cov.x) (< cov.x hi))))
+          none))
 
 ; -- @is_root
+; An empty q never reaches r, so that r is a number is said separately.
 (define-symbol @is_root ((! q :raw) r)
-  :term (= ($eo_to_smt_coeffs_at q r) cov.zero))
+  :term ("ite" ("Teq" (smt.typeof r) Real)
+          (= ($eo_to_smt_coeffs_at q r) cov.zero)
+          none))
 
 ; -- @sgn_inv
 ; q is positive throughout (l, r), or negative throughout it, or zero throughout

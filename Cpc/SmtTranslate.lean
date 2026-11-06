@@ -111,6 +111,12 @@ def __eo_to_smt_sets_deq_diff (a : SmtTerm) : SmtType -> SmtTerm -> SmtType -> S
   | aT, b, bT => SmtTerm.None
 
 
+def __eo_to_smt_is_list : Term -> native_Bool
+  | (Term.Apply (Term.Apply Term.__eo_List_cons x) xs) => (__eo_to_smt_is_list xs)
+  | Term.__eo_List_nil => true
+  | xs => false
+
+
 def __eo_to_smt_cov_above : Term -> SmtTerm -> SmtTerm
   | (Term.UOp UserOp._at__at_cov_minus_inf), sl => (SmtTerm.Boolean true)
   | l, sl => (SmtTerm.gt (SmtTerm.Var (native_string_lit "@x") SmtType.Real) sl)
@@ -462,13 +468,15 @@ def __eo_to_smt : Term -> SmtTerm
   | (Term.Apply (Term.UOp UserOp._at_div_by_zero) x1) => (SmtTerm.qdiv (__eo_to_smt x1) (SmtTerm.Rational (native_mk_rational 0 1)))
   | (Term.UOp4 UserOp4._at_ran x1 x2 x3 x4) =>
     let _v1 := (SmtTerm.Var (native_string_lit "@x") SmtType.Real)
-    (SmtTerm.choice (native_string_lit "@x") SmtType.Real (SmtTerm.and (SmtTerm.eq (__eo_to_smt_coeffs_at x1 _v1) (SmtTerm.Rational (native_mk_rational 0 1))) (SmtTerm.and (SmtTerm.lt (__eo_to_smt x2) _v1) (SmtTerm.lt _v1 (__eo_to_smt x3)))))
+    (native_ite (__eo_to_smt_is_list x4) (SmtTerm.choice (native_string_lit "@x") SmtType.Real (SmtTerm.and (SmtTerm.eq (__eo_to_smt_coeffs_at x1 _v1) (SmtTerm.Rational (native_mk_rational 0 1))) (SmtTerm.and (SmtTerm.lt (__eo_to_smt x2) _v1) (SmtTerm.lt _v1 (__eo_to_smt x3))))) SmtTerm.None)
   | (Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv x1) x2) x3) =>
     let _v0 := (SmtTerm.Rational (native_mk_rational 0 1))
     let _v1 := (__eo_to_smt_coeffs_at x1 (SmtTerm.Var (native_string_lit "@x") SmtType.Real))
     let _v2 := (SmtTerm.and (__eo_to_smt_cov_above x2 (__eo_to_smt x2)) (__eo_to_smt_cov_below x3 (__eo_to_smt x3)))
     (SmtTerm.or (__eo_to_smt_cov_throughout _v2 (SmtTerm.gt _v1 _v0)) (SmtTerm.or (__eo_to_smt_cov_throughout _v2 (SmtTerm.lt _v1 _v0)) (__eo_to_smt_cov_throughout _v2 (SmtTerm.eq _v1 _v0))))
-  | (Term.Apply (Term.UOp1 UserOp1._at_is_root x1) x2) => (SmtTerm.eq (__eo_to_smt_coeffs_at x1 (__eo_to_smt x2)) (SmtTerm.Rational (native_mk_rational 0 1)))
+  | (Term.Apply (Term.UOp1 UserOp1._at_is_root x1) x2) =>
+    let _v0 := (__eo_to_smt x2)
+    (native_ite (native_Teq (__smtx_typeof _v0) SmtType.Real) (SmtTerm.eq (__eo_to_smt_coeffs_at x1 _v0) (SmtTerm.Rational (native_mk_rational 0 1))) SmtTerm.None)
   | (Term.Apply (Term.Apply (Term.UOp UserOp.forall) Term.__eo_List_nil) x1) => SmtTerm.None
   | (Term.Apply (Term.Apply (Term.UOp UserOp.forall) x1) x2) => (SmtTerm.not (__eo_to_smt_exists x1 (SmtTerm.not (__eo_to_smt x2))))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.exists) Term.__eo_List_nil) x1) => SmtTerm.None
