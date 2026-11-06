@@ -1,47 +1,23 @@
-; What each symbol of SMT-LIB means to a model, said in the deep embedding: the
-; SMT-LIB half of a model is compiled from this. For each symbol it gives the
-; constructor $emb_sm.X of the embedding together with the macro $sm_X that
-; applies it, the cases X contributes to $smtx_typeof and to $smtx_model_eval
-; (as $eoc_typeof_X and $eoc_eval_X), and the auxiliary programs those cases
-; call. A block also comes after the ones its cases name.
+; What each symbol of SMT-LIB means to a model, written in the deep embedding.
+; The model semantics of Logos is compiled from this file and Cpc.eos, which says
+; how the symbols of CPC translate into these. What this file says is what a model
+; of any input means, and nothing in it depends on the input.
 ;
-; It gives the *types* its terms are of as well, in the section below the
-; vocabulary: the constructor $emb_tsm.X and its macro $tsm_X, and what each
-; type says about itself to the three programs written over the types.
+; For each symbol it gives how the symbol is typed and evaluated, with the
+; auxiliary programs those cases call. A block comes after the ones its cases
+; name. For each type, in the section below the vocabulary, it gives what the type
+; says about itself, such as whether it is well-formed and what its default value
+; is. It also gives the programs over the maps and sequences that values are built
+; from, each beside the sort it belongs to. The declarations of those shapes come
+; from the compiler rather than from this file.
 ;
-; It gives the programs written over the shapes a value is built over -- the
-; map an array and a set are, the sequence a string is -- which look one up,
-; type one and say whether one is written the one way. Each stands beside the
-; sort it belongs to. What such a shape *is* it does not say: a set writes what
-; a theory does with the embedding and never what the embedding is, so the
-; declaration of $smt_Map and of the constructors that build one stands in
-; plugins/model_smt/model_smt.eo.
+; The file is organized with one theory to a section. It started as a copy of
+; tools/eoc/semantics/smt.eos in the ethos tree and is maintained here, and it has
+; to stay compatible with the pinned compiler; see install/README.md.
 ;
-; This is the target of the compilation: every input is compiled through it, so
-; what it says is what a model of any input means, and nothing about an input
-; is asked of it.
-
-; This is a configuration of the eoc pipeline rather than anything a stage of it
-; reads. tools/eoc/compiler/sem_compile.py compiles it, before any stage runs,
-; into tools/eoc/out/smt_defs.eo and tools/eoc/out/smt_termination.lean, both
-; generated in full: what is to be changed is here. A run names another with
-; --smt-semantics, and that one compiles to these same two files in place of
-; this set. See https://github.com/ajreynol/eunoia/blob/main/tools/sapheneia/docs/eos.md
+; install/install-cpc.sh compiles this file by default, and --smt-semantics names
+; another. See https://github.com/ajreynol/eunoia/blob/main/tools/sapheneia/docs/eos.md
 ; for the language.
-;
-; The whole of the set stands here, one theory to a section, in the order the
-; blocks are emitted.
-;
-; What the set compiles to, and the shape of what it writes, it does not say:
-; this semantics is the target of the compilation, so both are fixed by the
-; tool. See tools/eoc/compiler/sem_target.py.
-;
-; A definitions file is ordered so that a symbol follows the ones its cases
-; name, and each set keeps an order of its own: this one has div_total before
-; div where the signature of the input has the reverse.
-;
-; There is no file of the datatypes or the quantifiers of the input, since the
-; SMT-LIB signature has nothing to say about them.
 
 ;-----------------------------------------------------------------------------
 (section "The vocabulary of the embedding")

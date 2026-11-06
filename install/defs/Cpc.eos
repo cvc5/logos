@@ -1,30 +1,15 @@
-; What each symbol of the input becomes, said as a transformation into the deep
-; embedding: the other half of a model is compiled from this. For each symbol
-; it gives the cases X contributes to $eo_to_smt (as $eoc_transform_X), or, for
-; a type constructor, to $eo_to_smt_type (as $eoc_transform_type_X). It
-; declares no constant: the constants are those of the SMT-LIB signature, see
-; tools/eoc/out/smt_defs.eo.
+; What each symbol of CPC becomes, written as a transformation into the deep
+; embedding. The model semantics of Logos is compiled from this file and smt.eos,
+; which says what the symbols of SMT-LIB mean. For each symbol of CPC this file
+; gives the cases it contributes to $eo_to_smt, or, for a type constructor, to
+; $eo_to_smt_type. It declares no constants: those are the ones smt.eos gives.
 ;
-; This is the semantics of CPC and this file is where it lives. The development
-; copy under tools/eoc/semantics in the ethos tree is also a compiler fixture;
-; scripts/bump-eoc-version.py synchronizes this file from that copy when the
-; pinned compiler is advanced.
-
-; This is a configuration of the eoc pipeline rather than anything a stage of it
-; reads. tools/eoc/compiler/sem_compile.py compiles it, before any stage runs,
-; into tools/eoc/out/user_defs.eo and tools/eoc/out/user_termination.lean,
-; both generated in full: what is to be changed is here. A run names another
-; with --semantics, and that one compiles to these same two files in place of
-; this set. See https://github.com/ajreynol/eunoia/blob/main/tools/sapheneia/docs/eos.md
+; This is the semantics of CPC and this file is where it lives, organized with one
+; theory to a section; see install/README.md.
+;
+; install/install-cpc.sh compiles this file by default, and --semantics names
+; another. See https://github.com/ajreynol/eunoia/blob/main/tools/sapheneia/docs/eos.md
 ; for the language.
-;
-; The whole of the set stands here, one theory to a section, in the order the
-; blocks are emitted.
-;
-; What the set compiles to, and the shape of what it writes, it does not say:
-; the stage reads one signature of the input whichever input a run compiles and
-; the plugin has no signature of its own, so both are fixed by the tool. See
-; tools/eoc/compiler/sem_target.py.
 
 ;-----------------------------------------------------------------------------
 (section "The vocabularies of the two layers")
