@@ -8,6 +8,7 @@ install/install-cpc.sh       regenerate Cpc, and with --all CpcMini too
 install/install-sig.sh       compile one signature into one package
 install/get-eo-compiler.sh   fetch and build the compiler
 install/defs/Cpc.eos         what the symbols of CPC mean, kept in git
+install/defs/smt.eos         what the symbols of SMT-LIB mean, kept in git
 install/defs/Cpc.cached.eo   the signature they compile, kept in git
 install/deps/                the Ethos tree and the compiler, ignored by git
 ```
@@ -135,9 +136,7 @@ that updates the copy.
 
 `install/defs/Cpc.eos` says what each symbol of the signature means, as a
 transformation into the deep embedding, and this repository is where it lives.
-The core SMT-LIB semantics it is written against live with the eoc compiler
-rather than here: `tools/eoc/semantics/smt.eos` in
-[cvc5/ethos](https://github.com/cvc5/ethos).
+`install/defs/smt.eos` gives the core SMT-LIB semantics it is written against.
 
 `Spec.lean` and the `SmtModel` modules are what the two compile to, so changing
 what CPC means changes what satisfiability means in Logos.
@@ -168,8 +167,7 @@ install/install-cpc.sh ~/cvc5/proofs/eo/cpc/Cpc.eo \
 
 This regenerates the Logos source against something other than the pair the
 checked-in packages are of, so `--check` reports the tree as out of date until
-the change lands in `install/defs/Cpc.eos` and in the `smt.eos` of the pinned
-compiler.
+the change lands in `install/defs/Cpc.eos` and `install/defs/smt.eos`.
 
 ## install-sig.sh
 
@@ -201,8 +199,13 @@ then runs `get-eo-compiler.sh` and
 `install/install-cpc.sh --all --cached`, regenerating both `Cpc` and `CpcMini`.
 The full commit hash is recorded, so later installations use that revision even
 after `main` advances. The helper does not fetch a new CPC signature or run the
-Lean proof checks, and it does not modify the CPC semantics in
-`install/defs/Cpc.eos`, which is maintained in Logos.
+Lean proof checks, and it does not modify `install/defs/Cpc.eos` or
+`install/defs/smt.eos`, which are maintained in Logos.
+
+`smt.eos` is written against declarations the compiler keeps, such as the shape
+of a map in `plugins/model_smt/model_smt.eo`, so it has to stay compatible with
+the pinned compiler. When moving the pin, compare `install/defs/smt.eos` with
+`tools/eoc/semantics/smt.eos` at the new commit and bring over what has changed.
 
 The Eunoia signature that Logos is compiled against is pinned by copy:
 `install/defs/Cpc.cached.eo` is the one the packages were compiled from, and

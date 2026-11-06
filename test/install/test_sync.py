@@ -60,6 +60,7 @@ class SynchronizationTests(unittest.TestCase):
         for script in ENTRY_POINTS:
             shutil.copy2(REPO_ROOT / "install" / script, install / script)
         (install / "defs" / "Cpc.eos").write_text("; fixture semantics\n")
+        (install / "defs" / "smt.eos").write_text("; fixture SMT-LIB semantics\n")
         self.cache = install / "defs" / "Cpc.cached.eo"
 
         self.source = self.root / "signature" / "Cpc.eo"
