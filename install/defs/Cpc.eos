@@ -1051,7 +1051,7 @@
 ; The text is Lean and is appended to the definition as it stands.
 ;
 ; It may not name the native layer, for the reason the same section of
-; semantics/smt.eos gives.
+; smt.eos gives.
 
 ; Distinctness of a list of values is decided by walking the list and, at each
 ; element, the rest of it, so the measure is the size of the two lists.
