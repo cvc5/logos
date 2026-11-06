@@ -1892,23 +1892,28 @@ def __upoly_derivative : Term -> Term
   | _ => Term.Stuck
 
 
-def __upoly_monomial : Term -> Term -> Term
-  | Term.Stuck , _  => Term.Stuck
-  | _ , Term.Stuck  => Term.Stuck
-  | c, (Term.Numeral 0) => (__eo_ite (__eo_and (Term.Boolean true) (__eo_is_eq c (Term.Rational (native_mk_rational 0 1)))) (Term.UOp UserOp._at__at_upoly_zero) (__eo_cons (Term.UOp UserOp._at__at_upoly) c (Term.UOp UserOp._at__at_upoly_zero)))
-  | c, k =>
-    let _v0 := (__upoly_monomial c (__eo_add k (Term.Numeral (-1 : native_Int))))
+def __upoly_monomial : Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , Term.Stuck  => Term.Stuck
+  | c, (Term.Numeral 0), f => (__eo_ite (__eo_and (Term.Boolean true) (__eo_is_eq c (Term.Rational (native_mk_rational 0 1)))) (Term.UOp UserOp._at__at_upoly_zero) (__eo_cons (Term.UOp UserOp._at__at_upoly) c (Term.UOp UserOp._at__at_upoly_zero)))
+  | c, k, (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_upoly) x) f) =>
+    let _v0 := (__upoly_monomial c (__eo_add k (Term.Numeral (-1 : native_Int))) f)
     (__eo_ite (__eo_and (__eo_is_eq _v0 (Term.UOp UserOp._at__at_upoly_zero)) (Term.Boolean true)) (Term.UOp UserOp._at__at_upoly_zero) (__eo_cons (Term.UOp UserOp._at__at_upoly) (Term.Rational (native_mk_rational 0 1)) _v0))
+  | _, _, _ => Term.Stuck
 
 
-def __upoly_divides : Term -> Term -> Term
-  | Term.Stuck , _  => Term.Stuck
-  | _ , Term.Stuck  => Term.Stuck
-  | b, (Term.UOp UserOp._at__at_upoly_zero) => (Term.Boolean true)
-  | b, a =>
+def __upoly_divides_rec : Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , Term.Stuck  => Term.Stuck
+  | b, (Term.UOp UserOp._at__at_upoly_zero), f => (Term.Boolean true)
+  | b, a, (Term.UOp UserOp._at__at_upoly_zero) => (Term.Boolean false)
+  | b, a, (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_upoly) x) f) =>
     let _v0 := (__upoly_deg b)
     let _v1 := (__upoly_deg a)
-    (__eo_ite (__eo_gt _v0 _v1) (Term.Boolean false) (__upoly_divides b (__upoly_add a (__upoly_mul (__upoly_monomial (__eo_neg (__eo_qdiv (__upoly_lc a) (__upoly_lc b))) (__eo_add _v1 (__eo_neg _v0))) b))))
+    (__eo_ite (__eo_gt _v0 _v1) (Term.Boolean false) (__upoly_divides_rec b (__upoly_add a (__upoly_mul (__upoly_monomial (__eo_neg (__eo_qdiv (__upoly_lc a) (__upoly_lc b))) (__eo_add _v1 (__eo_neg _v0)) a) b)) f))
+  | _, _, _ => Term.Stuck
 
 
 def __upoly_rem_seq_chain : Term -> Term -> Term -> Term
@@ -2070,7 +2075,7 @@ def __cov_is_root : Term -> Term -> Term -> Term
   | _ , _ , Term.Stuck  => Term.Stuck
   | p, (Term.UOp4 UserOp4._at_ran q a b s), st =>
     let _v0 := (__upoly_of_list q)
-    (__eo_ite (__upoly_divides _v0 p) (Term.Boolean true) (__eo_ite (__upoly_rem_seq_check _v0 (__upoly_mul (__upoly_derivative _v0) p) st) (__eo_is_eq (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values st a)) (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values st b))) (Term.Boolean false)))
+    (__eo_ite (__upoly_divides_rec _v0 p p) (Term.Boolean true) (__eo_ite (__upoly_rem_seq_check _v0 (__upoly_mul (__upoly_derivative _v0) p) st) (__eo_is_eq (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values st a)) (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values st b))) (Term.Boolean false)))
   | p, e, st => (__eo_ite (__eo_and (__eo_is_q e) (__eo_is_eq st Term.__eo_List_nil)) (__eo_is_eq (__upoly_eval p e) (Term.Rational (native_mk_rational 0 1))) (Term.Boolean false))
 
 

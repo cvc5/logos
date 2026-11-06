@@ -1770,31 +1770,36 @@
   (($upoly_derivative (@upoly a p))  ($upoly_derivative_rec p 1/1))
   )
 )
-(program $upoly_monomial ((c Real) (k Int))
-  :signature (Real Int) @UPoly
+(program $upoly_monomial ((c Real) (k Int) (x Real) (f @UPoly :list))
+  :signature (Real Int @UPoly) @UPoly
   (
-  (($upoly_monomial c 0)  ($upoly_cons c @upoly.zero))
-  (($upoly_monomial c k)  ($upoly_cons 0/1 ($upoly_monomial c (eo::add k -1))))
+  (($upoly_monomial c 0 f)            ($upoly_cons c @upoly.zero))
+  (($upoly_monomial c k (@upoly x f))
+    ($upoly_cons 0/1 ($upoly_monomial c (eo::add k -1) f)))
   )
 )
-(program $upoly_divides ((a @UPoly) (b @UPoly))
-  :signature (@UPoly @UPoly) Bool
+(program $upoly_divides_rec ((a @UPoly) (b @UPoly) (x Real) (f @UPoly :list))
+  :signature (@UPoly @UPoly @UPoly) Bool
   (
-  (($upoly_divides b @upoly.zero)  true)
-  (($upoly_divides b a)
+  (($upoly_divides_rec b @upoly.zero f)  true)
+  (($upoly_divides_rec b a @upoly.zero)  false)
+  (($upoly_divides_rec b a (@upoly x f))
     (eo::define ((da ($upoly_deg a)))
     (eo::define ((db ($upoly_deg b)))
     (eo::ite (eo::gt db da)
       false
-      ($upoly_divides b
+      ($upoly_divides_rec b
         ($upoly_add a
           ($upoly_mul
             ($upoly_monomial
               (eo::neg (eo::qdiv ($upoly_lc a) ($upoly_lc b)))
-              (eo::add da (eo::neg db)))
-            b)))))))
+              (eo::add da (eo::neg db))
+              a)
+            b))
+        f)))))
   )
 )
+(define $upoly_divides ((b @UPoly) (a @UPoly)) ($upoly_divides_rec b a a))
 (program $upoly_rem_seq_chain ((a @UPoly) (b @UPoly) (ql @List) (cl @List) (s @List :list))
   :signature (@UPoly @UPoly @List) Bool
   (
