@@ -855,7 +855,7 @@ theorem chainModel_total_typed (H : SmtTerm) :
       intro M hM hWf
       have hWfHead : __smtx_type_wf (__eo_to_smt_type T) = true :=
         hWf (s, T) (List.Mem.head _)
-      obtain ⟨hTy, hCan⟩ := tchoice_typed_canonical_of_wf M s (__eo_to_smt_type T)
+      obtain ⟨hTy, hCan⟩ := tchoice_typed_canonical_of_wf M hM.2.2.2 s (__eo_to_smt_type T)
         (smtExistsList vs H) hWfHead
       exact ih _
         (model_total_typed_push hM s (__eo_to_smt_type T) _ hWfHead hTy
@@ -1259,7 +1259,7 @@ theorem qskol_eval_eq_chainValue (M : SmtModel) (H : SmtTerm) :
             intro pv hpv hMem
             exact distinctList_append_disjoint hD _ (List.mem_map_of_mem hpv)
               (List.Mem.tail _ hMem)
-          obtain ⟨hCTy, hCCan⟩ := tchoice_typed_canonical_of_wf L s
+          obtain ⟨hCTy, hCCan⟩ := tchoice_typed_canonical_of_wf L hL.2.2.2 s
             (__eo_to_smt_type T) (smtExistsList vs H) hWfHead
           have hL' : model_wf
               (native_model_push L s (__eo_to_smt_type T)
