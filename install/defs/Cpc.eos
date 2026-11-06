@@ -920,22 +920,48 @@
 (define-symbol @const ((! i :raw) (! u :type))
   :term ("ite" ($eo_to_smt_nat_is_valid i) (UConst ("const_id" ($eo_to_smt_nat i)) u) none))
 
-; The proof-level binder of CPC, together with the methods and the rule that
-; reduce an application of one. SMT-LIB gives these no meaning at all, so
-; instead of a model each says it is left out of the compilation altogether:
-; the desugar stage drops what an exclusion names, and what never reaches the
-; model-smt stage needs no case at all. See Desugar::echo for what it does with
-; them and Pipeline.defs_excludes in tools/eoc/driver.py for how they are taken
-; from the generated file.
-;
-; No dependency closure is computed, so what dropping the binder would leave
-; behind says so for itself: a method of the signature is written out with
-; define-method and a proof rule with define-rule, and each is left out on the
-; same terms as the symbol.
-(define-symbol lambda ()
-  :exclude)
+;-----------------------------------------------------------------------------
+(section "Syntax-only lambdas")
+;-----------------------------------------------------------------------------
 
-(define-method $get_lambda_type :exclude)
+; -- lambda
+; A unary application is a semantic bind: the actual is evaluated before
+; entering the body, so substitution and variable renaming are unnecessary. An
+; ordinary body type deliberately leaves partial applications unsupported.
+(program $eo_to_smt_lambda_apply
+  ((s <string>) (T SmtType) (body SmtTerm) (f SmtTerm) (arg SmtTerm))
+  :signature (SmtTerm SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_lambda_apply (Lambda s T body) arg)
+    ("ite"
+      ("and" (smt.type_wf_component T)
+        ("and" ("Teq" T (smt.typeof arg))
+          ("not" ("Teq" (smt.typeof body) none))))
+      (bind s T arg body)
+      none))
+  (($eo_to_smt_lambda_apply f arg) (apply f arg))
+  )
+)
+
+; A CPC binder list becomes nested unary syntax-only lambdas. Empty lists
+; denote the body, as in $get_lambda_type; malformed lists have no translation.
+(program $eo_to_smt_lambda
+  ((s <string>) (T $eo_Term) (vs $eo_List) (body SmtTerm))
+  :signature ($eo_List SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_lambda eo.list_nil body) body)
+  (($eo_to_smt_lambda (eo.list_cons (eo.var (eo.string s) T) vs) body)
+    (Lambda s T ($eo_to_smt_lambda vs body)))
+  (($eo_to_smt_lambda vs body) none)
+  )
+)
+
+(define-symbol lambda ((! vs :raw) body arg)
+  :term (lambda vs body arg) ($eo_to_smt_lambda_apply ($eo_to_smt_lambda vs body) arg)
+  :term (lambda vs body) ($eo_to_smt_lambda vs body))
+
+; Translation eliminates lambda applications. Enabling CPC's beta-reduce
+; proof rule and its proof-level helpers is a separate extension.
 
 (define-method $beta_reduce_type :exclude)
 

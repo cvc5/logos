@@ -1028,6 +1028,13 @@ decreasing_by
 (section "The core symbols")
 ;-----------------------------------------------------------------------------
 
+; A lambda is syntax for translation and for operators that consume a raw
+; operand. It has no ordinary SMT type or semantic value: those aggregates
+; deliberately fall through to none and smt.not_value.
+(declare-constructor Lambda
+  ((s <string>) (T SmtType) (body SmtTerm))
+  :builds SmtTerm)
+
 ; The core symbols.
 ;
 ; Most are a Boolean operator whose type is what `of2` says -- both arguments
