@@ -5,7 +5,7 @@ import all CpcMini.Proofs.ModelEval
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -25,7 +25,7 @@ declaration lists.  That is exactly the condition under which generated
 defaults are used by the model.
 -/
 
-private theorem type_default_canonical_kernel : ∀ T : SmtType,
+private theorem type_default_canonical_kernel (huc : usort_dom_wf uc) : ∀ T : SmtType,
     __smtx_inhabited_type T = true →
     __smtx_type_wf_rec T = true →
     __smtx_value_canonical uc (__smtx_type_default T) = true := by
@@ -116,9 +116,7 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
       exact h.2
     simpa [__smtx_type_default] using ih hDecl
   · intro u _ _
-    rcases Nat.eq_zero_or_pos (uc u) with h | h <;>
-      simp [__smtx_type_default, __smtx_value_canonical, native_usort_card, native_or,
-        native_nateq, native_natlt, h]
+    simp [__smtx_type_default, __smtx_value_canonical, native_usort_mem, (huc u).1]
   · intros
     simp [__smtx_type_default, __smtx_value_canonical]
   · intro T h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 _hInh hRec
@@ -196,18 +194,18 @@ private theorem type_default_canonical_kernel : ∀ T : SmtType,
     · simpa [__smtx_field_type_default, hnotref] using ih hInh hRec
 
 /-- A recursively well-formed inhabited type has a typed, canonical default. -/
-theorem type_default_kernel (T : SmtType)
+theorem type_default_kernel (huc : usort_dom_wf uc) (T : SmtType)
     (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
     __smtx_value_canonical uc (__smtx_type_default T) = true :=
-  ⟨type_default_typed T hInh hRec, type_default_canonical_kernel T hInh hRec⟩
+  ⟨type_default_typed T hInh hRec, type_default_canonical_kernel huc T hInh hRec⟩
 
 /-- A recursively well-formed inhabited default value is canonical. -/
-theorem type_default_canonical_of_inhabited_wf_rec (T : SmtType)
+theorem type_default_canonical_of_inhabited_wf_rec (huc : usort_dom_wf uc) (T : SmtType)
     (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_value_canonical uc (__smtx_type_default T) = true :=
-  type_default_canonical_kernel T hInh hRec
+  type_default_canonical_kernel huc T hInh hRec
 
 end Smtm

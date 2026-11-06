@@ -9,7 +9,7 @@ import all Cpc.Proofs.TypePreservation.Helpers
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval
@@ -40,7 +40,7 @@ theorem eo_to_smt_eq_eq (x y : Term) :
 theorem model_eval_eo_to_smt_canonical
     (M : SmtModel) (hM : model_wf M) (t : Term)
     (hTrans : eo_has_smt_translation t) :
-    value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (__eo_to_smt t)) := by
   exact Smtm.model_eval_canonical M hM (__eo_to_smt t) (by
     simpa [eo_has_smt_translation, term_has_non_none_type] using hTrans)
 

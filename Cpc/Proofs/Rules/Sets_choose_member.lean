@@ -17,16 +17,16 @@ set_option maxHeartbeats 10000000
 
 /-- Choosing from a nonempty canonical set finds a true entry. -/
 private theorem choose_mem_of_ne_empty
-    {M : SmtModel}
+    {M : SmtModel} (huc : usort_dom_wf M.usortDom)
     (m : SmtMap) (A : SmtType)
     (hTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool)
-    (hCan : __smtx_map_canonical M.usortCard m = true)
+    (hCan : __smtx_map_canonical M.usortDom m = true)
     (hDef : __smtx_map_get_default m = SmtValue.Boolean false)
     (hNe : m ≠ SmtMap.default A (SmtValue.Boolean false)) :
     __smtx_map_lookup m
       (native_eval_map_diff M m (SmtMap.default A (SmtValue.Boolean false))) =
         SmtValue.Boolean true := by
-  have hDiff := RuleProofs.map_diff_selects_model_eval_eq_false_of_default_eq
+  have hDiff := RuleProofs.map_diff_selects_model_eval_eq_false_of_default_eq huc
     m (SmtMap.default A (SmtValue.Boolean false)) A SmtType.Bool
     hTy (by simp [__smtx_typeof_map_value, __smtx_typeof_value])
     hCan (set_empty_map_canonical A) hDef (by decide)
@@ -104,7 +104,7 @@ private theorem choose_member_properties
   have hmTy : __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool :=
     set_map_value_typed (by simpa [hm] using hValTy)
   have hCan := RuleProofs.model_eval_eo_to_smt_canonical M hM a haTrans
-  have hParts : __smtx_map_canonical M.usortCard m = true ∧
+  have hParts : __smtx_map_canonical M.usortDom m = true ∧
       native_veq (__smtx_map_get_default m) (SmtValue.Boolean false) = true := by
     simpa [hm, value_canonical, __smtx_value_canonical, SmtEval.native_and] using hCan
   have hmCan := hParts.1
@@ -134,7 +134,7 @@ private theorem choose_member_properties
   · rw [hb, hEmpty]
     cases b <;> simp [__smtx_model_eval_eq, native_veq, __smtx_model_eval_or,
       __smtx_model_eval, native_or]
-  · rw [choose_mem_of_ne_empty m A hmTy hmCan hmDef hEmpty]
+  · rw [choose_mem_of_ne_empty hM.2.2.2 m A hmTy hmCan hmDef hEmpty]
     simp [__smtx_model_eval_eq, native_veq, hEmpty, __smtx_model_eval_or,
       __smtx_model_eval, native_or]
 

@@ -7,7 +7,7 @@ import all Cpc.Proofs.Canonical.Order
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -364,7 +364,7 @@ private theorem typed_bitvec_shape (v : SmtValue) (w : Nat)
 
 private theorem typed_usort_shape (v : SmtValue) (u : native_Nat)
     (h : __smtx_typeof_value v = SmtType.USort u) :
-    ∃ n : native_Nat, v = SmtValue.UValue u n := by
+    ∃ n : ModelId, v = SmtValue.UValue u n := by
   cases v with
   | UValue i n =>
       simp [__smtx_typeof_value] at h
@@ -907,14 +907,12 @@ theorem unit_type_values_default
       simp [__smtx_is_unit_type, __smtx_type_bounded, native_and,
         native_not] at hUnit
   | USort u =>
-      have hOne : uc u = 1 := (smtx_is_unit_type_usort_iff u).mp hUnit
+      have hOne : uc u = {0} := (smtx_is_unit_type_usort_iff u).mp hUnit
       intro v hTy hCan
-      rcases typed_usort_shape v u hTy with ⟨n, rfl⟩
-      have hLt : n < 1 := by
-        rcases (smtx_value_canonical_uvalue_iff u n).mp hCan with h | h
-        · rw [hOne] at h; cases h
-        · rwa [hOne] at h
-      have hZero : n = 0 := Nat.lt_one_iff.mp hLt
+      rcases typed_usort_shape v u hTy with ⟨r, rfl⟩
+      have hMem : r ∈ uc u := (smtx_value_canonical_uvalue_iff u r).mp hCan
+      rw [hOne] at hMem
+      have hZero : r = 0 := Set.mem_singleton_iff.mp hMem
       subst hZero
       simp [__smtx_type_default]
   | BitVec w =>
@@ -1494,7 +1492,7 @@ private theorem dt_resolve_nth_inv (dd : SmtDatatypeDecl) :
       rcases dt_resolve_nth_inv dd d k cr h' with ⟨c', hnth, hcr⟩
       exact ⟨c', by simpa [dt_nth_cons] using hnth, hcr⟩
 
-private def covers_fields (uc : native_Nat -> native_Nat) : List (List SmtValue) → List SmtType → Prop
+private def covers_fields (uc : SmtUSortDom) : List (List SmtValue) → List SmtType → Prop
   | [], [] => True
   | L :: Ls, U :: Us =>
       (∀ v : SmtValue, __smtx_typeof_value v = U →
@@ -1707,15 +1705,12 @@ theorem finite_type_enumerable
   | Seq T =>
       simp [__smtx_is_finite_type, __smtx_type_bounded] at hFin
   | USort u =>
-      have hNe0 : uc u ≠ 0 := (smtx_is_finite_type_usort_iff u).mp hFin
-      refine ⟨(List.range (uc u)).map (fun n => SmtValue.UValue u n), ?_⟩
+      have hDomFin := (smtx_is_finite_type_usort_iff u).mp hFin
+      refine ⟨hDomFin.toFinset.toList.map (fun r => SmtValue.UValue u r), ?_⟩
       intro v hTy hCan
-      rcases typed_usort_shape v u hTy with ⟨n, rfl⟩
-      have hLt : n < uc u := by
-        rcases (smtx_value_canonical_uvalue_iff u n).mp hCan with h | h
-        · exact absurd h hNe0
-        · exact h
-      simp [hLt]
+      rcases typed_usort_shape v u hTy with ⟨r, rfl⟩
+      have hMem : r ∈ uc u := (smtx_value_canonical_uvalue_iff u r).mp hCan
+      simp [hMem]
   | Bool =>
       refine ⟨[SmtValue.Boolean false, SmtValue.Boolean true], ?_⟩
       intro v hTy hCan

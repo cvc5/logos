@@ -9,7 +9,7 @@ import all Cpc.Proofs.Closed.IsClosedRec
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval
@@ -389,7 +389,7 @@ private theorem eval_forall_encoding_true
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T →
-        __smtx_value_canonical M.usortCard v = true →
+        __smtx_value_canonical M.usortDom v = true →
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval M
@@ -399,7 +399,7 @@ private theorem eval_forall_encoding_true
   have hNoSat :
       ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v)
             (SmtTerm.not body) = SmtValue.Boolean true := by
     rintro ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -412,7 +412,7 @@ private theorem eval_forall_encoding_true
     change (if _h :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-          __smtx_value_canonical M.usortCard v = true ∧
+          __smtx_value_canonical M.usortDom v = true ∧
           __smtx_model_eval (native_model_push M s T v)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -434,7 +434,7 @@ private theorem eval_exists_is_boolean
     (if _h :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true then
       SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -442,7 +442,7 @@ private theorem eval_exists_is_boolean
   by_cases h :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true
   · exact ⟨true, dite_eq_left h⟩

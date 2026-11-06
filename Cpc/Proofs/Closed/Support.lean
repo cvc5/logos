@@ -10,7 +10,7 @@ import all Cpc.Proofs.RuleSupport.Contract
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval
@@ -54,7 +54,7 @@ by
       simp [native_model_lookup, model_key, native_model_push],
     by
       intro fid A B
-      simp [model_fun_lookup, model_key, native_model_push],
+      simp [model_fun_lookup, native_model_push],
     rfl⟩
 
 theorem model_agrees_on_globals_push₂
@@ -70,13 +70,13 @@ by
         using hAgree.1 s' T',
     by
       intro fid A B
-      simpa [model_fun_lookup, model_key, native_model_push]
+      simpa [model_fun_lookup, native_model_push]
         using hAgree.2 fid A B,
-    hAgree.usortCard⟩
+    hAgree.usortDom⟩
 
 /-- `map_diff` reads its model only through the cardinalities of uninterpreted sorts. -/
-theorem smtx_model_eval_map_diff_eq_of_usortCard
-    {M N : SmtModel} (hCard : M.usortCard = N.usortCard) (a b : SmtValue) :
+theorem smtx_model_eval_map_diff_eq_of_usortDom
+    {M N : SmtModel} (hCard : M.usortDom = N.usortDom) (a b : SmtValue) :
   __smtx_map_diff M a b = __smtx_map_diff N a b :=
 by
   obtain ⟨vM, fM, cM⟩ := M
@@ -118,7 +118,7 @@ by
 theorem native_model_fun_lookup_eq_of_env
     {vars : List SmtVarKey} {M N : SmtModel}
     (hAgree : model_agrees_on_env vars M N)
-    (fid : native_String) (T U : SmtType) :
+    (fid : ModelId) (T U : SmtType) :
   model_fun_lookup M fid T U =
     model_fun_lookup N fid T U :=
 by
@@ -136,7 +136,7 @@ by
 
 theorem native_eval_fun_apply_eq_of_globals
     {M N : SmtModel} (hAgree : model_agrees_on_globals M N)
-    (fid : native_String) (T U : SmtType) (i : SmtValue) :
+    (fid : ModelId) (T U : SmtType) (i : SmtValue) :
   native_eval_fun_apply M fid T U i =
     native_eval_fun_apply N fid T U i :=
 by
@@ -183,7 +183,7 @@ by
 
 theorem native_eval_texists_eq_of_body_eval_eq
     {M N : SmtModel} {s : native_String} {T : SmtType} {body : SmtTerm}
-    (hCard : M.usortCard = N.usortCard)
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
@@ -194,12 +194,12 @@ by
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical N.usortCard v = true ∧
+        __smtx_value_canonical N.usortDom v = true ∧
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -219,7 +219,7 @@ by
 
 theorem native_eval_tforall_eq_of_body_eval_eq
     {M N : SmtModel} {s : native_String} {T : SmtType} {body : SmtTerm}
-    (hCard : M.usortCard = N.usortCard)
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
@@ -230,12 +230,12 @@ by
   let PM : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical M.usortCard v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PN : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical N.usortCard v = true ->
+        __smtx_value_canonical N.usortDom v = true ->
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -253,7 +253,7 @@ by
 
 theorem native_eval_tchoice_eq_of_body_eval_eq
     {M N : SmtModel} {s : native_String} {T : SmtType} {body : SmtTerm}
-    (hCard : M.usortCard = N.usortCard)
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
@@ -264,14 +264,14 @@ by
   rw [← hCard]
   let PredM : SmtValue -> Prop := fun v =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PredN : SmtValue -> Prop := fun v =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   let PTy : Prop :=
-    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical M.usortCard v
+    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical M.usortDom v
   change
     (if hSat : ∃ v : SmtValue, PredM v then Classical.choose hSat
       else if hTy : PTy then Classical.choose hTy else SmtValue.NotValue) =
@@ -7334,7 +7334,7 @@ by
 theorem smtx_model_eval_exists_eq_of_body_eval_eq
     {M N : SmtModel} {s : native_String} {T : SmtType}
     {body : SmtTerm}
-    (hCard : M.usortCard = N.usortCard)
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
@@ -7346,7 +7346,7 @@ by
 theorem smtx_model_eval_forall_eq_of_body_eval_eq
     {M N : SmtModel} {s : native_String} {T : SmtType}
     {body : SmtTerm}
-    (hCard : M.usortCard = N.usortCard)
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
@@ -7551,19 +7551,19 @@ by
           (hRec (by simp <;> omega) hClosed.1 hAgree)
           (hRec (by simp) hClosed.2 hAgree)
       case «exists» s T body =>
-        exact smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortCard
+        exact smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortDom
           (fun v =>
             hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
       case «forall» s T body =>
-        exact smtx_model_eval_forall_eq_of_body_eval_eq hAgree.globals.usortCard
+        exact smtx_model_eval_forall_eq_of_body_eval_eq hAgree.globals.usortDom
           (fun v =>
             hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
       case choice s T body =>
         rw [smtx_model_eval_choice_eq M s T body,
           smtx_model_eval_choice_eq N s T body]
-        exact native_eval_tchoice_eq_of_body_eval_eq hAgree.globals.usortCard
+        exact native_eval_tchoice_eq_of_body_eval_eq hAgree.globals.usortDom
           (fun v =>
             hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
@@ -7677,7 +7677,7 @@ by
           hEvalSame _ hClosed.2.1 (by simp <;> omega),
           hEvalSame _ hClosed.2.2 (by simp <;> omega)]
       all_goals try
-        simp [smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard]
+        simp [smtx_model_eval_map_diff_eq_of_usortDom hAgree.globals.usortDom]
       all_goals try
         simp [hAgree.globals.1, hAgree.globals.2,
           smtx_model_eval_apply_eq_of_globals hAgree.globals,

@@ -6,7 +6,7 @@ import all Cpc.Proofs.TypePreservation.Common
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -342,7 +342,7 @@ private theorem native_eval_map_diff_msm_typed
   by_cases hDiff :
       ∃ i : SmtValue,
         __smtx_typeof_value i = A ∧
-          __smtx_value_canonical M.usortCard i = true ∧
+          __smtx_value_canonical M.usortDom i = true ∧
           native_veq (__smtx_map_lookup m1 i) (__smtx_map_lookup m2 i) = false
   · simpa [hDiff] using (Classical.choose_spec hDiff).1
   · simpa [hDiff] using hDefault
@@ -353,18 +353,18 @@ private theorem native_eval_map_diff_msm_canonical
     {A B : SmtType}
     (hm1 : __smtx_typeof_map_value m1 = SmtType.Map A B)
     (hm2 : __smtx_typeof_map_value m2 = SmtType.Map A B)
-    (hDefault : value_canonical M.usortCard (__smtx_type_default A)) :
-    value_canonical M.usortCard (native_eval_map_diff M m1 m2) := by
+    (hDefault : value_canonical M.usortDom (__smtx_type_default A)) :
+    value_canonical M.usortDom (native_eval_map_diff M m1 m2) := by
   classical
-  change value_canonical M.usortCard (native_eval_map_diff M m1 m2)
+  change value_canonical M.usortDom (native_eval_map_diff M m1 m2)
   rw [hm1, hm2]
   simp [native_ite, native_Teq, SmtEval.native_and]
   by_cases hDiff :
       ∃ i : SmtValue,
         __smtx_typeof_value i = A ∧
-          __smtx_value_canonical M.usortCard i = true ∧
+          __smtx_value_canonical M.usortDom i = true ∧
           native_veq (__smtx_map_lookup m1 i) (__smtx_map_lookup m2 i) = false
-  · have hCan : value_canonical M.usortCard (Classical.choose hDiff) := by
+  · have hCan : value_canonical M.usortDom (Classical.choose hDiff) := by
       simpa [value_canonical] using (Classical.choose_spec hDiff).2.1
     simpa [hDiff] using hCan
   · simpa [hDiff] using hDefault
@@ -421,10 +421,10 @@ theorem model_eval_map_diff_canonical
     (hDefault :
       ∀ {A : SmtType},
         __smtx_typeof (SmtTerm.map_diff t1 t2) = A ->
-          value_canonical M.usortCard (__smtx_type_default A))
+          value_canonical M.usortDom (__smtx_type_default A))
     (hpres1 : __smtx_typeof_value (__smtx_model_eval M t1) = __smtx_typeof t1)
     (hpres2 : __smtx_typeof_value (__smtx_model_eval M t2) = __smtx_typeof t2) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.map_diff t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.map_diff t1 t2)) := by
   rcases map_diff_args_of_non_none ht with hMap | hSet
   · rcases hMap with ⟨A, B, h1, h2, hTy⟩
     rw [show __smtx_model_eval M (SmtTerm.map_diff t1 t2) =

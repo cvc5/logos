@@ -4,9 +4,9 @@ Logos's soundness theorem is stated against `Cpc/SmtModel.lean`, a formalization
 of SMT-LIB semantics written independently of the checker. It parts company with
 SMT-LIB in five ways, and they are different kinds of thing:
 
-- **Narrowings.** The semantics admits fewer models than SMT-LIB does in three
-  places: arrays, uninterpreted sorts, and uninterpreted functions of more than
-  one argument. These change what `correct` claims, and are most of this page.
+- **Narrowings.** The semantics admits fewer models than SMT-LIB does for arrays,
+  and caps uninterpreted sorts at the size of the reals. These change what
+  `correct` claims.
 - **Extensions.** Sets and sequences are not in SMT-LIB at all, and neither are
   the auxiliary operators the semantics adds. Conformance is not defined for
   them, so nothing here is measured against the standard.
@@ -51,8 +51,6 @@ through, and proofs using it would be accepted.
 | narrowing | this semantics | SMT-LIB | where it bites |
 | --- | --- | --- | --- |
 | arrays are almost constant | a default plus finitely many overrides | the full function space | quantifiers over arrays or indices |
-| uninterpreted sorts are countable | any finite size, or countably infinite | any nonempty cardinality | quantifiers forcing a sort to be as large as `Real` |
-| partial applications are countable | countably many at each function sort | one for each argument | quantifiers over a function's non-final `Real` argument |
 
 ## Arrays are almost-constant maps
 
@@ -74,22 +72,13 @@ It does not bite on quantifier-free array formulas, where a satisfiable formula
 has an almost-constant model — the same property array decision procedures are
 built on.
 
-## Uninterpreted sorts are at most countable
+## Uninterpreted sorts are capped at the size of the reals
 
-A model chooses the size of each uninterpreted sort (`usortCard`, in
-`Cpc/SmtModel.lean`): a positive number gives a finite sort, and `0` gives a
-countably infinite one. Every such size SMT-LIB allows is available, so a
-formula bounding a sort is satisfiable here as it is there:
-
-```smt2
-(declare-sort U 0)
-(assert (forall ((a U) (b U) (c U)) (or (= a b) (= a c) (= b c))))
-```
-
-What is missing is the uncountable sizes. A value of a sort is `UValue i n` for a
-natural `n` (`Cpc/SmtModelDefs.lean`), so there are never more values than
-naturals, while `Real` has more than that. That bites where a formula forces a
-sort to be as large as `Real`:
+A model chooses the domain of each uninterpreted sort (`usortDom`, in
+`Cpc/SmtModel.lean`): a set of `ModelId`s, which are real numbers, and the sort's
+values are exactly `UValue i r` for `r` in that set. So every nonzero cardinality
+up to the size of the reals is available, including the uncountable ones. The
+surjection onto `Real` that a countable sort could not satisfy is fine:
 
 ```smt2
 (declare-sort U 0)
@@ -97,36 +86,15 @@ sort to be as large as `Real`:
 (assert (forall ((r Real)) (exists ((u U)) (= (g u) r))))
 ```
 
-satisfiable in SMT-LIB, taking `U` to be the reals and `g` the identity, and
-false under every model here: the image of a countable sort is countable. A
-quantifier-free formula is unaffected, since it only ever constrains finitely
-many values of a sort.
+The identifiers are only labels, so the two conditions on a domain lose nothing:
+it must contain `0`, which makes the sort nonempty and gives it a default value,
+and it must be unbounded if it is infinite, which the freshness proofs use.
 
-## Partial applications are countable
-
-An uninterpreted function of several arguments is curried: `(declare-fun f (A B)
-C)` has the type `(FunType A (FunType B C))`. Applying it to one argument
-therefore has to produce a value of a function type, and the only such value is a
-name, `SmtValue.Fun` (`Cpc/SmtModelDefs.lean`). There are countably many names, so
-`f` can produce only countably many different functions of its second argument,
-however many values its first argument ranges over.
-
-It bites where a formula forces uncountably many of them:
-
-```smt2
-(declare-fun lt (Real Real) Bool)
-(assert (forall ((x Real) (y Real)) (= (lt x y) (< x y))))
-```
-
-satisfiable in SMT-LIB, with `lt` being `<`, and false under every model here:
-`(lt x)` must be a different function for each real `x`, which would need more
-names than exist.
-
-The final argument is never affected, so a unary function may be any
-type-respecting function, as may `(declare-fun f (Int Real) Bool)`. It takes a
-sort with uncountably many values in a non-final position, which means `Real` or
-a sort built from it. A quantifier-free formula is unaffected, since it only ever
-applies a function at finitely many arguments.
+SMT-LIB has no upper limit, so sorts larger than the reals are still missing.
+As far as we can tell, that is only observable through the array narrowing above:
+a surjection from a sort onto `(Array Real Bool)` needs a larger sort in SMT-LIB,
+and fails here anyway because that array sort has only the almost-constant maps.
+This is a hand argument and has not been machine-checked.
 
 ## Extensions: what the standard does not define
 
@@ -185,18 +153,19 @@ Logos is meant for first-order input. The semantics can express function-sorted
 terms, because CPC uses them internally, but it does not give them their
 SMT-LIB 2.7 meaning, and that is deliberate.
 
-A function value is `SmtValue.Fun name T U` (`Cpc/SmtModelDefs.lean`): a name,
-whose behaviour the model supplies (`native_eval_fun_apply` in
+A function value is `SmtValue.Fun id T U` (`Cpc/SmtModelDefs.lean`): an
+identifier, a real number of type `ModelId`, whose behaviour the model supplies (`native_eval_fun_apply` in
 `Cpc/SmtModel.lean`). Two consequences follow.
 
 - **Equality on functions is intensional.** `=` compares values structurally
-  (`__smtx_model_eval_eq`), so two names with the same behaviour are unequal.
+  (`__smtx_model_eval_eq`), so two identifiers with the same behaviour are unequal.
   SMT-LIB 2.7 interprets `(-> A B)` as the total functions from `A` to `B`,
   where `=` is extensional.
-- **Function sorts range over named functions.** A variable of sort `(-> A B)`
-  ranges over `Fun s A B` for every string `s` (the quantifier domain is the
-  well-typed canonical values, and every `Fun` is canonical). That is countably
-  many values, possibly with repetitions, rather than the full function space.
+- **Function sorts range over identified functions.** A variable of sort
+  `(-> A B)` ranges over `Fun r A B` for every real `r` (the quantifier domain is
+  the well-typed canonical values, and every `Fun` is canonical). That is as many
+  values as there are reals, possibly with repetitions, and which behaviours they
+  have is up to the model, rather than the full function space.
 
 Unlike the narrowings, this cuts both ways. It admits models SMT-LIB does not
 have:
@@ -216,17 +185,19 @@ SMT-LIB has:
           (=> (forall ((x Bool)) (= (f x) (g x))) (= f g))))
 ```
 
-is valid in SMT-LIB 2.7 and false under every model here: of any five names, two
+is valid in SMT-LIB 2.7 and false under every model here: of any five identifiers, two
 behave the same as `Bool -> Bool` functions, and `=` still calls them distinct.
 That second direction is the one that matters for `correct`.
 
 None of this is reachable from first-order input. A first-order formula applies
 declared functions but never uses one as an argument: it does not compare
 functions, quantify over them or partially apply them. On such a formula a
-function value is only ever applied, and evaluation sees only its behaviour. That
-names are countable does still reach first-order input by one route, the
-partial applications evaluation makes internally, which is listed above as a
-narrowing.
+function value is only ever applied, and evaluation sees only its behaviour.
+That includes the partial applications evaluation makes internally for a function
+of several arguments: `(declare-fun lt (Real Real) Bool)` can be `<`, with a
+different identifier for each `(lt x)`. A function has at most as many partial
+applications as it has first arguments, and every sort here has at most as many
+values as there are reals, so there are always enough identifiers.
 
 ## Lenient typing
 
@@ -270,8 +241,8 @@ coverage and nothing else.
 - **The character alphabet** is SMT-LIB's, code points `0` to `196607`
   (`native_char_valid`, `Cpc/SmtEval.lean`).
 - **Uninterpreted functions** are not subject to the almost-constant restriction
-  arrays carry. A unary one may be any type-respecting function; one of more
-  arguments may be too, apart from the limit on partial applications above.
+  arrays carry. One of any number of arguments may be any type-respecting
+  function.
   Quantifying over a function sort is the higher-order case above.
 
 ## Where this is written down elsewhere
@@ -279,8 +250,8 @@ coverage and nothing else.
 The write-up, [`smt-model-definitions.pdf`](smt-model-definitions.pdf), states the
 same three kinds in its introduction and then each narrowing again at the
 definition that introduces it — arrays under the type constructors and again
-where maps are defined, partial applications where function values are, and the
-cardinality of a sort where uninterpreted sort values are. The parser's refusals
+where maps are defined, and the cardinality of a sort where uninterpreted sort
+values are. The parser's refusals
 are in [`parser.md`](parser.md). This page is the list as it matters to
 somebody running the checker; the write-up is where the definitions and their
 reasoning are.

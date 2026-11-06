@@ -25,7 +25,7 @@ import all Cpc.Proofs.Closed.IsClosedRec
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval
@@ -118,17 +118,17 @@ private theorem tchoice_eq_of_unique
     (M : SmtModel) (s : native_String) (T : SmtType) (b : SmtTerm)
     (v₀ : SmtValue)
     (hTy : __smtx_typeof_value v₀ = T)
-    (hCanon : __smtx_value_canonical M.usortCard v₀ = true)
+    (hCanon : __smtx_value_canonical M.usortDom v₀ = true)
     (hSat : __smtx_model_eval (native_model_push M s T v₀) b =
       SmtValue.Boolean true)
     (hUnique : ∀ v : SmtValue, __smtx_typeof_value v = T ->
-      __smtx_value_canonical M.usortCard v = true ->
+      __smtx_value_canonical M.usortDom v = true ->
       __smtx_model_eval (native_model_push M s T v) b =
         SmtValue.Boolean true -> v = v₀) :
     native_eval_choice M s T b = v₀ := by
   classical
   have hEx : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-      __smtx_value_canonical M.usortCard v = true ∧
+      __smtx_value_canonical M.usortDom v = true ∧
       __smtx_model_eval (native_model_push M s T v) b =
         SmtValue.Boolean true := ⟨v₀, hTy, hCanon, hSat⟩
   rw [dite_eq_left hEx]
@@ -614,7 +614,7 @@ private theorem eval_forall_encoding_true
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T ->
-        __smtx_value_canonical M.usortCard v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval M
@@ -624,7 +624,7 @@ private theorem eval_forall_encoding_true
   have hNoSat :
       ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v)
             (SmtTerm.not body) = SmtValue.Boolean true := by
     rintro ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -637,7 +637,7 @@ private theorem eval_forall_encoding_true
     change (if _h :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-          __smtx_value_canonical M.usortCard v = true ∧
+          __smtx_value_canonical M.usortDom v = true ∧
           __smtx_model_eval (native_model_push M s T v)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -672,23 +672,23 @@ private theorem int_wf : __smtx_type_wf SmtType.Int = true := by
 /-- The choice value at a well-formed type is always typed and canonical
 (local copy of the `SkolemizeSupport` fact, kept off that import chain). -/
 private theorem tchoice_typed_canonical_of_wf'
-    (N : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm)
+    (N : SmtModel) (huc : usort_dom_wf N.usortDom) (s : native_String) (T : SmtType) (body : SmtTerm)
     (hWf : __smtx_type_wf T = true) :
     __smtx_typeof_value (native_eval_choice N s T body) = T ∧
-      __smtx_value_canonical N.usortCard (native_eval_choice N s T body) =
+      __smtx_value_canonical N.usortDom (native_eval_choice N s T body) =
         true := by
   classical
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical N.usortCard v = true ∧
+          __smtx_value_canonical N.usortDom v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true
   · rw [dite_eq_left hSat]
     exact ⟨(Classical.choose_spec hSat).1, (Classical.choose_spec hSat).2.1⟩
   · have hTy : ∃ v : SmtValue,
-        __smtx_typeof_value v = T ∧ __smtx_value_canonical N.usortCard v := by
-      rcases canonical_type_inhabited_of_type_wf T hWf with ⟨v, hvTy, hvCan⟩
+        __smtx_typeof_value v = T ∧ __smtx_value_canonical N.usortDom v := by
+      rcases canonical_type_inhabited_of_type_wf huc T hWf with ⟨v, hvTy, hvCan⟩
       exact ⟨v, hvTy, by simpa [value_canonical] using hvCan⟩
     rw [dite_eq_right hSat, dite_eq_left hTy]
     refine ⟨(Classical.choose_spec hTy).1, ?_⟩

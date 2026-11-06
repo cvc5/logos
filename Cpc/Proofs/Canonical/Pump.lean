@@ -7,7 +7,7 @@ public section
 
 noncomputable section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -38,27 +38,50 @@ bounded body would have been added (monotonicity), and conclude.
 
 -- === uninterpreted sorts ===
 
-/-- A value of an uninterpreted sort is canonical when it is within the sort's
-cardinality, where `0` means the sort is infinite. -/
-theorem smtx_value_canonical_uvalue_iff (u n : native_Nat) :
-    __smtx_value_canonical uc (SmtValue.UValue u n) = true ↔ (uc u = 0 ∨ n < uc u) := by
-  by_cases h0 : uc u = 0 <;> by_cases h1 : n < uc u <;>
-    simp [__smtx_value_canonical, native_usort_card, native_or, native_nateq,
-      native_natlt, h0, h1]
+/-- A value of an uninterpreted sort is canonical when its identifier is in the
+sort's domain. -/
+theorem smtx_value_canonical_uvalue_iff (u : native_Nat) (r : ModelId) :
+    __smtx_value_canonical uc (SmtValue.UValue u r) = true ↔ r ∈ uc u := by
+  simp [__smtx_value_canonical, native_usort_mem]
 
-/-- An uninterpreted sort is finite exactly when its cardinality is not `0`. -/
+/-- An uninterpreted sort is finite exactly when its domain is. -/
 theorem smtx_is_finite_type_usort_iff (u : native_Nat) :
-    __smtx_is_finite_type uc (SmtType.USort u) = true ↔ uc u ≠ 0 := by
-  by_cases h0 : uc u = 0 <;>
-    simp [__smtx_is_finite_type, __smtx_type_bounded, native_usort_card, native_ite,
-      native_not, native_nateq, h0]
+    __smtx_is_finite_type uc (SmtType.USort u) = true ↔ (uc u).Finite := by
+  simp [__smtx_is_finite_type, __smtx_type_bounded, native_usort_finite, native_ite]
 
-/-- An uninterpreted sort has one element exactly when its cardinality is `1`. -/
+/-- An uninterpreted sort has one element exactly when its domain is `{0}`. -/
 theorem smtx_is_unit_type_usort_iff (u : native_Nat) :
-    __smtx_is_unit_type uc (SmtType.USort u) = true ↔ uc u = 1 := by
-  by_cases h1 : uc u = 1 <;>
-    simp [__smtx_is_unit_type, __smtx_type_bounded, native_usort_card, native_ite,
-      native_nateq, h1]
+    __smtx_is_unit_type uc (SmtType.USort u) = true ↔ uc u = {0} := by
+  simp [__smtx_is_unit_type, __smtx_type_bounded, native_usort_unit, native_ite]
+
+/-- A sort that is not a unit has a value other than its default. -/
+theorem usort_exists_nonzero_of_not_unit (huc : usort_dom_wf uc) (u : native_Nat)
+    (hNonUnit : __smtx_is_unit_type uc (SmtType.USort u) = false) :
+    ∃ r ∈ uc u, r ≠ 0 := by
+  by_contra hNone
+  have hEq : uc u = {0} := by
+    ext r
+    constructor
+    · intro hr
+      by_contra hne
+      exact hNone ⟨r, hr, hne⟩
+    · intro hr
+      rw [Set.mem_singleton_iff.mp hr]
+      exact (huc u).1
+  simp [(smtx_is_unit_type_usort_iff u).mpr hEq] at hNonUnit
+
+/-- The non-default witness of a non-unit uninterpreted sort. -/
+theorem usort_nondefault_witness (huc : usort_dom_wf uc) (u : native_Nat)
+    (hNonUnit : __smtx_is_unit_type uc (SmtType.USort u) = false) :
+    ∃ i : SmtValue,
+      __smtx_typeof_value i = SmtType.USort u ∧
+        __smtx_value_canonical uc i = true ∧
+          native_veq i (__smtx_type_default (SmtType.USort u)) = false := by
+  rcases usort_exists_nonzero_of_not_unit huc u hNonUnit with ⟨r, hr, hne⟩
+  refine ⟨SmtValue.UValue u r, ?_, ?_, ?_⟩
+  · simp [__smtx_typeof_value]
+  · exact (smtx_value_canonical_uvalue_iff u r).mpr hr
+  · simp [__smtx_type_default, native_veq, hne]
 
 -- === subset order on accumulators (via name membership) ===
 
@@ -348,7 +371,7 @@ private theorem dd_count_lt {B B' : SmtDatatypeDecl} (hSub : SubDD B B')
         · by_cases hsB' : __smtx_dd_has_dt s B' = true <;>
             simp [dd_count, hsB, hsB'] <;> omega
 
-private def StableDD (uc : native_Nat -> native_Nat) (u : native_Bool) (dd B : SmtDatatypeDecl) : Prop :=
+private def StableDD (uc : SmtUSortDom) (u : native_Bool) (dd B : SmtDatatypeDecl) : Prop :=
   EqDD (__smtx_datatype_decl_bounded_step uc u dd B) B
 
 private theorem stable_congr {u : native_Bool} {dd B B' : SmtDatatypeDecl}
@@ -702,7 +725,7 @@ theorem resolved_field_inh_wf
         exact resolved_field_inh_wf dd hDecl c hTail F hFc
 
 /-- The finiteness fixpoint of a declaration. -/
-def bounded_fix (uc : native_Nat -> native_Nat) (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
+def bounded_fix (uc : SmtUSortDom) (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
   __smtx_datatype_decl_bounded uc false dd dd SmtDatatypeDecl.nil
 
 theorem is_finite_datatype_eq (s : native_String) (dd : SmtDatatypeDecl) :
@@ -775,7 +798,7 @@ def build_spine : SmtValue -> List SmtValue -> SmtValue
   | f, [] => f
   | f, v :: vs => build_spine (SmtValue.Apply f v) vs
 
-def list_typed_canonical (uc : native_Nat -> native_Nat) : List SmtValue -> List SmtType -> Prop
+def list_typed_canonical (uc : SmtUSortDom) : List SmtValue -> List SmtType -> Prop
   | [], [] => True
   | v :: vs, U :: Us =>
       (__smtx_typeof_value v = U ∧ U ≠ SmtType.None ∧
@@ -861,7 +884,7 @@ def defaults_of : List SmtType -> List SmtValue
   | [] => []
   | U :: Us => __smtx_type_default U :: defaults_of Us
 
-theorem list_typed_canonical_defaults :
+theorem list_typed_canonical_defaults (huc : usort_dom_wf uc) :
     ∀ Us : List SmtType,
       (∀ U ∈ Us,
         __smtx_inhabited_type U = true ∧ __smtx_type_wf_rec U = true) ->
@@ -870,13 +893,13 @@ theorem list_typed_canonical_defaults :
       simp [defaults_of, list_typed_canonical]
   | U :: Us, hWf => by
       have hU := hWf U (by simp)
-      have hKernel := type_default_kernel (uc := uc) U hU.1 hU.2
+      have hKernel := type_default_kernel huc (uc := uc) U hU.1 hU.2
       have hNone : U ≠ SmtType.None := by
         intro hEq
         subst U
         simp [__smtx_inhabited_type, native_Teq, native_not, native_and] at hU
       refine ⟨⟨hKernel.1, hNone, hKernel.2⟩, ?_⟩
-      exact list_typed_canonical_defaults Us (fun V hV => hWf V (by simp [hV]))
+      exact list_typed_canonical_defaults huc Us (fun V hV => hWf V (by simp [hV]))
 
 theorem list_typed_canonical_append :
     ∀ {vs1 : List SmtValue} {Us1 : List SmtType}
@@ -906,13 +929,13 @@ theorem veq_eq_of_true {a b : SmtValue}
 theorem veq_refl_true (a : SmtValue) : native_veq a a = true := by
   simp [native_veq]
 
-private theorem type_default_typed_canonical_p
+private theorem type_default_typed_canonical_p (huc : usort_dom_wf uc)
     {T : SmtType}
     (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
       __smtx_value_canonical uc (__smtx_type_default T) = true :=
-  type_default_kernel T hInh hRec
+  type_default_kernel huc T hInh hRec
 
 theorem ne_none_of_inh {T : SmtType}
     (h : __smtx_inhabited_type T = true) : T ≠ SmtType.None :=
@@ -929,7 +952,7 @@ inhabited and well-formed, with at least one field of infinite type.  The
 constructor's value-level type is the corresponding `DtcAppType` chain over
 the resolved field types.
 -/
-private theorem infinite_datatype_unbounded_constructor
+private theorem infinite_datatype_unbounded_constructor (huc : usort_dom_wf uc)
     (s : native_String) (dd : SmtDatatypeDecl)
     (hRec : __smtx_type_wf_rec (SmtType.Datatype s dd) = true)
     (hInfinite : __smtx_is_finite_type uc (SmtType.Datatype s dd) = false) :
@@ -991,7 +1014,7 @@ of the previous level (`type_large` handles ground field types structurally),
 and pads the remaining fields with defaults.
 -/
 
-private def LargeOracle (uc : native_Nat -> native_Nat) (n : Nat) : Prop :=
+private def LargeOracle (uc : SmtUSortDom) (n : Nat) : Prop :=
   ∀ (s : native_String) (dd : SmtDatatypeDecl),
     __smtx_inhabited_type (SmtType.Datatype s dd) = true →
     __smtx_type_wf_rec (SmtType.Datatype s dd) = true →
@@ -1051,18 +1074,23 @@ private theorem real_large_witness_p (minSize : Nat) :
     show minSize ≤ 1 + ⌊|(minSize : _root_.Real)|⌋₊
     simp
 
-private theorem usort_large_witness_p (u : native_Nat) (minSize : Nat)
-    (hInf : uc u = 0) :
+theorem usort_large_witness (huc : usort_dom_wf uc) (u : native_Nat) (minSize : Nat)
+    (hInf : __smtx_is_finite_type uc (SmtType.USort u) = false) :
     ∃ i : SmtValue,
       __smtx_typeof_value i = SmtType.USort u ∧
         __smtx_value_canonical uc i = true ∧
           minSize ≤ sizeOf i := by
-  refine ⟨SmtValue.UValue u minSize, ?_, ?_, ?_⟩
+  have hDomInf : (uc u).Infinite := fun hFin => by
+    simp [(smtx_is_finite_type_usort_iff u).mpr hFin] at hInf
+  rcases (huc u).2 hDomInf minSize with ⟨r, hr, hLe⟩
+  refine ⟨SmtValue.UValue u r, ?_, ?_, ?_⟩
   · simp [__smtx_typeof_value]
-  · exact (smtx_value_canonical_uvalue_iff u minSize).mpr (Or.inl hInf)
-  · rw [show sizeOf (SmtValue.UValue u minSize) =
-        1 + sizeOf u + sizeOf minSize by rfl]
-    simp [sizeOf]
+  · exact (smtx_value_canonical_uvalue_iff u r).mpr hr
+  · rw [show sizeOf (SmtValue.UValue u r) = 1 + sizeOf u + sizeOf r by rfl]
+    have hSize : minSize ≤ sizeOf r := by
+      show minSize ≤ ⌊|r|⌋₊
+      exact Nat.le_floor hLe
+    omega
 
 -- === large seq witnesses ===
 
@@ -1102,7 +1130,7 @@ private theorem smt_seq_repeat_size_ge_p
         1 + sizeOf x + sizeOf (smt_seq_repeat_p T x n) by rfl]
       omega
 
-private theorem seq_large_witness_p
+private theorem seq_large_witness_p (huc : usort_dom_wf uc)
     (T : SmtType)
     (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true)
@@ -1111,7 +1139,7 @@ private theorem seq_large_witness_p
       __smtx_typeof_value i = SmtType.Seq T ∧
         __smtx_value_canonical uc i = true ∧
           minSize ≤ sizeOf i := by
-  have hDef := type_default_typed_canonical_p (uc := uc) hInh hRec
+  have hDef := type_default_typed_canonical_p huc (uc := uc) hInh hRec
   refine
     ⟨SmtValue.Seq (smt_seq_repeat_p T (__smtx_type_default T) minSize),
       ?_, ?_, ?_⟩
@@ -1581,7 +1609,7 @@ theorem bounded_field_finite
     exact hBnd
 
 /-- The unit fixpoint of a declaration. -/
-def unit_fix (uc : native_Nat -> native_Nat) (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
+def unit_fix (uc : SmtUSortDom) (dd : SmtDatatypeDecl) : SmtDatatypeDecl :=
   __smtx_datatype_decl_bounded uc true dd dd SmtDatatypeDecl.nil
 
 theorem is_unit_datatype_eq (s : native_String) (dd : SmtDatatypeDecl) :
@@ -1821,7 +1849,7 @@ theorem constructor_spine_typed
   exact apply_head_dt_cons s dd k
 
 /-- All-default typed canonical constructor spine. -/
-theorem constructor_default_spine
+theorem constructor_default_spine (huc : usort_dom_wf uc)
     (s : native_String) (dd : SmtDatatypeDecl) (k : Nat) (c : SmtDatatypeCons)
     (hDecl : __smtx_decl_wf_rec dd dd = true)
     (hnth : dt_nth_cons (__smtx_dd_lookup s dd) k = some c)
@@ -1838,7 +1866,7 @@ theorem constructor_default_spine
     rw [← hF'eq]
     exact resolved_field_inh_wf dd hDecl c hConsWf F' hF'mem
   have hTyped :=
-    list_typed_canonical_defaults (uc := uc) ((dtc_fields c).map (resolve_ty dd)) hWfAll
+    list_typed_canonical_defaults huc (uc := uc) ((dtc_fields c).map (resolve_ty dd)) hWfAll
   rcases constructor_spine_typed s dd k c hnth
       (defaults_of ((dtc_fields c).map (resolve_ty dd))) hTyped with
     ⟨hTy, hCan, hHead⟩
@@ -1849,7 +1877,7 @@ theorem constructor_default_spine
 mutual
 
 /-- Non-default typed canonical value of a finite non-unit datatype. -/
-private theorem dt_nondefault
+private theorem dt_nondefault (huc : usort_dom_wf uc)
     (s : native_String) (dd : SmtDatatypeDecl)
     (hInh : __smtx_inhabited_type (SmtType.Datatype s dd) = true)
     (hRec : __smtx_type_wf_rec (SmtType.Datatype s dd) = true)
@@ -1903,9 +1931,9 @@ private theorem dt_nondefault
             dt_wf_nth_cons dd (__smtx_dd_lookup s dd) 0 c hnth0 hDtWf
           have hConsWf1 :=
             dt_wf_nth_cons dd (__smtx_dd_lookup s dd) 1 c2 hnth1 hDtWf
-          rcases constructor_default_spine s dd 0 c hRecParts.2 hnth0 hConsWf0
+          rcases constructor_default_spine huc s dd 0 c hRecParts.2 hnth0 hConsWf0
             with ⟨v0, hv0Ty, hv0Can, hv0Head⟩
-          rcases constructor_default_spine s dd 1 c2 hRecParts.2 hnth1 hConsWf1
+          rcases constructor_default_spine huc s dd 1 c2 hRecParts.2 hnth1 hConsWf1
             with ⟨v1, hv1Ty, hv1Can, hv1Head⟩
           have hNe01 : v0 ≠ v1 := by
             intro hEq
@@ -2050,7 +2078,7 @@ private theorem dt_nondefault
               have hXNonUnit' := hXNonUnit
               have hXFinite' := hXFinite
               simp only [resolve_ty] at hXWf' hXNonUnit' hXFinite' ⊢
-              exact dt_nondefault t dd hXWf'.1 hXWf'.2 hXFinite' hXNonUnit'
+              exact dt_nondefault huc t dd hXWf'.1 hXWf'.2 hXFinite' hXNonUnit'
             · have hRef' : ∀ t : native_String, F ≠ SmtType.TypeRef t := by
                 intro t hFt
                 exact hRef ⟨t, hFt⟩
@@ -2063,7 +2091,7 @@ private theorem dt_nondefault
               have hXNonUnit' := hXNonUnit
               have hXFinite' := hXFinite
               rw [resolve_ty_ground dd F hRef'] at hXWf' hXNonUnit' hXFinite' ⊢
-              exact ty_nondefault F hXWf'.1 hXWf'.2 hXFinite' hXNonUnit'
+              exact ty_nondefault huc F hXWf'.1 hXWf'.2 hXFinite' hXNonUnit'
           rcases hEF with ⟨eF, heTy, heCan, heNe⟩
           -- assemble the witness spine
           have hMapFields :
@@ -2099,9 +2127,9 @@ private theorem dt_nondefault
                 ((dtc_fields c).map (resolve_ty dd)) := by
             rw [hMapFields]
             exact list_typed_canonical_append
-              (list_typed_canonical_defaults _ hPreWf)
+              (list_typed_canonical_defaults huc _ hPreWf)
               ⟨⟨heTy, hXNone, heCan⟩,
-                list_typed_canonical_defaults _ hPostWf⟩
+                list_typed_canonical_defaults huc _ hPostWf⟩
           rcases constructor_spine_typed s dd 0 c hnth0 _ hTyped with
             ⟨hvTy, hvCan, _hvHead⟩
           refine ⟨_, hvTy, hvCan, ?_⟩
@@ -2142,7 +2170,7 @@ decreasing_by
   · exact Prod.Lex.left _ _ hMeasure
 
 /-- Non-default typed canonical value of a finite non-unit type. -/
-private theorem ty_nondefault
+private theorem ty_nondefault (huc : usort_dom_wf uc)
     (A : SmtType)
     (_hInh : __smtx_inhabited_type A = true)
     (_hRec : __smtx_type_wf_rec A = true)
@@ -2193,10 +2221,10 @@ private theorem ty_nondefault
         · simp [native_or, native_and, hUNonUnit, hU] at _hFinite
         · rfl
       have hTDefault :=
-        type_default_typed_canonical_p (uc := uc) hRecParts.1 hRecParts.2.1
+        type_default_typed_canonical_p huc (uc := uc) hRecParts.1 hRecParts.2.1
       have hUDefault :=
-        type_default_typed_canonical_p (uc := uc) hRecParts.2.2.1 hRecParts.2.2.2
-      rcases ty_nondefault U hRecParts.2.2.1 hRecParts.2.2.2 hUFinite
+        type_default_typed_canonical_p huc (uc := uc) hRecParts.2.2.1 hRecParts.2.2.2
+      rcases ty_nondefault huc U hRecParts.2.2.1 hRecParts.2.2.2 hUFinite
           hUNonUnit with ⟨e, heTy, heCan, heNeDefault⟩
       have heNeDefaultProp : e ≠ __smtx_type_default U := by
         intro hEq
@@ -2229,7 +2257,7 @@ private theorem ty_nondefault
         simp [__smtx_type_wf_rec, native_and] at h
         exact h
       have hTDefault :=
-        type_default_typed_canonical_p (uc := uc) hRecParts.1 hRecParts.2
+        type_default_typed_canonical_p huc (uc := uc) hRecParts.1 hRecParts.2
       refine
         ⟨SmtValue.Set
           (SmtMap.cons (__smtx_type_default T) (SmtValue.Boolean true)
@@ -2249,18 +2277,11 @@ private theorem ty_nondefault
       · simp [__smtx_value_canonical, native_char_valid]
       · simp [__smtx_type_default, native_veq]
   | Datatype s2 dd2 =>
-      exact dt_nondefault s2 dd2 _hInh _hRec _hFinite _hNonUnit
+      exact dt_nondefault huc s2 dd2 _hInh _hRec _hFinite _hNonUnit
   | TypeRef s2 =>
       simp [__smtx_type_wf_rec] at _hRec
   | USort u =>
-      have hNe0 : uc u ≠ 0 := (smtx_is_finite_type_usort_iff u).mp _hFinite
-      have hNe1 : uc u ≠ 1 := fun h =>
-        by simp [(smtx_is_unit_type_usort_iff u).mpr h] at _hNonUnit
-      refine ⟨SmtValue.UValue u 1, ?_, ?_, ?_⟩
-      · simp [__smtx_typeof_value]
-      · exact (smtx_value_canonical_uvalue_iff u 1).mpr
-          (Or.inr (Nat.lt_of_le_of_ne (Nat.pos_of_ne_zero hNe0) (Ne.symm hNe1)))
-      · simp [__smtx_type_default, native_veq]
+      exact usort_nondefault_witness huc u _hNonUnit
   | FunType T U =>
       simp [__smtx_type_wf_rec] at _hRec
   | DtcAppType T U =>
@@ -2285,7 +2306,7 @@ end
 A finite non-unit datatype has a typed canonical value different from its
 default.
 -/
-theorem finite_nonunit_datatype_nondefault_value
+theorem finite_nonunit_datatype_nondefault_value (huc : usort_dom_wf uc)
     (s : native_String) (dd : SmtDatatypeDecl)
     (hInh : __smtx_inhabited_type (SmtType.Datatype s dd) = true)
     (hRec : __smtx_type_wf_rec (SmtType.Datatype s dd) = true)
@@ -2295,13 +2316,13 @@ theorem finite_nonunit_datatype_nondefault_value
       __smtx_typeof_value e = SmtType.Datatype s dd ∧
         __smtx_value_canonical uc e = true ∧
           native_veq e (__smtx_type_default (SmtType.Datatype s dd)) = false :=
-  dt_nondefault s dd hInh hRec hFinite hNonUnit
+  dt_nondefault huc s dd hInh hRec hFinite hNonUnit
 
 /--
 Every inhabited well-formed finite non-unit type has a typed canonical value
 different from its default.
 -/
-private theorem finite_nonunit_nondefault
+private theorem finite_nonunit_nondefault (huc : usort_dom_wf uc)
     (A : SmtType)
     (_hInh : __smtx_inhabited_type A = true)
     (_hRec : __smtx_type_wf_rec A = true)
@@ -2353,10 +2374,10 @@ private theorem finite_nonunit_nondefault
         · simp [native_or, native_and, hUNonUnit, hU] at _hFinite
         · rfl
       have hTDefault :=
-        type_default_typed_canonical_p (uc := uc) hRecParts.1 hRecParts.2.1
+        type_default_typed_canonical_p huc (uc := uc) hRecParts.1 hRecParts.2.1
       have hUDefault :=
-        type_default_typed_canonical_p (uc := uc) hRecParts.2.2.1 hRecParts.2.2.2
-      rcases finite_nonunit_nondefault
+        type_default_typed_canonical_p huc (uc := uc) hRecParts.2.2.1 hRecParts.2.2.2
+      rcases finite_nonunit_nondefault huc
           U hRecParts.2.2.1 hRecParts.2.2.2 hUFinite hUNonUnit with
         ⟨e, heTy, heCan, heNeDefault⟩
       have heNeDefaultProp : e ≠ __smtx_type_default U := by
@@ -2390,7 +2411,7 @@ private theorem finite_nonunit_nondefault
         simp [__smtx_type_wf_rec, native_and] at h
         exact h
       have hTDefault :=
-        type_default_typed_canonical_p (uc := uc) hRecParts.1 hRecParts.2
+        type_default_typed_canonical_p huc (uc := uc) hRecParts.1 hRecParts.2
       refine
         ⟨SmtValue.Set
           (SmtMap.cons (__smtx_type_default T) (SmtValue.Boolean true)
@@ -2410,19 +2431,12 @@ private theorem finite_nonunit_nondefault
       · simp [__smtx_value_canonical, native_char_valid]
       · simp [__smtx_type_default, native_veq]
   | Datatype s dd =>
-      exact finite_nonunit_datatype_nondefault_value
+      exact finite_nonunit_datatype_nondefault_value huc
         s dd _hInh _hRec _hFinite _hNonUnit
   | TypeRef s =>
       simp [__smtx_type_wf_rec] at _hRec
   | USort u =>
-      have hNe0 : uc u ≠ 0 := (smtx_is_finite_type_usort_iff u).mp _hFinite
-      have hNe1 : uc u ≠ 1 := fun h =>
-        by simp [(smtx_is_unit_type_usort_iff u).mpr h] at _hNonUnit
-      refine ⟨SmtValue.UValue u 1, ?_, ?_, ?_⟩
-      · simp [__smtx_typeof_value]
-      · exact (smtx_value_canonical_uvalue_iff u 1).mpr
-          (Or.inr (Nat.lt_of_le_of_ne (Nat.pos_of_ne_zero hNe0) (Ne.symm hNe1)))
-      · simp [__smtx_type_default, native_veq]
+      exact usort_nondefault_witness huc u _hNonUnit
   | FunType T U =>
       simp [__smtx_type_wf_rec] at _hRec
   | DtcAppType T U =>
@@ -2431,7 +2445,7 @@ termination_by sizeOf A
 
 -- === large values of arbitrary infinite types, given the oracle ===
 
-private theorem type_large
+private theorem type_large (huc : usort_dom_wf uc)
     (n : Nat) (hO : LargeOracle uc n) (A : SmtType) :
     __smtx_inhabited_type A = true →
     __smtx_type_wf_rec A = true →
@@ -2473,9 +2487,9 @@ private theorem type_large
         simp [__smtx_type_wf_rec, native_and] at h
         exact ⟨h.1.1, h.1.2, h.2.1, h.2.2⟩
       have hTDefault :=
-        type_default_typed_canonical_p (uc := uc) hRecParts.1 hRecParts.2.1
+        type_default_typed_canonical_p huc (uc := uc) hRecParts.1 hRecParts.2.1
       have hUDefault :=
-        type_default_typed_canonical_p (uc := uc) hRecParts.2.2.1 hRecParts.2.2.2
+        type_default_typed_canonical_p huc (uc := uc) hRecParts.2.2.1 hRecParts.2.2.2
       have hUNonUnit : __smtx_is_unit_type uc U = false := by
         rw [is_finite_map_eq_p] at hInf
         cases hU : __smtx_is_unit_type uc U
@@ -2483,7 +2497,7 @@ private theorem type_large
         · simp [native_or, hU] at hInf
       by_cases hUInf : __smtx_is_finite_type uc U = false
       · -- large range value
-        rcases type_large n hO U hRecParts.2.2.1 hRecParts.2.2.2 hUInf with
+        rcases type_large huc n hO U hRecParts.2.2.1 hRecParts.2.2.2 hUInf with
           ⟨e, heTy, heCan, heSize⟩
         cases hveq : native_veq e (__smtx_type_default U) with
         | false =>
@@ -2538,9 +2552,9 @@ private theorem type_large
           cases hT : __smtx_is_finite_type uc T
           · rfl
           · simp [native_or, native_and, hT, hUFin, hUNonUnit] at hInf
-        rcases type_large n hO T hRecParts.1 hRecParts.2.1 hTInf with
+        rcases type_large huc n hO T hRecParts.1 hRecParts.2.1 hTInf with
           ⟨k, hkTy, hkCan, hkSize⟩
-        rcases finite_nonunit_nondefault
+        rcases finite_nonunit_nondefault huc
             U hRecParts.2.2.1 hRecParts.2.2.2 hUFin hUNonUnit with
           ⟨e, heTy, heCan, heNeDefault⟩
         have heNeDefaultProp : e ≠ __smtx_type_default U := by
@@ -2576,7 +2590,7 @@ private theorem type_large
       have hTInf : __smtx_is_finite_type uc T = false := by
         rw [is_finite_set_eq_p] at hInf
         exact hInf
-      rcases type_large n hO T hRecParts.1 hRecParts.2 hTInf with
+      rcases type_large huc n hO T hRecParts.1 hRecParts.2 hTInf with
         ⟨x, hxTy, hxCan, hxSize⟩
       refine
         ⟨SmtValue.Set
@@ -2604,7 +2618,7 @@ private theorem type_large
         have h := hRec
         simp [__smtx_type_wf_rec, native_and] at h
         exact h
-      exact seq_large_witness_p T hRecParts.1 hRecParts.2 n
+      exact seq_large_witness_p huc T hRecParts.1 hRecParts.2 n
   | Datatype s dd =>
       intro hInh hRec hInf
       exact hO s dd hInh hRec hInf
@@ -2613,11 +2627,7 @@ private theorem type_large
       simp [__smtx_type_wf_rec] at hRec
   | USort u =>
       intro _ _ hInf
-      refine usort_large_witness_p u n ?_
-      by_cases h : uc u = 0
-      · exact h
-      · have hFin := (smtx_is_finite_type_usort_iff (uc := uc) u).mpr h
-        simp [hFin] at hInf
+      exact usort_large_witness huc u n hInf
   | FunType T U =>
       intro _hInh hRec _hInf
       simp [__smtx_type_wf_rec] at hRec
@@ -2628,19 +2638,19 @@ termination_by sizeOf A
 
 -- === the pump ===
 
-private theorem oracle_zero : LargeOracle uc 0 := by
+private theorem oracle_zero (huc : usort_dom_wf uc) : LargeOracle uc 0 := by
   intro s dd hInh hRec _hInf
-  have hKernel := type_default_kernel (uc := uc) (SmtType.Datatype s dd) hInh hRec
+  have hKernel := type_default_kernel huc (uc := uc) (SmtType.Datatype s dd) hInh hRec
   exact ⟨__smtx_type_default (SmtType.Datatype s dd), hKernel.1, hKernel.2,
     Nat.zero_le _⟩
 
-private theorem oracle_succ (n : Nat) (hO : LargeOracle uc n) :
+private theorem oracle_succ (huc : usort_dom_wf uc) (n : Nat) (hO : LargeOracle uc n) :
     LargeOracle uc (Nat.succ n) := by
   intro s dd hInh hRec hInf
-  rcases infinite_datatype_unbounded_constructor s dd hRec hInf with
+  rcases infinite_datatype_unbounded_constructor huc s dd hRec hInf with
     ⟨k, preU, postU, X, hChain, hAllWf, hXInf⟩
   have hXWf := hAllWf X (by simp)
-  rcases type_large n hO X hXWf.1 hXWf.2 hXInf with ⟨w, hwTy, hwCan, hwSize⟩
+  rcases type_large huc n hO X hXWf.1 hXWf.2 hXInf with ⟨w, hwTy, hwCan, hwSize⟩
   have hXNone : X ≠ SmtType.None := ne_none_of_inh hXWf.1
   have hPreWf :
       ∀ U ∈ preU, __smtx_inhabited_type U = true ∧
@@ -2657,8 +2667,8 @@ private theorem oracle_succ (n : Nat) (hO : LargeOracle uc n) :
         (defaults_of preU ++ w :: defaults_of postU)
         (preU ++ X :: postU) :=
     list_typed_canonical_append
-      (list_typed_canonical_defaults preU hPreWf)
-      ⟨⟨hwTy, hXNone, hwCan⟩, list_typed_canonical_defaults postU hPostWf⟩
+      (list_typed_canonical_defaults huc preU hPreWf)
+      ⟨⟨hwTy, hXNone, hwCan⟩, list_typed_canonical_defaults huc postU hPostWf⟩
   have hHeadCan :
       __smtx_value_canonical uc (SmtValue.DtCons s dd k) = true := by
     simp [__smtx_value_canonical]
@@ -2675,16 +2685,16 @@ private theorem oracle_succ (n : Nat) (hO : LargeOracle uc n) :
       (SmtValue.DtCons s dd k) w hMem
     omega
 
-private theorem oracle_all : ∀ n : Nat, LargeOracle uc n
-  | 0 => oracle_zero
-  | Nat.succ n => oracle_succ n (oracle_all n)
+private theorem oracle_all (huc : usort_dom_wf uc) : ∀ n : Nat, LargeOracle uc n
+  | 0 => oracle_zero huc
+  | Nat.succ n => oracle_succ huc n (oracle_all huc n)
 
 /--
 The infinite-datatype pump: an inhabited recursively well-formed datatype
 outside the finiteness fixpoint has typed canonical values of arbitrarily
 large size.
 -/
-theorem infinite_datatype_large_witness
+theorem infinite_datatype_large_witness (huc : usort_dom_wf uc)
     (minSize : Nat) (s : native_String) (dd : SmtDatatypeDecl)
     (hInh : __smtx_inhabited_type (SmtType.Datatype s dd) = true)
     (hRec : __smtx_type_wf_rec (SmtType.Datatype s dd) = true)
@@ -2692,6 +2702,6 @@ theorem infinite_datatype_large_witness
     ∃ v : SmtValue,
       __smtx_typeof_value v = SmtType.Datatype s dd ∧
         __smtx_value_canonical uc v = true ∧ minSize ≤ sizeOf v :=
-  oracle_all minSize s dd hInh hRec hInfinite
+  oracle_all huc minSize s dd hInh hRec hInfinite
 
 end Smtm

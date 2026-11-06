@@ -6,7 +6,7 @@ import all Cpc.Logos
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval

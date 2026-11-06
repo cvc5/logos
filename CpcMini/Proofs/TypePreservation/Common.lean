@@ -9,7 +9,7 @@ import all CpcMini.Proofs.Canonical.TypeDefaultBasic
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -44,7 +44,7 @@ theorem type_inhabited_of_native_inhabited_type
   ⟨__smtx_type_default T, type_default_typed T h hRec⟩
 
 /-- On a recursively well-formed inhabited type, the default is a typed, canonical witness. -/
-theorem type_default_typed_canonical_of_native_inhabited_type
+theorem type_default_typed_canonical_of_native_inhabited_type (huc : usort_dom_wf uc)
     (T : SmtType)
     (h : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
@@ -52,7 +52,7 @@ theorem type_default_typed_canonical_of_native_inhabited_type
       value_canonical uc (__smtx_type_default T) := by
   refine ⟨type_default_typed T h hRec, ?_⟩
   simpa [value_canonical] using
-    type_default_canonical_of_inhabited_wf_rec T h hRec
+    type_default_canonical_of_inhabited_wf_rec huc T h hRec
 
 /-- Computes the well-formedness/inhabitation guard from a non-`None` result. -/
 theorem smtx_typeof_guard_wf_of_non_none

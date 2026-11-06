@@ -183,12 +183,10 @@ assumptions the theorem talks about are whatever they read out of the file, and 
 compare them against an original input problem (`include` and `reference` are
 ignored).
 
-**Where the semantics is narrower than SMT-LIB.** In three places the model
-semantics admits a smaller class of models than SMT-LIB does: arrays are
-almost-constant maps, uninterpreted sorts are at most countable, and a function
-of several arguments has only countably many partial applications. Each takes
-quantifiers to reach — on quantifier-free input the two agree — and on the
-input it touches it makes `correct` claim slightly less than *unsatisfiable in
+**Where the semantics is narrower than SMT-LIB.** The model semantics admits a
+smaller class of models than SMT-LIB does in one way that matters: arrays are
+almost-constant maps. That takes quantifiers to reach — on quantifier-free input
+the two agree — and on the input it touches it makes `correct` claim slightly less than *unsatisfiable in
 SMT-LIB*. Separately, the semantics extends SMT-LIB with sorts and operators
 the standard does not define, sets and sequences among them, where conformance is
 not a question that arises; and parametric datatypes needing infinitely many

@@ -11,7 +11,7 @@ import all Cpc.Proofs.RuleSupport.DtConsEqSupport
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval
@@ -529,7 +529,7 @@ private theorem set_eval_map_info
     ∃ m,
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Set m ∧
       __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool ∧
-      __smtx_map_canonical M.usortCard m = true ∧
+      __smtx_map_canonical M.usortDom m = true ∧
       __smtx_map_get_default m = SmtValue.Boolean false := by
   intro hTrans hTy
   have hEvalTy :
@@ -547,11 +547,11 @@ private theorem set_eval_map_info
       __smtx_typeof_map_value m = SmtType.Map A SmtType.Bool :=
     set_map_value_typed (by simpa [hEval] using hEvalTy)
   have hCanEval :
-      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t)) :=
+      value_canonical M.usortDom (__smtx_model_eval M (__eo_to_smt t)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM t hTrans
-  have hCanSet : value_canonical M.usortCard (SmtValue.Set m) := by
+  have hCanSet : value_canonical M.usortDom (SmtValue.Set m) := by
     simpa [hEval] using hCanEval
-  have hMapCan : __smtx_map_canonical M.usortCard m = true := by
+  have hMapCan : __smtx_map_canonical M.usortDom m = true := by
     have hParts := hCanSet
     simp [value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
@@ -572,8 +572,8 @@ private theorem set_union_eval_maps
       __smtx_model_eval M (__eo_to_smt y) = SmtValue.Set my ∧
       __smtx_typeof_map_value mx = SmtType.Map A SmtType.Bool ∧
       __smtx_typeof_map_value my = SmtType.Map A SmtType.Bool ∧
-      __smtx_map_canonical M.usortCard mx = true ∧
-      __smtx_map_canonical M.usortCard my = true ∧
+      __smtx_map_canonical M.usortDom mx = true ∧
+      __smtx_map_canonical M.usortDom my = true ∧
       __smtx_map_get_default mx = SmtValue.Boolean false ∧
       __smtx_map_get_default my = SmtValue.Boolean false ∧
       __smtx_model_eval M
