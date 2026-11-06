@@ -87,10 +87,9 @@ Options:
   --smt-semantics PATH the same for the SMT-LIB semantics that one is written
                        against: what a symbol of SMT-LIB means to a model,
                        which is the target of the compilation rather than
-                       anything about this signature. The compiler ships one
-                       and compiles it where this names none, so naming one
-                       is changing what the target means
-                       (default: <ethos>/tools/eoc/semantics/smt.eos)
+                       anything about this signature, so naming one is
+                       changing what the target means
+                       (default: <install>/defs/smt.eos)
   --lean-config PATH   why each recursive program of the input terminates,
                        read by the lean-meta stage. The compiler writes one
                        from --semantics and gives it to that stage itself, so
@@ -435,9 +434,10 @@ PACKAGE="${PACKAGE:-Cpc}"
 # the two files the model-smt and lean-meta stages read. Where those two come
 # out is the compiler's own: a set compiles by the role it is given and not by
 # where it stands, and each stage is handed what it reads, so neither file is
-# named here. The SMT-LIB semantics they are written against is the
-# compiler's too, which is what --smt-semantics replaces.
+# named here. The SMT-LIB semantics they are written against is kept here as
+# well, in place of the copy the compiler ships.
 SEMANTICS="${SEMANTICS:-${script_dir}/defs/Cpc.eos}"
+SMT_SEMANTICS="${SMT_SEMANTICS:-${script_dir}/defs/smt.eos}"
 BUILD_DIR="${BUILD_DIR:-${EOC_BUILD_DIR:-${ETHOS_DIR}/build-eoc}}"
 OUT_DIR="${OUT_DIR:-${DEPS_DIR}/eoc-out}"
 DEST_DIR="${repo_root}/${PACKAGE}"
@@ -468,10 +468,10 @@ fi
   echo "error: --semantics file ${SEMANTICS} not found." >&2
   exit 1
 }
-if [ -n "${SMT_SEMANTICS}" ] && [ ! -f "${SMT_SEMANTICS}" ]; then
+[ -f "${SMT_SEMANTICS}" ] || {
   echo "error: --smt-semantics file ${SMT_SEMANTICS} not found." >&2
   exit 1
-fi
+}
 
 # The signature-wide files the lean subcommand of driver.py publishes, in
 # module dependency order, named as they stand in the package. The driver
@@ -566,16 +566,14 @@ calc_name_of() {
 echo "==> Compiling ${SIGNATURE}"
 echo "    ethos    ${ETHOS_DIR}"
 echo "    package  ${PACKAGE_DIR}"
-[ -z "${SMT_SEMANTICS}" ] || echo "    smt      ${SMT_SEMANTICS}"
+echo "    smt      ${SMT_SEMANTICS}"
 
 # --semantics is what the symbols of the signature mean and --smt-semantics
-# what the SMT-LIB ones they are written against do; the compiler compiles the
-# one it ships with where the second names none. --lean-config is left out
+# what the SMT-LIB ones they are written against do. --lean-config is left out
 # unless it was named, since the compiler writes one from --semantics and
 # gives the lean-meta stage that.
 driver_args=(lean --build-dir "${BUILD_DIR}" --final-out-dir "${OUT_DIR}"
-             --semantics "${SEMANTICS}" --skip-cvc5)
-[ -z "${SMT_SEMANTICS}" ] || driver_args+=(--smt-semantics "${SMT_SEMANTICS}")
+             --semantics "${SEMANTICS}" --smt-semantics "${SMT_SEMANTICS}" --skip-cvc5)
 [ -z "${LEAN_CONFIG}" ] || driver_args+=(--lean-config "${LEAN_CONFIG}")
 if [ -x "${BUILD_DIR}/ethos-eoc" ]; then
   driver_args+=(--no-build)

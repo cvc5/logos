@@ -2,8 +2,10 @@
 """Internal-use-only helper for advancing Logos to the latest EOC on Ethos main.
 
 Advance the pinned commit to the current head of cvc5/ethos's ``main``, build the
-compiler, and regenerate Cpc and CpcMini from the cached signature. The CPC
-semantics in install/defs/Cpc.eos is maintained in Logos and is not touched.
+compiler, and regenerate Cpc and CpcMini from the cached signature. The semantics
+in install/defs/Cpc.eos and install/defs/smt.eos are maintained in Logos and are
+not touched. If the eos format changes, these files may need to be updated by
+hand.
 """
 
 from __future__ import annotations
