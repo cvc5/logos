@@ -187,6 +187,11 @@ inductive UserOp : Type where
   | _at__at_Polynomial : UserOp
   | _at__at_poly_zero : UserOp
   | _at__at_poly : UserOp
+  | _at__at_UPoly : UserOp
+  | _at__at_upoly_zero : UserOp
+  | _at__at_upoly : UserOp
+  | _at_cov_minus_inf : UserOp
+  | _at_cov_plus_inf : UserOp
   | forall : UserOp
   | exists : UserOp
   | ubv_to_int : UserOp
@@ -212,6 +217,8 @@ inductive UserOp1 : Type where
   | tuple_select : UserOp1
   | tuple_update : UserOp1
   | set_empty : UserOp1
+  | _at_sgn_inv : UserOp1
+  | _at_is_root : UserOp1
   | int_to_bv : UserOp1
 
 deriving Repr, DecidableEq, Inhabited, Ord
@@ -236,6 +243,14 @@ inductive UserOp3 : Type where
 
 deriving Repr, DecidableEq, Inhabited, Ord
 
+/-
+User operators with four indices.
+-/
+inductive UserOp4 : Type where
+  | _at_ran : UserOp4
+
+deriving Repr, DecidableEq, Inhabited, Ord
+
 mutual
 
 /- Term definition -/
@@ -244,6 +259,7 @@ inductive Term : Type where
   | UOp1 : UserOp1 -> Term -> Term
   | UOp2 : UserOp2 -> Term -> Term -> Term
   | UOp3 : UserOp3 -> Term -> Term -> Term -> Term
+  | UOp4 : UserOp4 -> Term -> Term -> Term -> Term -> Term
   | __eo_List : Term
   | __eo_List_nil : Term
   | __eo_List_cons : Term

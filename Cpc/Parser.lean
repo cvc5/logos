@@ -1125,6 +1125,54 @@ private def parserOps : List (Logos.Parser.OpDecl Term) := [
     build := fun
       | [] => some (Term.UOp UserOp._at__at_poly)
       | _ => none },
+  { name := "@@UPoly"
+    indexArity := 0
+    arity := .exact 0
+    build := fun
+      | [] => some (Term.UOp UserOp._at__at_UPoly)
+      | _ => none },
+  { name := "@@upoly.zero"
+    indexArity := 0
+    arity := .exact 0
+    build := fun
+      | [] => some (Term.UOp UserOp._at__at_upoly_zero)
+      | _ => none },
+  { name := "@@upoly"
+    indexArity := 0
+    arity := .rightAssocNil (parserNil (Term.UOp UserOp._at__at_upoly))
+    build := fun
+      | [] => some (Term.UOp UserOp._at__at_upoly)
+      | _ => none },
+  { name := "@cov_minus_inf"
+    indexArity := 0
+    arity := .exact 0
+    build := fun
+      | [] => some (Term.UOp UserOp._at_cov_minus_inf)
+      | _ => none },
+  { name := "@cov_plus_inf"
+    indexArity := 0
+    arity := .exact 0
+    build := fun
+      | [] => some (Term.UOp UserOp._at_cov_plus_inf)
+      | _ => none },
+  { name := "@ran"
+    indexArity := 4
+    arity := .exact 0
+    build := fun
+      | [x1, x2, x3, x4] => some (Term.UOp4 UserOp4._at_ran x1 x2 x3 x4)
+      | _ => none },
+  { name := "@sgn_inv"
+    indexArity := 1
+    arity := .exact 2
+    build := fun
+      | [x1] => some (Term.UOp1 UserOp1._at_sgn_inv x1)
+      | _ => none },
+  { name := "@is_root"
+    indexArity := 1
+    arity := .exact 1
+    build := fun
+      | [x1] => some (Term.UOp1 UserOp1._at_is_root x1)
+      | _ => none },
   { name := "forall"
     indexArity := 0
     arity := .exact 2
@@ -1337,6 +1385,24 @@ private def parserOps : List (Logos.Parser.OpDecl Term) := [
     build := fun
       | [] => some (Term.UOp UserOp._at__at_poly)
       | _ => none },
+  { name := "@UPoly"
+    indexArity := 0
+    arity := .exact 0
+    build := fun
+      | [] => some (Term.UOp UserOp._at__at_UPoly)
+      | _ => none },
+  { name := "@upoly.zero"
+    indexArity := 0
+    arity := .exact 0
+    build := fun
+      | [] => some (Term.UOp UserOp._at__at_upoly_zero)
+      | _ => none },
+  { name := "@upoly"
+    indexArity := 0
+    arity := .rightAssocNil (parserNil (Term.UOp UserOp._at__at_upoly))
+    build := fun
+      | [] => some (Term.UOp UserOp._at__at_upoly)
+      | _ => none },
   { name := "int2bv"
     indexArity := 1
     arity := .exact 1
@@ -1472,6 +1538,11 @@ private def parserRules : List (String × CRule) := [
   ("arith_reduction", .arith_reduction),
   ("arith_poly_norm", .arith_poly_norm),
   ("arith_poly_norm_rel", .arith_poly_norm_rel),
+  ("cover", .cover),
+  ("sgn_inv_intro", .sgn_inv_intro),
+  ("is_root_intro", .is_root_intro),
+  ("ran_eval", .ran_eval),
+  ("sgn_inv_elim", .sgn_inv_elim),
   ("bv-repeat-elim", .bv_repeat_elim),
   ("bv-smulo-elim", .bv_smulo_elim),
   ("bv-umulo-elim", .bv_umulo_elim),
