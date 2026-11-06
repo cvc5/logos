@@ -371,13 +371,13 @@ theorem eo_to_smt_ran_cases (q lo hi s : Term) :
   | Rational rl =>
       cases hi with
       | Rational rh =>
-          cases hS : __eo_to_smt_is_literal_list s
-          · left
-            simp [__eo_to_smt_ran, hS, native_ite]
+          by_cases hS : __eo_to_smt_is_literal_list s = true
           · right
             exact ⟨rl, rh, rfl, rfl, hS, by
               change __eo_to_smt_ran q _ _ s = _
               simp [__eo_to_smt_ran, hS, native_ite]⟩
+          · left
+            simp [__eo_to_smt_ran, hS, native_ite]
       | _ => left; simp [__eo_to_smt_ran]
   | _ => left; simp [__eo_to_smt_ran]
 
