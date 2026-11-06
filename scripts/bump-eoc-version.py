@@ -4,7 +4,8 @@
 Advance the pinned commit to the current head of cvc5/ethos's ``main``, build the
 compiler, and regenerate Cpc and CpcMini from the cached signature. The semantics
 in install/defs/Cpc.eos and install/defs/smt.eos are maintained in Logos and are
-not touched, so a change to smt.eos at the new commit has to be copied by hand.
+not touched. If the eos format changes, these files may need to be updated by
+hand.
 """
 
 from __future__ import annotations

@@ -137,11 +137,6 @@ that updates the copy.
 `install/defs/Cpc.eos` says what each symbol of the signature means, as a
 transformation into the deep embedding, and this repository is where it lives.
 `install/defs/smt.eos` gives the core SMT-LIB semantics it is written against.
-It started as a copy of `tools/eoc/semantics/smt.eos` in
-[cvc5/ethos](https://github.com/cvc5/ethos), and every install compiles the copy
-here rather than the one the compiler ships, including an install using another
-Ethos tree through `--ethos`. A change to that tree's `smt.eos` therefore has no
-effect until it is copied here or named with `--smt-semantics`.
 
 `Spec.lean` and the `SmtModel` modules are what the two compile to, so changing
 what CPC means changes what satisfiability means in Logos.
