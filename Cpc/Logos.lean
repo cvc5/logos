@@ -4056,8 +4056,22 @@ def __mk_dt_inst : Term -> Term -> Term -> Term
   | D, c, x => (__mk_dt_inst_rec (__dt_get_selectors D c) x (__assoc_nil_nth Term.__eo_List_cons (__eo_dt_constructors D) (__eo_list_find Term.__eo_List_cons (__dt_get_constructors D) c)))
 
 
+def __mk_dt_inst_tuple : Term -> Term -> Term
+  | _ , Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2), xt => (__mk_dt_inst_tuple_rec (Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2) xt (Term.Numeral 0))
+  | (Term.UOp UserOp.UnitTuple), xu => (Term.UOp UserOp.tuple_unit)
+  | _, _ => Term.Stuck
+
+
+def __mk_dt_inst_prem : Term -> Term -> Term
+  | _ , Term.Stuck  => Term.Stuck
+  | (Term.Boolean true), x => (__mk_dt_inst_tuple (__eo_typeof x) x)
+  | (Term.Apply (Term.UOp1 UserOp1.is c) x), __eo_lv_x_2 => (__eo_requires (__eo_eq x __eo_lv_x_2) (Term.Boolean true) (__mk_dt_inst (__eo_typeof x) c x))
+  | _, _ => Term.Stuck
+
+
 def __eo_prog_dt_inst : Term -> Term
-  | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp1 UserOp1.is c) x)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_lv_x_2) t)) => (__eo_requires (__eo_eq x __eo_lv_x_2) (Term.Boolean true) (__eo_requires (__mk_dt_inst (__eo_typeof x) c x) t (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp1 UserOp1.is c) x)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t))))
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) prem) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t)) => (__eo_requires (__mk_dt_inst_prem prem x) t (Term.Apply (Term.Apply (Term.UOp UserOp.eq) prem) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t)))
   | _ => Term.Stuck
 
 
@@ -4189,10 +4203,17 @@ def __mk_dt_updater_elim_rhs : Term -> Term -> Term -> Term
   | _, _, _ => Term.Stuck
 
 
+def __mk_dt_updater_elim_conc : Term -> Term -> Term
+  | _ , Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_update n) t) a), tu => (__eo_requires (__mk_dt_updater_elim_rhs (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_update n) t) a) (Term.UOp UserOp.tuple) (__dt_get_selectors (__eo_typeof t) (Term.UOp UserOp.tuple))) tu (Term.Boolean true))
+  | (Term.Apply (Term.Apply (Term.UOp1 UserOp1.update s) t) a), (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.ite) (Term.Apply (Term.UOp1 UserOp1.is c) __eo_lv_t_2)) tu) __eo_lv_t_3) => (__eo_requires (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq t __eo_lv_t_3)) (Term.Boolean true) (__eo_requires (__mk_dt_updater_elim_rhs (Term.Apply (Term.Apply (Term.UOp1 UserOp1.update s) t) a) c (__dt_get_selectors (__eo_typeof t) c)) tu (Term.Boolean true)))
+  | _, _ => Term.Stuck
+
+
 def __eo_prog_dt_updater_elim : Term -> Term
-  | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply u t) a)) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.ite) (Term.Apply (Term.UOp1 UserOp1.is c) __eo_lv_t_2)) tu) __eo_lv_t_3)) =>
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply u t) a)) rhs) =>
     let _v0 := (Term.Apply (Term.Apply u t) a)
-    (__eo_requires (__eo_and (__eo_eq t __eo_lv_t_2) (__eo_eq t __eo_lv_t_3)) (Term.Boolean true) (__eo_requires (__mk_dt_updater_elim_rhs _v0 c (__dt_get_selectors (__eo_typeof t) c)) tu (Term.Apply (Term.Apply (Term.UOp UserOp.eq) _v0) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.ite) (Term.Apply (Term.UOp1 UserOp1.is c) t)) tu) t))))
+    (__eo_requires (__mk_dt_updater_elim_conc _v0 rhs) (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) _v0) rhs))
   | _ => Term.Stuck
 
 

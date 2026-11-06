@@ -1397,11 +1397,11 @@ def __smtx_typeof_value : SmtValue -> SmtType
   | (SmtValue.Real r1) => SmtType.Real
   | (SmtValue.Binary i1 i2) => (native_ite (native_and (native_zleq 0 i1) (native_zeq i2 (native_mod_total i2 (native_int_pow2 i1)))) (SmtType.BitVec (native_int_to_nat i1)) SmtType.None)
   | (SmtValue.Map m1) => (__smtx_typeof_map_value m1)
-  | (SmtValue.Fun s1 T2 T3) => (SmtType.FunType T2 T3)
+  | (SmtValue.Fun e1 T2 T3) => (SmtType.FunType T2 T3)
   | (SmtValue.Set m1) => (__smtx_map_to_set_type (__smtx_typeof_map_value m1))
   | (SmtValue.Seq q1) => (__smtx_typeof_seq_value q1)
   | (SmtValue.Char c1) => (native_ite (native_char_valid c1) SmtType.Char SmtType.None)
-  | (SmtValue.UValue n1 n2) => (SmtType.USort n1)
+  | (SmtValue.UValue n1 e2) => (SmtType.USort n1)
   | (SmtValue.RegLan re1) => SmtType.RegLan
   | (SmtValue.DtCons s1 dd2 n3) => (__smtx_typeof_dt_cons_value_rec (SmtType.Datatype s1 dd2) (__smtx_dt_resolve (__smtx_dd_lookup s1 dd2) dd2) n3)
   | (SmtValue.Apply v1 v2) => (__smtx_typeof_apply_value (__smtx_typeof_value v1) (__smtx_typeof_value v2))
@@ -1412,7 +1412,7 @@ def __smtx_model_eval_apply (M : SmtModel) : SmtValue -> SmtValue -> SmtValue
   | v, SmtValue.NotValue => SmtValue.NotValue
   | (SmtValue.DtCons s dd n), i => (SmtValue.Apply (SmtValue.DtCons s dd n) i)
   | (SmtValue.Apply f v), i => (SmtValue.Apply (SmtValue.Apply f v) i)
-  | (SmtValue.Fun s T U), i => (native_eval_fun_apply M s T U i)
+  | (SmtValue.Fun e T U), i => (native_eval_fun_apply M e T U i)
   | v, i => SmtValue.NotValue
 
 
@@ -1485,7 +1485,7 @@ def __smtx_value_canonical (uc : SmtUSortDom) : SmtValue -> native_Bool
   | (SmtValue.Set m1) => (native_and (__smtx_map_canonical uc m1) (native_veq (__smtx_map_get_default m1) (SmtValue.Boolean false)))
   | (SmtValue.Seq q1) => (__smtx_seq_canonical uc q1)
   | (SmtValue.Char c1) => (native_char_valid c1)
-  | (SmtValue.UValue n1 n2) => (native_usort_mem uc n1 n2)
+  | (SmtValue.UValue n1 e2) => (native_usort_mem uc n1 e2)
   | (SmtValue.RegLan re1) => (__smtx_re_canonical re1)
   | (SmtValue.Apply v1 v2) => (native_and (__smtx_value_canonical uc v1) (__smtx_value_canonical uc v2))
   | v => true
