@@ -876,33 +876,11 @@
 ;-----------------------------------------------------------------------------
 
 ; The nonlinear coverings calculus is not in SMT-LIB. Its formulas speak of a
-; polynomial as a function rather than at the value a model gives its variable,
-; and its rules compute with the coefficients as rationals, so a polynomial is
-; read the same way here: as a term of type Real at a point of type Real.
+; polynomial as a function rather than at the value a model gives a variable, so
+; each gives the polynomial by its coefficients, and it is evaluated at a point.
 
 (define-macro cov.zero () (Rational ("mk_rational" 0 1)))
 (define-macro cov.x ()    (Var "str_vname" Real))
-
-; The polynomial written by t, with its variable replaced by the Real term v. As
-; in $upoly_of_term, a numeral is a coefficient whichever sort it was written at,
-; so to_real has no further effect. Anything else is not a polynomial and has no
-; meaning. Which leaf is the variable is checked by the rules, not here.
-(program $eo_to_smt_poly_at
-  ((a SmtTerm) (b SmtTerm) (v SmtTerm) (n <numeral>) (q <rational>) (s <string>) (T SmtType) (i <nat>) (t SmtTerm))
-  :signature (SmtTerm SmtTerm) SmtTerm
-  (
-  (($eo_to_smt_poly_at (Numeral n) v) (to_real (Numeral n)))
-  (($eo_to_smt_poly_at (Rational q) v) (Rational q))
-  (($eo_to_smt_poly_at (to_real a) v) ($eo_to_smt_poly_at a v))
-  (($eo_to_smt_poly_at (uneg a) v) (uneg ($eo_to_smt_poly_at a v)))
-  (($eo_to_smt_poly_at (+ a b) v) (+ ($eo_to_smt_poly_at a v) ($eo_to_smt_poly_at b v)))
-  (($eo_to_smt_poly_at (- a b) v) (- ($eo_to_smt_poly_at a v) ($eo_to_smt_poly_at b v)))
-  (($eo_to_smt_poly_at (* a b) v) (* ($eo_to_smt_poly_at a v) ($eo_to_smt_poly_at b v)))
-  (($eo_to_smt_poly_at (Var s T) v) v)
-  (($eo_to_smt_poly_at (UConst i T) v) v)
-  (($eo_to_smt_poly_at t v) none)
-  )
-)
 
 ; The polynomial with the coefficients cs, lowest degree first, at the term v.
 (program $eo_to_smt_coeffs_at ((c $eo_Term) (cs $eo_List) (v SmtTerm))
@@ -959,17 +937,18 @@
           (and (< lo cov.x) (< cov.x hi)))))
 
 ; -- @is_root
-(define-symbol @is_root (p r)
-  :term (= ($eo_to_smt_poly_at p r) cov.zero))
+(define-symbol @is_root ((! q :raw) r)
+  :term (= ($eo_to_smt_coeffs_at q r) cov.zero))
 
 ; -- @sgn_inv
-; p is positive throughout (l, r), or negative throughout it, or zero throughout
+; q is positive throughout (l, r), or negative throughout it, or zero throughout
 ; it.
-(define-symbol @sgn_inv (p (! l :raw) (! r :raw))
+(define-symbol @sgn_inv ((! q :raw) (! l :raw) (! r :raw))
   :term (eo::define ((I (and ($eo_to_smt_cov_above l l) ($eo_to_smt_cov_below r r))))
-          (or ($eo_to_smt_cov_throughout I (> ($eo_to_smt_poly_at p cov.x) cov.zero))
-          (or ($eo_to_smt_cov_throughout I (< ($eo_to_smt_poly_at p cov.x) cov.zero))
-              ($eo_to_smt_cov_throughout I (= ($eo_to_smt_poly_at p cov.x) cov.zero))))))
+        (eo::define ((v ($eo_to_smt_coeffs_at q cov.x)))
+          (or ($eo_to_smt_cov_throughout I (> v cov.zero))
+          (or ($eo_to_smt_cov_throughout I (< v cov.zero))
+              ($eo_to_smt_cov_throughout I (= v cov.zero)))))))
 
 ;-----------------------------------------------------------------------------
 (section "Quantifiers, skolems, and the binder left out")
