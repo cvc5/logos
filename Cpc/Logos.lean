@@ -2002,9 +2002,16 @@ def __cov_seq_values : Term -> Term -> Term
 def __cov_lt : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | _ , Term.Stuck  => Term.Stuck
-  | (Term.UOp4 UserOp4._at_ran q1 l1 h1 s1), (Term.UOp4 UserOp4._at_ran q2 l2 h2 s2) => (__eo_not (__eo_gt h1 l2))
-  | (Term.UOp4 UserOp4._at_ran q1 l1 h1 s1), b => (__eo_not (__eo_gt h1 b))
-  | a, (Term.UOp4 UserOp4._at_ran q2 l2 h2 s2) => (__eo_not (__eo_gt a l2))
+  | (Term.UOp4 UserOp4._at_ran q1 l1 h1 s1), (Term.UOp4 UserOp4._at_ran q2 l2 h2 s2) =>
+    let _v0 := (__upoly_of_list q2)
+    let _v1 := (__upoly_of_list q1)
+    (__eo_and (__eo_and (__eo_ite (__eo_and (__eo_is_q l1) (__eo_is_q h1)) (__eo_ite (__upoly_rem_seq_check _v1 (__upoly_derivative _v1) s1) (__eo_and (__eo_is_neg (__eo_mul (__upoly_eval _v1 l1) (__upoly_eval _v1 h1))) (__eo_is_eq (__eo_add (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s1 l1)) (__eo_neg (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s1 h1)))) (Term.Numeral 1))) (Term.Boolean false)) (Term.Boolean false)) (__eo_ite (__eo_and (__eo_is_q l2) (__eo_is_q h2)) (__eo_ite (__upoly_rem_seq_check _v0 (__upoly_derivative _v0) s2) (__eo_and (__eo_is_neg (__eo_mul (__upoly_eval _v0 l2) (__upoly_eval _v0 h2))) (__eo_is_eq (__eo_add (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s2 l2)) (__eo_neg (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s2 h2)))) (Term.Numeral 1))) (Term.Boolean false)) (Term.Boolean false))) (__eo_not (__eo_gt h1 l2)))
+  | (Term.UOp4 UserOp4._at_ran q1 l1 h1 s1), b =>
+    let _v0 := (__upoly_of_list q1)
+    (__eo_and (__eo_ite (__eo_and (__eo_is_q l1) (__eo_is_q h1)) (__eo_ite (__upoly_rem_seq_check _v0 (__upoly_derivative _v0) s1) (__eo_and (__eo_is_neg (__eo_mul (__upoly_eval _v0 l1) (__upoly_eval _v0 h1))) (__eo_is_eq (__eo_add (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s1 l1)) (__eo_neg (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s1 h1)))) (Term.Numeral 1))) (Term.Boolean false)) (Term.Boolean false)) (__eo_not (__eo_gt h1 b)))
+  | a, (Term.UOp4 UserOp4._at_ran q2 l2 h2 s2) =>
+    let _v0 := (__upoly_of_list q2)
+    (__eo_and (__eo_ite (__eo_and (__eo_is_q l2) (__eo_is_q h2)) (__eo_ite (__upoly_rem_seq_check _v0 (__upoly_derivative _v0) s2) (__eo_and (__eo_is_neg (__eo_mul (__upoly_eval _v0 l2) (__upoly_eval _v0 h2))) (__eo_is_eq (__eo_add (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s2 l2)) (__eo_neg (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s2 h2)))) (Term.Numeral 1))) (Term.Boolean false)) (Term.Boolean false)) (__eo_not (__eo_gt a l2)))
   | a, b => (__eo_gt b a)
 
 
@@ -2081,7 +2088,8 @@ def __cov_is_root : Term -> Term -> Term -> Term
   | _ , _ , Term.Stuck  => Term.Stuck
   | p, (Term.UOp4 UserOp4._at_ran q a b s), st =>
     let _v0 := (__upoly_of_list q)
-    (__eo_ite (__upoly_divides_rec _v0 p p) (Term.Boolean true) (__eo_ite (__upoly_rem_seq_check _v0 (__upoly_mul (__upoly_derivative _v0) p) st) (__eo_is_eq (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values st a)) (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values st b))) (Term.Boolean false)))
+    let _v1 := (__upoly_derivative _v0)
+    (__eo_ite (__eo_ite (__eo_and (__eo_is_q a) (__eo_is_q b)) (__eo_ite (__upoly_rem_seq_check _v0 _v1 s) (__eo_and (__eo_is_neg (__eo_mul (__upoly_eval _v0 a) (__upoly_eval _v0 b))) (__eo_is_eq (__eo_add (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s a)) (__eo_neg (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s b)))) (Term.Numeral 1))) (Term.Boolean false)) (Term.Boolean false)) (__eo_ite (__upoly_divides_rec _v0 p p) (Term.Boolean true) (__eo_ite (__upoly_rem_seq_check _v0 (__upoly_mul _v1 p) st) (__eo_is_eq (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values st a)) (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values st b))) (Term.Boolean false))) (Term.Boolean false))
   | p, e, st => (__eo_ite (__eo_and (__eo_is_q e) (__eo_is_eq st Term.__eo_List_nil)) (__eo_is_eq (__upoly_eval p e) (Term.Rational (native_mk_rational 0 1))) (Term.Boolean false))
 
 
@@ -9367,15 +9375,9 @@ def __eo_typeof__at__at_upoly : Term -> Term -> Term
   | _, _ => Term.Stuck
 
 
-def __eo_typeof__at_ran : Term -> Term -> Term -> Term -> Term -> Term -> Term -> Term -> Term
-  | _ , Term.Stuck , _ , _ , _ , _ , _ , _  => Term.Stuck
-  | _ , _ , _ , Term.Stuck , _ , _ , _ , _  => Term.Stuck
-  | _ , _ , _ , _ , _ , Term.Stuck , _ , _  => Term.Stuck
-  | _ , _ , _ , _ , _ , _ , _ , Term.Stuck  => Term.Stuck
-  | Term.__eo_List, q, (Term.UOp UserOp.Real), lo, (Term.UOp UserOp.Real), hi, Term.__eo_List, s =>
-    let _v0 := (__upoly_of_list q)
-    (__eo_requires (__eo_ite (__eo_and (__eo_is_q lo) (__eo_is_q hi)) (__eo_ite (__upoly_rem_seq_check _v0 (__upoly_derivative _v0) s) (__eo_and (__eo_is_neg (__eo_mul (__upoly_eval _v0 lo) (__upoly_eval _v0 hi))) (__eo_is_eq (__eo_add (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s lo)) (__eo_neg (__sign_variations_rec (Term.Rational (native_mk_rational 0 1)) (__cov_seq_values s hi)))) (Term.Numeral 1))) (Term.Boolean false)) (Term.Boolean false)) (Term.Boolean true) (Term.UOp UserOp.Real))
-  | _, _, _, _, _, _, _, _ => Term.Stuck
+def __eo_typeof__at_ran : Term -> Term -> Term -> Term -> Term
+  | Term.__eo_List, (Term.UOp UserOp.Real), (Term.UOp UserOp.Real), Term.__eo_List => (Term.UOp UserOp.Real)
+  | _, _, _, _ => Term.Stuck
 
 
 def __eo_typeof__at_sgn_inv : Term -> Term -> Term -> Term
@@ -9622,7 +9624,7 @@ def __eo_typeof : Term -> Term
   | (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_upoly) __eo_x1) __eo_x2) => (__eo_typeof__at__at_upoly (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
   | (Term.UOp UserOp._at__at_cov_minus_inf) => (Term.UOp UserOp.Real)
   | (Term.UOp UserOp._at__at_cov_plus_inf) => (Term.UOp UserOp.Real)
-  | (Term.UOp4 UserOp4._at_ran __eo_x1 __eo_x2 __eo_x3 __eo_x4) => (__eo_typeof__at_ran (__eo_typeof __eo_x1) __eo_x1 (__eo_typeof __eo_x2) __eo_x2 (__eo_typeof __eo_x3) __eo_x3 (__eo_typeof __eo_x4) __eo_x4)
+  | (Term.UOp4 UserOp4._at_ran __eo_x1 __eo_x2 __eo_x3 __eo_x4) => (__eo_typeof__at_ran (__eo_typeof __eo_x1) (__eo_typeof __eo_x2) (__eo_typeof __eo_x3) (__eo_typeof __eo_x4))
   | (Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv __eo_x1) __eo_x2) __eo_x3) => (__eo_typeof__at_sgn_inv (__eo_typeof __eo_x1) (__eo_typeof __eo_x2) (__eo_typeof __eo_x3))
   | (Term.Apply (Term.UOp1 UserOp1._at_is_root __eo_x1) __eo_x2) => (__eo_typeof__at_is_root (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.forall) __eo_x1) __eo_x2) => (__eo_typeof_forall (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
