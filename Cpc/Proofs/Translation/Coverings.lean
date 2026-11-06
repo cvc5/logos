@@ -462,4 +462,13 @@ theorem eo_typeof_apply_at_ran (a b c d t : Term) :
     __eo_typeof_apply (__eo_typeof__at_ran a b c d) t = Term.Stuck := by
   rcases eo_typeof_at_ran_cases a b c d with h | h <;> rw [h] <;> cases t <;> rfl
 
+theorem eo_typeof_apply_stuck (t : Term) : __eo_typeof_apply Term.Stuck t = Term.Stuck := by
+  cases t <;> rfl
+
+/-- `@is_root` is never of a function type, so applying it is stuck. -/
+theorem eo_typeof_apply_at_is_root (a b t : Term) :
+    __eo_typeof_apply (__eo_typeof__at_is_root a b) t = Term.Stuck := by
+  unfold __eo_typeof__at_is_root
+  split <;> cases t <;> rfl
+
 end TranslationProofs
