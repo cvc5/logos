@@ -663,7 +663,6 @@ private theorem nativeIntPow2PosOfNonneg
     simpa [SmtEval.native_zleq] using hW0
   have hNot : ¬ W < 0 := Int.not_lt_of_ge hW
   simp [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hNot]
-  exact Int.pow_pos (by decide)
 
 private theorem ultAddOneBoolIdentity
     (m x b : native_Int) :

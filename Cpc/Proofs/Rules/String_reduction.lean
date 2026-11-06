@@ -31,6 +31,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 10000000
@@ -615,7 +618,7 @@ private theorem sr_native_seq_replace_nil
 
 /-- Search in a dropped suffix, with a successful result shifted back by the
     suffix offset, agrees with search in the original sequence at that offset. -/
-private def sr_native_seq_indexof_offset
+private noncomputable def sr_native_seq_indexof_offset
     (xs pat : List SmtValue) (off : Nat) : native_Int :=
   let r := native_seq_indexof xs pat 0
   if r = (-1 : native_Int) then -1 else r + Int.ofNat off
@@ -1273,7 +1276,7 @@ private theorem sr_nondigit_code_outside (s : native_String) (j : Nat)
     rw [Int.sub_add_cancel]
     simpa using Int.add_one_le_iff.mpr hHi'
 
-private def sr_nondigit_re : SmtRegLan :=
+private noncomputable def sr_nondigit_re : SmtRegLan :=
   native_re_inter native_re_allchar
     (native_re_comp
       (native_re_range (native_string_lit "0") (native_string_lit "9")))
@@ -1348,22 +1351,19 @@ private theorem sr_nondigit_find_aux :
           sr_nondigit_prefix c cs hp.1
       rw [impl_native_re_find_idx_aux.eq_def, hPrefix]
       by_cases hc : impl_native_char_is_digit c = true
-      · simp [hc]
-        have htail : cs.all impl_native_char_is_digit ≠ true := by
+      · have htail : cs.all impl_native_char_is_digit ≠ true := by
           intro ht
           apply h
           simp [hc, ht]
         rcases sr_nondigit_find_aux cs (idx + 1) hp.2 htail with
           ⟨j, d, pre, post, hcs, hlen, hd, hfind⟩
-        refine ⟨j + 1, d, c :: pre, ?_⟩
-        refine ⟨⟨post, by simp [hcs]⟩, by simpa using hlen,
-          by simpa using hd, ?_⟩
-        have hsimpa := hfind
-        try simp [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] at hsimpa ⊢
-        exact hsimpa
-      · simp [hc]
-        exact ⟨0, c, [], ⟨⟨cs, by simp⟩, by simp,
-          by simpa using hc, by simp⟩⟩
+        refine ⟨j + 1, d, c :: pre, post, ?_, ?_, hd, ?_⟩
+        · simp [hcs]
+        · simp [hlen]
+        · simpa [hc, impl_native_string_to_values, Nat.add_assoc, Nat.add_comm,
+            Nat.add_left_comm] using hfind
+      · refine ⟨0, c, [], cs, by simp, by simp, hc, ?_⟩
+        simp [hc]
 
 private theorem sr_nondigit_index_data (s : native_String)
     (hValid : native_string_valid s = true)
@@ -1496,7 +1496,7 @@ private theorem sr_native_seq_update_active_facts
   refine ⟨hUpdate, hSource, ?_, ?_⟩
   · simp [hJle]
   · exact (List.length_take_of_le (by
-      simpa [hDropLen] using hSelectedLe)).symm
+      simp [hDropLen])).symm
 
 /-- The syntactic constant-length shortcut used by `str_update` is sound with
     respect to model evaluation in its only special case, length one. -/
@@ -2453,7 +2453,9 @@ private theorem string_reduction_pred_true
                 hResultEval, hSourceLenEval, hNonDigitEval,
                 hBadDigitEval, native_zlt, native_zleq, native_veq,
                 native_and, native_or, hResultNeg, hResultNegOne, hj]
-              exact ⟨hResultNegOne, Or.inr hOutside⟩
+              exact ⟨hResultNegOne, Or.inr (by
+                simpa only [Int.ofNat_eq_natCast, sub_lt_iff_lt_add, zero_add]
+                  using hOutside)⟩
       case str_from_int =>
         have hFromNN : term_has_non_none_type
             (SmtTerm.str_from_int (__eo_to_smt x)) := by
@@ -3577,6 +3579,9 @@ private theorem string_reduction_pred_true
                       _ = native_seq_extract (native_unpack_seq sx)
                             (Int.ofNat (native_unpack_seq sx).length +
                               -(k + 1)) 1 := by rw [hMirrorCast]
+                      _ = native_seq_extract (native_unpack_seq sx)
+                            ((native_unpack_seq sx).length + (-1 + -k)) 1 := by
+                        simp [Int.ofNat_eq_natCast, Int.neg_add, Int.add_comm]
                   · right
                     left
                     exact Int.le_of_not_gt hklt
@@ -4091,15 +4096,13 @@ private theorem string_reduction_pred_true
                     Int.ofNat xs.length + -(i + 1) =
                       Int.ofNat (xs.length - (j + 1)) := by
                   rw [hNextCast]
-                  have hsimpa := (Int.ofNat_sub hjSuccLe).symm
-                  try simp at hsimpa ⊢
-                  exact hsimpa
+                  simpa [Int.sub_eq_add_neg, Int.neg_add, Int.add_comm] using
+                    (Int.ofNat_sub hjSuccLe).symm
                 have hRemainingNatCast :
                     Int.ofNat xs.length + -Int.ofNat (j + 1) =
                       Int.ofNat (xs.length - (j + 1)) := by
-                  have hsimpa := (Int.ofNat_sub hjSuccLe).symm
-                  try simp at hsimpa ⊢
-                  exact hsimpa
+                  simpa [Int.sub_eq_add_neg, Int.neg_add, Int.add_comm] using
+                    (Int.ofNat_sub hjSuccLe).symm
                 have hPreExtract :
                     native_seq_extract xs 0 i = xs.take j := by
                   rw [← hCast]
@@ -6503,15 +6506,7 @@ private theorem string_reduction_pred_true
                         elem_typeof_pack_seq, native_unpack_seq,
                         native_seq_concat, hSource, hZPack,
                         List.append_assoc]
-                      calc
-                        native_pack_seq T
-                            (zs.take j ++
-                              ((zs.drop j).take chosen.length ++
-                                zs.drop (j + chosen.length))) =
-                            native_pack_seq T zs := by
-                          apply congrArg (native_pack_seq T)
-                          simpa [List.append_assoc, zs] using hSource.symm
-                        _ = sz := hZPack
+                      exact hZPack
                     have hPreLenEval :
                         __smtx_model_eval M (SmtTerm.str_len preS) =
                           SmtValue.Numeral n := by
@@ -6526,7 +6521,7 @@ private theorem string_reduction_pred_true
                             exact congrArg Int.ofNat (by
                               simpa [List.length_take] using hPreLen)
                           _ = n := hCast
-                      exact hTakeLen
+                      simpa only [Int.ofNat_eq_natCast, Nat.cast_min] using hTakeLen
                     have hSelectedLenEval :
                         __smtx_model_eval M selectedLen =
                           SmtValue.Numeral (Int.ofNat chosen.length) := by

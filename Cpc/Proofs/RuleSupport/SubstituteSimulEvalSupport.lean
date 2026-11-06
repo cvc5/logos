@@ -2124,10 +2124,10 @@ theorem substFalse_eval_set_insert
     simp [IsNonbinderSubterm, hOuterNonbinder]
   have hTlEval : __smtx_model_eval M (__eo_to_smt tlSub) =
       __smtx_model_eval N (__eo_to_smt tl) :=
-    hRecArg hTlSubterm (by simp; omega) hTlTrans hTlSubTrans
+    hRecArg hTlSubterm (by simp <;> omega) hTlTrans hTlSubTrans
   have hBaseEval : __smtx_model_eval M (__eo_to_smt baseSub) =
       __smtx_model_eval N (__eo_to_smt base) :=
-    hRecArg hBaseSubterm (by simp; omega) hBaseTrans hBaseSubTrans
+    hRecArg hBaseSubterm (by simp <;> omega) hBaseTrans hBaseSubTrans
   rw [hResultEq]
   change __smtx_model_eval M
       (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt tlSub)) (__eo_to_smt baseSub)) =
@@ -2960,13 +2960,13 @@ theorem substFalse_eval_ternary_op
   exact hCong _ _ _ _ _ _
     (hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder, hMiddleNonbinder])
-      (by simp; omega) hArgsTrans.1 hSubstArgsTrans.1)
+      (by simp <;> omega) hArgsTrans.1 hSubstArgsTrans.1)
     (hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder, hMiddleNonbinder])
-      (by simp; omega) hArgsTrans.2.1 hSubstArgsTrans.2.1)
+      (by simp <;> omega) hArgsTrans.2.1 hSubstArgsTrans.2.1)
     (hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder, hMiddleNonbinder])
-      (by simp; omega) hArgsTrans.2.2 hSubstArgsTrans.2.2)
+      (by simp <;> omega) hArgsTrans.2.2 hSubstArgsTrans.2.2)
 
 /-- Reusable reduction for a **quaternary special-head application**
 `(Apply (Apply (Apply (Apply (UOp op) x1) x2) x3) a)` in the
@@ -3325,22 +3325,22 @@ theorem substFalse_eval_quaternary_op
       (by
         simp [IsNonbinderSubterm, hOuterNonbinder, hThirdNonbinder,
           hMiddleNonbinder])
-      (by simp; omega) hArgsTrans.1 hSubstArgsTrans.1)
+      (by simp <;> omega) hArgsTrans.1 hSubstArgsTrans.1)
     (hRecArg
       (by
         simp [IsNonbinderSubterm, hOuterNonbinder, hThirdNonbinder,
           hMiddleNonbinder])
-      (by simp; omega) hArgsTrans.2.1 hSubstArgsTrans.2.1)
+      (by simp <;> omega) hArgsTrans.2.1 hSubstArgsTrans.2.1)
     (hRecArg
       (by
         simp [IsNonbinderSubterm, hOuterNonbinder, hThirdNonbinder,
           hMiddleNonbinder])
-      (by simp; omega) hArgsTrans.2.2.1 hSubstArgsTrans.2.2.1)
+      (by simp <;> omega) hArgsTrans.2.2.1 hSubstArgsTrans.2.2.1)
     (hRecArg
       (by
         simp [IsNonbinderSubterm, hOuterNonbinder, hThirdNonbinder,
           hMiddleNonbinder])
-      (by simp; omega) hArgsTrans.2.2.2 hSubstArgsTrans.2.2.2)
+      (by simp <;> omega) hArgsTrans.2.2.2 hSubstArgsTrans.2.2.2)
 
 theorem smtx_model_eval_apply_cross_eq_of_eval_eq
     {M N : SmtModel} (hGlobals : model_agrees_on_globals M N)
@@ -6692,17 +6692,17 @@ theorem substFalse_eval_ternary_var_head_generic_apply
           hGlobals
           (fun ht hst => hRecArg
             (by simp [IsNonbinderSubterm, hOuterNonbinder, hMiddleNonbinder])
-            (by simp; omega) ht hst)
+            (by simp <;> omega) ht hst)
           (fun ht hst => hRecArg
             (by simp [IsNonbinderSubterm, hOuterNonbinder, hMiddleNonbinder])
-            (by simp; omega) ht hst)
+            (by simp <;> omega) ht hst)
           (fun ht hst => hRecArg
             (by simp [IsNonbinderSubterm, hOuterNonbinder, hMiddleNonbinder])
-            (by simp; omega) ht hst)
+            (by simp <;> omega) ht hst)
     simpa [hHeadResultEq] using hHeadEvalRaw
   have hZEval := hRecArg
     (by simp [IsNonbinderSubterm, hOuterNonbinder])
-    (by simp; omega) hZTrans hSubstZTrans
+    (by simp <;> omega) hZTrans hSubstZTrans
   have hOrigEval :
       generic_apply_eval
         (__eo_to_smt (Term.Apply (Term.Apply (Term.Var name S) x) y))
@@ -6831,7 +6831,7 @@ theorem substFalse_eval_ternary_uop1_head_generic_apply
           __smtx_model_eval N (__eo_to_smt x) :=
     fun ht hst => hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder, hMiddleNonbinder])
-      (by simp; omega) ht hst
+      (by simp <;> omega) ht hst
   have hRecY :
       eoHasSmtTranslation y →
         eoHasSmtTranslation
@@ -6842,7 +6842,7 @@ theorem substFalse_eval_ternary_uop1_head_generic_apply
           __smtx_model_eval N (__eo_to_smt y) :=
     fun ht hst => hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder, hMiddleNonbinder])
-      (by simp; omega) ht hst
+      (by simp <;> omega) ht hst
   have hRecZ :
       eoHasSmtTranslation z →
         eoHasSmtTranslation
@@ -6853,7 +6853,7 @@ theorem substFalse_eval_ternary_uop1_head_generic_apply
           __smtx_model_eval N (__eo_to_smt z) :=
     fun ht hst => hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder])
-      (by simp; omega) ht hst
+      (by simp <;> omega) ht hst
   have hSubstInner :
       __substitute_simul_rec (Term.Boolean isRename)
           (Term.Apply (Term.UOp1 op idx) x) xs ss bvs =
@@ -7257,7 +7257,7 @@ theorem substFalse_eval_ternary_atom_head_generic_apply
           __smtx_model_eval N (__eo_to_smt (Term.Apply g x)) :=
     fun ht hst => hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder, hMiddleNonbinder])
-      (by simp; omega) ht hst
+      (by simp <;> omega) ht hst
   have hRecY :
       eoHasSmtTranslation y →
         eoHasSmtTranslation
@@ -7268,7 +7268,7 @@ theorem substFalse_eval_ternary_atom_head_generic_apply
           __smtx_model_eval N (__eo_to_smt y) :=
     fun ht hst => hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder, hMiddleNonbinder])
-      (by simp; omega) ht hst
+      (by simp <;> omega) ht hst
   have hRecZ :
       eoHasSmtTranslation z →
         eoHasSmtTranslation
@@ -7279,7 +7279,7 @@ theorem substFalse_eval_ternary_atom_head_generic_apply
           __smtx_model_eval N (__eo_to_smt z) :=
     fun ht hst => hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder])
-      (by simp; omega) ht hst
+      (by simp <;> omega) ht hst
   have hSubstInnerRaw :
       __substitute_simul_rec (Term.Boolean isRename)
           (Term.Apply g x) xs ss bvs =
@@ -7496,7 +7496,7 @@ theorem substFalse_eval_quaternary_apply_head_generic_apply
             (__eo_to_smt (Term.Apply (Term.Apply (Term.Apply g y) x0) x1)) :=
     fun ht hst => hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder])
-      (by simp; omega) ht hst
+      (by simp <;> omega) ht hst
   have hRecA :
       eoHasSmtTranslation a →
         eoHasSmtTranslation
@@ -7507,7 +7507,7 @@ theorem substFalse_eval_quaternary_apply_head_generic_apply
           __smtx_model_eval N (__eo_to_smt a) :=
     fun ht hst => hRecArg
       (by simp [IsNonbinderSubterm, hOuterNonbinder])
-      (by simp; omega) ht hst
+      (by simp <;> omega) ht hst
   have hOrigTranslate :
       __eo_to_smt
           (Term.Apply (Term.Apply (Term.Apply (Term.Apply g y) x0) x1) a) =
@@ -11095,7 +11095,7 @@ theorem substFalse_eval_gen_lt
                       hRec
                         (G := a)
                         (bvs' := __eo_list_concat Term.__eo_List_cons binder bvs)
-                        (by simp; omega)
+                        (by simp <;> omega)
                         hFullBvsEnv hBodyTrans hBodySubTrans
                         hM' hN' hRel'
                     simp [bodySub, __smtx_model_eval, hBodyEq])
@@ -11129,7 +11129,7 @@ theorem substFalse_eval_gen_lt
                     hRec
                       (G := a)
                       (bvs' := __eo_list_concat Term.__eo_List_cons binder bvs)
-                      (by simp; omega)
+                      (by simp <;> omega)
                       hFullBvsEnv hBodyTrans hBodySubTrans
                       hM' hN' hRel')
           · -- The argument IH provider, shared by every non-binder head: the

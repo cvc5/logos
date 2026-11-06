@@ -249,6 +249,19 @@ run (for instance overnight) before a release or after a regeneration.
 `CpcMini` is a cut-down calculus used to develop and test the proofs; it has no
 parser and no executable of its own.
 
+Before the first verification build, or after updating verification dependencies,
+download the precompiled Mathlib modules and their dependencies:
+
+```bash
+bash scripts/cache-mathlib.sh
+```
+
+The script fetches the Mathlib modules imported by the model and real-number
+bridge. Keep its module list in sync when adding Mathlib imports. CI runs it on
+a dependency-cache miss for `cpc-proofs` and `cpcmini`, then saves the shared
+dependencies before running proof checks. The `cpc-proofs` job allows 45 minutes;
+the other check groups allow 30 minutes.
+
 To run the same checks as CI locally, use:
 
 ```bash

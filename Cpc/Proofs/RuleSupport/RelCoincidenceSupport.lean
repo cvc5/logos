@@ -2027,491 +2027,491 @@ theorem smt_model_eval_rel_of_var_rel_lt
         exact RuleProofs.smt_value_rel_refl _
       case plus x1 x2 =>
         have hA := arith2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case neg x1 x2 =>
         have hA := arith2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case mult x1 x2 =>
         have hA := arith2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case lt x1 x2 =>
         have hA := arith2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case leq x1 x2 =>
         have hA := arith2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case gt x1 x2 =>
         have hA := arith2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case geq x1 x2 =>
         have hA := arith2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case qdiv_total x1 x2 =>
         have hA := arith2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case divisible x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case div_total x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case mod_total x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case str_lt x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case str_leq x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case or x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case and x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case imp x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case xor x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case concat x1 x2 =>
         have hA := concat_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case str_concat x1 x2 =>
         have hA := seq2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case str_contains x1 x2 =>
         have hA := seq2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case str_prefixof x1 x2 =>
         have hA := seq2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case str_suffixof x1 x2 =>
         have hA := seq2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case set_union x1 x2 =>
         have hA := sets2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case set_inter x1 x2 =>
         have hA := sets2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case set_minus x1 x2 =>
         have hA := sets2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case set_subset x1 x2 =>
         have hA := sets2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case map_diff x1 x2 =>
         have hA := map_diff_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2, smtx_model_eval_map_diff_eq_of_usortDom hGlobals.usortDom]
         exact RuleProofs.smt_value_rel_refl _
       case seq_diff x1 x2 =>
         have hA := seq_diff_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case str_at x1 x2 =>
         have hA := str_at_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvand x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvor x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvnand x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvnor x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvxor x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvxnor x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvadd x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvmul x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvudiv x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvurem x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvsub x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvsdiv x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvsrem x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvsmod x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvshl x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvlshr x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvashr x1 x2 =>
         have hA := bv2_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvcomp x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvult x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvule x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvugt x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvuge x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvslt x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvsle x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvsgt x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvsge x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvuaddo x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvsaddo x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvumulo x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvsmulo x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvusubo x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvssubo x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case bvsdivo x1 x2 =>
         have hA := bv2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case str_substr x1 x2 x3 =>
         have hA := str_substr_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2.1 (by simp)) (by rw [hA.2.1]; simp)
-        have e3 := ihEq x3 (by simp; omega) (tnn_of_typeof_eq hA.2.2 (by simp)) (by rw [hA.2.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2.1 (by simp)) (by rw [hA.2.1]; simp)
+        have e3 := ihEq x3 (by simp <;> omega) (tnn_of_typeof_eq hA.2.2 (by simp)) (by rw [hA.2.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2, e3]
         exact RuleProofs.smt_value_rel_refl _
       case str_replace x1 x2 x3 =>
         have hA := seq3_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1.1 hA.2.1.2
-        have e3 := ihEq x3 (by simp; omega) hA.2.2.1 hA.2.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1.1 hA.2.1.2
+        have e3 := ihEq x3 (by simp <;> omega) hA.2.2.1 hA.2.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2, e3]
         exact RuleProofs.smt_value_rel_refl _
       case str_replace_all x1 x2 x3 =>
         have hA := seq3_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1.1 hA.2.1.2
-        have e3 := ihEq x3 (by simp; omega) hA.2.2.1 hA.2.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1.1 hA.2.1.2
+        have e3 := ihEq x3 (by simp <;> omega) hA.2.2.1 hA.2.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2, e3]
         exact RuleProofs.smt_value_rel_refl _
       case str_indexof x1 x2 x3 =>
         have hA := str_indexof_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1.1 hA.2.1.2
-        have e3 := ihEq x3 (by simp; omega) (tnn_of_typeof_eq hA.2.2 (by simp)) (by rw [hA.2.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1.1 hA.2.1.2
+        have e3 := ihEq x3 (by simp <;> omega) (tnn_of_typeof_eq hA.2.2 (by simp)) (by rw [hA.2.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2, e3]
         exact RuleProofs.smt_value_rel_refl _
       case _at_strings_occur_index x1 x2 x3 =>
         have hA := str_indexof_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1.1 hA.2.1.2
-        have e3 := ihEq x3 (by simp; omega)
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1.1 hA.2.1.2
+        have e3 := ihEq x3 (by simp <;> omega)
           (tnn_of_typeof_eq hA.2.2 (by simp)) (by rw [hA.2.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2, e3]
         exact RuleProofs.smt_value_rel_refl _
       case str_update x1 x2 x3 =>
         have hA := str_update_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2.1 (by simp)) (by rw [hA.2.1]; simp)
-        have e3 := ihEq x3 (by simp; omega) hA.2.2.1 hA.2.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2.1 (by simp)) (by rw [hA.2.1]; simp)
+        have e3 := ihEq x3 (by simp <;> omega) hA.2.2.1 hA.2.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2, e3]
         exact RuleProofs.smt_value_rel_refl _
       case re_range x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
+        have e1 := ihEq x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
+        have e2 := ihEq x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
@@ -2539,26 +2539,26 @@ theorem smt_model_eval_rel_of_var_rel_lt
         have hA := guard2_args hTy
         simp only [__smtx_model_eval]
         exact CongSupport.smt_value_rel_re_concat_congr
-          (ih x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)))
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)))
+          (ih x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)))
       case re_inter x1 x2 =>
         have hA := guard2_args hTy
         simp only [__smtx_model_eval]
         exact CongSupport.smt_value_rel_re_inter_congr
-          (ih x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)))
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)))
+          (ih x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)))
       case re_union x1 x2 =>
         have hA := guard2_args hTy
         simp only [__smtx_model_eval]
         exact CongSupport.smt_value_rel_re_union_congr
-          (ih x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)))
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)))
+          (ih x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)))
       case re_diff x1 x2 =>
         have hA := guard2_args hTy
         simp only [__smtx_model_eval]
         exact CongSupport.smt_value_rel_re_diff_congr
-          (ih x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)))
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)))
+          (ih x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)))
       case str_in_re x1 x2 =>
         have hA := guard2_args hTy
         simp only [__smtx_model_eval]
@@ -2568,8 +2568,8 @@ theorem smt_model_eval_rel_of_var_rel_lt
               (tnn_of_typeof_eq hA.1 (by simp))
             rw [hA.1] at hp
             exact hp)
-          (ih x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)))
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2 (by simp)))
+          (ih x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 (by simp)))
       case str_replace_re x1 x2 x3 =>
         have hA := guard3_args hTy
         simp only [__smtx_model_eval]
@@ -2584,9 +2584,9 @@ theorem smt_model_eval_rel_of_var_rel_lt
               (tnn_of_typeof_eq hA.2.2 (by simp))
             rw [hA.2.2] at hp
             exact hp)
-          (ih x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)))
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2.1 (by simp)))
-          (ih x3 (by simp; omega) (tnn_of_typeof_eq hA.2.2 (by simp)))
+          (ih x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2.1 (by simp)))
+          (ih x3 (by simp <;> omega) (tnn_of_typeof_eq hA.2.2 (by simp)))
       case str_replace_re_all x1 x2 x3 =>
         have hA := guard3_args hTy
         simp only [__smtx_model_eval]
@@ -2601,9 +2601,9 @@ theorem smt_model_eval_rel_of_var_rel_lt
               (tnn_of_typeof_eq hA.2.2 (by simp))
             rw [hA.2.2] at hp
             exact hp)
-          (ih x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)))
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2.1 (by simp)))
-          (ih x3 (by simp; omega) (tnn_of_typeof_eq hA.2.2 (by simp)))
+          (ih x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2.1 (by simp)))
+          (ih x3 (by simp <;> omega) (tnn_of_typeof_eq hA.2.2 (by simp)))
       case str_indexof_re x1 x2 x3 =>
         have hA := guard3_args hTy
         simp only [__smtx_model_eval]
@@ -2613,16 +2613,16 @@ theorem smt_model_eval_rel_of_var_rel_lt
               (tnn_of_typeof_eq hA.1 (by simp))
             rw [hA.1] at hp
             exact hp)
-          (ih x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)))
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2.1 (by simp)))
-          (ih x3 (by simp; omega) (tnn_of_typeof_eq hA.2.2 (by simp)))
+          (ih x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2.1 (by simp)))
+          (ih x3 (by simp <;> omega) (tnn_of_typeof_eq hA.2.2 (by simp)))
       case _at_strings_occur_index_re x1 x2 x3 =>
         have hA := guard3_args hTy
         have hX1Tnn : term_has_non_none_type x1 :=
           tnn_of_typeof_eq hA.1 (by simp)
-        have e1 := ihEq x1 (by simp; omega)
+        have e1 := ihEq x1 (by simp <;> omega)
           hX1Tnn (by rw [hA.1]; simp)
-        have e3 := ihEq x3 (by simp; omega)
+        have e3 := ihEq x3 (by simp <;> omega)
           (tnn_of_typeof_eq hA.2.2 (by simp)) (by rw [hA.2.2]; simp)
         have hX1ValTy :
             __smtx_typeof_value (__smtx_model_eval N x1) =
@@ -2633,7 +2633,7 @@ theorem smt_model_eval_rel_of_var_rel_lt
         rw [e1, e3]
         exact rel_strings_occur_index_re_congr
           hX1ValTy
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2.1 (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2.1 (by simp)))
       case str_indexof_re_split x1 x2 x3 =>
         have hA := guard3_args hTy
         simp only [__smtx_model_eval]
@@ -2643,9 +2643,9 @@ theorem smt_model_eval_rel_of_var_rel_lt
               (tnn_of_typeof_eq hA.1 (by simp))
             rw [hA.1] at hp
             exact hp)
-          (ih x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)))
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2.1 (by simp)))
-          (ih x3 (by simp; omega) (tnn_of_typeof_eq hA.2.2 (by simp)))
+          (ih x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2.1 (by simp)))
+          (ih x3 (by simp <;> omega) (tnn_of_typeof_eq hA.2.2 (by simp)))
 
       case Var s0 T0 =>
         exact hVars s0 T0
@@ -2655,31 +2655,31 @@ theorem smt_model_eval_rel_of_var_rel_lt
         exact ih x1 (by simp) hTy
       case Apply f x1 =>
         exact apply_rel hM hN hGlobals hTy
-          (fun hfn => ih f (by simp; omega) hfn)
-          (fun hxn => ih x1 (by simp; omega) hxn)
-          (fun hxn hne => ihEq x1 (by simp; omega) hxn hne)
+          (fun hfn => ih f (by simp <;> omega) hfn)
+          (fun hxn => ih x1 (by simp <;> omega) hxn)
+          (fun hxn hne => ihEq x1 (by simp <;> omega) hxn hne)
       case div x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega)
+        have e1 := ihEq x1 (by simp <;> omega)
           (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega)
+        have e2 := ihEq x2 (by simp <;> omega)
           (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2, hGlobals.1, smtx_model_eval_apply_eq_of_globals hGlobals]
         exact RuleProofs.smt_value_rel_refl _
       case mod x1 x2 =>
         have hA := guard2_args hTy
-        have e1 := ihEq x1 (by simp; omega)
+        have e1 := ihEq x1 (by simp <;> omega)
           (tnn_of_typeof_eq hA.1 (by simp)) (by rw [hA.1]; simp)
-        have e2 := ihEq x2 (by simp; omega)
+        have e2 := ihEq x2 (by simp <;> omega)
           (tnn_of_typeof_eq hA.2 (by simp)) (by rw [hA.2]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2, hGlobals.1, smtx_model_eval_apply_eq_of_globals hGlobals]
         exact RuleProofs.smt_value_rel_refl _
       case qdiv x1 x2 =>
         have hA := arith2_ret_args hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1.1 hA.1.2
-        have e2 := ihEq x2 (by simp; omega) hA.2.1 hA.2.2
+        have e1 := ihEq x1 (by simp <;> omega) hA.1.1 hA.1.2
+        have e2 := ihEq x2 (by simp <;> omega) hA.2.1 hA.2.2
         simp only [__smtx_model_eval]
         rw [e1, e2, hGlobals.1, smtx_model_eval_apply_eq_of_globals hGlobals]
         exact RuleProofs.smt_value_rel_refl _
@@ -2689,9 +2689,9 @@ theorem smt_model_eval_rel_of_var_rel_lt
           have h1 := typeof_cleanOrNone x1
           rw [hMap] at h1
           exact h1.resolve_left (by simp)
-        have e1 := ihEq x1 (by simp; omega)
+        have e1 := ihEq x1 (by simp <;> omega)
           (tnn_of_typeof_eq hMap (by simp)) (by rw [hMap]; simp)
-        have e2 := ihEq x2 (by simp; omega)
+        have e2 := ihEq x2 (by simp <;> omega)
           (tnn_of_typeof_eq hKey hClean.1.1) (by rw [hKey]; exact hClean.1.2.1)
         simp only [__smtx_model_eval]
         rw [e1, e2]
@@ -2702,11 +2702,11 @@ theorem smt_model_eval_rel_of_var_rel_lt
           have h1 := typeof_cleanOrNone x1
           rw [hMap] at h1
           exact h1.resolve_left (by simp)
-        have e1 := ihEq x1 (by simp; omega)
+        have e1 := ihEq x1 (by simp <;> omega)
           (tnn_of_typeof_eq hMap (by simp)) (by rw [hMap]; simp)
-        have e2 := ihEq x2 (by simp; omega)
+        have e2 := ihEq x2 (by simp <;> omega)
           (tnn_of_typeof_eq hKey hClean.1.1) (by rw [hKey]; exact hClean.1.2.1)
-        have e3 := ihEq x3 (by simp; omega)
+        have e3 := ihEq x3 (by simp <;> omega)
           (tnn_of_typeof_eq hVal hClean.2.1) (by rw [hVal]; exact hClean.2.2.1)
         simp only [__smtx_model_eval]
         rw [e1, e2, e3]
@@ -2717,17 +2717,17 @@ theorem smt_model_eval_rel_of_var_rel_lt
           have h2 := typeof_cleanOrNone x2
           rw [hSet] at h2
           exact h2.resolve_left (by simp)
-        have e1 := ihEq x1 (by simp; omega)
+        have e1 := ihEq x1 (by simp <;> omega)
           (tnn_of_typeof_eq hElem hClean.1) (by rw [hElem]; exact hClean.2.1)
-        have e2 := ihEq x2 (by simp; omega)
+        have e2 := ihEq x2 (by simp <;> omega)
           (tnn_of_typeof_eq hSet (by simp)) (by rw [hSet]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2]
         exact RuleProofs.smt_value_rel_refl _
       case seq_nth x1 x2 =>
         obtain ⟨hA, hB⟩ := seq_nth_types hTy
-        have e1 := ihEq x1 (by simp; omega) hA.1 hA.2
-        have e2 := ihEq x2 (by simp; omega)
+        have e1 := ihEq x1 (by simp <;> omega) hA.1 hA.2
+        have e2 := ihEq x2 (by simp <;> omega)
           (tnn_of_typeof_eq hB (by simp)) (by rw [hB]; simp)
         simp only [__smtx_model_eval]
         rw [e1, e2, smtx_seq_nth_eq_of_globals hGlobals]
@@ -2750,43 +2750,43 @@ theorem smt_model_eval_rel_of_var_rel_lt
         exact RuleProofs.smt_value_rel_refl _
       case extract x1 x2 x3 =>
         obtain ⟨⟨a, rfl⟩, ⟨b, rfl⟩, hC⟩ := extract_term_args hTy
-        have e3 := ihEq x3 (by simp; omega) hC.1 hC.2
+        have e3 := ihEq x3 (by simp <;> omega) hC.1 hC.2
         simp only [__smtx_model_eval]
         rw [e3]
         exact RuleProofs.smt_value_rel_refl _
       case «repeat» x1 x2 =>
         obtain ⟨⟨a, rfl⟩, hC⟩ := repeat_term_args hTy
-        have e2 := ihEq x2 (by simp; omega) hC.1 hC.2
+        have e2 := ihEq x2 (by simp <;> omega) hC.1 hC.2
         simp only [__smtx_model_eval]
         rw [e2]
         exact RuleProofs.smt_value_rel_refl _
       case zero_extend x1 x2 =>
         obtain ⟨⟨a, rfl⟩, hC⟩ := zero_extend_term_args hTy
-        have e2 := ihEq x2 (by simp; omega) hC.1 hC.2
+        have e2 := ihEq x2 (by simp <;> omega) hC.1 hC.2
         simp only [__smtx_model_eval]
         rw [e2]
         exact RuleProofs.smt_value_rel_refl _
       case sign_extend x1 x2 =>
         obtain ⟨⟨a, rfl⟩, hC⟩ := sign_extend_term_args hTy
-        have e2 := ihEq x2 (by simp; omega) hC.1 hC.2
+        have e2 := ihEq x2 (by simp <;> omega) hC.1 hC.2
         simp only [__smtx_model_eval]
         rw [e2]
         exact RuleProofs.smt_value_rel_refl _
       case rotate_left x1 x2 =>
         obtain ⟨⟨a, rfl⟩, hC⟩ := rotate_left_term_args hTy
-        have e2 := ihEq x2 (by simp; omega) hC.1 hC.2
+        have e2 := ihEq x2 (by simp <;> omega) hC.1 hC.2
         simp only [__smtx_model_eval]
         rw [e2]
         exact RuleProofs.smt_value_rel_refl _
       case rotate_right x1 x2 =>
         obtain ⟨⟨a, rfl⟩, hC⟩ := rotate_right_term_args hTy
-        have e2 := ihEq x2 (by simp; omega) hC.1 hC.2
+        have e2 := ihEq x2 (by simp <;> omega) hC.1 hC.2
         simp only [__smtx_model_eval]
         rw [e2]
         exact RuleProofs.smt_value_rel_refl _
       case int_to_bv x1 x2 =>
         obtain ⟨⟨a, rfl⟩, hC⟩ := int_to_bv_term_args hTy
-        have e2 := ihEq x2 (by simp; omega)
+        have e2 := ihEq x2 (by simp <;> omega)
           (tnn_of_typeof_eq hC (by simp)) (by rw [hC]; simp)
         simp only [__smtx_model_eval]
         rw [e2]
@@ -2795,25 +2795,25 @@ theorem smt_model_eval_rel_of_var_rel_lt
         obtain ⟨⟨a, rfl⟩, hC⟩ := re_exp_term_args hTy
         simp only [__smtx_model_eval]
         exact rel_re_exp_congr
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hC (by simp)))
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hC (by simp)))
       case re_loop x1 x2 x3 =>
         obtain ⟨⟨a, rfl⟩, ⟨b, rfl⟩, hC⟩ := re_loop_term_args hTy
         simp only [__smtx_model_eval]
         exact rel_re_loop_congr
-          (ih x3 (by simp; omega) (tnn_of_typeof_eq hC (by simp)))
+          (ih x3 (by simp <;> omega) (tnn_of_typeof_eq hC (by simp)))
       case eq x1 x2 =>
         have hA := eq_types hTy
         simp only [__smtx_model_eval]
         exact CongSupport.smt_value_rel_eq_congr _ _ _ _
-          (ih x1 (by simp; omega) hA.1)
-          (ih x2 (by simp; omega) (tnn_of_typeof_eq hA.2 hA.1))
+          (ih x1 (by simp <;> omega) hA.1)
+          (ih x2 (by simp <;> omega) (tnn_of_typeof_eq hA.2 hA.1))
       case ite x1 x2 x3 =>
         have hA := ite_types hTy
         simp only [__smtx_model_eval]
         exact CongSupport.smt_value_rel_ite_congr _ _ _ _ _ _
-          (ih x1 (by simp; omega) (tnn_of_typeof_eq hA.1 (by simp)))
-          (ih x2 (by simp; omega) hA.2.2)
-          (ih x3 (by simp; omega) (tnn_of_typeof_eq hA.2.1 hA.2.2))
+          (ih x1 (by simp <;> omega) (tnn_of_typeof_eq hA.1 (by simp)))
+          (ih x2 (by simp <;> omega) hA.2.2)
+          (ih x3 (by simp <;> omega) (tnn_of_typeof_eq hA.2.1 hA.2.2))
       case «exists» s0 T0 body =>
         obtain ⟨hBTy, hTWf⟩ := quant_types hTy
         have hBtnn : term_has_non_none_type body :=
@@ -2828,7 +2828,7 @@ theorem smt_model_eval_rel_of_var_rel_lt
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
           (by simpa [value_canonical, hGlobals.usortDom] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
-          (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
+          (hRec (by simp <;> omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
           hBtnn (by rw [hBTy]; simp)
       case «forall» s0 T0 body =>
@@ -2845,7 +2845,7 @@ theorem smt_model_eval_rel_of_var_rel_lt
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
           (by simpa [value_canonical, hGlobals.usortDom] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
-          (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
+          (hRec (by simp <;> omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
           hBtnn (by rw [hBTy]; simp)
       case choice s0 T0 body =>
@@ -2861,14 +2861,14 @@ theorem smt_model_eval_rel_of_var_rel_lt
         have hPN := model_total_typed_push hN s0 T0 v hTWf hvTy
           (by simpa [value_canonical, hGlobals.usortDom] using hvCanon)
         exact eval_eq_of_rel_of_ty_ne_reglan hPM hPN
-          (hRec (by simp; omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
+          (hRec (by simp <;> omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
           hBtnn (by rw [hBTy]; simp)
       case bind s0 T0 x1 x2 =>
         obtain ⟨hX1Ty, hTWf, hX2Ne⟩ := bind_types hTy
         have hX1tnn : term_has_non_none_type x1 :=
           tnn_of_typeof_eq hX1Ty (ne_none_of_wf hTWf)
-        have hRelX1 := ih x1 (by simp; omega) hX1tnn
+        have hRelX1 := ih x1 (by simp <;> omega) hX1tnn
         have hVM : __smtx_typeof_value (__smtx_model_eval M x1) = T0 := by
           rw [smt_model_eval_preserves_type_of_non_none M hM x1 hX1tnn, hX1Ty]
         have hVN : __smtx_typeof_value (__smtx_model_eval N x1) = T0 := by
@@ -2878,7 +2878,7 @@ theorem smt_model_eval_rel_of_var_rel_lt
         have hPN := model_total_typed_push hN s0 T0 (__smtx_model_eval N x1)
           hTWf hVN (Smtm.model_eval_canonical N hN x1 hX1tnn)
         simp only [__smtx_model_eval]
-        exact hRec (by simp; omega) hPM hPN
+        exact hRec (by simp <;> omega) hPM hPN
           (globals_push_push hGlobals s0 T0 _ _)
           (modelVarRel_push_rel hVars s0 T0 hRelX1) hX2Ne
 termination_by n

@@ -15,6 +15,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 40000000

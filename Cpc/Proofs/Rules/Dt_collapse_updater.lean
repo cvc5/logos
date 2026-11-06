@@ -1480,7 +1480,6 @@ decreasing_by
   simp_wf
   subst t
   simp
-  omega
 
 private theorem tuple_collapse_updater_eval_eq
     (M : SmtModel) (hM : model_wf M)

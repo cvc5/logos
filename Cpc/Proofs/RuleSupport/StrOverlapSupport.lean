@@ -2235,7 +2235,6 @@ theorem eo_list_len_rec_numeral_nonneg_of_seq_const_rec_true :
       change Term.Numeral 0 = Term.Numeral n at hLen
       injection hLen with hn
       rw [← hn]
-      decide
   | case4 ss _hStuck _hCons _hEmpty =>
       intro h
       simp [__is_seq_const_rec] at h
@@ -2554,7 +2553,6 @@ theorem str_value_len_numeral_nonneg :
       __eo_requires, __eo_list_len, strConcat_is_list_explicit_seq_empty_seq,
       __eo_list_len_rec] at h
     rw [← h]
-    decide
   · subst hUnit
     simp [__str_value_len] at h
     rw [← h]

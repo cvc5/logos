@@ -9,6 +9,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 10000000
@@ -344,8 +347,10 @@ private theorem type_and_facts
           (native_str_to_re (native_unpack_string ss))
           (native_str_to_re (native_unpack_string ts)) rys))
       (RuleProofs.smt_value_rel_re_concat_congr
-        (RuleProofs.smt_value_rel_str_to_re_append
-          (native_unpack_string ss) (native_unpack_string ts))
+        (by
+          simpa [impl_native_string_to_values, List.map_eq_flatMap] using
+            RuleProofs.smt_value_rel_str_to_re_append
+              (native_unpack_string ss) (native_unpack_string ts))
         (RuleProofs.smt_value_rel_refl (SmtValue.RegLan rys)))
   have hCore := RuleProofs.smt_value_rel_re_concat_congr
     (RuleProofs.smt_value_rel_refl (SmtValue.RegLan rxs)) hTailMerge

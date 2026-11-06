@@ -231,7 +231,7 @@ theorem EvaluateProofInternal.eo_extract_literal_arg_binary_of_typeof_bitvec
     · have hDeltaNotLt : ¬ i + -j < 0 := by
         have hsimpa := hDeltaNeg
         try simp [native_zlt, SmtEval.native_zlt, native_zplus, SmtEval.native_zplus, native_zneg, SmtEval.native_zneg] at hsimpa ⊢
-        exact Int.not_lt.mp (of_decide_eq_false hsimpa)
+        exact hsimpa
       have hDeltaNonneg : 0 <= i + -j :=
         Int.le_of_not_gt hDeltaNotLt
       have hWidthNonneg : native_zleq 0 (i + -j + 1) = true := by
@@ -264,7 +264,7 @@ theorem EvaluateProofInternal.eo_extract_literal_arg_binary_of_typeof_bitvec
     · have hDeltaLt : i + -j < 0 := by
         have hsimpa := hDeltaNeg
         try simp [native_zlt, SmtEval.native_zlt, native_zplus, SmtEval.native_zplus, native_zneg, SmtEval.native_zneg] at hsimpa ⊢
-        exact of_decide_eq_true hsimpa
+        exact hsimpa
       have hWidthGe : 0 <= i + -j + 1 := by
         simpa [native_zleq, SmtEval.native_zleq, native_zplus,
           SmtEval.native_zplus, native_zneg, SmtEval.native_zneg,
@@ -544,7 +544,6 @@ theorem EvaluateProofInternal.native_int_pow2_pos_of_nonneg
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 theorem EvaluateProofInternal.native_int_pow2_lt_of_lt_nonneg
     {w k : native_Int} (hw : 0 <= w) (hlt : w < k) :
@@ -647,7 +646,7 @@ theorem EvaluateProofInternal.eo_sign_extend_low_payload_eq_mod_of_pos
       have hsimpa :=
         hNeg
       try simp [native_zlt, SmtEval.native_zlt, native_zplus, SmtEval.native_zplus, native_zneg, SmtEval.native_zneg] at hsimpa ⊢
-      exact of_decide_eq_true hsimpa
+      exact hsimpa
     have hwEq : w = 1 := by
       have hlt2 : w < 2 := by
         have h := Int.add_lt_add_right hlt 2
@@ -698,7 +697,6 @@ theorem EvaluateProofInternal.sign_payload_eq_uts_core
       have hwp0 : 0 <= w - 1 := Int.sub_nonneg.mpr hw1
       have hnot : ¬ w - 1 < 0 := Int.not_lt_of_ge hwp0
       simp [p, native_int_pow2, native_zexp_total, hnot]
-      exact Int.pow_pos (by decide)
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow : native_int_pow2 w = 2 * p := by
       simpa [p] using EvaluateProofInternal.native_int_pow2_succ_pred (w := w) hwpos
@@ -774,21 +772,8 @@ theorem EvaluateProofInternal.sign_payload_eq_uts_core
             (native_zneg n)
       rw [hnEq] at hNMod
       rw [hnEq, hNMod]
-      simp [native_zplus, native_zmult, native_zneg]
-      rw [Int.two_mul]
-      rw [Int.neg_add]
-      rw [Int.add_assoc]
-      rw [show r + (-p + -r) = -p by
-        calc
-          r + (-p + -r) = r + (-r + -p) := by
-            rw [Int.add_comm (-p) (-r)]
-          _ = r + -r + -p := by
-            rw [← Int.add_assoc]
-          _ = 0 + -p := by
-            rw [Int.add_right_neg]
-          _ = -p := by
-            rw [Int.zero_add]]
-      rw [Int.add_comm]
+      change -p + r = 2 * r + -(p + r)
+      ring
   · have hw : 0 <= w := by
       simpa [native_zleq, SmtEval.native_zleq] using hw0
     have hwEq : w = 0 :=
@@ -825,7 +810,7 @@ theorem EvaluateProofInternal.eo_sign_extend_payload_eq_uts
       have hsimpa :=
         Int.not_lt_of_ge hwp0
       try simp [native_zlt, SmtEval.native_zlt, native_zplus, SmtEval.native_zplus, native_zneg, SmtEval.native_zneg] at hsimpa ⊢
-      exact decide_eq_false (Int.not_lt.mpr hsimpa)
+      exact hsimpa
     rw [EvaluateProofInternal.eo_sign_extend_payload, EvaluateProofInternal.eo_sign_extend_msb_set, hMsbNeg,
       hLow]
     simpa [native_zplus, SmtEval.native_zplus, native_zneg,

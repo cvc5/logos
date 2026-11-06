@@ -19,6 +19,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 10000000
@@ -1509,7 +1512,6 @@ theorem str_replace_re_reduction_pred_true
                   SmtValue.Numeral (Int.ofNat matchLen) := by
               simp [__smtx_model_eval, __smtx_model_eval__,
                 hFinishEvalPush, hFirstEvalPush, native_zplus, native_zneg]
-              exact hEndDiff
             have hMatchedSubEvalPush :
                 __smtx_model_eval Mk
                     (SmtTerm.str_substr tz first

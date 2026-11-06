@@ -312,8 +312,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
               simpa [aSub] using
                 hRec
                   (G := a) (bvs' := bvs)
-                  (by
-                    simp
+                  (by simp)
                   hXsEnv hBvsEnv hATrans hTs hActuals
                   (by simpa [aSub] using hATy)
             refine ⟨?_, ?_⟩
@@ -404,8 +403,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                 simpa [aSub] using
                   hRec
                     (G := a) (bvs' := bvs)
-                    (by
-                      simp
+                    (by simp)
                     hXsEnv hBvsEnv hATrans hTs hActuals
                     (by simpa [aSub] using hATy)
               refine ⟨?_, ?_⟩
@@ -509,8 +507,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                   simpa [aSub] using
                     hRec
                       (G := a) (bvs' := bvs)
-                      (by
-                        simp
+                      (by simp)
                       hXsEnv hBvsEnv hATrans hTs hActuals
                       (by simpa [aSub] using hATy)
                 refine ⟨?_, ?_⟩
@@ -579,7 +576,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                         (fun hXTrans hXTy =>
                           hRec
                             (G := x1) (bvs' := bvs)
-                            (by simp; omega)
+                            (by simp <;> omega)
                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                         (fun hATrans hATy =>
                           hRec
@@ -633,7 +630,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                           (fun hXTrans hXTy =>
                             hRec
                               (G := x1) (bvs' := bvs)
-                              (by simp; omega)
+                              (by simp <;> omega)
                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                           (fun hATrans hATy =>
                             hRec
@@ -687,7 +684,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                             (fun hXTrans hXTy =>
                               hRec
                                 (G := x1) (bvs' := bvs)
-                                (by simp; omega)
+                                (by simp <;> omega)
                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                             (fun hATrans hATy =>
                               hRec
@@ -741,7 +738,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                               (fun hXTrans hXTy =>
                                 hRec
                                   (G := x1) (bvs' := bvs)
-                                  (by simp; omega)
+                                  (by simp <;> omega)
                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                               (fun hATrans hATy =>
                                 hRec
@@ -807,7 +804,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                 (fun hXTrans hXTy =>
                                   hRec
                                     (G := x1) (bvs' := bvs)
-                                    (by simp; omega)
+                                    (by simp <;> omega)
                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                 (fun hATrans hATy =>
                                   hRec
@@ -872,7 +869,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                   (fun hXTrans hXTy =>
                                     hRec
                                       (G := x1) (bvs' := bvs)
-                                      (by simp; omega)
+                                      (by simp <;> omega)
                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                   (fun hATrans hATy =>
                                     hRec
@@ -937,7 +934,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                     (fun hXTrans hXTy =>
                                       hRec
                                         (G := x1) (bvs' := bvs)
-                                        (by simp; omega)
+                                        (by simp <;> omega)
                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                     (fun hATrans hATy =>
                                       hRec
@@ -1002,7 +999,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                       (fun hXTrans hXTy =>
                                         hRec
                                           (G := x1) (bvs' := bvs)
-                                          (by simp; omega)
+                                          (by simp <;> omega)
                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                       (fun hATrans hATy =>
                                         hRec
@@ -1045,7 +1042,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                         (fun hXTrans hXTy =>
                                           hRec
                                             (G := x1) (bvs' := bvs)
-                                            (by simp; omega)
+                                            (by simp <;> omega)
                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                         (fun hATrans hATy =>
                                           hRec
@@ -1088,7 +1085,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                           (fun hXTrans hXTy =>
                                             hRec
                                               (G := x1) (bvs' := bvs)
-                                              (by simp; omega)
+                                              (by simp <;> omega)
                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                           (fun hATrans hATy =>
                                             hRec
@@ -1131,7 +1128,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                             (fun hXTrans hXTy =>
                                               hRec
                                                 (G := x1) (bvs' := bvs)
-                                                (by simp; omega)
+                                                (by simp <;> omega)
                                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                             (fun hATrans hATy =>
                                               hRec
@@ -1174,7 +1171,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                               (fun hXTrans hXTy =>
                                                 hRec
                                                   (G := x1) (bvs' := bvs)
-                                                  (by simp; omega)
+                                                  (by simp <;> omega)
                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                               (fun hATrans hATy =>
                                                 hRec
@@ -1224,7 +1221,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                 (fun hXTrans hXTy =>
                                                   hRec
                                                     (G := x1) (bvs' := bvs)
-                                                    (by simp; omega)
+                                                    (by simp <;> omega)
                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                 (fun hATrans hATy =>
                                                   hRec
@@ -1274,7 +1271,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                   (fun hXTrans hXTy =>
                                                     hRec
                                                       (G := x1) (bvs' := bvs)
-                                                      (by simp; omega)
+                                                      (by simp <;> omega)
                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                   (fun hATrans hATy =>
                                                     hRec
@@ -1326,7 +1323,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                       (fun hXTrans hXTy =>
                                                         hRec
                                                           (G := x1) (bvs' := bvs)
-                                                          (by simp; omega)
+                                                          (by simp <;> omega)
                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                       (fun hATrans hATy =>
                                                         hRec
@@ -1377,7 +1374,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                         (fun hXTrans hXTy =>
                                                           hRec
                                                             (G := x1) (bvs' := bvs)
-                                                            (by simp; omega)
+                                                            (by simp <;> omega)
                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                         (fun hATrans hATy =>
                                                           hRec
@@ -1428,7 +1425,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                           (fun hXTrans hXTy =>
                                                             hRec
                                                               (G := x1) (bvs' := bvs)
-                                                              (by simp; omega)
+                                                              (by simp <;> omega)
                                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                           (fun hATrans hATy =>
                                                             hRec
@@ -1473,7 +1470,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                               (fun hXTrans hXTy =>
                                                                 hRec
                                                                   (G := x1) (bvs' := bvs)
-                                                                  (by simp; omega)
+                                                                  (by simp <;> omega)
                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                               (fun hATrans hATy =>
                                                                 hRec
@@ -1517,7 +1514,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                 (fun hXTrans hXTy =>
                                                                   hRec
                                                                     (G := x1) (bvs' := bvs)
-                                                                    (by simp; omega)
+                                                                    (by simp <;> omega)
                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                 (fun hATrans hATy =>
                                                                   hRec
@@ -1563,7 +1560,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                   (fun hXTrans hXTy =>
                                                                     hRec
                                                                       (G := x1) (bvs' := bvs)
-                                                                      (by simp; omega)
+                                                                      (by simp <;> omega)
                                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                   (fun hATrans hATy =>
                                                                     hRec
@@ -1613,7 +1610,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                     (fun hXTrans hXTy =>
                                                                       hRec
                                                                         (G := x1) (bvs' := bvs)
-                                                                        (by simp; omega)
+                                                                        (by simp <;> omega)
                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                     (fun hATrans hATy =>
                                                                       hRec
@@ -1663,7 +1660,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                       (fun hXTrans hXTy =>
                                                                         hRec
                                                                           (G := x1) (bvs' := bvs)
-                                                                          (by simp; omega)
+                                                                          (by simp <;> omega)
                                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                       (fun hATrans hATy =>
                                                                         hRec
@@ -1685,7 +1682,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                         (fun hXTrans hXTy =>
                                                                           hRec
                                                                             (G := x1) (bvs' := bvs)
-                                                                            (by simp; omega)
+                                                                            (by simp <;> omega)
                                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                         (fun hATrans hATy =>
                                                                           hRec
@@ -1707,7 +1704,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                           (fun hXTrans hXTy =>
                                                                             hRec
                                                                               (G := x1) (bvs' := bvs)
-                                                                              (by simp; omega)
+                                                                              (by simp <;> omega)
                                                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                           (fun hATrans hATy =>
                                                                             hRec
@@ -1729,7 +1726,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                             (fun hXTrans hXTy =>
                                                                               hRec
                                                                                 (G := x1) (bvs' := bvs)
-                                                                                (by simp; omega)
+                                                                                (by simp <;> omega)
                                                                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                             (fun hATrans hATy =>
                                                                               hRec
@@ -1751,7 +1748,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                               (fun hXTrans hXTy =>
                                                                                 hRec
                                                                                   (G := x1) (bvs' := bvs)
-                                                                                  (by simp; omega)
+                                                                                  (by simp <;> omega)
                                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                               (fun hATrans hATy =>
                                                                                 hRec
@@ -1773,7 +1770,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                 (fun hXTrans hXTy =>
                                                                                   hRec
                                                                                     (G := x1) (bvs' := bvs)
-                                                                                    (by simp; omega)
+                                                                                    (by simp <;> omega)
                                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                 (fun hATrans hATy =>
                                                                                   hRec
@@ -1795,7 +1792,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                   (fun hXTrans hXTy =>
                                                                                     hRec
                                                                                       (G := x1) (bvs' := bvs)
-                                                                                      (by simp; omega)
+                                                                                      (by simp <;> omega)
                                                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                   (fun hATrans hATy =>
                                                                                     hRec
@@ -1817,7 +1814,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                     (fun hXTrans hXTy =>
                                                                                       hRec
                                                                                         (G := x1) (bvs' := bvs)
-                                                                                        (by simp; omega)
+                                                                                        (by simp <;> omega)
                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                     (fun hATrans hATy =>
                                                                                       hRec
@@ -1839,7 +1836,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                       (fun hXTrans hXTy =>
                                                                                         hRec
                                                                                           (G := x1) (bvs' := bvs)
-                                                                                          (by simp; omega)
+                                                                                          (by simp <;> omega)
                                                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                       (fun hATrans hATy =>
                                                                                         hRec
@@ -1861,7 +1858,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                         (fun hXTrans hXTy =>
                                                                                           hRec
                                                                                             (G := x1) (bvs' := bvs)
-                                                                                            (by simp; omega)
+                                                                                            (by simp <;> omega)
                                                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                         (fun hATrans hATy =>
                                                                                           hRec
@@ -1883,7 +1880,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                           (fun hXTrans hXTy =>
                                                                                             hRec
                                                                                               (G := x1) (bvs' := bvs)
-                                                                                              (by simp; omega)
+                                                                                              (by simp <;> omega)
                                                                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                           (fun hATrans hATy =>
                                                                                             hRec
@@ -1905,7 +1902,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                             (fun hXTrans hXTy =>
                                                                                               hRec
                                                                                                 (G := x1) (bvs' := bvs)
-                                                                                                (by simp; omega)
+                                                                                                (by simp <;> omega)
                                                                                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                             (fun hATrans hATy =>
                                                                                               hRec
@@ -1927,7 +1924,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                               (fun hXTrans hXTy =>
                                                                                                 hRec
                                                                                                   (G := x1) (bvs' := bvs)
-                                                                                                  (by simp; omega)
+                                                                                                  (by simp <;> omega)
                                                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                               (fun hATrans hATy =>
                                                                                                 hRec
@@ -1949,7 +1946,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                 (fun hXTrans hXTy =>
                                                                                                   hRec
                                                                                                     (G := x1) (bvs' := bvs)
-                                                                                                    (by simp; omega)
+                                                                                                    (by simp <;> omega)
                                                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                 (fun hATrans hATy =>
                                                                                                   hRec
@@ -1971,7 +1968,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                   (fun hXTrans hXTy =>
                                                                                                     hRec
                                                                                                       (G := x1) (bvs' := bvs)
-                                                                                                      (by simp; omega)
+                                                                                                      (by simp <;> omega)
                                                                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                   (fun hATrans hATy =>
                                                                                                     hRec
@@ -1993,7 +1990,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                     (fun hXTrans hXTy =>
                                                                                                       hRec
                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                        (by simp; omega)
+                                                                                                        (by simp <;> omega)
                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                     (fun hATrans hATy =>
                                                                                                       hRec
@@ -2018,7 +2015,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                       (fun hXTrans hXTy =>
                                                                                                         hRec
                                                                                                           (G := x1) (bvs' := bvs)
-                                                                                                          (by simp; omega)
+                                                                                                          (by simp <;> omega)
                                                                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                       (fun hATrans hATy =>
                                                                                                         hRec
@@ -2043,7 +2040,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                         (fun hXTrans hXTy =>
                                                                                                           hRec
                                                                                                             (G := x1) (bvs' := bvs)
-                                                                                                            (by simp; omega)
+                                                                                                            (by simp <;> omega)
                                                                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                         (fun hATrans hATy =>
                                                                                                           hRec
@@ -2068,7 +2065,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                           (fun hXTrans hXTy =>
                                                                                                             hRec
                                                                                                               (G := x1) (bvs' := bvs)
-                                                                                                              (by simp; omega)
+                                                                                                              (by simp <;> omega)
                                                                                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                           (fun hATrans hATy =>
                                                                                                             hRec
@@ -2093,7 +2090,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                             (fun hXTrans hXTy =>
                                                                                                               hRec
                                                                                                                 (G := x1) (bvs' := bvs)
-                                                                                                                (by simp; omega)
+                                                                                                                (by simp <;> omega)
                                                                                                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                             (fun hATrans hATy =>
                                                                                                               hRec
@@ -2118,7 +2115,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                               (fun hXTrans hXTy =>
                                                                                                                 hRec
                                                                                                                   (G := x1) (bvs' := bvs)
-                                                                                                                  (by simp; omega)
+                                                                                                                  (by simp <;> omega)
                                                                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                               (fun hATrans hATy =>
                                                                                                                 hRec
@@ -2143,7 +2140,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                 (fun hXTrans hXTy =>
                                                                                                                   hRec
                                                                                                                     (G := x1) (bvs' := bvs)
-                                                                                                                    (by simp; omega)
+                                                                                                                    (by simp <;> omega)
                                                                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                 (fun hATrans hATy =>
                                                                                                                   hRec
@@ -2168,7 +2165,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                   (fun hXTrans hXTy =>
                                                                                                                     hRec
                                                                                                                       (G := x1) (bvs' := bvs)
-                                                                                                                      (by simp; omega)
+                                                                                                                      (by simp <;> omega)
                                                                                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                   (fun hATrans hATy =>
                                                                                                                     hRec
@@ -2193,7 +2190,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                       hRec
                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                        (by simp; omega)
+                                                                                                                        (by simp <;> omega)
                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                     (fun hATrans hATy =>
                                                                                                                       hRec
@@ -2218,7 +2215,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                       (fun hXTrans hXTy =>
                                                                                                                         hRec
                                                                                                                           (G := x1) (bvs' := bvs)
-                                                                                                                          (by simp; omega)
+                                                                                                                          (by simp <;> omega)
                                                                                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                       (fun hATrans hATy =>
                                                                                                                         hRec
@@ -2243,7 +2240,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                         (fun hXTrans hXTy =>
                                                                                                                           hRec
                                                                                                                             (G := x1) (bvs' := bvs)
-                                                                                                                            (by simp; omega)
+                                                                                                                            (by simp <;> omega)
                                                                                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                         (fun hATrans hATy =>
                                                                                                                           hRec
@@ -2268,7 +2265,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                           (fun hXTrans hXTy =>
                                                                                                                             hRec
                                                                                                                               (G := x1) (bvs' := bvs)
-                                                                                                                              (by simp; omega)
+                                                                                                                              (by simp <;> omega)
                                                                                                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                           (fun hATrans hATy =>
                                                                                                                             hRec
@@ -2293,7 +2290,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                             (fun hXTrans hXTy =>
                                                                                                                               hRec
                                                                                                                                 (G := x1) (bvs' := bvs)
-                                                                                                                                (by simp; omega)
+                                                                                                                                (by simp <;> omega)
                                                                                                                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                             (fun hATrans hATy =>
                                                                                                                               hRec
@@ -2318,7 +2315,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                               (fun hXTrans hXTy =>
                                                                                                                                 hRec
                                                                                                                                   (G := x1) (bvs' := bvs)
-                                                                                                                                  (by simp; omega)
+                                                                                                                                  (by simp <;> omega)
                                                                                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                               (fun hATrans hATy =>
                                                                                                                                 hRec
@@ -2343,7 +2340,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                 (fun hXTrans hXTy =>
                                                                                                                                   hRec
                                                                                                                                     (G := x1) (bvs' := bvs)
-                                                                                                                                    (by simp; omega)
+                                                                                                                                    (by simp <;> omega)
                                                                                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                   hRec
@@ -2368,7 +2365,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                   (fun hXTrans hXTy =>
                                                                                                                                     hRec
                                                                                                                                       (G := x1) (bvs' := bvs)
-                                                                                                                                      (by simp; omega)
+                                                                                                                                      (by simp <;> omega)
                                                                                                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                     hRec
@@ -2393,7 +2390,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                       hRec
                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                        (by simp; omega)
+                                                                                                                                        (by simp <;> omega)
                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                       hRec
@@ -2448,7 +2445,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                       (fun hXTrans hXTy =>
                                                                                                                                         hRec
                                                                                                                                           (G := x1) (bvs' := bvs)
-                                                                                                                                          (by simp; omega)
+                                                                                                                                          (by simp <;> omega)
                                                                                                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                         hRec
@@ -2503,7 +2500,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                         (fun hXTrans hXTy =>
                                                                                                                                           hRec
                                                                                                                                             (G := x1) (bvs' := bvs)
-                                                                                                                                            (by simp; omega)
+                                                                                                                                            (by simp <;> omega)
                                                                                                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                         (fun hATrans hATy =>
                                                                                                                                           hRec
@@ -2547,7 +2544,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                           (fun hXTrans hXTy =>
                                                                                                                                             hRec
                                                                                                                                               (G := x1) (bvs' := bvs)
-                                                                                                                                              (by simp; omega)
+                                                                                                                                              (by simp <;> omega)
                                                                                                                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                             hRec
@@ -2598,7 +2595,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                             (fun hXTrans hXTy =>
                                                                                                                                               hRec
                                                                                                                                                 (G := x1) (bvs' := bvs)
-                                                                                                                                                (by simp; omega)
+                                                                                                                                                (by simp <;> omega)
                                                                                                                                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                             (fun hATrans hATy =>
                                                                                                                                               hRec
@@ -2650,7 +2647,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                               (fun hXTrans hXTy =>
                                                                                                                                                 hRec
                                                                                                                                                   (G := x1) (bvs' := bvs)
-                                                                                                                                                  (by simp; omega)
+                                                                                                                                                  (by simp <;> omega)
                                                                                                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                 hRec
@@ -2668,7 +2665,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                 (fun hXTrans hXTy =>
                                                                                                                                                   hRec
                                                                                                                                                     (G := x1) (bvs' := bvs)
-                                                                                                                                                    (by simp; omega)
+                                                                                                                                                    (by simp <;> omega)
                                                                                                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                   hRec
@@ -2686,7 +2683,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                   (fun hXTrans hXTy =>
                                                                                                                                                     hRec
                                                                                                                                                       (G := x1) (bvs' := bvs)
-                                                                                                                                                      (by simp; omega)
+                                                                                                                                                      (by simp <;> omega)
                                                                                                                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                                     hRec
@@ -2735,7 +2732,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                                       hRec
                                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                                        (by simp; omega)
+                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                       hRec
@@ -2789,7 +2786,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                       (fun hXTrans hXTy =>
                                                                                                                                                         hRec
                                                                                                                                                           (G := x1) (bvs' := bvs)
-                                                                                                                                                          (by simp; omega)
+                                                                                                                                                          (by simp <;> omega)
                                                                                                                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                         hRec
@@ -2843,7 +2840,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                         (fun hXTrans hXTy =>
                                                                                                                                                           hRec
                                                                                                                                                             (G := x1) (bvs' := bvs)
-                                                                                                                                                            (by simp; omega)
+                                                                                                                                                            (by simp <;> omega)
                                                                                                                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                         (fun hATrans hATy =>
                                                                                                                                                           hRec
@@ -2862,7 +2859,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                           (fun hXTrans hXTy =>
                                                                                                                                                             hRec
                                                                                                                                                               (G := x1) (bvs' := bvs)
-                                                                                                                                                              (by simp; omega)
+                                                                                                                                                              (by simp <;> omega)
                                                                                                                                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                             hRec
@@ -2884,7 +2881,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                             (fun hXTrans hXTy =>
                                                                                                                                                               hRec
                                                                                                                                                                 (G := x1) (bvs' := bvs)
-                                                                                                                                                                (by simp; omega)
+                                                                                                                                                                (by simp <;> omega)
                                                                                                                                                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                             (fun hATrans hATy =>
                                                                                                                                                               hRec
@@ -2906,7 +2903,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                               (fun hXTrans hXTy =>
                                                                                                                                                                 hRec
                                                                                                                                                                   (G := x1) (bvs' := bvs)
-                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                  (by simp <;> omega)
                                                                                                                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                                 hRec
@@ -2928,7 +2925,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                 (fun hXTrans hXTy =>
                                                                                                                                                                   hRec
                                                                                                                                                                     (G := x1) (bvs' := bvs)
-                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                    (by simp <;> omega)
                                                                                                                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                                   hRec
@@ -2950,7 +2947,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                   (fun hXTrans hXTy =>
                                                                                                                                                                     hRec
                                                                                                                                                                       (G := x1) (bvs' := bvs)
-                                                                                                                                                                      (by simp; omega)
+                                                                                                                                                                      (by simp <;> omega)
                                                                                                                                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                                                     hRec
@@ -2969,7 +2966,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                                                       hRec
                                                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                       hRec
@@ -2988,7 +2985,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                       (fun hXTrans hXTy =>
                                                                                                                                                                         hRec
                                                                                                                                                                           (G := x1) (bvs' := bvs)
-                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                          (by simp <;> omega)
                                                                                                                                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                                         hRec
@@ -3010,7 +3007,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                         (fun hXTrans hXTy =>
                                                                                                                                                                           hRec
                                                                                                                                                                             (G := x1) (bvs' := bvs)
-                                                                                                                                                                            (by simp; omega)
+                                                                                                                                                                            (by simp <;> omega)
                                                                                                                                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                         (fun hATrans hATy =>
                                                                                                                                                                           hRec
@@ -3032,7 +3029,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                           (fun hXTrans hXTy =>
                                                                                                                                                                             hRec
                                                                                                                                                                               (G := x1) (bvs' := bvs)
-                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                              (by simp <;> omega)
                                                                                                                                                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                                             hRec
@@ -3054,7 +3051,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                             (fun hXTrans hXTy =>
                                                                                                                                                                               hRec
                                                                                                                                                                                 (G := x1) (bvs' := bvs)
-                                                                                                                                                                                (by simp; omega)
+                                                                                                                                                                                (by simp <;> omega)
                                                                                                                                                                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                             (fun hATrans hATy =>
                                                                                                                                                                               hRec
@@ -3073,7 +3070,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                               (fun hXTrans hXTy =>
                                                                                                                                                                                 hRec
                                                                                                                                                                                   (G := x1) (bvs' := bvs)
-                                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                                  (by simp <;> omega)
                                                                                                                                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                                                 hRec
@@ -3092,7 +3089,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                 (fun hXTrans hXTy =>
                                                                                                                                                                                   hRec
                                                                                                                                                                                     (G := x1) (bvs' := bvs)
-                                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                                    (by simp <;> omega)
                                                                                                                                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                                                   hRec
@@ -3112,7 +3109,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                   (fun hXTrans hXTy =>
                                                                                                                                                                                     hRec
                                                                                                                                                                                       (G := x1) (bvs' := bvs)
-                                                                                                                                                                                      (by simp; omega)
+                                                                                                                                                                                      (by simp <;> omega)
                                                                                                                                                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                                                                       hRec
@@ -3132,7 +3129,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                                                                       hRec
                                                                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                       hRec
@@ -3152,7 +3149,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                       (fun hXTrans hXTy =>
                                                                                                                                                                                         hRec
                                                                                                                                                                                           (G := x1) (bvs' := bvs)
-                                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                                          (by simp <;> omega)
                                                                                                                                                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                                                         hRec
@@ -3172,7 +3169,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                         (fun hXTrans hXTy =>
                                                                                                                                                                                           hRec
                                                                                                                                                                                             (G := x1) (bvs' := bvs)
-                                                                                                                                                                                            (by simp; omega)
+                                                                                                                                                                                            (by simp <;> omega)
                                                                                                                                                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                         (fun hATrans hATy =>
                                                                                                                                                                                           hRec
@@ -3192,7 +3189,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                           (fun hXTrans hXTy =>
                                                                                                                                                                                             hRec
                                                                                                                                                                                               (G := x1) (bvs' := bvs)
-                                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                                              (by simp <;> omega)
                                                                                                                                                                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                                                             hRec
@@ -3212,7 +3209,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                             (fun hXTrans hXTy =>
                                                                                                                                                                                               hRec
                                                                                                                                                                                                 (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                (by simp; omega)
+                                                                                                                                                                                                (by simp <;> omega)
                                                                                                                                                                                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                             (fun hATrans hATy =>
                                                                                                                                                                                               hRec
@@ -3232,7 +3229,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                               (fun hXTrans hXTy =>
                                                                                                                                                                                                 hRec
                                                                                                                                                                                                   (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                                                  (by simp <;> omega)
                                                                                                                                                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                                                                 hRec
@@ -3252,12 +3249,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                 (fun hCTrans hCTy =>
                                                                                                                                                                                                   hRec
                                                                                                                                                                                                     (G := c) (bvs' := bvs)
-                                                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                                                    (by simp <;> omega)
                                                                                                                                                                                                     hXsEnv hBvsEnv hCTrans hTs hActuals hCTy)
                                                                                                                                                                                                 (fun hXTrans hXTy =>
                                                                                                                                                                                                   hRec
                                                                                                                                                                                                     (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                                                    (by simp <;> omega)
                                                                                                                                                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                                                                   hRec
@@ -3277,12 +3274,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                   (fun hCTrans hCTy =>
                                                                                                                                                                                                     hRec
                                                                                                                                                                                                       (G := c) (bvs' := bvs)
-                                                                                                                                                                                                      (by simp; omega)
+                                                                                                                                                                                                      (by simp <;> omega)
                                                                                                                                                                                                       hXsEnv hBvsEnv hCTrans hTs hActuals hCTy)
                                                                                                                                                                                                   (fun hXTrans hXTy =>
                                                                                                                                                                                                     hRec
                                                                                                                                                                                                       (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                      (by simp; omega)
+                                                                                                                                                                                                      (by simp <;> omega)
                                                                                                                                                                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                                                                                     hRec
@@ -3302,12 +3299,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                     (fun hArrTrans hArrTy =>
                                                                                                                                                                                                       hRec
                                                                                                                                                                                                         (G := arr) (bvs' := bvs)
-                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                         hXsEnv hBvsEnv hArrTrans hTs hActuals hArrTy)
                                                                                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                                                                                       hRec
                                                                                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                                       hRec
@@ -3327,12 +3324,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                       (fun hSTrans hSTy =>
                                                                                                                                                                                                         hRec
                                                                                                                                                                                                           (G := s) (bvs' := bvs)
-                                                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                                                          (by simp <;> omega)
                                                                                                                                                                                                           hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                       (fun hXTrans hXTy =>
                                                                                                                                                                                                         hRec
                                                                                                                                                                                                           (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                                                          (by simp <;> omega)
                                                                                                                                                                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                                                                         hRec
@@ -3352,12 +3349,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                         (fun hSTrans hSTy =>
                                                                                                                                                                                                           hRec
                                                                                                                                                                                                             (G := s) (bvs' := bvs)
-                                                                                                                                                                                                            (by simp; omega)
+                                                                                                                                                                                                            (by simp <;> omega)
                                                                                                                                                                                                             hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                         (fun hXTrans hXTy =>
                                                                                                                                                                                                           hRec
                                                                                                                                                                                                             (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                            (by simp; omega)
+                                                                                                                                                                                                            (by simp <;> omega)
                                                                                                                                                                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                                                                             hRec
@@ -3377,12 +3374,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                           (fun hSTrans hSTy =>
                                                                                                                                                                                                             hRec
                                                                                                                                                                                                               (G := s) (bvs' := bvs)
-                                                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                                                              (by simp <;> omega)
                                                                                                                                                                                                               hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                           (fun hXTrans hXTy =>
                                                                                                                                                                                                             hRec
                                                                                                                                                                                                               (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                                                              (by simp <;> omega)
                                                                                                                                                                                                               hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                                                                             hRec
@@ -3402,12 +3399,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                             (fun hSTrans hSTy =>
                                                                                                                                                                                                               hRec
                                                                                                                                                                                                                 (G := s) (bvs' := bvs)
-                                                                                                                                                                                                                (by simp; omega)
+                                                                                                                                                                                                                (by simp <;> omega)
                                                                                                                                                                                                                 hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                             (fun hXTrans hXTy =>
                                                                                                                                                                                                               hRec
                                                                                                                                                                                                                 (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                (by simp; omega)
+                                                                                                                                                                                                                (by simp <;> omega)
                                                                                                                                                                                                                 hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                             (fun hATrans hATy =>
                                                                                                                                                                                                               hRec
@@ -3427,12 +3424,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                               (fun hSTrans hSTy =>
                                                                                                                                                                                                                 hRec
                                                                                                                                                                                                                   (G := s) (bvs' := bvs)
-                                                                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                                                                  (by simp <;> omega)
                                                                                                                                                                                                                   hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                               (fun hXTrans hXTy =>
                                                                                                                                                                                                                 hRec
                                                                                                                                                                                                                   (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                                                                  (by simp <;> omega)
                                                                                                                                                                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                                                                                 hRec
@@ -3452,12 +3449,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                 (fun hSTrans hSTy =>
                                                                                                                                                                                                                   hRec
                                                                                                                                                                                                                     (G := s) (bvs' := bvs)
-                                                                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                                                                    (by simp <;> omega)
                                                                                                                                                                                                                     hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                                 (fun hXTrans hXTy =>
                                                                                                                                                                                                                   hRec
                                                                                                                                                                                                                     (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                                                                    (by simp <;> omega)
                                                                                                                                                                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                                                                                   hRec
@@ -3477,12 +3474,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                   (fun hSTrans hSTy =>
                                                                                                                                                                                                                     hRec
                                                                                                                                                                                                                       (G := s) (bvs' := bvs)
-                                                                                                                                                                                                                      (by simp; omega)
+                                                                                                                                                                                                                      (by simp <;> omega)
                                                                                                                                                                                                                       hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                                   (fun hXTrans hXTy =>
                                                                                                                                                                                                                     hRec
                                                                                                                                                                                                                       (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                      (by simp; omega)
+                                                                                                                                                                                                                      (by simp <;> omega)
                                                                                                                                                                                                                       hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                   (fun hATrans hATy =>
                                                                                                                                                                                                                     hRec
@@ -3502,12 +3499,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                     (fun hSTrans hSTy =>
                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                         (G := s) (bvs' := bvs)
-                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                         hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                                                       hRec
@@ -3524,7 +3521,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                       (fun q v vs hEq => hBinder ⟨q, v, vs, hEq⟩)
                                                                                                                                                                                                                       hFTrans hTy
                                                                                                                                                                                                                       (fun hXTrans hXTy =>
-                                                                                                                                                                                                                        hRec (G := x1) (bvs' := bvs) (by simp; omega)
+                                                                                                                                                                                                                        hRec (G := x1) (bvs' := bvs) (by simp <;> omega)
                                                                                                                                                                                                                           hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                                                                                         hRec
@@ -3543,7 +3540,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                         (fun hXTrans hXTy =>
                                                                                                                                                                                                                           hRec
                                                                                                                                                                                                                             (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                            (by simp; omega)
+                                                                                                                                                                                                                            (by simp <;> omega)
                                                                                                                                                                                                                             hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                         (fun hATrans hATy =>
                                                                                                                                                                                                                           hRec
@@ -3612,7 +3609,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                               (fun hXTrans hXTy =>
                                                                                                                                                                                                                                 hRec
                                                                                                                                                                                                                                   (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                                  (by simp; omega)
+                                                                                                                                                                                                                                  (by simp <;> omega)
                                                                                                                                                                                                                                   hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                               (fun hATrans hATy =>
                                                                                                                                                                                                                                 hRec
@@ -3633,7 +3630,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                 (fun hXTrans hXTy =>
                                                                                                                                                                                                                                   hRec
                                                                                                                                                                                                                                     (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                                    (by simp; omega)
+                                                                                                                                                                                                                                    (by simp <;> omega)
                                                                                                                                                                                                                                     hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                                 (fun hATrans hATy =>
                                                                                                                                                                                                                                   hRec
@@ -3674,12 +3671,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                               · rcases hOccurIndex with ⟨s, rfl⟩
                                                                                                                                                                                                                                 exact
@@ -3690,17 +3687,17 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                     (fun hSTrans hSTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := s) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                               · rcases hOccurIndexRe with ⟨s, rfl⟩
                                                                                                                                                                                                                                 exact
@@ -3711,17 +3708,17 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                     (fun hSTrans hSTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := s) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                               · rcases hReplaceAllResult with ⟨s, p, rfl⟩
                                                                                                                                                                                                                                 exact
@@ -3732,22 +3729,22 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                     (fun hSTrans hSTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := s) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                                                     (fun hPTrans hPTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := p) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hPTrans hTs hActuals hPTy)
                                                                                                                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                               · rcases hReplaceReAllResult with ⟨s, p, rfl⟩
                                                                                                                                                                                                                                 exact
@@ -3758,22 +3755,22 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                     (fun hSTrans hSTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := s) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hSTrans hTs hActuals hSTy)
                                                                                                                                                                                                                                     (fun hPTrans hPTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := p) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hPTrans hTs hActuals hPTy)
                                                                                                                                                                                                                                     (fun hXTrans hXTy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := x1) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hXTrans hTs hActuals hXTy)
                                                                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                             · have hHeadStringsNumOccurRe :
                                                                                                                                                                                                                                   g ≠ Term.UOp UserOp._at_strings_num_occur_re :=
@@ -3823,12 +3820,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := Term.Apply (Term.Var name T) x1)
                                                                                                                                                                                                                                         (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hHeadTrans hTs hActuals hHeadTy)
                                                                                                                                                                                                                                     (fun hATrans hATy =>
                                                                                                                                                                                                                                       hRec
                                                                                                                                                                                                                                         (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                        (by simp; omega)
+                                                                                                                                                                                                                                        (by simp <;> omega)
                                                                                                                                                                                                                                         hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                                     (substitute_simul_apply_apply_var_head_generic_head_typeof_ne_stuck
                                                                                                                                                                                                                                       name T x1 a xs ts bvs
@@ -3871,12 +3868,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                         hRec
                                                                                                                                                                                                                                           (G := Term.Apply (Term.UConst i U) x1)
                                                                                                                                                                                                                                           (bvs' := bvs)
-                                                                                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                                                                                          (by simp <;> omega)
                                                                                                                                                                                                                                           hXsEnv hBvsEnv hHeadTrans hTs hActuals hHeadTy)
                                                                                                                                                                                                                                       (fun hATrans hATy =>
                                                                                                                                                                                                                                         hRec
                                                                                                                                                                                                                                           (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                          (by simp; omega)
+                                                                                                                                                                                                                                          (by simp <;> omega)
                                                                                                                                                                                                                                           hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                                       (substitute_simul_apply_apply_atom_base_generic_head_typeof_ne_stuck
                                                                                                                                                                                                                                         (Term.UConst i U) x1 a xs ts bvs
@@ -3978,12 +3975,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                           hRec
                                                                                                                                                                                                                                             (G := Term.Apply (Term.DtCons s d i) x1)
                                                                                                                                                                                                                                             (bvs' := bvs)
-                                                                                                                                                                                                                                            (by simp; omega)
+                                                                                                                                                                                                                                            (by simp <;> omega)
                                                                                                                                                                                                                                             hXsEnv hBvsEnv hHeadTrans hTs hActuals hHeadTy)
                                                                                                                                                                                                                                        (fun hATrans hATy =>
                                                                                                                                                                                                                                          hRec
                                                                                                                                                                                                                                            (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                           (by simp; omega)
+                                                                                                                                                                                                                                           (by simp <;> omega)
                                                                                                                                                                                                                                            hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                                         (substitute_simul_apply_apply_atom_base_generic_head_typeof_ne_stuck
                                                                                                                                                                                                                                           (Term.DtCons s d i) x1 a xs ts bvs
@@ -4145,12 +4142,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                             hRec
                                                                                                                                                                                                                                               (G := Term.Apply (Term.UOp op) x1)
                                                                                                                                                                                                                                               (bvs' := bvs)
-                                                                                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                                                                                              (by simp <;> omega)
                                                                                                                                                                                                                                               hXsEnv hBvsEnv hHeadTrans hTs hActuals hHeadTy)
                                                                                                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                                                                                                             hRec
                                                                                                                                                                                                                                               (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                                                                                              (by simp <;> omega)
                                                                                                                                                                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                                           hTy
                                                                                                                                                                                                                                     · exact
@@ -4166,12 +4163,12 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                             hRec
                                                                                                                                                                                                                                               (G := Term.Apply g x1)
                                                                                                                                                                                                                                               (bvs' := bvs)
-                                                                                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                                                                                              (by simp <;> omega)
                                                                                                                                                                                                                                               hXsEnv hBvsEnv hHeadTrans hTs hActuals hHeadTy)
                                                                                                                                                                                                                                           (fun hATrans hATy =>
                                                                                                                                                                                                                                             hRec
                                                                                                                                                                                                                                               (G := a) (bvs' := bvs)
-                                                                                                                                                                                                                                              (by simp; omega)
+                                                                                                                                                                                                                                              (by simp <;> omega)
                                                                                                                                                                                                                                               hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                                                                                                                                                                                                                                           hTy
                 · by_cases hHeadSpecial :
@@ -7280,9 +7277,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                 hRec
                                                                                                                   (G := a)
                                                                                                                   (bvs' := bvs)
-                                                                                                                  (by
-                                                                                                                    simp
-                                                                                                                    omega)
+                                                                                                                  (by simp <;> omega)
                                                                                                                   hXsEnv
                                                                                                                   hBvsEnv
                                                                                                                   hATrans
@@ -7360,9 +7355,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                             hRec
                                                                                                                               (G := a)
                                                                                                                               (bvs' := bvs)
-                                                                                                                              (by
-                                                                                                                                simp
-                                                                                                                                omega)
+                                                                                                                              (by simp <;> omega)
                                                                                                                               hXsEnv
                                                                                                                               hBvsEnv
                                                                                                                               hATrans
@@ -7389,9 +7382,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                               hRec
                                                                                                                                 (G := a)
                                                                                                                                 (bvs' := bvs)
-                                                                                                                                (by
-                                                                                                                                  simp
-                                                                                                                                  omega)
+                                                                                                                                (by simp <;> omega)
                                                                                                                                 hXsEnv
                                                                                                                                 hBvsEnv
                                                                                                                                 hATrans
@@ -7418,9 +7409,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                 hRec
                                                                                                                                   (G := a)
                                                                                                                                   (bvs' := bvs)
-                                                                                                                                  (by
-                                                                                                                                    simp
-                                                                                                                                    omega)
+                                                                                                                                  (by simp <;> omega)
                                                                                                                                   hXsEnv
                                                                                                                                   hBvsEnv
                                                                                                                                   hATrans
@@ -7447,9 +7436,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                   hRec
                                                                                                                                     (G := a)
                                                                                                                                     (bvs' := bvs)
-                                                                                                                                    (by
-                                                                                                                                      simp
-                                                                                                                                      omega)
+                                                                                                                                    (by simp <;> omega)
                                                                                                                                     hXsEnv
                                                                                                                                     hBvsEnv
                                                                                                                                     hATrans
@@ -7476,9 +7463,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                     hRec
                                                                                                                                       (G := a)
                                                                                                                                       (bvs' := bvs)
-                                                                                                                                      (by
-                                                                                                                                        simp
-                                                                                                                                        omega)
+                                                                                                                                      (by simp <;> omega)
                                                                                                                                       hXsEnv
                                                                                                                                       hBvsEnv
                                                                                                                                       hATrans
@@ -7505,9 +7490,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                       hRec
                                                                                                                                         (G := a)
                                                                                                                                         (bvs' := bvs)
-                                                                                                                                        (by
-                                                                                                                                          simp
-                                                                                                                                          omega)
+                                                                                                                                        (by simp <;> omega)
                                                                                                                                         hXsEnv
                                                                                                                                         hBvsEnv
                                                                                                                                         hATrans
@@ -7534,9 +7517,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                         hRec
                                                                                                                                           (G := a)
                                                                                                                                           (bvs' := bvs)
-                                                                                                                                          (by
-                                                                                                                                            simp
-                                                                                                                                            omega)
+                                                                                                                                          (by simp <;> omega)
                                                                                                                                           hXsEnv
                                                                                                                                           hBvsEnv
                                                                                                                                           hATrans
@@ -7563,9 +7544,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                           hRec
                                                                                                                                             (G := a)
                                                                                                                                             (bvs' := bvs)
-                                                                                                                                            (by
-                                                                                                                                              simp
-                                                                                                                                              omega)
+                                                                                                                                            (by simp <;> omega)
                                                                                                                                             hXsEnv
                                                                                                                                             hBvsEnv
                                                                                                                                             hATrans
@@ -7592,9 +7571,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                             hRec
                                                                                                                                               (G := a)
                                                                                                                                               (bvs' := bvs)
-                                                                                                                                              (by
-                                                                                                                                                simp
-                                                                                                                                                omega)
+                                                                                                                                              (by simp <;> omega)
                                                                                                                                               hXsEnv
                                                                                                                                               hBvsEnv
                                                                                                                                               hATrans
@@ -7621,9 +7598,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                               hRec
                                                                                                                                                 (G := a)
                                                                                                                                                 (bvs' := bvs)
-                                                                                                                                                (by
-                                                                                                                                                  simp
-                                                                                                                                                  omega)
+                                                                                                                                                (by simp <;> omega)
                                                                                                                                                 hXsEnv
                                                                                                                                                 hBvsEnv
                                                                                                                                                 hATrans
@@ -7663,9 +7638,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                       hRec
                                                                                                                         (G := a)
                                                                                                                         (bvs' := bvs)
-                                                                                                                        (by
-                                                                                                                          simp
-                                                                                                                          omega)
+                                                                                                                        (by simp <;> omega)
                                                                                                                         hXsEnv
                                                                                                                         hBvsEnv
                                                                                                                         hATrans
@@ -7690,9 +7663,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                       hRec
                                                                                                                         (G := a)
                                                                                                                         (bvs' := bvs)
-                                                                                                                        (by
-                                                                                                                          simp
-                                                                                                                          omega)
+                                                                                                                        (by simp <;> omega)
                                                                                                                         hXsEnv
                                                                                                                         hBvsEnv
                                                                                                                         hATrans
@@ -7718,9 +7689,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                       hRec
                                                                                                                         (G := a)
                                                                                                                         (bvs' := bvs)
-                                                                                                                        (by
-                                                                                                                          simp
-                                                                                                                          omega)
+                                                                                                                        (by simp <;> omega)
                                                                                                                         hXsEnv
                                                                                                                         hBvsEnv
                                                                                                                         hATrans
@@ -7746,9 +7715,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                       hRec
                                                                                                                         (G := a)
                                                                                                                         (bvs' := bvs)
-                                                                                                                        (by
-                                                                                                                          simp
-                                                                                                                          omega)
+                                                                                                                        (by simp <;> omega)
                                                                                                                         hXsEnv
                                                                                                                         hBvsEnv
                                                                                                                         hATrans
@@ -7800,9 +7767,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                         hRec
                                                                                                                           (G := a)
                                                                                                                           (bvs' := bvs)
-                                                                                                                          (by
-                                                                                                                            simp
-                                                                                                                            omega)
+                                                                                                                          (by simp <;> omega)
                                                                                                                           hXsEnv
                                                                                                                           hBvsEnv
                                                                                                                           hATrans
@@ -7940,9 +7905,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                         (fun hATrans hATy =>
                           hRec
                             (G := a) (bvs' := bvs)
-                            (by
-                              simp
-                              omega)
+                            (by simp <;> omega)
                             hXsEnv hBvsEnv hATrans hTs hActuals hATy)
                         hTy
       · by_cases hVar : ∃ name T, F = Term.Var name T
@@ -8058,9 +8021,7 @@ private theorem substitute_simul_false_binder_preserves
       (hRec
         (G := a)
         (bvs' := __eo_list_concat Term.__eo_List_cons binders bvs)
-        (by
-          simp
-          omega)
+        (by simp)
         hXsEnv hBvsEnv' hBodyTrans hTs hActuals
         (by simpa [bodySub] using hBodyTy)).1
   have hBodySubTrans :
@@ -8069,9 +8030,7 @@ private theorem substitute_simul_false_binder_preserves
       (hRec
         (G := a)
         (bvs' := __eo_list_concat Term.__eo_List_cons binders bvs)
-        (by
-          simp
-          omega)
+        (by simp)
         hXsEnv hBvsEnv' hBodyTrans hTs hActuals
         (by simpa [bodySub] using hBodyTy)).2
   refine ⟨?_, ?_⟩

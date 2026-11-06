@@ -320,6 +320,7 @@ theorem EvaluateProofInternal.smt_bvsgt_formula_eq_signed_gt
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange2.1
     subst n1
     subst n2
+    simp [native_veq]
     native_decide
 
 theorem EvaluateProofInternal.smtx_model_eval_bvsgt_binary_eq_uts

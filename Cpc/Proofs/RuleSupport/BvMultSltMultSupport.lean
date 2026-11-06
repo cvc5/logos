@@ -121,14 +121,8 @@ private theorem unsigned_signed_product_fits
       (x.toNat : Int) * a.toInt < (2 : Int) ^ (W - 1) := by
   rcases T with _ | t
   · simp [BitVec.of_length_zero]
-    have hNonneg : 0 ≤ (2 : Int) ^ (W - 1) := Int.pow_nonneg (by decide)
-    have hPos : 0 < (2 : Int) ^ (W - 1) := Int.pow_pos (by decide)
-    exact ⟨hNonneg, hPos⟩
   rcases U with _ | u
   · simp [BitVec.of_length_zero]
-    have hNonneg : 0 ≤ (2 : Int) ^ (W - 1) := Int.pow_nonneg (by decide)
-    have hPos : 0 < (2 : Int) ^ (W - 1) := Int.pow_pos (by decide)
-    exact ⟨hNonneg, hPos⟩
   have hx0 : (0 : Int) ≤ x.toNat := Int.natCast_nonneg _
   have hxHiNat := x.isLt
   have hxHi : (x.toNat : Int) < (2 : Int) ^ (t + 1) := by exact_mod_cast hxHiNat

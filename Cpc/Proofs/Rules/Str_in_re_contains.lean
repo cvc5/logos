@@ -11,6 +11,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 10000000
@@ -365,7 +368,8 @@ private theorem native_str_in_re_contains_regex_eq
       simpa [RuleProofs.native_str_in_re, hMidValid, native_str_to_re] using
         hMidMem
     have hMidEq : mid = pat :=
-      RuleProofs.native_str_in_re_str_to_re_eq hMidValid hMidStrMem
+      RuleProofs.native_str_in_re_str_to_re_eq hMidValid (by
+        simpa [impl_native_string_to_values, List.map_eq_flatMap] using hMidStrMem)
     have hTailConcat :
         RuleProofs.nativeListInRe tail
             (native_re_mk_concat native_re_all (native_str_to_re [])) = true := by

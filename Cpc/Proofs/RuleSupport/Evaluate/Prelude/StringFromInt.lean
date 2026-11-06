@@ -480,7 +480,6 @@ theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_pos
       by_cases hCond :
           (decide (Int.toNat 10 ≤ 1) || Int.toNat n == 0) = true
       · rw [ite_eq_left hCond]
-        decide
       · rw [ite_eq_right hCond]
         exact Int.natCast_nonneg _
     have hFuelNonneg :
