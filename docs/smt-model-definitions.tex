@@ -746,7 +746,7 @@ def model_push (M : SmtModel) (s : String) (T : SmtType) (v : SmtValue) : SmtMod
 
 Before giving the definition of SMT-LIB values (\smtvalue), 
 we first give a definition of \smtmodel.
-A model consists of two mappings and a cardinality function.
+A model consists of three mappings.
 The first (\code{values}) is a mapping from keys (as defined via the structure \code{SmtModelKey})
 to values.
 The second (\code{nativeFuns}) gives a native (unary) Lean function for each
@@ -1150,30 +1150,30 @@ the types for which a default value can be constructed.
 
 \begin{figure}
 \begin{lstlisting}
-def smt_field_type_bounded (uc : Nat -> Nat) (u : Bool) : SmtType -> SmtDatatypeDecl -> Bool
+def smt_field_type_bounded (uc : Nat -> Set ModelId) (u : Bool) : SmtType -> SmtDatatypeDecl -> Bool
   | (SmtType.TypeRef s), ddB => (smt_dd_has_dt s ddB)
   | T, ddB => (smt_type_bounded uc u T)
 
-def smt_datatype_cons_bounded (uc : Nat -> Nat) (u : Bool) : SmtDatatypeCons -> SmtDatatypeDecl -> Bool
+def smt_datatype_cons_bounded (uc : Nat -> Set ModelId) (u : Bool) : SmtDatatypeCons -> SmtDatatypeDecl -> Bool
   | SmtDatatypeCons.unit, ddB => true
   | (SmtDatatypeCons.cons T c), ddB => ((smt_field_type_bounded uc u T ddB) && (smt_datatype_cons_bounded uc u c ddB))
 
-def smt_datatype_bounded (uc : Nat -> Nat) (u : Bool) : SmtDatatype -> SmtDatatypeDecl -> Bool
+def smt_datatype_bounded (uc : Nat -> Set ModelId) (u : Bool) : SmtDatatype -> SmtDatatypeDecl -> Bool
   | (SmtDatatype.sum c SmtDatatype.null), ddB => (smt_datatype_cons_bounded uc u c ddB)
   | (SmtDatatype.sum c dF), ddB => (!u && ((smt_datatype_cons_bounded uc u c ddB) && (smt_datatype_bounded uc u dF ddB)))
   | dF, ddB => !u
 
-def smt_datatype_decl_bounded_step (uc : Nat -> Nat) (u : Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
+def smt_datatype_decl_bounded_step (uc : Nat -> Set ModelId) (u : Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
   | (SmtDatatypeDecl.cons sF dF ddR), ddB => (smt_datatype_decl_bounded_step uc u ddR (if (!(smt_dd_has_dt sF ddB) && (smt_datatype_bounded uc u dF ddB)) then (SmtDatatypeDecl.cons sF dF ddB) else ddB))
   | SmtDatatypeDecl.nil, ddB => ddB
 
-def smt_datatype_decl_bounded (uc : Nat -> Nat) (u : Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
+def smt_datatype_decl_bounded (uc : Nat -> Set ModelId) (u : Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
   | (SmtDatatypeDecl.cons sC dC ddC), dd, ddB => (smt_datatype_decl_bounded uc u ddC dd (smt_datatype_decl_bounded_step uc u dd ddB))
   | SmtDatatypeDecl.nil, dd, ddB => ddB
 
-def smt_type_bounded (uc : Nat -> Nat) (u : Bool) : SmtType -> Bool
+def smt_type_bounded (uc : Nat -> Set ModelId) (u : Bool) : SmtType -> Bool
   | SmtType.Bool => !u
-  | (SmtType.USort i) => (if u then (uc i = 1) else (uc i != 0))
+  | (SmtType.USort i) => (if u then decide (uc i = {0}) else decide (uc i).Finite)
   | (SmtType.BitVec w) => (!u || (w = 0))
   | SmtType.Char => !u
   | (SmtType.Datatype s dd) => (smt_dd_has_dt s (smt_datatype_decl_bounded uc u dd dd SmtDatatypeDecl.nil))
@@ -1181,10 +1181,10 @@ def smt_type_bounded (uc : Nat -> Nat) (u : Bool) : SmtType -> Bool
   | (SmtType.Set T) => (!u && (smt_type_bounded uc u T))
   | T => false
 
-def smt_is_unit_type (uc : Nat -> Nat) (T : SmtType) : Bool :=
+def smt_is_unit_type (uc : Nat -> Set ModelId) (T : SmtType) : Bool :=
   (smt_type_bounded uc true T)
 
-def smt_is_finite_type (uc : Nat -> Nat) (T : SmtType) : Bool :=
+def smt_is_finite_type (uc : Nat -> Set ModelId) (T : SmtType) : Bool :=
   (smt_type_bounded uc false T)
 \end{lstlisting}
 \caption{Unit and finite SMT type predicates.}
@@ -1194,7 +1194,7 @@ def smt_is_finite_type (uc : Nat -> Nat) (T : SmtType) : Bool :=
 \begin{figure}
 \begin{lstlisting}
 theorem finite_type_enumerable
-    (uc : Nat -> Nat) (A : SmtType)
+    (uc : Nat -> Set ModelId) (A : SmtType)
     (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hFin : smt_is_finite_type uc A = true) :
@@ -1203,7 +1203,7 @@ theorem finite_type_enumerable
       smt_value_canonical uc v = true → v ∈ l
 
 theorem fresh_typed_canonical_value_for_infinite_type
-    (uc : Nat -> Nat) (A : SmtType)
+    (uc : Nat -> Set ModelId) (huc : usort_dom_wf uc) (A : SmtType)
     (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hInfinite : smt_is_finite_type uc A = false)
@@ -1214,7 +1214,7 @@ theorem fresh_typed_canonical_value_for_infinite_type
       (∀ j : SmtValue, j ∈ avoid → veq j i = false)
 
 theorem unit_type_values_default
-    (uc : Nat -> Nat) (A : SmtType)
+    (uc : Nat -> Set ModelId) (A : SmtType)
     (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hUnit : smt_is_unit_type uc A = true) :
@@ -1224,7 +1224,7 @@ theorem unit_type_values_default
       v = smt_type_default A
 
 theorem nonunit_typed_canonical_nondefault_value
-    (uc : Nat -> Nat) (A : SmtType)
+    (uc : Nat -> Set ModelId) (huc : usort_dom_wf uc) (A : SmtType)
     (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hNonUnit : smt_is_unit_type uc A = false) :
@@ -1233,7 +1233,7 @@ theorem nonunit_typed_canonical_nondefault_value
       smt_value_canonical uc e = true ∧
       veq e (smt_type_default A) = false
 \end{lstlisting}
-\caption{Soundness and completeness of the finite and unit type classifiers, relative to the well-formedness and inhabitedness guards. Statements 1 (\code{finite_type_enumerable}) and 3 (\code{unit_type_values_default}) are the soundness directions; statements 2 (\code{fresh_typed_canonical_value_for_infinite_type}) and 4 (\code{nonunit_typed_canonical_nondefault_value}) are the completeness directions.}
+\caption{Soundness and completeness of the finite and unit type classifiers, relative to the well-formedness and inhabitedness guards. Statements 1 (\code{finite_type_enumerable}) and 3 (\code{unit_type_values_default}) are the soundness directions; statements 2 (\code{fresh_typed_canonical_value_for_infinite_type}) and 4 (\code{nonunit_typed_canonical_nondefault_value}) are the completeness directions, which also assume the domains of uninterpreted sorts are well-formed (\code{usort_dom_wf}, Figure~\ref{fig:model-typed}).}
 \label{fig:finite-unit-correctness}
 \end{figure}
 
@@ -1254,8 +1254,9 @@ same element everywhere),
 or both its index and element types are finite;
 it is unit iff its element type is unit.
 Set types are finite iff their element type is finite, and are never unit.
-An uninterpreted sort is finite iff the model gives it a nonzero cardinality,
-and unit iff that cardinality is one.
+An uninterpreted sort is finite iff the domain the model gives it is finite,
+and unit iff that domain is exactly $\{0\}$, the only singleton a well-formed
+model can give it, since a well-formed domain contains $0$.
 Other types such as integers, reals, sequences and regular expressions
 are unconditionally not finite.
 Since uninterpreted sorts are classified using the domains chosen by the model, \code{smt_type_bounded} and every method that calls it,
@@ -1571,7 +1572,7 @@ def smt_map_entries_ordered_after (i : SmtValue) : SmtMap -> Bool
   | (SmtMap.cons j e m) => (vcmp j i)
   | m => true
 
-def smt_map_canonical (uc : Nat -> Nat) : SmtMap -> Bool
+def smt_map_canonical (uc : Nat -> Set ModelId) : SmtMap -> Bool
   | (SmtMap.default T e) =>
     (!(smt_is_finite_type uc T) || (veq e (smt_type_default (smt_typeof_value e)))) &&
     (smt_value_canonical uc e)
@@ -1582,11 +1583,11 @@ def smt_map_canonical (uc : Nat -> Nat) : SmtMap -> Bool
       smt_map_entries_ordered_after i m &&
       !(veq e (smt_map_get_default m))
 
-def smt_seq_canonical (uc : Nat -> Nat) : SmtSeq -> Bool
+def smt_seq_canonical (uc : Nat -> Set ModelId) : SmtSeq -> Bool
   | (SmtSeq.empty T) => true
   | (SmtSeq.cons v s) => (smt_value_canonical uc v) && (smt_seq_canonical uc s)
 
-def smt_value_canonical (uc : Nat -> Nat) : SmtValue -> Bool
+def smt_value_canonical (uc : Nat -> Set ModelId) : SmtValue -> Bool
   | (SmtValue.Binary w n) => (if (0 <= w) then (n = n % (2 ^ w)) else true)
   | (SmtValue.Char c) => (c < 196608)
   | (SmtValue.Map m) => (smt_map_canonical uc m)
