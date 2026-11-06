@@ -872,6 +872,106 @@
   :term ($eo_to_smt_tuple_update (smt.typeof t) n t u))
 
 ;-----------------------------------------------------------------------------
+(section "Coverings")
+;-----------------------------------------------------------------------------
+
+; The nonlinear coverings calculus is not in SMT-LIB. Its formulas speak of a
+; polynomial as a function rather than at the value a model gives its variable,
+; and its rules compute with the coefficients as rationals, so a polynomial is
+; read the same way here: as a term of type Real at a point of type Real.
+
+(define-macro cov.zero () (Rational ("mk_rational" 0 1)))
+(define-macro cov.x ()    (Var "str_vname" Real))
+
+; The polynomial written by t, with its variable replaced by the Real term v. As
+; in $upoly_of_term, a numeral is a coefficient whichever sort it was written at,
+; so to_real has no further effect. Anything else is not a polynomial and has no
+; meaning. Which leaf is the variable is checked by the rules, not here.
+(program $eo_to_smt_poly_at
+  ((a SmtTerm) (b SmtTerm) (v SmtTerm) (n <numeral>) (q <rational>) (s <string>) (T SmtType) (i <nat>) (t SmtTerm))
+  :signature (SmtTerm SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_poly_at (Numeral n) v) (to_real (Numeral n)))
+  (($eo_to_smt_poly_at (Rational q) v) (Rational q))
+  (($eo_to_smt_poly_at (to_real a) v) ($eo_to_smt_poly_at a v))
+  (($eo_to_smt_poly_at (uneg a) v) (uneg ($eo_to_smt_poly_at a v)))
+  (($eo_to_smt_poly_at (+ a b) v) (+ ($eo_to_smt_poly_at a v) ($eo_to_smt_poly_at b v)))
+  (($eo_to_smt_poly_at (- a b) v) (- ($eo_to_smt_poly_at a v) ($eo_to_smt_poly_at b v)))
+  (($eo_to_smt_poly_at (* a b) v) (* ($eo_to_smt_poly_at a v) ($eo_to_smt_poly_at b v)))
+  (($eo_to_smt_poly_at (Var s T) v) v)
+  (($eo_to_smt_poly_at (UConst i T) v) v)
+  (($eo_to_smt_poly_at t v) none)
+  )
+)
+
+; The polynomial with the coefficients cs, lowest degree first, at the term v.
+(program $eo_to_smt_coeffs_at ((c $eo_Term) (cs $eo_List) (v SmtTerm))
+  :signature ($eo_List SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_coeffs_at (eo.list_cons c cs) v)
+    (+ c (* v ($eo_to_smt_coeffs_at cs v))))
+  (($eo_to_smt_coeffs_at eo.list_nil v) cov.zero)
+  (($eo_to_smt_coeffs_at cs v) none)
+  )
+)
+
+; That cov.x is above the lower endpoint, and below the upper one. An infinite
+; endpoint is no constraint, as in $mk_cover_piece, so each program is given the
+; endpoint as written, to recognize one, and the term it was transformed into.
+(program $eo_to_smt_cov_above ((l $eo_Term) (sl SmtTerm))
+  :signature ($eo_Term SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_cov_above @cov_minus_inf sl) true)
+  (($eo_to_smt_cov_above l sl) (> cov.x sl))
+  )
+)
+(program $eo_to_smt_cov_below ((r $eo_Term) (sr SmtTerm))
+  :signature ($eo_Term SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_cov_below @cov_plus_inf sr) true)
+  (($eo_to_smt_cov_below r sr) (< cov.x sr))
+  )
+)
+
+; That F, which is written over cov.x, holds wherever cov.x satisfies I.
+(program $eo_to_smt_cov_throughout ((I SmtTerm) (F SmtTerm))
+  :signature (SmtTerm SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_cov_throughout I F)
+    (not (exists "str_vname" Real (and I (not F)))))
+  )
+)
+
+; The markers of an infinite endpoint are not numbers, so alone they have no
+; meaning. @sgn_inv reads its endpoints before they are transformed.
+(define-symbol @cov_minus_inf ()
+  :term @cov_minus_inf none)
+
+(define-symbol @cov_plus_inf ()
+  :term @cov_plus_inf none)
+
+; -- @ran
+; The root of q between lo and hi. The type of @ran requires that there is
+; exactly one, and s is the evidence for that, so it has no part in the value.
+(define-symbol @ran ((! q :raw) lo hi (! s :raw))
+  :term (choice "str_vname" Real
+          (and (= ($eo_to_smt_coeffs_at q cov.x) cov.zero)
+          (and (< lo cov.x) (< cov.x hi)))))
+
+; -- @is_root
+(define-symbol @is_root (p r)
+  :term (= ($eo_to_smt_poly_at p r) cov.zero))
+
+; -- @sgn_inv
+; p is positive throughout (l, r), or negative throughout it, or zero throughout
+; it.
+(define-symbol @sgn_inv (p (! l :raw) (! r :raw))
+  :term (eo::define ((I (and ($eo_to_smt_cov_above l l) ($eo_to_smt_cov_below r r))))
+          (or ($eo_to_smt_cov_throughout I (> ($eo_to_smt_poly_at p cov.x) cov.zero))
+          (or ($eo_to_smt_cov_throughout I (< ($eo_to_smt_poly_at p cov.x) cov.zero))
+              ($eo_to_smt_cov_throughout I (= ($eo_to_smt_poly_at p cov.x) cov.zero))))))
+
+;-----------------------------------------------------------------------------
 (section "Quantifiers, skolems, and the binder left out")
 ;-----------------------------------------------------------------------------
 
