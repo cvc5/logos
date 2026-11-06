@@ -5,7 +5,7 @@ import all Cpc.Proofs.Canonical.Basic
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm

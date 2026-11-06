@@ -299,16 +299,16 @@ private theorem facts___eo_prog_sets_ext_impl
       __smtx_typeof_map_value m2 =
         SmtType.Map (__eo_to_smt_type T) SmtType.Bool :=
     Smtm.set_map_value_typed (by simpa [hEvalB] using hEvalBTy)
-  have hACan : value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt a)) :=
+  have hACan : value_canonical M.usortDom (__smtx_model_eval M (__eo_to_smt a)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM a hATrans
-  have hBCan : value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt b)) :=
+  have hBCan : value_canonical M.usortDom (__smtx_model_eval M (__eo_to_smt b)) :=
     RuleProofs.model_eval_eo_to_smt_canonical M hM b hBTrans
-  have hm1Can : __smtx_map_canonical M.usortCard m1 = true := by
+  have hm1Can : __smtx_map_canonical M.usortDom m1 = true := by
     have hParts := hACan
     simp [hEvalA, value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
     exact hParts.1
-  have hm2Can : __smtx_map_canonical M.usortCard m2 = true := by
+  have hm2Can : __smtx_map_canonical M.usortDom m2 = true := by
     have hParts := hBCan
     simp [hEvalB, value_canonical, __smtx_value_canonical,
       SmtEval.native_and] at hParts
@@ -340,7 +340,7 @@ private theorem facts___eo_prog_sets_ext_impl
           (__smtx_map_lookup m1 (native_eval_map_diff M m1 m2))
           (__smtx_map_lookup m2 (native_eval_map_diff M m1 m2)) =
         SmtValue.Boolean false :=
-    RuleProofs.map_diff_selects_model_eval_eq_false_of_default_eq
+    RuleProofs.map_diff_selects_model_eval_eq_false_of_default_eq hM.2.2.2
       m1 m2 (__eo_to_smt_type T) SmtType.Bool
       hm1Ty hm2Ty hm1Can hm2Can hDefaultsEq (by decide) hMapsEqFalse
   have hEqEvalFalse :

@@ -42,7 +42,7 @@ private theorem nativeReExtEq_eq_true_iff (r1 r2 : SmtRegLan) :
 
 namespace RuleProofs
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 /-! ## Term-structure abbreviations for `re_eq_elim`
 
@@ -468,7 +468,7 @@ private theorem re_eq_elim_smt_value_rel
     by_cases hEx :
         ∃ v : SmtValue,
           __smtx_typeof_value v = __eo_to_smt_type seqCharTy ∧
-            __smtx_value_canonical M.usortCard v = true ∧
+            __smtx_value_canonical M.usortDom v = true ∧
             __smtx_model_eval_not
               (__smtx_model_eval
                 (native_model_push M reqName (__eo_to_smt_type seqCharTy) v)
@@ -511,7 +511,7 @@ private theorem re_eq_elim_smt_value_rel
             show __smtx_typeof_seq_value (native_pack_string s) =
               SmtType.Seq SmtType.Char
             exact typeof_pack_string s hs
-          · show __smtx_seq_canonical M.usortCard (native_pack_string s) = true
+          · show __smtx_seq_canonical M.usortDom (native_pack_string s) = true
             exact seq_canonical_pack_string s hs
           · rw [hBodyEval (native_pack_string s) (typeof_pack_string s hs),
               native_unpack_string_pack_string s]

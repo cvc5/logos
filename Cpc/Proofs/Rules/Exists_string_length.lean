@@ -190,7 +190,7 @@ private theorem native_eval_tchoice_body_true_of_exists
     (M : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm)
     (hSat : ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval (native_model_push M s T
@@ -202,12 +202,12 @@ private theorem native_eval_tchoice_body_true_of_exists
       (native_model_push M s T
         (if hSat' : ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical M.usortCard v = true ∧
+            __smtx_value_canonical M.usortDom v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true then
           Classical.choose hSat'
         else if hTy : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-            __smtx_value_canonical M.usortCard v then
+            __smtx_value_canonical M.usortDom v then
           Classical.choose hTy
         else SmtValue.NotValue)) body = SmtValue.Boolean true
   simp [hSat]
@@ -283,7 +283,7 @@ private theorem eslFormula_has_bool_type
     (by rw [hLenTy]; simp)
 
 private theorem eslFormula_true
-    (M : SmtModel) (U id : Term) (A : SmtType) (k : native_Int)
+    (M : SmtModel) (huc : usort_dom_wf M.usortDom) (U id : Term) (A : SmtType) (k : native_Int)
     (hIdGt : __eo_gt id (Term.Numeral (-1 : native_Int)) =
       Term.Boolean true)
     (hSeqTy : __eo_to_smt_type (Term.Apply (Term.UOp UserOp.Seq) U) =
@@ -301,7 +301,7 @@ private theorem eslFormula_true
     exact Int.add_one_le_iff.mpr hkLt
   have hAParts := seq_elem_wf_parts_of_seq_wf hSeqWF
   have hDef :=
-    Smtm.type_default_typed_canonical_of_native_inhabited_type (uc := M.usortCard)
+    Smtm.type_default_typed_canonical_of_native_inhabited_type huc (uc := M.usortDom)
       A hAParts.1 hAParts.2
   let xs : List SmtValue :=
     List.replicate (native_int_to_nat k) (__smtx_type_default A)
@@ -310,8 +310,8 @@ private theorem eslFormula_true
     change __smtx_typeof_seq_value (native_pack_seq A xs) = SmtType.Seq A
     exact Smtm.typeof_seq_value_pack_seq_of_typed
       (list_typed_replicate_type_default A (native_int_to_nat k) hDef.1)
-  have hWCanon : __smtx_value_canonical M.usortCard w = true := by
-    change __smtx_seq_canonical M.usortCard (native_pack_seq A xs) = true
+  have hWCanon : __smtx_value_canonical M.usortDom w = true := by
+    change __smtx_seq_canonical M.usortDom (native_pack_seq A xs) = true
     apply Smtm.seq_canonical_pack_seq
     intro v hv
     simp [xs] at hv
@@ -323,7 +323,7 @@ private theorem eslFormula_true
     simpa [w, xs] using eslSmtBody_eval_default_seq M A k hkNonneg
   have hSat : ∃ v : SmtValue,
       __smtx_typeof_value v = SmtType.Seq A ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval
           (native_model_push M (native_string_lit "@x") (SmtType.Seq A) v)
           (eslSmtBody A k) = SmtValue.Boolean true :=
@@ -508,7 +508,7 @@ by
                             (Term.Apply (Term.UOp UserOp.Seq) U)
                             (Term.Numeral k) id) true
                         rw [hFormulaEq]
-                        exact eslFormula_true M U id A k hIdGt
+                        exact eslFormula_true M hM.2.2.2 U id A k hIdGt
                           hSeqTy hSeqWF' hkGt
                       · change RuleProofs.eo_has_smt_translation
                           (__eo_prog_exists_string_length

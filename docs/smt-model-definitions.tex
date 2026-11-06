@@ -67,7 +67,7 @@
   xrightmargin=0.5em,
   aboveskip=0.75em,
   belowskip=0.75em,
-  literate={∀}{{$\forall$}}1 {∧}{{$\land$}}1 {∃}{{$\exists$}}1 {∈}{{$\in$}}1 {≠}{{$\neq$}}1 {¬}{{$\neg$}}1 {⟨}{{$\langle$}}1 {⟩}{{$\rangle$}}1 {·}{{$\cdot$}}1 {→}{{$\rightarrow$}}1 {↔}{{$\leftrightarrow$}}1
+  literate={∀}{{$\forall$}}1 {∧}{{$\land$}}1 {∃}{{$\exists$}}1 {∈}{{$\in$}}1 {≠}{{$\neq$}}1 {≤}{{$\le$}}1 {¬}{{$\neg$}}1 {⟨}{{$\langle$}}1 {⟩}{{$\rangle$}}1 {·}{{$\cdot$}}1 {→}{{$\rightarrow$}}1 {↔}{{$\leftrightarrow$}}1
 }
 
 % Inline Lean/SMT identifiers in typewriter font; \detokenize prints
@@ -181,16 +181,14 @@ supports non-standard extensions of theories, and defines non-standard internal 
 The formalization that follows departs from SMT-LIB in three ways, which are
 different in kind.
 
-First, in three places it admits fewer models than SMT-LIB does:
-arrays are interpreted as almost-constant maps, uninterpreted sorts are at most
-countable, and a function of several arguments has only countably many partial
-applications. Each restriction is stated again at the definition that introduces
-it, and they are collected here so that the list can be read in one place. Read
+First, it admits fewer models than SMT-LIB does in that
+arrays are interpreted as almost-constant maps. The restriction is stated again
+at the definition that introduces it. Read
 on the standard theories alone, every model of this semantics is an SMT-LIB
 model and the converse does not hold, so unsatisfiability as defined here is
 implied by unsatisfiability in SMT-LIB and does not imply it: a formula
 satisfiable in SMT-LIB only by a model this semantics cannot express is treated
-here as unsatisfiable. Each takes quantifiers to reach, and on quantifier-free
+here as unsatisfiable. It takes quantifiers to reach, and on quantifier-free
 input the two notions agree.
 
 Second, the semantics interprets sorts and operators that SMT-LIB does not
@@ -727,10 +725,12 @@ structure SmtModelKey where
   ty : SmtType
 deriving Repr, DecidableEq, Inhabited
 
+abbrev ModelId := Real
+
 structure SmtModel where
   values : SmtModelKey -> SmtValue
-  nativeFuns : SmtModelKey -> (SmtValue -> SmtValue)
-  usortCard : Nat -> Nat
+  nativeFuns : ModelId -> SmtType -> SmtType -> (SmtValue -> SmtValue)
+  usortDom : Nat -> Set ModelId
 deriving Inhabited
 
 def model_push (M : SmtModel) (s : String) (T : SmtType) (v : SmtValue) : SmtModel :=
@@ -746,13 +746,14 @@ def model_push (M : SmtModel) (s : String) (T : SmtType) (v : SmtValue) : SmtMod
 
 Before giving the definition of SMT-LIB values (\smtvalue), 
 we first give a definition of \smtmodel.
-A model consists of two mappings and a cardinality function.
+A model consists of three mappings.
 The first (\code{values}) is a mapping from keys (as defined via the structure \code{SmtModelKey})
 to values.
-The second (\code{nativeFuns}) is a mapping from keys to native (unary) Lean functions.
-The third (\code{usortCard}) gives the cardinality of each uninterpreted sort,
+The second (\code{nativeFuns}) gives a native (unary) Lean function for each
+function identifier and pair of domain and range types.
+The third (\code{usortDom}) gives the domain of each uninterpreted sort,
 as described in Section~\ref{sec:values}.
-For both mappings, a model key consists of three things:
+A model key consists of three things:
 (1) whether the key is for a variable (resp. free constant),
 (2) a string identifier for the variable or constant, and
 (3) the type of the variable or constant.
@@ -763,7 +764,7 @@ We also require that they are \emph{well-typed},
 namely, that they map identifiers having a given type to values with that type
 (for the mapping \code{values}).
 For the mapping \code{nativeFuns},
-for keys whose types are \code{(FunType T U)},
+at types \code{T} and \code{U} with \code{(FunType T U)} well-formed,
 we require that for all input values of type $T$,
 the Lean function successfully returns a value of type $U$.
 All other indices in either map are not used.
@@ -782,14 +783,14 @@ inductive SmtValue : Type where
   | Real : Real -> SmtValue
   | Binary : Int -> Int -> SmtValue
   | Map : SmtMap -> SmtValue
-  | Fun : String -> SmtType -> SmtType -> SmtValue
+  | Fun : ModelId -> SmtType -> SmtType -> SmtValue
   | Set : SmtMap -> SmtValue
   | Seq : SmtSeq -> SmtValue
   | Char : Char -> SmtValue
   | RegLan : SmtRegLan -> SmtValue
   | DtCons : String -> SmtDatatypeDecl -> Nat -> SmtValue
   | Apply : SmtValue -> SmtValue -> SmtValue
-  | UValue : Nat -> Nat -> SmtValue
+  | UValue : Nat -> ModelId -> SmtValue
 deriving Repr, DecidableEq, Inhabited, Ord
 
 inductive SmtMap : Type where
@@ -883,22 +884,21 @@ stores integer indices but has a Boolean value as its default.
 We will see later that these values will be considered ill-typed.
 
 Function values are represented by the constructor \code{Fun},
-which takes three arguments (a string and two types).
+which takes three arguments (an identifier and two types).
 These arguments together are an identifier that is used to lookup
 the behavior of the function value in the model,
 as a native Lean function \smtvalue \code{->} \smtvalue.
-In detail, the first argument $s$ is a string identifier,
+In detail, the first argument $r$ is an identifier of type \code{ModelId},
+which abbreviates \code{Real},
 the second argument $T$ is its domain type,
 and the third argument $U$ is its range type.
 Given a model $M$, the behavior of a function value
-is the Lean function stored in \code{M.nativeFuns} at the (constant) key
-with name \code{s} and type \code{(FunType T U)}.
+is the Lean function \code{(M.nativeFuns r T U)}.
 In other words, function values use a level of indirection for their definition.
 Since functions of several arguments are curried, a partial application is such
-a value too, and so there are only countably many of them at each type.
-This is a divergence from SMT-LIB where a non-final argument has uncountably many
-values: no model here interprets a binary function on \code{Real} as $<$,
-for instance, since that would need a different name for each real.
+a value too. Identifiers are real numbers so that there are enough of them:
+a model can interpret a binary function on \code{Real} as $<$, for instance,
+using a different identifier for each real.
 As a downside, this means that we cannot do computations over function values,
 nor can we define equality over function values in a manner that preserves
 extensionality.
@@ -974,21 +974,25 @@ and not for instance functions.
 Again, this is because datatypes are given Herbrand interpretations.
 
 Values of uninterpreted sort are represented by constructor \code{UValue},
-which take two natural number indices.
-The first correspond to the identifier of their uninterpreted sort,
+which take a natural number index and an identifier.
+The first corresponds to the identifier of their uninterpreted sort,
 where recall uninterpreted sorts are of the form \code{(USort n)} for natural
 number $n$.
-The second index is the identifier for the value,
+The second is the identifier for the value, of type \code{ModelId},
 where we assume that \code{(UValue n i)} and \code{(UValue n j)} are distinct
 when $i$ and $j$ are distinct.
-The cardinality of each uninterpreted sort is chosen by the model:
-\code{(M.usortCard n)} is either $0$, in which case \code{(USort n)} is
-countably infinite and every \code{(UValue n i)} is one of its values,
-or some $k > 0$, in which case its values are \code{(UValue n i)} for $i < k$.
-This admits every finite and countable cardinality, but not the uncountable ones
-SMT-LIB also allows. That is a divergence where a formula forces a sort to be as
-large as \code{Real}, for instance by asserting a surjection from the sort
-onto \code{Real}.
+The domain of each uninterpreted sort is chosen by the model:
+\code{(M.usortDom n)} is a set of identifiers,
+and the values of \code{(USort n)} are exactly \code{(UValue n r)} for $r$ in that
+set, so its size is the cardinality of the sort.
+The definition of a well-formed model requires it to contain $0$, so that the sort
+is nonempty and has a default value, and to be unbounded if it is infinite.
+Since identifiers are only labels, neither
+condition rules out a cardinality:
+every nonzero cardinality up to the size of \code{Real} is available.
+SMT-LIB has no upper limit, but as far as we can tell a larger sort can only be
+forced through the full function space of an array sort, which is already the
+array divergence.
 The restriction to the values of the sort is enforced by canonicity,
 described below.
 
@@ -1146,30 +1150,30 @@ the types for which a default value can be constructed.
 
 \begin{figure}
 \begin{lstlisting}
-def smt_field_type_bounded (uc : Nat -> Nat) (u : Bool) : SmtType -> SmtDatatypeDecl -> Bool
+def smt_field_type_bounded (uc : Nat -> Set ModelId) (u : Bool) : SmtType -> SmtDatatypeDecl -> Bool
   | (SmtType.TypeRef s), ddB => (smt_dd_has_dt s ddB)
   | T, ddB => (smt_type_bounded uc u T)
 
-def smt_datatype_cons_bounded (uc : Nat -> Nat) (u : Bool) : SmtDatatypeCons -> SmtDatatypeDecl -> Bool
+def smt_datatype_cons_bounded (uc : Nat -> Set ModelId) (u : Bool) : SmtDatatypeCons -> SmtDatatypeDecl -> Bool
   | SmtDatatypeCons.unit, ddB => true
   | (SmtDatatypeCons.cons T c), ddB => ((smt_field_type_bounded uc u T ddB) && (smt_datatype_cons_bounded uc u c ddB))
 
-def smt_datatype_bounded (uc : Nat -> Nat) (u : Bool) : SmtDatatype -> SmtDatatypeDecl -> Bool
+def smt_datatype_bounded (uc : Nat -> Set ModelId) (u : Bool) : SmtDatatype -> SmtDatatypeDecl -> Bool
   | (SmtDatatype.sum c SmtDatatype.null), ddB => (smt_datatype_cons_bounded uc u c ddB)
   | (SmtDatatype.sum c dF), ddB => (!u && ((smt_datatype_cons_bounded uc u c ddB) && (smt_datatype_bounded uc u dF ddB)))
   | dF, ddB => !u
 
-def smt_datatype_decl_bounded_step (uc : Nat -> Nat) (u : Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
+def smt_datatype_decl_bounded_step (uc : Nat -> Set ModelId) (u : Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
   | (SmtDatatypeDecl.cons sF dF ddR), ddB => (smt_datatype_decl_bounded_step uc u ddR (if (!(smt_dd_has_dt sF ddB) && (smt_datatype_bounded uc u dF ddB)) then (SmtDatatypeDecl.cons sF dF ddB) else ddB))
   | SmtDatatypeDecl.nil, ddB => ddB
 
-def smt_datatype_decl_bounded (uc : Nat -> Nat) (u : Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
+def smt_datatype_decl_bounded (uc : Nat -> Set ModelId) (u : Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
   | (SmtDatatypeDecl.cons sC dC ddC), dd, ddB => (smt_datatype_decl_bounded uc u ddC dd (smt_datatype_decl_bounded_step uc u dd ddB))
   | SmtDatatypeDecl.nil, dd, ddB => ddB
 
-def smt_type_bounded (uc : Nat -> Nat) (u : Bool) : SmtType -> Bool
+def smt_type_bounded (uc : Nat -> Set ModelId) (u : Bool) : SmtType -> Bool
   | SmtType.Bool => !u
-  | (SmtType.USort i) => (if u then (uc i = 1) else (uc i != 0))
+  | (SmtType.USort i) => (if u then decide (uc i = {0}) else decide (uc i).Finite)
   | (SmtType.BitVec w) => (!u || (w = 0))
   | SmtType.Char => !u
   | (SmtType.Datatype s dd) => (smt_dd_has_dt s (smt_datatype_decl_bounded uc u dd dd SmtDatatypeDecl.nil))
@@ -1177,10 +1181,10 @@ def smt_type_bounded (uc : Nat -> Nat) (u : Bool) : SmtType -> Bool
   | (SmtType.Set T) => (!u && (smt_type_bounded uc u T))
   | T => false
 
-def smt_is_unit_type (uc : Nat -> Nat) (T : SmtType) : Bool :=
+def smt_is_unit_type (uc : Nat -> Set ModelId) (T : SmtType) : Bool :=
   (smt_type_bounded uc true T)
 
-def smt_is_finite_type (uc : Nat -> Nat) (T : SmtType) : Bool :=
+def smt_is_finite_type (uc : Nat -> Set ModelId) (T : SmtType) : Bool :=
   (smt_type_bounded uc false T)
 \end{lstlisting}
 \caption{Unit and finite SMT type predicates.}
@@ -1190,7 +1194,7 @@ def smt_is_finite_type (uc : Nat -> Nat) (T : SmtType) : Bool :=
 \begin{figure}
 \begin{lstlisting}
 theorem finite_type_enumerable
-    (uc : Nat -> Nat) (A : SmtType)
+    (uc : Nat -> Set ModelId) (A : SmtType)
     (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hFin : smt_is_finite_type uc A = true) :
@@ -1199,7 +1203,7 @@ theorem finite_type_enumerable
       smt_value_canonical uc v = true → v ∈ l
 
 theorem fresh_typed_canonical_value_for_infinite_type
-    (uc : Nat -> Nat) (A : SmtType)
+    (uc : Nat -> Set ModelId) (huc : usort_dom_wf uc) (A : SmtType)
     (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hInfinite : smt_is_finite_type uc A = false)
@@ -1210,7 +1214,7 @@ theorem fresh_typed_canonical_value_for_infinite_type
       (∀ j : SmtValue, j ∈ avoid → veq j i = false)
 
 theorem unit_type_values_default
-    (uc : Nat -> Nat) (A : SmtType)
+    (uc : Nat -> Set ModelId) (A : SmtType)
     (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hUnit : smt_is_unit_type uc A = true) :
@@ -1220,7 +1224,7 @@ theorem unit_type_values_default
       v = smt_type_default A
 
 theorem nonunit_typed_canonical_nondefault_value
-    (uc : Nat -> Nat) (A : SmtType)
+    (uc : Nat -> Set ModelId) (huc : usort_dom_wf uc) (A : SmtType)
     (hInh : smt_inhabited_type A = true)
     (hRec : smt_type_wf_rec A = true)
     (hNonUnit : smt_is_unit_type uc A = false) :
@@ -1229,7 +1233,7 @@ theorem nonunit_typed_canonical_nondefault_value
       smt_value_canonical uc e = true ∧
       veq e (smt_type_default A) = false
 \end{lstlisting}
-\caption{Soundness and completeness of the finite and unit type classifiers, relative to the well-formedness and inhabitedness guards. Statements 1 (\code{finite_type_enumerable}) and 3 (\code{unit_type_values_default}) are the soundness directions; statements 2 (\code{fresh_typed_canonical_value_for_infinite_type}) and 4 (\code{nonunit_typed_canonical_nondefault_value}) are the completeness directions.}
+\caption{Soundness and completeness of the finite and unit type classifiers, relative to the well-formedness and inhabitedness guards. Statements 1 (\code{finite_type_enumerable}) and 3 (\code{unit_type_values_default}) are the soundness directions; statements 2 (\code{fresh_typed_canonical_value_for_infinite_type}) and 4 (\code{nonunit_typed_canonical_nondefault_value}) are the completeness directions, which also assume the domains of uninterpreted sorts are well-formed (\code{usort_dom_wf}, Figure~\ref{fig:model-typed}).}
 \label{fig:finite-unit-correctness}
 \end{figure}
 
@@ -1250,15 +1254,15 @@ same element everywhere),
 or both its index and element types are finite;
 it is unit iff its element type is unit.
 Set types are finite iff their element type is finite, and are never unit.
-An uninterpreted sort is finite iff the model gives it a nonzero cardinality,
-and unit iff that cardinality is one.
+An uninterpreted sort is finite iff the domain the model gives it is finite,
+and unit iff that domain is exactly $\{0\}$, the only singleton a well-formed
+model can give it, since a well-formed domain contains $0$.
 Other types such as integers, reals, sequences and regular expressions
 are unconditionally not finite.
-Since uninterpreted sorts are classified using the cardinality function
-of the model, \code{smt_type_bounded} and every method that calls it,
+Since uninterpreted sorts are classified using the domains chosen by the model, \code{smt_type_bounded} and every method that calls it,
 including \code{smt_is_finite_type} and \code{smt_value_canonical} below,
-take that function as an additional argument \code{uc};
-when a model \code{M} is at hand it is \code{M.usortCard}.
+take them as an additional argument \code{uc};
+when a model \code{M} is at hand it is \code{M.usortDom}.
 We do not define finiteness for functions here,
 as they will not be considered first-class.
 
@@ -1326,7 +1330,7 @@ def smt_type_default : SmtType -> SmtValue
     (if (veq _v0 SmtValue.NotValue) then SmtValue.NotValue else (SmtValue.Map (SmtMap.default T _v0)))
   | (SmtType.Set T) => (SmtValue.Set (SmtMap.default T (SmtValue.Boolean false)))
   | (SmtType.Seq T) => (SmtValue.Seq (SmtSeq.empty T))
-  | (SmtType.FunType T U) => (SmtValue.Fun "@default" T U)
+  | (SmtType.FunType T U) => (SmtValue.Fun 0 T U)
   | (SmtType.USort i) => (SmtValue.UValue i 0)
   | ... => ...
   | T => SmtValue.NotValue
@@ -1475,13 +1479,10 @@ The other definitions of default values are trivial.
 Maps and sets use a default (constant) map, where maps store the default
 value of the element type and sets store false.
 Sequence default value is the empty sequence.
-Function types have a default value which uses a reserved default identifier
-\code{"@default"},
-where note that "@" is used as a prefix to
-avoid name clashes with user symbols.\footnote{
-SMT-LIB uses a convention that user symbols cannot be prefixed by "@".}
-Uninterpreted sort values use a default natural number identifier,
-i.e. the first value of the uninterpreted sort's domain.
+Function types have a default value which uses the reserved default identifier
+$0$.
+Uninterpreted sort values use the identifier $0$ as well,
+which every uninterpreted sort's domain contains.
 
 In the figure, we also give a definition of inhabitedness for types
 via the method \code{smt_inhabited_type}.
@@ -1571,7 +1572,7 @@ def smt_map_entries_ordered_after (i : SmtValue) : SmtMap -> Bool
   | (SmtMap.cons j e m) => (vcmp j i)
   | m => true
 
-def smt_map_canonical (uc : Nat -> Nat) : SmtMap -> Bool
+def smt_map_canonical (uc : Nat -> Set ModelId) : SmtMap -> Bool
   | (SmtMap.default T e) =>
     (!(smt_is_finite_type uc T) || (veq e (smt_type_default (smt_typeof_value e)))) &&
     (smt_value_canonical uc e)
@@ -1582,17 +1583,17 @@ def smt_map_canonical (uc : Nat -> Nat) : SmtMap -> Bool
       smt_map_entries_ordered_after i m &&
       !(veq e (smt_map_get_default m))
 
-def smt_seq_canonical (uc : Nat -> Nat) : SmtSeq -> Bool
+def smt_seq_canonical (uc : Nat -> Set ModelId) : SmtSeq -> Bool
   | (SmtSeq.empty T) => true
   | (SmtSeq.cons v s) => (smt_value_canonical uc v) && (smt_seq_canonical uc s)
 
-def smt_value_canonical (uc : Nat -> Nat) : SmtValue -> Bool
+def smt_value_canonical (uc : Nat -> Set ModelId) : SmtValue -> Bool
   | (SmtValue.Binary w n) => (if (0 <= w) then (n = n % (2 ^ w)) else true)
   | (SmtValue.Char c) => (c < 196608)
   | (SmtValue.Map m) => (smt_map_canonical uc m)
   | (SmtValue.Set m) => (smt_map_canonical uc m) && (veq (smt_map_get_default m) (SmtValue.Boolean false))
   | (SmtValue.Seq s) => (smt_seq_canonical uc s)
-  | (SmtValue.UValue i n) => (uc i = 0) || (n < uc i)
+  | (SmtValue.UValue i r) => decide (r ∈ uc i)
   | (SmtValue.RegLan r) => (re_canonical r)
   | (SmtValue.Apply f v) => (smt_value_canonical uc f) && (smt_value_canonical uc v)
   | v => true
@@ -1855,21 +1856,26 @@ and will contain a special case for regular expressions.
 def model_lookup (M : SmtModel) (isVar : Bool) (s : String) (T : SmtType) : SmtValue :=
   M.values { isVar := isVar, name := s, ty := T }
 
-def model_fun_lookup (M : SmtModel) (fid : String) (T U : SmtType) : SmtValue -> SmtValue :=
-  M.nativeFuns { isVar := false, name := fid, ty := (SmtType.FunType T U) }
+def model_fun_lookup (M : SmtModel) (fid : ModelId) (T U : SmtType) : SmtValue -> SmtValue :=
+  M.nativeFuns fid T U
 
-def eval_fun_apply (M : SmtModel) (fid : String) (T U : SmtType) (i : SmtValue) : SmtValue :=
-  if (fid = "@default") then (smt_type_default U) else (model_fun_lookup M fid T U i)
+def eval_fun_apply (M : SmtModel) (fid : ModelId) (T U : SmtType) (i : SmtValue) : SmtValue :=
+  if (fid = 0) then (smt_type_default U) else (model_fun_lookup M fid T U i)
+
+def usort_dom_wf (uc : Nat -> Set ModelId) : Prop :=
+  ∀ i, (0 : ModelId) ∈ uc i ∧
+    ((uc i).Infinite -> ∀ n : Nat, ∃ r ∈ uc i, (n : ModelId) ≤ |r|)
 
 def model_wf (M : SmtModel) : Prop :=
   (∀ isVar s T, smt_type_wf T = true ->
     smt_typeof_value (model_lookup M isVar s T) = T ∧
-    smt_value_canonical M.usortCard (model_lookup M isVar s T) = true) ∧
+    smt_value_canonical M.usortDom (model_lookup M isVar s T) = true) ∧
   (∀ fid A B i,
     smt_type_wf (SmtType.FunType A B) = true ->
     smt_typeof_value i = A ->
     smt_typeof_value (eval_fun_apply M fid A B i) = B ∧
-      smt_value_canonical M.usortCard (eval_fun_apply M fid A B i) = true)
+      smt_value_canonical M.usortDom (eval_fun_apply M fid A B i) = true) ∧
+  usort_dom_wf M.usortDom
 \end{lstlisting}
 \caption{Total typed model conditions.}
 \label{fig:model-typed}
@@ -1889,22 +1895,25 @@ and moreover that value is \emph{canonical}.
 It will be the case that our model evaluator only returns canonical values,
 the latter requirement can be seen as a base case on the leafs when interpreting a term (i.e. its variables and free constants).
 
-The second clause says that for all keys,
+The second clause says that for all identifiers and types,
 the \code{M.nativeFuns} has similar requirements,
 but where now the functions stored in the domain behave like properly typed functions of the given type.
 Function behavior is accessed through the method \code{eval_fun_apply},
 which behaves as the direct lookup \code{model_fun_lookup} except on the
-reserved default function identifier \code{"@default"},
+reserved default function identifier $0$,
 for which it returns the default value of the range type regardless of the
 model; this guarantees that the default function value from
 Figure~\ref{fig:default-value} is well-behaved in every model.
 Model evaluation of function applications will go through the same method.
-In particular, the second clause requires that for keys having type \code{(SmtType.FunType A B)},
+In particular, the second clause requires that when \code{(SmtType.FunType A B)} is well-formed,
 for all inputs \code{i} whose type is \code{A},
 applying \code{(eval_fun_apply M fid A B)}
 to \code{i} results in a value of type \code{B}, and moreover the returned value is canonical.
 
-Notice that for both clauses, we insist that the respective components of \code{M} are total mappings.
+The third clause restricts the domains of uninterpreted sorts,
+as described in Section~\ref{sec:values}.
+
+Notice that for the first two clauses, we insist that the respective components of \code{M} are total mappings.
 
 \subsection{Terms}
 \label{sec:terms}
@@ -2184,7 +2193,7 @@ noncomputable def eval_texists (M : SmtModel) (s : String)
     (T : SmtType) (body : SmtTerm) : SmtValue :=
   SmtValue.Boolean (∃ v : SmtValue,
       smt_typeof_value v = T ∧
-        smt_value_canonical M.usortCard v = true ∧
+        smt_value_canonical M.usortDom v = true ∧
         smt_model_eval (model_push M s T v) body = (SmtValue.Boolean true))
 
 def smt_model_eval_apply (M : SmtModel) : SmtValue -> SmtValue -> SmtValue
@@ -2342,7 +2351,7 @@ theorem model_eval_canonical
     (hM : model_wf M)
     (t : SmtTerm)
     (hTy : smt_typeof t ≠ SmtType.None) :
-    smt_value_canonical M.usortCard (smt_model_eval M t) = true
+    smt_value_canonical M.usortDom (smt_model_eval M t) = true
 \end{lstlisting}
 \caption{Main type-preservation, canonicality, and model-existence statements.}
 \label{fig:type-preservation}
@@ -2954,7 +2963,7 @@ def assumptionCheckGuard (A : Term) : Term :=
 structure model_agrees_on_globals (M N : SmtModel) : Prop where
   consts : ∀ s T, model_lookup M false s T = model_lookup N false s T
   funs : ∀ fid T U, model_fun_lookup M fid T U = model_fun_lookup N fid T U
-  usortCard : M.usortCard = N.usortCard
+  usortDom : M.usortDom = N.usortDom
 
 theorem smt_model_eval_eq_of_eo_closed
     (P : Term) (hClosed : eo_is_closed P = Term.Boolean true)

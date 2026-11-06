@@ -7,7 +7,7 @@ import all Cpc.Proofs.Canonical.BasicModel
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -20,26 +20,26 @@ namespace Smtm
 theorem model_eval_boolean_canonical
     (M : SmtModel)
     (b : native_Bool) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.Boolean b)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.Boolean b)) := by
   simpa [__smtx_model_eval] using value_canonical_boolean b
 
 theorem model_eval_numeral_canonical
     (M : SmtModel)
     (n : native_Int) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.Numeral n)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.Numeral n)) := by
   simpa [__smtx_model_eval] using value_canonical_numeral n
 
 theorem model_eval_rational_canonical
     (M : SmtModel)
     (q : native_Rat) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.Rational q)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.Rational q)) := by
   simpa [__smtx_model_eval] using value_canonical_rational (native_rat_to_real q)
 
 theorem model_eval_string_canonical
     (M : SmtModel)
     (s : native_String)
     (hs : native_string_valid s = true) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.String s)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.String s)) := by
   simpa [__smtx_model_eval] using model_eval_string_value_canonical s hs
 
 theorem model_eval_var_canonical
@@ -48,7 +48,7 @@ theorem model_eval_var_canonical
     (s : native_String)
     (T : SmtType)
     (hWF : __smtx_type_wf T = true) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.Var s T)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.Var s T)) := by
   simpa [__smtx_model_eval] using
     model_total_typed_var_lookup_canonical hM s T hWF
 
@@ -58,142 +58,142 @@ theorem model_eval_uconst_canonical
     (s : native_String)
     (T : SmtType)
     (hWF : __smtx_type_wf T = true) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.UConst s T)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.UConst s T)) := by
   simpa [__smtx_model_eval] using
     model_total_typed_lookup_canonical hM s T hWF
 
 theorem model_eval_eq_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.eq t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.eq t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_eq_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_not_term_canonical
     (M : SmtModel)
     (t : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.not t)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.not t)) := by
   simpa [__smtx_model_eval] using
     model_eval_not_canonical (__smtx_model_eval M t)
 
 theorem model_eval_or_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.or t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.or t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_or_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_and_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.and t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.and t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_and_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_imp_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.imp t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.imp t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_imp_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_xor_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.xor t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.xor t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_xor_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_plus_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.plus t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.plus t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_plus_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_sub_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.neg t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.neg t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_sub_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_mult_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.mult t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.mult t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_mult_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_lt_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.lt t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.lt t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_lt_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_leq_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.leq t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.leq t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_leq_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_gt_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.gt t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.gt t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_gt_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_geq_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.geq t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.geq t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_geq_canonical (__smtx_model_eval M t1) (__smtx_model_eval M t2)
 
 theorem model_eval_to_real_term_canonical
     (M : SmtModel)
     (t : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.to_real t)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.to_real t)) := by
   simpa [__smtx_model_eval] using
     model_eval_to_real_canonical (__smtx_model_eval M t)
 
 theorem model_eval_to_int_term_canonical
     (M : SmtModel)
     (t : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.to_int t)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.to_int t)) := by
   simpa [__smtx_model_eval] using
     model_eval_to_int_canonical (__smtx_model_eval M t)
 
 theorem model_eval_is_int_term_canonical
     (M : SmtModel)
     (t : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.is_int t)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.is_int t)) := by
   simpa [__smtx_model_eval] using
     model_eval_is_int_canonical (__smtx_model_eval M t)
 
 theorem model_eval_abs_term_canonical
     (M : SmtModel)
     (t : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.abs t)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.abs t)) := by
   simpa [__smtx_model_eval] using
     model_eval_abs_canonical (__smtx_model_eval M t)
 
 theorem model_eval_uneg_term_canonical
     (M : SmtModel)
     (t : SmtTerm) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.uneg t)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.uneg t)) := by
   simpa [__smtx_model_eval] using
     model_eval_uneg_canonical (__smtx_model_eval M t)
 
 theorem model_eval_ite_term_canonical
     (M : SmtModel)
     (c t e : SmtTerm)
-    (ht : value_canonical M.usortCard (__smtx_model_eval M t))
-    (he : value_canonical M.usortCard (__smtx_model_eval M e)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.ite c t e)) := by
+    (ht : value_canonical M.usortDom (__smtx_model_eval M t))
+    (he : value_canonical M.usortDom (__smtx_model_eval M e)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.ite c t e)) := by
   simpa [__smtx_model_eval] using
     model_eval_ite_canonical
       (c := __smtx_model_eval M c)
@@ -203,8 +203,8 @@ theorem model_eval_ite_term_canonical
 theorem model_eval_select_term_canonical
     (M : SmtModel)
     (a i : SmtTerm)
-    (ha : value_canonical M.usortCard (__smtx_model_eval M a)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.select a i)) := by
+    (ha : value_canonical M.usortDom (__smtx_model_eval M a)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.select a i)) := by
   simpa [__smtx_model_eval] using
     model_eval_select_canonical
       (v := __smtx_model_eval M a)
@@ -213,23 +213,23 @@ theorem model_eval_select_term_canonical
 theorem model_eval_seq_empty_term_canonical
     (M : SmtModel)
     (T : SmtType) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.seq_empty T)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.seq_empty T)) := by
   simpa [__smtx_model_eval] using model_eval_seq_empty_value_canonical T
 
 theorem model_eval_seq_unit_term_canonical
     (M : SmtModel)
     (t : SmtTerm)
-    (ht : value_canonical M.usortCard (__smtx_model_eval M t)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.seq_unit t)) := by
+    (ht : value_canonical M.usortDom (__smtx_model_eval M t)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.seq_unit t)) := by
   simpa [__smtx_model_eval] using
     model_eval_seq_unit_value_canonical (v := __smtx_model_eval M t) ht
 
 theorem model_eval_str_concat_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm)
-    (h1 : value_canonical M.usortCard (__smtx_model_eval M t1))
-    (h2 : value_canonical M.usortCard (__smtx_model_eval M t2)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.str_concat t1 t2)) := by
+    (h1 : value_canonical M.usortDom (__smtx_model_eval M t1))
+    (h2 : value_canonical M.usortDom (__smtx_model_eval M t2)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.str_concat t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_str_concat_canonical
       (v1 := __smtx_model_eval M t1)
@@ -238,16 +238,16 @@ theorem model_eval_str_concat_term_canonical
 theorem model_eval_str_rev_term_canonical
     (M : SmtModel)
     (t : SmtTerm)
-    (ht : value_canonical M.usortCard (__smtx_model_eval M t)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.str_rev t)) := by
+    (ht : value_canonical M.usortDom (__smtx_model_eval M t)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.str_rev t)) := by
   simpa [__smtx_model_eval] using
     model_eval_str_rev_canonical (v := __smtx_model_eval M t) ht
 
 theorem model_eval_str_substr_term_canonical
     (M : SmtModel)
     (t1 t2 t3 : SmtTerm)
-    (h1 : value_canonical M.usortCard (__smtx_model_eval M t1)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.str_substr t1 t2 t3)) := by
+    (h1 : value_canonical M.usortDom (__smtx_model_eval M t1)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.str_substr t1 t2 t3)) := by
   simpa [__smtx_model_eval] using
     model_eval_str_substr_canonical
       (v := __smtx_model_eval M t1)
@@ -257,10 +257,10 @@ theorem model_eval_str_substr_term_canonical
 theorem model_eval_str_replace_term_canonical
     (M : SmtModel)
     (t1 t2 t3 : SmtTerm)
-    (h1 : value_canonical M.usortCard (__smtx_model_eval M t1))
-    (h2 : value_canonical M.usortCard (__smtx_model_eval M t2))
-    (h3 : value_canonical M.usortCard (__smtx_model_eval M t3)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.str_replace t1 t2 t3)) := by
+    (h1 : value_canonical M.usortDom (__smtx_model_eval M t1))
+    (h2 : value_canonical M.usortDom (__smtx_model_eval M t2))
+    (h3 : value_canonical M.usortDom (__smtx_model_eval M t3)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.str_replace t1 t2 t3)) := by
   simpa [__smtx_model_eval] using
     model_eval_str_replace_canonical
       (v := __smtx_model_eval M t1)
@@ -270,8 +270,8 @@ theorem model_eval_str_replace_term_canonical
 theorem model_eval_str_at_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm)
-    (h1 : value_canonical M.usortCard (__smtx_model_eval M t1)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.str_at t1 t2)) := by
+    (h1 : value_canonical M.usortDom (__smtx_model_eval M t1)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.str_at t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_str_at_canonical
       (v := __smtx_model_eval M t1)
@@ -280,9 +280,9 @@ theorem model_eval_str_at_term_canonical
 theorem model_eval_str_update_term_canonical
     (M : SmtModel)
     (t1 t2 t3 : SmtTerm)
-    (h1 : value_canonical M.usortCard (__smtx_model_eval M t1))
-    (h3 : value_canonical M.usortCard (__smtx_model_eval M t3)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.str_update t1 t2 t3)) := by
+    (h1 : value_canonical M.usortDom (__smtx_model_eval M t1))
+    (h3 : value_canonical M.usortDom (__smtx_model_eval M t3)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.str_update t1 t2 t3)) := by
   simpa [__smtx_model_eval] using
     model_eval_str_update_canonical
       (v := __smtx_model_eval M t1)
@@ -292,10 +292,10 @@ theorem model_eval_str_update_term_canonical
 theorem model_eval_str_replace_all_term_canonical
     (M : SmtModel)
     (t1 t2 t3 : SmtTerm)
-    (h1 : value_canonical M.usortCard (__smtx_model_eval M t1))
-    (h2 : value_canonical M.usortCard (__smtx_model_eval M t2))
-    (h3 : value_canonical M.usortCard (__smtx_model_eval M t3)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.str_replace_all t1 t2 t3)) := by
+    (h1 : value_canonical M.usortDom (__smtx_model_eval M t1))
+    (h2 : value_canonical M.usortDom (__smtx_model_eval M t2))
+    (h3 : value_canonical M.usortDom (__smtx_model_eval M t3)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.str_replace_all t1 t2 t3)) := by
   simpa [__smtx_model_eval] using
     model_eval_str_replace_all_canonical
       (v := __smtx_model_eval M t1)
@@ -305,23 +305,23 @@ theorem model_eval_str_replace_all_term_canonical
 theorem model_eval_set_empty_term_canonical
     (M : SmtModel)
     (T : SmtType) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.set_empty T)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.set_empty T)) := by
   simpa [__smtx_model_eval] using model_eval_set_empty_value_canonical T
 
 theorem model_eval_set_singleton_term_canonical
     (M : SmtModel)
     (t : SmtTerm)
-    (ht : value_canonical M.usortCard (__smtx_model_eval M t)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.set_singleton t)) := by
+    (ht : value_canonical M.usortDom (__smtx_model_eval M t)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.set_singleton t)) := by
   simpa [__smtx_model_eval] using
     model_eval_set_singleton_value_canonical (v := __smtx_model_eval M t) ht
 
 theorem model_eval_set_union_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm)
-    (h1 : value_canonical M.usortCard (__smtx_model_eval M t1))
-    (h2 : value_canonical M.usortCard (__smtx_model_eval M t2)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.set_union t1 t2)) := by
+    (h1 : value_canonical M.usortDom (__smtx_model_eval M t1))
+    (h2 : value_canonical M.usortDom (__smtx_model_eval M t2)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.set_union t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_set_union_canonical
       (v1 := __smtx_model_eval M t1)
@@ -330,9 +330,9 @@ theorem model_eval_set_union_term_canonical
 theorem model_eval_set_inter_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm)
-    (h1 : value_canonical M.usortCard (__smtx_model_eval M t1))
-    (h2 : value_canonical M.usortCard (__smtx_model_eval M t2)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.set_inter t1 t2)) := by
+    (h1 : value_canonical M.usortDom (__smtx_model_eval M t1))
+    (h2 : value_canonical M.usortDom (__smtx_model_eval M t2)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.set_inter t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_set_inter_canonical
       (v1 := __smtx_model_eval M t1)
@@ -341,9 +341,9 @@ theorem model_eval_set_inter_term_canonical
 theorem model_eval_set_minus_term_canonical
     (M : SmtModel)
     (t1 t2 : SmtTerm)
-    (h1 : value_canonical M.usortCard (__smtx_model_eval M t1))
-    (h2 : value_canonical M.usortCard (__smtx_model_eval M t2)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.set_minus t1 t2)) := by
+    (h1 : value_canonical M.usortDom (__smtx_model_eval M t1))
+    (h2 : value_canonical M.usortDom (__smtx_model_eval M t2)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.set_minus t1 t2)) := by
   simpa [__smtx_model_eval] using
     model_eval_set_minus_canonical
       (v1 := __smtx_model_eval M t1)
@@ -358,8 +358,8 @@ theorem model_eval_seq_nth_term_canonical
       ∀ {T : SmtType},
         __smtx_typeof t1 = SmtType.Seq T ->
           __smtx_type_wf_rec T = true)
-    (h1 : value_canonical M.usortCard (__smtx_model_eval M t1)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.seq_nth t1 t2)) := by
+    (h1 : value_canonical M.usortDom (__smtx_model_eval M t1)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.seq_nth t1 t2)) := by
   rcases seq_nth_args_of_non_none ht with ⟨T, ht1Ty, ht2Ty⟩
   have hGuardNN : __smtx_typeof_guard_wf T T ≠ SmtType.None := by
     unfold term_has_non_none_type at ht
@@ -395,8 +395,8 @@ theorem model_eval_dt_sel_term_canonical
     (i j : native_Nat)
     (x : SmtTerm)
     (ht : term_has_non_none_type (SmtTerm.Apply (SmtTerm.DtSel s d i j) x))
-    (hx : value_canonical M.usortCard (__smtx_model_eval M x)) :
-    value_canonical M.usortCard
+    (hx : value_canonical M.usortDom (__smtx_model_eval M x)) :
+    value_canonical M.usortDom
       (__smtx_model_eval M (SmtTerm.Apply (SmtTerm.DtSel s d i j) x)) := by
   have htx : term_has_non_none_type x :=
     by
@@ -417,19 +417,19 @@ theorem native_eval_tchoice_canonical
     (s : native_String)
     (T : SmtType)
     (body : SmtTerm) :
-    value_canonical M.usortCard (native_eval_choice M s T body) := by
+    value_canonical M.usortDom (native_eval_choice M s T body) := by
   classical
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical M.usortCard v = true ∧
+          __smtx_value_canonical M.usortDom v = true ∧
           __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
-  · have hCan : value_canonical M.usortCard (Classical.choose hSat) := by
+  · have hCan : value_canonical M.usortDom (Classical.choose hSat) := by
       simpa [value_canonical] using (Classical.choose_spec hSat).2.1
     simpa [hSat] using hCan
   · by_cases hTy :
-        ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical M.usortCard v
-    · have hCan : value_canonical M.usortCard (Classical.choose hTy) := by
+        ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical M.usortDom v
+    · have hCan : value_canonical M.usortDom (Classical.choose hTy) := by
         simpa [value_canonical] using (Classical.choose_spec hTy).2
       simpa [hSat, hTy] using hCan
     · simpa [hSat, hTy] using value_canonical_notValue
@@ -448,10 +448,10 @@ theorem model_eval_store_term_canonical_of_order_laws
             native_vcmp a c = true)
     (M : SmtModel)
     (a i e : SmtTerm)
-    (ha : value_canonical M.usortCard (__smtx_model_eval M a))
-    (hi : value_canonical M.usortCard (__smtx_model_eval M i))
-    (he : value_canonical M.usortCard (__smtx_model_eval M e)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.store a i e)) := by
+    (ha : value_canonical M.usortDom (__smtx_model_eval M a))
+    (hi : value_canonical M.usortDom (__smtx_model_eval M i))
+    (he : value_canonical M.usortDom (__smtx_model_eval M e)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.store a i e)) := by
   simpa [__smtx_model_eval] using
     model_eval_store_canonical_of_order_laws
       hFlip hTrans
@@ -463,10 +463,10 @@ theorem model_eval_store_term_canonical_of_order_laws
 theorem model_eval_store_term_canonical
     (M : SmtModel)
     (a i e : SmtTerm)
-    (ha : value_canonical M.usortCard (__smtx_model_eval M a))
-    (hi : value_canonical M.usortCard (__smtx_model_eval M i))
-    (he : value_canonical M.usortCard (__smtx_model_eval M e)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.store a i e)) := by
+    (ha : value_canonical M.usortDom (__smtx_model_eval M a))
+    (hi : value_canonical M.usortDom (__smtx_model_eval M i))
+    (he : value_canonical M.usortDom (__smtx_model_eval M e)) :
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.store a i e)) := by
   simpa [__smtx_model_eval] using
     model_eval_store_canonical
       (v := __smtx_model_eval M a)
@@ -478,7 +478,7 @@ theorem model_eval_zero_extend_term_canonical
     (hM : model_wf M)
     (t1 t2 : SmtTerm)
     (hTy : term_has_non_none_type (SmtTerm.zero_extend t1 t2)) :
-    value_canonical M.usortCard (__smtx_model_eval M (SmtTerm.zero_extend t1 t2)) := by
+    value_canonical M.usortDom (__smtx_model_eval M (SmtTerm.zero_extend t1 t2)) := by
   rcases zero_extend_args_of_non_none hTy with ⟨i, w, h1, h2, hi0⟩
   exact model_eval_canonical_of_bitvec_type M hM _ (native_int_to_nat (native_zplus i (native_nat_to_int w))) (by
     rw [typeof_zero_extend_eq]
@@ -493,7 +493,7 @@ theorem model_eval_canonical_of_supported
     (t : SmtTerm)
     (hTy : term_has_non_none_type t)
     (hs : supported_preservation_term t) :
-    value_canonical M.usortCard (__smtx_model_eval M t) := by
+    value_canonical M.usortDom (__smtx_model_eval M t) := by
   induction hs generalizing M
   case boolean b =>
       exact model_eval_boolean_canonical M b
@@ -566,7 +566,7 @@ theorem model_eval_canonical_of_supported
         (ih1 M hM ht1) (ih2 M hM ht2) (ih3 M hM ht3)
   case map_diff ht1 hs1 ht2 hs2 hDefault ih1 ih2 =>
       exact model_eval_map_diff_canonical M _ _ hTy
-        (fun {A} hA => (hDefault (A := A) hA).2)
+        (fun {A} hA => (hDefault (A := A) hM.2.2.2 hA).2)
         (smt_model_eval_preserves_type_of_non_none M hM _ ht1)
         (smt_model_eval_preserves_type_of_non_none M hM _ ht2)
   case seq_diff ht1 hs1 ht2 hs2 ih1 ih2 =>
@@ -591,7 +591,7 @@ theorem model_eval_canonical_of_supported
       have hWf : __smtx_type_wf T = true := bind_binder_type_wf_of_non_none hTy
       have hx1ty : __smtx_typeof_value (__smtx_model_eval M x1) = __smtx_typeof x1 :=
         smt_model_eval_preserves_type_of_non_none M hM x1 ht1
-      have hx1canon : value_canonical M.usortCard (__smtx_model_eval M x1) :=
+      have hx1canon : value_canonical M.usortDom (__smtx_model_eval M x1) :=
         ih1 M hM ht1
       have hM' : model_wf (native_model_push M s T (__smtx_model_eval M x1)) :=
         model_total_typed_push hM s T (__smtx_model_eval M x1) hWf (hx1ty.trans hTx1) hx1canon
@@ -828,7 +828,7 @@ theorem model_eval_canonical_of_supported
         model_eval_re_diff_canonical (ih1 M hM ht1) (ih2 M hM ht2)
   case re_loop n1 n2 ht hs ih =>
       simpa [__smtx_model_eval] using
-        model_eval_re_loop_canonical (SmtValue.Numeral _) (SmtValue.Numeral _)
+        model_eval_re_loop_canonical hM.2.2.2 (SmtValue.Numeral _) (SmtValue.Numeral _)
           (ih M hM ht)
   case str_in_re ht1 hs1 ht2 hs2 ih1 ih2 =>
       simpa [__smtx_model_eval] using
@@ -1062,7 +1062,7 @@ theorem model_eval_canonical
     (hM : model_wf M)
     (t : SmtTerm)
     (hTy : term_has_non_none_type t) :
-    value_canonical M.usortCard (__smtx_model_eval M t) := by
+    value_canonical M.usortDom (__smtx_model_eval M t) := by
   exact model_eval_canonical_of_supported M hM t hTy
     (supported_preservation_term_of_non_none t hTy)
 

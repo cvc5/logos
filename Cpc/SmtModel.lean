@@ -7,6 +7,7 @@
 
 module
 
+public import Mathlib.Data.Set.Finite.Basic
 public import Cpc.SmtTyping
 import all Cpc.SmtTyping
 public import Cpc.SmtValueOrder
@@ -25,9 +26,10 @@ noncomputable section
 
 abbrev SmtNativeFun := SmtValue -> SmtValue
 
--- The number of elements of each uninterpreted sort, by its index, where 0
--- means the sort is countably infinite.
-abbrev SmtUSortCard := native_Nat -> native_Nat
+-- The identifiers of each uninterpreted sort, by its index: the sort's values
+-- are exactly the `UValue`s with one of them, so its cardinality is the size of
+-- the set. `model_wf` says which sets a model may choose.
+abbrev SmtUSortDom := native_Nat -> _root_.Set ModelId
 
 -- The primitive operations no module above this one uses, together with those
 -- written over the values of this embedding, which cannot stand above it.
@@ -365,7 +367,7 @@ macro_rules
       let typeofValueId := Lean.mkIdent `__smtx_typeof_value
       let typeDefaultId := Lean.mkIdent `__smtx_type_default
       let canonId := Lean.mkIdent `__smtx_value_canonical
-      let usortCardId := Lean.mkIdent `SmtModel.usortCard
+      let usortDomId := Lean.mkIdent `SmtModel.usortDom
       `(by
           classical
           exact
@@ -375,7 +377,7 @@ macro_rules
                   (if hDiff :
                       ∃ i : SmtValue,
                         $typeofValueId i = T1 ∧
-                          $canonId ($usortCardId $M) i = true ∧
+                          $canonId ($usortDomId $M) i = true ∧
                             native_veq ($lookupId $m1 i) ($lookupId $m2 i) = false then
                     Classical.choose hDiff
                   else
@@ -408,14 +410,14 @@ macro_rules
       let pushId := Lean.mkIdent `native_model_push
       let typeofValueId := Lean.mkIdent `__smtx_typeof_value
       let canonId := Lean.mkIdent `__smtx_value_canonical
-      let usortCardId := Lean.mkIdent `SmtModel.usortCard
+      let usortDomId := Lean.mkIdent `SmtModel.usortDom
       `(by
           classical
           exact
             if h :
                 ∃ v : SmtValue,
                   $typeofValueId v = $T ∧
-                    $canonId ($usortCardId $M) v = true ∧
+                    $canonId ($usortDomId $M) v = true ∧
                     $evalId ($pushId $M $s $T v) $body = (SmtValue.Boolean true) then
               SmtValue.Boolean true
             else
@@ -427,14 +429,14 @@ macro_rules
       let pushId := Lean.mkIdent `native_model_push
       let typeofValueId := Lean.mkIdent `__smtx_typeof_value
       let canonId := Lean.mkIdent `__smtx_value_canonical
-      let usortCardId := Lean.mkIdent `SmtModel.usortCard
+      let usortDomId := Lean.mkIdent `SmtModel.usortDom
       `(by
           classical
           exact
             if h :
                 ∀ v : SmtValue,
                   $typeofValueId v = $T ->
-                    $canonId ($usortCardId $M) v = true ->
+                    $canonId ($usortDomId $M) v = true ->
                     $evalId ($pushId $M $s $T v) $body = (SmtValue.Boolean true) then
               SmtValue.Boolean true
             else
@@ -446,17 +448,17 @@ macro_rules
       let pushId := Lean.mkIdent `native_model_push
       let typeofValueId := Lean.mkIdent `__smtx_typeof_value
       let canonId := Lean.mkIdent `__smtx_value_canonical
-      let usortCardId := Lean.mkIdent `SmtModel.usortCard
+      let usortDomId := Lean.mkIdent `SmtModel.usortDom
       `(by
           classical
           exact
             if hSat :
                 ∃ v : SmtValue,
                   $typeofValueId v = $T ∧
-                    $canonId ($usortCardId $M) v = true ∧
+                    $canonId ($usortDomId $M) v = true ∧
                     $evalId ($pushId $M $s $T v) $body = (SmtValue.Boolean true) then
               Classical.choose hSat
-            else if hTy : ∃ v : SmtValue, $typeofValueId v = $T ∧ $canonId ($usortCardId $M) v then
+            else if hTy : ∃ v : SmtValue, $typeofValueId v = $T ∧ $canonId ($usortDomId $M) v then
               Classical.choose hTy
             else
               SmtValue.NotValue)
@@ -542,17 +544,17 @@ deriving Repr, DecidableEq, Inhabited
 
 structure SmtModel where
   values : SmtModelKey -> SmtValue
-  nativeFuns : SmtModelKey -> SmtNativeFun
-  usortCard : SmtUSortCard
+  nativeFuns : ModelId -> SmtType -> SmtType -> SmtNativeFun
+  usortDom : SmtUSortDom
 deriving Inhabited
 
 def model_key (s : native_String) (T : SmtType) : SmtModelKey :=
   { isVar := false, name := s, ty := T }
 
-def model_fun_lookup (M : SmtModel) (fid : native_String) (T U : SmtType) : SmtNativeFun :=
-  M.nativeFuns (model_key fid (SmtType.FunType T U))
+def model_fun_lookup (M : SmtModel) (fid : ModelId) (T U : SmtType) : SmtNativeFun :=
+  M.nativeFuns fid T U
 
-def native_default_fun_id : native_String := (native_string_lit "@native_default_fun")
+noncomputable def native_default_fun_id : ModelId := 0
 
 def native_model_var_lookup (M : SmtModel) (s : native_String) (T : SmtType) : SmtValue :=
   M.values { isVar := true, name := s, ty := T }
@@ -567,8 +569,17 @@ def native_model_push (M : SmtModel) (s : native_String) (T : SmtType) (v : SmtV
       else
         M.values k }
 
-def native_usort_card (uc : SmtUSortCard) (n : native_Nat) : native_Nat :=
-  uc n
+open Classical in
+noncomputable def native_usort_mem (uc : SmtUSortDom) (n : native_Nat) (r : ModelId) : native_Bool :=
+  decide (r ∈ uc n)
+
+open Classical in
+noncomputable def native_usort_finite (uc : SmtUSortDom) (n : native_Nat) : native_Bool :=
+  decide (uc n).Finite
+
+open Classical in
+noncomputable def native_usort_unit (uc : SmtUSortDom) (n : native_Nat) : native_Bool :=
+  decide (uc n = {0})
 
 /- Definition of SMT-LIB model semantics -/
 
@@ -702,7 +713,7 @@ def __smtx_model_eval_mod_total : SmtValue -> SmtValue -> SmtValue
   | t1, t2 => SmtValue.NotValue
 
 
-def __smtx_is_finite_type (uc : SmtUSortCard) (T : SmtType) : native_Bool :=
+def __smtx_is_finite_type (uc : SmtUSortDom) (T : SmtType) : native_Bool :=
   (__smtx_type_bounded uc false T)
 
 def __smtx_map_get_default : SmtMap -> SmtValue
@@ -1238,32 +1249,32 @@ def __smtx_model_eval__at_strings_occur_index_re : SmtValue -> SmtValue -> SmtVa
   | t1, t2, t3 => SmtValue.NotValue
 
 
-def __smtx_field_type_bounded (uc : SmtUSortCard) (u : native_Bool) : SmtType -> SmtDatatypeDecl -> native_Bool
+def __smtx_field_type_bounded (uc : SmtUSortDom) (u : native_Bool) : SmtType -> SmtDatatypeDecl -> native_Bool
   | (SmtType.TypeRef s), ddB => (__smtx_dd_has_dt s ddB)
   | T, ddB => (__smtx_type_bounded uc u T)
 termination_by T ddB => (sizeOf T, 1)
 
 
-def __smtx_datatype_cons_bounded (uc : SmtUSortCard) (u : native_Bool) : SmtDatatypeCons -> SmtDatatypeDecl -> native_Bool
+def __smtx_datatype_cons_bounded (uc : SmtUSortDom) (u : native_Bool) : SmtDatatypeCons -> SmtDatatypeDecl -> native_Bool
   | SmtDatatypeCons.unit, ddB => true
   | (SmtDatatypeCons.cons T c), ddB => (native_and (__smtx_field_type_bounded uc u T ddB) (__smtx_datatype_cons_bounded uc u c ddB))
 termination_by c ddB => (sizeOf c, 0)
 
 
-def __smtx_datatype_bounded (uc : SmtUSortCard) (u : native_Bool) : SmtDatatype -> SmtDatatypeDecl -> native_Bool
+def __smtx_datatype_bounded (uc : SmtUSortDom) (u : native_Bool) : SmtDatatype -> SmtDatatypeDecl -> native_Bool
   | (SmtDatatype.sum c SmtDatatype.null), ddB => (__smtx_datatype_cons_bounded uc u c ddB)
   | (SmtDatatype.sum c dF), ddB => (native_and (native_not u) (native_and (__smtx_datatype_cons_bounded uc u c ddB) (__smtx_datatype_bounded uc u dF ddB)))
   | dF, ddB => (native_not u)
 termination_by dF ddB => (sizeOf dF, 0)
 
 
-def __smtx_datatype_decl_bounded_step (uc : SmtUSortCard) (u : native_Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
+def __smtx_datatype_decl_bounded_step (uc : SmtUSortDom) (u : native_Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
   | (SmtDatatypeDecl.cons sF dF ddR), ddB => (__smtx_datatype_decl_bounded_step uc u ddR (native_ite (native_and (native_not (__smtx_dd_has_dt sF ddB)) (__smtx_datatype_bounded uc u dF ddB)) (SmtDatatypeDecl.cons sF dF ddB) ddB))
   | SmtDatatypeDecl.nil, ddB => ddB
 termination_by ddR ddB => (sizeOf ddR, 0)
 
 
-def __smtx_datatype_decl_bounded (uc : SmtUSortCard) (u : native_Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
+def __smtx_datatype_decl_bounded (uc : SmtUSortDom) (u : native_Bool) : SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl -> SmtDatatypeDecl
   | (SmtDatatypeDecl.cons sC dC ddC), dd, ddB => (__smtx_datatype_decl_bounded uc u ddC dd (__smtx_datatype_decl_bounded_step uc u dd ddB))
   | SmtDatatypeDecl.nil, dd, ddB => ddB
 termination_by ddC dd ddB => (sizeOf dd, sizeOf ddC)
@@ -1367,7 +1378,7 @@ def __smtx_model_eval_sbv_to_int : SmtValue -> SmtValue
   | t1 => SmtValue.NotValue
 
 
-def __smtx_is_unit_type (uc : SmtUSortCard) (T : SmtType) : native_Bool :=
+def __smtx_is_unit_type (uc : SmtUSortDom) (T : SmtType) : native_Bool :=
   (__smtx_type_bounded uc true T)
 
 def __smtx_apply_head_value : SmtValue -> SmtValue
@@ -1386,11 +1397,11 @@ def __smtx_typeof_value : SmtValue -> SmtType
   | (SmtValue.Real r1) => SmtType.Real
   | (SmtValue.Binary i1 i2) => (native_ite (native_and (native_zleq 0 i1) (native_zeq i2 (native_mod_total i2 (native_int_pow2 i1)))) (SmtType.BitVec (native_int_to_nat i1)) SmtType.None)
   | (SmtValue.Map m1) => (__smtx_typeof_map_value m1)
-  | (SmtValue.Fun s1 T2 T3) => (SmtType.FunType T2 T3)
+  | (SmtValue.Fun e1 T2 T3) => (SmtType.FunType T2 T3)
   | (SmtValue.Set m1) => (__smtx_map_to_set_type (__smtx_typeof_map_value m1))
   | (SmtValue.Seq q1) => (__smtx_typeof_seq_value q1)
   | (SmtValue.Char c1) => (native_ite (native_char_valid c1) SmtType.Char SmtType.None)
-  | (SmtValue.UValue n1 n2) => (SmtType.USort n1)
+  | (SmtValue.UValue n1 e2) => (SmtType.USort n1)
   | (SmtValue.RegLan re1) => SmtType.RegLan
   | (SmtValue.DtCons s1 dd2 n3) => (__smtx_typeof_dt_cons_value_rec (SmtType.Datatype s1 dd2) (__smtx_dt_resolve (__smtx_dd_lookup s1 dd2) dd2) n3)
   | (SmtValue.Apply v1 v2) => (__smtx_typeof_apply_value (__smtx_typeof_value v1) (__smtx_typeof_value v2))
@@ -1401,7 +1412,7 @@ def __smtx_model_eval_apply (M : SmtModel) : SmtValue -> SmtValue -> SmtValue
   | v, SmtValue.NotValue => SmtValue.NotValue
   | (SmtValue.DtCons s dd n), i => (SmtValue.Apply (SmtValue.DtCons s dd n) i)
   | (SmtValue.Apply f v), i => (SmtValue.Apply (SmtValue.Apply f v) i)
-  | (SmtValue.Fun s T U), i => (native_eval_fun_apply M s T U i)
+  | (SmtValue.Fun e T U), i => (native_eval_fun_apply M e T U i)
   | v, i => SmtValue.NotValue
 
 
@@ -1411,16 +1422,14 @@ def __smtx_model_eval_dt_sel (M : SmtModel) (s : native_String) (dd : SmtDatatyp
 def __smtx_model_eval_dt_tester (s : native_String) (dd : SmtDatatypeDecl) (n : native_Nat) (v1 : SmtValue) : SmtValue :=
   (SmtValue.Boolean (native_veq (__smtx_apply_head_value v1) (SmtValue.DtCons s dd n)))
 
-def __smtx_type_bounded (uc : SmtUSortCard) (u : native_Bool) : SmtType -> native_Bool
+def __smtx_type_bounded (uc : SmtUSortDom) (u : native_Bool) : SmtType -> native_Bool
   | SmtType.Bool => (native_not u)
   | (SmtType.BitVec n1) => (native_or (native_not u) (native_nateq n1 native_nat_zero))
   | (SmtType.Map x1 x2) => (native_or (__smtx_type_bounded uc true x2) (native_and (native_not u) (native_and (__smtx_type_bounded uc u x1) (__smtx_type_bounded uc u x2))))
   | (SmtType.Set x1) => (native_and (native_not u) (__smtx_type_bounded uc u x1))
   | SmtType.Char => (native_not u)
   | (SmtType.Datatype s1 dd2) => (__smtx_dd_has_dt s1 (__smtx_datatype_decl_bounded uc u dd2 dd2 SmtDatatypeDecl.nil))
-  | (SmtType.USort n1) =>
-    let _v1 := (native_usort_card uc n1)
-    (native_ite u (native_nateq _v1 (native_nat_succ native_nat_zero)) (native_not (native_nateq _v1 native_nat_zero)))
+  | (SmtType.USort n1) => (native_ite u (native_usort_unit uc n1) (native_usort_finite uc n1))
   | T => false
 termination_by T => (sizeOf T, 0)
 
@@ -1438,13 +1447,13 @@ def __smtx_type_default : SmtType -> SmtValue
   | (SmtType.Seq x1) => (SmtValue.Seq (SmtSeq.empty x1))
   | SmtType.Char => (SmtValue.Char native_nat_zero)
   | (SmtType.Datatype s1 dd2) => (__smtx_datatype_decl_default s1 dd2 dd2)
-  | (SmtType.USort n1) => (SmtValue.UValue n1 native_nat_zero)
+  | (SmtType.USort n1) => (SmtValue.UValue n1 0)
   | (SmtType.FunType x1 x2) => (SmtValue.Fun native_default_fun_id x1 x2)
   | T => SmtValue.NotValue
 termination_by T => 2 * sizeOf T
 
 
-def __smtx_seq_canonical (uc : SmtUSortCard) : SmtSeq -> native_Bool
+def __smtx_seq_canonical (uc : SmtUSortDom) : SmtSeq -> native_Bool
   | (SmtSeq.empty T) => true
   | (SmtSeq.cons v s) => (native_and (__smtx_value_canonical uc v) (__smtx_seq_canonical uc s))
 
@@ -1462,23 +1471,21 @@ def __smtx_re_canonical : SmtRegLan -> native_Bool
   | (SmtRegLan.comp r) => (__smtx_re_canonical r)
 
 
-def __smtx_map_default_canonical (uc : SmtUSortCard) (T : SmtType) (e : SmtValue) : native_Bool :=
+def __smtx_map_default_canonical (uc : SmtUSortDom) (T : SmtType) (e : SmtValue) : native_Bool :=
   (native_ite (__smtx_is_finite_type uc T) (native_veq e (__smtx_type_default (__smtx_typeof_value e))) true)
 
-def __smtx_map_canonical (uc : SmtUSortCard) : SmtMap -> native_Bool
+def __smtx_map_canonical (uc : SmtUSortDom) : SmtMap -> native_Bool
   | (SmtMap.default T e) => (native_and (__smtx_map_default_canonical uc T e) (__smtx_value_canonical uc e))
   | (SmtMap.cons i e m) => (native_and (native_and (native_and (native_and (__smtx_value_canonical uc i) (__smtx_value_canonical uc e)) (__smtx_map_canonical uc m)) (__smtx_map_entries_ordered_after i m)) (native_not (native_veq e (__smtx_map_get_default m))))
 
 
-def __smtx_value_canonical (uc : SmtUSortCard) : SmtValue -> native_Bool
+def __smtx_value_canonical (uc : SmtUSortDom) : SmtValue -> native_Bool
   | (SmtValue.Binary i1 i2) => (native_ite (native_zleq 0 i1) (native_zeq i2 (native_mod_total i2 (native_int_pow2 i1))) true)
   | (SmtValue.Map m1) => (__smtx_map_canonical uc m1)
   | (SmtValue.Set m1) => (native_and (__smtx_map_canonical uc m1) (native_veq (__smtx_map_get_default m1) (SmtValue.Boolean false)))
   | (SmtValue.Seq q1) => (__smtx_seq_canonical uc q1)
   | (SmtValue.Char c1) => (native_char_valid c1)
-  | (SmtValue.UValue n1 n2) =>
-    let _v0 := (native_usort_card uc n1)
-    (native_or (native_nateq _v0 native_nat_zero) (native_natlt n2 _v0))
+  | (SmtValue.UValue n1 e2) => (native_usort_mem uc n1 e2)
   | (SmtValue.RegLan re1) => (__smtx_re_canonical re1)
   | (SmtValue.Apply v1 v2) => (native_and (__smtx_value_canonical uc v1) (__smtx_value_canonical uc v2))
   | v => true
@@ -1486,7 +1493,7 @@ def __smtx_value_canonical (uc : SmtUSortCard) : SmtValue -> native_Bool
 
 
 
-def native_eval_fun_apply (M : SmtModel) (fid : native_String) (T U : SmtType) (i : SmtValue) : SmtValue :=
+def native_eval_fun_apply (M : SmtModel) (fid : ModelId) (T U : SmtType) (i : SmtValue) : SmtValue :=
   let fallback := __smtx_type_default U
   if fid = native_default_fun_id then
     fallback
@@ -1667,15 +1674,23 @@ def model_fun_wf (M : SmtModel) : Prop :=
     __smtx_type_wf (SmtType.FunType A B) = true ->
     __smtx_typeof_value i = A ->
     __smtx_typeof_value (native_eval_fun_apply M fid A B i) = B ∧
-      __smtx_value_canonical M.usortCard (native_eval_fun_apply M fid A B i) = true
+      __smtx_value_canonical M.usortDom (native_eval_fun_apply M fid A B i) = true
+
+-- Every sort has the value `UValue _ 0`, which is its default, and an infinite
+-- sort has identifiers of arbitrarily large `sizeOf`. Identifiers are only labels,
+-- so this rules out no cardinality up to the size of `Real`.
+def usort_dom_wf (uc : SmtUSortDom) : Prop :=
+  ∀ i, (0 : ModelId) ∈ uc i ∧
+    ((uc i).Infinite -> ∀ n : native_Nat, ∃ r ∈ uc i, (n : ModelId) ≤ |r|)
 
 def model_wf (M : SmtModel) : Prop :=
   (∀ isVar s T, __smtx_type_wf T = true ->
     __smtx_typeof_value (M.values { isVar := isVar, name := s, ty := T }) = T) ∧
   (∀ isVar s T, __smtx_type_wf T = true ->
-    __smtx_value_canonical M.usortCard
+    __smtx_value_canonical M.usortDom
       (M.values { isVar := isVar, name := s, ty := T }) = true) ∧
-  model_fun_wf M
+  model_fun_wf M ∧
+  usort_dom_wf M.usortDom
 
 /-
 SMT interpretation is satisfiability, i.e. the existence of a model

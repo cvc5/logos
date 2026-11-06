@@ -2685,7 +2685,7 @@ by
         set_choose_arg_has_smt_translation_of_has_smt_translation
         hNoFree hAgree
         (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx,
-          smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard])
+          smtx_model_eval_map_diff_eq_of_usortDom hAgree.globals.usortDom])
         ih
   case set_is_empty =>
     exact
@@ -2702,7 +2702,7 @@ by
         set_is_singleton_arg_has_smt_translation_of_has_smt_translation
         hNoFree hAgree
         (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx,
-          smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard])
+          smtx_model_eval_map_diff_eq_of_usortDom hAgree.globals.usortDom])
         ih
   case ubv_to_int =>
     exact
@@ -3520,7 +3520,7 @@ by
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists vs body))
       exact
-        smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortCard
+        smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortDom
           (fun v =>
             ih
               (boundVars := (s, T) :: boundVars)
@@ -3596,7 +3596,7 @@ by
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists vs body))
       exact
-        smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortCard
+        smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortDom
           (fun v =>
             ih
               (boundVars := (s, T) :: boundVars)
@@ -4609,7 +4609,7 @@ by
             cases hXTy : __smtx_typeof (__eo_to_smt x) <;>
               cases hYTy : __smtx_typeof (__eo_to_smt y) <;>
               simp [__smtx_model_eval, hx, hy,
-                smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard])
+                smtx_model_eval_map_diff_eq_of_usortDom hAgree.globals.usortDom])
           ih
     | exact
         smt_model_eval_apply_apply_uop_binary_eq_of_contains_atomic_term_list_free_rec_false_mapped
@@ -4625,7 +4625,7 @@ by
             cases hXTy : __smtx_typeof (__eo_to_smt x) <;>
               cases hYTy : __smtx_typeof (__eo_to_smt y) <;>
               simp [__smtx_model_eval, hx, hy,
-                smtx_model_eval_map_diff_eq_of_usortCard hAgree.globals.usortCard])
+                smtx_model_eval_map_diff_eq_of_usortDom hAgree.globals.usortDom])
           ih
     | exact
         smt_model_eval_apply_apply_uop_binary_eq_of_contains_atomic_term_list_free_rec_false_mapped

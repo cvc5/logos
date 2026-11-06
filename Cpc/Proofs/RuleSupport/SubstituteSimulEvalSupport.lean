@@ -13,7 +13,7 @@ import all Cpc.Proofs.Closed.Substitute
 
 public section
 
-variable {uc : native_Nat -> native_Nat}
+variable {uc : SmtUSortDom}
 
 open Eo
 open SmtEval
@@ -136,8 +136,8 @@ noncomputable def pushSubstModel (M : SmtModel) : Term -> Term -> SmtModel
   | _, _ => M
 
 /-- Pushing substitution values leaves the uninterpreted sort cardinalities unchanged. -/
-@[simp] theorem pushSubstModel_usortCard (M : SmtModel) (xs ts : Term) :
-    (pushSubstModel M xs ts).usortCard = M.usortCard := by
+@[simp] theorem pushSubstModel_usortDom (M : SmtModel) (xs ts : Term) :
+    (pushSubstModel M xs ts).usortDom = M.usortDom := by
   fun_induction pushSubstModel M xs ts <;> simp_all [native_model_push]
 
 @[simp] theorem pushSubstModel_nil_left (M : SmtModel) (ts : Term) :
@@ -301,7 +301,7 @@ theorem eo_to_smt_eval_typed_canonical
     (hTrans : RuleProofs.eo_has_smt_translation t) :
     __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t)) =
         __smtx_typeof (__eo_to_smt t) ∧
-      value_canonical M.usortCard (__smtx_model_eval M (__eo_to_smt t)) := by
+      value_canonical M.usortDom (__smtx_model_eval M (__eo_to_smt t)) := by
   have hNN : term_has_non_none_type (__eo_to_smt t) := by
     simpa [RuleProofs.eo_has_smt_translation, term_has_non_none_type] using hTrans
   exact ⟨smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt t) hNN,
@@ -338,7 +338,7 @@ inductive ForallInstantiationModel : SmtModel -> Term -> SmtModel -> Prop where
   | cons {M N : SmtModel} {s : native_String} {T env : Term} {v : SmtValue} :
       __smtx_type_wf (__eo_to_smt_type T) = true ->
       __smtx_typeof_value v = __eo_to_smt_type T ->
-      __smtx_value_canonical M.usortCard v = true ->
+      __smtx_value_canonical M.usortDom v = true ->
       ForallInstantiationModel
         (native_model_push M s (__eo_to_smt_type T) v) env N ->
       ForallInstantiationModel M
@@ -459,7 +459,7 @@ theorem forallAssignmentModel_instantiation
     (hWf :
       ∀ s T, (s, T) ∈ vars ->
         __smtx_type_wf (__eo_to_smt_type T) = true)
-    (M : SmtModel) (hCard : M.usortCard = Source.usortCard) :
+    (M : SmtModel) (hCard : M.usortDom = Source.usortDom) :
     ForallInstantiationModel M xs
       (forallAssignmentModel Source M xs) := by
   induction hEnv generalizing M with
@@ -501,7 +501,7 @@ theorem forallAssignmentModel_total_typed
     (hWf :
       ∀ s T, (s, T) ∈ vars ->
         __smtx_type_wf (__eo_to_smt_type T) = true)
-    (hCard : M.usortCard = Source.usortCard) :
+    (hCard : M.usortDom = Source.usortDom) :
     model_wf (forallAssignmentModel Source M xs) :=
   (forallAssignmentModel_instantiation Source hSource hEnv hWf M hCard).total_typed hM
 
@@ -513,7 +513,7 @@ theorem forallAssignmentModel_agrees_except_base
     (hWf :
       ∀ s T, (s, T) ∈ vars ->
         __smtx_type_wf (__eo_to_smt_type T) = true)
-    (hCard : M.usortCard = Source.usortCard) :
+    (hCard : M.usortDom = Source.usortDom) :
     model_agrees_except_on_env (vars.map EoVarKey.toSmt) []
       (forallAssignmentModel Source M xs) M :=
   (forallAssignmentModel_instantiation Source hSource hEnv hWf M hCard).agrees_except hEnv
@@ -828,7 +828,7 @@ theorem forall_instantiation_body_true
       have hNoSat :
           ¬ ∃ w : SmtValue,
             __smtx_typeof_value w = ST ∧
-              __smtx_value_canonical M.usortCard w = true ∧
+              __smtx_value_canonical M.usortDom w = true ∧
               __smtx_model_eval (native_model_push M s ST w) tail =
                 SmtValue.Boolean true := by
         intro hSat
@@ -886,7 +886,7 @@ theorem forall_assignment_body_true
     (hWf :
       ∀ s T, (s, T) ∈ vars ->
         __smtx_type_wf (__eo_to_smt_type T) = true)
-    (hCard : M.usortCard = Source.usortCard)
+    (hCard : M.usortDom = Source.usortDom)
     (hBodyTy : __smtx_typeof body = SmtType.Bool)
     (hEval :
       __smtx_model_eval M
@@ -949,7 +949,7 @@ theorem instantiate_body_true_of_push_total_and_closedIn
           (body := __eo_to_smt F)
           hXsEnv
           (by simpa [Source] using hPushTotal)
-          hM hBinderWf hBase.globals.usortCard hBodyBool hForallEval
+          hM hBinderWf hBase.globals.usortDom hBodyBool hForallEval
       have hAgreeAll :
           model_agrees_except_on_env [] []
             (forallAssignmentModel Source M xs) Source :=
@@ -971,7 +971,7 @@ then the existentials evaluate equally. Generalises
 substitution case needs (`toSmt (subst a)` vs `toSmt a`). -/
 theorem native_eval_texists_eq_of_body_eval_eq_diff
     {M N : SmtModel} {s : native_String} {T : SmtType} {bodyM bodyN : SmtTerm}
-    (hCard : M.usortCard = N.usortCard)
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
@@ -982,12 +982,12 @@ theorem native_eval_texists_eq_of_body_eval_eq_diff
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) bodyM = SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push N s T v) bodyN = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -1009,10 +1009,10 @@ theorem native_eval_texists_eq_of_body_eval_eq_diff
 needed for values that pass the evaluator's type/canonical guards. -/
 theorem native_eval_texists_eq_of_body_eval_eq_diff_typed
     {M N : SmtModel} {s : native_String} {T : SmtType} {bodyM bodyN : SmtTerm}
-    (hCard : M.usortCard = N.usortCard)
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical M.usortCard v = true ->
+      __smtx_value_canonical M.usortDom v = true ->
       __smtx_model_eval (native_model_push M s T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     (native_eval_exists M s T bodyM : SmtValue) =
@@ -1022,12 +1022,12 @@ theorem native_eval_texists_eq_of_body_eval_eq_diff_typed
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) bodyM = SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical M.usortCard v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push N s T v) bodyN = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -1048,7 +1048,7 @@ theorem native_eval_texists_eq_of_body_eval_eq_diff_typed
 /-- Different-body congruence for the universal evaluator. -/
 theorem native_eval_tforall_eq_of_body_eval_eq_diff
     {M N : SmtModel} {s : native_String} {T : SmtType} {bodyM bodyN : SmtTerm}
-    (hCard : M.usortCard = N.usortCard)
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
@@ -1059,12 +1059,12 @@ theorem native_eval_tforall_eq_of_body_eval_eq_diff
   let PM : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical M.usortCard v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval (native_model_push M s T v) bodyM = SmtValue.Boolean true
   let PN : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical M.usortCard v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval (native_model_push N s T v) bodyN = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -1084,10 +1084,10 @@ theorem native_eval_tforall_eq_of_body_eval_eq_diff
 for values that pass the evaluator's type/canonical guards. -/
 theorem native_eval_tforall_eq_of_body_eval_eq_diff_typed
     {M N : SmtModel} {s : native_String} {T : SmtType} {bodyM bodyN : SmtTerm}
-    (hCard : M.usortCard = N.usortCard)
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical M.usortCard v = true ->
+      __smtx_value_canonical M.usortDom v = true ->
       __smtx_model_eval (native_model_push M s T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     (native_eval_forall M s T bodyM : SmtValue) =
@@ -1097,12 +1097,12 @@ theorem native_eval_tforall_eq_of_body_eval_eq_diff_typed
   let PM : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical M.usortCard v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval (native_model_push M s T v) bodyM = SmtValue.Boolean true
   let PN : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical M.usortCard v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval (native_model_push N s T v) bodyN = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -1206,7 +1206,7 @@ theorem substFalse_eval_eo_to_smt_exists_diff_rel
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists tail bodyN))
       simpa [__smtx_model_eval] using
-        native_eval_texists_eq_of_body_eval_eq_diff_typed hRel.globals.usortCard
+        native_eval_texists_eq_of_body_eval_eq_diff_typed hRel.globals.usortDom
           (fun v hValTy hValCanon => by
             have hBvsConsEnv :
                 EoVarEnvPerm
@@ -1255,7 +1255,7 @@ theorem substFalse_eval_eo_to_smt_exists_diff_rel
                   (native_model_push N s (__eo_to_smt_type T) v) :=
               model_total_typed_push hN s (__eo_to_smt_type T) v
                 hHeadWf hValTy (by
-                  simpa [value_canonical, hRel.globals.usortCard] using hValCanon)
+                  simpa [value_canonical, hRel.globals.usortDom] using hValCanon)
             exact
               ih
                 (bvs :=
@@ -8427,7 +8427,7 @@ theorem substitute_simul_eval_nonbinder
                                                                                                 (__eo_to_smt_set_elem_type
                                                                                                     (__smtx_typeof (__eo_to_smt Y)))))
                                                                                     rw [hTy]
-                                                                                    simp [__smtx_model_eval, hArg, smtx_model_eval_map_diff_eq_of_usortCard hGlobals.usortCard])
+                                                                                    simp [__smtx_model_eval, hArg, smtx_model_eval_map_diff_eq_of_usortDom hGlobals.usortDom])
                                                                                   (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
                                                                               · by_cases hSetEmpty : f = Term.UOp UserOp.set_is_empty
                                                                                 · subst f
@@ -8475,7 +8475,7 @@ theorem substitute_simul_eval_nonbinder
                                                                                                         (__eo_to_smt_set_elem_type
                                                                                                             (__smtx_typeof (__eo_to_smt Y)))))))
                                                                                         rw [hTy]
-                                                                                        simp [__smtx_model_eval, hArg, smtx_model_eval_map_diff_eq_of_usortCard hGlobals.usortCard])
+                                                                                        simp [__smtx_model_eval, hArg, smtx_model_eval_map_diff_eq_of_usortDom hGlobals.usortDom])
                                                                                       (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
                                                                                   · -- `f` is not one of the handled unary heads: dispatch on its
                                                                                     -- structure for binary heads (`Apply (UOp op) x1`).
@@ -10097,7 +10097,7 @@ theorem substitute_simul_eval_nonbinder
                                                                                                                                                                                                                                                                               TranslationProofs.smtx_typeof_none] at hOrigApp ⊢
                                                                                                                                                                                                                                                                           case Map.Map A' B' C' D' =>
                                                                                                                                                                                                                                                                             simp [__smtx_model_eval, h1, h2,
-                                                                                                                                                                                                                                                                              smtx_model_eval_map_diff_eq_of_usortCard hGlobals.usortCard])
+                                                                                                                                                                                                                                                                              smtx_model_eval_map_diff_eq_of_usortDom hGlobals.usortDom])
                                                                                                                                                                                                                                                                       (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
                                                                                                                                                                                                                                                                       (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
                                                                                                                                                                                                                                                                   · by_cases h_sets_deq_diff : op = UserOp._at_sets_deq_diff
@@ -10145,7 +10145,7 @@ theorem substitute_simul_eval_nonbinder
                                                                                                                                                                                                                                                                                 TranslationProofs.smtx_typeof_none] at hOrigApp ⊢
                                                                                                                                                                                                                                                                             case Set.Set A' B' =>
                                                                                                                                                                                                                                                                               simp [__smtx_model_eval, h1, h2,
-                                                                                                                                                                                                                                                                                smtx_model_eval_map_diff_eq_of_usortCard hGlobals.usortCard])
+                                                                                                                                                                                                                                                                                smtx_model_eval_map_diff_eq_of_usortDom hGlobals.usortDom])
                                                                                                                                                                                                                                                                         (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
                                                                                                                                                                                                                                                                         (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
                                                                                                                                                                                                                                                                     · by_cases h_forall : op = UserOp.forall
