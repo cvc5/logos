@@ -4529,7 +4529,7 @@
   :conclusion
     (eo::define ((w ($bv_bitwidth (eo::typeof b))))
       (and (<= 0 (ubv_to_int b))
-        (<= (ubv_to_int b) ($arith_eval_int_pow_2 w))))
+        (< (ubv_to_int b) ($arith_eval_int_pow_2 w))))
 )
 (program $abconv_ubv_to_int_elim
   ((n Int) (b (BitVec n)) (i Int) (ns (@TList Int) :list) (p Int))

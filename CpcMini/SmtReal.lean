@@ -74,6 +74,8 @@ def native_rdiv_total : native_Real -> native_Real -> native_Real
 def native_real_to_int : native_Real -> native_Int
   | x => ⌊x⌋
 
+def native_id_zero : ModelId := 0
+
 end
 
 end SmtEval
