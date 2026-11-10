@@ -3775,7 +3775,7 @@ def __eo_prog_ubv_to_int_range : Term -> Term
   | (Term.Apply (Term.UOp UserOp.ubv_to_int) b) =>
     let _v0 := (__bv_bitwidth (__eo_typeof b))
     let _v1 := (Term.Apply (Term.UOp UserOp.ubv_to_int) b)
-    (__eo_mk_apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.leq) (Term.Numeral 0)) _v1)) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.and) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.leq) _v1) (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)))) (Term.Boolean true)))
+    (__eo_mk_apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.leq) (Term.Numeral 0)) _v1)) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.and) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.lt) _v1) (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)))) (Term.Boolean true)))
   | _ => Term.Stuck
 
 
