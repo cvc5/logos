@@ -4524,6 +4524,13 @@
 ; (programs/Arith.eo is included above)
 ; (programs/Utils.eo is included above)
 ; (programs/Nary.eo is included above)
+(declare-rule ubv_to_int_range ((n Int) (b (BitVec n)))
+  :args ((ubv_to_int b))
+  :conclusion
+    (eo::define ((w ($bv_bitwidth (eo::typeof b))))
+      (and (<= 0 (ubv_to_int b))
+        (<= (ubv_to_int b) ($arith_eval_int_pow_2 w))))
+)
 (program $abconv_ubv_to_int_elim
   ((n Int) (b (BitVec n)) (i Int) (ns (@TList Int) :list) (p Int))
   :signature ((BitVec n) (@TList Int) Int) Int
