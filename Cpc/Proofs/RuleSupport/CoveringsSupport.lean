@@ -11,6 +11,8 @@ public import Mathlib.Topology.Order.IntermediateValue
 public import Mathlib.Topology.Algebra.Ring.Real
 public import Cpc.Proofs.RuleSupport.TypeInversionSupport
 import all Cpc.Proofs.RuleSupport.TypeInversionSupport
+public import Cpc.Proofs.RuleSupport.CoveringsPolySupport
+import all Cpc.Proofs.RuleSupport.CoveringsPolySupport
 public import Cpc.Proofs.RuleSupport.CoveringsUPolySupport
 import all Cpc.Proofs.RuleSupport.CoveringsUPolySupport
 
@@ -318,6 +320,19 @@ theorem covLit_true (M : SmtModel) (hM : model_wf M) (neg : Bool) (r : CovRel) (
           refine ⟨hp, ?_⟩
           rw [hE, hz0] at hE'
           simpa [litSem] using hE'
+
+/-- The polynomial with the coefficients `q`, at a real SMT term, is real. -/
+theorem coeffs_at_typeof {q : Term} {l : List Rat} (hq : RatList q l)
+    (v : SmtTerm) (hv : __smtx_typeof v = SmtType.Real) :
+    __smtx_typeof (__eo_to_smt_coeffs_at q v) = SmtType.Real := by
+  induction hq with
+  | nil => simp [__eo_to_smt_coeffs_at, __smtx_typeof]
+  | cons a q l hq ih =>
+      rw [show __eo_to_smt_coeffs_at
+          (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Rational a)) q) v =
+          SmtTerm.plus (SmtTerm.Rational a) (SmtTerm.mult v (__eo_to_smt_coeffs_at q v)) by
+        rw [__eo_to_smt_coeffs_at], typeof_plus_eq, typeof_mult_eq, hv, ih]
+      simp [__smtx_typeof, __smtx_typeof_arith_overload_op_2]
 
 /-- The value of the polynomial with the coefficients `q` at the SMT term `v`. -/
 theorem coeffs_at_eval (M : SmtModel) {q : Term} {l : List Rat} (hq : RatList q l)
@@ -693,13 +708,93 @@ theorem validRan_bounds {q lo hi s : Term} (h : validRan q lo hi s = Term.Boolea
     · cases h
   · cases h
 
--- TODO(sturm): proved from Sturm's theorem; until then this is the one open obligation.
-set_option warningAsError false in
-/-- The one consequence of `$valid_ran` that rests on Sturm's theorem: the bounds are in
-order. A Sturm count `V(lo) - V(hi)` of one root needs `lo < hi`. -/
+theorem ratList_unique {q : Term} {l m : List Rat} (h1 : RatList q l) (h2 : RatList q m) : l = m := by
+  induction h1 generalizing m with
+  | nil => cases h2; rfl
+  | cons a q l hq ih => cases h2 with
+    | cons _ _ m hm => rw [ih hm]
+
+/-- The sign variations of the Sturm sequence the checker computes at a rational point. -/
+theorem sturm_vars_at {s : Term} {p q : Polynomial ℝ} {σ : SignType} {Ps : List (Polynomial ℝ)}
+    (hσ : σ ≠ 0) (hS : SeqPolys s Ps) (hsc : Scaled σ Ps (SturmTarski.sturmSeq p q ++ [0]))
+    (r : Rat) :
+    __sign_variations_rec (Term.Rational 0) (__cov_seq_values s (Term.Rational r)) =
+      Term.Numeral (List.signVariations (SturmTarski.seqEval (r : ℝ) (SturmTarski.sturmSeq p q)) : Int) := by
+  rw [seq_sign_variations (Term.Rational r) (by simp) (fun p => SignType.sign (p.eval (r : ℝ)))
+    (seqElem_rat r) (g_point r) (by simp) hσ hS hsc]
+  congr 2
+  rw [SturmTarski.seqEval]
+  apply List.signVariations_congr
+  simp [Function.comp_def, signType_sign]
+
+/-- The sign variations of the Sturm sequence the checker computes at `-∞`. -/
+theorem sturm_vars_minf {s : Term} {p q : Polynomial ℝ} {σ : SignType} {Ps : List (Polynomial ℝ)}
+    (hσ : σ ≠ 0) (hS : SeqPolys s Ps) (hsc : Scaled σ Ps (SturmTarski.sturmSeq p q ++ [0])) :
+    __sign_variations_rec (Term.Rational 0)
+        (__cov_seq_values s (Term.UOp UserOp._at__at_cov_minus_inf)) =
+      Term.Numeral (List.signVariations (SturmTarski.seqSignNegInf (SturmTarski.sturmSeq p q)) : Int) := by
+  rw [seq_sign_variations _ (by simp) SturmTarski.signNegInf seqElem_minf g_negInf
+    (by simp [SturmTarski.signNegInf]) hσ hS hsc]
+  rfl
+
+/-- The sign variations of the Sturm sequence the checker computes at `+∞`. -/
+theorem sturm_vars_pinf {s : Term} {p q : Polynomial ℝ} {σ : SignType} {Ps : List (Polynomial ℝ)}
+    (hσ : σ ≠ 0) (hS : SeqPolys s Ps) (hsc : Scaled σ Ps (SturmTarski.sturmSeq p q ++ [0])) :
+    __sign_variations_rec (Term.Rational 0)
+        (__cov_seq_values s (Term.UOp UserOp._at__at_cov_plus_inf)) =
+      Term.Numeral (List.signVariations (SturmTarski.seqSignPosInf (SturmTarski.sturmSeq p q)) : Int) := by
+  rw [seq_sign_variations _ (by simp) SturmTarski.signPosInf seqElem_pinf g_posInf
+    (by simp [SturmTarski.signPosInf]) hσ hS hsc]
+  rfl
+
+/-- What `$valid_ran` establishes, by Sturm's theorem: its bounds are in order, and its
+polynomial has exactly one root between them. -/
+theorem validRan_sturm {q : Term} {a b : Rat} {s : Term}
+    (h : validRan q (Term.Rational a) (Term.Rational b) s = Term.Boolean true) :
+    ∃ lst, RatList q lst ∧ a < b ∧
+      (SturmTarski.rootsInInterval (toPoly lst) (a : ℝ) (b : ℝ)).card = 1 := by
+  obtain ⟨a', b', lst, ha, hb, hq, hsgn⟩ := validRan_bounds h
+  cases ha; cases hb
+  unfold validRan at h
+  rcases eo_ite_true_cases h with ⟨_, h⟩ | ⟨_, h⟩
+  swap; · cases h
+  rcases eo_ite_true_cases h with ⟨hrem, h⟩ | ⟨_, h⟩
+  swap; · cases h
+  obtain ⟨_, hvar⟩ := eo_and_true_inv h
+  have hPS := (check_shape hrem).1
+  obtain ⟨l, hl, hP⟩ := upoly_of_list_cpoly hPS
+  cases ratList_unique hl hq
+  obtain ⟨_, _, σ, hσ, Ps, hS, hsc⟩ := rem_seq_check_bridge hP (upoly_derivative_cpoly hP) hrem
+  have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+  rw [h0] at hvar
+  simp only [sturm_vars_at hσ hS hsc] at hvar
+  have hV : SturmTarski.signVariationsSturmAb (toPoly lst) (Polynomial.derivative (toPoly lst)) a b = 1 := by
+    simp [__eo_add, __eo_neg, __eo_is_eq, native_zplus, native_zneg, native_teq, native_and,
+      native_not] at hvar
+    simp only [SturmTarski.signVariationsSturmAb, SturmTarski.signVariationsAb]
+    linarith
+  have hpa : (toPoly lst).eval (a : ℝ) ≠ 0 := by
+    intro h0; rw [eval_toPoly] at h0; rw [h0, zero_mul] at hsgn; exact lt_irrefl _ hsgn
+  have hpb : (toPoly lst).eval (b : ℝ) ≠ 0 := by
+    intro h0; rw [eval_toPoly] at h0; rw [h0, mul_zero] at hsgn; exact lt_irrefl _ hsgn
+  have hab : a < b := by
+    rcases lt_trichotomy a b with hab | rfl | hab
+    · exact hab
+    · simp [SturmTarski.signVariationsSturmAb, SturmTarski.signVariationsAb] at hV
+    · have hba : (b : ℝ) < a := by exact_mod_cast hab
+      have := SturmTarski.Theorem.sturm_interval (b : ℝ) a (toPoly lst) hba hpb hpa
+      simp only [SturmTarski.signVariationsSturmAb, SturmTarski.signVariationsAb] at this hV
+      omega
+  refine ⟨lst, hq, hab, ?_⟩
+  have := SturmTarski.Theorem.sturm_interval (a : ℝ) b (toPoly lst) (by exact_mod_cast hab) hpa hpb
+  rw [hV] at this
+  exact_mod_cast this
+
+/-- The bounds of a valid `@ran` are in order. -/
 theorem validRan_lt {q : Term} {a b : Rat} {s : Term}
     (h : validRan q (Term.Rational a) (Term.Rational b) s = Term.Boolean true) : a < b := by
-  sorry
+  obtain ⟨_, _, hab, _⟩ := validRan_sturm h
+  exact hab
 
 /-- The body of the choice `@ran` translates to, under `@x ↦ t`. -/
 private theorem ran_body_eval (M : SmtModel) {q : Term} {lst : List Rat} (hq : RatList q lst)
@@ -1106,5 +1201,335 @@ theorem finEnd_covArith {e : Term} (h : FinEnd e) : CovArith e := by
   rcases h with ⟨q, rfl⟩ | ⟨_, _, _, _, _, hT⟩
   · right; rw [__eo_to_smt.eq_def]; simp [__smtx_typeof]
   · exact Or.inr hT
+
+
+/-! ### Roots -/
+
+/-- A root in an interval holding exactly one root is the only one there. -/
+private theorem roots_eq_singleton {f : Polynomial ℝ} {a b w : ℝ}
+    (hcard : (SturmTarski.rootsInInterval f a b).card = 1) (hf : f ≠ 0)
+    (hw : f.eval w = 0) (hwa : a < w) (hwb : w < b) :
+    SturmTarski.rootsInInterval f a b = {w} := by
+  obtain ⟨u, hu⟩ := Finset.card_eq_one.mp hcard
+  have hmem : w ∈ SturmTarski.rootsInInterval f a b := by
+    simp [SturmTarski.rootsInInterval, Multiset.mem_toFinset, Polynomial.mem_roots hf, hw, hwa, hwb]
+  rw [hu] at hmem ⊢
+  rw [Finset.mem_singleton.mp hmem]
+
+/-- `$cov_is_root P e st` puts a root of `P` at the value of the finite endpoint `e`. -/
+theorem cov_is_root_sound (M : SmtModel) (hM : model_wf M) {P : Term} {pp : Polynomial ℝ}
+    (hP : CPoly P pp) (e st : Term) (he : FinEnd e)
+    (h : __cov_is_root P e st = Term.Boolean true) : pp.eval (covDen M e) = 0 := by
+  have hPS := hP.ne_stuck
+  rcases he with ⟨r, rfl⟩ | ⟨c, a, b, d, rfl, hTy⟩
+  · -- a rational
+    have hstS : st ≠ Term.Stuck := by rintro rfl; simp [__cov_is_root] at h
+    have hEq : __cov_is_root P (Term.Rational r) st =
+        __eo_ite (__eo_and (__eo_is_q (Term.Rational r)) (__eo_is_eq st Term.__eo_List_nil))
+          (__eo_is_eq (__upoly_eval P (Term.Rational r)) (Term.Rational 0)) (Term.Boolean false) := by
+      rw [__cov_is_root.eq_def]
+      have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+      split <;> simp_all
+    rw [hEq] at h
+    rcases eo_ite_true_cases h with ⟨_, h⟩ | ⟨_, h⟩
+    swap; · cases h
+    obtain ⟨x, hx, hx'⟩ := upoly_eval_cpoly hP r
+    rw [hx] at h
+    have : x = 0 := by
+      simpa [__eo_is_eq, native_teq, native_and, native_not, eq_comm] using h
+    rw [covDen_rational, ← hx', this, Rat.cast_zero]
+  · -- a real algebraic number
+    have hstS : st ≠ Term.Stuck := by rintro rfl; simp [__cov_is_root] at h
+    have hEq : __cov_is_root P (Term.UOp4 UserOp4._at_ran c a b d) st =
+        __eo_ite (validRan c a b d)
+          (__eo_ite (__upoly_divides_rec (__upoly_of_list c) P P) (Term.Boolean true)
+            (__eo_ite (__upoly_rem_seq_check (__upoly_of_list c)
+                (__upoly_mul (__upoly_derivative (__upoly_of_list c)) P) st)
+              (__eo_is_eq (__sign_variations_rec (Term.Rational 0) (__cov_seq_values st a))
+                (__sign_variations_rec (Term.Rational 0) (__cov_seq_values st b)))
+              (Term.Boolean false)))
+          (Term.Boolean false) := by
+      have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+      simp [__cov_is_root, validRan, h0]
+    rw [hEq] at h
+    rcases eo_ite_true_cases h with ⟨hV, h⟩ | ⟨_, h⟩
+    swap; · cases h
+    obtain ⟨a', b', lst, rfl, rfl, hq, hwa, hwb, hroot⟩ := ran_val M hM c _ _ d hV hTy
+    obtain ⟨lst', hq', hab, hcard⟩ := validRan_sturm hV
+    cases ratList_unique hq hq'
+    obtain ⟨_, _, lst'', ha'', hb'', hq'', hsgn⟩ := validRan_bounds hV
+    cases ha''; cases hb''
+    cases ratList_unique hq hq''
+    set w := covDen M (Term.UOp4 UserOp4._at_ran c (Term.Rational a') (Term.Rational b') d)
+    have hcS := (check_shape (show __upoly_rem_seq_check (__upoly_of_list c)
+      (__upoly_derivative (__upoly_of_list c)) d = Term.Boolean true by
+        unfold validRan at hV
+        rcases eo_ite_true_cases hV with ⟨_, hV⟩ | ⟨_, hV⟩
+        swap; · cases hV
+        rcases eo_ite_true_cases hV with ⟨h', _⟩ | ⟨_, hV⟩
+        · exact h'
+        · cases hV)).1
+    obtain ⟨l0, hl0, hC⟩ := upoly_of_list_cpoly hcS
+    cases ratList_unique hl0 hq
+    have hq0 : toPoly lst ≠ 0 := by
+      intro h0; rw [h0] at hcard; simp [SturmTarski.rootsInInterval] at hcard
+    have hrootP : (toPoly lst).eval w = 0 := by rw [eval_toPoly]; exact hroot
+    rcases eo_ite_true_cases h with ⟨hdiv, _⟩ | ⟨_, h⟩
+    · -- the polynomial of the root divides `P`
+      exact Polynomial.eval_eq_zero_of_dvd_of_eval_eq_zero
+        (upoly_divides_sound hC hq0 P P pp hP hdiv) hrootP
+    · rcases eo_ite_true_cases h with ⟨hrem, heq⟩ | ⟨_, h⟩
+      swap; · cases h
+      -- a Tarski query of zero at the only root
+      have hQ := upoly_mul_cpoly (upoly_derivative_cpoly hC) hP
+      obtain ⟨_, _, σ, hσ, Ps, hS, hsc⟩ := rem_seq_check_bridge hC hQ hrem
+      simp only [sturm_vars_at hσ hS hsc] at heq
+      have hV0 : SturmTarski.signVariationsSturmAb (toPoly lst)
+          (Polynomial.derivative (toPoly lst) * pp) a' b' = 0 := by
+        simp [__eo_is_eq, native_teq, native_and, native_not] at heq
+        simp only [SturmTarski.signVariationsSturmAb, SturmTarski.signVariationsAb]
+        rw [heq]; ring
+      have hpa : (toPoly lst).eval (a' : ℝ) ≠ 0 := by
+        intro h0; rw [eval_toPoly] at h0; rw [h0, zero_mul] at hsgn; exact lt_irrefl _ hsgn
+      have hpb : (toPoly lst).eval (b' : ℝ) ≠ 0 := by
+        intro h0; rw [eval_toPoly] at h0; rw [h0, mul_zero] at hsgn; exact lt_irrefl _ hsgn
+      have hT := SturmTarski.Theorem.sturm_tarski_interval (a' : ℝ) b' (toPoly lst) pp
+        (by exact_mod_cast hab) hpa hpb
+      rw [hV0, SturmTarski.tarskiQuery, roots_eq_singleton hcard hq0 hrootP hwa hwb,
+        Finset.sum_singleton] at hT
+      have : SignType.sign (pp.eval w) = 0 := by
+        revert hT; generalize SignType.sign (pp.eval w) = τ; intro hT; cases τ <;> simp_all
+      exact sign_eq_zero_iff.mp this
+
+
+/-- `@is_root L r` is a Boolean when `L` lists rationals and `r` is real. -/
+theorem is_root_bool {L : Term} {lst : List Rat} (hL : RatList L lst) (r : Term)
+    (hr : __smtx_typeof (__eo_to_smt r) = SmtType.Real) :
+    RuleProofs.eo_has_bool_type (Term.Apply (Term.UOp1 UserOp1._at_is_root L) r) := by
+  unfold RuleProofs.eo_has_bool_type
+  have hEq : __eo_to_smt (Term.Apply (Term.UOp1 UserOp1._at_is_root L) r) =
+      SmtTerm.eq (__eo_to_smt_coeffs_at L (__eo_to_smt r))
+        (SmtTerm.Rational (native_mk_rational 0 1)) := by
+    rw [__eo_to_smt.eq_def]; simp [native_ite, native_Teq, hr]
+  have h0 : __smtx_typeof (SmtTerm.Rational (native_mk_rational 0 1)) = SmtType.Real := by
+    rw [__smtx_typeof.eq_def] <;> simp only
+  rw [hEq, typeof_eq_eq, coeffs_at_typeof hL _ hr, h0]
+  simp [__smtx_typeof_eq, __smtx_typeof_guard, native_ite, native_Teq]
+
+/-- A true `@is_root L r`, when `r` is a root of the polynomial `L` lists. -/
+theorem is_root_true_of_root (M : SmtModel) (hM : model_wf M) {L : Term} {lst : List Rat}
+    (hL : RatList L lst) (r : Term) (hr : __smtx_typeof (__eo_to_smt r) = SmtType.Real)
+    (h : lev lst (covDen M r) = 0) :
+    eo_interprets M (Term.Apply (Term.UOp1 UserOp1._at_is_root L) r) true := by
+  have hB := is_root_bool hL r hr
+  refine RuleProofs.eo_interprets_of_bool_eval M _ true hB ?_
+  have hEq : __eo_to_smt (Term.Apply (Term.UOp1 UserOp1._at_is_root L) r) =
+      SmtTerm.eq (__eo_to_smt_coeffs_at L (__eo_to_smt r))
+        (SmtTerm.Rational (native_mk_rational 0 1)) := by
+    rw [__eo_to_smt.eq_def]; simp [native_ite, native_Teq, hr]
+  rw [hEq, __smtx_model_eval, (coeffs_at_eval M hL _ hr _ (eval_of_real M hM r hr)).2, h]
+  simp [__smtx_model_eval, __smtx_model_eval_eq, native_veq, native_rat_to_real,
+    native_mk_rational_zero']
+
+
+/-! ### Introducing `@sgn_inv` -/
+
+/-- `$eo_to_smt_cov_throughout I F` holds when `F` holds wherever `I` does. -/
+theorem throughout_of (M : SmtModel) (I F : SmtTerm) (PI PF : Real -> Prop)
+    (hI : ∀ v, ∃ b, __smtx_model_eval (pushX M v) I = SmtValue.Boolean b ∧ (b = true ↔ PI v))
+    (hF : ∀ v, ∃ b, __smtx_model_eval (pushX M v) F = SmtValue.Boolean b ∧ (b = true ↔ PF v))
+    (h : ∀ v, PI v -> PF v) :
+    __smtx_model_eval M (__eo_to_smt_cov_throughout I F) = SmtValue.Boolean true := by
+  have hEx : __smtx_model_eval M
+      (SmtTerm.exists (native_string_lit "@x") SmtType.Real (SmtTerm.and I (SmtTerm.not F))) =
+        SmtValue.Boolean false := by
+    rw [__smtx_model_eval]
+    have hnP : ¬ ∃ w : SmtValue,
+        __smtx_typeof_value w = SmtType.Real ∧
+          __smtx_value_canonical M.usortDom w = true ∧
+            __smtx_model_eval (native_model_push M (native_string_lit "@x") SmtType.Real w)
+              (SmtTerm.and I (SmtTerm.not F)) = SmtValue.Boolean true := by
+      rintro ⟨w, hw, _, hb⟩
+      obtain ⟨v, rfl⟩ := real_value_canonical hw
+      obtain ⟨b1, hb1, hb1'⟩ := hI v
+      obtain ⟨b2, hb2, hb2'⟩ := hF v
+      rw [__smtx_model_eval, __smtx_model_eval] at hb
+      rw [show native_model_push M (native_string_lit "@x") SmtType.Real (SmtValue.Real v) =
+        pushX M v from rfl, hb1, hb2] at hb
+      cases b1 <;> cases b2 <;> simp_all [__smtx_model_eval_not, __smtx_model_eval_and,
+        native_and, native_not]
+    simp [hnP]
+  unfold __eo_to_smt_cov_throughout
+  rw [__smtx_model_eval, hEx]
+  simp [__smtx_model_eval_not, native_not]
+
+private theorem typeof_thr (I F : SmtTerm) (hI : __smtx_typeof I = SmtType.Bool)
+    (hF : __smtx_typeof F = SmtType.Bool) :
+    __smtx_typeof (__eo_to_smt_cov_throughout I F) = SmtType.Bool := by
+  unfold __eo_to_smt_cov_throughout
+  rw [typeof_not_eq, TranslationProofs.typeof_exists_eq', typeof_and_eq, typeof_not_eq, hI, hF]
+  simp [native_ite, native_Teq, __smtx_typeof_guard_wf, __smtx_type_wf, __smtx_type_wf_component,
+    __smtx_type_wf_rec, native_and]
+
+private theorem cov_above_bool (l : Term) (hl : l = Term.UOp UserOp._at__at_cov_minus_inf ∨ FinEnd l) :
+    __smtx_typeof (__eo_to_smt_cov_above l (__eo_to_smt l)) = SmtType.Bool := by
+  rcases hl with rfl | ⟨q, rfl⟩ | ⟨c, a, b, d, rfl, hT⟩
+  · simp [__eo_to_smt_cov_above, __smtx_typeof]
+  · rw [show __eo_to_smt_cov_above (Term.Rational q) (__eo_to_smt (Term.Rational q)) =
+      SmtTerm.gt covX (SmtTerm.Rational q) from rfl, typeof_gt_eq, typeof_covX]
+    rw [show __smtx_typeof (SmtTerm.Rational q) = SmtType.Real by
+      rw [__smtx_typeof.eq_def] <;> simp only]
+    rfl
+  · rw [show __eo_to_smt_cov_above (Term.UOp4 UserOp4._at_ran c a b d)
+        (__eo_to_smt (Term.UOp4 UserOp4._at_ran c a b d)) =
+      SmtTerm.gt covX (__eo_to_smt (Term.UOp4 UserOp4._at_ran c a b d)) from rfl,
+      typeof_gt_eq, typeof_covX, hT]
+    rfl
+
+private theorem cov_below_bool (r : Term) (hr : r = Term.UOp UserOp._at__at_cov_plus_inf ∨ FinEnd r) :
+    __smtx_typeof (__eo_to_smt_cov_below r (__eo_to_smt r)) = SmtType.Bool := by
+  rcases hr with rfl | ⟨q, rfl⟩ | ⟨c, a, b, d, rfl, hT⟩
+  · simp [__eo_to_smt_cov_below, __smtx_typeof]
+  · rw [show __eo_to_smt_cov_below (Term.Rational q) (__eo_to_smt (Term.Rational q)) =
+      SmtTerm.lt covX (SmtTerm.Rational q) from rfl, typeof_lt_eq, typeof_covX]
+    rw [show __smtx_typeof (SmtTerm.Rational q) = SmtType.Real by
+      rw [__smtx_typeof.eq_def] <;> simp only]
+    rfl
+  · rw [show __eo_to_smt_cov_below (Term.UOp4 UserOp4._at_ran c a b d)
+        (__eo_to_smt (Term.UOp4 UserOp4._at_ran c a b d)) =
+      SmtTerm.lt covX (__eo_to_smt (Term.UOp4 UserOp4._at_ran c a b d)) from rfl,
+      typeof_lt_eq, typeof_covX, hT]
+    rfl
+
+private theorem thr_eval_bool (M : SmtModel) (I F : SmtTerm) :
+    ∃ b, __smtx_model_eval M (__eo_to_smt_cov_throughout I F) = SmtValue.Boolean b := by
+  unfold __eo_to_smt_cov_throughout
+  rw [__smtx_model_eval, __smtx_model_eval]
+  by_cases h : ∃ w : SmtValue, __smtx_typeof_value w = SmtType.Real ∧
+      __smtx_value_canonical M.usortDom w = true ∧
+      __smtx_model_eval (native_model_push M (native_string_lit "@x") SmtType.Real w)
+        (SmtTerm.and I (SmtTerm.not F)) = SmtValue.Boolean true
+  · simp [h, __smtx_model_eval_not]
+  · simp [h, __smtx_model_eval_not]
+
+/-- `@sgn_inv L l r` holds when the polynomial `L` lists has one sign throughout `(l, r)`. -/
+theorem sgn_inv_of_sign (M : SmtModel) (hM : model_wf M) {L : Term} {lst : List Rat}
+    (hL : RatList L lst) (l r : Term)
+    (hl : l = Term.UOp UserOp._at__at_cov_minus_inf ∨ FinEnd l)
+    (hr : r = Term.UOp UserOp._at__at_cov_plus_inf ∨ FinEnd r) :
+    RuleProofs.eo_has_bool_type (Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv L) l) r) ∧
+    ((∃ τ : SignType, ∀ v, InL M l v -> InR M r v -> SignType.sign (lev lst v) = τ) ->
+      eo_interprets M (Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv L) l) r) true) := by
+  have hEq : __eo_to_smt (Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv L) l) r) =
+      SmtTerm.or
+        (__eo_to_smt_cov_throughout
+          (SmtTerm.and (__eo_to_smt_cov_above l (__eo_to_smt l))
+            (__eo_to_smt_cov_below r (__eo_to_smt r)))
+          (SmtTerm.gt (__eo_to_smt_coeffs_at L covX) (SmtTerm.Rational (native_mk_rational 0 1))))
+        (SmtTerm.or
+          (__eo_to_smt_cov_throughout
+            (SmtTerm.and (__eo_to_smt_cov_above l (__eo_to_smt l))
+              (__eo_to_smt_cov_below r (__eo_to_smt r)))
+            (SmtTerm.lt (__eo_to_smt_coeffs_at L covX) (SmtTerm.Rational (native_mk_rational 0 1))))
+          (__eo_to_smt_cov_throughout
+            (SmtTerm.and (__eo_to_smt_cov_above l (__eo_to_smt l))
+              (__eo_to_smt_cov_below r (__eo_to_smt r)))
+            (SmtTerm.eq (__eo_to_smt_coeffs_at L covX) (SmtTerm.Rational (native_mk_rational 0 1))))) := by
+    rw [__eo_to_smt.eq_def]
+  have hcT := coeffs_at_typeof hL covX typeof_covX
+  have h0T : __smtx_typeof (SmtTerm.Rational (native_mk_rational 0 1)) = SmtType.Real := by
+    rw [__smtx_typeof.eq_def] <;> simp only
+  have hIT : __smtx_typeof (SmtTerm.and (__eo_to_smt_cov_above l (__eo_to_smt l))
+      (__eo_to_smt_cov_below r (__eo_to_smt r))) = SmtType.Bool := by
+    rw [typeof_and_eq, cov_above_bool l hl, cov_below_bool r hr]; simp [native_ite, native_Teq]
+  have hB : RuleProofs.eo_has_bool_type
+      (Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv L) l) r) := by
+    unfold RuleProofs.eo_has_bool_type
+    rw [hEq, typeof_or_eq, typeof_or_eq,
+      typeof_thr _ _ hIT (by rw [typeof_gt_eq, hcT, h0T]; rfl),
+      typeof_thr _ _ hIT (by rw [typeof_lt_eq, hcT, h0T]; rfl),
+      typeof_thr _ _ hIT (by rw [typeof_eq_eq, hcT, h0T]; simp [__smtx_typeof_eq, __smtx_typeof_guard,
+        native_ite, native_Teq])]
+    simp [native_ite, native_Teq]
+  refine ⟨hB, fun ⟨τ, hτ⟩ => ?_⟩
+  refine RuleProofs.eo_interprets_of_bool_eval M _ true hB ?_
+  have hL' := cov_above_eval M hM l (by rw [cov_above_bool l hl]; simp)
+  have hR' := cov_below_eval M hM r (by rw [cov_below_bool r hr]; simp)
+  have hIev : ∀ v, ∃ b, __smtx_model_eval (pushX M v)
+      (SmtTerm.and (__eo_to_smt_cov_above l (__eo_to_smt l))
+        (__eo_to_smt_cov_below r (__eo_to_smt r))) = SmtValue.Boolean b ∧
+      (b = true ↔ (InL M l v ∧ InR M r v)) := by
+    intro v
+    obtain ⟨b1, h1, h1'⟩ := hL' v
+    obtain ⟨b2, h2, h2'⟩ := hR' v
+    refine ⟨b1 && b2, ?_, ?_⟩
+    · rw [__smtx_model_eval, h1, h2]; simp [__smtx_model_eval_and, native_and]
+    · simp [← h1', ← h2']
+  have hP : ∀ v, __smtx_model_eval (pushX M v) (__eo_to_smt_coeffs_at L covX) =
+      SmtValue.Real (lev lst v) := fun v =>
+    (coeffs_at_eval (pushX M v) hL covX typeof_covX v (eval_covX_push M v)).2
+  have h0 : ∀ v, __smtx_model_eval (pushX M v) (SmtTerm.Rational (native_mk_rational 0 1)) =
+      SmtValue.Real 0 := by
+    intro v; simp [__smtx_model_eval, native_rat_to_real, native_mk_rational_zero']
+  have hgt := throughout_of M _ (SmtTerm.gt (__eo_to_smt_coeffs_at L covX)
+      (SmtTerm.Rational (native_mk_rational 0 1))) (fun v => InL M l v ∧ InR M r v)
+    (fun v => 0 < lev lst v) hIev
+    (fun v => ⟨decide (0 < lev lst v), by
+      rw [__smtx_model_eval, hP, h0]; simp [__smtx_model_eval_gt, __smtx_model_eval_lt, native_rlt],
+      by simp⟩)
+  have hlt := throughout_of M _ (SmtTerm.lt (__eo_to_smt_coeffs_at L covX)
+      (SmtTerm.Rational (native_mk_rational 0 1))) (fun v => InL M l v ∧ InR M r v)
+    (fun v => lev lst v < 0) hIev
+    (fun v => ⟨decide (lev lst v < 0), by
+      rw [__smtx_model_eval, hP, h0]; simp [__smtx_model_eval_lt, native_rlt], by simp⟩)
+  have heq := throughout_of M _ (SmtTerm.eq (__eo_to_smt_coeffs_at L covX)
+      (SmtTerm.Rational (native_mk_rational 0 1))) (fun v => InL M l v ∧ InR M r v)
+    (fun v => lev lst v = 0) hIev
+    (fun v => ⟨decide (lev lst v = 0), by
+      rw [__smtx_model_eval, hP, h0]; simp [__smtx_model_eval_eq, native_veq], by simp⟩)
+  obtain ⟨b1, hb1⟩ := thr_eval_bool M (SmtTerm.and (__eo_to_smt_cov_above l (__eo_to_smt l))
+      (__eo_to_smt_cov_below r (__eo_to_smt r)))
+    (SmtTerm.gt (__eo_to_smt_coeffs_at L covX) (SmtTerm.Rational (native_mk_rational 0 1)))
+  obtain ⟨b2, hb2⟩ := thr_eval_bool M (SmtTerm.and (__eo_to_smt_cov_above l (__eo_to_smt l))
+      (__eo_to_smt_cov_below r (__eo_to_smt r)))
+    (SmtTerm.lt (__eo_to_smt_coeffs_at L covX) (SmtTerm.Rational (native_mk_rational 0 1)))
+  obtain ⟨b3, hb3⟩ := thr_eval_bool M (SmtTerm.and (__eo_to_smt_cov_above l (__eo_to_smt l))
+      (__eo_to_smt_cov_below r (__eo_to_smt r)))
+    (SmtTerm.eq (__eo_to_smt_coeffs_at L covX) (SmtTerm.Rational (native_mk_rational 0 1)))
+  rw [hEq, __smtx_model_eval, __smtx_model_eval]
+  rcases τ with _ | _ | _
+  · rw [heq (fun v ⟨h1, h2⟩ => sign_eq_zero_iff.mp (hτ v h1 h2)), hb1, hb2]
+    simp [__smtx_model_eval_or, native_or]
+  · rw [hlt (fun v ⟨h1, h2⟩ => sign_eq_neg_one_iff.mp (hτ v h1 h2)), hb1, hb3]
+    simp [__smtx_model_eval_or, native_or]
+  · rw [hgt (fun v ⟨h1, h2⟩ => sign_eq_one_iff.mp (hτ v h1 h2)), hb2, hb3]
+    simp [__smtx_model_eval_or, native_or]
+
+/-- What `$cov_is_root` accepts as a root: a rational, or a real algebraic number. -/
+theorem cov_is_root_shape {P r st : Term}
+    (h : __cov_is_root P r st = Term.Boolean true) :
+    (∃ q, r = Term.Rational q) ∨ ∃ c a b d, r = Term.UOp4 UserOp4._at_ran c a b d := by
+  by_cases hr : ∃ c a b d, r = Term.UOp4 UserOp4._at_ran c a b d
+  · exact Or.inr hr
+  · left
+    have hPS : P ≠ Term.Stuck := by rintro rfl; simp [__cov_is_root] at h
+    have hrS : r ≠ Term.Stuck := by rintro rfl; simp [__cov_is_root] at h
+    have hstS : st ≠ Term.Stuck := by rintro rfl; simp [__cov_is_root] at h
+    have hEq : __cov_is_root P r st =
+        __eo_ite (__eo_and (__eo_is_q r) (__eo_is_eq st Term.__eo_List_nil))
+          (__eo_is_eq (__upoly_eval P r) (Term.Rational (native_mk_rational 0 1)))
+          (Term.Boolean false) := by
+      rw [__cov_is_root.eq_def]
+      split
+      · exact absurd rfl hPS
+      · exact absurd rfl hrS
+      · exact absurd rfl hstS
+      · exact absurd ⟨_, _, _, _, rfl⟩ hr
+      · rfl
+    rw [hEq] at h
+    rcases eo_ite_true_cases h with ⟨hq, _⟩ | ⟨_, h⟩
+    · obtain ⟨hq, _⟩ := eo_and_true_inv hq
+      cases r <;> simp_all [__eo_is_q, __eo_is_q_internal, native_and, native_not, native_teq]
+    · cases h
 
 end CoveringsProofs
