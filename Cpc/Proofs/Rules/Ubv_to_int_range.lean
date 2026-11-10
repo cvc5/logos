@@ -34,7 +34,7 @@ private def ubvRangeConclusion (b : Term) (w : native_Nat) : Term :=
     (Term.Apply
       (Term.Apply (Term.UOp UserOp.and)
         (Term.Apply
-          (Term.Apply (Term.UOp UserOp.leq)
+          (Term.Apply (Term.UOp UserOp.lt)
             (Term.Apply (Term.UOp UserOp.ubv_to_int) b))
           (ubvRangeBound w)))
       (Term.Boolean true))
@@ -88,6 +88,25 @@ private theorem eo_interprets_leq_of_numerals
     simp only
     rw [hxEval, hyEval]
     simp [__smtx_model_eval_leq, native_zleq, SmtEval.native_zleq, hle]
+
+private theorem eo_interprets_lt_of_numerals
+    (M : SmtModel) (x y : Term) (a c : native_Int)
+    (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Int)
+    (hyTy : __smtx_typeof (__eo_to_smt y) = SmtType.Int)
+    (hxEval : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Numeral a)
+    (hyEval : __smtx_model_eval M (__eo_to_smt y) = SmtValue.Numeral c)
+    (hlt : a < c) :
+    eo_interprets M
+      (Term.Apply (Term.Apply (Term.UOp UserOp.lt) x) y) true := by
+  rw [RuleProofs.eo_interprets_iff_smt_interprets]
+  change smt_interprets M (SmtTerm.lt (__eo_to_smt x) (__eo_to_smt y)) true
+  apply smt_interprets.intro_true
+  · rw [typeof_lt_eq, hxTy, hyTy]
+    rfl
+  · rw [__smtx_model_eval.eq_def]
+    simp only
+    rw [hxEval, hyEval]
+    simp [__smtx_model_eval_lt, native_zlt, SmtEval.native_zlt, hlt]
 
 public theorem cmd_step_ubv_to_int_range_properties
     (M : SmtModel) (hM : model_wf M)
@@ -183,14 +202,14 @@ by
                   (hNumTy 0) hxTy (hNumEval 0) hxEval hRange.1
               have hUpper :
                   eo_interprets M
-                    (Term.Apply (Term.Apply (Term.UOp UserOp.leq) x)
+                    (Term.Apply (Term.Apply (Term.UOp UserOp.lt) x)
                       (ubvRangeBound w)) true := by
                 have hlt : n < native_zexp_total 2 (native_nat_to_int w) := by
                   simpa [native_int_pow2, SmtEval.native_int_pow2] using
                     hRange.2
-                exact eo_interprets_leq_of_numerals M x (ubvRangeBound w) n
+                exact eo_interprets_lt_of_numerals M x (ubvRangeBound w) n
                   (native_zexp_total 2 (native_nat_to_int w))
-                  hxTy (hNumTy _) hxEval (hNumEval _) (Int.le_of_lt hlt)
+                  hxTy (hNumTy _) hxEval (hNumEval _) hlt
               have hFact : eo_interprets M (ubvRangeConclusion b w) true :=
                 RuleProofs.eo_interprets_and_intro M _ _ hLower
                   (RuleProofs.eo_interprets_and_intro M _ _ hUpper
