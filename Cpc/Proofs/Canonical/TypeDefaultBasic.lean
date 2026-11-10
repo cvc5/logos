@@ -116,7 +116,7 @@ private theorem type_default_canonical_kernel (huc : usort_dom_wf uc) : ∀ T : 
       exact h.2
     simpa [__smtx_type_default] using ih hDecl
   · intro u _ _
-    simp [__smtx_type_default, __smtx_value_canonical, native_usort_mem, (huc u).1]
+    simp [__smtx_type_default, __smtx_value_canonical, native_usort_mem, native_id_zero, (huc u).1]
   · intros
     simp [__smtx_type_default, __smtx_value_canonical]
   · intro T h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 _hInh hRec
