@@ -149,6 +149,7 @@ import Cpc.Proofs.Rules.Sets_singleton_inj
 import Cpc.Proofs.Rules.Sets_ext
 import Cpc.Proofs.Rules.Sets_choose_member
 import Cpc.Proofs.Rules.Sets_eval_op
+import Cpc.Proofs.Rules.Ubv_to_int_range
 import Cpc.Proofs.Rules.Ubv_to_int_elim
 import Cpc.Proofs.Rules.Int_to_bv_elim
 import Cpc.Proofs.Rules.Instantiate
@@ -1347,6 +1348,11 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_sets_eval_op_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | ubv_to_int_range =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_ubv_to_int_range_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | ubv_to_int_elim =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by

@@ -4127,6 +4127,14 @@ def __eo_prog_sets_eval_op : Term -> Term
   | _ => Term.Stuck
 
 
+def __eo_prog_ubv_to_int_range : Term -> Term
+  | (Term.Apply (Term.UOp UserOp.ubv_to_int) b) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof b))
+    let _v1 := (Term.Apply (Term.UOp UserOp.ubv_to_int) b)
+    (__eo_mk_apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.leq) (Term.Numeral 0)) _v1)) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.and) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.lt) _v1) (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)))) (Term.Boolean true)))
+  | _ => Term.Stuck
+
+
 def __abconv_ubv_to_int_elim : Term -> Term -> Term -> Term
   | Term.Stuck , _ , _  => Term.Stuck
   | _ , _ , Term.Stuck  => Term.Stuck
@@ -9848,6 +9856,7 @@ inductive CRule : Type where
   | sets_ext : CRule
   | sets_choose_member : CRule
   | sets_eval_op : CRule
+  | ubv_to_int_range : CRule
   | ubv_to_int_elim : CRule
   | int_to_bv_elim : CRule
   | instantiate : CRule
@@ -10528,6 +10537,7 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.sets_ext, CArgList.nil, (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_sets_ext (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.sets_choose_member, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_choose_member a1)
   | CRule.sets_eval_op, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_eval_op a1)
+  | CRule.ubv_to_int_range, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_ubv_to_int_range a1)
   | CRule.ubv_to_int_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_ubv_to_int_elim a1)
   | CRule.int_to_bv_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_int_to_bv_elim a1)
   | CRule.instantiate, (CArgList.cons a1 CArgList.nil), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_instantiate a1 (Proof.pf (__eo_state_proven_nth S n1)))

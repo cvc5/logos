@@ -1606,6 +1606,7 @@ private def parserRules : List (String × CRule) := [
   ("sets_ext", .sets_ext),
   ("sets_choose_member", .sets_choose_member),
   ("sets-eval-op", .sets_eval_op),
+  ("ubv_to_int_range", .ubv_to_int_range),
   ("ubv-to-int-elim", .ubv_to_int_elim),
   ("int-to-bv-elim", .int_to_bv_elim),
   ("instantiate", .instantiate),
