@@ -81,7 +81,7 @@ theorem usort_nondefault_witness (huc : usort_dom_wf uc) (u : native_Nat)
   refine ⟨SmtValue.UValue u r, ?_, ?_, ?_⟩
   · simp [__smtx_typeof_value]
   · exact (smtx_value_canonical_uvalue_iff u r).mpr hr
-  · simp [__smtx_type_default, native_veq, hne]
+  · simp [__smtx_type_default, native_veq, native_id_zero, hne]
 
 -- === subset order on accumulators (via name membership) ===
 
