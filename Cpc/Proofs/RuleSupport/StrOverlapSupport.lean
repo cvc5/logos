@@ -906,7 +906,7 @@ theorem contains_args_seq_of_eval_bool (M : SmtModel) (x y : Term) (b : Bool)
     simp_all [__smtx_model_eval_str_contains]
 
 /-- Model-evaluation of an `or`. -/
-theorem model_eval_or_eq (M : SmtModel) (A B : Term) :
+theorem model_eval_eo_or_eq (M : SmtModel) (A B : Term) :
     __smtx_model_eval M (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.or) A) B)) =
       __smtx_model_eval_or (__smtx_model_eval M (__eo_to_smt A))
         (__smtx_model_eval M (__eo_to_smt B)) := by
@@ -949,7 +949,7 @@ theorem overlap_split_eval (M : SmtModel) (t c sw emp d : Term)
     rw [show __eo_to_smt (Term.Boolean false) = SmtTerm.Boolean false from rfl]
     simp only [__smtx_model_eval]
   rw [strContains_eval_eq M _ d s3 Sd hs3 hd]
-  rw [model_eval_or_eq, model_eval_or_eq,
+  rw [model_eval_eo_or_eq, model_eval_eo_or_eq,
     strContains_eval_eq M t d St Sd ht hd, strContains_eval_eq M sw d Ss Sd hsw hd, hfalse]
   simp only [__smtx_model_eval_or]
   have hcs : native_unpack_seq s3 =

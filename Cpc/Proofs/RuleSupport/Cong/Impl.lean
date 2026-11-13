@@ -1248,7 +1248,13 @@ theorem typed___eo_prog_cong_impl (t : Term) (premises : List Term) :
     (by simp) hRhsNN]
   exact hEqBool
 
-private theorem congEvidenceSpine_eq_true
+/--
+The model-level core of `cong`: an evidence spine for `t` and `rhs` whose
+premises are true in `M` (and in every model agreeing with `M` on globals)
+makes `(= t rhs)` true in `M`, provided it is well typed. This covers every
+application spine, including `forall` and `exists` binders.
+-/
+theorem congEvidenceSpine_eq_true
     (M : SmtModel) (hM : model_wf M)
     (premises : List Term) (t rhs : Term) :
   RulePremiseEvidence M premises ->
