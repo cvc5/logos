@@ -3183,8 +3183,14 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                       
                       ] at hTy hTypeNN ⊢
                   all_goals try cases hTy
+            case UOp4 op q lo hi r =>
+              cases op
+              rw [eo_typeof_apply_at_ran] at hTy
+              cases hTy
             case UOp1 op y =>
               cases op <;> dsimp [__eo_typeof] at hTy hTypeNN
+              case _at_is_root =>
+                exact False.elim (false_of_typeof_at_is_root_eq_dtcapp hTy)
               case seq_empty =>
                 exact False.elim (hNonNone (by
                   change
@@ -3387,6 +3393,10 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                         native_teq, native_not] at hTy hTypeNN ⊢)
             case Apply g y =>
               cases g <;> dsimp [__eo_typeof] at hTy hTypeNN
+              case UOp4 op q lo hi r =>
+                cases op
+                rw [eo_typeof_apply_at_ran, eo_typeof_apply_stuck] at hTy
+                cases hTy
               case UOp op =>
                 cases op <;> dsimp [__eo_typeof] at hTy hTypeNN
                 case select =>
@@ -3555,6 +3565,15 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                      all_goals cases hTy)
               case UOp1 op z =>
                 cases op <;> dsimp [__eo_typeof] at hTy hTypeNN
+                case _at_sgn_inv =>
+                  exact False.elim (false_of_typeof_at_sgn_inv_eq_dtcapp hTy)
+                case _at_is_root =>
+                  have hApp :
+                      __eo_typeof_apply (__eo_typeof__at_is_root (__eo_typeof z) (__eo_typeof y))
+                          (__eo_typeof x) =
+                        Term.DtcAppType a b := hTy
+                  rw [eo_typeof_apply_at_is_root] at hApp
+                  cases hApp
                 case «repeat» =>
                   exact eo_type_valid_of_nested_generic_apply_eq_dtcapp_full
                     (g := Term.UOp1 UserOp1.repeat z) (y := y) (x := x)
@@ -4497,8 +4516,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                 rfl rfl hTermNN hTy
           all_goals
             rw [hTy] at hTypeNN
-            simp [eo_type_valid, eo_type_valid_rec, __eo_to_smt_type, native_ite,
-              native_Teq] at hTypeNN ⊢
+            simp [__eo_to_smt_type] at hTypeNN ⊢
       | Term.UOp1 UserOp1.seq_empty T, hNonNone => by
             change __smtx_typeof (__eo_to_smt_seq_empty (__eo_to_smt_type T)) ≠
               SmtType.None at hNonNone
@@ -4830,6 +4848,23 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
           simp [native_ite, smtx_typeof_none, smtx_typeof_dt_sel_head_none]
     | Term.USort i, hNonNone => by
         exact false_of_smtx_typeof_none_non_none_full hNonNone
+    | Term.UOp4 UserOp4._at_ran q lo hi r, hNonNone => by
+        have hEq := eo_to_smt_typeof_matches_translation_ran q lo hi r hNonNone
+        refine ⟨hEq, ?_⟩
+        change eo_type_valid
+          (__eo_typeof__at_ran (__eo_typeof q) (__eo_typeof lo) (__eo_typeof hi) (__eo_typeof r))
+        rcases eo_typeof_at_ran_cases (__eo_typeof q) (__eo_typeof lo) (__eo_typeof hi)
+            (__eo_typeof r) with hT | hT
+        · rw [hT]
+          simp [eo_type_valid]
+        · exfalso
+          apply hNonNone
+          rw [hEq]
+          change __eo_to_smt_type
+            (__eo_typeof__at_ran (__eo_typeof q) (__eo_typeof lo) (__eo_typeof hi) (__eo_typeof r)) =
+              SmtType.None
+          rw [hT]
+          rfl
     | Term.UOp3 UserOp3._at_re_unfold_pos_component str re idx, hNonNone => by
         exact
           eo_to_smt_typeof_matches_translation_apply_apply_apply_re_unfold_pos_component

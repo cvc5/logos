@@ -2934,6 +2934,11 @@ private theorem eo_to_smt_apply_ne_numeral
     case tuple_select =>
       exact False.elim (eo_to_smt_tuple_select_ne_numeral
       (__smtx_typeof (__eo_to_smt x)) (__eo_to_smt idx) (__eo_to_smt x) n h)
+    case _at_is_root =>
+      change native_ite (native_Teq (__smtx_typeof (__eo_to_smt x)) SmtType.Real)
+          (SmtTerm.eq _ _) SmtTerm.None = SmtTerm.Numeral n at h
+      cases hr : native_Teq (__smtx_typeof (__eo_to_smt x)) SmtType.Real <;>
+        simp [native_ite, hr] at h
   case UOp2 op idx1 idx2 =>
     cases op <;> try cases h
   case Apply g y =>
@@ -3041,6 +3046,14 @@ theorem eo_to_smt_eq_numeral
           simp [native_ite, hy] at h
         cases hz : __eo_to_smt_nat_is_valid z <;>
           simp [hz] at h
+  | UOp4 op q lo hi s =>
+      cases op
+      change __eo_to_smt_ran q lo hi s = SmtTerm.Numeral n at h
+      unfold __eo_to_smt_ran at h
+      split at h
+      · unfold native_ite at h
+        split at h <;> cases h
+      · cases h
   | Apply f x => exact False.elim (eo_to_smt_apply_ne_numeral f x n h)
   | _ => cases h
 

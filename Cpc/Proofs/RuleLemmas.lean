@@ -93,6 +93,11 @@ import Cpc.Proofs.Rules.Arith_mult_abs_comparison
 import Cpc.Proofs.Rules.Arith_reduction
 import Cpc.Proofs.Rules.Arith_poly_norm
 import Cpc.Proofs.Rules.Arith_poly_norm_rel
+import Cpc.Proofs.Rules.Cover
+import Cpc.Proofs.Rules.Sgn_inv_intro
+import Cpc.Proofs.Rules.Is_root_intro
+import Cpc.Proofs.Rules.Ran_eval
+import Cpc.Proofs.Rules.Sgn_inv_elim
 import Cpc.Proofs.Rules.Bv_repeat_elim
 import Cpc.Proofs.Rules.Bv_smulo_elim
 import Cpc.Proofs.Rules.Bv_umulo_elim
@@ -1063,6 +1068,31 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_arith_poly_norm_rel_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | cover =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_cover_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | sgn_inv_intro =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_sgn_inv_intro_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | is_root_intro =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_is_root_intro_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | ran_eval =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_ran_eval_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | sgn_inv_elim =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_sgn_inv_elim_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | bv_repeat_elim =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
