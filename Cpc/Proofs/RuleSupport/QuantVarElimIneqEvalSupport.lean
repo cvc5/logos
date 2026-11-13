@@ -9,6 +9,8 @@ public import Cpc.Proofs.RuleSupport.ArithPolyNormRelSupport
 import all Cpc.Proofs.RuleSupport.ArithPolyNormRelSupport
 public import Cpc.Proofs.Closed.ContainsAtomicTermListFree
 import all Cpc.Proofs.Closed.ContainsAtomicTermListFree
+import all Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 
 public section
 
@@ -101,9 +103,9 @@ theorem free_poly_eval {M N : SmtModel} {s : native_String} {T p : Term}
 variable, with the same nonzero coefficient in every agreeing model. -/
 theorem linear_eval {M : SmtModel} {s : native_String} {T p : Term} {c : Rat}
     (hp : arith_poly_rational M p) (hl : LinearPart (qvar s T) p c) :
-    ∃ b : Rat, ∀ (N : SmtModel) (q : Rat), Agree s T N M →
-      arith_poly_norm_atom_denote_real N (qvar s T) = SmtValue.Rational q →
-      arith_poly_denote_real N p = SmtValue.Rational (c * q + b) := by
+    ∃ b : native_Real, ∀ (N : SmtModel) (q : native_Real), Agree s T N M →
+      arith_poly_norm_atom_denote_real N (qvar s T) = SmtValue.Real q →
+      arith_poly_denote_real N p = SmtValue.Real ((c : native_Real) * q + b) := by
   induction hl with
   | head c p hfree =>
       cases hp with
@@ -114,7 +116,8 @@ theorem linear_eval {M : SmtModel} {s : native_String} {T p : Term} {c : Rat}
           have ht := (free_poly_eval hp hfree hAgree).trans hb
           simp [poly, mon, single, arith_poly_denote_real, arith_mon_denote_real,
             arith_mvar_denote_real, hq, ht, __smtx_model_eval_mult,
-            __smtx_model_eval_plus, native_qmult, native_qplus, ratOne, Rat.mul_one]
+            __smtx_model_eval_plus, native_rmult, native_rplus, native_mk_real,
+            native_rat_to_real, ratOne]
   | skip a d p c hfree hl ih =>
       cases hp with
       | cons _ _ hm hp =>
@@ -122,19 +125,19 @@ theorem linear_eval {M : SmtModel} {s : native_String} {T p : Term} {c : Rat}
           | mk _ _ ha =>
               obtain ⟨b, hb⟩ := ih hp
               obtain ⟨r, hr⟩ := arith_mvar_denote_real_rational_of_rational_support M ha
-              refine ⟨d * r + b, ?_⟩
+              refine ⟨(d : native_Real) * r + b, ?_⟩
               intro N q hAgree hq
               have hvars := (free_mvar_eval ha hfree hAgree).trans hr
               simp only [poly, mon, arith_poly_denote_real, arith_mon_denote_real,
                 hvars, hb N q hAgree hq, __smtx_model_eval_mult, __smtx_model_eval_plus,
-                native_qmult, native_qplus]
+                native_rmult, native_rplus, native_rat_to_real]
               congr 1
-              exact Rat.add_left_comm _ _ _
+              ring
 
 def ArithType (T : Term) : Prop := T = Term.UOp UserOp.Int ∨ T = Term.UOp UserOp.Real
 
 def arithValue (T : Term) (n : Int) : SmtValue :=
-  if T = Term.UOp UserOp.Int then SmtValue.Numeral n else SmtValue.Rational (n : Rat)
+  if T = Term.UOp UserOp.Int then SmtValue.Numeral n else SmtValue.Real (n : native_Real)
 
 abbrev push (M : SmtModel) (s : native_String) (T : Term) (n : Int) : SmtModel :=
   native_model_push M s (__eo_to_smt_type T) (arithValue T n)
@@ -160,13 +163,11 @@ theorem push_agree (M : SmtModel) (s : native_String) (T : Term) (n : Int) :
 theorem push_variable (M : SmtModel) (s : native_String) {T : Term}
     (hT : ArithType T) (n : Int) :
     arith_poly_norm_atom_denote_real (push M s T n) (qvar s T) =
-      SmtValue.Rational (n : Rat) := by
-  have hn : native_to_real n = (n : Rat) := by
-    simpa [native_to_real, native_mk_rational] using (rat_div_one_intCast n)
+      SmtValue.Real (n : native_Real) := by
   rcases hT with rfl | rfl <;>
     simp [arith_poly_norm_atom_denote_real, qvar, __eo_to_smt,
       __eo_to_smt_type, __smtx_model_eval, native_model_var_lookup, push,
-      native_model_push, arithValue, __smtx_to_real_coerce, hn]
+      native_model_push, arithValue, __smtx_to_real_coerce, native_int_to_real]
 
 def Eventually (P : Int → Prop) : Prop := ∃ B : Int, ∀ n : Int, B ≤ n → P n
 
@@ -188,16 +189,16 @@ theorem diff_affine (M : SmtModel) (hM : model_wf M) (s : native_String) {T : Te
       __smtx_typeof (__eo_to_smt (diff a b)) = SmtType.Real)
     (d : Int)
     (hd : __arith_linear_dir (qvar s T) (__get_arith_poly_norm (diff a b)) = Term.Numeral d) :
-    ∃ c k : Rat, c ≠ 0 ∧ d = (if c < 0 then -1 else 1) ∧
+    ∃ (c : Rat) (k : native_Real), c ≠ 0 ∧ d = (if c < 0 then -1 else 1) ∧
       ∀ n : Int, arith_atom_denote_real (push M s T n) (diff a b) =
-        SmtValue.Rational (c * (n : Rat) + k) := by
+        SmtValue.Real ((c : native_Real) * (n : native_Real) + k) := by
   obtain ⟨c, hc, hl, hd⟩ := linear_dir_nonzero (by simp [qvar])
     (nonzeroCoeffs_norm (diff a b)) d hd
   have hp := (arith_poly_norm_facts_of_smt_arith_type M hM (diff a b) hDiffTy).1
   obtain ⟨k, hk⟩ := linear_eval hp hl
   refine ⟨c, k, hc, hd, ?_⟩
   intro n
-  have he := hk (push M s T n) (n : Rat) (push_agree M s T n) (push_variable M s hT n)
+  have he := hk (push M s T n) (n : native_Real) (push_agree M s T n) (push_variable M s hT n)
   rw [arith_poly_denote_real_of_get_arith_poly_norm_of_smt_arith_type
     (push M s T n) (push_wf hM s hT n) (diff a b) hDiffTy] at he
   exact he
@@ -244,16 +245,17 @@ private theorem eval_not (M : SmtModel) (f : Term) :
   rw [__smtx_model_eval.eq_def]
 
 theorem upper_false (M : SmtModel) (hM : model_wf M) {a b f : Term}
-    (hTy : DiffType a b) (hf : UpperLiteral a b f) {q : Rat}
-    (hv : arith_atom_denote_real M (diff a b) = SmtValue.Rational q) (hq : 0 < q) :
+    (hTy : DiffType a b) (hf : UpperLiteral a b f) {q : native_Real}
+    (hv : arith_atom_denote_real M (diff a b) = SmtValue.Real q) (hq : 0 < q) :
     __smtx_model_eval M (__eo_to_smt f) = SmtValue.Boolean false := by
   obtain ⟨r, hr, hlt, hle, heq, hgt, hge⟩ := arith_rel_eval_bools_of_diff_type M hM a b hTy
-  have hrq : r = q := by rw [hv] at hr; exact (SmtValue.Rational.inj hr).symm
+  have hrq : r = q := by rw [hv] at hr; exact (SmtValue.Real.inj hr).symm
   subst r
-  have hq0 : 0 ≤ q := Rat.le_of_lt hq
-  have hnlt : ¬q < 0 := Rat.not_lt.mpr hq0
-  have hnle : ¬q ≤ 0 := Rat.not_le.mpr hq
-  simp only [ratZero, native_qlt, native_qleq, decide_eq_false hnlt,
+  have hq0 : (0 : native_Real) ≤ q := le_of_lt hq
+  have hnlt : ¬q < 0 := not_lt.mpr hq0
+  have hnle : ¬q ≤ 0 := not_le.mpr hq
+  have hz : native_mk_real 0 1 = 0 := by simp [native_mk_real]
+  simp only [hz, native_rlt, native_rleq, decide_eq_false hnlt,
     decide_eq_false hnle, decide_eq_true hq, decide_eq_true hq0] at hlt hle hgt hge
   cases hf with
   | lt => exact hlt
@@ -266,13 +268,34 @@ theorem upper_false (M : SmtModel) (hM : model_wf M) {a b f : Term}
   | not_le => rw [eval_not, ← swapped_ge M b a, hge]; rfl
 
 theorem equality_false (M : SmtModel) (hM : model_wf M) {a b : Term}
-    (hTy : DiffType a b) {q : Rat}
-    (hv : arith_atom_denote_real M (diff a b) = SmtValue.Rational q) (hq : q ≠ 0) :
+    (hTy : DiffType a b) {q : native_Real}
+    (hv : arith_atom_denote_real M (diff a b) = SmtValue.Real q) (hq : q ≠ 0) :
     __smtx_model_eval M (__eo_to_smt (binary UserOp.eq a b)) = SmtValue.Boolean false := by
   obtain ⟨r, hr, _, _, heq, _, _⟩ := arith_rel_eval_bools_of_diff_type M hM a b hTy
-  have hrq : r = q := by rw [hv] at hr; exact (SmtValue.Rational.inj hr).symm
+  have hrq : r = q := by rw [hv] at hr; exact (SmtValue.Real.inj hr).symm
   subst r
-  simpa [ratZero, native_qeq, hq] using heq
+  simpa [native_mk_real, native_req, hq] using heq
+
+theorem real_affine_eventually_pos (a b : native_Real) (ha : 0 < a) :
+    ∃ B : Int, ∀ n : Int, B ≤ n → 0 < a * (n : native_Real) + b := by
+  obtain ⟨B, hB⟩ := exists_int_gt (-b / a)
+  refine ⟨B, fun n hn => ?_⟩
+  have hn' : (B : native_Real) ≤ (n : native_Real) := by exact_mod_cast hn
+  have hlt : -b / a < (n : native_Real) := lt_of_lt_of_le hB hn'
+  have hmul : -b < a * (n : native_Real) := by
+    rw [div_lt_iff₀ ha] at hlt
+    linarith
+  linarith
+
+theorem real_affine_eventually_ne (a b : native_Real) (ha : a ≠ 0) :
+    ∃ B : Int, ∀ n : Int, B ≤ n → a * (n : native_Real) + b ≠ 0 := by
+  rcases lt_or_gt_of_ne ha with hneg | hpos
+  · obtain ⟨B, hB⟩ := real_affine_eventually_pos (-a) (-b) (by linarith)
+    refine ⟨B, fun n hn heq => ?_⟩
+    have hp := hB n hn
+    linarith
+  · obtain ⟨B, hB⟩ := real_affine_eventually_pos a b hpos
+    exact ⟨B, fun n hn => ne_of_gt (hB n hn)⟩
 
 theorem upper_escapes (M : SmtModel) (hM : model_wf M) (s : native_String) {T : Term}
     (hT : ArithType T) {a b f : Term} (hTy : DiffType a b) (hf : UpperLiteral a b f)
@@ -280,11 +303,17 @@ theorem upper_escapes (M : SmtModel) (hM : model_wf M) (s : native_String) {T : 
     (hd : __arith_linear_dir (qvar s T) (__get_arith_poly_norm (diff a b)) = Term.Numeral d) :
     Escapes M s T sign f := by
   obtain ⟨c, k, hc, hd, hval⟩ := diff_affine M hM s hT a b hTy d hd
-  obtain ⟨B, hB⟩ := affine_eventually_pos (c * (sign : Rat)) k (compatible_slope hc hd hs hcompat)
+  have hslope : (0 : native_Real) < (c : native_Real) * (sign : native_Real) := by
+    have h := compatible_slope hc hd hs hcompat
+    have h' : ((0 : Rat) : native_Real) < ((c * (sign : Rat) : Rat) : native_Real) :=
+      Rat.cast_lt.mpr h
+    push_cast at h'
+    exact h'
+  obtain ⟨B, hB⟩ := real_affine_eventually_pos ((c : native_Real) * (sign : native_Real)) k hslope
   refine ⟨B, ?_⟩
   intro n hn
   have hv := hval (sign * n)
-  rw [Rat.intCast_mul, ← Rat.mul_assoc] at hv
+  rw [Int.cast_mul, ← mul_assoc] at hv
   exact upper_false _ (push_wf hM s hT _) hTy hf hv (hB n hn)
 
 theorem equality_escapes (M : SmtModel) (hM : model_wf M) (s : native_String) {T : Term}
@@ -300,16 +329,16 @@ theorem equality_escapes (M : SmtModel) (hM : model_wf M) (s : native_String) {T
     · exact ⟨1, h⟩
   obtain ⟨d, hdir⟩ := hdir
   obtain ⟨c, k, hc, _, hval⟩ := diff_affine M hM s hT a b hTy d hdir
-  have hslope : c * (sign : Rat) ≠ 0 := by
-    intro heq
-    rcases Rat.mul_eq_zero.mp heq with hc0 | hs0
-    · exact hc hc0
-    · rcases hs with rfl | rfl <;> contradiction
-  obtain ⟨B, hB⟩ := affine_eventually_ne (c * (sign : Rat)) k hslope
+  have hslope : (c : native_Real) * (sign : native_Real) ≠ 0 := by
+    have hc' : (c : native_Real) ≠ 0 := Rat.cast_ne_zero.mpr hc
+    have hs' : (sign : native_Real) ≠ 0 := by
+      rcases hs with rfl | rfl <;> norm_num
+    exact mul_ne_zero hc' hs'
+  obtain ⟨B, hB⟩ := real_affine_eventually_ne ((c : native_Real) * (sign : native_Real)) k hslope
   refine ⟨B, ?_⟩
   intro n hn
   have hv := hval (sign * n)
-  rw [Rat.intCast_mul, ← Rat.mul_assoc] at hv
+  rw [Int.cast_mul, ← mul_assoc] at hv
   exact equality_false _ (push_wf hM s hT _) hTy hv (hB n hn)
 
 private abbrev SameArith (a b : Term) : Prop :=
