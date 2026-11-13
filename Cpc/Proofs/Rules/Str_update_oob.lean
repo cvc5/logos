@@ -13,8 +13,9 @@ set_option maxHeartbeats 10000000
 
 private abbrev updateOobPremise (t n : Term) : Term :=
   Term.Apply (Term.Apply Term.eq
-    (Term.Apply (Term.Apply Term.geq n) (Term.Apply Term.str_len t)))
-    (Term.Boolean true)
+    (Term.Apply Term.str_len
+      (Term.Apply (Term.Apply (Term.Apply Term.str_substr t) n) (Term.Numeral 1))))
+    (Term.Numeral 0)
 
 private abbrev updateOobLhs (t n r : Term) : Term :=
   Term.Apply (Term.Apply (Term.Apply Term.str_update t) n) r
@@ -96,20 +97,16 @@ private theorem smtx_eval_str_update_term_eq
         (__smtx_model_eval M n) := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
-private theorem smtx_eval_geq_term_eq
-    (M : SmtModel) (x y : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.geq x y) =
-      __smtx_model_eval_geq
-        (__smtx_model_eval M x) (__smtx_model_eval M y) := by
-  rw [__smtx_model_eval.eq_def] <;> simp only
+private theorem smtx_eval_str_substr_term_eq
+    (M : SmtModel) (t n len : SmtTerm) :
+    __smtx_model_eval M (SmtTerm.str_substr t n len) =
+      __smtx_model_eval_str_substr (__smtx_model_eval M t)
+        (__smtx_model_eval M n) (__smtx_model_eval M len) := by
+  rw [__smtx_model_eval.eq_def]
 
 private theorem smtx_eval_numeral_term_eq
     (M : SmtModel) (n : native_Int) :
     __smtx_model_eval M (SmtTerm.Numeral n) = SmtValue.Numeral n := by
-  rw [__smtx_model_eval.eq_def]
-
-private theorem smtx_eval_boolean_term_eq (M : SmtModel) (b : native_Bool) :
-    __smtx_model_eval M (SmtTerm.Boolean b) = SmtValue.Boolean b := by
   rw [__smtx_model_eval.eq_def]
 
 private theorem prog_str_update_oob_info
@@ -217,20 +214,33 @@ private theorem facts___eo_prog_str_update_oob_impl
   rcases seq_value_canonical hTEvalTy with ⟨ts, hTEval⟩
   rcases seq_value_canonical hREvalTy with ⟨ss, hREval⟩
   rcases int_value_canonical hNEvalTy with ⟨ni, hNEval⟩
-  have hNAfterLen : native_seq_len (native_unpack_seq ts) ≤ ni := by
-    rw [RuleProofs.eo_interprets_iff_smt_interprets] at hPrem
-    cases hPrem with
-    | intro_true _ hEval =>
+  have hOutOfBounds : ni < 0 ∨ (native_unpack_seq ts).length ≤ ni := by
+    have hExtractLen : (native_seq_extract (native_unpack_seq ts) ni 1).length = 0 := by
+      rw [RuleProofs.eo_interprets_iff_smt_interprets] at hPrem
+      cases hPrem with
+      | intro_true _ hEval =>
         change __smtx_model_eval M
-            (SmtTerm.eq (SmtTerm.geq (__eo_to_smt n)
-              (SmtTerm.str_len (__eo_to_smt t))) (SmtTerm.Boolean true)) =
-          SmtValue.Boolean true at hEval
-        rw [smtx_eval_eq_term_eq, smtx_eval_geq_term_eq,
-          hNEval, smtx_eval_str_len_term_eq, hTEval,
-          smtx_eval_boolean_term_eq] at hEval
-        simpa [__smtx_model_eval_geq, __smtx_model_eval_leq,
-          __smtx_model_eval_str_len, __smtx_model_eval_eq,
-          native_veq, native_zleq] using hEval
+            (SmtTerm.eq (SmtTerm.str_len
+              (SmtTerm.str_substr (__eo_to_smt t) (__eo_to_smt n) (SmtTerm.Numeral 1)))
+              (SmtTerm.Numeral 0)) = SmtValue.Boolean true at hEval
+        rw [smtx_eval_eq_term_eq, smtx_eval_str_len_term_eq,
+          smtx_eval_str_substr_term_eq, hTEval, hNEval,
+          smtx_eval_numeral_term_eq, smtx_eval_numeral_term_eq] at hEval
+        simpa [__smtx_model_eval_str_substr, __smtx_model_eval_str_len,
+          __smtx_model_eval_eq, native_seq_len, Smtm.native_unpack_pack_seq,
+          native_veq, native_nat_to_int] using hEval
+    by_cases hNeg : ni < 0
+    · exact Or.inl hNeg
+    by_cases hGe : (native_unpack_seq ts).length ≤ ni
+    · exact Or.inr hGe
+    have hNonneg : (0 : Int) ≤ ni := Int.le_of_not_gt hNeg
+    have hBefore : ni < (native_unpack_seq ts).length := Int.lt_of_not_ge hGe
+    have hMin : min (1 : Int) ((native_unpack_seq ts).length - ni) = 1 :=
+      Int.min_eq_left (Int.add_one_le_of_lt (Int.sub_pos_of_lt hBefore))
+    have hStart : ni.toNat < (native_unpack_seq ts).length :=
+      (Int.toNat_lt hNonneg).mpr hBefore
+    simp [native_seq_extract, hNeg, hGe, hMin] at hExtractLen
+    omega
 
   have hEvalEq :
       __smtx_model_eval M (__eo_to_smt lhs) =
@@ -239,9 +249,9 @@ private theorem facts___eo_prog_str_update_oob_impl
         (SmtTerm.str_update (__eo_to_smt t) (__eo_to_smt n) (__eo_to_smt r)) =
       __smtx_model_eval M (__eo_to_smt t)
     rw [smtx_eval_str_update_term_eq, hTEval, hNEval, hREval]
-    simp [__smtx_model_eval_str_update, native_seq_update, native_seq_len,
-      show ((native_unpack_seq ts).length : Int) ≤ ni from hNAfterLen,
-      native_pack_unpack_seq]
+    rcases hOutOfBounds with hOut | hOut <;>
+      simp [__smtx_model_eval_str_update, native_seq_update, native_seq_len,
+        hOut, native_pack_unpack_seq]
 
   rw [hProgEq]
   exact RuleProofs.eo_interprets_eq_of_rel M lhs rhs hBoolEq <| by

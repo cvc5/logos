@@ -7,8 +7,10 @@
 
 module
 
-public import CpcMini.SmtEval
-import all CpcMini.SmtEval
+public import CpcMini.SmtReal
+import all CpcMini.SmtReal
+public import CpcMini.SmtSyntax
+import all CpcMini.SmtSyntax
 
 public section
 
@@ -19,58 +21,9 @@ namespace Smtm
 
 open SmtEval
 
+noncomputable section
+
 mutual
-
-/-
-SMT-LIB types.
--/
-inductive SmtType : Type where
-  | None : SmtType
-  | Bool : SmtType
-  | Int : SmtType
-  | Real : SmtType
-  | RegLan : SmtType
-  | BitVec : native_Nat -> SmtType
-  | Map : SmtType -> SmtType -> SmtType
-  | Set : SmtType -> SmtType
-  | Seq : SmtType -> SmtType
-  | Char : SmtType
-  | Datatype : native_String -> SmtDatatypeDecl -> SmtType
-  | TypeRef : native_String -> SmtType
-  | USort : native_Nat -> SmtType
-  | FunType : SmtType -> SmtType -> SmtType
-  | DtcAppType : SmtType -> SmtType -> SmtType
-
-deriving Repr, DecidableEq, Inhabited, Ord
-
-/-
-SMT-LIB terms.
--/
-inductive SmtTerm : Type where
-  | None : SmtTerm
-  | Boolean : native_Bool -> SmtTerm
-  | Numeral : native_Int -> SmtTerm
-  | Rational : native_Rat -> SmtTerm
-  | String : native_String -> SmtTerm
-  | Binary : native_Int -> native_Int -> SmtTerm
-  | Apply : SmtTerm -> SmtTerm -> SmtTerm
-  | Var : native_String -> SmtType -> SmtTerm
-  | exists : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | forall : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | choice : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | bind : native_String -> SmtType -> SmtTerm -> SmtTerm -> SmtTerm
-  | DtCons : native_String -> SmtDatatypeDecl -> native_Nat -> SmtTerm
-  | DtSel : native_String -> SmtDatatypeDecl -> native_Nat -> native_Nat -> SmtTerm
-  | DtTester : native_String -> SmtDatatypeDecl -> native_Nat -> SmtTerm
-  | UConst : native_String -> SmtType -> SmtTerm
-  | not : SmtTerm -> SmtTerm
-  | and : SmtTerm -> SmtTerm -> SmtTerm
-  | or : SmtTerm -> SmtTerm -> SmtTerm
-  | imp : SmtTerm -> SmtTerm -> SmtTerm
-  | eq : SmtTerm -> SmtTerm -> SmtTerm
-  | ite : SmtTerm -> SmtTerm -> SmtTerm -> SmtTerm
-
-deriving Repr, DecidableEq, Inhabited
 
 /-
 SMT-LIB values.
@@ -79,43 +32,19 @@ inductive SmtValue : Type where
   | NotValue : SmtValue
   | Boolean : native_Bool -> SmtValue
   | Numeral : native_Int -> SmtValue
-  | Rational : native_Rat -> SmtValue
+  | Real : native_Real -> SmtValue
   | Binary : native_Int -> native_Int -> SmtValue
   | Map : SmtMap -> SmtValue
-  | Fun : native_String -> SmtType -> SmtType -> SmtValue
+  | Fun : ModelId -> SmtType -> SmtType -> SmtValue
   | Set : SmtMap -> SmtValue
   | Seq : SmtSeq -> SmtValue
   | Char : native_Char -> SmtValue
-  | UValue : native_Nat -> native_Nat -> SmtValue
+  | UValue : native_Nat -> ModelId -> SmtValue
   | RegLan : SmtRegLan -> SmtValue
   | DtCons : native_String -> SmtDatatypeDecl -> native_Nat -> SmtValue
   | Apply : SmtValue -> SmtValue -> SmtValue
 
-deriving Repr, DecidableEq, Inhabited, Ord
-
-/-
-The SmtDatatype of the embedding.
--/
-inductive SmtDatatype : Type where
-  | null : SmtDatatype
-  | sum : SmtDatatypeCons -> SmtDatatype -> SmtDatatype
-deriving Repr, DecidableEq, Inhabited, Ord
-
-/-
-The SmtDatatypeCons of the embedding.
--/
-inductive SmtDatatypeCons : Type where
-  | unit : SmtDatatypeCons
-  | cons : SmtType -> SmtDatatypeCons -> SmtDatatypeCons
-deriving Repr, DecidableEq, Inhabited, Ord
-
-/-
-The SmtDatatypeDecl of the embedding.
--/
-inductive SmtDatatypeDecl : Type where
-  | nil : SmtDatatypeDecl
-  | cons : native_String -> SmtDatatype -> SmtDatatypeDecl -> SmtDatatypeDecl
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving DecidableEq, Inhabited
 
 /-
 The SmtMap of the embedding.
@@ -123,7 +52,7 @@ The SmtMap of the embedding.
 inductive SmtMap : Type where
   | cons : SmtValue -> SmtValue -> SmtMap -> SmtMap
   | default : SmtType -> SmtValue -> SmtMap
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving DecidableEq, Inhabited
 
 /-
 The SmtRegLan of the embedding.
@@ -139,7 +68,7 @@ inductive SmtRegLan : Type where
   | inter : SmtRegLan -> SmtRegLan -> SmtRegLan
   | star : SmtRegLan -> SmtRegLan
   | comp : SmtRegLan -> SmtRegLan
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving DecidableEq, Inhabited
 
 /-
 The SmtSeq of the embedding.
@@ -147,23 +76,20 @@ The SmtSeq of the embedding.
 inductive SmtSeq : Type where
   | cons : SmtValue -> SmtSeq -> SmtSeq
   | empty : SmtType -> SmtSeq
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving DecidableEq, Inhabited
 
 
 
 end
 
--- Equality of a type and of a value, decided by the two inductives above.
--- They stand after the mutual block rather than beside the inductive whose
--- `deriving` makes them possible: a mutual block holds inductives or
--- definitions, never both.
-
-/- Type equality -/
-def native_Teq : SmtType -> SmtType -> native_Bool
-  | x, y => decide (x = y)
+-- Equality of a value, decided by the inductive above. It stands after the
+-- mutual block rather than beside the inductive whose `deriving` makes it
+-- possible: a mutual block holds inductives or definitions, never both.
 
 /- Value equality -/
 def native_veq : SmtValue -> SmtValue -> native_Bool
   | x, y => decide (x = y)
+
+end
 
 end Smtm

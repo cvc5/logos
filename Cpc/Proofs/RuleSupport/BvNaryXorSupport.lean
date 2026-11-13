@@ -69,7 +69,7 @@ private theorem bvxor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
               (__smtx_typeof (__eo_to_smt x)) by
           rw [__smtx_typeof.eq_44]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-        Smtm.native_nateq] using hTy'
+        SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'

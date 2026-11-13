@@ -63,24 +63,24 @@ private theorem eval_uneg (M : SmtModel) (a : SmtTerm) :
       __smtx_model_eval_uneg (__smtx_model_eval M a) := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
-/-- abs eval on an integer value. -/
-private theorem eval_abs_real (M : SmtModel) (x : Term) (n : native_Rat)
-    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Rational n) :
+/-- abs eval on a real value. -/
+private theorem eval_abs_real (M : SmtModel) (x : Term) (n : native_Real)
+    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Real n) :
     __smtx_model_eval M (__eo_to_smt (absTerm x)) =
-      SmtValue.Rational (if n < 0 then -n else n) := by
+      SmtValue.Real (if n < 0 then -n else n) := by
   rw [show __eo_to_smt (absTerm x) = SmtTerm.abs (__eo_to_smt x) by rfl]
   rw [eval_abs, hx]
   by_cases hneg : n < 0
-  · simp [__smtx_model_eval_abs, native_qabs, hneg]
-  · simp [__smtx_model_eval_abs, native_qabs, hneg]
+  · simp [__smtx_model_eval_abs, hneg, abs_of_neg hneg]
+  · simp [__smtx_model_eval_abs, hneg, abs_of_nonneg (le_of_not_gt hneg)]
 
-/-- uneg eval on an integer value. -/
-private theorem eval_neg_real (M : SmtModel) (x : Term) (n : native_Rat)
-    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Rational n) :
-    __smtx_model_eval M (__eo_to_smt (negTerm x)) = SmtValue.Rational (-n) := by
+/-- uneg eval on a real value. -/
+private theorem eval_neg_real (M : SmtModel) (x : Term) (n : native_Real)
+    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Real n) :
+    __smtx_model_eval M (__eo_to_smt (negTerm x)) = SmtValue.Real (-n) := by
   rw [show __eo_to_smt (negTerm x) = SmtTerm.uneg (__eo_to_smt x) by rfl]
   rw [eval_uneg, hx]
-  simp [__smtx_model_eval_uneg, native_qneg]
+  simp [__smtx_model_eval_uneg]
 
 /-- Rewrite the program to the explicit equation when args are non-stuck. -/
 private theorem prog_eq_of_nonstuck (x1 y1 : Term)
@@ -96,7 +96,7 @@ private theorem prog_eq_of_nonstuck (x1 y1 : Term)
       | exact False.elim (hy rfl)
       | rfl
 
-/-- `geq t 0` (integer zero) has eo-typeof Bool only when `t` has eo-typeof Int. -/
+/-- `geq t 0` (real zero) has eo-typeof Bool only when `t` has eo-typeof Real. -/
 private theorem real_of_geq_zero_bool (t : Term)
     (h : __eo_typeof (geqTerm t zeroTerm) = Term.Bool) :
     __eo_typeof t = Term.Real := by
@@ -150,7 +150,7 @@ private theorem rhs_conds_bool (x1 y1 : Term)
     exact ite_cond_bool_of_not_stuck _ _ _ hThenNotStuck
   exact ⟨hCondX, hCondY⟩
 
-/-- From result being Bool, both args are eo-Int. -/
+/-- From result being Bool, both args are eo-Real. -/
 private theorem arg_types_real (x1 y1 : Term)
     (hxTrans : RuleProofs.eo_has_smt_translation x1)
     (hyTrans : RuleProofs.eo_has_smt_translation y1)
@@ -168,7 +168,7 @@ private theorem arg_types_real (x1 y1 : Term)
   have hConds := rhs_conds_bool x1 y1 hRightNotStuck
   exact ⟨real_of_geq_zero_bool x1 hConds.1, real_of_geq_zero_bool y1 hConds.2⟩
 
-/-- SMT type of each arg is Int. -/
+/-- SMT type of each arg is Real. -/
 private theorem smt_real_of_eo_real (t : Term)
     (hTrans : RuleProofs.eo_has_smt_translation t)
     (hTy : __eo_typeof t = Term.Real) :
@@ -176,7 +176,7 @@ private theorem smt_real_of_eo_real (t : Term)
   RuleProofs.eo_to_smt_well_typed_and_typeof_implies_smt_type
     t Term.Real (__eo_to_smt t) rfl hTrans hTy
 
-/-- SMT type of abs of an int-typed term is Int. -/
+/-- SMT type of abs of a real-typed term is Real. -/
 private theorem smt_abs_real (t : Term)
     (hSmt : __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
     __smtx_typeof (__eo_to_smt (absTerm t)) = SmtType.Real := by
@@ -184,7 +184,7 @@ private theorem smt_abs_real (t : Term)
   rw [typeof_abs_eq, hSmt]
   simp [__smtx_typeof_arith_overload_op_1]
 
-/-- SMT type of uneg of an int-typed term is Int. -/
+/-- SMT type of uneg of a real-typed term is Real. -/
 private theorem smt_neg_real (t : Term)
     (hSmt : __smtx_typeof (__eo_to_smt t) = SmtType.Real) :
     __smtx_typeof (__eo_to_smt (negTerm t)) = SmtType.Real := by
@@ -257,7 +257,7 @@ private theorem typed_result (x1 y1 : Term)
     (gtTerm (absTerm x1) (absTerm y1)) (rhsTerm x1 y1)
     (by rw [hLhs, hRhs]) (by rw [hLhs]; simp)
 
-/-- The core integer arithmetic identity expressed at the value level. -/
+/-- The core real arithmetic identity expressed at the value level. -/
 private theorem eval_rel (M : SmtModel) (hM : model_wf M) (x1 y1 : Term)
     (hxTrans : RuleProofs.eo_has_smt_translation x1)
     (hyTrans : RuleProofs.eo_has_smt_translation y1)
@@ -276,7 +276,7 @@ private theorem eval_rel (M : SmtModel) (hM : model_wf M) (x1 y1 : Term)
   have hNegY := eval_neg_real M y1 b hEvalY
   have hLhsEval :
       __smtx_model_eval M (__eo_to_smt (gtTerm (absTerm x1) (absTerm y1))) =
-        SmtValue.Boolean (native_qlt (if b < 0 then -b else b) (if a < 0 then -a else a)) := by
+        SmtValue.Boolean (native_rlt (if b < 0 then -b else b) (if a < 0 then -a else a)) := by
     rw [show __eo_to_smt (gtTerm (absTerm x1) (absTerm y1)) =
         SmtTerm.gt (__eo_to_smt (absTerm x1)) (__eo_to_smt (absTerm y1)) by rfl]
     rw [eval_gt, hAbsX, hAbsY]
@@ -285,9 +285,9 @@ private theorem eval_rel (M : SmtModel) (hM : model_wf M) (x1 y1 : Term)
       __smtx_model_eval M (__eo_to_smt (rhsTerm x1 y1)) =
         SmtValue.Boolean
           (if 0 ≤ a then
-            (if 0 ≤ b then native_qlt b a else native_qlt (-b) a)
+            (if 0 ≤ b then native_rlt b a else native_rlt (-b) a)
           else
-            (if 0 ≤ b then native_qlt b (-a) else native_qlt (-b) (-a))) := by
+            (if 0 ≤ b then native_rlt b (-a) else native_rlt (-b) (-a))) := by
     rw [show __eo_to_smt (rhsTerm x1 y1) =
         SmtTerm.ite (__eo_to_smt (geqTerm x1 zeroTerm))
           (SmtTerm.ite (__eo_to_smt (geqTerm y1 zeroTerm))
@@ -295,48 +295,45 @@ private theorem eval_rel (M : SmtModel) (hM : model_wf M) (x1 y1 : Term)
           (SmtTerm.ite (__eo_to_smt (geqTerm y1 zeroTerm))
             (__eo_to_smt (gtTerm (negTerm x1) y1))
             (__eo_to_smt (gtTerm (negTerm x1) (negTerm y1)))) by rfl]
-    have hEvalZero : __smtx_model_eval M (__eo_to_smt zeroTerm) = SmtValue.Rational (native_mk_rational 0 1) := by
-      change __smtx_model_eval M (SmtTerm.Rational (native_mk_rational 0 1)) = SmtValue.Rational (native_mk_rational 0 1)
+    have hEvalZero : __smtx_model_eval M (__eo_to_smt zeroTerm) = SmtValue.Real (native_mk_real 0 1) := by
+      change __smtx_model_eval M (SmtTerm.Rational (native_mk_rational 0 1)) = SmtValue.Real (native_mk_real 0 1)
       rw [__smtx_model_eval.eq_3]
+      simp
     have hGeqX :
         __smtx_model_eval M (__eo_to_smt (geqTerm x1 zeroTerm)) =
-          SmtValue.Boolean (native_qleq 0 a) := by
+          SmtValue.Boolean (native_rleq 0 a) := by
       rw [show __eo_to_smt (geqTerm x1 zeroTerm) =
           SmtTerm.geq (__eo_to_smt x1) (__eo_to_smt zeroTerm) by rfl]
       rw [eval_geq, hEvalX, hEvalZero]
       simp [__smtx_model_eval_geq, __smtx_model_eval_leq]
-      have hZeroRat : native_mk_rational 0 1 = (0 : native_Rat) := by native_decide
-      rw [hZeroRat]
     have hGeqY :
         __smtx_model_eval M (__eo_to_smt (geqTerm y1 zeroTerm)) =
-          SmtValue.Boolean (native_qleq 0 b) := by
+          SmtValue.Boolean (native_rleq 0 b) := by
       rw [show __eo_to_smt (geqTerm y1 zeroTerm) =
           SmtTerm.geq (__eo_to_smt y1) (__eo_to_smt zeroTerm) by rfl]
       rw [eval_geq, hEvalY, hEvalZero]
       simp [__smtx_model_eval_geq, __smtx_model_eval_leq]
-      have hZeroRat : native_mk_rational 0 1 = (0 : native_Rat) := by native_decide
-      rw [hZeroRat]
     have hGT_xy :
         __smtx_model_eval M (__eo_to_smt (gtTerm x1 y1)) =
-          SmtValue.Boolean (native_qlt b a) := by
+          SmtValue.Boolean (native_rlt b a) := by
       rw [show __eo_to_smt (gtTerm x1 y1) =
           SmtTerm.gt (__eo_to_smt x1) (__eo_to_smt y1) by rfl]
       rw [eval_gt, hEvalX, hEvalY]; simp [__smtx_model_eval_gt, __smtx_model_eval_lt]
     have hGT_xny :
         __smtx_model_eval M (__eo_to_smt (gtTerm x1 (negTerm y1))) =
-          SmtValue.Boolean (native_qlt (-b) a) := by
+          SmtValue.Boolean (native_rlt (-b) a) := by
       rw [show __eo_to_smt (gtTerm x1 (negTerm y1)) =
           SmtTerm.gt (__eo_to_smt x1) (__eo_to_smt (negTerm y1)) by rfl]
       rw [eval_gt, hEvalX, hNegY]; simp [__smtx_model_eval_gt, __smtx_model_eval_lt]
     have hGT_nxy :
         __smtx_model_eval M (__eo_to_smt (gtTerm (negTerm x1) y1)) =
-          SmtValue.Boolean (native_qlt b (-a)) := by
+          SmtValue.Boolean (native_rlt b (-a)) := by
       rw [show __eo_to_smt (gtTerm (negTerm x1) y1) =
           SmtTerm.gt (__eo_to_smt (negTerm x1)) (__eo_to_smt y1) by rfl]
       rw [eval_gt, hNegX, hEvalY]; simp [__smtx_model_eval_gt, __smtx_model_eval_lt]
     have hGT_nxny :
         __smtx_model_eval M (__eo_to_smt (gtTerm (negTerm x1) (negTerm y1))) =
-          SmtValue.Boolean (native_qlt (-b) (-a)) := by
+          SmtValue.Boolean (native_rlt (-b) (-a)) := by
       rw [show __eo_to_smt (gtTerm (negTerm x1) (negTerm y1)) =
           SmtTerm.gt (__eo_to_smt (negTerm x1)) (__eo_to_smt (negTerm y1)) by rfl]
       rw [eval_gt, hNegX, hNegY]; simp [__smtx_model_eval_gt, __smtx_model_eval_lt]
@@ -344,29 +341,29 @@ private theorem eval_rel (M : SmtModel) (hM : model_wf M) (x1 y1 : Term)
       hGeqX, hGeqY, hGT_xy, hGT_xny, hGT_nxy, hGT_nxny]
     by_cases hA : 0 ≤ a
     · by_cases hB : 0 ≤ b
-      · simp [native_qleq, __smtx_model_eval_ite, hA, hB]
-      · simp [native_qleq, __smtx_model_eval_ite, hA, hB]
+      · simp [native_rleq, __smtx_model_eval_ite, hA, hB]
+      · simp [native_rleq, __smtx_model_eval_ite, hA, hB]
     · by_cases hB : 0 ≤ b
-      · simp [native_qleq, __smtx_model_eval_ite, hA, hB]
-      · simp [native_qleq, __smtx_model_eval_ite, hA, hB]
+      · simp [native_rleq, __smtx_model_eval_ite, hA, hB]
+      · simp [native_rleq, __smtx_model_eval_ite, hA, hB]
   unfold RuleProofs.smt_value_rel
   rw [hLhsEval, hRhsEval]
   have hEq :
-      (native_qlt (if b < 0 then -b else b) (if a < 0 then -a else a)) =
+      (native_rlt (if b < 0 then -b else b) (if a < 0 then -a else a)) =
         (if 0 ≤ a then
-          (if 0 ≤ b then native_qlt b a else native_qlt (-b) a)
+          (if 0 ≤ b then native_rlt b a else native_rlt (-b) a)
         else
-          (if 0 ≤ b then native_qlt b (-a) else native_qlt (-b) (-a))) := by
+          (if 0 ≤ b then native_rlt b (-a) else native_rlt (-b) (-a))) := by
     by_cases hA : 0 ≤ a
     · by_cases hB : 0 ≤ b
-      · simp [hA, hB, native_qlt]
+      · simp [hA, hB, native_rlt]
         grind
-      · simp [hA, hB, native_qlt]
+      · simp [hA, hB, native_rlt]
         grind
     · by_cases hB : 0 ≤ b
-      · simp [hA, hB, native_qlt]
+      · simp [hA, hB, native_rlt]
         grind
-      · simp [hA, hB, native_qlt]
+      · simp [hA, hB, native_rlt]
         grind
   rw [hEq]
   exact RuleProofs.smtx_model_eval_eq_refl _

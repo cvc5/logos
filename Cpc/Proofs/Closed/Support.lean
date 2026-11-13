@@ -10,6 +10,8 @@ import all Cpc.Proofs.RuleSupport.Contract
 
 public section
 
+variable {uc : SmtUSortDom}
+
 open Eo
 open SmtEval
 open Smtm
@@ -52,7 +54,8 @@ by
       simp [native_model_lookup, model_key, native_model_push],
     by
       intro fid A B
-      simp [model_fun_lookup, model_key, native_model_push]⟩
+      simp [model_fun_lookup, native_model_push],
+    rfl⟩
 
 theorem model_agrees_on_globals_push₂
     {M N : SmtModel} {s : native_String} {T : SmtType} {v : SmtValue} :
@@ -67,8 +70,19 @@ by
         using hAgree.1 s' T',
     by
       intro fid A B
-      simpa [model_fun_lookup, model_key, native_model_push]
-        using hAgree.2 fid A B⟩
+      simpa [model_fun_lookup, native_model_push]
+        using hAgree.2 fid A B,
+    hAgree.usortDom⟩
+
+/-- `map_diff` reads its model only through the cardinalities of uninterpreted sorts. -/
+theorem smtx_model_eval_map_diff_eq_of_usortDom
+    {M N : SmtModel} (hCard : M.usortDom = N.usortDom) (a b : SmtValue) :
+  __smtx_map_diff M a b = __smtx_map_diff N a b :=
+by
+  obtain ⟨vM, fM, cM⟩ := M
+  obtain ⟨vN, fN, cN⟩ := N
+  cases hCard
+  rfl
 
 theorem model_agrees_on_env_push_same
     {vars : List SmtVarKey} {M N : SmtModel}
@@ -104,7 +118,7 @@ by
 theorem native_model_fun_lookup_eq_of_env
     {vars : List SmtVarKey} {M N : SmtModel}
     (hAgree : model_agrees_on_env vars M N)
-    (fid : native_String) (T U : SmtType) :
+    (fid : ModelId) (T U : SmtType) :
   model_fun_lookup M fid T U =
     model_fun_lookup N fid T U :=
 by
@@ -122,7 +136,7 @@ by
 
 theorem native_eval_fun_apply_eq_of_globals
     {M N : SmtModel} (hAgree : model_agrees_on_globals M N)
-    (fid : native_String) (T U : SmtType) (i : SmtValue) :
+    (fid : ModelId) (T U : SmtType) (i : SmtValue) :
   native_eval_fun_apply M fid T U i =
     native_eval_fun_apply N fid T U i :=
 by
@@ -169,6 +183,7 @@ by
 
 theorem native_eval_texists_eq_of_body_eval_eq
     {M N : SmtModel} {s : native_String} {T : SmtType} {body : SmtTerm}
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
@@ -179,12 +194,12 @@ by
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical N.usortDom v = true ∧
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
@@ -192,10 +207,10 @@ by
     constructor
     · intro h
       rcases h with ⟨v, hTy, hCanon, hEval⟩
-      exact ⟨v, hTy, hCanon, by simpa [hBody v] using hEval⟩
+      exact ⟨v, hTy, hCard ▸ hCanon, by simpa [hBody v] using hEval⟩
     · intro h
       rcases h with ⟨v, hTy, hCanon, hEval⟩
-      exact ⟨v, hTy, hCanon, by simpa [← hBody v] using hEval⟩
+      exact ⟨v, hTy, hCard ▸ hCanon, by simpa [← hBody v] using hEval⟩
   by_cases hM : PM
   · have hN : PN := hIff.mp hM
     simp [hM, hN]
@@ -204,6 +219,7 @@ by
 
 theorem native_eval_tforall_eq_of_body_eval_eq
     {M N : SmtModel} {s : native_String} {T : SmtType} {body : SmtTerm}
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
@@ -214,21 +230,21 @@ by
   let PM : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PN : Prop :=
     ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical N.usortDom v = true ->
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
     (if _ : PN then SmtValue.Boolean true else SmtValue.Boolean false)
   have hIff : PM ↔ PN := by
     constructor
     · intro h v hTy hCanon
-      simpa [hBody v] using h v hTy hCanon
+      simpa [hBody v] using h v hTy (hCard ▸ hCanon)
     · intro h v hTy hCanon
-      simpa [← hBody v] using h v hTy hCanon
+      simpa [← hBody v] using h v hTy (hCard ▸ hCanon)
   by_cases hM : PM
   · have hN : PN := hIff.mp hM
     simp [hM, hN]
@@ -237,6 +253,7 @@ by
 
 theorem native_eval_tchoice_eq_of_body_eval_eq
     {M N : SmtModel} {s : native_String} {T : SmtType} {body : SmtTerm}
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
@@ -244,16 +261,17 @@ theorem native_eval_tchoice_eq_of_body_eval_eq
     (native_eval_choice N s T body : SmtValue) :=
 by
   classical
+  rw [← hCard]
   let PredM : SmtValue -> Prop := fun v =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
   let PredN : SmtValue -> Prop := fun v =>
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push N s T v) body = SmtValue.Boolean true
   let PTy : Prop :=
-    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical v
+    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical M.usortDom v
   change
     (if hSat : ∃ v : SmtValue, PredM v then Classical.choose hSat
       else if hTy : PTy then Classical.choose hTy else SmtValue.NotValue) =
@@ -2912,72 +2930,6 @@ theorem smtTermClosedIn_eo_to_smt_set_subset
 by
   exact ⟨hx, hy⟩
 
-theorem smtTermClosedIn_eo_to_smt_set_insert_rec_of_closed_rec_using :
-    ∀ {xs : Term} {base : SmtTerm} {env : Term} {vars : List SmtVarKey},
-      EoSmtVarEnvPerm env vars ->
-        (∀ {t env' : Term} {vars' : List SmtVarKey},
-          EoSmtVarEnvPerm env' vars' ->
-            __eo_is_closed_rec t env' = Term.Boolean true ->
-              SmtTermClosedIn vars' (__eo_to_smt t)) ->
-          __eo_is_closed_rec xs env = Term.Boolean true ->
-            SmtTermClosedIn vars base ->
-              SmtTermClosedIn vars (__eo_to_smt_set_insert xs base)
-  | Term.__eo_List_nil, base, env, vars, hEnv, hRec, hClosed, hBase =>
-      by trivial
-  | Term.Apply f tail, base, env, vars, hEnv, hRec, hClosed, hBase =>
-      by
-        cases f <;> try trivial
-        case UOp op =>
-          cases op <;> try trivial
-          case _at__at_TypedList_nil =>
-            cases hTy :
-                native_Teq (__smtx_typeof base)
-                  (SmtType.Set (__eo_to_smt_type tail))
-            · simp [__eo_to_smt_set_insert, hTy, native_ite]
-              change True
-              trivial
-            · simpa [__eo_to_smt_set_insert, hTy, native_ite] using hBase
-        case Apply g head =>
-          cases g <;> try trivial
-          case UOp op =>
-            cases op <;> try trivial
-            case _at__at_TypedList_cons =>
-              have hCases :=
-                eo_is_closed_rec_binary_uop_eq_true_cases
-                  (op := UserOp._at__at_TypedList_cons)
-                  (by decide) (by decide) hEnv hClosed
-              change SmtTermClosedIn vars
-                (SmtTerm.set_union
-                  (SmtTerm.set_singleton (__eo_to_smt head))
-                  (__eo_to_smt_set_insert tail base))
-              exact
-                ⟨hRec hEnv hCases.1,
-                  smtTermClosedIn_eo_to_smt_set_insert_rec_of_closed_rec_using
-                    hEnv hRec hCases.2 hBase⟩
-  | Term.UOp _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.UOp1 _ _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.UOp2 _ _ _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.UOp3 _ _ _ _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.__eo_List, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.__eo_List_cons, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.Bool, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.Boolean _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.Numeral _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.Rational _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.String _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.Binary _ _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.Type, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.Stuck, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.FunType, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.Var _ _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.DatatypeType _ _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.DatatypeTypeRef _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.DtcAppType _ _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.DtCons _ _ _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.DtSel _ _ _ _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.USort _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-  | Term.UConst _ _, base, env, vars, hEnv, hRec, hClosed, hBase => by trivial
-
 theorem smtTermClosedIn_eo_to_smt_distinct_pairs_rec_of_closed_rec_using :
     ∀ {xs : Term} {s : SmtTerm} {env : Term} {vars : List SmtVarKey},
       SmtTermClosedIn vars s ->
@@ -3092,82 +3044,6 @@ theorem smtTermClosedIn_eo_to_smt_distinct_rec_of_closed_rec_using :
   | Term.DtSel _ _ _ _, env, vars, hEnv, hRec, hClosed => by trivial
   | Term.USort _, env, vars, hEnv, hRec, hClosed => by trivial
   | Term.UConst _ _, env, vars, hEnv, hRec, hClosed => by trivial
-
-theorem smtTermClosedIn_eo_to_smt_set_insert_rec_below
-    (root : Term)
-    (hRec :
-      ∀ {t env' : Term} {vars' : List SmtVarKey},
-        sizeOf t < sizeOf root ->
-          EoSmtVarEnvPerm env' vars' ->
-            __eo_is_closed_rec t env' = Term.Boolean true ->
-              SmtTermClosedIn vars' (__eo_to_smt t)) :
-    ∀ {xs : Term} {base : SmtTerm} {env : Term} {vars : List SmtVarKey},
-      sizeOf xs < sizeOf root ->
-        EoSmtVarEnvPerm env vars ->
-          __eo_is_closed_rec xs env = Term.Boolean true ->
-            SmtTermClosedIn vars base ->
-              SmtTermClosedIn vars (__eo_to_smt_set_insert xs base)
-  | Term.__eo_List_nil, base, env, vars, hLt, hEnv, hClosed, hBase =>
-      by trivial
-  | Term.Apply f tail, base, env, vars, hLt, hEnv, hClosed, hBase =>
-      by
-        cases f <;> try trivial
-        case UOp op =>
-          cases op <;> try trivial
-          case _at__at_TypedList_nil =>
-            cases hTy :
-                native_Teq (__smtx_typeof base)
-                  (SmtType.Set (__eo_to_smt_type tail))
-            · simp [__eo_to_smt_set_insert, hTy, native_ite]
-              change True
-              trivial
-            · simpa [__eo_to_smt_set_insert, hTy, native_ite] using hBase
-        case Apply g head =>
-          cases g <;> try trivial
-          case UOp op =>
-            cases op <;> try trivial
-            case _at__at_TypedList_cons =>
-              have hCases :=
-                eo_is_closed_rec_binary_uop_eq_true_cases
-                  (op := UserOp._at__at_TypedList_cons)
-                  (by decide) (by decide) hEnv hClosed
-              have hHeadLt : sizeOf head < sizeOf root := by
-                simp at hLt
-                omega
-              have hTailLt : sizeOf tail < sizeOf root := by
-                simp at hLt
-                omega
-              change SmtTermClosedIn vars
-                (SmtTerm.set_union
-                  (SmtTerm.set_singleton (__eo_to_smt head))
-                  (__eo_to_smt_set_insert tail base))
-              exact
-                ⟨hRec hHeadLt hEnv hCases.1,
-                  smtTermClosedIn_eo_to_smt_set_insert_rec_below root hRec
-                    hTailLt hEnv hCases.2 hBase⟩
-  | Term.UOp _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.UOp1 _ _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.UOp2 _ _ _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.UOp3 _ _ _ _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.__eo_List, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.__eo_List_cons, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.Bool, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.Boolean _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.Numeral _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.Rational _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.String _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.Binary _ _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.Type, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.Stuck, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.FunType, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.Var _ _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.DatatypeType _ _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.DatatypeTypeRef _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.DtcAppType _ _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.DtCons _ _ _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.DtSel _ _ _ _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.USort _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
-  | Term.UConst _ _, base, env, vars, hLt, hEnv, hClosed, hBase => by trivial
 
 theorem smtTermClosedIn_eo_to_smt_distinct_pairs_rec_below
     (root : Term)
@@ -4041,29 +3917,10 @@ theorem smtTermClosedIn_eo_to_smt_set_insert_of_closed_rec_using
         Term.Boolean true) :
   SmtTermClosedIn vars
     (__eo_to_smt
-      (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) x)) :=
-by
-  have hCases :=
-    eo_is_closed_rec_binary_uop_eq_true_cases
-      (op := UserOp.set_insert) (by decide) (by decide)
-      hEnv hClosed
-  cases xs
-  case Apply f arg =>
-    cases f
-    case UOp op =>
-      cases op
-      case _at__at_TypedList_nil =>
-        exact smtTermClosedIn_eo_to_smt_set_insert_rec_of_closed_rec_using
-          hEnv hRec hCases.1 (hRec hEnv hCases.2)
-      all_goals
-        exact smtTermClosedIn_eo_to_smt_set_insert_rec_of_closed_rec_using
-          hEnv hRec hCases.1 (hRec hEnv hCases.2)
-    all_goals
-      exact smtTermClosedIn_eo_to_smt_set_insert_rec_of_closed_rec_using
-        hEnv hRec hCases.1 (hRec hEnv hCases.2)
-  all_goals
-    exact smtTermClosedIn_eo_to_smt_set_insert_rec_of_closed_rec_using
-      hEnv hRec hCases.1 (hRec hEnv hCases.2)
+      (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) x)) := by
+  have hCases := eo_is_closed_rec_binary_uop_eq_true_cases
+    (op := UserOp.set_insert) (by decide) (by decide) hEnv hClosed
+  exact ⟨hRec hEnv hCases.1, hRec hEnv hCases.2⟩
 
 theorem smtTermClosedIn_eo_to_smt_distinct_of_closed_rec_using
     {xs env : Term} {vars : List SmtVarKey}
@@ -6196,7 +6053,6 @@ by
     omega
   have hXLt : sizeOf x < sizeOf (Term.Apply f x) := by
     simp
-    omega
   exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
     hSmt hNotForall hNotExists hEnv
     (fun hEnv' hClosed' => hRec hFLt hEnv' hClosed')
@@ -6219,7 +6075,6 @@ theorem smtTermClosedIn_eo_to_smt_uop1_any_below
 by
   have hXLt : sizeOf x < sizeOf (Term.UOp1 op x) := by
     simp
-    omega
   cases op <;> try trivial
   case seq_empty =>
     exact smtTermClosedIn_eo_to_smt_seq_empty_of_closed_rec_using
@@ -6247,7 +6102,6 @@ by
     omega
   have hYLt : sizeOf y < sizeOf (Term.UOp2 op x y) := by
     simp
-    omega
   cases op <;> try trivial
   case _at_const =>
     cases hValid : __eo_to_smt_nat_is_valid x
@@ -6293,7 +6147,6 @@ by
     omega
   have hZLt : sizeOf z < sizeOf (Term.UOp3 op x y z) := by
     simp
-    omega
   cases op
   case _at_re_unfold_pos_component =>
     exact smtTermClosedIn_eo_to_smt_re_unfold_pos_component_of_closed_rec_using
@@ -6354,7 +6207,6 @@ theorem smtTermClosedIn_eo_to_smt_apply_uop_any_below
 by
   have hXLt : sizeOf x < sizeOf (Term.Apply (Term.UOp op) x) := by
     simp
-    omega
   let recX :
       ∀ {env' : Term} {vars' : List SmtVarKey},
         EoSmtVarEnvPerm env' vars' ->
@@ -6587,7 +6439,7 @@ by
   have hXLt : sizeOf x < sizeOf (Term.Apply (Term.UOp1 op x) y) := by
     simp; omega
   have hYLt : sizeOf y < sizeOf (Term.Apply (Term.UOp1 op x) y) := by
-    simp; omega
+    simp
   cases op
   case «repeat» =>
     exact smtTermClosedIn_eo_to_smt_repeat_of_closed_rec_using
@@ -6655,7 +6507,7 @@ by
   have hYLt : sizeOf y < sizeOf (Term.Apply (Term.UOp2 op x y) z) := by
     simp; omega
   have hZLt : sizeOf z < sizeOf (Term.Apply (Term.UOp2 op x y) z) := by
-    simp; omega
+    simp
   cases op
   case extract =>
     exact smtTermClosedIn_eo_to_smt_extract_of_closed_rec_using
@@ -6701,7 +6553,7 @@ by
   have hZLt :
       sizeOf z <
         sizeOf (Term.Apply (Term.Apply (Term.UOp1 op x) y) z) := by
-    simp; omega
+    simp
   cases op
   case update =>
     exact smtTermClosedIn_eo_to_smt_update_of_closed_rec_using
@@ -6749,7 +6601,7 @@ by
   have hZLt :
       sizeOf z <
         sizeOf (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) x) y) z) := by
-    simp; omega
+    simp
   cases op
   case ite =>
     exact smtTermClosedIn_eo_to_smt_ite_of_closed_rec_using
@@ -6865,45 +6717,11 @@ theorem smtTermClosedIn_eo_to_smt_set_insert_below
         Term.Boolean true) :
   SmtTermClosedIn vars
     (__eo_to_smt
-      (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) x)) :=
-by
-  have hXsLt :
-      sizeOf xs <
-        sizeOf (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) x) := by
-    simp; omega
-  have hXLt :
-      sizeOf x <
-        sizeOf (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) x) := by
-    simp; omega
-  have hCases :=
-    eo_is_closed_rec_binary_uop_eq_true_cases
-      (op := UserOp.set_insert) (by decide) (by decide)
-      hEnv hClosed
-  cases xs
-  case Apply f arg =>
-    cases f
-    case UOp op =>
-      cases op
-      case _at__at_TypedList_nil =>
-        exact smtTermClosedIn_eo_to_smt_set_insert_rec_below
-          _ hRec
-          hXsLt hEnv hCases.1
-          (hRec hXLt hEnv hCases.2)
-      all_goals
-        exact smtTermClosedIn_eo_to_smt_set_insert_rec_below
-          _ hRec
-          hXsLt hEnv hCases.1
-          (hRec hXLt hEnv hCases.2)
-    all_goals
-      exact smtTermClosedIn_eo_to_smt_set_insert_rec_below
-        _ hRec
-        hXsLt hEnv hCases.1
-        (hRec hXLt hEnv hCases.2)
-  all_goals
-    exact smtTermClosedIn_eo_to_smt_set_insert_rec_below
-      _ hRec
-      hXsLt hEnv hCases.1
-      (hRec hXLt hEnv hCases.2)
+      (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs) x)) := by
+  have hCases := eo_is_closed_rec_binary_uop_eq_true_cases
+    (op := UserOp.set_insert) (by decide) (by decide) hEnv hClosed
+  exact ⟨hRec (by simp; omega) hEnv hCases.1,
+    hRec (by simp) hEnv hCases.2⟩
 
 theorem smtTermClosedIn_eo_to_smt_apply_apply_uop_any_below
     {op : UserOp} {x y env : Term} {vars : List SmtVarKey}
@@ -6926,7 +6744,7 @@ by
     simp; omega
   have hYLt :
       sizeOf y < sizeOf (Term.Apply (Term.Apply (Term.UOp op) x) y) := by
-    simp; omega
+    simp
   let recX :
       ∀ {env' : Term} {vars' : List SmtVarKey},
         EoSmtVarEnvPerm env' vars' ->
@@ -7282,7 +7100,7 @@ by
                 (fun hEnv' hClosed' =>
                   hRec (by simp; omega) hEnv' hClosed')
                 (fun hEnv' hClosed' =>
-                  hRec (by simp; omega) hEnv' hClosed')
+                  hRec (by simp) hEnv' hClosed')
                 hClosed
           case _at_strings_replace_re_all_result =>
             exact
@@ -7300,7 +7118,7 @@ by
                 (fun hEnv' hClosed' =>
                   hRec (by simp; omega) hEnv' hClosed')
                 (fun hEnv' hClosed' =>
-                  hRec (by simp; omega) hEnv' hClosed')
+                  hRec (by simp) hEnv' hClosed')
                 hClosed
           all_goals
             exact smtTermClosedIn_eo_to_smt_apply_generic_below
@@ -7516,24 +7334,26 @@ by
 theorem smtx_model_eval_exists_eq_of_body_eval_eq
     {M N : SmtModel} {s : native_String} {T : SmtType}
     {body : SmtTerm}
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
   __smtx_model_eval M (SmtTerm.exists s T body) =
     __smtx_model_eval N (SmtTerm.exists s T body) :=
 by
-  simp [__smtx_model_eval, native_eval_texists_eq_of_body_eval_eq hBody]
+  simp [__smtx_model_eval, native_eval_texists_eq_of_body_eval_eq hCard hBody]
 
 theorem smtx_model_eval_forall_eq_of_body_eval_eq
     {M N : SmtModel} {s : native_String} {T : SmtType}
     {body : SmtTerm}
+    (hCard : M.usortDom = N.usortDom)
     (hBody : ∀ v : SmtValue,
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push N s T v) body) :
   __smtx_model_eval M (SmtTerm.forall s T body) =
     __smtx_model_eval N (SmtTerm.forall s T body) :=
 by
-  simp [__smtx_model_eval, native_eval_tforall_eq_of_body_eval_eq hBody]
+  simp [__smtx_model_eval, native_eval_tforall_eq_of_body_eval_eq hCard hBody]
 
 /-- A formula remains true when only SMT variable assignments are changed. -/
 def StableInAnyVarModel (M : SmtModel) (P : Term) : Prop :=
@@ -7728,32 +7548,32 @@ by
         exact smtx_model_eval_uconst_eq_of_env hAgree
       case Apply f x =>
         exact smtx_model_eval_apply_eq_of_env hAgree
-          (hRec (by simp; omega) hClosed.1 hAgree)
-          (hRec (by simp; omega) hClosed.2 hAgree)
+          (hRec (by simp <;> omega) hClosed.1 hAgree)
+          (hRec (by simp) hClosed.2 hAgree)
       case «exists» s T body =>
-        exact smtx_model_eval_exists_eq_of_body_eval_eq
+        exact smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortDom
           (fun v =>
-            hRec (by simp; omega) hClosed
+            hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
       case «forall» s T body =>
-        exact smtx_model_eval_forall_eq_of_body_eval_eq
+        exact smtx_model_eval_forall_eq_of_body_eval_eq hAgree.globals.usortDom
           (fun v =>
-            hRec (by simp; omega) hClosed
+            hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
       case choice s T body =>
         rw [smtx_model_eval_choice_eq M s T body,
           smtx_model_eval_choice_eq N s T body]
-        exact native_eval_tchoice_eq_of_body_eval_eq
+        exact native_eval_tchoice_eq_of_body_eval_eq hAgree.globals.usortDom
           (fun v =>
-            hRec (by simp; omega) hClosed
+            hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
       case bind s T x1 x2 =>
         rw [smtx_model_eval_bind_eq M s T x1 x2,
           smtx_model_eval_bind_eq N s T x1 x2]
         have hx1 : __smtx_model_eval M x1 = __smtx_model_eval N x1 :=
-          hRec (by simp; omega) hClosed.1 hAgree
+          hRec (by simp <;> omega) hClosed.1 hAgree
         rw [hx1]
-        exact hRec (by simp; omega) hClosed.2
+        exact hRec (by simp) hClosed.2
           (model_agrees_on_env_push_same hAgree)
       case not x =>
         simp [__smtx_model_eval,
@@ -7850,12 +7670,14 @@ by
           smtx_model_eval_apply_eq_of_globals hAgree.globals,
           smtx_seq_nth_eq_of_globals hAgree.globals]
       all_goals try
-        rw [hEvalSame _ hClosed.1 (by simp; omega),
-          hEvalSame _ hClosed.2 (by simp; omega)]
+        rw [hEvalSame _ hClosed.1 (by simp <;> omega),
+          hEvalSame _ hClosed.2 (by simp <;> omega)]
       all_goals try
-        rw [hEvalSame _ hClosed.1 (by simp; omega),
-          hEvalSame _ hClosed.2.1 (by simp; omega),
-          hEvalSame _ hClosed.2.2 (by simp; omega)]
+        rw [hEvalSame _ hClosed.1 (by simp <;> omega),
+          hEvalSame _ hClosed.2.1 (by simp <;> omega),
+          hEvalSame _ hClosed.2.2 (by simp <;> omega)]
+      all_goals try
+        simp [smtx_model_eval_map_diff_eq_of_usortDom hAgree.globals.usortDom]
       all_goals try
         simp [hAgree.globals.1, hAgree.globals.2,
           smtx_model_eval_apply_eq_of_globals hAgree.globals,

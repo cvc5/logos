@@ -1902,7 +1902,8 @@ private theorem str_re_includes_sound_mutual
     simp [__smtx_model_eval, __smtx_model_eval_str_to_re,
       ] at hSubEval
     cases hSubEval
-    exact native_includes_str_to_re_of_eval_side M hM r1 pat rvSup
+    simpa [impl_native_string_to_values, List.map_eq_flatMap] using
+      native_includes_str_to_re_of_eval_side M hM r1 pat rvSup
       hSTy hSupTy hSupEval hEvalSide
   · intro s1 r1 _hR1Ne _hNotStr
     intro rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
@@ -2227,6 +2228,7 @@ private theorem eval_str_to_re_reglan
   change __smtx_model_eval M (SmtTerm.str_to_re (__eo_to_smt s)) =
     SmtValue.RegLan (native_str_to_re (native_unpack_string ss))
   simp [__smtx_model_eval, __smtx_model_eval_str_to_re, hEval,
+    impl_native_string_to_values, List.map_eq_flatMap,
     native_unpack_seq_eq_string_to_values_of_typeof_seq_char hTy]
 
 private theorem smt_typeof_string_seq_char_of_valid

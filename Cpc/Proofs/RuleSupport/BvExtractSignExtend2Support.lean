@@ -587,21 +587,21 @@ private theorem eval_bv_extract_sign_extend_2
   let D := native_int_to_nat d
   let S := native_int_to_nat s
   have hWRound : (↑W : Int) = w := by
-    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hKRound : (↑K : Int) = a := by
-    simpa [K, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [K, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip a ha0
   have hLRound : (↑L : Int) = l := by
-    simpa [L, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [L, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip l hl0
   have hdLhsNonneg : native_zleq 0 d = true :=
     native_zleq_of_zlt_true _ _ hdLhs0
   have hDRound : (↑D : Int) = d := by
-    simpa [D, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [D, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip d hdLhsNonneg
   have hSRound : (↑S : Int) = s := by
-    simpa [S, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [S, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip s hs0
   have hlwInt : l < w := by
     simpa [SmtEval.native_zlt] using hlw
@@ -642,7 +642,6 @@ private theorem eval_bv_extract_sign_extend_2
   have hFitEq : l + d = h + 1 := by
     simp [d, SmtEval.native_zplus, SmtEval.native_zneg, Int.add_assoc,
       Int.add_comm, Int.add_left_comm]
-    omega
   have hFitZ : l + d ≤ a + w := by
     rw [hFitEq]
     exact Int.add_one_le_iff.mpr hhwaInt
@@ -662,8 +661,8 @@ private theorem eval_bv_extract_sign_extend_2
   have hCross : W ≤ L + D := by exact_mod_cast hCrossInt
   have hWidthZ : s + (w - l) = d := by
     rw [hs]
-    simp [d, SmtEval.native_zplus, SmtEval.native_zneg,
-      Int.add_assoc, Int.add_comm, Int.add_left_comm]
+    simp only [d, SmtEval.native_zplus, SmtEval.native_zneg]
+    change (_ : Int) = _
     omega
   have hWidthInt : (↑S : Int) + (↑(W - L) : Int) = (↑D : Int) := by
     rw [hSRound, hDRound]
@@ -681,13 +680,13 @@ private theorem eval_bv_extract_sign_extend_2
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) =
         SmtValue.Binary (↑W : Int) p := by
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
   have hWidth0 : native_zleq 0 (native_nat_to_int W) = true := by
-    simp [SmtEval.native_zleq, native_nat_to_int, Smtm.native_nat_to_int]
+    simp [SmtEval.native_zleq, native_nat_to_int, SmtEval.native_nat_to_int]
   have hRange := bitvec_payload_range_of_canonical hWidth0 hCan
   have hp0 : (0 : Int) ≤ p := hRange.1
   have hp1 : p < (2 : Int) ^ W := by
-    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int] using
       hRange.2
   unfold bvExtractSignExtend2Lhs bvExtractSignExtend2Rhs
   rw [eval_extract_term, eval_sign_extend_term, eval_sign_extend_term,

@@ -7,6 +7,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
@@ -870,7 +873,8 @@ theorem StrInReConsumeInternal.native_str_in_re_snoc_word_suffixes_false_local
           exact hValid)
       have hYStr : native_str_in_re y (native_str_to_re u) = true := by
         simpa [native_str_in_re, hYValid] using hY
-      have hYU : y = u := native_str_in_re_str_to_re_eq hYValid hYStr
+      have hYU : y = u := native_str_in_re_str_to_re_eq hYValid (by
+        simpa [impl_native_string_to_values, List.map_eq_flatMap] using hYStr)
       subst hYU
       have hWX : (pre ++ x) ++ y = w ++ y := by
         rw [List.append_assoc, hSplit]
@@ -1467,7 +1471,8 @@ theorem StrInReConsumeInternal.native_str_in_re_snoc_word_eq_consume_local
             exact hValid)
         have hYStr : native_str_in_re y (native_str_to_re u) = true := by
           simpa [native_str_in_re, hYValid] using hY
-        have hYU : y = u := native_str_in_re_str_to_re_eq hYValid hYStr
+        have hYU : y = u := native_str_in_re_str_to_re_eq hYValid (by
+          simpa [impl_native_string_to_values, List.map_eq_flatMap] using hYStr)
         subst hYU
         rcases List.append_inj' hSplit rfl with ⟨rfl, _⟩
         simpa [native_str_in_re, hWV] using hX
@@ -1654,7 +1659,8 @@ theorem StrInReConsumeInternal.native_str_in_re_snoc_word_mismatch_suffixes_fals
           exact hValid)
       have hYStr : native_str_in_re y (native_str_to_re [d]) = true := by
         simpa [native_str_in_re, hYValid] using hY
-      have hYD : y = [d] := native_str_in_re_str_to_re_eq hYValid hYStr
+      have hYD : y = [d] := native_str_in_re_str_to_re_eq hYValid (by
+        simpa [impl_native_string_to_values, List.map_eq_flatMap] using hYStr)
       subst hYD
       have hWX : (pre ++ x) ++ [d] = w ++ [c] := by
         rw [List.append_assoc, hSplit]
@@ -2106,7 +2112,8 @@ theorem StrInReConsumeInternal.consume_no_suffix_concat_of_residual_local
       have hXStr :
           native_str_in_re x (native_str_to_re pre) = true := by
         simpa [native_str_in_re, hXValid] using hX
-      have hXPre : x = pre := native_str_in_re_str_to_re_eq hXValid hXStr
+      have hXPre : x = pre := native_str_in_re_str_to_re_eq hXValid (by
+        simpa [impl_native_string_to_values, List.map_eq_flatMap] using hXStr)
       subst hXPre
       have hYStr : native_str_in_re y rvU2 = true := by
         simpa [native_str_in_re, hYValid] using hY

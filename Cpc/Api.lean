@@ -2,12 +2,10 @@ module
 
 public import Cpc.Logos
 import all Cpc.Logos
-public import Cpc.Spec
-import all Cpc.Spec
 public import Cpc.Parser
 import all Cpc.Parser
-public import Cpc.Proofs.Assumptions
-import all Cpc.Proofs.Assumptions
+public import Cpc.TranslationChecks
+import all Cpc.TranslationChecks
 
 @[expose] public section
 
@@ -54,7 +52,7 @@ component it stands for, and `Cpc/ApiCorrect.lean` assembles those into
 `correct___logos_check_proof`.
 
 The two translation side conditions are not re-implemented here.  They are the
-predicates of `Cpc/Proofs/Assumptions.lean`, decided by the `Decidable`
+predicates of `Cpc/TranslationChecks.lean`, decided by the `Decidable`
 instances that file derives from them, so that the executable checks the same
 per-rule masks the rule proofs assume, with no second copy to keep in sync.
 
@@ -142,7 +140,7 @@ def logos_invoke_input_assume (s : CState) (A : Term) : CState :=
 The first is the checker run itself.  The other two are the side conditions
 `correct___eo_is_refutation` assumes: the rule proofs only interpret an EO term
 through `__eo_to_smt`, so terms with no SMT-LIB counterpart are excluded.  Both
-are `decide` applied to the predicate of `Cpc/Proofs/Assumptions.lean` that the
+are `decide` applied to the predicate of `Cpc/TranslationChecks.lean` that the
 theorem uses, which is what keeps them from drifting away from it.
 -/
 
@@ -174,7 +172,7 @@ def logos_check_translatableAssumptionList (assums : List Term) : Bool :=
 /--
 `CmdListTranslationOk cmds`, the second hypothesis of
 `correct___eo_is_refutation`, decided by the instance in
-`Cpc/Proofs/Assumptions.lean`.
+`Cpc/TranslationChecks.lean`.
 -/
 def logos_check_cmdListTranslationOk (cmds : CCmdList) : Bool :=
   decide (CmdListTranslationOk cmds)

@@ -191,7 +191,7 @@ private theorem native_seq_indexof_rec_append_ne_neg
       | succ f =>
           simp only [List.nil_append]
           unfold native_seq_indexof_rec
-          rw [if_pos (native_seq_prefix_eq_append pat after)]
+          rw [ite_eq_left (native_seq_prefix_eq_append pat after)]
           simp
   | cons b bs ih =>
       intro i fuel hFuel
@@ -204,9 +204,9 @@ private theorem native_seq_indexof_rec_append_ne_neg
           unfold native_seq_indexof_rec
           by_cases hPre :
               native_seq_prefix_eq pat ((b :: bs) ++ pat ++ after) = true
-          · rw [if_pos hPre]
+          · rw [ite_eq_left hPre]
             simp
-          · rw [if_neg hPre]
+          · rw [ite_eq_right hPre]
             have hxs : (b :: bs) ++ pat ++ after =
                 b :: (bs ++ pat ++ after) := by
               simp
@@ -223,7 +223,7 @@ private theorem native_seq_contains_of_decomp
       native_seq_indexof (before ++ pat ++ after) pat 0 ≠ -1 := by
     rw [native_seq_indexof_eq_rec]
     simp only [Int.reduceLT, ↓reduceIte, Int.toNat_zero, Nat.zero_add]
-    rw [dif_pos hLen]
+    rw [dite_eq_left hLen]
     have hFuel :
         before.length <
           (before ++ pat ++ after).length - pat.length + 1 := by

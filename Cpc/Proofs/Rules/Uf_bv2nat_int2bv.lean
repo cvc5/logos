@@ -292,7 +292,7 @@ private theorem width_nat_to_int_eq
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hnNonneg
-  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 /-- SMT typing of the left side `int_to_bv w (ubv_to_int t)` matches the BitVec

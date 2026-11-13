@@ -161,8 +161,6 @@ private theorem typed_bv_ssubo_term (x y nm : Term) :
       _ _ W hXSmtTyW hYSmtTyW
   have hOneIndex : native_zplus (native_zplus n 1) (native_zneg n) = 1 := by
     simp [SmtEval.native_zplus, SmtEval.native_zneg]
-    rw [Int.add_comm n 1]
-    exact Int.add_neg_cancel_right 1 n
   have hOneWidth :
       native_zlt 0 (native_zplus (native_zplus n 1) (native_zneg n)) =
         true := by rw [hOneIndex]; decide
@@ -642,7 +640,7 @@ private theorem facts_bv_ssubo_term
   have hW : 0 < W := by
     rw [← hRound] at hwPos
     have hwPos' : (0 : Int) < (W : Int) := by
-      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hwPos
+      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hwPos
     exact_mod_cast hwPos'
   have hOneLe : 1 ≤ W := hW
   have hIndexNat : n = native_nat_to_int (W - 1) := by

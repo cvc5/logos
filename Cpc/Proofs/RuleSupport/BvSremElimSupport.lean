@@ -129,8 +129,6 @@ private theorem typed_bv_srem_term (x y nm : Term) :
   have hOneIndex :
       native_zplus (native_zplus n 1) (native_zneg n) = 1 := by
     simp [SmtEval.native_zplus, SmtEval.native_zneg]
-    rw [Int.add_comm n 1]
-    exact Int.add_neg_cancel_right 1 n
   have hOneWidth :
       native_zlt 0 (native_zplus (native_zplus n 1) (native_zneg n)) =
         true := by

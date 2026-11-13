@@ -28,7 +28,7 @@ theorem emod_sub_nat (w A B : Nat)
   have hpow : 2 ^ (w + 1) = 2 * 2 ^ w := by
     simp [Nat.pow_succ, Nat.mul_comm]
   by_cases hlt : A < B
-  · simp only [hlt, if_true]
+  · simp only [hlt, ite_true]
     have hBLe : B ≤ 2 ^ (w + 1) + A := by omega
     have hCast :
         ((2 ^ (w + 1) + A - B : Nat) : Int) =
@@ -47,7 +47,7 @@ theorem emod_sub_nat (w A B : Nat)
     apply Int.emod_eq_of_lt
     · omega
     · omega
-  · simp only [hlt, if_false]
+  · simp only [hlt, ite_false]
     have hBA : B ≤ A := Nat.le_of_not_gt hlt
     have hCast : ((A - B : Nat) : Int) = (A : Int) - (B : Int) := by
       rw [Int.ofNat_sub hBA]
@@ -65,7 +65,7 @@ theorem extended_sub_payload_lt (w A B : Nat)
   have hpow : 2 ^ (w + 1) = 2 * 2 ^ w := by
     simp [Nat.pow_succ, Nat.mul_comm]
   unfold extendedSubPayload
-  by_cases hlt : A < B <;> simp only [hlt, if_true, if_false] <;> omega
+  by_cases hlt : A < B <;> simp only [hlt, ite_true, ite_false] <;> omega
 
 theorem extended_sub_payload_bit (w A B : Nat)
     (ha : A < 2 ^ w) (hb : B < 2 ^ w) :
@@ -74,11 +74,11 @@ theorem extended_sub_payload_bit (w A B : Nat)
     simp [Nat.pow_succ, Nat.mul_comm]
   unfold extendedSubPayload
   by_cases hlt : A < B
-  · simp only [hlt, if_true, decide_true]
+  · simp only [hlt, ite_true, decide_true]
     apply bit_w_of_range
     · omega
     · omega
-  · simp only [hlt, if_false, decide_false]
+  · simp only [hlt, ite_false, decide_false]
     apply Bool.eq_false_iff.mpr
     intro hbit
     have hge := Nat.ge_two_pow_of_testBit hbit
@@ -151,7 +151,7 @@ theorem eval_zero_extend_one_direct
   change SmtValue.Binary
       (native_zplus 1 (native_nat_to_int w)) (A : Int) = _
   congr 1
-  simp [SmtEval.native_zplus, Smtm.native_nat_to_int, Int.add_comm]
+  simp [SmtEval.native_zplus, SmtEval.native_nat_to_int, Int.add_comm]
 
 def usuboExt (x : Term) : Term :=
   Term.Apply (Term.UOp1 UserOp1.zero_extend (Term.Numeral 1)) x
@@ -179,7 +179,7 @@ theorem smt_typeof_usubo_ext (x : Term) (w : Nat)
   rw [__smtx_typeof.eq_def]
   simp only
   simp [__smtx_typeof_zero_extend, hTy, SmtEval.native_zleq,
-    SmtEval.native_zplus, Smtm.native_nat_to_int,
+    SmtEval.native_zplus, SmtEval.native_nat_to_int,
     SmtEval.native_int_to_nat, native_ite, Int.add_comm]
 
 theorem smt_typeof_usubo_diff (x y : Term) (w : Nat)
@@ -193,7 +193,7 @@ theorem smt_typeof_usubo_diff (x y : Term) (w : Nat)
   rw [__smtx_typeof.eq_def]
   simp only
   rw [smt_typeof_usubo_ext x w hx, smt_typeof_usubo_ext y w hy]
-  simp [__smtx_typeof_bv_op_2, Smtm.native_nateq,
+  simp [__smtx_typeof_bv_op_2, SmtEval.native_nateq,
     SmtEval.native_ite]
 
 theorem typeof_bvult_args_of_ne_stuck {A B : Term}
@@ -315,7 +315,7 @@ theorem typed_usubo_term (x y n : Term) :
     rw [__smtx_typeof.eq_def]
     simp only
     simp [__smtx_typeof_bv_op_2_ret, hXSmtTyW, hYSmtTyW,
-      Smtm.native_nateq, native_ite]
+      SmtEval.native_nateq, native_ite]
   have hDiffSmtTy :
       __smtx_typeof (__eo_to_smt (usuboDiff x y)) =
         SmtType.BitVec (W + 1) :=
@@ -335,8 +335,6 @@ theorem typed_usubo_term (x y n : Term) :
       simpa [W] using hiLt
     have hOne : native_zplus (native_zplus i 1) (native_zneg i) = 1 := by
       simp [SmtEval.native_zplus, SmtEval.native_zneg]
-      rw [Int.add_comm i 1]
-      exact Int.add_neg_cancel_right 1 i
     unfold __smtx_typeof_extract
     simp only
     rw [hi0, hiLtW, hOne]

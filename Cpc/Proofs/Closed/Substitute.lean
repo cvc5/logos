@@ -545,7 +545,7 @@ theorem contains_assoc_nil_nth_false_lt
                     hRec
                       (ss' := tail)
                       (idx' := __eo_add idx (Term.Numeral (-1 : native_Int)))
-                      (by simp; omega)
+                      (by simp)
                       hExceptEnv
                       hTailTrans
                       hTailTrans'
@@ -652,7 +652,7 @@ theorem assoc_nil_nth_has_smt_translation_of_list_all_and_typeof_bool_lt
                     hRec
                       (ss' := tail)
                       (idx' := __eo_add idx (Term.Numeral (-1 : native_Int)))
-                      (by simp; omega)
+                      (by simp)
                       hTailTrans
                       hTailTy
                   simpa [hAssocTail] using hTailTransResult
@@ -754,7 +754,7 @@ theorem assoc_nil_nth_has_smt_translation_of_list_all_and_typeof_ne_stuck_lt
                     hRec
                       (ss' := tail)
                       (idx' := __eo_add idx (Term.Numeral (-1 : native_Int)))
-                      (by simp; omega)
+                      (by simp)
                       hTailTrans
                       hTailTy
                   simpa [hAssocTail] using hTailTransResult
@@ -856,7 +856,7 @@ theorem assoc_nil_nth_has_smt_translation_of_list_all_and_ne_stuck_lt
                     hRec
                       (ss' := tail)
                       (idx' := __eo_add idx (Term.Numeral (-1 : native_Int)))
-                      (by simp; omega)
+                      (by simp)
                       hTailTrans
                       hTailNe
                   simpa [hAssocTail] using hTailTransResult

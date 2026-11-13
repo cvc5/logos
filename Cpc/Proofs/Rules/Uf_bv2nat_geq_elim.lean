@@ -629,7 +629,7 @@ private theorem eval_lhs_matches_rhs
   have hWidthInt : native_nat_to_int (native_int_to_nat k) = k := by
     have hnNonneg : 0 <= k := by simpa [SmtEval.native_zleq] using hNonneg
     have hInt : (Int.ofNat (Int.toNat k) : Int) = k := Int.toNat_of_nonneg hnNonneg
-    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   rw [hWidthInt] at hEvalX
   -- canonicity payload in range.

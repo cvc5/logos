@@ -1407,10 +1407,7 @@ theorem re_unfold_neg_concat_fixed_true_eval_true
         have h : len - n <= len := Int.sub_le_self len hn0
         simpa [cut] using h
       have hLenCut : len - cut = n := by
-        have h : len - (len - n) = n := by
-          apply (Int.sub_eq_iff_eq_add).2
-          omega
-        simpa [cut] using h
+        simp [cut]
       have hSplit :
           prefixStr ++ suffixStr = native_unpack_string ss := by
         simpa [prefixStr, suffixStr, prefixSeq, suffixSeq, cut, len,

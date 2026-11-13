@@ -207,7 +207,7 @@ theorem native_seq_replace_eq_indexof
             (Int.toNat (native_seq_indexof xs pat 0) + pat.length) := by
   unfold native_seq_replace native_seq_indexof native_str_replace_re
     native_str_indexof_re
-  simp only [Int.reduceLT, if_false, Int.toNat_zero, Nat.zero_le, if_true]
+  simp only [Int.reduceLT, ite_false, Int.toNat_zero, Nat.zero_le, ite_true]
   cases hFind : native_re_find_idx_from (native_str_to_re pat) xs 0 with
   | none => simp [hFind]
   | some result =>
@@ -218,7 +218,7 @@ theorem native_seq_replace_eq_indexof
         simpa [native_re_find_idx_from, native_str_to_re] using hFind
       have hIdxNonneg : ¬ (Int.ofNat idx : native_Int) < 0 := by simp
       simp only [hFind]
-      rw [if_neg hIdxNonneg, hLen]
+      rw [ite_eq_right hIdxNonneg, hLen]
       simp
 
 /-- Compatibility form for proofs that expose the regex-backed implementation
@@ -267,7 +267,7 @@ theorem native_seq_replace_of_indexof_nonneg
       simp [native_seq_replace_eq_indexof, hIdx]
   | cons p ps =>
       rw [native_seq_replace_eq_indexof]
-      rw [if_neg (Int.not_lt_of_ge hNonneg)]
+      rw [ite_eq_right (Int.not_lt_of_ge hNonneg)]
 
 theorem native_seq_indexof_zero_bounds_of_nonneg
     (xs pat : List SmtValue)
@@ -436,7 +436,7 @@ theorem native_seq_replace_source_of_pat_len_ge
           simp only [List.length_append, List.length_cons] at hLenDecomp
           omega
         rw [native_seq_replace_eq_indexof]
-        rw [if_neg hNeg]
+        rw [ite_eq_right hNeg]
         change xs.take idx ++ xs ++ xs.drop (idx + (p :: ps).length) = xs
         rw [hTakeNil, hDropNil]
         simp
@@ -471,7 +471,7 @@ theorem native_seq_replace_id
       · have hNonneg : 0 ≤ native_seq_indexof xs (p :: ps) 0 :=
           int_nonneg_of_not_neg hNeg
         rw [native_seq_replace_eq_indexof]
-        rw [if_neg hNeg]
+        rw [ite_eq_right hNeg]
         exact native_seq_indexof_zero_decomp_take_drop
           xs (p :: ps) hNonneg
 

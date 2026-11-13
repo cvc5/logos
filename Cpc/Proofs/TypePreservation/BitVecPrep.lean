@@ -1,7 +1,7 @@
 module
 
 public import Cpc.Proofs.TypePreservation.Helpers
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 import all Cpc.Proofs.TypePreservation.Common
 
 public section
@@ -329,7 +329,7 @@ theorem bv_binop_args_of_non_none
       | BitVec w2 =>
           by_cases hEq : native_nateq w1 w2 = true
           · have hw : w1 = w2 := by
-              simpa [native_nateq, Smtm.native_nateq] using hEq
+              simpa [native_nateq, SmtEval.native_nateq] using hEq
             cases hw
             exact ⟨w1, rfl, rfl⟩
           · exfalso
@@ -359,7 +359,7 @@ theorem bv_binop_ret_args_of_non_none
       | BitVec w2 =>
           by_cases hEq : native_nateq w1 w2 = true
           · have hw : w1 = w2 := by
-              simpa [native_nateq, Smtm.native_nateq] using hEq
+              simpa [native_nateq, SmtEval.native_nateq] using hEq
             cases hw
             exact ⟨w1, rfl, rfl⟩
           · exfalso

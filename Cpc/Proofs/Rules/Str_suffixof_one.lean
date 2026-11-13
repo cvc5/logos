@@ -226,7 +226,8 @@ private theorem eval_str_suffixof_one_eq_contains
                     have hStartNeg :
                         (1 : Int) + -(↑zs.length + 1 + 1) < 0 := by
                       omega
-                    simp [hIf, hMin, hStartNeg, native_pack_seq]
+                    have hGuard : (-1 : Int) < (zs.length : Int) := by omega
+                    simp [hIf, hMin, hStartNeg, hGuard, native_pack_seq]
       | cons z zs =>
           simp [hys] at hLen
 

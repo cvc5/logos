@@ -4458,6 +4458,11 @@ def __eo_prog_sets_ext : Proof -> Term
   | _ => Term.Stuck
 
 
+def __eo_prog_sets_choose_member : Term -> Term
+  | (Term.Apply (Term.UOp UserOp.set_choose) a) => (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.or) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.eq) a) (Term.UOp1 UserOp1.set_empty (__eo_typeof a)))) (Term.Apply (Term.Apply (Term.UOp UserOp.or) (Term.Apply (Term.Apply (Term.UOp UserOp.set_member) (Term.Apply (Term.UOp UserOp.set_choose) a)) a)) (Term.Boolean false)))
+  | _ => Term.Stuck
+
+
 def __set_union_to_list : Term -> Term
   | (Term.Apply (Term.Apply (Term.UOp UserOp.set_union) (Term.Apply (Term.UOp UserOp.set_singleton) e)) t) => (__eo_mk_apply (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) e) (__set_union_to_list t))
   | (Term.UOp1 UserOp1.set_empty (Term.Apply (Term.UOp UserOp.Set) T)) => (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) T)
@@ -4495,15 +4500,11 @@ def __eo_prog_sets_eval_op : Term -> Term
   | _ => Term.Stuck
 
 
-def __set_eval_insert : Term -> Term -> Term
-  | _ , Term.Stuck  => Term.Stuck
-  | (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) x) xs), t => (__eo_mk_apply (Term.Apply (Term.UOp UserOp.set_union) (Term.Apply (Term.UOp UserOp.set_singleton) x)) (__set_eval_insert xs t))
-  | (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) T), t => t
-  | _, _ => Term.Stuck
-
-
-def __eo_prog_sets_insert_elim : Term -> Term
-  | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) es) s)) t) => (__eo_requires (__set_eval_insert es s) t (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) es) s)) t))
+def __eo_prog_ubv_to_int_range : Term -> Term
+  | (Term.Apply (Term.UOp UserOp.ubv_to_int) b) =>
+    let _v0 := (__bv_bitwidth (__eo_typeof b))
+    let _v1 := (Term.Apply (Term.UOp UserOp.ubv_to_int) b)
+    (__eo_mk_apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.leq) (Term.Numeral 0)) _v1)) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.and) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.lt) _v1) (__eo_ite (__eo_is_z _v0) (__eo_ite (__eo_is_neg _v0) (Term.Numeral 0) (__eo_pow (Term.Numeral 2) _v0)) (__eo_mk_apply (Term.UOp UserOp.int_pow2) _v0)))) (Term.Boolean true)))
   | _ => Term.Stuck
 
 
@@ -6934,6 +6935,12 @@ def __eo_prog_sets_subset_elim : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | _ , Term.Stuck  => Term.Stuck
   | x1, y1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.set_subset) x1) y1)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.set_union) x1) y1)) y1))
+
+
+def __eo_prog_sets_insert_elim : Term -> Term -> Term
+  | Term.Stuck , _  => Term.Stuck
+  | _ , Term.Stuck  => Term.Stuck
+  | x1, y1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) x1) y1)) (Term.Apply (Term.Apply (Term.UOp UserOp.set_union) (Term.Apply (Term.UOp UserOp.set_singleton) x1)) y1))
 
 
 def __eo_prog_sets_union_comm : Term -> Term -> Term
@@ -9711,7 +9718,8 @@ def __eo_typeof_set_is_empty : Term -> Term
 
 
 def __eo_typeof_set_insert : Term -> Term -> Term
-  | (Term.Apply (Term.UOp UserOp._at__at_TypedList) T), (Term.Apply (Term.UOp UserOp.Set) __eo_lv_T_2) => (__eo_requires (__eo_eq T __eo_lv_T_2) (Term.Boolean true) (Term.Apply (Term.UOp UserOp.Set) T))
+  | Term.Stuck , _  => Term.Stuck
+  | T, (Term.Apply (Term.UOp UserOp.Set) __eo_lv_T_2) => (__eo_requires (__eo_eq T __eo_lv_T_2) (Term.Boolean true) (Term.Apply (Term.UOp UserOp.Set) T))
   | _, _ => Term.Stuck
 
 
@@ -10184,8 +10192,9 @@ inductive CRule : Type where
   | seq_eval_op : CRule
   | sets_singleton_inj : CRule
   | sets_ext : CRule
+  | sets_choose_member : CRule
   | sets_eval_op : CRule
-  | sets_insert_elim : CRule
+  | ubv_to_int_range : CRule
   | ubv_to_int_elim : CRule
   | int_to_bv_elim : CRule
   | instantiate : CRule
@@ -10440,6 +10449,7 @@ inductive CRule : Type where
   | sets_member_singleton : CRule
   | sets_member_emp : CRule
   | sets_subset_elim : CRule
+  | sets_insert_elim : CRule
   | sets_union_comm : CRule
   | sets_inter_comm : CRule
   | sets_inter_emp1 : CRule
@@ -10859,8 +10869,9 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.seq_eval_op, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_seq_eval_op a1)
   | CRule.sets_singleton_inj, CArgList.nil, (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_sets_singleton_inj (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.sets_ext, CArgList.nil, (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_sets_ext (Proof.pf (__eo_state_proven_nth S n1)))
+  | CRule.sets_choose_member, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_choose_member a1)
   | CRule.sets_eval_op, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_eval_op a1)
-  | CRule.sets_insert_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_insert_elim a1)
+  | CRule.ubv_to_int_range, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_ubv_to_int_range a1)
   | CRule.ubv_to_int_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_ubv_to_int_elim a1)
   | CRule.int_to_bv_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_int_to_bv_elim a1)
   | CRule.instantiate, (CArgList.cons a1 CArgList.nil), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_instantiate a1 (Proof.pf (__eo_state_proven_nth S n1)))
@@ -11115,6 +11126,7 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.sets_member_singleton, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_sets_member_singleton a1 a2)
   | CRule.sets_member_emp, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_sets_member_emp a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.sets_subset_elim, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_sets_subset_elim a1 a2)
+  | CRule.sets_insert_elim, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_sets_insert_elim a1 a2)
   | CRule.sets_union_comm, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_sets_union_comm a1 a2)
   | CRule.sets_inter_comm, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_sets_inter_comm a1 a2)
   | CRule.sets_inter_emp1, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_sets_inter_emp1 a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)))

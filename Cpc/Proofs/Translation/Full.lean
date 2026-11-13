@@ -610,6 +610,15 @@ private theorem false_of_requires_eq_dtcapp_of_payload_ne_full
     | exact hU hReq
     | cases hReq
 
+private theorem false_of_typeof_set_insert_eq_dtcapp_full
+    {X Y A B : Term}
+    (hTy : __eo_typeof_set_insert X Y = Term.DtcAppType A B) : False := by
+  unfold __eo_typeof_set_insert at hTy
+  repeat (first | split at hTy)
+  all_goals first
+    | exact false_of_requires_eq_dtcapp_of_payload_ne_full (by intro h; cases h) hTy
+    | cases hTy
+
 private theorem false_of_typeof_store_eq_dtcapp_full
     {z y x A B : Term}
     (hTy :
@@ -1659,7 +1668,7 @@ private theorem eo_type_valid_of_tuple_select_eq_dtcapp_full
               have hNatInt :
                   native_nat_to_int (native_int_to_nat n) = n := by
                 simp [native_nat_to_int, native_int_to_nat,
-                  Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+                  SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
                   Int.toNat_of_nonneg hnNonneg]
               have hSelectedValid :
                   eo_type_valid_rec []
@@ -2282,10 +2291,7 @@ private theorem get_var_type_list_nth_succ_cons_var_of_exists_bool
       __get_var_type (__eo_list_nth_rec a (Term.Numeral (native_nat_to_int n)))
   rw [show native_zplus (native_nat_to_int n.succ) (-1 : native_Int) =
       native_nat_to_int n by
-    simp [native_zplus, native_nat_to_int]
-    calc
-      (↑n + 1 + -1 : Int) = ↑n + (1 + -1) := by ac_rfl
-      _ = ↑n := by rfl]
+    simp [native_zplus, native_nat_to_int]]
 
 private theorem smtx_typeof_eo_to_smt_exists_cons_bool_of_tail_bool
     (s : native_String) (T a : Term) (body : SmtTerm)
@@ -3403,6 +3409,8 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                   exact False.elim (false_of_typeof_lt_eq_dtcapp_full hTy)
                 case geq =>
                   exact False.elim (false_of_typeof_lt_eq_dtcapp_full hTy)
+                case set_insert =>
+                  exact False.elim (false_of_typeof_set_insert_eq_dtcapp_full hTy)
                 case set_member =>
                   exact False.elim (false_of_typeof_set_member_eq_dtcapp_full hTy)
                 case qdiv =>
@@ -3483,7 +3491,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                         __eo_typeof_re_concat, __eo_typeof_str_in_re,
                         __eo_typeof__at_strings_deq_diff, __eo_typeof_tuple,
                         __eo_typeof_set_union,
-                        __eo_typeof_set_subset, __eo_typeof_set_insert,
+                        __eo_typeof_set_subset,
                         __eo_typeof_forall,
                         
                         __eo_is_list,
@@ -3528,7 +3536,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                        __eo_typeof_str_in_re, __eo_typeof__at_strings_deq_diff,
                        __eo_typeof_tuple, __eo_typeof_set_union,
                        __eo_typeof_set_member, __eo_typeof_set_subset,
-                       __eo_typeof_set_insert, __eo_typeof_qdiv,
+                       __eo_typeof_qdiv,
                        __eo_typeof_forall, __eo_is_list, __eo_get_nil_rec,
                        __eo_is_list_nil, __eo_is_ok, __eo_list_len, __is_arith_type,
                        __eo_eq, __eo_and, __eo_mk_apply, __eo_add, native_ite,
@@ -4649,8 +4657,8 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                                       simpa [__eo_to_smt_nat_is_valid, native_zleq,
                                         SmtEval.native_zleq] using hIdxValid)
                                   simp [native_nat_to_int, native_int_to_nat,
-                                    Smtm.native_nat_to_int, SmtEval.native_int_to_nat]
-                                  exact Int.max_eq_left hNonneg
+                                    SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]
+                                  exact hNonneg
                                 have hEoSk :
                                     __eo_to_smt_type
                                         (__eo_typeof
@@ -4764,8 +4772,8 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                                       simpa [__eo_to_smt_nat_is_valid, native_zleq,
                                         SmtEval.native_zleq] using hIdxValid)
                                   simp [native_nat_to_int, native_int_to_nat,
-                                    Smtm.native_nat_to_int, SmtEval.native_int_to_nat]
-                                  exact Int.max_eq_left hNonneg
+                                    SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]
+                                  exact hNonneg
                                 have hSkValid :=
                                   eo_to_smt_quantifiers_skolemize_var_type_valid_of_non_none xs
                                     (SmtTerm.not (__eo_to_smt body)) (native_int_to_nat n)

@@ -5,6 +5,8 @@ import all Cpc.Proofs.TypePreservation.Support
 
 public section
 
+variable {uc : SmtUSortDom}
+
 open SmtEval
 open Smtm
 
@@ -16,7 +18,7 @@ private theorem model_total_typed_lookup_canonical_bool
     (s : native_String)
     (T : SmtType)
     (hT : __smtx_type_wf T = true) :
-    __smtx_value_canonical (native_model_lookup M s T) = true := by
+    __smtx_value_canonical M.usortDom (native_model_lookup M s T) = true := by
   simpa [native_model_lookup, model_key] using
     hM.2.1 false s T hT
 
@@ -39,7 +41,7 @@ theorem model_total_typed_lookup_canonical
     (s : native_String)
     (T : SmtType)
     (hT : __smtx_type_wf T = true) :
-    value_canonical (native_model_lookup M s T) :=
+    value_canonical M.usortDom (native_model_lookup M s T) :=
   by
     simpa [value_canonical]
       using model_total_typed_lookup_canonical_bool hM s T hT
@@ -49,7 +51,7 @@ theorem model_total_typed_native_fun_typed
     {M : SmtModel}
     (hM : model_wf M) :
     model_fun_wf M :=
-  hM.2.2
+  hM.2.2.1
 
 private theorem model_total_typed_var_lookup_canonical_bool
     {M : SmtModel}
@@ -57,7 +59,7 @@ private theorem model_total_typed_var_lookup_canonical_bool
     (s : native_String)
     (T : SmtType)
     (hT : __smtx_type_wf T = true) :
-    __smtx_value_canonical (native_model_var_lookup M s T) = true := by
+    __smtx_value_canonical M.usortDom (native_model_var_lookup M s T) = true := by
   simpa [native_model_var_lookup] using
     hM.2.1 true s T hT
 
@@ -77,7 +79,7 @@ theorem model_total_typed_var_lookup_canonical
     (s : native_String)
     (T : SmtType)
     (hT : __smtx_type_wf T = true) :
-    value_canonical (native_model_var_lookup M s T) := by
+    value_canonical M.usortDom (native_model_var_lookup M s T) := by
   simpa [value_canonical]
     using model_total_typed_var_lookup_canonical_bool hM s T hT
 
@@ -106,7 +108,7 @@ theorem model_total_typed_push
     (v : SmtValue)
     (_hWF : __smtx_type_wf T = true)
     (hv : __smtx_typeof_value v = T)
-    (hvCanon : value_canonical v) :
+    (hvCanon : value_canonical M.usortDom v) :
     model_wf (native_model_push M s T v) := by
   constructor
   · intro isVar s' T' hT'
@@ -126,7 +128,8 @@ theorem model_total_typed_push
         simpa [native_model_push, value_canonical] using hvCanon
       · simp [native_model_push, hKey]
         exact hM.2.1 isVar s' T' hT'
-    · intro fid A B i hFunWF hi
+    · refine ⟨?_, hM.2.2.2⟩
+      intro fid A B i hFunWF hi
       simpa [model_fun_wf, native_eval_fun_apply, model_fun_lookup,
         native_model_push]
         using model_total_typed_native_fun_typed hM fid A B i hFunWF hi
@@ -134,34 +137,34 @@ theorem model_total_typed_push
 /--
 Datatype-default canonicity for the generated model.
 
-The `native_inhabited_type` witness uniformly carries exactly this canonical
-default witness for datatype types.
+For a recursively well-formed datatype type, inhabitation gives a typed,
+canonical default (`type_default_typed`, `Proofs/StaticTyping.lean`).
 -/
-theorem datatype_type_default_typed_canonical_of_inhabited
+theorem datatype_type_default_typed_canonical_of_inhabited (huc : usort_dom_wf uc)
     (s : native_String)
     (d : SmtDatatypeDecl)
-    (_hInh : native_inhabited_type (SmtType.Datatype s d) = true)
+    (_hInh : __smtx_inhabited_type (SmtType.Datatype s d) = true)
     (_hRec : __smtx_type_wf_rec (SmtType.Datatype s d) = true) :
       __smtx_typeof_value (__smtx_type_default (SmtType.Datatype s d)) =
         SmtType.Datatype s d ∧
-      value_canonical (__smtx_type_default (SmtType.Datatype s d)) :=
-  type_default_typed_canonical_of_native_inhabited_type
+      value_canonical uc (__smtx_type_default (SmtType.Datatype s d)) :=
+  type_default_typed_canonical_of_native_inhabited_type huc
     (SmtType.Datatype s d) _hInh _hRec
 
-private theorem type_default_typed_canonical_of_wf_rec
-    (T : SmtType) (hInh : native_inhabited_type T = true)
+private theorem type_default_typed_canonical_of_wf_rec (huc : usort_dom_wf uc)
+    (T : SmtType) (hInh : __smtx_inhabited_type T = true)
     (_hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
-      value_canonical (__smtx_type_default T) :=
-  type_default_typed_canonical_of_native_inhabited_type T hInh _hRec
+      value_canonical uc (__smtx_type_default T) :=
+  type_default_typed_canonical_of_native_inhabited_type huc T hInh _hRec
 
 /-- The syntactic default is typed and canonical for every well-formed SMT
 type, including curried function types. -/
-theorem type_default_typed_canonical_of_type_wf
+theorem type_default_typed_canonical_of_type_wf (huc : usort_dom_wf uc)
     (T : SmtType)
     (hWF : __smtx_type_wf T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
-      value_canonical (__smtx_type_default T) := by
+      value_canonical uc (__smtx_type_default T) := by
   by_cases hReg : T = SmtType.RegLan
   · subst T
     simp [__smtx_type_default, __smtx_typeof_value, value_canonical,
@@ -171,38 +174,36 @@ theorem type_default_typed_canonical_of_type_wf
       simp [__smtx_type_default, __smtx_typeof_value, value_canonical,
         __smtx_value_canonical]
     · have hParts :
-        native_inhabited_type T = true ∧
+        __smtx_inhabited_type T = true ∧
           __smtx_type_wf_rec T = true := by
         cases T <;>
           simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
             native_and] at hWF hReg hFun ⊢ <;>
           first | exact hWF | exact hWF.1
-      have hDef :=
-        type_default_typed_canonical_of_wf_rec T hParts.1 hParts.2
-      exact hDef
+      exact type_default_typed_canonical_of_wf_rec huc T hParts.1 hParts.2
 
 /-- Every well-formed SMT type has a canonical inhabitant. -/
-theorem canonical_type_inhabited_of_type_wf
+theorem canonical_type_inhabited_of_type_wf (huc : usort_dom_wf uc)
     (T : SmtType)
     (hWF : __smtx_type_wf T = true) :
-    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical v := by
-  exact ⟨__smtx_type_default T, type_default_typed_canonical_of_type_wf T hWF⟩
+    ∃ v : SmtValue, __smtx_typeof_value v = T ∧ value_canonical uc v := by
+  exact ⟨__smtx_type_default T, type_default_typed_canonical_of_type_wf huc T hWF⟩
 
 /-- The syntactic default is well-typed and canonical for recursively well-formed inhabited types. -/
-theorem type_default_typed_canonical_of_inhabited_wf_rec
+theorem type_default_typed_canonical_of_inhabited_wf_rec (huc : usort_dom_wf uc)
     (T : SmtType)
-    (hInh : native_inhabited_type T = true)
+    (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T ∧
-      value_canonical (__smtx_type_default T) :=
-  type_default_typed_canonical_of_wf_rec T hInh hRec
+      value_canonical uc (__smtx_type_default T) :=
+  type_default_typed_canonical_of_wf_rec huc T hInh hRec
 
 /-- The syntactic default is well-typed for types whose recursive well-formedness is known. -/
 theorem type_default_typed_of_inhabited_wf_rec
     (T : SmtType)
-    (hInh : native_inhabited_type T = true)
+    (hInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true) :
     __smtx_typeof_value (__smtx_type_default T) = T :=
-  (type_default_typed_canonical_of_inhabited_wf_rec T hInh hRec).1
+  type_default_typed T hInh hRec
 
 end Smtm

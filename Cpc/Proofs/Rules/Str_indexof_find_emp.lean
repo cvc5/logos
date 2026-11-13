@@ -168,7 +168,7 @@ private theorem native_seq_indexof_rec_empty_succ
     (xs : List SmtValue) (i fuel : Nat) :
     native_seq_indexof_rec xs [] i (fuel + 1) = Int.ofNat i := by
   unfold native_seq_indexof_rec
-  rw [if_pos (native_seq_prefix_eq_nil_left xs)]
+  rw [ite_eq_left (native_seq_prefix_eq_nil_left xs)]
 
 private theorem native_seq_indexof_empty_of_bounds
     (xs : List SmtValue) (i : native_Int)
@@ -187,7 +187,7 @@ private theorem native_seq_indexof_empty_of_bounds
     simpa using hStartLeNat
   simp [hNotNeg, hBounds]
   rw [native_seq_indexof_rec_empty_succ]
-  rw [if_pos (by simpa [native_seq_len] using hLeLen)]
+  rw [ite_eq_left (by simpa [native_seq_len] using hLeLen)]
   exact hToNat
 
 private theorem list_eq_nil_of_native_seq_len_zero

@@ -1,5 +1,8 @@
 module
 
+public import Cpc.Proofs.RealBridge
+import all Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 public import Cpc.Proofs.RuleSupport.CoreSupport
 import all Cpc.Proofs.RuleSupport.CoreSupport
 
@@ -35,19 +38,6 @@ private theorem eo_to_smt_to_real_eq (x : Term) :
 private theorem eo_to_smt_to_int_eq (x : Term) :
     __eo_to_smt (toIntTerm x) = SmtTerm.to_int (__eo_to_smt x) := by
   rfl
-
-private theorem native_to_int_to_real (n : native_Int) :
-    native_to_int (native_to_real n) = n := by
-  rw [native_to_int, native_to_real, native_mk_rational]
-  change Rat.floor ((n : Rat) / (1 : Rat)) = n
-  have hDiv : ((n : Rat) / (1 : Rat)) = (n : Rat) := by
-    change (n : Rat) * ((1 : Rat)⁻¹) = (n : Rat)
-    rw [Rat.inv_def]
-    change (n : Rat) * Rat.divInt 1 1 = (n : Rat)
-    rw [show Rat.divInt 1 1 = (1 : Rat) by rfl]
-    exact Rat.mul_one _
-  rw [hDiv]
-  exact Rat.floor_intCast n
 
 private theorem smtx_typeof_of_eo_type
     (a T : Term) (S : SmtType)
@@ -225,20 +215,21 @@ private theorem facts___eo_prog_arith_int_eq_conflict_impl
       (toRealTerm (toIntTerm c)) c hPrem
   have hPremFalseQ :
       __smtx_model_eval_eq
-        (SmtValue.Rational (native_to_real (native_to_int cq)))
-        (SmtValue.Rational cq) = SmtValue.Boolean false := by
+        (SmtValue.Real (native_int_to_real (native_real_to_int cq)))
+        (SmtValue.Real cq) = SmtValue.Boolean false := by
     rw [eo_to_smt_to_real_eq, smtx_eval_to_real_term_eq,
       eo_to_smt_to_int_eq, smtx_eval_to_int_term_eq, hCEval] at hPremFalse
     simpa [__smtx_model_eval_to_int, __smtx_model_eval_to_real] using hPremFalse
-  have hCNonInt : native_to_real (native_to_int cq) ≠ cq := by
+  have hCNonInt : native_int_to_real (native_real_to_int cq) ≠ cq := by
     intro hEq
     rw [hEq] at hPremFalseQ
-    simp [__smtx_model_eval_eq, native_veq, native_qeq] at hPremFalseQ
-  have hTargetNe : native_to_real ti ≠ cq := by
+    simp [__smtx_model_eval_eq, native_veq, native_req] at hPremFalseQ
+  have hTargetNe : native_int_to_real ti ≠ cq := by
     intro hEq
-    have hFloor : native_to_int cq = ti := by
-      rw [← hEq, native_to_int_to_real]
+    have hFloor : native_real_to_int cq = ti := by
+      rw [← hEq, native_real_to_int_int_to_real]
     exact hCNonInt (by rw [hFloor]; exact hEq)
+  have hTargetNe' : (ti : native_Real) ≠ cq := hTargetNe
   have hEvalInner :
       __smtx_model_eval M (__eo_to_smt (eqTerm (toRealTerm t) c)) =
         SmtValue.Boolean false := by
@@ -248,7 +239,7 @@ private theorem facts___eo_prog_arith_int_eq_conflict_impl
     rw [smtx_eval_eq_term_eq, eo_to_smt_to_real_eq,
       smtx_eval_to_real_term_eq, hTEval, hCEval]
     simp [__smtx_model_eval_to_real, __smtx_model_eval_eq, native_veq,
-      native_qeq, hTargetNe]
+      native_req, hTargetNe']
   rw [hProgEq]
   exact RuleProofs.eo_interprets_eq_of_rel M
     (eqTerm (toRealTerm t) c) (Term.Boolean false) hProgBool' <| by

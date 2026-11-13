@@ -1,12 +1,14 @@
 module
 
 public import Cpc.Proofs.TypePreservation.Base
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 import all Cpc.Proofs.TypePreservation.Common
 import all Init.Data.Repr
 import all Init.Data.Int.Repr
 
 public section
+
+noncomputable section
 
 open SmtEval
 open Smtm
@@ -149,7 +151,7 @@ theorem typeof_value_dt_cons_head_type_chain_result :
   | SmtValue.Numeral _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
       simp [__smtx_apply_head_value] at hHead
-  | SmtValue.Rational _, T, U, hHead, h => by
+  | SmtValue.Real _, T, U, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary _ _, T, U, hHead, h => by
@@ -213,7 +215,7 @@ theorem typeof_value_dt_cons_head_chain_result :
   | SmtValue.Numeral _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
       simp [__smtx_apply_head_value] at hHead
-  | SmtValue.Rational _, T, hHead, h => by
+  | SmtValue.Real _, T, hHead, h => by
       rcases hHead with ⟨s, d, i, hHead⟩
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary _ _, T, hHead, h => by
@@ -337,7 +339,7 @@ theorem typeof_value_apply_of_head_ne_dt_cons :
       simp [__smtx_typeof_value, __smtx_typeof_apply_value]
   | SmtValue.Numeral _, i, hDt => by
       simp [__smtx_typeof_value, __smtx_typeof_apply_value]
-  | SmtValue.Rational _, i, hDt => by
+  | SmtValue.Real _, i, hDt => by
       simp [__smtx_typeof_value, __smtx_typeof_apply_value]
   | SmtValue.Binary w n, i, hDt => by
       cases hWidth : native_zleq 0 w <;>
@@ -439,7 +441,7 @@ theorem typeof_value_ne_type_ref
       simp [__smtx_typeof_value]
   | SmtValue.Numeral _ => by
       simp [__smtx_typeof_value]
-  | SmtValue.Rational _ => by
+  | SmtValue.Real _ => by
       simp [__smtx_typeof_value]
   | SmtValue.Binary w n => by
       cases hWidth : native_zleq 0 w <;>
@@ -507,7 +509,7 @@ theorem bool_value_canonical
       simp [__smtx_typeof_value] at h
   | Numeral _ =>
       simp [__smtx_typeof_value] at h
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at h
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
@@ -567,7 +569,7 @@ theorem int_value_canonical
       simp [__smtx_typeof_value] at h
   | Boolean _ =>
       simp [__smtx_typeof_value] at h
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at h
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
@@ -619,9 +621,9 @@ theorem int_value_canonical
 theorem real_value_canonical
     {v : SmtValue}
     (h : __smtx_typeof_value v = SmtType.Real) :
-    ∃ q : native_Rat, v = SmtValue.Rational q := by
+    ∃ q : native_Real, v = SmtValue.Real q := by
   cases v with
-  | Rational q =>
+  | Real q =>
       exact ⟨q, rfl⟩
   | NotValue =>
       simp [__smtx_typeof_value] at h
@@ -705,7 +707,7 @@ theorem bitvec_value_canonical
       simp [__smtx_typeof_value] at h
   | Numeral _ =>
       simp [__smtx_typeof_value] at h
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at h
   | Map m =>
       cases typeof_map_value_shape m with
@@ -775,7 +777,6 @@ theorem bitvec_payload_range_of_canonical
   have hPowPos : 0 < native_int_pow2 w := by
     have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
     simp [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hnot]
-    exact Int.pow_pos (by decide)
   have hEq : n = native_mod_total n (native_int_pow2 w) := by
     simpa [SmtEval.native_zeq] using hMod
   constructor
@@ -856,7 +857,7 @@ theorem fun_value_canonical
     {v : SmtValue}
     {A B : SmtType}
     (h : __smtx_typeof_value v = SmtType.FunType A B) :
-    ∃ fid : native_String, v = SmtValue.Fun fid A B := by
+    ∃ fid : ModelId, v = SmtValue.Fun fid A B := by
   cases v with
   | Fun fid A' B' =>
       simp [__smtx_typeof_value] at h
@@ -870,7 +871,7 @@ theorem fun_value_canonical
       simp [__smtx_typeof_value] at h
   | Numeral _ =>
       simp [__smtx_typeof_value] at h
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at h
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
@@ -933,7 +934,7 @@ theorem map_value_canonical
       simp [__smtx_typeof_value] at h
   | Numeral _ =>
       simp [__smtx_typeof_value] at h
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at h
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
@@ -984,7 +985,7 @@ theorem set_value_canonical
       simp [__smtx_typeof_value] at h
   | Numeral _ =>
       simp [__smtx_typeof_value] at h
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at h
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
@@ -1085,7 +1086,7 @@ theorem seq_value_canonical
       simp [__smtx_typeof_value] at h
   | Numeral _ =>
       simp [__smtx_typeof_value] at h
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at h
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
@@ -1137,7 +1138,7 @@ theorem char_value_canonical
       simp [__smtx_typeof_value] at h
   | Numeral _ =>
       simp [__smtx_typeof_value] at h
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at h
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
@@ -1248,9 +1249,9 @@ theorem list_typed_extract
   dsimp
   by_cases h :
       (decide (i < 0) || decide (n <= 0) || decide (i >= (↑xs.length : Int))) = true
-  · rw [if_pos h]
+  · rw [ite_eq_left h]
     simp [list_typed]
-  · rw [if_neg h]
+  · rw [ite_eq_right h]
     exact
       list_typed_take (Int.toNat (min n (Int.ofNat xs.length - i)))
         (list_typed_drop (Int.toNat i) hxs)
@@ -1350,9 +1351,9 @@ theorem list_typed_update
   unfold native_seq_update
   dsimp
   by_cases h : (decide (i < 0) || decide ((↑xs.length : Int) <= i)) = true
-  · rw [if_pos h]
+  · rw [ite_eq_left h]
     exact hxs
-  · rw [if_neg h]
+  · rw [ite_eq_right h]
     simpa [List.append_assoc] using
       (list_typed_append
         (list_typed_append (list_typed_take (Int.toNat i) hxs)
@@ -1647,10 +1648,10 @@ theorem native_string_valid_toDigitsCore :
   | fuel + 1, n, ds, hds => by
       rw [Nat.toDigitsCore.eq_2]
       by_cases hDiv : n / 10 = 0
-      · rw [if_pos hDiv]
+      · rw [ite_eq_left hDiv]
         exact native_string_valid_char_toNat_cons
           (native_char_valid_digitChar (n % 10)) hds
-      · rw [if_neg hDiv]
+      · rw [ite_eq_right hDiv]
         exact native_string_valid_toDigitsCore fuel (n / 10)
           ((Nat.digitChar (n % 10)) :: ds)
           (native_string_valid_char_toNat_cons
@@ -1689,14 +1690,14 @@ theorem native_str_from_int_valid
       unfold native_str_from_int
       have hNot : ¬ ((Int.ofNat n) < 0) := by
         exact Int.not_lt_of_ge (Int.natCast_nonneg n)
-      rw [if_neg hNot]
+      rw [ite_eq_right hNot]
       simpa [Int.toString_eq_repr, Int.repr, Nat.toString_eq_repr] using
         native_string_valid_nat_toString n
   | negSucc n =>
       unfold native_str_from_int
       have hNeg : (Int.negSucc n) < 0 := by
         exact Int.negSucc_lt_zero n
-      rw [if_pos hNeg]
+      rw [ite_eq_left hNeg]
       simp [native_string_lit, native_string_valid]
 
 /-- Lemma about `char_value_list_typed`. -/
@@ -1947,7 +1948,7 @@ theorem reglan_value_canonical
       simp [__smtx_typeof_value] at h
   | Numeral _ =>
       simp [__smtx_typeof_value] at h
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at h
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>

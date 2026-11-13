@@ -346,9 +346,9 @@ theorem type_result_seq_components_wf_dt_cons_rec
 private theorem seq_char_wf :
     __smtx_type_wf (SmtType.Seq SmtType.Char) = true := by
   have hSeqInh :
-      native_inhabited_type (SmtType.Seq SmtType.Char) = true :=
+      __smtx_inhabited_type (SmtType.Seq SmtType.Char) = true :=
     native_inhabited_type_seq SmtType.Char
-  have hCharInh : native_inhabited_type SmtType.Char = true :=
+  have hCharInh : __smtx_inhabited_type SmtType.Char = true :=
     native_inhabited_type_char
   simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
     native_and, hSeqInh, hCharInh]
@@ -3309,7 +3309,7 @@ theorem pair_first_str_strip_prefix_self_eq_pair_second (x : Term)
       pair_second_pair]
 termination_by sizeOf x
 decreasing_by
-  all_goals subst_vars; simp_wf; omega
+  all_goals subst_vars; simp_wf
 
 
 theorem eo_interprets_double_rev_intros_of_self

@@ -671,7 +671,7 @@ theorem dcs_translation {c T : Term} (hs : DCS c)
       TranslationProofs.noNoneDt (__smtx_dd_lookup s dd) = true :=
     TranslationProofs.noNoneDt_of_wf dd (__smtx_dd_lookup s dd) hLookupWf
   have hWfParts :
-      native_inhabited_type (SmtType.Datatype s dd) = true ∧
+      __smtx_inhabited_type (SmtType.Datatype s dd) = true ∧
         (__smtx_dd_has_dt s dd = true ∧ __smtx_decl_wf_rec dd dd = true) := by
     simpa [base, __smtx_type_wf, __smtx_type_wf_component,
       __smtx_type_wf_rec, native_and] using hBaseWf
@@ -1264,7 +1264,7 @@ private theorem qds_tuple_ret_type_wf_aux (c₀ : SmtDatatypeCons) :
         simpa [__smtx_dt_resolve, __smtx_dtc_resolve,
           __smtx_ret_typeof_sel_rec] using hOuterWf
       · have hParts :
-            native_inhabited_type U = true ∧
+            __smtx_inhabited_type U = true ∧
               __smtx_type_wf_rec U = true := by
           cases U <;>
             simp_all [__smtx_dt_cons_wf_rec, native_and]
@@ -1697,7 +1697,7 @@ private theorem qds_tuple_prepend_non_none
   simp [__eo_to_smt_tuple_prepend_of_type, __eo_to_smt_tuple_decl,
     native_streq, native_and, native_ite]
   rw [hFullWf']
-  simp only [if_true]
+  simp only [ite_true]
   let tailD := SmtDatatype.sum c SmtDatatype.null
   let tailDD := __eo_to_smt_tuple_decl tailD
   let fullD := SmtDatatype.sum (SmtDatatypeCons.cons A c) SmtDatatype.null

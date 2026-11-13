@@ -37,7 +37,7 @@ private theorem eo_interprets_of_not_false (M : SmtModel) (F : Term) :
       | Numeral _ =>
           exfalso
           simp [hEvalF, __smtx_model_eval_not] at hEvalNot
-      | Rational _ =>
+      | Real _ =>
           exfalso
           simp [hEvalF, __smtx_model_eval_not] at hEvalNot
       | Binary _ _ =>

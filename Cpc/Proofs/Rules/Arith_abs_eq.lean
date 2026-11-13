@@ -1,5 +1,8 @@
 module
 
+public import Cpc.Proofs.RealBridge
+import all Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 public import Cpc.Proofs.RuleSupport.CoreSupport
 import all Cpc.Proofs.RuleSupport.CoreSupport
 
@@ -282,13 +285,13 @@ private theorem eval_abs_int (M : SmtModel) (x : Term) (n : native_Int)
   rw [eval_abs, hx]
   simp [__smtx_model_eval_abs, native_zabs, native_zneg]
 
-private theorem eval_abs_real (M : SmtModel) (x : Term) (q : native_Rat)
-    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Rational q) :
+private theorem eval_abs_real (M : SmtModel) (x : Term) (q : native_Real)
+    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Real q) :
     __smtx_model_eval M (__eo_to_smt (absTerm x)) =
-      SmtValue.Rational (if q < 0 then native_qneg q else q) := by
+      SmtValue.Real (native_rabs q) := by
   rw [show __eo_to_smt (absTerm x) = SmtTerm.abs (__eo_to_smt x) by rfl]
   rw [eval_abs, hx]
-  simp [__smtx_model_eval_abs, native_qabs, native_qneg]
+  simp [__smtx_model_eval_abs]
 
 private theorem eval_neg_int (M : SmtModel) (x : Term) (n : native_Int)
     (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Numeral n) :
@@ -298,10 +301,10 @@ private theorem eval_neg_int (M : SmtModel) (x : Term) (n : native_Int)
   rw [eval_uneg, hx]
   simp [__smtx_model_eval_uneg]
 
-private theorem eval_neg_real (M : SmtModel) (x : Term) (q : native_Rat)
-    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Rational q) :
+private theorem eval_neg_real (M : SmtModel) (x : Term) (q : native_Real)
+    (hx : __smtx_model_eval M (__eo_to_smt x) = SmtValue.Real q) :
     __smtx_model_eval M (__eo_to_smt (negTerm x)) =
-      SmtValue.Rational (native_qneg q) := by
+      SmtValue.Real (native_rneg q) := by
   rw [show __eo_to_smt (negTerm x) = SmtTerm.uneg (__eo_to_smt x) by rfl]
   rw [eval_uneg, hx]
   simp [__smtx_model_eval_uneg]
@@ -320,13 +323,13 @@ private theorem int_abs_eq_bool (x y : native_Int) :
   unfold native_zeq native_or native_zneg
   grind
 
-private theorem real_abs_eq_bool (x y : native_Rat) :
-    native_qeq (if x < 0 then native_qneg x else x)
-      (if y < 0 then native_qneg y else y) =
-    native_or (native_qeq x y)
-      (native_or (native_qeq x (native_qneg y)) false) := by
-  unfold native_qeq native_or native_qneg
-  grind
+private theorem real_abs_eq_bool (x y : native_Real) :
+    native_req (native_rabs x) (native_rabs y) =
+    native_or (native_req x y)
+      (native_or (native_req x (native_rneg y)) false) := by
+  show decide (|x| = |y|) = (decide (x = y) || (decide (x = -y) || false))
+  rw [Bool.or_false, ← Bool.decide_or, decide_eq_decide]
+  exact abs_eq_abs
 
 private theorem eval_result_int
     (M : SmtModel) (hM : model_wf M) (x y : Term)
@@ -430,30 +433,31 @@ private theorem eval_result_real
   have hEqAbs :
       __smtx_model_eval M (__eo_to_smt (eqTerm (absTerm x) (absTerm y))) =
         SmtValue.Boolean
-          (native_qeq (if xq < 0 then native_qneg xq else xq)
-            (if yq < 0 then native_qneg yq else yq)) := by
+          (native_req (native_rabs xq) (native_rabs yq)) := by
     rw [show __eo_to_smt (eqTerm (absTerm x) (absTerm y)) =
         SmtTerm.eq (__eo_to_smt (absTerm x)) (__eo_to_smt (absTerm y)) by rfl]
     rw [smtx_eval_eq_term_eq, hxAbs, hyAbs]
-    simp [__smtx_model_eval_eq, native_veq, native_qeq]
+    simp [__smtx_model_eval_eq, native_veq, native_req]
+    exact decide_eq_decide.mpr Iff.rfl
   have hEqXY :
       __smtx_model_eval M (__eo_to_smt (eqTerm x y)) =
-        SmtValue.Boolean (native_qeq xq yq) := by
+        SmtValue.Boolean (native_req xq yq) := by
     rw [show __eo_to_smt (eqTerm x y) =
         SmtTerm.eq (__eo_to_smt x) (__eo_to_smt y) by rfl]
     rw [smtx_eval_eq_term_eq, hxEval, hyEval]
-    simp [__smtx_model_eval_eq, native_veq, native_qeq]
+    simp [__smtx_model_eval_eq, native_veq, native_req]
   have hEqXNegY :
       __smtx_model_eval M (__eo_to_smt (eqTerm x (negTerm y))) =
-        SmtValue.Boolean (native_qeq xq (native_qneg yq)) := by
+        SmtValue.Boolean (native_req xq (native_rneg yq)) := by
     rw [show __eo_to_smt (eqTerm x (negTerm y)) =
         SmtTerm.eq (__eo_to_smt x) (__eo_to_smt (negTerm y)) by rfl]
     rw [smtx_eval_eq_term_eq, hxEval, hyNeg]
-    simp [__smtx_model_eval_eq, native_veq, native_qeq]
+    simp [__smtx_model_eval_eq, native_veq, native_req]
+    exact decide_eq_decide.mpr Iff.rfl
   have hOrTail :
       __smtx_model_eval M
           (__eo_to_smt (orTerm (eqTerm x (negTerm y)) (Term.Boolean false))) =
-        SmtValue.Boolean (native_or (native_qeq xq (native_qneg yq)) false) := by
+        SmtValue.Boolean (native_or (native_req xq (native_rneg yq)) false) := by
     rw [show __eo_to_smt (orTerm (eqTerm x (negTerm y)) (Term.Boolean false)) =
         SmtTerm.or (__eo_to_smt (eqTerm x (negTerm y)))
           (__eo_to_smt (Term.Boolean false)) by rfl]
@@ -462,8 +466,8 @@ private theorem eval_result_real
   have hRhs :
       __smtx_model_eval M (__eo_to_smt (rhsTerm x y)) =
         SmtValue.Boolean
-          (native_or (native_qeq xq yq)
-            (native_or (native_qeq xq (native_qneg yq)) false)) := by
+          (native_or (native_req xq yq)
+            (native_or (native_req xq (native_rneg yq)) false)) := by
     rw [show __eo_to_smt (rhsTerm x y) =
         SmtTerm.or (__eo_to_smt (eqTerm x y))
           (__eo_to_smt (orTerm (eqTerm x (negTerm y)) (Term.Boolean false))) by rfl]

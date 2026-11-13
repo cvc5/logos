@@ -13,9 +13,14 @@ import all Cpc.Proofs.Closed.IsClosedRec
 
 public section
 
+variable {uc : SmtUSortDom}
+
 open Eo
 open SmtEval
 open Smtm
+
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
 
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
@@ -442,7 +447,7 @@ private theorem substr_middle
     simp only [Int.ofNat_eq_natCast]
     omega
   unfold native_str_substr native_str_len
-  rw [if_neg]
+  rw [ite_eq_right]
   · rw [hMin]
     simp only [Int.ofNat_eq_natCast, Int.toNat_natCast]
   · simp only [Bool.or_eq_true, decide_eq_true_eq]
@@ -469,7 +474,7 @@ private theorem substr_suffix_drop
         ¬ (Int.ofNat start : Int) ≥ Int.ofNat s.length := by
       simpa [Int.ofNat_eq_natCast] using hLt
     unfold native_str_substr native_str_len
-    rw [if_neg (by
+    rw [ite_eq_right (by
       intro hBad
       simp only [Bool.or_eq_true, decide_eq_true_eq] at hBad
       exact hBad.elim
@@ -549,7 +554,7 @@ private theorem eval_forall_encoding_true
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T →
-        __smtx_value_canonical v = true →
+        __smtx_value_canonical M.usortDom v = true →
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval M
@@ -559,7 +564,7 @@ private theorem eval_forall_encoding_true
   have hNoSat :
       ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v)
             (SmtTerm.not body) = SmtValue.Boolean true := by
     rintro ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -572,12 +577,12 @@ private theorem eval_forall_encoding_true
     change (if _h :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortDom v = true ∧
           __smtx_model_eval (native_model_push M s T v)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean false
-    rw [dif_neg hNoSat]
+    rw [dite_eq_right hNoSat]
   change __smtx_model_eval_not
       (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean true
@@ -695,7 +700,7 @@ private theorem extract_pack_string
     · exact False.elim ((Int.not_lt_of_ge hi0) hi)
     · exact False.elim ((Int.not_le_of_gt hn0) hn)
     · exact False.elim ((Int.not_le_of_gt hilt) hlen)
-  rw [if_neg hbadFalse]
+  rw [ite_eq_right hbadFalse]
   simp [List.map_take, List.map_drop]
 
 private theorem unpack_extract_pack_string
@@ -1312,7 +1317,6 @@ theorem str_replace_re_reduction_pred_true
                 SmtValue.Numeral (Int.ofNat matchLen) := by
             simp [__smtx_model_eval, __smtx_model_eval__,
               hFinishEval, hFirstEval, native_zplus, native_zneg]
-            exact hEndDiff
           have hSuffixLenEval :
               __smtx_model_eval M (SmtTerm.neg sourceLen finish) =
                 SmtValue.Numeral
@@ -1508,7 +1512,6 @@ theorem str_replace_re_reduction_pred_true
                   SmtValue.Numeral (Int.ofNat matchLen) := by
               simp [__smtx_model_eval, __smtx_model_eval__,
                 hFinishEvalPush, hFirstEvalPush, native_zplus, native_zneg]
-              exact hEndDiff
             have hMatchedSubEvalPush :
                 __smtx_model_eval Mk
                     (SmtTerm.str_substr tz first

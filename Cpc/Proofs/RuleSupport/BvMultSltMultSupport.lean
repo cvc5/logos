@@ -121,14 +121,8 @@ private theorem unsigned_signed_product_fits
       (x.toNat : Int) * a.toInt < (2 : Int) ^ (W - 1) := by
   rcases T with _ | t
   · simp [BitVec.of_length_zero]
-    have hNonneg : 0 ≤ (2 : Int) ^ (W - 1) := Int.pow_nonneg (by decide)
-    have hPos : 0 < (2 : Int) ^ (W - 1) := Int.pow_pos (by decide)
-    exact ⟨hNonneg, hPos⟩
   rcases U with _ | u
   · simp [BitVec.of_length_zero]
-    have hNonneg : 0 ≤ (2 : Int) ^ (W - 1) := Int.pow_nonneg (by decide)
-    have hPos : 0 < (2 : Int) ^ (W - 1) := Int.pow_pos (by decide)
-    exact ⟨hNonneg, hPos⟩
   have hx0 : (0 : Int) ≤ x.toNat := Int.natCast_nonneg _
   have hxHiNat := x.isLt
   have hxHi : (x.toNat : Int) < (2 : Int) ^ (t + 1) := by exact_mod_cast hxHiNat
@@ -289,7 +283,7 @@ private theorem bvslt_bitvec_values {W : Nat} (x y : BitVec W) :
   have hW0 : native_zleq 0 (W : Int) = true := by
     simpa [SmtEval.native_zleq] using Int.natCast_nonneg W
   have hWCast : (W : Int) = native_nat_to_int W := by
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   have hXCanon : native_zeq (x.toNat : Int)
       (native_mod_total (x.toNat : Int) (native_int_pow2 (W : Int))) = true := by
     rw [hWCast]
@@ -343,7 +337,7 @@ private theorem bvsub_bitvec_values {W : Nat} (x y : BitVec W) :
         (native_int_pow2 (W : Int))) = _
   congr 2
   have hWCast : (W : Int) = native_nat_to_int W := by
-    simp [native_nat_to_int, Smtm.native_nat_to_int]
+    simp [native_nat_to_int, SmtEval.native_nat_to_int]
   rw [hWCast]
   rw [native_int_pow2_nat W]
   simp only [SmtEval.native_zplus, SmtEval.native_zneg,
@@ -1512,7 +1506,7 @@ private theorem mult_smt_typeof_bvmul
   change __smtx_typeof (SmtTerm.bvmul (__eo_to_smt p) (__eo_to_smt q)) = _
   rw [__smtx_typeof.eq_def] <;> simp only
   simp [__smtx_typeof_bv_op_2, hp, hq, native_ite,
-    native_nateq, Smtm.native_nateq]
+    native_nateq, SmtEval.native_nateq]
 
 private theorem mult_smt_typeof_bvsub
     (p q : Term) (W : Nat) :
@@ -1526,7 +1520,7 @@ private theorem mult_smt_typeof_bvsub
   change __smtx_typeof (SmtTerm.bvsub (__eo_to_smt p) (__eo_to_smt q)) = _
   rw [__smtx_typeof.eq_def] <;> simp only
   simp [__smtx_typeof_bv_op_2, hp, hq, native_ite,
-    native_nateq, Smtm.native_nateq]
+    native_nateq, SmtEval.native_nateq]
 
 private theorem mult_smt_typeof_bvslt
     (p q : Term) (W : Nat) :
@@ -1539,7 +1533,7 @@ private theorem mult_smt_typeof_bvslt
   change __smtx_typeof (SmtTerm.bvslt (__eo_to_smt p) (__eo_to_smt q)) = _
   rw [__smtx_typeof.eq_def] <;> simp only
   simp [__smtx_typeof_bv_op_2_ret, hp, hq, native_ite,
-    native_nateq, Smtm.native_nateq]
+    native_nateq, SmtEval.native_nateq]
 
 private theorem mult_smt_typeof_bvult
     (p q : Term) (W : Nat) :
@@ -1552,7 +1546,7 @@ private theorem mult_smt_typeof_bvult
   change __smtx_typeof (SmtTerm.bvult (__eo_to_smt p) (__eo_to_smt q)) = _
   rw [__smtx_typeof.eq_def] <;> simp only
   simp [__smtx_typeof_bv_op_2_ret, hp, hq, native_ite,
-    native_nateq, Smtm.native_nateq]
+    native_nateq, SmtEval.native_nateq]
 
 private theorem mult_smt_typeof_bvsgt
     (p q : Term) (W : Nat) :
@@ -1565,7 +1559,7 @@ private theorem mult_smt_typeof_bvsgt
   change __smtx_typeof (SmtTerm.bvsgt (__eo_to_smt p) (__eo_to_smt q)) = _
   rw [__smtx_typeof.eq_def] <;> simp only
   simp [__smtx_typeof_bv_op_2_ret, hp, hq, native_ite,
-    native_nateq, Smtm.native_nateq]
+    native_nateq, SmtEval.native_nateq]
 
 private theorem mult_smt_typeof_bitvec_payload (v : BitVec W) :
     __smtx_typeof
@@ -1573,7 +1567,7 @@ private theorem mult_smt_typeof_bitvec_payload (v : BitVec W) :
       SmtType.BitVec W := by
   have hW0 : native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hMod :
       native_mod_total (v.toNat : Int)
           (native_int_pow2 (native_nat_to_int W)) = (v.toNat : Int) := by
@@ -1585,7 +1579,7 @@ private theorem mult_smt_typeof_bitvec_payload (v : BitVec W) :
   have hMod' :
       (v.toNat : Int) =
         native_mod_total (v.toNat : Int) (native_int_pow2 (W : Int)) := by
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hMod.symm
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hMod.symm
   have hCanon :
       native_zeq (v.toNat : Int)
           (native_mod_total (v.toNat : Int) (native_int_pow2 (W : Int))) =
@@ -1605,7 +1599,7 @@ private theorem mult_smt_typeof_bitvec_payload (v : BitVec W) :
   rw [__smtx_typeof.eq_def] <;> simp only
   rw [hAnd]
   simp [native_ite, native_int_to_nat, native_nat_to_int,
-    SmtEval.native_int_to_nat, Smtm.native_nat_to_int]
+    SmtEval.native_int_to_nat, SmtEval.native_nat_to_int]
 
 private theorem typed_bv_mult_slt_raw
     (unsigned : Bool) (x y a n m tn an : Term) :
@@ -1636,7 +1630,7 @@ private theorem typed_bv_mult_slt_raw
     calc
       native_nat_to_int WN =
           native_nat_to_int TN + native_nat_to_int NN := by
-        simp [WN, native_nat_to_int, Smtm.native_nat_to_int]
+        simp [WN, native_nat_to_int, SmtEval.native_nat_to_int]
       _ = T + N := by rw [hTRound, hNRound]
       _ = native_zplus T N := rfl
   have hXExtTy := mult_extend_type_of_context unsigned x N T hXTy hN0
@@ -1702,7 +1696,7 @@ private theorem typed_bv_mult_slt_raw
     unfold Wide
     rw [← hWideRound]
     simp [native_int_to_nat, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hNilXSmt :
       __smtx_typeof
           (__eo_to_smt (bvMultSltNil unsigned (Term.Numeral N) x)) =
@@ -1848,7 +1842,7 @@ private theorem eval_bv_mult_slt_raw
     calc
       native_nat_to_int WW =
           native_nat_to_int TW + native_nat_to_int NW := by
-        simp [WW, native_nat_to_int, Smtm.native_nat_to_int]
+        simp [WW, native_nat_to_int, SmtEval.native_nat_to_int]
       _ = T + N := by rw [hTRound, hNRound]
       _ = native_zplus T N := rfl
   have hNatWidths : WW = UW + KW := by
@@ -1861,7 +1855,7 @@ private theorem eval_bv_mult_slt_raw
           rw [hURound, hKRound]
           rfl
         _ = native_nat_to_int (UW + KW) := by
-          simp [native_nat_to_int, Smtm.native_nat_to_int]
+          simp [native_nat_to_int, SmtEval.native_nat_to_int]
     change Int.ofNat WW = Int.ofNat (UW + KW) at hNatWidthsInt
     exact Int.ofNat_inj.mp hNatWidthsInt
   have hWidthBound : TW + UW ≤ WW :=
@@ -1879,15 +1873,15 @@ private theorem eval_bv_mult_slt_raw
   have hXEval' :
       __smtx_model_eval Mdl (__eo_to_smt x) =
         SmtValue.Binary (TW : Int) (xv.toNat : Int) := by
-    simpa [xv, native_nat_to_int, Smtm.native_nat_to_int] using hXEval
+    simpa [xv, native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
   have hYEval' :
       __smtx_model_eval Mdl (__eo_to_smt y) =
         SmtValue.Binary (TW : Int) (yv.toNat : Int) := by
-    simpa [yv, native_nat_to_int, Smtm.native_nat_to_int] using hYEval
+    simpa [yv, native_nat_to_int, SmtEval.native_nat_to_int] using hYEval
   have hAEval' :
       __smtx_model_eval Mdl (__eo_to_smt a) =
         SmtValue.Binary (UW : Int) (av.toNat : Int) := by
-    simpa [av, native_nat_to_int, Smtm.native_nat_to_int] using hAEval
+    simpa [av, native_nat_to_int, SmtEval.native_nat_to_int] using hAEval
   have hXExtEval :
       __smtx_model_eval Mdl
           (__eo_to_smt (bvMultSltExt unsigned (Term.Numeral N) x)) =
@@ -1896,23 +1890,23 @@ private theorem eval_bv_mult_slt_raw
     cases unsigned with
     | false =>
         unfold bvMultSltExt
-        simp only [Bool.false_eq_true, if_false]
+        simp only [Bool.false_eq_true, ite_false]
         rw [eval_sign_extend_term, hXEval']
         have hVal := sign_extend_val_bitvec TW NW (xv.toNat : Int)
           (Int.natCast_nonneg _) (by exact_mod_cast xv.isLt)
         rw [Nat.add_comm NW TW] at hVal
         rw [← hNRound]
         simpa [WW, Nat.add_comm, native_nat_to_int,
-          Smtm.native_nat_to_int, bitvec_ofInt_natCast_toNat] using hVal
+          SmtEval.native_nat_to_int, bitvec_ofInt_natCast_toNat] using hVal
     | true =>
         unfold bvMultSltExt
-        simp only [if_true]
+        simp only [ite_true]
         rw [mult_eval_zero_extend_term, hXEval']
         have hVal := zero_extend_val_bitvec_local TW NW (xv.toNat : Int)
           (Int.natCast_nonneg _) (by exact_mod_cast xv.isLt)
         rw [← hNRound]
         simpa [WW, Nat.add_comm, native_nat_to_int,
-          Smtm.native_nat_to_int, bitvec_ofInt_natCast_toNat] using hVal
+          SmtEval.native_nat_to_int, bitvec_ofInt_natCast_toNat] using hVal
   have hYExtEval :
       __smtx_model_eval Mdl
           (__eo_to_smt (bvMultSltExt unsigned (Term.Numeral N) y)) =
@@ -1921,29 +1915,29 @@ private theorem eval_bv_mult_slt_raw
     cases unsigned with
     | false =>
         unfold bvMultSltExt
-        simp only [Bool.false_eq_true, if_false]
+        simp only [Bool.false_eq_true, ite_false]
         rw [eval_sign_extend_term, hYEval']
         have hVal := sign_extend_val_bitvec TW NW (yv.toNat : Int)
           (Int.natCast_nonneg _) (by exact_mod_cast yv.isLt)
         rw [Nat.add_comm NW TW] at hVal
         rw [← hNRound]
         simpa [WW, Nat.add_comm, native_nat_to_int,
-          Smtm.native_nat_to_int, bitvec_ofInt_natCast_toNat] using hVal
+          SmtEval.native_nat_to_int, bitvec_ofInt_natCast_toNat] using hVal
     | true =>
         unfold bvMultSltExt
-        simp only [if_true]
+        simp only [ite_true]
         rw [mult_eval_zero_extend_term, hYEval']
         have hVal := zero_extend_val_bitvec_local TW NW (yv.toNat : Int)
           (Int.natCast_nonneg _) (by exact_mod_cast yv.isLt)
         rw [← hNRound]
         simpa [WW, Nat.add_comm, native_nat_to_int,
-          Smtm.native_nat_to_int, bitvec_ofInt_natCast_toNat] using hVal
+          SmtEval.native_nat_to_int, bitvec_ofInt_natCast_toNat] using hVal
   have hAExtEval :
       __smtx_model_eval Mdl
           (__eo_to_smt (bvMultSltExt false (Term.Numeral K) a)) =
         SmtValue.Binary (WW : Int) ((av.signExtend WW).toNat : Int) := by
     unfold bvMultSltExt
-    simp only [Bool.false_eq_true, if_false]
+    simp only [Bool.false_eq_true, ite_false]
     rw [eval_sign_extend_term, hAEval']
     have hVal := sign_extend_val_bitvec UW KW (av.toNat : Int)
       (Int.natCast_nonneg _) (by exact_mod_cast av.isLt)
@@ -1951,7 +1945,7 @@ private theorem eval_bv_mult_slt_raw
     have hAWidth : KW + UW = WW := by
       simpa [Nat.add_comm] using hNatWidths.symm
     rw [hAWidth] at hVal
-    simpa [hAWidth, native_nat_to_int, Smtm.native_nat_to_int,
+    simpa [hAWidth, native_nat_to_int, SmtEval.native_nat_to_int,
       bitvec_ofInt_natCast_toNat] using hVal
   rcases bv_mult_slt_nils_ne unsigned x y a (Term.Numeral N)
       (Term.Numeral K) (Term.Numeral T) (Term.Numeral U) hRawTy with
@@ -1987,14 +1981,14 @@ private theorem eval_bv_mult_slt_raw
           (__eo_to_smt (bvMultSltNil unsigned (Term.Numeral N) x)) =
         SmtValue.Binary (WW : Int) ((1#WW).toNat : Int) := by
     rw [hNilXEq]
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
       eval_binary Mdl (native_nat_to_int WW) ((1#WW).toNat : Int)
   have hNilYEval :
       __smtx_model_eval Mdl
           (__eo_to_smt (bvMultSltNil unsigned (Term.Numeral N) y)) =
         SmtValue.Binary (WW : Int) ((1#WW).toNat : Int) := by
     rw [hNilYEq]
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
       eval_binary Mdl (native_nat_to_int WW) ((1#WW).toNat : Int)
   have hZeroTEval :
       __smtx_model_eval Mdl
@@ -2005,7 +1999,7 @@ private theorem eval_bv_mult_slt_raw
     change __smtx_model_eval Mdl
         (SmtTerm.int_to_bv (SmtTerm.Numeral T) (SmtTerm.Numeral 0)) = _
     rw [smtx_eval_int_to_bv_numerals]
-    simp [native_nat_to_int, Smtm.native_nat_to_int,
+    simp [native_nat_to_int, SmtEval.native_nat_to_int,
       SmtEval.native_mod_total, ← hTRound]
   have hZeroUEval :
       __smtx_model_eval Mdl
@@ -2016,7 +2010,7 @@ private theorem eval_bv_mult_slt_raw
     change __smtx_model_eval Mdl
         (SmtTerm.int_to_bv (SmtTerm.Numeral U) (SmtTerm.Numeral 0)) = _
     rw [smtx_eval_int_to_bv_numerals]
-    simp [native_nat_to_int, Smtm.native_nat_to_int,
+    simp [native_nat_to_int, SmtEval.native_nat_to_int,
       SmtEval.native_mod_total, ← hURound]
   have hRawEq := bv_mult_slt_raw_eq_direct unsigned x y a
     (Term.Numeral N) (Term.Numeral K) (Term.Numeral T) (Term.Numeral U)

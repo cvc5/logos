@@ -12,6 +12,14 @@ set_option linter.unusedSimpArgs false
 set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
 
+private theorem native_rlt_cast_rat (a b : native_Rat) :
+    native_rlt (a : native_Real) (b : native_Real) = native_qlt a b := by
+  simpa only [native_rat_to_real] using native_rlt_rat_to_real a b
+
+private theorem native_rleq_cast_rat (a b : native_Rat) :
+    native_rleq (a : native_Real) (b : native_Real) = native_qleq a b := by
+  simpa only [native_rat_to_real] using native_rleq_rat_to_real a b
+
 theorem EvaluateProofInternal.run_evaluate_sound_apply_plus_core
     (M : SmtModel) (hM : model_wf M)
     (a b : Term)
@@ -320,7 +328,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_plus_core
     · have hARelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt a))
-            (SmtValue.Rational runA) := by
+            (SmtValue.Real runA) := by
         rw [hRunA] at hARel
         rw [show __eo_to_smt (Term.Rational runA) =
             SmtTerm.Rational runA by
@@ -330,7 +338,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_plus_core
       have hBRelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt b))
-            (SmtValue.Rational runB) := by
+            (SmtValue.Real runB) := by
         rw [hRunB] at hBRel
         rw [show __eo_to_smt (Term.Rational runB) =
             SmtTerm.Rational runB by
@@ -339,12 +347,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_plus_core
         exact hBRel
       have hAEval :
           __smtx_model_eval M (__eo_to_smt a) =
-            SmtValue.Rational runA :=
+            SmtValue.Real runA :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt a)) runA hARelValue
       have hBEval :
           __smtx_model_eval M (__eo_to_smt b) =
-            SmtValue.Rational runB :=
+            SmtValue.Real runB :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt b)) runB hBRelValue
       rw [show
@@ -357,10 +365,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_plus_core
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
-          (SmtValue.Rational (native_qplus runA runB))
+          (SmtValue.Real (native_rplus runA runB))
           (__smtx_model_eval M
             (SmtTerm.Rational (native_qplus runA runB)))
-      rw [__smtx_model_eval.eq_3]
+      rw [__smtx_model_eval.eq_3, native_rat_to_real_qplus]
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_mult_core
@@ -671,7 +679,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mult_core
     · have hARelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt a))
-            (SmtValue.Rational runA) := by
+            (SmtValue.Real runA) := by
         rw [hRunA] at hARel
         rw [show __eo_to_smt (Term.Rational runA) =
             SmtTerm.Rational runA by
@@ -681,7 +689,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mult_core
       have hBRelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt b))
-            (SmtValue.Rational runB) := by
+            (SmtValue.Real runB) := by
         rw [hRunB] at hBRel
         rw [show __eo_to_smt (Term.Rational runB) =
             SmtTerm.Rational runB by
@@ -690,12 +698,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mult_core
         exact hBRel
       have hAEval :
           __smtx_model_eval M (__eo_to_smt a) =
-            SmtValue.Rational runA :=
+            SmtValue.Real runA :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt a)) runA hARelValue
       have hBEval :
           __smtx_model_eval M (__eo_to_smt b) =
-            SmtValue.Rational runB :=
+            SmtValue.Real runB :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt b)) runB hBRelValue
       rw [show
@@ -708,10 +716,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_mult_core
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
-          (SmtValue.Rational (native_qmult runA runB))
+          (SmtValue.Real (native_rmult runA runB))
           (__smtx_model_eval M
             (SmtTerm.Rational (native_qmult runA runB)))
-      rw [__smtx_model_eval.eq_3]
+      rw [__smtx_model_eval.eq_3, native_rat_to_real_qmult]
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_neg_core
@@ -1067,7 +1075,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_neg_core
     · have hARelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt a))
-            (SmtValue.Rational runA) := by
+            (SmtValue.Real runA) := by
         rw [hRunA] at hARel
         rw [show __eo_to_smt (Term.Rational runA) =
             SmtTerm.Rational runA by
@@ -1077,7 +1085,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_neg_core
       have hBRelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt b))
-            (SmtValue.Rational runB) := by
+            (SmtValue.Real runB) := by
         rw [hRunB] at hBRel
         rw [show __eo_to_smt (Term.Rational runB) =
             SmtTerm.Rational runB by
@@ -1086,12 +1094,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_neg_core
         exact hBRel
       have hAEval :
           __smtx_model_eval M (__eo_to_smt a) =
-            SmtValue.Rational runA :=
+            SmtValue.Real runA :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt a)) runA hARelValue
       have hBEval :
           __smtx_model_eval M (__eo_to_smt b) =
-            SmtValue.Rational runB :=
+            SmtValue.Real runB :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt b)) runB hBRelValue
       rw [show
@@ -1104,10 +1112,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_neg_core
       rw [hAEval, hBEval]
       change
         RuleProofs.smt_value_rel
-          (SmtValue.Rational (native_qplus runA (native_qneg runB)))
+          (SmtValue.Real (native_rplus runA (native_rneg (native_rat_to_real runB))))
           (__smtx_model_eval M
             (SmtTerm.Rational (native_qplus runA (native_qneg runB))))
-      rw [__smtx_model_eval.eq_3]
+      rw [__smtx_model_eval.eq_3, native_rat_to_real_qplus, native_rat_to_real_qneg]
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_lt_core
@@ -1305,7 +1313,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_lt_core
     · have hARelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt a))
-            (SmtValue.Rational runA) := by
+            (SmtValue.Real runA) := by
         rw [hRunA] at hARel
         rw [show __eo_to_smt (Term.Rational runA) =
             SmtTerm.Rational runA by
@@ -1315,7 +1323,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_lt_core
       have hBRelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt b))
-            (SmtValue.Rational runB) := by
+            (SmtValue.Real runB) := by
         rw [hRunB] at hBRel
         rw [show __eo_to_smt (Term.Rational runB) =
             SmtTerm.Rational runB by
@@ -1324,12 +1332,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_lt_core
         exact hBRel
       have hAEval :
           __smtx_model_eval M (__eo_to_smt a) =
-            SmtValue.Rational runA :=
+            SmtValue.Real runA :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt a)) runA hARelValue
       have hBEval :
           __smtx_model_eval M (__eo_to_smt b) =
-            SmtValue.Rational runB :=
+            SmtValue.Real runB :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt b)) runB hBRelValue
       rw [show
@@ -1340,6 +1348,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_lt_core
               (__smtx_model_eval M (__eo_to_smt b)) by
         rw [__smtx_model_eval.eq_def] <;> simp only]
       rw [hAEval, hBEval]
+      simp only [__smtx_model_eval_lt, native_rlt_cast_rat]
       change
         RuleProofs.smt_value_rel
           (SmtValue.Boolean (native_qlt runA runB))
@@ -1548,7 +1557,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_leq_core
     · have hARelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt a))
-            (SmtValue.Rational runA) := by
+            (SmtValue.Real runA) := by
         rw [hRunA] at hARel
         rw [show __eo_to_smt (Term.Rational runA) =
             SmtTerm.Rational runA by
@@ -1558,7 +1567,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_leq_core
       have hBRelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt b))
-            (SmtValue.Rational runB) := by
+            (SmtValue.Real runB) := by
         rw [hRunB] at hBRel
         rw [show __eo_to_smt (Term.Rational runB) =
             SmtTerm.Rational runB by
@@ -1567,12 +1576,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_leq_core
         exact hBRel
       have hAEval :
           __smtx_model_eval M (__eo_to_smt a) =
-            SmtValue.Rational runA :=
+            SmtValue.Real runA :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt a)) runA hARelValue
       have hBEval :
           __smtx_model_eval M (__eo_to_smt b) =
-            SmtValue.Rational runB :=
+            SmtValue.Real runB :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt b)) runB hBRelValue
       rw [show
@@ -1583,6 +1592,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_leq_core
               (__smtx_model_eval M (__eo_to_smt b)) by
         rw [__smtx_model_eval.eq_def] <;> simp only]
       rw [hAEval, hBEval]
+      simp only [__smtx_model_eval_leq, native_rleq_cast_rat]
       change
         RuleProofs.smt_value_rel
           (SmtValue.Boolean (native_qleq runA runB))
@@ -1786,7 +1796,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_gt_core
     · have hARelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt a))
-            (SmtValue.Rational runA) := by
+            (SmtValue.Real runA) := by
         rw [hRunA] at hARel
         rw [show __eo_to_smt (Term.Rational runA) =
             SmtTerm.Rational runA by
@@ -1796,7 +1806,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_gt_core
       have hBRelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt b))
-            (SmtValue.Rational runB) := by
+            (SmtValue.Real runB) := by
         rw [hRunB] at hBRel
         rw [show __eo_to_smt (Term.Rational runB) =
             SmtTerm.Rational runB by
@@ -1805,12 +1815,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_gt_core
         exact hBRel
       have hAEval :
           __smtx_model_eval M (__eo_to_smt a) =
-            SmtValue.Rational runA :=
+            SmtValue.Real runA :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt a)) runA hARelValue
       have hBEval :
           __smtx_model_eval M (__eo_to_smt b) =
-            SmtValue.Rational runB :=
+            SmtValue.Real runB :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt b)) runB hBRelValue
       rw [show
@@ -1821,6 +1831,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_gt_core
               (__smtx_model_eval M (__eo_to_smt b)) by
         rw [__smtx_model_eval.eq_def] <;> simp only]
       rw [hAEval, hBEval]
+      simp only [__smtx_model_eval_gt, __smtx_model_eval_lt, native_rlt_cast_rat]
       change
         RuleProofs.smt_value_rel
           (SmtValue.Boolean (native_qlt runB runA))
@@ -2029,7 +2040,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_geq_core
     · have hARelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt a))
-            (SmtValue.Rational runA) := by
+            (SmtValue.Real runA) := by
         rw [hRunA] at hARel
         rw [show __eo_to_smt (Term.Rational runA) =
             SmtTerm.Rational runA by
@@ -2039,7 +2050,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_geq_core
       have hBRelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt b))
-            (SmtValue.Rational runB) := by
+            (SmtValue.Real runB) := by
         rw [hRunB] at hBRel
         rw [show __eo_to_smt (Term.Rational runB) =
             SmtTerm.Rational runB by
@@ -2048,12 +2059,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_geq_core
         exact hBRel
       have hAEval :
           __smtx_model_eval M (__eo_to_smt a) =
-            SmtValue.Rational runA :=
+            SmtValue.Real runA :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt a)) runA hARelValue
       have hBEval :
           __smtx_model_eval M (__eo_to_smt b) =
-            SmtValue.Rational runB :=
+            SmtValue.Real runB :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt b)) runB hBRelValue
       rw [show
@@ -2064,6 +2075,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_geq_core
               (__smtx_model_eval M (__eo_to_smt b)) by
         rw [__smtx_model_eval.eq_def] <;> simp only]
       rw [hAEval, hBEval]
+      simp only [__smtx_model_eval_geq, __smtx_model_eval_leq, native_rleq_cast_rat]
       change
         RuleProofs.smt_value_rel
           (SmtValue.Boolean (native_qleq runB runA))
@@ -2613,6 +2625,8 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
         native_to_real runB ≠ native_mk_rational 0 1 := by
       intro h
       exact hZeroNe h.symm
+    have hRunBNonzero : runB ≠ 0 := by
+      simpa [native_to_real, native_mk_rational] using hRunBZeroNe
     have hTermNe :
         Term.Rational (native_mk_rational 0 1) ≠
           Term.Rational (native_to_real runB) := by
@@ -2687,7 +2701,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
               (__smtx_model_eval M (__eo_to_smt a))
             __smtx_model_eval_ite
               (__smtx_model_eval_eq _v0
-                (SmtValue.Rational (native_mk_rational 0 1)))
+                (SmtValue.Real (native_mk_real 0 1)))
               (__smtx_model_eval_apply M
                 (native_model_lookup M native_qdiv_by_zero_id
                   (SmtType.FunType SmtType.Real SmtType.Real)) _v1)
@@ -2705,7 +2719,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
       rw [__smtx_model_eval.eq_3]
       simp [__smtx_to_real_coerce, __smtx_model_eval_eq,
         __smtx_model_eval_ite, __smtx_model_eval_qdiv_total, native_veq,
-        hRunBZeroNe, EvaluateProofInternal.native_to_real_qdiv_total_eval]
+        hRunBZeroNe, hRunBNonzero, EvaluateProofInternal.native_to_real_qdiv_total_eval]
       exact RuleProofs.smt_value_rel_refl _
   · rcases hArgsReal with ⟨hATyReal, hBTyReal⟩
     have hATransA : RuleProofs.eo_has_smt_translation a := by
@@ -2755,6 +2769,8 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
         runB ≠ native_mk_rational 0 1 := by
       intro h
       exact hZeroNe h.symm
+    have hRunBNonzero : runB ≠ 0 := by
+      simpa [native_mk_rational] using hRunBZeroNe
     have hTermNe :
         Term.Rational (native_mk_rational 0 1) ≠
           Term.Rational runB := by
@@ -2792,7 +2808,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
     · have hARelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt a))
-            (SmtValue.Rational runA) := by
+            (SmtValue.Real runA) := by
         rw [hRunA] at hARel
         rw [show __eo_to_smt (Term.Rational runA) =
             SmtTerm.Rational runA by
@@ -2802,7 +2818,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
       have hBRelValue :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt b))
-            (SmtValue.Rational runB) := by
+            (SmtValue.Real runB) := by
         rw [hRunB] at hBRel
         rw [show __eo_to_smt (Term.Rational runB) =
             SmtTerm.Rational runB by
@@ -2811,12 +2827,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
         exact hBRel
       have hAEval :
           __smtx_model_eval M (__eo_to_smt a) =
-            SmtValue.Rational runA :=
+            SmtValue.Real runA :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt a)) runA hARelValue
       have hBEval :
           __smtx_model_eval M (__eo_to_smt b) =
-            SmtValue.Rational runB :=
+            SmtValue.Real runB :=
         EvaluateProofInternal.smt_value_rel_rational_eq
           (__smtx_model_eval M (__eo_to_smt b)) runB hBRelValue
       rw [show
@@ -2828,7 +2844,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
               (__smtx_model_eval M (__eo_to_smt a))
             __smtx_model_eval_ite
               (__smtx_model_eval_eq _v0
-                (SmtValue.Rational (native_mk_rational 0 1)))
+                (SmtValue.Real (native_mk_real 0 1)))
               (__smtx_model_eval_apply M
                 (native_model_lookup M native_qdiv_by_zero_id
                   (SmtType.FunType SmtType.Real SmtType.Real)) _v1)
@@ -2845,7 +2861,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_core
       rw [__smtx_model_eval.eq_3]
       simp [__smtx_to_real_coerce, __smtx_model_eval_eq,
         __smtx_model_eval_ite, __smtx_model_eval_qdiv_total, native_veq,
-        hRunBZeroNe]
+        hRunBZeroNe, hRunBNonzero]
       exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
@@ -3068,11 +3084,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
             rfl]
           change
             RuleProofs.smt_value_rel
-              (SmtValue.Rational (native_mk_rational evalA 0))
+              (SmtValue.Real (native_mk_real evalA 0))
               (__smtx_model_eval M
                 (SmtTerm.Rational (native_mk_rational 0 1)))
-          rw [EvaluateProofInternal.native_mk_rational_zero_den, __smtx_model_eval.eq_3]
-          exact RuleProofs.smt_value_rel_refl _
+          rw [__smtx_model_eval.eq_3]
+          simpa [native_mk_real] using
+            RuleProofs.smt_value_rel_refl (SmtValue.Real 0)
     | inr hDenNonzero =>
         rcases hDenNonzero with ⟨qNum, hRunAToQ, hNZ⟩
         have hDenEq : native_to_real runB = qDen := by
@@ -3168,10 +3185,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
             rfl]
           change
             RuleProofs.smt_value_rel
-              (SmtValue.Rational (native_mk_rational runA runB))
+              (SmtValue.Real (native_mk_real runA runB))
               (__smtx_model_eval M
                 (SmtTerm.Rational (native_mk_rational runA runB)))
-          rw [__smtx_model_eval.eq_3]
+          rw [__smtx_model_eval.eq_3, native_rat_to_real_mk_rational]
           exact RuleProofs.smt_value_rel_refl _
   · rcases hArgsReal with ⟨hATyReal, hBTyReal⟩
     have hATransA : RuleProofs.eo_has_smt_translation a := by
@@ -3232,7 +3249,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
     have hBRelValue :
         RuleProofs.smt_value_rel
           (__smtx_model_eval M (__eo_to_smt b))
-          (SmtValue.Rational runB) := by
+          (SmtValue.Real runB) := by
       rw [hRunB] at hBRel
       rw [show __eo_to_smt (Term.Rational runB) =
           SmtTerm.Rational runB by
@@ -3241,7 +3258,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
       exact hBRel
     have hBEval :
         __smtx_model_eval M (__eo_to_smt b) =
-          SmtValue.Rational runB :=
+          SmtValue.Real runB :=
       EvaluateProofInternal.smt_value_rel_rational_eq
         (__smtx_model_eval M (__eo_to_smt b)) runB hBRelValue
     change
@@ -3330,12 +3347,13 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
             rfl]
           change
             RuleProofs.smt_value_rel
-              (SmtValue.Rational
-                (native_qdiv_total evalA (native_mk_rational 0 1)))
+              (SmtValue.Real
+                (native_rdiv_total evalA (native_rat_to_real (native_mk_rational 0 1))))
               (__smtx_model_eval M
                 (SmtTerm.Rational (native_mk_rational 0 1)))
-          rw [EvaluateProofInternal.native_qdiv_total_zero, __smtx_model_eval.eq_3]
-          exact RuleProofs.smt_value_rel_refl _
+          rw [__smtx_model_eval.eq_3]
+          simpa [native_rdiv_total, native_mk_rational] using
+            RuleProofs.smt_value_rel_refl (SmtValue.Real 0)
     | inr hDenNonzero =>
         rcases hDenNonzero with ⟨qNum, hRunAToQ, hNZ⟩
         have hDenEq : runB = qDen := by
@@ -3397,7 +3415,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
         · have hARelValue :
               RuleProofs.smt_value_rel
                 (__smtx_model_eval M (__eo_to_smt a))
-                (SmtValue.Rational runA) := by
+                (SmtValue.Real runA) := by
             rw [hRunA] at hARel
             rw [show __eo_to_smt (Term.Rational runA) =
                 SmtTerm.Rational runA by
@@ -3406,7 +3424,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
             exact hARel
           have hAEval :
               __smtx_model_eval M (__eo_to_smt a) =
-                SmtValue.Rational runA :=
+                SmtValue.Real runA :=
             EvaluateProofInternal.smt_value_rel_rational_eq
               (__smtx_model_eval M (__eo_to_smt a)) runA hARelValue
           rw [show
@@ -3431,10 +3449,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_qdiv_total_core
             rfl]
           change
             RuleProofs.smt_value_rel
-              (SmtValue.Rational (native_qdiv_total runA runB))
+              (SmtValue.Real (native_rdiv_total runA runB))
               (__smtx_model_eval M
                 (SmtTerm.Rational (native_qdiv_total runA runB)))
-          rw [__smtx_model_eval.eq_3]
+          rw [__smtx_model_eval.eq_3, native_rat_to_real_qdiv_total]
           exact RuleProofs.smt_value_rel_refl _
 
 theorem EvaluateProofInternal.run_evaluate_sound_apply_div_total_core

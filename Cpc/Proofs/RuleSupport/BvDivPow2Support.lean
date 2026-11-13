@@ -302,7 +302,7 @@ private theorem typed_bv_udiv_pow2_term
     rw [hEmptyTy]
     simp [__smtx_typeof_concat, native_int_to_nat,
       SmtEval.native_int_to_nat, native_nat_to_int,
-      Smtm.native_nat_to_int, SmtEval.native_zplus,
+      SmtEval.native_nat_to_int, SmtEval.native_zplus,
       Int.max_eq_left hDInt]
   have hPRound := native_int_to_nat_roundtrip P hP0
   have hDRound := native_int_to_nat_roundtrip D hDNonneg
@@ -329,7 +329,7 @@ private theorem typed_bv_udiv_pow2_term
     rw [typeof_concat_eq, hZeroTy, hTailTy]
     simp [__smtx_typeof_concat, native_int_to_nat,
       SmtEval.native_int_to_nat, native_nat_to_int,
-      Smtm.native_nat_to_int, SmtEval.native_zplus, hWidthNat,
+      SmtEval.native_nat_to_int, SmtEval.native_zplus, hWidthNat,
       hPRound, hDRound, hPD, hPDInt, Int.max_eq_left hPInt,
       Int.max_eq_left hDInt]
   unfold bvUdivPow2Term
@@ -713,7 +713,7 @@ private theorem typed_bv_urem_pow2_term
     rw [hEmptyTy]
     simp [__smtx_typeof_concat, native_int_to_nat,
       SmtEval.native_int_to_nat, native_nat_to_int,
-      Smtm.native_nat_to_int, SmtEval.native_zplus,
+      SmtEval.native_nat_to_int, SmtEval.native_zplus,
       Int.max_eq_left hDInt]
   have hWidthNat :
       native_int_to_nat A + native_int_to_nat D = native_int_to_nat W := by
@@ -740,7 +740,7 @@ private theorem typed_bv_urem_pow2_term
     rw [typeof_concat_eq, hZeroTy, hTailTy]
     simp [__smtx_typeof_concat, native_int_to_nat,
       SmtEval.native_int_to_nat, native_nat_to_int,
-      Smtm.native_nat_to_int, SmtEval.native_zplus, hWidthNat,
+      SmtEval.native_nat_to_int, SmtEval.native_zplus, hWidthNat,
       hARound, hDRound, hAD, hADInt, Int.max_eq_left hAInt,
       Int.max_eq_left hDInt]
   unfold bvUremPow2Term
@@ -838,7 +838,6 @@ private theorem native_int_pow2_pos_of_nonneg_div
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 private theorem native_int_pow2_lt_of_lt_nonneg_div
     {w k : native_Int} (hw : 0 ≤ w) (hlt : w < k) :
@@ -852,7 +851,7 @@ private theorem native_int_pow2_lt_of_lt_nonneg_div
   have hPowNat : (2 : Nat) ^ Int.toNat w < 2 ^ Int.toNat k :=
     Nat.pow_lt_pow_right (by decide) hNat
   rw [native_int_pow2, native_int_pow2, native_zexp_total,
-    native_zexp_total, if_neg hnotW, if_neg hnotK]
+    native_zexp_total, ite_eq_right hnotW, ite_eq_right hnotK]
   exact_mod_cast hPowNat
 
 private theorem native_int_pow2_add_of_nonneg_div
@@ -1299,11 +1298,11 @@ private theorem pow2_and_true {a b : Term} :
   intro h
   cases a <;> cases b <;>
     simp [__eo_and, __eo_requires, native_teq, native_ite, native_not,
-      SmtEval.native_not, SmtEval.native_and] at h |-
+      SmtEval.native_not, SmtEval.native_and] at h ⊢
   case Binary.Binary w1 n1 w2 n2 =>
     by_cases hw : w1 = w2 <;> simp [hw] at h
   case Boolean.Boolean b1 b2 =>
-    cases b1 <;> cases b2 <;> simp at h |-
+    cases b1 <;> cases b2 <;> simp at h ⊢
 
 private def bvUremPow2Guard
     (x v n nmp pm vRef1 vRef2 nmpRef nRef vRef3 pmRef vRef4 : Term) :

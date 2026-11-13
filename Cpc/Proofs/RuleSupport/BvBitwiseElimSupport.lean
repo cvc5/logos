@@ -467,7 +467,7 @@ theorem bvand_generated_nil_eq_allOnes
   intro hNe
   exact bvAnd_nil_eq_allOnes_of_type w (by
     simp [__eo_to_smt_type, native_ite, SmtEval.native_zleq, native_nat_to_int, native_int_to_nat,
-      Smtm.native_nat_to_int, SmtEval.native_int_to_nat]) hNe
+      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]) hNe
 
 theorem bvor_generated_nil_eq_zero
     (w : Nat) :
@@ -481,7 +481,7 @@ theorem bvor_generated_nil_eq_zero
   intro hNe
   exact bvOr_nil_eq_zero_of_type w (by
     simp [__eo_to_smt_type, native_ite, SmtEval.native_zleq, native_nat_to_int, native_int_to_nat,
-      Smtm.native_nat_to_int, SmtEval.native_int_to_nat]) hNe
+      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]) hNe
 
 theorem bvxor_generated_nil_eq_zero
     (w : Nat) :
@@ -495,7 +495,7 @@ theorem bvxor_generated_nil_eq_zero
   intro hNe
   exact bvXor_nil_eq_zero_of_type w (by
     simp [__eo_to_smt_type, native_ite, SmtEval.native_zleq, native_nat_to_int, native_int_to_nat,
-      Smtm.native_nat_to_int, SmtEval.native_int_to_nat]) hNe
+      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat]) hNe
 
 theorem bvand_generated_nil_smt_type
     (w : Nat) (hNe : __eo_nil (Term.UOp UserOp.bvand)

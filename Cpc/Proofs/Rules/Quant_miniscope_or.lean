@@ -251,7 +251,7 @@ private theorem native_eval_texists_eq_of_body_eval_eq_same_typed
     {body body' : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical M.usortDom v = true ->
       __smtx_model_eval (native_model_push M s T v) body =
         __smtx_model_eval (native_model_push M s T v) body') :
     native_eval_exists M s T body =
@@ -260,13 +260,13 @@ private theorem native_eval_texists_eq_of_body_eval_eq_same_typed
   let P : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) body' =
           SmtValue.Boolean true
   change (if _ : P then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -403,7 +403,7 @@ private theorem smtx_model_eval_exists_not_true_false_of_env :
       let P : Prop :=
         ∃ v : SmtValue,
           __smtx_typeof_value v = __eo_to_smt_type T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortDom v = true ∧
             __smtx_model_eval
                 (native_model_push M s (__eo_to_smt_type T) v)
                 (__eo_to_smt_exists env
@@ -952,7 +952,7 @@ private theorem miniToSmt_eval_eq_of_contains_atomic_term_list_free_rec_false_ma
                     __smtx_model_eval N (miniToSmt a) :=
                 hRec (u := a) (except' := except)
                   (exceptVars' := exceptVars) (M' := M) (N' := N)
-                  (by simp; omega) hM hN hExcept hATy hANoFree hAgree
+                  (by simp) hM hN hExcept hATy hANoFree hAgree
               change
                 __smtx_model_eval M (SmtTerm.or (miniToSmt y) (miniToSmt a)) =
                   __smtx_model_eval N

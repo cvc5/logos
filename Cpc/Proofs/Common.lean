@@ -43,8 +43,8 @@ set_option maxHeartbeats 10000000
 compiler happened to emit for one signature, and the numbering shifts when the
 operator set does: the `and` arm of `__smtx_model_eval` is `eq_9` in `Cpc` and
 `eq_7` in `CpcMini`.  A proof in the checker layer that names a number is
-reusable only by accident, so the three arms this layer needs are named here
-and the numbers are not used anywhere in it.
+reusable only by accident, so the arms this layer needs are named here and in
+`ModelEval`, and the numbers are not used anywhere in it.
 `scripts/check-proof-modularity.sh` keeps it that way.
 -/
 
@@ -56,11 +56,6 @@ theorem typeof_boolean_eq (b : Bool) :
 /-- The `None` arm of the generated `__smtx_typeof`. -/
 theorem typeof_none_eq :
     __smtx_typeof SmtTerm.None = SmtType.None := by
-  rfl
-
-/-- The `Boolean` arm of the generated `__smtx_model_eval`. -/
-theorem model_eval_boolean_eq (M : SmtModel) (b : Bool) :
-    __smtx_model_eval M (SmtTerm.Boolean b) = SmtValue.Boolean b := by
   rfl
 
 /-- The `and` arm of the generated `__smtx_model_eval`. -/
@@ -337,7 +332,7 @@ def smt_seq_rel (s1 s2 : SmtSeq) : Prop :=
   __smtx_model_eval_eq (SmtValue.Seq s1) (SmtValue.Seq s2) = SmtValue.Boolean true
 
 /-- Relates non-regex SMT equality evaluation to Lean equality of values. -/
-private theorem smtx_model_eval_eq_true_iff_of_not_reglan_pair {v1 v2 : SmtValue}
+theorem smtx_model_eval_eq_true_iff_of_not_reglan_pair {v1 v2 : SmtValue}
     (hReg :
       ¬ ∃ r1 r2, v1 = SmtValue.RegLan r1 ∧ v2 = SmtValue.RegLan r2) :
     __smtx_model_eval_eq v1 v2 = SmtValue.Boolean true ↔ v1 = v2 := by
@@ -349,13 +344,6 @@ private theorem smtx_model_eval_seq_eq_true_iff {s1 s2 : SmtSeq} :
     __smtx_model_eval_eq (SmtValue.Seq s1) (SmtValue.Seq s2) = SmtValue.Boolean true ↔
       s1 = s2 := by
   simp [__smtx_model_eval_eq, native_veq]
-
-/-- Stable rewrite for evaluating SMT equality terms. -/
-private theorem smtx_model_eval_eq_term_eq
-    (M : SmtModel) (x y : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.eq x y) =
-      __smtx_model_eval_eq (__smtx_model_eval M x) (__smtx_model_eval M y) := by
-  rw [__smtx_model_eval.eq_def] <;> simp only
 
 /-- Establishes an equality relating `smtx_model_eval` and `refl_aux`. -/
 private theorem smtx_model_eval_eq_refl_aux
@@ -552,5 +540,38 @@ theorem smtx_typeof_eq_refl (T : SmtType) :
 theorem smtx_model_eval_eq_refl (v : SmtValue) :
   __smtx_model_eval_eq v v = SmtValue.Boolean true := by
   exact (smt_value_rel_iff_model_eval_eq_true v v).mp (smt_value_rel_refl v)
+
+
+/-! ## Adapters for downstream users -/
+
+/-- SMT equality always evaluates to a Boolean. -/
+theorem eval_eq_boolean (v w : SmtValue) :
+    ∃ b, __smtx_model_eval_eq v w = SmtValue.Boolean b := by
+  unfold __smtx_model_eval_eq
+  split <;> exact ⟨_, rfl⟩
+
+/-- An SMT term is unsatisfiable iff it evaluates to `false` in every
+well-formed model. -/
+theorem smt_satisfiability_false_iff (t : SmtTerm) :
+    smt_satisfiability t false ↔
+      ∀ M, model_wf M → __smtx_model_eval M t = SmtValue.Boolean false := by
+  constructor
+  · intro h
+    cases h with
+    | intro_false h => exact h
+  · exact smt_satisfiability.intro_false t
+
+/-- An EO term is true in `M` iff it is Boolean and evaluates to `true`. -/
+theorem eo_interprets_true_iff (M : SmtModel) (t : Term) :
+    eo_interprets M t true ↔
+      eo_has_bool_type t ∧
+        __smtx_model_eval M (__eo_to_smt t) = SmtValue.Boolean true := by
+  unfold eo_interprets
+  constructor
+  · intro h
+    cases h with
+    | intro_true hty hev => exact ⟨hty, hev⟩
+  · rintro ⟨hty, hev⟩
+    exact smt_interprets.intro_true _ _ hty hev
 
 end RuleProofs

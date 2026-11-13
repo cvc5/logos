@@ -270,7 +270,7 @@ theorem native_nat_to_int_int_to_nat_eq
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hnNonneg
-  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem native_int_to_nat_one_plus
@@ -355,7 +355,6 @@ private theorem native_int_pow2_pos_of_nonneg
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 theorem native_mod_zero_pow2
     {w : native_Int} (hw : native_zleq 0 w = true) :
@@ -566,8 +565,6 @@ theorem eval_bvnego_matches_eq_min
     eval_bv_nego_min M i hNonneg]
   have hSub : native_zplus (native_zplus 1 i) (native_zneg 1) = i := by
     simp [SmtEval.native_zplus, SmtEval.native_zneg]
-    rw [Int.add_comm 1 i]
-    exact Int.add_sub_cancel i 1
   simp [__smtx_model_eval_bvnego, __smtx_model_eval_eq, native_veq,
     hSub, SmtEval.native_zeq]
 

@@ -36,7 +36,7 @@ private theorem ofInt_toNat_canonical (w : Nat) (c : Int) (h0 : 0 ≤ c) (h1 : c
 private theorem natpow2_eq (w : Nat) : native_int_pow2 (↑w : Int) = (2:Int)^w := by
   have hwnn : ¬ ((↑w:Int) < 0) := by omega
   unfold native_int_pow2 native_zexp_total
-  rw [if_neg hwnn, Int.toNat_natCast]
+  rw [ite_eq_right hwnn, Int.toNat_natCast]
 
 private theorem int_canon_bounds {n : Int} {W : Nat}
     (h : native_zeq n (native_mod_total n (native_int_pow2 (↑W:Int))) = true) :
@@ -1073,9 +1073,9 @@ private theorem extract_bin_ne_stuck (W cn i : Int) :
     unfold native_zleq; exact decide_eq_true h
   unfold __eo_extract
   cases hc : native_or (native_zlt i 0) (native_zlt (native_zplus i (native_zneg i)) 0)
-  · simp only [native_ite, hc, Bool.false_eq_true, if_false, __eo_mk_binary, hz, if_true]
+  · simp only [native_ite, hc, Bool.false_eq_true, ite_false, __eo_mk_binary, hz, ite_true]
     intro h; cases h
-  · simp only [native_ite, hc, if_true]; intro h; cases h
+  · simp only [native_ite, hc, ite_true]; intro h; cases h
 
 -- The bit list built from a constant `Binary W cn` over an index list `xs` is an `FB` list.
 private theorem const_to_bitlist_FB (W cn : Int) :
@@ -1953,7 +1953,7 @@ private theorem fold_eval (op : BvOpSpec) (M : SmtModel) (W : Nat) :
         rw [eq_binary_false a1 ↑W cnb ha1ne hbin, eo_ite_false,
           eo_mk_apply_ne (by intro h; cases h) (ne_stuck_of_eval_bin M _ ↑W vleb hleb)]
         rw [op.htypeof a1 _, htya, htyle]
-        simp [__smtx_typeof_bv_op_2, native_nateq, Smtm.native_nateq, native_ite]
+        simp [__smtx_typeof_bv_op_2, native_nateq, SmtEval.native_nateq, native_ite]
       · show __smtx_model_eval M (__eo_to_smt (__eo_ite (__eo_eq a1 (Term.Binary ↑W cnb)) b
             (__eo_mk_apply (Term.Apply op.f a1)
               (__eo_list_erase_rec b (Term.Binary ↑W cnb))))) = _
@@ -2241,7 +2241,7 @@ private theorem bv_bitwise_slicing_eval_rel_op (op : BvOpSpec)
   have hLhsTy : __smtx_typeof (__eo_to_smt lhs) = SmtType.BitVec ↑W := by
     dsimp [lhs]
     rw [op.htypeof a1 a2, hty1, hty2]
-    simp [__smtx_typeof_bv_op_2, native_nateq, Smtm.native_nateq, native_ite]
+    simp [__smtx_typeof_bv_op_2, native_nateq, SmtEval.native_nateq, native_ite]
   have hSp := mk_spine op M hM W lhs hRepNN hLhsTy hList hConstNe
   rcases fold_eval op M W lhs hSp with
     ⟨cn, vle, hGfc, hc0, hc1, hEraseListRec, hEraseTyRec, hEraseEvalRec,

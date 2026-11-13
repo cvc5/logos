@@ -393,7 +393,7 @@ private theorem width_nat_to_int_eq
     native_nat_to_int (native_int_to_nat n) = n := by
   have hnNonneg : 0 <= n := by
     simpa [SmtEval.native_zleq] using hNonneg
-  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using Int.toNat_of_nonneg hnNonneg
 
 private theorem smt_bitvec_type_of_eo_bitvec_type_with_width

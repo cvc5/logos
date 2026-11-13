@@ -273,7 +273,7 @@ private theorem conclusion_facts (M : SmtModel) (hM : model_wf M) (t pat repl po
         (SmtTerm.Numeral 0)) (SmtTerm.Numeral 0)) = SmtValue.Boolean true at he
       simp only [smtx_eval_eq_term_eq, smtx_eval_str_indexof_term_eq, smtx_eval_numeral_term_eq, hTEval, hPatEval] at he
       simpa [idx, __smtx_model_eval_eq, __smtx_model_eval_str_indexof, native_veq] using he
-  have hIndexNonneg : 0 ≤ idx := by rw [hIndexZero]; exact Int.le_refl 0
+  have hIndexNonneg : 0 ≤ idx := by rw [hIndexZero]
   let unpackValue : SmtValue -> List SmtValue
     | SmtValue.Seq xs => native_unpack_seq xs
     | _ => []

@@ -9,6 +9,10 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Mathlib's `Monad List` would make the `native_String` to `List SmtValue` coercion
+-- elaborate through `coeM` rather than `impl_native_string_to_values`.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
 
@@ -408,8 +412,7 @@ decreasing_by
   all_goals
     subst_vars
     change Term._sizeOf_1 _ < Term._sizeOf_1 _
-    simp [Term._sizeOf_1]
-    omega
+    simp [Term._sizeOf_1] <;> omega
 
 private theorem eo_interprets_and_left_false_intro
     (M : SmtModel) (hM : model_wf M) (A B : Term) :
@@ -660,7 +663,7 @@ private theorem bvand_args_of_bitvec_type (y x : Term) (w : native_Nat) :
               (__smtx_typeof (__eo_to_smt x)) by
           rw [__smtx_typeof.eq_40]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite,
-        native_nateq, Smtm.native_nateq] using hTy'
+        native_nateq, SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -699,7 +702,7 @@ private theorem bvor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
               (__smtx_typeof (__eo_to_smt x)) by
           rw [__smtx_typeof.eq_41]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite,
-        native_nateq, Smtm.native_nateq] using hTy'
+        native_nateq, SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -730,7 +733,7 @@ private theorem bvand_result_type_of_non_none (y x : Term) :
     SmtType.BitVec w
   rw [__smtx_typeof.eq_40]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-    Smtm.native_nateq]
+    SmtEval.native_nateq]
 
 private theorem bvor_result_type_of_non_none (y x : Term) :
     __smtx_typeof (__eo_to_smt (mkBvOr y x)) ≠ SmtType.None ->
@@ -757,7 +760,7 @@ private theorem bvor_result_type_of_non_none (y x : Term) :
     SmtType.BitVec w
   rw [__smtx_typeof.eq_41]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-    Smtm.native_nateq]
+    SmtEval.native_nateq]
 
 private theorem native_str_in_re_mk_union
     (str : native_String) (r s : SmtRegLan) :

@@ -85,7 +85,7 @@ jobs:
   checks:
     name: ${{ matrix.group }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: ${{ matrix.group == 'cpc-proofs' && 45 || 30 }}
     permissions:
       contents: read
     strategy:
@@ -95,6 +95,7 @@ jobs:
           - regressions
           - cpc-proofs
           - cpcmini
+          - checker-boundary
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -109,16 +110,39 @@ jobs:
           # Each matrix group manages its own build cache below.
           use-github-cache: false
 
+      # Dependencies are shared by the two verification groups. Save them before
+      # proof checks, so a failed or timed-out proof job can still warm this cache.
+      - name: Restore verification dependencies
+        if: matrix.group == 'cpc-proofs' || matrix.group == 'cpcmini'
+        id: verification-deps
+        uses: actions/cache/restore@v5
+        with:
+          path: verification/.lake/packages
+          key: verification-deps-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'verification/lean-toolchain', 'verification/lakefile.toml', 'verification/lake-manifest.json', 'scripts/cache-mathlib.sh') }}
+
+      - name: Fetch Mathlib build cache
+        if: (matrix.group == 'cpc-proofs' || matrix.group == 'cpcmini') && steps.verification-deps.outputs.cache-hit != 'true'
+        run: bash scripts/cache-mathlib.sh
+
+      - name: Save verification dependencies
+        if: (matrix.group == 'cpc-proofs' || matrix.group == 'cpcmini') && steps.verification-deps.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: verification/.lake/packages
+          key: ${{ steps.verification-deps.outputs.cache-primary-key }}
+
       # Save each successful commit's build so the cache follows source changes.
       # Restore the latest cache for this group and build configuration, then
       # let Lake rebuild changed targets.
       - name: Restore Lake build cache
         uses: actions/cache@v5
         with:
-          path: .lake/build
-          key: lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-${{ github.sha }}
+          path: |
+            .lake/build
+            verification/.lake/build
+          key: lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'verification/lean-toolchain', 'verification/lakefile.toml', 'verification/lake-manifest.json') }}-${{ github.sha }}
           restore-keys: |
-            lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-
+            lake-build-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json', 'verification/lean-toolchain', 'verification/lakefile.toml', 'verification/lake-manifest.json') }}-
 
       - name: Run ${{ matrix.group }} checks
         run: bash scripts/run-ci.sh "${CI_GROUP}"

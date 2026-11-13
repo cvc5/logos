@@ -406,7 +406,7 @@ private theorem str_in_re_sigma_star_rec_allchar_eq
         (Term.Numeral (Int.ofNat n)) =
       __str_mk_str_in_re_sigma_star_rec s r
         (Term.Numeral (Int.ofNat (n + 1))) := by
-  simp [__str_mk_str_in_re_sigma_star_rec, __eo_add, native_zplus, Int.natCast_add]
+  simp [__str_mk_str_in_re_sigma_star_rec, __eo_add, native_zplus]
 
 private theorem smtx_model_eval_str_in_re_sigma_star_rec
     (M : SmtModel) (s : Term) (ss : SmtSeq)

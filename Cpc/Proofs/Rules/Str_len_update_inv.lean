@@ -117,7 +117,7 @@ private theorem native_seq_update_length
               List.take (Int.toNat i) xs ++
                 (List.take (xs.length - Int.toNat i) ys ++
                   List.drop (Int.toNat i + ys.length) xs)) = xs from
-        if_pos hHigh]
+        ite_eq_left hHigh]
     · simp [hHigh]
       have hNonneg : 0 ≤ i := int_nonneg_of_not_neg hNeg
       let idx := Int.toNat i
@@ -136,7 +136,7 @@ private theorem native_seq_update_length
             List.take (Int.toNat i) xs ++
               (List.take (xs.length - Int.toNat i) ys ++
                 List.drop (Int.toNat i + ys.length) xs) from
-        if_neg hHigh]
+        ite_eq_right hHigh]
       simpa [idx] using native_seq_update_slice_length xs ys idx hIdxLe
 
 private theorem typed___eo_prog_str_len_update_inv_impl
