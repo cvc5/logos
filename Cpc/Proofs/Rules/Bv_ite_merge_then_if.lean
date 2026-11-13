@@ -247,7 +247,7 @@ private theorem typed___eo_prog_bv_ite_merge_then_if_impl
 
 private theorem bv1_not (b : Bool) :
     __smtx_model_eval_bvnot (bv1 b) = bv1 (!b) := by
-  cases b <;> native_decide
+  cases b <;> decide
 
 private theorem eval_bvnot_bv1_term
     (M : SmtModel) (x : Term) (b : Bool)

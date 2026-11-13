@@ -544,8 +544,7 @@ public theorem cmd_step_str_replace_all_find_properties
                           have hw := (smt_seq_component_wf_of_non_none_type (__eo_to_smt t) _ htS).2
                           intro hT
                           subst T
-                          change false = true at hw
-                          contradiction
+                          exact type_wf_non_none hw (by simp [__eo_to_smt_type])
                         have hIdxTy : __eo_typeof_str_indexof (Term.Apply Term.Seq T) (Term.Apply Term.Seq T) Term.Int = Term.Int := by
                           change __eo_requires (__eo_eq T T) (Term.Boolean true) Term.Int = Term.Int
                           rw [eo_eq_self_true_of_ne_stuck T hTNe]

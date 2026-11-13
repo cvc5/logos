@@ -8,6 +8,7 @@ install/install-cpc.sh       regenerate Cpc, and with --all CpcMini too
 install/install-sig.sh       compile one signature into one package
 install/get-eo-compiler.sh   fetch and build the compiler
 install/defs/Cpc.eos         what the symbols of CPC mean, kept in git
+install/defs/smt.eos         what the symbols of SMT-LIB mean, kept in git
 install/defs/Cpc.cached.eo   the signature they compile, kept in git
 install/deps/                the Ethos tree and the compiler, ignored by git
 ```
@@ -17,7 +18,8 @@ install/deps/                the Ethos tree and the compiler, ignored by git
 ```bash
 install/get-eo-compiler.sh                          # once
 install/install-cpc.sh ~/cvc5/proofs/eo/cpc/Cpc.eo  # regenerate Cpc
-scripts/build.sh Cpc                                # check the result
+scripts/build.sh Cpc                                # build the checker interface
+scripts/build.sh Cpc.Proofs.StaticTyping             # check inhabitation against the model
 ```
 
 Passing the signature is the whole of a normal update. It can be any Eunoia
@@ -33,6 +35,7 @@ compiles to has to move it as well. `--all` is both:
 ```bash
 install/install-cpc.sh --all ~/cvc5/proofs/eo/cpc/Cpc.eo
 scripts/build.sh Cpc CpcMini
+scripts/build.sh Cpc.Proofs.StaticTyping CpcMini.Proofs.StaticTyping
 ```
 
 With no signature to hand, `--cached` compiles that recorded copy:
@@ -73,6 +76,7 @@ Cpc/Logos.lean       Cpc/SmtModelDefs.lean   Cpc/Spec.lean
 Cpc/LogosTerm.lean   Cpc/SmtValueOrder.lean  Cpc/Proofs/RuleLemmas.lean
 Cpc/Parser.lean      Cpc/SmtModel.lean       Cpc/Proofs/Rules/<Rule>.lean
 Cpc/SmtEval.lean
+Cpc/SmtSyntax.lean   Cpc/SmtTyping.lean     Cpc/SmtTranslate.lean
 ```
 
 Each of those signature-wide modules is installed with a banner saying it is
@@ -82,8 +86,9 @@ get one: the compiler's stub is where the proof then goes, so it stops being
 generated code the moment it is worth keeping.
 
 Everything else is hand-written and is left alone: `Cpc/Api*.lean`,
-`Cpc/Diagnostics.lean`, `Cpc/Native.lean` and `Cpc/Native/`, and everything under
+`Cpc/TranslationChecks.lean`, `Cpc/Diagnostics.lean`, `Cpc/Native.lean` and `Cpc/Native/`, and everything under
 `Cpc/Proofs/` other than `RuleLemmas.lean` and `Rules/`.
+The shared parser and datatype elaboration under `Logos/` are also hand-written.
 
 Rule files are preserved. The compiler emits each rule as its statement with
 `sorry` for a proof, and the proofs live in those same files, so an existing
@@ -131,12 +136,21 @@ that updates the copy.
 
 `install/defs/Cpc.eos` says what each symbol of the signature means, as a
 transformation into the deep embedding, and this repository is where it lives.
-The core SMT-LIB semantics it is written against live with the eoc compiler
-rather than here: `tools/eoc/semantics/smt.eos` in
-[cvc5/ethos](https://github.com/cvc5/ethos).
+`install/defs/smt.eos` gives the core SMT-LIB semantics it is written against.
 
 `Spec.lean` and the `SmtModel` modules are what the two compile to, so changing
 what CPC means changes what satisfiability means in Logos.
+
+The compiler's target layout separates a static interface from model semantics.
+`SmtSyntax` contains types, datatype declarations, and terms; `SmtTyping` holds
+static typing, well-formedness, and the structural inhabitation check;
+`SmtTranslate` contains EO-to-SMT translation. `Spec` connects translation to
+model satisfiability. `Proofs/StaticTyping.lean` connects the inhabitation check
+to the semantic default generator for both packages.
+
+The EOC compiler emits this layout directly; there is no installation-time
+splitting pass. The installer checks that all of the modules are present
+before copying any compiler output into a package.
 
 In practice they only need to change when a new theory symbol is added, when
 the formalized semantics of an operator is being revised, or when the Eunoia
@@ -153,8 +167,7 @@ install/install-cpc.sh ~/cvc5/proofs/eo/cpc/Cpc.eo \
 
 This regenerates the Logos source against something other than the pair the
 checked-in packages are of, so `--check` reports the tree as out of date until
-the change lands in `install/defs/Cpc.eos` and in the `smt.eos` of the pinned
-compiler.
+the change lands in `install/defs/Cpc.eos` and `install/defs/smt.eos`.
 
 ## install-sig.sh
 
@@ -181,13 +194,18 @@ with `install/deps/`.
 
 The Ethos commit is not an option. It is hardcoded as `ETHOS_VERSION` in
 `get-eo-compiler.sh`. For internal development only,
-`scripts/bump-eoc-version.py` moves it to the current head of `cvc5/ethos`'s `main` and
-copies that same revision's `tools/eoc/semantics/development-cpc.eos` into the
-authoritative `install/defs/Cpc.eos`. It then runs `get-eo-compiler.sh` and
+`scripts/bump-eoc-version.py` moves it to the current head of `cvc5/ethos`'s `main`,
+then runs `get-eo-compiler.sh` and
 `install/install-cpc.sh --all --cached`, regenerating both `Cpc` and `CpcMini`.
 The full commit hash is recorded, so later installations use that revision even
 after `main` advances. The helper does not fetch a new CPC signature or run the
-Lean proof checks.
+Lean proof checks, and it does not modify `install/defs/Cpc.eos` or
+`install/defs/smt.eos`, which are maintained in Logos.
+
+`smt.eos` is written against declarations the compiler keeps, such as the shape
+of a map in `plugins/model_smt/model_smt.eo`, so it has to stay compatible with
+the pinned compiler. When moving the pin, compare `install/defs/smt.eos` with
+`tools/eoc/semantics/smt.eos` at the new commit and bring over what has changed.
 
 The Eunoia signature that Logos is compiled against is pinned by copy:
 `install/defs/Cpc.cached.eo` is the one the packages were compiled from, and

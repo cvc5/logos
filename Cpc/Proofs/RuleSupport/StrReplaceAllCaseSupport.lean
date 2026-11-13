@@ -25,6 +25,8 @@ import all Cpc.Proofs.Closed.IsClosedRec
 
 public section
 
+variable {uc : SmtUSortDom}
+
 open Eo
 open SmtEval
 open Smtm
@@ -116,20 +118,20 @@ private theorem tchoice_eq_of_unique
     (M : SmtModel) (s : native_String) (T : SmtType) (b : SmtTerm)
     (v₀ : SmtValue)
     (hTy : __smtx_typeof_value v₀ = T)
-    (hCanon : __smtx_value_canonical v₀ = true)
+    (hCanon : __smtx_value_canonical M.usortDom v₀ = true)
     (hSat : __smtx_model_eval (native_model_push M s T v₀) b =
       SmtValue.Boolean true)
     (hUnique : ∀ v : SmtValue, __smtx_typeof_value v = T ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical M.usortDom v = true ->
       __smtx_model_eval (native_model_push M s T v) b =
         SmtValue.Boolean true -> v = v₀) :
     native_eval_choice M s T b = v₀ := by
   classical
   have hEx : ∃ v : SmtValue, __smtx_typeof_value v = T ∧
-      __smtx_value_canonical v = true ∧
+      __smtx_value_canonical M.usortDom v = true ∧
       __smtx_model_eval (native_model_push M s T v) b =
         SmtValue.Boolean true := ⟨v₀, hTy, hCanon, hSat⟩
-  rw [dif_pos hEx]
+  rw [dite_eq_left hEx]
   rcases Classical.choose_spec hEx with ⟨h1, h2, h3⟩
   exact hUnique _ h1 h2 h3
 
@@ -214,7 +216,7 @@ private theorem eval_eq_term_eq (M : SmtModel) (x y : SmtTerm) :
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem numeral_canonical (m : native_Int) :
-    __smtx_value_canonical (SmtValue.Numeral m) = true := by
+    __smtx_value_canonical uc (SmtValue.Numeral m) = true := by
   simp [__smtx_value_canonical]
 
 private theorem numeral_typeof (m : native_Int) :
@@ -229,7 +231,7 @@ private theorem extract_zero_toNat (ss : List SmtValue) (m : Int) :
     have hTake : Int.toNat m = 0 := by omega
     rw [hTake]
     unfold native_seq_extract
-    rw [if_pos]
+    rw [ite_eq_left]
     · rfl
     · simp only [Bool.or_eq_true, decide_eq_true_eq]
       exact Or.inl (Or.inr hm')
@@ -283,7 +285,7 @@ private theorem find_nonempty_aux_str_to_re_cons_eq
         native_re_prefix_match_re_of_list]
       by_cases hPrefix : native_seq_prefix_eq (p :: ps) (x :: xs) = true
       · simp [hPrefix]
-      · simp only [if_neg hPrefix]
+      · simp only [ite_eq_right hPrefix]
         exact find_nonempty_aux_str_to_re_cons_eq p ps xs (idx + 1)
 
 private theorem find_nonempty_from_str_to_re_cons_eq
@@ -365,7 +367,7 @@ private theorem scan_ends_aux_str_to_re_cons_eq
           rw [scan_ends_aux_str_to_re_cons_eq p ps xs fuel
             (pos + idx + matchLen) hNext]
           rw [hIndex]
-          rw [if_neg (show ¬ Int.ofNat idx < 0 from
+          rw [ite_eq_right (show ¬ Int.ofNat idx < 0 from
             Int.not_lt_of_ge (Int.natCast_nonneg idx))]
           simp [hFind, hMatchLen, List.drop_drop, List.map_map,
             Function.comp_def, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
@@ -405,7 +407,7 @@ private theorem occ_index_eq_bound (ss ts : List SmtValue) (nn : Nat)
       (native_str_to_re ts) ss 0 =
       occEnds ts ss := occ_ends_aux_eq (ss.length + 1) ts ss
   simp only [native_seq_occur_index, native_str_occur_index_re, hAux]
-  rw [if_pos]
+  rw [ite_eq_left]
   · rw [Int.toNat_natCast]
     simp only [bound, Int.ofNat_eq_natCast]
   · refine ⟨Int.natCast_nonneg _, ?_⟩
@@ -507,14 +509,14 @@ private theorem extract_full_drop (ss : List SmtValue) (b : Nat)
   by_cases hEq : b = ss.length
   · subst hEq
     unfold native_seq_extract
-    rw [if_pos]
+    rw [ite_eq_left]
     · rw [List.drop_length]
     · simp only [Bool.or_eq_true, decide_eq_true_eq]
       right
       simp [Int.ofNat_eq_natCast]
   · have hLt : b < ss.length := by omega
     unfold native_seq_extract
-    rw [if_neg]
+    rw [ite_eq_right]
     · rw [Int.toNat_natCast]
       have hMin :
           min ((ss.length : Nat) : Int)
@@ -525,7 +527,6 @@ private theorem extract_full_drop (ss : List SmtValue) (b : Nat)
       rw [hMin, Int.toNat_natCast]
       apply List.take_of_length_le
       rw [List.length_drop]
-      exact Nat.le_refl _
     · simp only [Bool.or_eq_true, decide_eq_true_eq, Int.ofNat_eq_natCast]
       intro hAbs
       unfold native_Int at hAbs
@@ -613,7 +614,7 @@ private theorem eval_forall_encoding_true
     (hAll :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T ->
-        __smtx_value_canonical v = true ->
+        __smtx_value_canonical M.usortDom v = true ->
         __smtx_model_eval (native_model_push M s T v) body =
           SmtValue.Boolean true) :
     __smtx_model_eval M
@@ -623,7 +624,7 @@ private theorem eval_forall_encoding_true
   have hNoSat :
       ¬ ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v)
             (SmtTerm.not body) = SmtValue.Boolean true := by
     rintro ⟨v, hvTy, hvCanonical, hvNot⟩
@@ -636,12 +637,12 @@ private theorem eval_forall_encoding_true
     change (if _h :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical M.usortDom v = true ∧
           __smtx_model_eval (native_model_push M s T v)
               (SmtTerm.not body) = SmtValue.Boolean true then
         SmtValue.Boolean true else SmtValue.Boolean false) =
       SmtValue.Boolean false
-    rw [dif_neg hNoSat]
+    rw [dite_eq_right hNoSat]
   change __smtx_model_eval_not
       (native_eval_exists M s T (SmtTerm.not body)) =
         SmtValue.Boolean true
@@ -654,7 +655,7 @@ private theorem extract_cast_drop_take (ss : List SmtValue) (a b : Nat) :
   by_cases hb : b = 0
   · subst hb
     unfold native_seq_extract
-    rw [if_pos]
+    rw [ite_eq_left]
     · simp
     · simp only [Bool.or_eq_true, decide_eq_true_eq]
       left
@@ -671,25 +672,25 @@ private theorem int_wf : __smtx_type_wf SmtType.Int = true := by
 /-- The choice value at a well-formed type is always typed and canonical
 (local copy of the `SkolemizeSupport` fact, kept off that import chain). -/
 private theorem tchoice_typed_canonical_of_wf'
-    (N : SmtModel) (s : native_String) (T : SmtType) (body : SmtTerm)
+    (N : SmtModel) (huc : usort_dom_wf N.usortDom) (s : native_String) (T : SmtType) (body : SmtTerm)
     (hWf : __smtx_type_wf T = true) :
     __smtx_typeof_value (native_eval_choice N s T body) = T ∧
-      __smtx_value_canonical (native_eval_choice N s T body) =
+      __smtx_value_canonical N.usortDom (native_eval_choice N s T body) =
         true := by
   classical
   by_cases hSat :
       ∃ v : SmtValue,
         __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
+          __smtx_value_canonical N.usortDom v = true ∧
           __smtx_model_eval (native_model_push N s T v) body =
             SmtValue.Boolean true
-  · rw [dif_pos hSat]
+  · rw [dite_eq_left hSat]
     exact ⟨(Classical.choose_spec hSat).1, (Classical.choose_spec hSat).2.1⟩
   · have hTy : ∃ v : SmtValue,
-        __smtx_typeof_value v = T ∧ __smtx_value_canonical v := by
-      rcases canonical_type_inhabited_of_type_wf T hWf with ⟨v, hvTy, hvCan⟩
+        __smtx_typeof_value v = T ∧ __smtx_value_canonical N.usortDom v := by
+      rcases canonical_type_inhabited_of_type_wf huc T hWf with ⟨v, hvTy, hvCan⟩
       exact ⟨v, hvTy, by simpa [value_canonical] using hvCan⟩
-    rw [dif_neg hSat, dif_pos hTy]
+    rw [dite_eq_right hSat, dite_eq_left hTy]
     refine ⟨(Classical.choose_spec hTy).1, ?_⟩
     simpa using (Classical.choose_spec hTy).2
 
@@ -698,7 +699,7 @@ private theorem agrees_push_push
     (s₂ : native_String) (T₂ : SmtType) (v₂ : SmtValue) :
     model_agrees_on_globals M
       (native_model_push (native_model_push M s₁ T₁ v₁) s₂ T₂ v₂) := by
-  refine ⟨?_, ?_⟩
+  refine ⟨?_, ?_, rfl⟩
   · intro s' T'
     simp [native_model_lookup, model_key, native_model_push]
   · intro fid A B

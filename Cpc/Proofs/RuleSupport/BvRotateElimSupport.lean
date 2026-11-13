@@ -20,7 +20,7 @@ private theorem natpow2_eq (w : Nat) :
     native_int_pow2 (↑w : Int) = (2 : Int) ^ w := by
   have hwnn : ¬ ((↑w : Int) < 0) := by omega
   unfold native_int_pow2 native_zexp_total
-  rw [if_neg hwnn, Int.toNat_natCast]
+  rw [ite_eq_right hwnn, Int.toNat_natCast]
 
 private theorem ofInt_toNat_canonical (w : Nat) (c : Int)
     (h0 : 0 ≤ c) (h1 : c < 2 ^ w) :
@@ -185,12 +185,12 @@ private theorem leftStep_eq_rotateLeft_one
   | zero =>
       have hp : p = 0 := by simp at hp1; omega
       subst p
-      native_decide
+      decide
   | succ W =>
       cases W with
       | zero =>
           have hp : p = 0 ∨ p = 1 := by simp at hp1; omega
-          rcases hp with rfl | rfl <;> native_decide
+          rcases hp with rfl | rfl <;> decide
       | succ W =>
           have hNat : W + 1 + 1 = W + 2 := by omega
           rw [hNat] at hp1 ⊢
@@ -258,12 +258,12 @@ private theorem rightStep_eq_rotateRight_one
   | zero =>
       have hp : p = 0 := by simp at hp1; omega
       subst p
-      native_decide
+      decide
   | succ W =>
       cases W with
       | zero =>
           have hp : p = 0 ∨ p = 1 := by simp at hp1; omega
-          rcases hp with rfl | rfl <;> native_decide
+          rcases hp with rfl | rfl <;> decide
       | succ W =>
           have hNat : W + 1 + 1 = W + 2 := by omega
           rw [hNat] at hp1 ⊢
@@ -623,7 +623,7 @@ private theorem native_int_to_nat_roundtrip
     native_nat_to_int (native_int_to_nat w) = w := by
   have hw : (0 : Int) ≤ w := by
     simpa [SmtEval.native_zleq] using hw0
-  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using Int.toNat_of_nonneg hw
 
 private theorem eval_bvsize_eq
@@ -732,7 +732,7 @@ private theorem eval_bv_rotate_elim_lhs_eq
   rcases bitvec_value_canonical hEvalTy with ⟨p, hXEval⟩
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) = SmtValue.Binary (↑W) p := by
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
   have hEvalTy' :
       __smtx_typeof_value (SmtValue.Binary (↑W) p) = SmtType.BitVec W := by
     simpa [hXEval'] using hEvalTy

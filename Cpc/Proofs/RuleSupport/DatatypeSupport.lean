@@ -258,7 +258,7 @@ theorem datatype_value_head_of_type
     | NotValue => simp [__smtx_typeof_value] at hTy
     | Boolean _ => simp [__smtx_typeof_value] at hTy
     | Numeral _ => simp [__smtx_typeof_value] at hTy
-    | Rational _ => simp [__smtx_typeof_value] at hTy
+    | Real _ => simp [__smtx_typeof_value] at hTy
     | Binary w n =>
         cases hWidth : native_zleq 0 w <;>
           cases hMod : native_zeq n (native_mod_total n (native_int_pow2 w)) <;>

@@ -666,8 +666,8 @@ private theorem bv_concat_extract_merge_adjacent_extracts
   simp only [BitVec.getElem_cast, BitVec.getElem_append,
     BitVec.getElem_extractLsb']
   by_cases hLow : q < J + 1 - I
-  · simp only [hLow, dif_pos]
-  · simp only [hLow, dif_neg]
+  · simp only [hLow, dite_eq_left]
+  · simp only [hLow, dite_eq_right]
     have hIndexEq :
         J + 1 + (q - (J + 1 - I)) = I + q := by omega
     have hFull : I + q < W := by omega
@@ -748,11 +748,11 @@ private theorem eval_bv_concat_extract_merge_core
   have hDHighInt : 0 < kv + 1 + -j2v := by
     have hsimpa := hDHigh0
     try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg] at hsimpa ⊢
-    exact of_decide_eq_true hsimpa
+    exact hsimpa
   have hDLowInt : 0 < j1v + 1 + -iv := by
     have hsimpa := hDLow0
     try simp [SmtEval.native_zlt, SmtEval.native_zplus, SmtEval.native_zneg] at hsimpa ⊢
-    exact of_decide_eq_true hsimpa
+    exact hsimpa
   have hJ2LtK1 : j2v < kv + 1 := by
     have hSub : 0 < (kv + 1 - j2v) := by
       rw [Int.sub_eq_add_neg]
@@ -776,16 +776,16 @@ private theorem eval_bv_concat_extract_merge_core
   let J := native_int_to_nat j1v
   let I := native_int_to_nat iv
   have hWRound : (↑W : Int) = w := by
-    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hKRound : (↑K : Int) = kv := by
-    simpa [K, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [K, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip kv hK0
   have hJRound : (↑J : Int) = j1v := by
-    simpa [J, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [J, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip j1v hJ10
   have hIRound : (↑I : Int) = iv := by
-    simpa [I, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [I, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip iv hi0
   have hJ2Round : (↑(J + 1) : Int) = j2v := by
     calc
@@ -812,15 +812,15 @@ private theorem eval_bv_concat_extract_merge_core
   have hSEval' :
       __smtx_model_eval M (__eo_to_smt s) =
         SmtValue.Binary (↑W : Int) p := by
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hSEval
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hSEval
   have hWidth0 : native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hRange := bitvec_payload_range_of_canonical hWidth0 hCanonical
   have hp0 : (0 : Int) ≤ p := hRange.1
   have hp1 : p < (2 : Int) ^ W := by
     simpa [natpow2_eq, native_nat_to_int,
-      Smtm.native_nat_to_int] using hRange.2
+      SmtEval.native_nat_to_int] using hRange.2
   change __smtx_model_eval_concat
       (__smtx_model_eval M
         (__eo_to_smt
@@ -1100,13 +1100,13 @@ theorem facts_bv_concat_extract_merge_program
   have hDWholeNonneg : native_zleq 0 dWhole = true :=
     native_zleq_of_zlt_true _ _ hDWhole0
   have hDHighRound : (↑DH : Int) = dHigh := by
-    simpa [DH, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [DH, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip dHigh hDHighNonneg
   have hDLowRound : (↑DL : Int) = dLow := by
-    simpa [DL, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [DL, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip dLow hDLowNonneg
   have hDWholeRound : (↑DW : Int) = dWhole := by
-    simpa [DW, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [DW, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip dWhole hDWholeNonneg
   have hDIntEq : dWhole = dHigh + dLow := by
     have hArithmetic :

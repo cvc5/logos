@@ -1,9 +1,11 @@
 module
 
-public import CpcMini.SmtModel
-import all CpcMini.SmtModel
+public import CpcMini.Proofs.ModelEval
+import all CpcMini.Proofs.ModelEval
 
 public section
+
+variable {uc : SmtUSortDom}
 
 open SmtEval
 open Smtm
@@ -15,7 +17,7 @@ def type_inhabited (T : SmtType) : Prop :=
   ∃ v : SmtValue, __smtx_typeof_value v = T
 
 /-- Proof-facing canonicality predicate for SMT values. -/
-def value_canonical (v : SmtValue) : Prop :=
-  __smtx_value_canonical v = true
+def value_canonical (uc : SmtUSortDom) (v : SmtValue) : Prop :=
+  __smtx_value_canonical uc v = true
 
 end Smtm

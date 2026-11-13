@@ -788,7 +788,7 @@ theorem eval_bv_umulo_expanded
     rw [hCond]
     simp [__eo_ite, native_ite, native_teq]
     rw [hOrigEval]
-    simp [hNoOverflow, __smtx_model_eval]
+    simpa [__smtx_model_eval] using Nat.lt_of_not_ge hNoOverflow
   · have hTop :
         __eo_add (Term.Numeral (native_nat_to_int w))
           (Term.Numeral (-1 : native_Int)) =

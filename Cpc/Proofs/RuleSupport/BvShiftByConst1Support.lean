@@ -68,11 +68,11 @@ private theorem typeof_bvand_arg_types_of_ne_stuck_local1
     exists width,
       A = Term.Apply (Term.UOp UserOp.BitVec) width /\
         B = Term.Apply (Term.UOp UserOp.BitVec) width := by
-  cases A <;> cases B <;> simp [__eo_typeof_bvand] at h |-
+  cases A <;> cases B <;> simp [__eo_typeof_bvand] at h ⊢
   case Apply.Apply f n g m =>
-    cases f <;> cases g <;> simp [__eo_typeof_bvand] at h |-
+    cases f <;> cases g <;> simp [__eo_typeof_bvand] at h ⊢
     case UOp.UOp opA opB =>
-      cases opA <;> cases opB <;> simp [__eo_typeof_bvand] at h |-
+      cases opA <;> cases opB <;> simp [__eo_typeof_bvand] at h ⊢
       have hReq :
           __eo_requires (__eo_eq n m) (Term.Boolean true)
               (Term.Apply (Term.UOp UserOp.BitVec) n) ≠
@@ -132,11 +132,11 @@ private theorem eo_typeof_concat_args_bitvec_of_ne_stuck_local
     exists wa wb,
       A = Term.Apply (Term.UOp UserOp.BitVec) wa /\
       B = Term.Apply (Term.UOp UserOp.BitVec) wb := by
-  cases A <;> cases B <;> simp [__eo_typeof_concat] at h |-
+  cases A <;> cases B <;> simp [__eo_typeof_concat] at h ⊢
   case Apply.Apply f a g b =>
-    cases f <;> cases g <;> simp [__eo_typeof_concat] at h |-
+    cases f <;> cases g <;> simp [__eo_typeof_concat] at h ⊢
     case UOp.UOp op op' =>
-      cases op <;> cases op' <;> simp [__eo_typeof_concat] at h |-
+      cases op <;> cases op' <;> simp [__eo_typeof_concat] at h ⊢
 
 private theorem smt_typeof_concat_bitvec
     (a b : Term) (wa wb : native_Nat) :
@@ -742,7 +742,7 @@ private theorem int_lt_native_int_pow2_of_nonneg_lt
       (Int.toNat W : Int) < ((2 ^ Int.toNat W : Nat) : Int) := by
     exact_mod_cast hNat
   have hWPow : W < native_int_pow2 W := by
-    rw [native_int_pow2, native_zexp_total, if_neg hWNotNeg]
+    rw [native_int_pow2, native_zexp_total, ite_eq_right hWNotNeg]
     rw [← hWCast]
     exact_mod_cast hNat
   exact Int.lt_trans hAW hWPow
@@ -785,7 +785,6 @@ private theorem native_int_pow2_pos_of_nonneg_local1
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 private theorem lshr_const1_value_local
     (W A N p : native_Int)
@@ -1192,11 +1191,11 @@ private theorem shift_and_true1 {a b : Term} :
   intro h
   cases a <;> cases b <;>
     simp [__eo_and, __eo_requires, native_teq, native_ite, native_not,
-      SmtEval.native_not, SmtEval.native_and] at h |-
+      SmtEval.native_not, SmtEval.native_and] at h ⊢
   case Binary.Binary w1 n1 w2 n2 =>
     by_cases hw : w1 = w2 <;> simp [hw] at h
   case Boolean.Boolean b1 b2 =>
-    cases b1 <;> cases b2 <;> simp at h |-
+    cases b1 <;> cases b2 <;> simp at h ⊢
 
 private def bvShlByConst1Guard
     (x amount en amountRef1 xRef1 enRef xRef2 amountRef2 : Term) : Term :=
@@ -1739,7 +1738,6 @@ private theorem typed_bv_ashr_by_const_1_term
     have hOne :
         native_zplus (native_zplus N 1) (native_zneg N) = 1 := by
       simp [SmtEval.native_zplus, SmtEval.native_zneg]
-      grind
     have hSignD0 :
         native_zlt 0
             (native_zplus (native_zplus N 1) (native_zneg N)) = true := by
@@ -1767,7 +1765,7 @@ private theorem typed_bv_ashr_by_const_1_term
         (__eo_to_smt (bvAshrByConst1Sign x (Term.Numeral N)))) = _
     rw [typeof_repeat_eq, hSignTy]
     simp [__smtx_typeof_repeat, native_ite, hAOne,
-      SmtEval.native_zmult, native_nat_to_int, Smtm.native_nat_to_int]
+      SmtEval.native_zmult, native_nat_to_int, SmtEval.native_nat_to_int]
   have hA0 := native_zleq_of_zlt_true 0 A hAPos
   have hLowTy := smt_typeof_extract_of_context x W N A hXSmtTy
     hW0 hA0 hNW hD0
@@ -1873,7 +1871,7 @@ private theorem eval_extract_msb_bitvec_local1
     (by exact Int.natCast_nonneg _)
     (by norm_cast; exact x.isLt) rfl (by push_cast; omega)]
   rw [bitvec_ofInt_natCast_toNat, extractLsb_sign_bit_local1 hW]
-  cases x.msb <;> native_decide
+  cases x.msb <;> decide
 
 private theorem bvashr_bitvec_value_local1
     (x : BitVec W) (A : Nat) (hW : 0 < W) :
@@ -1910,7 +1908,7 @@ private theorem bvashr_decomp_local1
   by_cases hLow : i < W - A
   · have hAI : A + i < W := by omega
     simp only [hLow]
-    rw [dif_pos hAI, BitVec.getLsbD_eq_getElem hAI]
+    rw [dite_eq_left hAI, BitVec.getLsbD_eq_getElem hAI]
     simp
   · have hHigh : W - A ≤ i := Nat.le_of_not_gt hLow
     simp [hLow]
@@ -1978,20 +1976,20 @@ private theorem eval_repeat_rec_zero_bit_local1 :
         SmtValue.Binary (native_nat_to_int n) 0
   | Nat.zero => by
       simp [__smtx_repeat_rec, native_nat_to_int,
-        Smtm.native_nat_to_int]
+        SmtEval.native_nat_to_int]
   | Nat.succ n => by
       rw [__smtx_repeat_rec, eval_repeat_rec_zero_bit_local1 n]
       have hWidth :
           native_zplus (1 : native_Int) (native_nat_to_int n) =
             native_nat_to_int (Nat.succ n) := by
         simp [SmtEval.native_zplus, native_nat_to_int,
-          Smtm.native_nat_to_int]
+          SmtEval.native_nat_to_int]
         rw [Int.add_comm]
       have hWidthInt : (1 : Int) + ↑n = ↑n + 1 := by
         rw [Int.add_comm]
       simp [__smtx_model_eval_concat, native_binary_concat,
         SmtEval.native_zplus, SmtEval.native_zmult,
-        native_nat_to_int, Smtm.native_nat_to_int,
+        native_nat_to_int, SmtEval.native_nat_to_int,
         native_mod_total, hWidth, hWidthInt]
 
 private theorem eval_repeat_rec_one_bit_local1 :
@@ -2001,13 +1999,13 @@ private theorem eval_repeat_rec_one_bit_local1 :
           (native_int_pow2 (native_nat_to_int n) - 1)
   | Nat.zero => by
       simp [__smtx_repeat_rec, native_nat_to_int,
-        Smtm.native_nat_to_int, native_int_pow2, native_zexp_total]
+        SmtEval.native_nat_to_int, native_int_pow2, native_zexp_total]
   | Nat.succ n => by
       rw [__smtx_repeat_rec, eval_repeat_rec_one_bit_local1 n]
       have hPowSucc :
           native_int_pow2 (native_nat_to_int (Nat.succ n)) =
             2 * native_int_pow2 (native_nat_to_int n) := by
-        simpa [native_nat_to_int, Smtm.native_nat_to_int] using
+        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
           native_int_pow2_nat_succ_local1 n
       have hRaw :
           native_int_pow2 (native_nat_to_int n) +
@@ -2037,10 +2035,10 @@ private theorem eval_repeat_rec_one_bit_local1 :
               (native_int_pow2 (↑n + 1)) =
             native_int_pow2 (↑n + 1) - 1 := by
         rw [hRaw]
-        simpa [native_nat_to_int, Smtm.native_nat_to_int] using hMod
+        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hMod
       simpa [__smtx_model_eval_concat, native_binary_concat,
         SmtEval.native_zplus, SmtEval.native_zmult,
-        native_nat_to_int, Smtm.native_nat_to_int, hWidthInt]
+        native_nat_to_int, SmtEval.native_nat_to_int, hWidthInt]
         using hPayload
 
 private theorem eval_repeat_bit_local1 (A : Nat) (b : Bool) :
@@ -2058,12 +2056,11 @@ private theorem eval_repeat_bit_local1 (A : Nat) (b : Bool) :
   | false =>
       simp [__smtx_model_eval_repeat, hAToNat,
         eval_repeat_rec_zero_bit_local1, BitVec.fill_toNat,
-        native_nat_to_int, Smtm.native_nat_to_int]
+        native_nat_to_int, SmtEval.native_nat_to_int]
   | true =>
       simp [__smtx_model_eval_repeat, hAToNat,
         eval_repeat_rec_one_bit_local1, BitVec.fill_toNat,
-        native_nat_to_int, Smtm.native_nat_to_int, natpow2_eq]
-      exact hOnesCast.symm
+        native_nat_to_int, SmtEval.native_nat_to_int, natpow2_eq]
 
 private theorem ashr_const1_value_local1
     (W A N p : native_Int)

@@ -227,7 +227,6 @@ private theorem native_int_pow2_pos_of_nonneg
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 private theorem native_int_pow2_succ_pred
     {w : native_Int} (hwpos : 0 < w) :
@@ -670,7 +669,7 @@ private theorem eval_bv_zero_one (M : SmtModel) :
   have hTrans : __eo_to_smt bvOneZeroTerm =
       SmtTerm.int_to_bv (SmtTerm.Numeral 1) (SmtTerm.Numeral 0) := rfl
   rw [hTrans, smtx_eval_int_to_bv_numerals]
-  native_decide
+  decide
 
 /-- The SMT type of `bvsize t` is `Int` and its value is the static width. -/
 private theorem eval_bvsize_eq (M : SmtModel) (t : Term) (w : native_Int)
@@ -940,7 +939,7 @@ private theorem smt_typeof_rhs_int
     have hNatOne : native_int_to_nat (1 : native_Int) = 1 := by
       native_decide
     simpa only [__smtx_typeof_extract, native_ite, hge0, hle, hlt, hwidthPos,
-      if_true, hwidth]
+      ite_true, hwidth]
       using hNatOne
   have hBvTy :
       __smtx_typeof

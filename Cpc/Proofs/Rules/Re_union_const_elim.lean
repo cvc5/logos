@@ -7,6 +7,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 10000000
@@ -254,7 +257,8 @@ private theorem smt_value_rel_union_const_elim
       cases hSg : RuleProofs.native_str_in_re str (native_str_to_re pat)
       · rfl
       · have hStrEq : str = pat :=
-          RuleProofs.native_str_in_re_str_to_re_eq hValid hSg
+          RuleProofs.native_str_in_re_str_to_re_eq hValid (by
+            simpa [impl_native_string_to_values, List.map_eq_flatMap] using hSg)
         rw [hStrEq, hPatMem] at hRv
         cases hRv
     simp [hRv, hSingletonFalse]

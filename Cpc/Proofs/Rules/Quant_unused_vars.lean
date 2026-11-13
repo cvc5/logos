@@ -43,7 +43,7 @@ private theorem native_model_push_same
     native_model_push (native_model_push M s T v) s T w =
       native_model_push M s T w := by
   cases M with
-  | mk values nativeFuns =>
+  | mk values nativeFuns usortDom =>
       change
         SmtModel.mk
             (fun k =>
@@ -51,12 +51,12 @@ private theorem native_model_push_same
               else
                 (if k = ({ isVar := true, name := s, ty := T } : SmtModelKey) then v
                 else values k))
-            nativeFuns =
+            nativeFuns usortDom =
           SmtModel.mk
             (fun k =>
               if k = ({ isVar := true, name := s, ty := T } : SmtModelKey) then w
               else values k)
-            nativeFuns
+            nativeFuns usortDom
       congr
       funext k
       by_cases hk : k = ({ isVar := true, name := s, ty := T } : SmtModelKey)
@@ -72,7 +72,7 @@ private theorem native_model_push_comm
     native_model_push (native_model_push M s1 T1 v1) s2 T2 v2 =
       native_model_push (native_model_push M s2 T2 v2) s1 T1 v1 := by
   cases M with
-  | mk values nativeFuns =>
+  | mk values nativeFuns usortDom =>
       change
         SmtModel.mk
             (fun k =>
@@ -80,14 +80,14 @@ private theorem native_model_push_comm
               else
                 (if k = ({ isVar := true, name := s1, ty := T1 } : SmtModelKey) then v1
                 else values k))
-            nativeFuns =
+            nativeFuns usortDom =
           SmtModel.mk
             (fun k =>
               if k = ({ isVar := true, name := s1, ty := T1 } : SmtModelKey) then v1
               else
                 (if k = ({ isVar := true, name := s2, ty := T2 } : SmtModelKey) then v2
                 else values k))
-            nativeFuns
+            nativeFuns usortDom
       congr
       funext k
       by_cases h1 : k = ({ isVar := true, name := s1, ty := T1 } : SmtModelKey)
@@ -118,13 +118,13 @@ private theorem smtExistsOfBinders_cons_congr
   let P : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) t =
           SmtValue.Boolean true
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) u =
           SmtValue.Boolean true
   have hPQ : P ↔ Q := by
@@ -152,10 +152,10 @@ private theorem smtExistsOfBinders_swap
   let P : Prop :=
     ∃ v1 : SmtValue,
       __smtx_typeof_value v1 = T1 ∧
-        __smtx_value_canonical v1 = true ∧
+        __smtx_value_canonical M.usortDom v1 = true ∧
         ∃ v2 : SmtValue,
           __smtx_typeof_value v2 = T2 ∧
-            __smtx_value_canonical v2 = true ∧
+            __smtx_value_canonical M.usortDom v2 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s1 T1 v1) s2 T2 v2)
                 rest =
@@ -163,10 +163,10 @@ private theorem smtExistsOfBinders_swap
   let Q : Prop :=
     ∃ v2 : SmtValue,
       __smtx_typeof_value v2 = T2 ∧
-        __smtx_value_canonical v2 = true ∧
+        __smtx_value_canonical M.usortDom v2 = true ∧
         ∃ v1 : SmtValue,
           __smtx_typeof_value v1 = T1 ∧
-            __smtx_value_canonical v1 = true ∧
+            __smtx_value_canonical M.usortDom v1 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s2 T2 v2) s1 T1 v1)
                 rest =
@@ -197,7 +197,9 @@ private theorem smtExistsOfBinders_swap
         simpa [native_model_push_comm M s1 s2 T1 T2 v1 v2 hKey] using
           hEval
   have hPropEq : P = Q := propext hPQ
-  simp [smtExistsOfBinders, __smtx_model_eval, P, Q, rest, hPropEq]
+  have hCard (M : SmtModel) (s : native_String) (T : SmtType) (v : SmtValue) :
+      (native_model_push M s T v).usortDom = M.usortDom := rfl
+  simp [smtExistsOfBinders, __smtx_model_eval, hCard, P, Q, rest, hPropEq]
 
 private theorem smtExistsOfBinders_eval_perm
     (body : SmtTerm) {xs ys : List QuantBinder}
@@ -230,10 +232,10 @@ private theorem smtExistsOfBinders_dup
   let P : Prop :=
     ∃ v1 : SmtValue,
       __smtx_typeof_value v1 = T ∧
-        __smtx_value_canonical v1 = true ∧
+        __smtx_value_canonical M.usortDom v1 = true ∧
         ∃ v2 : SmtValue,
           __smtx_typeof_value v2 = T ∧
-            __smtx_value_canonical v2 = true ∧
+            __smtx_value_canonical M.usortDom v2 = true ∧
             __smtx_model_eval
                 (native_model_push (native_model_push M s T v1) s T v2)
                 rest =
@@ -241,7 +243,7 @@ private theorem smtExistsOfBinders_dup
   let Q : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M s T v) rest =
           SmtValue.Boolean true
   have hPQ : P ↔ Q := by
@@ -255,7 +257,9 @@ private theorem smtExistsOfBinders_dup
       exact ⟨v, hv, hc, v, hv, hc, by
         simpa [native_model_push_same] using hEval⟩
   have hPropEq : P = Q := propext hPQ
-  simp [smtExistsOfBinders, __smtx_model_eval, P, Q, rest, hPropEq]
+  have hCard (M : SmtModel) (s : native_String) (T : SmtType) (v : SmtValue) :
+      (native_model_push M s T v).usortDom = M.usortDom := rfl
+  simp [smtExistsOfBinders, __smtx_model_eval, hCard, P, Q, rest, hPropEq]
 
 private theorem smtExistsOfBinders_append
     (xs ys : List QuantBinder) (body : SmtTerm) :
@@ -396,7 +400,7 @@ by
           __smtx_model_eval N
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists env body))
-      apply smtx_model_eval_exists_eq_of_body_eval_eq
+      apply smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortDom
       intro v
       have hPush :
           model_agrees_except_on_env except (head :: bound)
@@ -2028,7 +2032,7 @@ private theorem smtx_model_eval_exists_eq_body_of_body_eval_eq
     (hBody :
       ∀ v : SmtValue,
         __smtx_typeof_value v = T ->
-          __smtx_value_canonical v = true ->
+          __smtx_value_canonical M.usortDom v = true ->
             __smtx_model_eval (native_model_push M s T v) body =
               __smtx_model_eval M body) :
   __smtx_model_eval M (SmtTerm.exists s T body) =
@@ -2037,16 +2041,16 @@ by
   classical
   rcases smt_model_eval_bool_is_boolean M hM body hBodyTy with
     ⟨b, hEvalBody⟩
-  rcases canonical_type_inhabited_of_type_wf T hWF with
+  rcases canonical_type_inhabited_of_type_wf hM.2.2.2 (uc := M.usortDom) T hWF with
     ⟨w, hwTy, hwCan⟩
-  have hwCanBool : __smtx_value_canonical w = true := by
+  have hwCanBool : __smtx_value_canonical M.usortDom w = true := by
     simpa [value_canonical] using hwCan
   cases b
   · rw [hEvalBody]
     by_cases hSat :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortDom v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true
     · rcases hSat with ⟨v, hvTy, hvCan, hvEval⟩
@@ -2059,7 +2063,7 @@ by
     have hSat :
         ∃ v : SmtValue,
           __smtx_typeof_value v = T ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortDom v = true ∧
             __smtx_model_eval (native_model_push M s T v) body =
               SmtValue.Boolean true := by
       refine ⟨w, hwTy, hwCanBool, ?_⟩
@@ -2145,7 +2149,7 @@ by
       have hTailConst :
           ∀ v : SmtValue,
             __smtx_typeof_value v = ST ->
-              __smtx_value_canonical v = true ->
+              __smtx_value_canonical N.usortDom v = true ->
                 __smtx_model_eval
                     (native_model_push N s ST v)
                     (__eo_to_smt_exists env body) =
@@ -2241,7 +2245,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
             let P : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical v = true ∧
+                  __smtx_value_canonical M.usortDom v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a
@@ -2250,7 +2254,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body_true_iff
             let Q : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical v = true ∧
+                  __smtx_value_canonical M.usortDom v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a body) =
@@ -2320,7 +2324,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
             let P : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical v = true ∧
+                  __smtx_value_canonical M.usortDom v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a
@@ -2329,7 +2333,7 @@ private theorem smtx_model_eval_eo_to_smt_exists_double_not_body
             let Q : Prop :=
               ∃ v : SmtValue,
                 __smtx_typeof_value v = __eo_to_smt_type T ∧
-                  __smtx_value_canonical v = true ∧
+                  __smtx_value_canonical M.usortDom v = true ∧
                   __smtx_model_eval
                       (native_model_push M s (__eo_to_smt_type T) v)
                       (__eo_to_smt_exists a body) =

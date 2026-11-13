@@ -6,6 +6,8 @@ import all Cpc.Logos
 
 public section
 
+variable {uc : SmtUSortDom}
+
 open Eo
 open SmtEval
 open Smtm
@@ -194,87 +196,87 @@ attribute [local simp] native_and
 
 @[simp] private theorem smt_fun_choice_if_ne_none
     (T U : SmtType) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.None := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_bool
     (T U : SmtType) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.Bool := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_int
     (T U : SmtType) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.Int := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_real
     (T U : SmtType) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.Real := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_reglan
     (T U : SmtType) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.RegLan := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_char
     (T U : SmtType) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.Char := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_bitvec
     (T U : SmtType) (w : native_Nat) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.BitVec w := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_seq
     (T U A : SmtType) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.Seq A := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_set
     (T U A : SmtType) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.Set A := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_map
     (T U A B : SmtType) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.Map A B := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_typeref
     (T U : SmtType) (s : native_String) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.TypeRef s := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_datatype
     (T U : SmtType) (s : native_String) (d : SmtDatatypeDecl) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.Datatype s d := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_dtc_app
     (T U A B : SmtType) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.DtcAppType A B := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 @[simp] private theorem smt_fun_choice_if_ne_usort
     (T U : SmtType) (i : native_Nat) :
-    (if __smtx_is_finite_type (SmtType.FunType T U) = true then SmtType.FunType T U else SmtType.FunType T U) ≠
+    SmtType.FunType T U ≠
       SmtType.USort i := by
-  by_cases hFin : __smtx_is_finite_type (SmtType.FunType T U) = true <;> simp [hFin]
+  simp
 
 /-- Well-formedness of a type occurring at a *field* position (a datatype-constructor field,
 function argument, sequence/set/map element, …). Under the new algorithm this is exactly the
@@ -331,7 +333,7 @@ theorem seq_type_wf_rec_component_of_wf
     (h : __smtx_type_wf_rec (SmtType.Seq A) = true) :
     __smtx_type_wf_rec A = true := by
   have h' :
-      native_inhabited_type A = true ∧ __smtx_type_wf_rec A = true := by
+      __smtx_inhabited_type A = true ∧ __smtx_type_wf_rec A = true := by
     simpa [__smtx_type_wf_rec, native_and] using h
   exact h'.2
 
@@ -348,7 +350,7 @@ theorem set_type_wf_rec_component_of_wf
     (h : __smtx_type_wf_rec (SmtType.Set A) = true) :
     __smtx_type_wf_rec A = true := by
   have h' :
-      native_inhabited_type A = true ∧ __smtx_type_wf_rec A = true := by
+      __smtx_inhabited_type A = true ∧ __smtx_type_wf_rec A = true := by
     simpa [__smtx_type_wf_rec, native_and] using h
   exact h'.2
 
@@ -366,8 +368,8 @@ theorem map_type_wf_rec_components_of_wf
     __smtx_type_wf_rec A = true ∧
       __smtx_type_wf_rec B = true := by
   have h' :
-      (native_inhabited_type A = true ∧ __smtx_type_wf_rec A = true) ∧
-        (native_inhabited_type B = true ∧ __smtx_type_wf_rec B = true) := by
+      (__smtx_inhabited_type A = true ∧ __smtx_type_wf_rec A = true) ∧
+        (__smtx_inhabited_type B = true ∧ __smtx_type_wf_rec B = true) := by
     simpa [__smtx_type_wf_rec, native_and] using h
   exact ⟨h'.1.2, h'.2.2⟩
 
@@ -686,10 +688,7 @@ private theorem eo_to_smt_type_fun_ne_bool
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_int`. -/
 private theorem eo_to_smt_type_fun_ne_int
@@ -699,10 +698,7 @@ private theorem eo_to_smt_type_fun_ne_int
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_real`. -/
 private theorem eo_to_smt_type_fun_ne_real
@@ -712,10 +708,7 @@ private theorem eo_to_smt_type_fun_ne_real
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_reglan`. -/
 private theorem eo_to_smt_type_fun_ne_reglan
@@ -725,10 +718,7 @@ private theorem eo_to_smt_type_fun_ne_reglan
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_char`. -/
 private theorem eo_to_smt_type_fun_ne_char
@@ -738,10 +728,7 @@ private theorem eo_to_smt_type_fun_ne_char
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_bitvec`. -/
 private theorem eo_to_smt_type_fun_ne_bitvec
@@ -751,10 +738,7 @@ private theorem eo_to_smt_type_fun_ne_bitvec
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_seq`. -/
 private theorem eo_to_smt_type_fun_ne_seq
@@ -764,10 +748,7 @@ private theorem eo_to_smt_type_fun_ne_seq
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_set`. -/
 private theorem eo_to_smt_type_fun_ne_set
@@ -777,10 +758,7 @@ private theorem eo_to_smt_type_fun_ne_set
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_map`. -/
 private theorem eo_to_smt_type_fun_ne_map
@@ -790,10 +768,7 @@ private theorem eo_to_smt_type_fun_ne_map
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_dtc_app`. -/
 private theorem eo_to_smt_type_fun_ne_dtc_app
@@ -803,10 +778,7 @@ private theorem eo_to_smt_type_fun_ne_dtc_app
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_usort`. -/
 private theorem eo_to_smt_type_fun_ne_usort
@@ -816,10 +788,7 @@ private theorem eo_to_smt_type_fun_ne_usort
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for `fun_ne_typeref`. -/
 private theorem eo_to_smt_type_fun_ne_typeref
@@ -829,10 +798,7 @@ private theorem eo_to_smt_type_fun_ne_typeref
   · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT]
   · by_cases hU : __eo_to_smt_type U = SmtType.None
     · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
-    · cases hFin :
-        __smtx_is_finite_type
-          (SmtType.FunType (__eo_to_smt_type T) (__eo_to_smt_type U)) <;>
-        simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
+    · simp [eo_to_smt_type_fun, __smtx_typeof_guard, native_ite, native_Teq, hT, hU]
 
 /-- Simplifies EO-to-SMT type translation for datatype-constructor application types. -/
 private theorem eo_to_smt_type_dtc_app_ne_bitvec
@@ -1193,7 +1159,7 @@ theorem eo_to_smt_type_eq_bitvec
                     have hnNonneg : 0 <= n := by
                       simpa [native_zleq, SmtEval.native_zleq] using hn
                     simp [native_nat_to_int, native_int_to_nat,
-                      Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+                      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
                       Int.toNat_of_nonneg hnNonneg]
                   · simp [native_ite, hn] at h
               | _ =>
@@ -1843,8 +1809,8 @@ theorem subst_noResRef_ty (r : native_String) (hRes : __eo_to_smt_reserved_datat
       simp only [noResRefTy] at h
       simp only [__smtx_type_substitute]
       by_cases hrs : native_streq r s = true
-      · rw [native_ite, if_pos hrs]
-      · rw [native_ite, if_neg (by simp [hrs])]
+      · rw [native_ite, ite_eq_left hrs]
+      · rw [native_ite, ite_eq_right (by simp [hrs])]
         rw [subst_noResRef_dt r hRes d (__smtx_dt_lift s d X) h]
   | SmtType.TypeRef s, X, h => by
       simp only [noResRefTy, native_not, Bool.not_eq_true'] at h
@@ -1852,7 +1818,7 @@ theorem subst_noResRef_ty (r : native_String) (hRes : __eo_to_smt_reserved_datat
         simp only [native_streq, decide_eq_false_iff_not]
         intro he; rw [he] at hRes; rw [h] at hRes; exact absurd hRes (by decide)
       simp only [__smtx_type_substitute]
-      rw [native_ite, if_neg (by simp [hrs])]
+      rw [native_ite, ite_eq_right (by simp [hrs])]
   | SmtType.Seq a, X, h => by simp [__smtx_type_substitute]
   | SmtType.Set a, X, h => by simp [__smtx_type_substitute]
   | SmtType.Map a b, X, h => by simp [__smtx_type_substitute]
@@ -1906,10 +1872,10 @@ theorem noResRef_tuple (A B : SmtType)
               by_cases hcond :
                   native_and (native_streq s (native_string_lit "@Tuple"))
                     (__smtx_type_wf_component A) = true
-              · rw [native_ite, if_pos hcond]
+              · rw [native_ite, ite_eq_left hcond]
                 simp only [noResRefTy, noResRefDt, native_and, Bool.and_eq_true, noResRefDtc] at hB ⊢
                 exact ⟨⟨hA, hB.1⟩, hB.2⟩
-              · rw [native_ite, if_neg (by simp [hcond])]; simp [noResRefTy]
+              · rw [native_ite, ite_eq_right (by simp [hcond])]; simp [noResRefTy]
           | sum _ _ => simp [__eo_to_smt_type_tuple, noResRefTy]
       | null => simp [__eo_to_smt_type_tuple, noResRefTy]
   | _ => simp [__eo_to_smt_type_tuple, noResRefTy]
@@ -1924,7 +1890,7 @@ theorem noResRef_translate_ty : (T : Term) → noResRefTy (__eo_to_smt_type T) =
       · simp [__eo_to_smt_type, native_ite, hs, noResRefTy]
       · have hsF : __eo_to_smt_reserved_datatype_name s = false := by
           cases h : __eo_to_smt_reserved_datatype_name s <;> simp [h] at hs ⊢
-        simp only [__eo_to_smt_type, native_ite, hsF, Bool.false_eq_true, if_false, noResRefTy]
+        simp only [__eo_to_smt_type, native_ite, hsF, Bool.false_eq_true, ite_false, noResRefTy]
         exact noResRef_translate_dt d
   | Term.DatatypeTypeRef s => by
       by_cases hs : __eo_to_smt_reserved_datatype_name s = true
@@ -2014,10 +1980,10 @@ theorem noResRef_translate_ty : (T : Term) → noResRefTy (__eo_to_smt_type T) =
                   simp only [__eo_to_smt_type]
                   by_cases hWf :
                       __smtx_type_wf (__eo_to_smt_type_tuple (__eo_to_smt_type y) (__eo_to_smt_type x)) = true
-                  · rw [native_ite, if_pos hWf]
+                  · rw [native_ite, ite_eq_left hWf]
                     exact noResRef_tuple (__eo_to_smt_type y) (__eo_to_smt_type x)
                       (noResRef_translate_ty y) (noResRef_translate_ty x)
-                  · rw [native_ite, if_neg (by simp [hWf])]; simp [noResRefTy]
+                  · rw [native_ite, ite_eq_right (by simp [hWf])]; simp [noResRefTy]
               | _ => simp [__eo_to_smt_type, noResRefTy]
           | _ => simp [__eo_to_smt_type, noResRefTy]
       | _ => simp [__eo_to_smt_type, noResRefTy]
@@ -2120,7 +2086,7 @@ theorem tuple_diag_wf_components (y x : Term)
                   __smtx_dt_cons_wf_rec (SmtDatatypeCons.cons (__eo_to_smt_type y) cx)
                     (SmtDatatypeCons.cons (__eo_to_smt_type y) cx) = true
               · exact hc
-              · rw [if_neg (by simpa using hc)] at hAwf; simp at hAwf
+              · rw [ite_eq_right (by simpa using hc)] at hAwf; simp at hAwf
             have hyNotRef : ∀ s, __eo_to_smt_type y ≠ SmtType.TypeRef s := by
               intro s he
               rw [he] at hConsWF
@@ -2206,14 +2172,14 @@ theorem alignTy_subst (s : native_String) (d0 : SmtDatatype) :
   | SmtType.Datatype s2 d2 => by
       simp only [__smtx_type_substitute]
       by_cases hst : native_streq s s2 = true
-      · simp only [native_ite, if_pos hst, alignTy]; exact alignDt_refl d2
-      · simp only [native_ite, if_neg hst, alignTy]
+      · simp only [native_ite, ite_eq_left hst, alignTy]; exact alignDt_refl d2
+      · simp only [native_ite, ite_eq_right hst, alignTy]
         exact alignDt_subst s (__smtx_dt_lift s2 d2 d0) d2
   | SmtType.TypeRef s2 => by
       simp only [__smtx_type_substitute]
       by_cases hst : native_streq s s2 = true
-      · simp [native_ite, if_pos hst, alignTy]
-      · simp [native_ite, if_neg hst, alignTy]
+      · simp [native_ite, ite_eq_left hst, alignTy]
+      · simp [native_ite, ite_eq_right hst, alignTy]
   | SmtType.Seq a => by simp [__smtx_type_substitute, alignTy]
   | SmtType.Set a => by simp [__smtx_type_substitute, alignTy]
   | SmtType.Map a b => by simp [__smtx_type_substitute, alignTy]
@@ -2349,15 +2315,15 @@ private theorem nn_cons_head (UF U : SmtType) (cFtl c : SmtDatatypeCons)
     __smtx_type_wf_rec UF U = true := by
   have hgen :
       __smtx_dt_cons_wf_rec (SmtDatatypeCons.cons UF cFtl) (SmtDatatypeCons.cons U c) =
-        native_ite (native_and (native_inhabited_type UF) (__smtx_type_wf_rec UF U))
+        native_ite (native_and (__smtx_inhabited_type UF) (__smtx_type_wf_rec UF U))
           (__smtx_dt_cons_wf_rec cFtl c) false := by
     cases U with
     | TypeRef s => exact absurd rfl (hNotRef s)
     | _ => cases UF <;> rfl
   rw [hgen] at h
-  by_cases hcond : native_and (native_inhabited_type UF) (__smtx_type_wf_rec UF U) = true
+  by_cases hcond : native_and (__smtx_inhabited_type UF) (__smtx_type_wf_rec UF U) = true
   · simp only [native_and, Bool.and_eq_true] at hcond; exact hcond.2
-  · rw [native_ite, if_neg (by simpa using hcond)] at h
+  · rw [native_ite, ite_eq_right (by simpa using hcond)] at h
     exact absurd h (by simp)
 
 /- THE BRIDGE: `dt_wf_rec DF D` together with `alignDt DF D` (the full side is a genuine unfold, so
@@ -2379,20 +2345,20 @@ theorem noNoneTy_of_field (TF U : SmtType) :
               simpa [noNoneTy] using noNoneDt_of_align (__smtx_dt_substitute s3 dTF dTF) d2 hDt hAlign
           | _ => simp [alignTy] at hAl
       | Seq a =>
-          have ha : (native_inhabited_type a = true ∧ __smtx_type_wf_rec a a = true) ∧
+          have ha : (__smtx_inhabited_type a = true ∧ __smtx_type_wf_rec a a = true) ∧
               __smtx_type_no_alias_rec native_reflist_nil a = true := by
             simpa [__smtx_type_wf_rec, native_and] using h
           simpa [noNoneTy] using noNoneTy_of_field a a ha.1.2 (alignTy_refl a)
       | Set a =>
-          have ha : (native_inhabited_type a = true ∧ __smtx_type_wf_rec a a = true) ∧
+          have ha : (__smtx_inhabited_type a = true ∧ __smtx_type_wf_rec a a = true) ∧
               __smtx_type_no_alias_rec native_reflist_nil a = true := by
             simpa [__smtx_type_wf_rec, native_and] using h
           simpa [noNoneTy] using noNoneTy_of_field a a ha.1.2 (alignTy_refl a)
       | Map a b =>
           have hab :
-              ((native_inhabited_type a = true ∧ __smtx_type_wf_rec a a = true) ∧
+              ((__smtx_inhabited_type a = true ∧ __smtx_type_wf_rec a a = true) ∧
                 __smtx_type_no_alias_rec native_reflist_nil a = true) ∧
-                (native_inhabited_type b = true ∧ __smtx_type_wf_rec b b = true) ∧
+                (__smtx_inhabited_type b = true ∧ __smtx_type_wf_rec b b = true) ∧
                   __smtx_type_no_alias_rec native_reflist_nil b = true := by
             simpa [__smtx_type_wf_rec, native_and] using h
           simp only [noNoneTy, native_and, Bool.and_eq_true]
@@ -2420,8 +2386,8 @@ theorem noNoneDt_of_align :
               __smtx_dt_cons_wf_rec cF c = true ∧ __smtx_dt_wf_rec dF d = true := by
             by_cases hc : __smtx_dt_cons_wf_rec cF c = true
             · refine ⟨hc, ?_⟩
-              simp only [__smtx_dt_wf_rec, native_ite, if_pos hc] at h; exact h
-            · rw [__smtx_dt_wf_rec, native_ite, if_neg (by simpa using hc)] at h
+              simp only [__smtx_dt_wf_rec, native_ite, ite_eq_left hc] at h; exact h
+            · rw [__smtx_dt_wf_rec, native_ite, ite_eq_right (by simpa using hc)] at h
               exact absurd h (by simp)
           have hAlParts :
               alignDtc cF c = true ∧ alignDt dF d = true := by
@@ -2714,22 +2680,11 @@ theorem eo_typeof_type_of_smt_type_wf_rec :
           | FunType =>
               have hOuter := smtx_type_wf_rec_guard_of_true (__eo_to_smt_type y)
                 (__smtx_typeof_guard (__eo_to_smt_type x)
-                  (native_ite
-                    (__smtx_is_finite_type
-                      (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x)))
-                    (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x))
-                    (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x)))) (by
+                  ((SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x)))) (by
                   simpa [__eo_to_smt_type] using hWF)
               have hFun := smtx_type_wf_rec_guard_of_true (__eo_to_smt_type x)
-                (native_ite
-                  (__smtx_is_finite_type
-                    (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x)))
-                  (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x))
-                  (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x))) hOuter
-              cases hFin :
-                  __smtx_is_finite_type
-                    (SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x)) <;>
-                simp [native_ite, hFin, __smtx_type_wf_rec] at hFun
+                ((SmtType.FunType (__eo_to_smt_type y) (__eo_to_smt_type x))) hOuter
+              simp [__smtx_type_wf_rec] at hFun
           | UOp op =>
               cases op <;> try (simp [__eo_to_smt_type, __smtx_type_wf_rec] at hWF)
               case Array =>
@@ -2775,7 +2730,7 @@ theorem eo_typeof_type_of_smt_type_wf_rec :
                         hx, hyF] at hRaw'
                   have hyWF : __smtx_type_wf_rec (__eo_to_smt_type y) = true := by
                     have hParts :
-                        native_inhabited_type (__eo_to_smt_type y) = true ∧
+                        __smtx_inhabited_type (__eo_to_smt_type y) = true ∧
                           __smtx_type_wf_rec (__eo_to_smt_type y) = true := by
                       simpa [__smtx_type_wf_component, native_and] using hyComp
                     exact hParts.2
@@ -2858,7 +2813,7 @@ theorem eo_typeof_type_of_smt_tuple :
               hx, hyF] at hRaw
         have hyWF : __smtx_type_wf_rec (__eo_to_smt_type y) = true := by
           have hParts :
-              native_inhabited_type (__eo_to_smt_type y) = true ∧
+              __smtx_inhabited_type (__eo_to_smt_type y) = true ∧
                 __smtx_type_wf_rec (__eo_to_smt_type y) = true := by
             simpa [__smtx_type_wf_component, native_and] using hyComp
           exact hParts.2
@@ -3071,20 +3026,20 @@ theorem noNoneTy_of_wf :
       simpa [noNoneTy] using noNoneDecl_of_wf dd dd hParts.2
   | SmtType.Seq T, h => by
       have hT : __smtx_type_wf_rec T = true := by
-        have hp : native_inhabited_type T = true ∧ __smtx_type_wf_rec T = true := by
+        have hp : __smtx_inhabited_type T = true ∧ __smtx_type_wf_rec T = true := by
           simpa [__smtx_type_wf_rec, native_and] using h
         exact hp.2
       simpa [noNoneTy] using noNoneTy_of_wf T hT
   | SmtType.Set T, h => by
       have hT : __smtx_type_wf_rec T = true := by
-        have hp : native_inhabited_type T = true ∧ __smtx_type_wf_rec T = true := by
+        have hp : __smtx_inhabited_type T = true ∧ __smtx_type_wf_rec T = true := by
           simpa [__smtx_type_wf_rec, native_and] using h
         exact hp.2
       simpa [noNoneTy] using noNoneTy_of_wf T hT
   | SmtType.Map T U, h => by
       have hp :
-          (native_inhabited_type T = true ∧ __smtx_type_wf_rec T = true) ∧
-            native_inhabited_type U = true ∧ __smtx_type_wf_rec U = true := by
+          (__smtx_inhabited_type T = true ∧ __smtx_type_wf_rec T = true) ∧
+            __smtx_inhabited_type U = true ∧ __smtx_type_wf_rec U = true := by
         simpa [__smtx_type_wf_rec, native_and] using h
       simp [noNoneTy, noNoneTy_of_wf T hp.1.2,
         noNoneTy_of_wf U hp.2.2, native_and]
@@ -3107,7 +3062,7 @@ theorem noNoneDecl_of_wf :
   | base, SmtDatatypeDecl.cons s d dd, h => by
       have hp :
           __smtx_dt_wf_rec base d = true ∧
-            native_inhabited_type (SmtType.Datatype s base) = true ∧
+            __smtx_inhabited_type (SmtType.Datatype s base) = true ∧
               __smtx_decl_wf_rec base dd = true ∧
                 native_not (__smtx_dd_has_dt s dd) = true := by
         simpa [__smtx_decl_wf_rec, native_and] using h
@@ -3371,7 +3326,7 @@ theorem noNoneTy_of_type_wf
             __smtx_type_wf Y = true := by
         simpa [__smtx_type_wf, native_and] using hWF
       have hX : __smtx_type_wf_rec X = true := by
-        have hp : native_inhabited_type X = true ∧ __smtx_type_wf_rec X = true := by
+        have hp : __smtx_inhabited_type X = true ∧ __smtx_type_wf_rec X = true := by
           simpa [__smtx_type_wf_component, native_and] using hComponents.1
         exact hp.2
       simp [noNoneTy, noNoneTy_of_wf X hX,
@@ -3382,7 +3337,7 @@ theorem noNoneTy_of_type_wf
           cases A <;>
             simp [__smtx_type_wf] at hWF hReg hFun ⊢
           all_goals first | contradiction | exact hWF
-        have hp : native_inhabited_type A = true ∧ __smtx_type_wf_rec A = true := by
+        have hp : __smtx_inhabited_type A = true ∧ __smtx_type_wf_rec A = true := by
           simpa [__smtx_type_wf_component, native_and] using hComponent
         exact hp.2
       exact noNoneTy_of_wf A hRec

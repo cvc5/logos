@@ -5,6 +5,8 @@ import all Cpc.Proofs.RuleSupport.Cong.ApplySpineB
 
 public section
 
+noncomputable section
+
 open Eo
 open SmtEval
 open Smtm
@@ -1231,13 +1233,14 @@ theorem congTrueSpine_qdiv_by_zero_eq_true
   congTrueSpine_non_reg_unop_eq_true M hM UserOp._at_div_by_zero
     (fun a => SmtTerm.qdiv a (SmtTerm.Rational (native_mk_rational 0 1)))
     (fun v => smtEvalQdiv M v
-      (SmtValue.Rational (native_mk_rational 0 1)))
+      (SmtValue.Real (native_mk_real 0 1)))
     (by intro a; rfl)
     qdiv_by_zero_arg_non_reg_of_non_none
     (by
       intro a
-      rw [smtx_model_eval_qdiv_term_eq]
-      rw [__smtx_model_eval.eq_def] <;> simp only)
+      have hZero : native_rat_to_real (native_mk_rational 0 1) = native_mk_real 0 1 := by
+        simp [native_rat_to_real, native_mk_rational, native_mk_real]
+      rw [smtx_model_eval_qdiv_term_eq, __smtx_model_eval.eq_3, hZero])
     x rhs
 
 theorem congTypeSpine_qdiv_by_zero_eq_has_bool_type

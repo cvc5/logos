@@ -829,7 +829,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop
       · subst w
         have hRunBodyEq :
             EvaluateProofInternal.eo_eval_sbv_to_int_rhs x = Term.Numeral 0 := by
-          simpa [native_nat_to_int, Smtm.native_nat_to_int] using
+          simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
             EvaluateProofInternal.eo_eval_sbv_to_int_rhs_eq_zero_of_run_typeof_zero
               x hRunXEoBv
         change
@@ -841,7 +841,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop
         have hwIntPos : 0 < native_nat_to_int w := by
           have hCast : (Int.ofNat 0) < (Int.ofNat w) :=
             Int.ofNat_lt.mpr hwNatPos
-          simpa [native_nat_to_int, Smtm.native_nat_to_int]
+          simpa [native_nat_to_int, SmtEval.native_nat_to_int]
             using hCast
         have hRunBodyTy :
             __eo_typeof (EvaluateProofInternal.eo_eval_sbv_to_int_rhs x) =
@@ -5753,8 +5753,9 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop1
       have hlt : (0 : Int) < i := by omega
       simpa [native_zlt, SmtEval.native_zlt] using hlt
     have hiNotNeg : native_zlt i 0 = false := by
-      simp [native_zlt, SmtEval.native_zlt]
-      omega
+      change decide (i < 0) = false
+      exact decide_eq_false
+        (Int.not_lt_of_ge (Int.le_trans (by decide : (0 : Int) ≤ 1) hi))
     have hXTrans : RuleProofs.eo_has_smt_translation x := by
       unfold RuleProofs.eo_has_smt_translation
       rw [hxSmtTy]

@@ -7,6 +7,8 @@ import all CpcMini.Proofs.TypePreservation.Datatypes
 
 public section
 
+variable {uc : SmtUSortDom}
+
 open SmtEval
 open Smtm
 
@@ -40,11 +42,6 @@ private theorem mini_result_components_wf_native_ite
     (hU : mini_result_components_wf U) :
     mini_result_components_wf (native_ite b T U) := by
   cases b <;> simpa [native_ite]
-
-private theorem mini_result_components_wf_guard_wf_bool (T : SmtType) :
-    mini_result_components_wf (__smtx_typeof_guard_wf T SmtType.Bool) := by
-  unfold __smtx_typeof_guard_wf
-  exact mini_result_components_wf_native_ite _ (by trivial) (by trivial)
 
 private theorem mini_result_components_wf_of_type_wf
     {T : SmtType} (h : __smtx_type_wf T = true) :
@@ -114,21 +111,6 @@ private theorem mini_smt_term_result_components_wf_of_non_none
       rw [typeof_ite_eq]
       simp [__smtx_typeof_ite, native_ite, native_Teq, hc, hxT, hyT]
       simpa [hxT] using hxGood
-    case choice s T body =>
-      have hGuardTy :
-          __smtx_typeof (SmtTerm.choice s T body) = __smtx_typeof_guard_wf T T :=
-        choice_term_guard_type_of_non_none hxNN
-      have hGuardNN : __smtx_typeof_guard_wf T T ≠ SmtType.None := by
-        rw [← hGuardTy]
-        exact hxNN
-      rw [choice_term_typeof_of_non_none hxNN]
-      exact mini_result_components_wf_of_type_wf
-        (smtx_typeof_guard_wf_wf_of_non_none T T hGuardNN)
-    case bind s T x1 x2 =>
-      have hTyEq : __smtx_typeof (SmtTerm.bind s T x1 x2) = __smtx_typeof x2 :=
-        bind_term_typeof_of_non_none hxNN
-      rw [hTyEq]
-      exact go x2 (by simpa [term_has_non_none_type, hTyEq] using hxNN)
     case DtCons s d i =>
       let raw :=
         __smtx_typeof_dt_cons_rec (SmtType.Datatype s d)
@@ -197,14 +179,6 @@ private theorem mini_smt_term_result_components_wf_of_non_none
       unfold __smtx_typeof_eq __smtx_typeof_guard
       exact mini_result_components_wf_native_ite _ (by trivial)
         (mini_result_components_wf_native_ite _ (by trivial) (by trivial))
-    case «exists» s T body =>
-      rw [__smtx_typeof.eq_def]
-      exact mini_result_components_wf_native_ite _
-        (mini_result_components_wf_guard_wf_bool T) (by trivial)
-    case «forall» s T body =>
-      rw [__smtx_typeof.eq_def]
-      exact mini_result_components_wf_native_ite _
-        (mini_result_components_wf_guard_wf_bool T) (by trivial)
     case not t =>
       rw [__smtx_typeof.eq_def]
       exact mini_result_components_wf_native_ite _ (by trivial) (by trivial)
@@ -236,14 +210,14 @@ private theorem mini_smt_fun_wf_of_non_none_type
 
 /-- `NotValue` is (vacuously) canonical. -/
 private theorem mini_value_canonical_notValue :
-    value_canonical SmtValue.NotValue := by
+    value_canonical uc SmtValue.NotValue := by
   simp [value_canonical, __smtx_value_canonical]
 
 /-- Boolean-typed values are canonical. -/
 private theorem mini_value_canonical_of_bool_type
     {v : SmtValue}
     (h : __smtx_typeof_value v = SmtType.Bool) :
-    value_canonical v := by
+    value_canonical uc v := by
   rcases bool_value_canonical h with ⟨b, rfl⟩
   simp [value_canonical, __smtx_value_canonical]
 
@@ -251,15 +225,15 @@ private theorem mini_value_canonical_of_bool_type
 private theorem mini_seq_canonical_pack_string :
     ∀ s : native_String,
       native_string_valid s = true ->
-        __smtx_seq_canonical (native_pack_string s) = true
+        __smtx_seq_canonical uc (native_pack_string s) = true
   | [], _ => by
       simp [native_pack_string, native_pack_seq, __smtx_seq_canonical]
   | c :: cs, hValid => by
       have hParts : native_char_valid c = true ∧ native_string_valid cs = true := by
         simpa [native_string_valid, List.all_cons, Bool.and_eq_true] using hValid
-      have hTail : __smtx_seq_canonical (native_pack_seq SmtType.Char (cs.map SmtValue.Char)) = true :=
+      have hTail : __smtx_seq_canonical uc (native_pack_seq SmtType.Char (cs.map SmtValue.Char)) = true :=
         mini_seq_canonical_pack_string cs hParts.2
-      show __smtx_seq_canonical
+      show __smtx_seq_canonical uc
           (native_pack_seq SmtType.Char (SmtValue.Char c :: cs.map SmtValue.Char)) = true
       simp [native_pack_seq, __smtx_seq_canonical, __smtx_value_canonical,
         SmtEval.native_and, hParts.1, hTail]
@@ -267,9 +241,9 @@ private theorem mini_seq_canonical_pack_string :
 /-- Value-level SMT `ite` preserves canonicality of the selected branch. -/
 private theorem mini_model_eval_ite_canonical
     {c t e : SmtValue}
-    (ht : value_canonical t)
-    (he : value_canonical e) :
-    value_canonical (__smtx_model_eval_ite c t e) := by
+    (ht : value_canonical uc t)
+    (he : value_canonical uc e) :
+    value_canonical uc (__smtx_model_eval_ite c t e) := by
   cases c <;>
     try simpa [__smtx_model_eval_ite] using mini_value_canonical_notValue
   · cases ‹native_Bool› <;>
@@ -277,72 +251,49 @@ private theorem mini_model_eval_ite_canonical
 
 /-- Value-level Boolean negation always returns a canonical value. -/
 private theorem mini_model_eval_not_canonical (v : SmtValue) :
-    value_canonical (__smtx_model_eval_not v) := by
+    value_canonical uc (__smtx_model_eval_not v) := by
   cases v <;>
     simp [__smtx_model_eval_not, value_canonical, __smtx_value_canonical]
 
 /-- Value-level Boolean disjunction always returns a canonical value. -/
 private theorem mini_model_eval_or_canonical (v1 v2 : SmtValue) :
-    value_canonical (__smtx_model_eval_or v1 v2) := by
+    value_canonical uc (__smtx_model_eval_or v1 v2) := by
   cases v1 <;> cases v2 <;>
     simp [__smtx_model_eval_or, value_canonical, __smtx_value_canonical]
 
 /-- Value-level Boolean conjunction always returns a canonical value. -/
 private theorem mini_model_eval_and_canonical (v1 v2 : SmtValue) :
-    value_canonical (__smtx_model_eval_and v1 v2) := by
+    value_canonical uc (__smtx_model_eval_and v1 v2) := by
   cases v1 <;> cases v2 <;>
     simp [__smtx_model_eval_and, value_canonical, __smtx_value_canonical]
 
 /-- Value-level implication always returns a canonical value. -/
 private theorem mini_model_eval_imp_canonical (v1 v2 : SmtValue) :
-    value_canonical (__smtx_model_eval_imp v1 v2) := by
+    value_canonical uc (__smtx_model_eval_imp v1 v2) := by
   simpa [__smtx_model_eval_imp] using
     mini_model_eval_or_canonical (__smtx_model_eval_not v1) v2
 
 /-- Value-level SMT equality always returns a canonical Boolean value. -/
 private theorem mini_model_eval_eq_canonical (v1 v2 : SmtValue) :
-    value_canonical (__smtx_model_eval_eq v1 v2) := by
+    value_canonical uc (__smtx_model_eval_eq v1 v2) := by
   cases v1 <;> cases v2 <;>
     simp [__smtx_model_eval_eq, value_canonical, __smtx_value_canonical]
-
-/-- Choice evaluation always returns a canonical value. -/
-private theorem mini_native_eval_tchoice_canonical
-    (M : SmtModel)
-    (s : native_String)
-    (T : SmtType)
-    (body : SmtTerm) :
-    value_canonical (native_eval_choice M s T body) := by
-  classical
-  by_cases hSat :
-      ∃ v : SmtValue,
-        __smtx_typeof_value v = T ∧
-          __smtx_value_canonical v = true ∧
-          __smtx_model_eval (native_model_push M s T v) body = SmtValue.Boolean true
-  · have hCan : value_canonical (Classical.choose hSat) := by
-      simpa [value_canonical] using (Classical.choose_spec hSat).2.1
-    simpa [hSat] using hCan
-  · by_cases hTy :
-        ∃ v : SmtValue, __smtx_typeof_value v = T ∧ __smtx_value_canonical v
-    · have hCan : value_canonical (Classical.choose hTy) := by
-        simpa [value_canonical] using (Classical.choose_spec hTy).2
-      simpa [hSat, hTy] using hCan
-    · simpa [hSat, hTy] using mini_value_canonical_notValue
 
 /-- Applying a function-typed value to an argument of the domain type yields a
 canonical value. -/
 private theorem mini_model_eval_apply_fun_canonical
     (M : SmtModel)
     (hM : model_wf M)
-    (fid : native_String)
+    (fid : ModelId)
     (A B : SmtType)
     (x : SmtValue)
     (hxTy : __smtx_typeof_value x = A)
     (hFunWF : __smtx_type_wf (SmtType.FunType A B) = true) :
-    value_canonical (__smtx_model_eval_apply M (SmtValue.Fun fid A B) x) := by
+    value_canonical M.usortDom (__smtx_model_eval_apply M (SmtValue.Fun fid A B) x) := by
   by_cases hxNot : x = SmtValue.NotValue
   · subst x
     simp [__smtx_model_eval_apply, value_canonical, __smtx_value_canonical]
-  · have hCan : value_canonical (native_eval_fun_apply M fid A B x) := by
+  · have hCan : value_canonical M.usortDom (native_eval_fun_apply M fid A B x) := by
       have hRaw := (model_total_typed_native_fun_typed hM fid A B x hFunWF hxTy).2
       simpa [value_canonical] using hRaw
     have hApply :
@@ -354,7 +305,7 @@ private theorem mini_model_eval_apply_fun_canonical
 /-- Applying `NotValue` yields a canonical value. -/
 private theorem mini_model_eval_apply_not_value_canonical
     (M : SmtModel) (x : SmtValue) :
-    value_canonical (__smtx_model_eval_apply M SmtValue.NotValue x) := by
+    value_canonical M.usortDom (__smtx_model_eval_apply M SmtValue.NotValue x) := by
   cases x <;>
     simp [__smtx_model_eval_apply, value_canonical, __smtx_value_canonical]
 
@@ -367,7 +318,7 @@ private theorem mini_model_eval_apply_lookup_fun_canonical
     (x : SmtValue)
     (hFunWF : __smtx_type_wf (SmtType.FunType A B) = true)
     (hxTy : __smtx_typeof_value x = A) :
-    value_canonical
+    value_canonical M.usortDom
       (__smtx_model_eval_apply M
         (native_model_lookup M s (SmtType.FunType A B)) x) := by
   have hLookupTy :
@@ -391,9 +342,9 @@ private theorem mini_model_eval_apply_canonical
       __smtx_typeof_value f = SmtType.FunType A B ->
         __smtx_type_wf (SmtType.FunType A B) = true)
     (hxTy : __smtx_typeof_value x = A)
-    (hf : value_canonical f)
-    (hx : value_canonical x) :
-    value_canonical (__smtx_model_eval_apply M f x) := by
+    (hf : value_canonical M.usortDom f)
+    (hx : value_canonical M.usortDom x) :
+    value_canonical M.usortDom (__smtx_model_eval_apply M f x) := by
   cases hHead with
   | inl hFun =>
       rcases fun_value_canonical hFun with ⟨fid, rfl⟩
@@ -411,19 +362,19 @@ private theorem mini_model_eval_apply_canonical
 /-- Selecting the `n`-th applied argument of a canonical value yields a canonical value. -/
 private theorem mini_vsm_apply_arg_nth_canonical :
     ∀ {v : SmtValue} {n npos : native_Nat},
-      value_canonical v ->
-        value_canonical (__smtx_apply_arg_nth_value v n npos)
+      value_canonical uc v ->
+        value_canonical uc (__smtx_apply_arg_nth_value v n npos)
   | SmtValue.Apply f a, n, npos, hv => by
       cases npos with
       | zero =>
           simpa [__smtx_apply_arg_nth_value] using mini_value_canonical_notValue
       | succ npos =>
-          have hf : value_canonical f := by
+          have hf : value_canonical uc f := by
             have hParts := hv
             simp [value_canonical, __smtx_value_canonical,
               SmtEval.native_and] at hParts
             exact hParts.1
-          have ha : value_canonical a := by
+          have ha : value_canonical uc a := by
             have hParts := hv
             simp [value_canonical, __smtx_value_canonical,
               SmtEval.native_and] at hParts
@@ -438,7 +389,7 @@ private theorem mini_vsm_apply_arg_nth_canonical :
       simpa [__smtx_apply_arg_nth_value] using mini_value_canonical_notValue
   | SmtValue.Numeral k, n, npos, hv => by
       simpa [__smtx_apply_arg_nth_value] using mini_value_canonical_notValue
-  | SmtValue.Rational q, n, npos, hv => by
+  | SmtValue.Real q, n, npos, hv => by
       simpa [__smtx_apply_arg_nth_value] using mini_value_canonical_notValue
   | SmtValue.Binary w k, n, npos, hv => by
       simpa [__smtx_apply_arg_nth_value] using mini_value_canonical_notValue
@@ -473,7 +424,7 @@ private theorem mini_model_eval_dt_sel_wrong_canonical
           (SmtType.Map SmtType.Int
             (SmtType.Map (SmtType.Datatype s d) (__smtx_ret_typeof_sel s d n m)))) = true)
     (hvTy : __smtx_typeof_value v = SmtType.Datatype s d) :
-    value_canonical
+    value_canonical M.usortDom
       (__smtx_model_eval_apply M
         (native_model_lookup M (native_wrong_apply_sel_id n m)
           (SmtType.FunType (SmtType.Datatype s d) (__smtx_ret_typeof_sel s d n m)))
@@ -496,8 +447,8 @@ private theorem mini_model_eval_dt_sel_canonical
           (SmtType.Map SmtType.Int
             (SmtType.Map (SmtType.Datatype s d) (__smtx_ret_typeof_sel s d n m)))) = true)
     (hvTy : __smtx_typeof_value v = SmtType.Datatype s d)
-    (hv : value_canonical v) :
-    value_canonical (__smtx_model_eval_dt_sel M s d n m v) := by
+    (hv : value_canonical M.usortDom v) :
+    value_canonical M.usortDom (__smtx_model_eval_dt_sel M s d n m v) := by
   unfold __smtx_model_eval_dt_sel
   cases hEq : native_veq (__smtx_apply_head_value v) (SmtValue.DtCons s d n)
   · simpa [native_ite, hEq] using
@@ -536,25 +487,6 @@ private theorem supported_type_preservation
         (supported_type_preservation M hM _ htc hsc)
         (supported_type_preservation M hM _ ht1 hs1)
         (supported_type_preservation M hM _ ht2 hs2)
-  | «exists» s T body =>
-      exact typeof_value_model_eval_exists M s T body ht
-  | «forall» s T body =>
-      exact typeof_value_model_eval_forall M s T body ht
-  | choice s T body hChoice =>
-      exact typeof_value_model_eval_choice M hM M s T body ht
-  | bind s T x1 x2 hbt hs1 hs2 =>
-      have ht1 : term_has_non_none_type x1 := bind_arg1_non_none_of_non_none ht
-      have ht2 : term_has_non_none_type x2 := bind_arg2_non_none_of_non_none ht
-      have hTx1 : __smtx_typeof x1 = T := bind_arg1_type_of_non_none ht
-      have hWf : __smtx_type_wf T = true := bind_binder_type_wf_of_non_none ht
-      have hx1ty : __smtx_typeof_value (__smtx_model_eval M x1) = __smtx_typeof x1 :=
-        supported_type_preservation M hM x1 ht1 hs1
-      have hx1canon : value_canonical (__smtx_model_eval M x1) :=
-        canonical_of_supported M hM x1 ht1 hs1
-      have hM' : model_wf (native_model_push M s T (__smtx_model_eval M x1)) :=
-        model_total_typed_push hM s T (__smtx_model_eval M x1) hWf (hx1ty.trans hTx1) hx1canon
-      exact typeof_value_model_eval_bind M s T x1 x2 ht
-        (supported_type_preservation _ hM' x2 ht2 hs2)
   | «not» ht1 hs1 =>
       exact typeof_value_model_eval_not M _ ht
         (supported_type_preservation M hM _ ht1 hs1)
@@ -601,31 +533,15 @@ private theorem supported_type_preservation
         (supported_type_preservation M hM f htf hsf)
         (supported_type_preservation M hM x htx hsx)
 
-/-- Canonicity preservation for supported SMT terms in total typed models.  Runs
-mutually with `supported_type_preservation` because the `bind` type-preservation
-step needs the pushed model to remain `model_wf`, which in turn needs
-canonicity of the bound value. -/
+/-- Canonicity preservation for supported SMT terms in total typed models. -/
 private theorem canonical_of_supported
     (M : SmtModel)
     (hM : model_wf M)
     (t : SmtTerm)
     (ht : term_has_non_none_type t)
     (hs : supported_preservation_term t) :
-    value_canonical (__smtx_model_eval M t) := by
+    value_canonical M.usortDom (__smtx_model_eval M t) := by
   cases hs
-  case bind s T x1 x2 hbt hs1 hs2 =>
-      have ht1 : term_has_non_none_type x1 := bind_arg1_non_none_of_non_none ht
-      have ht2 : term_has_non_none_type x2 := bind_arg2_non_none_of_non_none ht
-      have hTx1 : __smtx_typeof x1 = T := bind_arg1_type_of_non_none ht
-      have hWf : __smtx_type_wf T = true := bind_binder_type_wf_of_non_none ht
-      have hx1ty : __smtx_typeof_value (__smtx_model_eval M x1) = __smtx_typeof x1 :=
-        supported_type_preservation M hM x1 ht1 hs1
-      have hx1canon : value_canonical (__smtx_model_eval M x1) :=
-        canonical_of_supported M hM x1 ht1 hs1
-      have hM' : model_wf (native_model_push M s T (__smtx_model_eval M x1)) :=
-        model_total_typed_push hM s T (__smtx_model_eval M x1) hWf (hx1ty.trans hTx1) hx1canon
-      rw [smtx_model_eval_bind_eq]
-      exact canonical_of_supported _ hM' x2 ht2 hs2
   case boolean b =>
       simp [__smtx_model_eval, value_canonical, __smtx_value_canonical]
   case numeral n =>
@@ -642,7 +558,7 @@ private theorem canonical_of_supported
             cases h : native_string_valid s <;> simp [h] at hV ⊢
           rw [__smtx_typeof.eq_4]
           simp [SmtEval.native_ite, hVF]
-      have hCan : value_canonical (SmtValue.Seq (native_pack_string s)) := by
+      have hCan : value_canonical M.usortDom (SmtValue.Seq (native_pack_string s)) := by
         simpa [value_canonical, __smtx_value_canonical] using
           mini_seq_canonical_pack_string s hsValid
       rw [__smtx_model_eval.eq_4]
@@ -673,16 +589,6 @@ private theorem canonical_of_supported
           (e := __smtx_model_eval M _)
           (canonical_of_supported M hM _ ht1 hs1)
           (canonical_of_supported M hM _ ht2 hs2)
-  case «exists» s T body =>
-      exact mini_value_canonical_of_bool_type
-        ((typeof_value_model_eval_exists M s T body ht).trans
-          (exists_term_typeof_of_non_none ht))
-  case «forall» s T body =>
-      exact mini_value_canonical_of_bool_type
-        ((typeof_value_model_eval_forall M s T body ht).trans
-          (forall_term_typeof_of_non_none ht))
-  case choice s T body htc =>
-      simpa [__smtx_model_eval] using mini_native_eval_tchoice_canonical M s T body
   case «not» ht1 hs1 =>
       simpa [__smtx_model_eval] using mini_model_eval_not_canonical (__smtx_model_eval M _)
   case «or» ht1 hs1 ht2 hs2 =>
@@ -909,7 +815,7 @@ private theorem tp_type_wf_parts_of_wf_ne_reglan
     (hWf : __smtx_type_wf T = true)
     (hNe : T ≠ SmtType.RegLan)
     (hNeFun : ∀ A B : SmtType, T ≠ SmtType.FunType A B) :
-    native_inhabited_type T = true ∧
+    __smtx_inhabited_type T = true ∧
       __smtx_type_wf_rec T = true := by
   cases T <;> simp [__smtx_type_wf, native_and] at hWf hNe ⊢
   case FunType A B =>
@@ -985,23 +891,23 @@ theorem dt_sel_wrong_map_type_wf_of_non_none
       tp_ret_typeof_sel_ne_funtype_of_datatype_wf
         (s := s) (d := d) (i := i) (j := j) hDTWf A B
   have hRParts :
-      native_inhabited_type R = true ∧ __smtx_type_wf_rec R = true :=
+      __smtx_inhabited_type R = true ∧ __smtx_type_wf_rec R = true :=
     tp_type_wf_parts_of_wf_ne_reglan hRWf hRNe hRNeFun
   have hDTParts :
-      native_inhabited_type D = true ∧ __smtx_type_wf_rec D = true :=
+      __smtx_inhabited_type D = true ∧ __smtx_type_wf_rec D = true :=
     tp_type_wf_parts_of_wf_ne_reglan hDTWf (by simp [D]) (by
       intro A B h
       simp [D] at h)
-  have hM3Inh : native_inhabited_type M3 = true :=
+  have hM3Inh : __smtx_inhabited_type M3 = true :=
     native_inhabited_type_map hRParts.1
   have hM3Rec : __smtx_type_wf_rec M3 = true := by
     simp [M3, __smtx_type_wf_rec, native_and, hDTParts.1,
       hDTParts.2, hRParts.1, hRParts.2]
-  have hM2Inh : native_inhabited_type M2 = true :=
+  have hM2Inh : __smtx_inhabited_type M2 = true :=
     native_inhabited_type_map hM3Inh
   have hM2Rec : __smtx_type_wf_rec M2 = true := by
     simp [M2, __smtx_type_wf_rec, native_and, hM3Inh, hM3Rec]
-  have hM1Inh : native_inhabited_type M1 = true :=
+  have hM1Inh : __smtx_inhabited_type M1 = true :=
     native_inhabited_type_map hM2Inh
   have hM1Rec : __smtx_type_wf_rec M1 = true := by
     simp [M1, __smtx_type_wf_rec, native_and, hM2Inh, hM2Rec]
@@ -1084,16 +990,6 @@ theorem supported_preservation_term_of_non_none :
           htc (go c htc) ht1 (go t1 ht1) ht2 (go t2 ht2)
     | SmtTerm.eq t1 t2 =>
         exact supported_preservation_term.eq t1 t2
-    | SmtTerm.exists s T body =>
-        exact supported_preservation_term.exists s T body
-    | SmtTerm.forall s T body =>
-        exact supported_preservation_term.forall s T body
-    | SmtTerm.choice s T body =>
-        exact supported_preservation_term.choice s T body ht
-    | SmtTerm.bind s T x1 x2 =>
-        have ht1 : term_has_non_none_type x1 := bind_arg1_non_none_of_non_none ht
-        have ht2 : term_has_non_none_type x2 := bind_arg2_non_none_of_non_none ht
-        exact supported_preservation_term.bind s T x1 x2 ht (go x1 ht1) (go x2 ht2)
     | SmtTerm.DtCons s d i =>
         exact supported_preservation_term.dt_cons s d i
     | SmtTerm.DtSel s d i j =>
@@ -1161,38 +1057,6 @@ theorem supported_preservation_term_of_non_none :
         exact supported_preservation_term.imp ht1 (go t1 ht1) ht2 (go t2 ht2)
     | SmtTerm.Apply f x =>
         cases f with
-        | «exists» s T body =>
-            have hApp := generic_apply_facts_of_not_special (f := SmtTerm.exists s T body) (x := x)
-              (by intro s' d i j hEq; cases hEq)
-              (by intro s' d i hEq; cases hEq)
-            have hArgs := generic_apply_subterms_non_none hApp.1 ht
-            exact supported_generic_apply_of_non_none hApp.1 hApp.2 ht
-              (go (SmtTerm.exists s T body) hArgs.1)
-              (go x hArgs.2)
-        | «forall» s T body =>
-            have hApp := generic_apply_facts_of_not_special (f := SmtTerm.forall s T body) (x := x)
-              (by intro s' d i j hEq; cases hEq)
-              (by intro s' d i hEq; cases hEq)
-            have hArgs := generic_apply_subterms_non_none hApp.1 ht
-            exact supported_generic_apply_of_non_none hApp.1 hApp.2 ht
-              (go (SmtTerm.forall s T body) hArgs.1)
-              (go x hArgs.2)
-        | choice s T body =>
-            have hApp := generic_apply_facts_of_not_special (f := SmtTerm.choice s T body) (x := x)
-              (by intro s' d i j hEq; cases hEq)
-              (by intro s' d i hEq; cases hEq)
-            have hArgs := generic_apply_subterms_non_none hApp.1 ht
-            exact supported_generic_apply_of_non_none hApp.1 hApp.2 ht
-              (go (SmtTerm.choice s T body) hArgs.1)
-              (go x hArgs.2)
-        | bind s T x1 x2 =>
-            have hApp := generic_apply_facts_of_not_special (f := SmtTerm.bind s T x1 x2) (x := x)
-              (by intro s' d i j hEq; cases hEq)
-              (by intro s' d i hEq; cases hEq)
-            have hArgs := generic_apply_subterms_non_none hApp.1 ht
-            exact supported_generic_apply_of_non_none hApp.1 hApp.2 ht
-              (go (SmtTerm.bind s T x1 x2) hArgs.1)
-              (go x hArgs.2)
         | DtSel s d i j =>
             have htx : term_has_non_none_type x := by
               have hx : __smtx_typeof x = SmtType.Datatype s d :=

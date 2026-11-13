@@ -2,7 +2,7 @@ module
 
 public import Cpc.Proofs.RuleSupport.CoreSupport
 import all Cpc.Proofs.RuleSupport.CoreSupport
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 
 open Eo
 open SmtEval

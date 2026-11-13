@@ -13,6 +13,9 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 40000000
@@ -58,15 +61,15 @@ namespace StrReplaceReAllReduction
 
 /-- The regex with its empty word removed, as used by the generated
 `str_replace_re_all` predicate. -/
-@[expose] def nonemptyRe (r : SmtRegLan) : SmtRegLan :=
+@[expose] noncomputable def nonemptyRe (r : SmtRegLan) : SmtRegLan :=
   native_re_diff r SmtRegLan.epsilon
 
 /-- End positions of the nonempty-match scan. -/
-@[expose] def reEnds (r : SmtRegLan) (s : native_String) : List Nat :=
+@[expose] noncomputable def reEnds (r : SmtRegLan) (s : native_String) : List Nat :=
   impl_native_re_scan_ends_aux (s.length + 1) r (impl_native_string_to_values s) 0
 
 /-- Scan boundary zero is `0`; later boundaries are elements of `reEnds`. -/
-@[expose] def reBound (r : SmtRegLan) (s : native_String) (n : Nat) : Nat :=
+@[expose] noncomputable def reBound (r : SmtRegLan) (s : native_String) (n : Nat) : Nat :=
   (0 :: reEnds r s).getD n 0
 
 theorem reBound_zero (r : SmtRegLan) (s : native_String) :
@@ -320,7 +323,7 @@ private theorem prefix_match_eq_positive_of_not_nullable
       rw [native_re_prefix_match_len?.eq_1,
         impl_native_re_prefix_match_len_go.eq_2,
         native_re_positive_prefix_match_len?.eq_2]
-      simp only [hNull, Bool.false_eq_true, if_false, Nat.zero_add]
+      simp only [hNull, Bool.false_eq_true, ite_false, Nat.zero_add]
       rw [prefix_go_shift (native_re_deriv c r) cs 1]
       cases native_re_prefix_match_len? (native_re_deriv c r) cs <;>
         simp [Nat.add_comm]
@@ -1345,7 +1348,7 @@ theorem full_substr_eq_drop
       omega
     simp only [native_str_substr, native_str_len, Bool.or_eq_true,
       decide_eq_true_eq, Int.ofNat_eq_natCast]
-    rw [if_neg]
+    rw [ite_eq_right]
     · rw [hMin, Int.toNat_natCast]
       exact List.take_of_length_le (by simp)
     · exact fun h =>

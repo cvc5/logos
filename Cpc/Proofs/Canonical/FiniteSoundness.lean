@@ -7,6 +7,8 @@ import all Cpc.Proofs.Canonical.Order
 
 public section
 
+variable {uc : SmtUSortDom}
+
 open SmtEval
 open Smtm
 
@@ -22,7 +24,7 @@ namespace Smtm
 The semantic domain of a sort `T` is its set of *typed canonical values*,
 
   `⟦T⟧ := {v : SmtValue | __smtx_typeof_value v = T ∧
-                          __smtx_value_canonical v = true}`,
+                          __smtx_value_canonical uc v = true}`,
 
 which is exactly the range of the quantifier evaluators
 (`native_eval_exists` / `native_eval_forall` / `native_eval_choice`).
@@ -30,7 +32,7 @@ The executable classifiers `__smtx_is_finite_type` and `__smtx_is_unit_type`
 (both instances of the `__smtx_type_bounded` fixpoint) are intended to
 characterize the cardinality of `⟦T⟧`.  Their correctness decomposes into
 four statements, all relative to the guard
-`native_inhabited_type T = true ∧ __smtx_type_wf_rec T = true`
+`__smtx_inhabited_type T = true ∧ __smtx_type_wf_rec T = true`
 (the guard is essential: e.g. a sequence type over an uninhabited element
 type has exactly one canonical value even though sequences are classified
 infinite, but such a type is not recursively well-formed):
@@ -154,11 +156,11 @@ private theorem apply_value_inversion {X Y Z : SmtType}
   | DtcAppType T U =>
       simp only [__smtx_typeof_apply_value, __smtx_typeof_guard] at h
       by_cases hTN : native_Teq T SmtType.None = true
-      · rw [native_ite, if_pos hTN] at h
+      · rw [native_ite, ite_eq_left hTN] at h
         exact absurd h.symm (by simpa using hZ)
-      · rw [native_ite, if_neg hTN] at h
+      · rw [native_ite, ite_eq_right hTN] at h
         by_cases hTV : native_Teq T Y = true
-        · rw [native_ite, if_pos hTV] at h
+        · rw [native_ite, ite_eq_left hTV] at h
           have hTY : T = Y := by simpa [native_Teq] using hTV
           subst T
           subst Z
@@ -166,7 +168,7 @@ private theorem apply_value_inversion {X Y Z : SmtType}
           intro hYN
           subst Y
           simp [native_Teq] at hTN
-        · rw [native_ite, if_neg hTV] at h
+        · rw [native_ite, ite_eq_right hTV] at h
           exact absurd h.symm (by simpa using hZ)
   | _ =>
       simp [__smtx_typeof_apply_value] at h
@@ -187,7 +189,7 @@ private theorem typeof_dtcapp_chain :
       simp [__smtx_typeof_value] at h
   | SmtValue.Numeral n, U, rest, h => by
       simp [__smtx_typeof_value] at h
-  | SmtValue.Rational q, U, rest, h => by
+  | SmtValue.Real q, U, rest, h => by
       simp [__smtx_typeof_value] at h
   | SmtValue.Binary w n, U, rest, h => by
       by_cases hc :
@@ -360,6 +362,46 @@ private theorem typed_bitvec_shape (v : SmtValue) (w : Nat)
         (by intro _ _ hEq; cases hEq) (by intro _ _ hEq; cases hEq)
   | _ => simp [__smtx_typeof_value] at h
 
+private theorem typed_usort_shape (v : SmtValue) (u : native_Nat)
+    (h : __smtx_typeof_value v = SmtType.USort u) :
+    ∃ n : ModelId, v = SmtValue.UValue u n := by
+  cases v with
+  | UValue i n =>
+      simp [__smtx_typeof_value] at h
+      subst h
+      exact ⟨n, rfl⟩
+  | Binary wi n =>
+      by_cases hc :
+          (native_and (native_zleq 0 wi)
+            (native_zeq n (native_mod_total n (native_int_pow2 wi)))) = true <;>
+        simp [__smtx_typeof_value, native_ite, hc] at h
+  | Char c =>
+      by_cases hc : native_char_valid c = true <;>
+        simp [__smtx_typeof_value, native_ite, hc] at h
+  | Map m =>
+      rcases typeof_map_value_shape m with ⟨A, B, hm⟩ | hm <;>
+        simp [__smtx_typeof_value, hm] at h
+  | Set m =>
+      rcases map_to_set_type_shape (__smtx_typeof_map_value m) with
+        ⟨A, hm⟩ | hm <;>
+        simp [__smtx_typeof_value, hm] at h
+  | Seq ss =>
+      rcases typeof_seq_value_shape ss with ⟨A, hs⟩ | hs <;>
+        simp [__smtx_typeof_value, hs] at h
+  | DtCons s' dd' j =>
+      exfalso
+      rcases dt_cons_result_chain s' dd' j (SmtType.USort u) h
+          (by intro hEq; cases hEq) with ⟨Us, hChain⟩
+      exact not_chain_of_base hChain.symm
+        (by intro _ _ hEq; cases hEq) (by intro _ _ hEq; cases hEq)
+  | Apply f a =>
+      exfalso
+      rcases apply_result_chain f a (SmtType.USort u) h
+          (by intro hEq; cases hEq) with ⟨s, dd, Us, hChain⟩
+      exact not_chain_of_base hChain.symm
+        (by intro _ _ hEq; cases hEq) (by intro _ _ hEq; cases hEq)
+  | _ => simp [__smtx_typeof_value] at h
+
 private theorem typed_char_shape (v : SmtValue)
     (h : __smtx_typeof_value v = SmtType.Char) :
     ∃ c : native_Char, v = SmtValue.Char c := by
@@ -473,11 +515,11 @@ private theorem build_spine_snoc :
 
 private theorem list_typed_canonical_snoc
     {vs : List SmtValue} {Us : List SmtType}
-    (h : list_typed_canonical vs Us)
+    (h : list_typed_canonical uc vs Us)
     {a : SmtValue} {U : SmtType}
     (ha : __smtx_typeof_value a = U) (hU : U ≠ SmtType.None)
-    (hc : __smtx_value_canonical a = true) :
-    list_typed_canonical (vs ++ [a]) (Us ++ [U]) :=
+    (hc : __smtx_value_canonical uc a = true) :
+    list_typed_canonical uc (vs ++ [a]) (Us ++ [U]) :=
   list_typed_canonical_append h ⟨⟨ha, hU, hc⟩, trivial⟩
 
 /--
@@ -490,14 +532,14 @@ private theorem chain_typed_spine :
     ∀ (v : SmtValue) (s : native_String) (dd : SmtDatatypeDecl)
       (Us : List SmtType),
       __smtx_typeof_value v = dtc_chain_type (SmtType.Datatype s dd) Us ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical uc v = true ->
       ∃ (k : Nat) (cr : SmtDatatypeCons) (consumed : List SmtType)
         (vs : List SmtValue),
         dt_nth_cons (__smtx_dt_resolve (__smtx_dd_lookup s dd) dd) k =
           some cr ∧
         dtc_fields cr = consumed ++ Us ∧
         v = build_spine (SmtValue.DtCons s dd k) vs ∧
-        list_typed_canonical vs consumed
+        list_typed_canonical uc vs consumed
   | SmtValue.NotValue, s, dd, Us, h, _ => by
       exfalso
       exact not_chain_of_base (Eq.symm h)
@@ -510,7 +552,7 @@ private theorem chain_typed_spine :
       exfalso
       exact not_chain_of_base (Eq.symm h)
         (by simp [__smtx_typeof_value]) (by simp [__smtx_typeof_value])
-  | SmtValue.Rational q, s, dd, Us, h, _ => by
+  | SmtValue.Real q, s, dd, Us, h, _ => by
       exfalso
       exact not_chain_of_base (Eq.symm h)
         (by simp [__smtx_typeof_value]) (by simp [__smtx_typeof_value])
@@ -586,8 +628,8 @@ private theorem chain_typed_spine :
       rcases apply_value_inversion hTy (chain_ne_none s dd Us) with
         ⟨hf, haN⟩
       have hCanParts :
-          __smtx_value_canonical f = true ∧
-            __smtx_value_canonical a = true := by
+          __smtx_value_canonical uc f = true ∧
+            __smtx_value_canonical uc a = true := by
         simpa [__smtx_value_canonical, native_and] using hCan
       have hfChain :
           __smtx_typeof_value f =
@@ -612,12 +654,12 @@ a full application of a declared constructor to typed canonical arguments.
 theorem datatype_typed_canonical_spine
     (v : SmtValue) (s : native_String) (dd : SmtDatatypeDecl)
     (hTy : __smtx_typeof_value v = SmtType.Datatype s dd)
-    (hCan : __smtx_value_canonical v = true) :
+    (hCan : __smtx_value_canonical uc v = true) :
     ∃ (k : Nat) (cr : SmtDatatypeCons) (vs : List SmtValue),
       dt_nth_cons (__smtx_dt_resolve (__smtx_dd_lookup s dd) dd) k =
         some cr ∧
       v = build_spine (SmtValue.DtCons s dd k) vs ∧
-      list_typed_canonical vs (dtc_fields cr) := by
+      list_typed_canonical uc vs (dtc_fields cr) := by
   rcases chain_typed_spine v s dd [] (by simpa [dtc_chain_type] using hTy)
       hCan with ⟨k, cr, consumed, vs, hnth, hFields, hSpine, hTyped⟩
   refine ⟨k, cr, vs, hnth, hSpine, ?_⟩
@@ -664,18 +706,18 @@ private theorem map_value_default_parts {T' : SmtType} {e : SmtValue}
   exact ⟨h1, h2⟩
 
 private theorem map_canonical_cons_parts {i e : SmtValue} {m : SmtMap}
-    (h : __smtx_map_canonical (SmtMap.cons i e m) = true) :
-    __smtx_value_canonical i = true ∧
-      __smtx_value_canonical e = true ∧
-      __smtx_map_canonical m = true ∧
+    (h : __smtx_map_canonical uc (SmtMap.cons i e m) = true) :
+    __smtx_value_canonical uc i = true ∧
+      __smtx_value_canonical uc e = true ∧
+      __smtx_map_canonical uc m = true ∧
       native_veq e (__smtx_map_get_default m) = false := by
   simp only [__smtx_map_canonical, native_and, native_not,
     Bool.and_eq_true, Bool.not_eq_eq_eq_not, Bool.not_true] at h
   exact ⟨h.1.1.1.1, h.1.1.1.2, h.1.1.2, h.2⟩
 
 private theorem map_canonical_default_parts {T : SmtType} {e : SmtValue}
-    (h : __smtx_map_canonical (SmtMap.default T e) = true) :
-    __smtx_value_canonical e = true := by
+    (h : __smtx_map_canonical uc (SmtMap.default T e) = true) :
+    __smtx_value_canonical uc e = true := by
   simp only [__smtx_map_canonical, native_and, Bool.and_eq_true] at h
   exact h.2
 
@@ -692,8 +734,8 @@ private theorem get_default_typed :
 
 private theorem get_default_canonical :
     ∀ m : SmtMap,
-      __smtx_map_canonical m = true ->
-        __smtx_value_canonical (__smtx_map_get_default m) = true
+      __smtx_map_canonical uc m = true ->
+        __smtx_value_canonical uc (__smtx_map_get_default m) = true
   | SmtMap.default T e, h => by
       simpa [__smtx_map_get_default] using map_canonical_default_parts h
   | SmtMap.cons i e m, h => by
@@ -703,10 +745,10 @@ private theorem get_default_canonical :
 -- === unit fixpoint body shape ===
 
 private theorem unit_body_shape {d : SmtDatatype} {B : SmtDatatypeDecl}
-    (h : __smtx_datatype_bounded true d B = true) :
+    (h : __smtx_datatype_bounded uc true d B = true) :
     ∃ c : SmtDatatypeCons,
       d = SmtDatatype.sum c SmtDatatype.null ∧
-        __smtx_datatype_cons_bounded true c B = true := by
+        __smtx_datatype_cons_bounded uc true c B = true := by
   cases d with
   | null =>
       simp [__smtx_datatype_bounded, native_not] at h
@@ -721,10 +763,10 @@ private theorem unit_body_shape {d : SmtDatatype} {B : SmtDatatypeDecl}
 
 private theorem list_typed_all_default :
     ∀ (Us : List SmtType) (vs : List SmtValue),
-      list_typed_canonical vs Us ->
+      list_typed_canonical uc vs Us ->
       (∀ U ∈ Us, ∀ w : SmtValue,
         __smtx_typeof_value w = U ->
-        __smtx_value_canonical w = true ->
+        __smtx_value_canonical uc w = true ->
         w = __smtx_type_default U) ->
       vs = defaults_of Us
   | [], [], _, _ => rfl
@@ -782,7 +824,7 @@ private theorem restricted_slots_eq_defaults
 
 private theorem unit_default_spine
     (s : native_String) (dd : SmtDatatypeDecl) (c : SmtDatatypeCons)
-    (hInh : native_inhabited_type (SmtType.Datatype s dd) = true)
+    (hInh : __smtx_inhabited_type (SmtType.Datatype s dd) = true)
     (hMem : __smtx_dd_has_dt s dd = true)
     (hUniq : dd_unique dd)
     (hd : __smtx_dd_lookup s dd = SmtDatatype.sum c SmtDatatype.null) :
@@ -833,12 +875,12 @@ well-formed inhabited unit type is its default value.
 -/
 theorem unit_type_values_default
     (A : SmtType)
-    (hInh : native_inhabited_type A = true)
+    (hInh : __smtx_inhabited_type A = true)
     (hRec : __smtx_type_wf_rec A = true)
-    (hUnit : __smtx_is_unit_type A = true) :
+    (hUnit : __smtx_is_unit_type uc A = true) :
     ∀ v : SmtValue,
       __smtx_typeof_value v = A ->
-      __smtx_value_canonical v = true ->
+      __smtx_value_canonical uc v = true ->
       v = __smtx_type_default A := by
   cases A with
   | None =>
@@ -865,7 +907,14 @@ theorem unit_type_values_default
       simp [__smtx_is_unit_type, __smtx_type_bounded, native_and,
         native_not] at hUnit
   | USort u =>
-      simp [__smtx_is_unit_type, __smtx_type_bounded] at hUnit
+      have hOne : uc u = {0} := (smtx_is_unit_type_usort_iff u).mp hUnit
+      intro v hTy hCan
+      rcases typed_usort_shape v u hTy with ⟨r, rfl⟩
+      have hMem : r ∈ uc u := (smtx_value_canonical_uvalue_iff u r).mp hCan
+      rw [hOne] at hMem
+      have hZero : r = 0 := Set.mem_singleton_iff.mp hMem
+      subst hZero
+      simp [__smtx_type_default]
   | BitVec w =>
       cases w with
       | succ w =>
@@ -905,14 +954,14 @@ theorem unit_type_values_default
           · simp [__smtx_typeof_value, native_ite, hc] at hTy
   | Map T U =>
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true ∧
-              native_inhabited_type U = true ∧
+              __smtx_inhabited_type U = true ∧
                 __smtx_type_wf_rec U = true := by
         have h := hRec
         simp [__smtx_type_wf_rec, native_and] at h
         exact ⟨h.1.1, h.1.2, h.2.1, h.2.2⟩
-      have hUUnit : __smtx_is_unit_type U = true := by
+      have hUUnit : __smtx_is_unit_type uc U = true := by
         simpa [__smtx_is_unit_type, __smtx_type_bounded, native_or,
           native_and, native_not] using hUnit
       have hUNV : __smtx_type_default U ≠ SmtValue.NotValue :=
@@ -921,7 +970,7 @@ theorem unit_type_values_default
       rcases typed_map_shape v T U hTy with ⟨m, rfl⟩
       have hmTy : __smtx_typeof_map_value m = SmtType.Map T U := by
         simpa [__smtx_typeof_value] using hTy
-      have hmCan : __smtx_map_canonical m = true := by
+      have hmCan : __smtx_map_canonical uc m = true := by
         simpa [__smtx_value_canonical] using hCan
       cases m with
       | cons i e m' =>
@@ -935,7 +984,7 @@ theorem unit_type_values_default
           have hgTy : __smtx_typeof_value (__smtx_map_get_default m') = U :=
             get_default_typed m' T U hm'Ty
           have hgCan :
-              __smtx_value_canonical (__smtx_map_get_default m') =
+              __smtx_value_canonical uc (__smtx_map_get_default m') =
                 true :=
             get_default_canonical m' hm'Can
           have hgDef : __smtx_map_get_default m' = __smtx_type_default U :=
@@ -965,7 +1014,7 @@ theorem unit_type_values_default
       have hUniq : dd_unique dd := dd_unique_of_decl_wf dd dd hRecParts.2
       have hFixMem :
           __smtx_dd_has_dt s
-            (__smtx_datatype_decl_bounded true dd dd SmtDatatypeDecl.nil) =
+            (__smtx_datatype_decl_bounded uc true dd dd SmtDatatypeDecl.nil) =
             true := by
         rw [is_unit_datatype_eq] at hUnit
         exact hUnit
@@ -973,7 +1022,7 @@ theorem unit_type_values_default
       refine decl_bounded_payload true dd hUniq
         (fun t => ∀ w : SmtValue,
           __smtx_typeof_value w = SmtType.Datatype t dd ->
-          __smtx_value_canonical w = true ->
+          __smtx_value_canonical uc w = true ->
           w = __smtx_type_default (SmtType.Datatype t dd))
         ?_ s hFixMem v hTy hCan
       intro t hMemDD B0 hBnd hInvB w hwTy hwCan
@@ -983,7 +1032,7 @@ theorem unit_type_values_default
       have hConsWf : __smtx_dt_cons_wf_rec dd c = true := by
         rw [hdLk] at hDtWf
         simpa [__smtx_dt_wf_rec, native_and] using hDtWf
-      have hInhT : native_inhabited_type (SmtType.Datatype t dd) = true :=
+      have hInhT : __smtx_inhabited_type (SmtType.Datatype t dd) = true :=
         decl_wf_rec_inh t dd dd hMemDD hRecParts.2
       rcases datatype_typed_canonical_spine w t dd hwTy hwCan with
         ⟨k, cr, vs, hnth, hSpine, hTyped⟩
@@ -1007,12 +1056,12 @@ theorem unit_type_values_default
       have hAllDefault :
           ∀ U ∈ (dtc_fields c).map (resolve_ty dd), ∀ w2 : SmtValue,
             __smtx_typeof_value w2 = U ->
-            __smtx_value_canonical w2 = true ->
+            __smtx_value_canonical uc w2 = true ->
             w2 = __smtx_type_default U := by
         intro U hU w2 hw2Ty hw2Can
         rcases List.mem_map.mp hU with ⟨F, hFmem, hFeq⟩
         have hFieldBnd :
-            __smtx_field_type_bounded true F B0 = true :=
+            __smtx_field_type_bounded uc true F B0 = true :=
           bounded_cons_field c hConsBnd F hFmem
         by_cases hRef : ∃ r : native_String, F = SmtType.TypeRef r
         · rcases hRef with ⟨r, rfl⟩
@@ -1030,8 +1079,8 @@ theorem unit_type_values_default
             rw [← hFeq]
             exact resolve_ty_ground dd F hRef'
           rw [hUEq] at hw2Ty ⊢
-          have hFUnit : __smtx_is_unit_type F = true := by
-            have hBnd : __smtx_type_bounded true F = true := by
+          have hFUnit : __smtx_is_unit_type uc F = true := by
+            have hBnd : __smtx_type_bounded uc true F = true := by
               cases F <;> first
                 | exact absurd rfl (hRef' _)
                 | simpa [__smtx_field_type_bounded] using hFieldBnd
@@ -1176,10 +1225,10 @@ private theorem map_entries_typed :
 
 private theorem map_entries_canonical :
     ∀ m : SmtMap,
-      __smtx_map_canonical m = true →
+      __smtx_map_canonical uc m = true →
         ∀ p ∈ map_entries m,
-          __smtx_value_canonical p.1 = true ∧
-            __smtx_value_canonical p.2 = true
+          __smtx_value_canonical uc p.1 = true ∧
+            __smtx_value_canonical uc p.2 = true
   | SmtMap.default T' e, _, p, hp => by
       simp [map_entries] at hp
   | SmtMap.cons i e m, h, p, hp => by
@@ -1190,14 +1239,14 @@ private theorem map_entries_canonical :
       · exact map_entries_canonical m hm p hTail
 
 private theorem map_canonical_cons_ordered {i e : SmtValue} {m : SmtMap}
-    (h : __smtx_map_canonical (SmtMap.cons i e m) = true) :
+    (h : __smtx_map_canonical uc (SmtMap.cons i e m) = true) :
     __smtx_map_entries_ordered_after i m = true := by
   simp only [__smtx_map_canonical, native_and, Bool.and_eq_true] at h
   exact h.1.2
 
 private theorem map_keys_below :
     ∀ (m : SmtMap) (i : SmtValue),
-      __smtx_map_canonical m = true →
+      __smtx_map_canonical uc m = true →
       __smtx_map_entries_ordered_after i m = true →
       ∀ p ∈ map_entries m, native_vcmp p.1 i = true
   | SmtMap.default T e, i, _, _, p, hp => by
@@ -1216,7 +1265,7 @@ private theorem map_keys_below :
 
 private theorem map_keys_nodup :
     ∀ m : SmtMap,
-      __smtx_map_canonical m = true →
+      __smtx_map_canonical uc m = true →
         ((map_entries m).map Prod.fst).Nodup
   | SmtMap.default T e, _ => by
       simp [map_entries]
@@ -1236,17 +1285,17 @@ private theorem map_keys_nodup :
 
 private theorem map_default_forced :
     ∀ (m : SmtMap) (T U : SmtType),
-      __smtx_is_finite_type T = true →
+      __smtx_is_finite_type uc T = true →
       __smtx_typeof_map_value m = SmtType.Map T U →
-      __smtx_map_canonical m = true →
+      __smtx_map_canonical uc m = true →
         __smtx_map_get_default m = __smtx_type_default U
   | SmtMap.default T' e, T, U, hFin, hTy, hCan => by
       rcases map_value_default_parts hTy with ⟨hT', he⟩
       subst hT'
-      have hDef : __smtx_map_default_canonical T' e = true := by
+      have hDef : __smtx_map_default_canonical uc T' e = true := by
         simp only [__smtx_map_canonical, native_and, Bool.and_eq_true] at hCan
         exact hCan.1
-      rw [__smtx_map_default_canonical, native_ite, if_pos hFin] at hDef
+      rw [__smtx_map_default_canonical, native_ite, ite_eq_left hFin] at hDef
       have := veq_eq_of_true hDef
       rw [he] at this
       simpa [__smtx_map_get_default] using this
@@ -1289,14 +1338,14 @@ private theorem entry_unpack_pack :
 /-- Cover for canonical maps with finite domain and range covers. -/
 private theorem map_cover_exists
     (T U : SmtType) (lT lU : List SmtValue)
-    (hFinT : __smtx_is_finite_type T = true)
+    (hFinT : __smtx_is_finite_type uc T = true)
     (hlT : ∀ v : SmtValue, __smtx_typeof_value v = T →
-      __smtx_value_canonical v = true → v ∈ lT)
+      __smtx_value_canonical uc v = true → v ∈ lT)
     (hlU : ∀ v : SmtValue, __smtx_typeof_value v = U →
-      __smtx_value_canonical v = true → v ∈ lU) :
+      __smtx_value_canonical uc v = true → v ∈ lU) :
     ∃ l : List SmtValue, ∀ v : SmtValue,
       __smtx_typeof_value v = SmtType.Map T U →
-      __smtx_value_canonical v = true → v ∈ l := by
+      __smtx_value_canonical uc v = true → v ∈ l := by
   refine ⟨(lists_up_to (pairs_of lT lU) lT.length).map
     (fun ps => SmtValue.Map
       (mk_map T (__smtx_type_default U) (entry_unpack_list ps))), ?_⟩
@@ -1304,7 +1353,7 @@ private theorem map_cover_exists
   rcases typed_map_shape v T U hTy with ⟨m, rfl⟩
   have hmTy : __smtx_typeof_map_value m = SmtType.Map T U := by
     simpa [__smtx_typeof_value] using hTy
-  have hmCan : __smtx_map_canonical m = true := by
+  have hmCan : __smtx_map_canonical uc m = true := by
     simpa [__smtx_value_canonical] using hCan
   have hDefault : __smtx_map_get_default m = __smtx_type_default U :=
     map_default_forced m T U hFinT hmTy hmCan
@@ -1338,7 +1387,7 @@ private theorem map_cover_exists
 private theorem set_entries_true :
     ∀ (m : SmtMap) (T : SmtType),
       __smtx_typeof_map_value m = SmtType.Map T SmtType.Bool →
-      __smtx_map_canonical m = true →
+      __smtx_map_canonical uc m = true →
       __smtx_map_get_default m = SmtValue.Boolean false →
       ∀ p ∈ map_entries m, p.2 = SmtValue.Boolean true
   | SmtMap.default T' e, T, _, _, _, p, hp => by
@@ -1374,10 +1423,10 @@ private theorem entries_eq_keys_map :
 private theorem set_cover_exists
     (T : SmtType) (lT : List SmtValue)
     (hlT : ∀ v : SmtValue, __smtx_typeof_value v = T →
-      __smtx_value_canonical v = true → v ∈ lT) :
+      __smtx_value_canonical uc v = true → v ∈ lT) :
     ∃ l : List SmtValue, ∀ v : SmtValue,
       __smtx_typeof_value v = SmtType.Set T →
-      __smtx_value_canonical v = true → v ∈ l := by
+      __smtx_value_canonical uc v = true → v ∈ l := by
   refine ⟨(lists_up_to lT lT.length).map
     (fun ks => SmtValue.Set
       (mk_map T (SmtValue.Boolean false)
@@ -1391,7 +1440,7 @@ private theorem set_cover_exists
       simpa [__smtx_typeof_value] using hTy
     exact map_to_set_type_inv h'
   have hCanParts :
-      __smtx_map_canonical m = true ∧
+      __smtx_map_canonical uc m = true ∧
         native_veq (__smtx_map_get_default m) (SmtValue.Boolean false) =
           true := by
     simpa [__smtx_value_canonical, native_and] using hCan
@@ -1443,12 +1492,12 @@ private theorem dt_resolve_nth_inv (dd : SmtDatatypeDecl) :
       rcases dt_resolve_nth_inv dd d k cr h' with ⟨c', hnth, hcr⟩
       exact ⟨c', by simpa [dt_nth_cons] using hnth, hcr⟩
 
-private def covers_fields : List (List SmtValue) → List SmtType → Prop
+private def covers_fields (uc : SmtUSortDom) : List (List SmtValue) → List SmtType → Prop
   | [], [] => True
   | L :: Ls, U :: Us =>
       (∀ v : SmtValue, __smtx_typeof_value v = U →
-        __smtx_value_canonical v = true → v ∈ L) ∧
-      covers_fields Ls Us
+        __smtx_value_canonical uc v = true → v ∈ L) ∧
+      covers_fields uc Ls Us
   | _, _ => False
 
 private def arg_lists : List (List SmtValue) → List (List SmtValue)
@@ -1458,8 +1507,8 @@ private def arg_lists : List (List SmtValue) → List (List SmtValue)
 private theorem arg_lists_complete :
     ∀ (Ls : List (List SmtValue)) (Us : List SmtType)
       (vs : List SmtValue),
-      covers_fields Ls Us →
-      list_typed_canonical vs Us →
+      covers_fields uc Ls Us →
+      list_typed_canonical uc vs Us →
       vs ∈ arg_lists Ls
   | [], [], [], _, _ => by
       simp [arg_lists]
@@ -1489,29 +1538,29 @@ private theorem cons_covers_exist
     (hInv : ∀ r : native_String, __smtx_dd_has_dt r B0 = true →
       ∃ l : List SmtValue, ∀ v : SmtValue,
         __smtx_typeof_value v = SmtType.Datatype r dd →
-        __smtx_value_canonical v = true → v ∈ l)
+        __smtx_value_canonical uc v = true → v ∈ l)
     (hGround : ∀ F : SmtType,
       (∀ r : native_String, F ≠ SmtType.TypeRef r) →
       sizeOf F < sizeOf dd →
-      native_inhabited_type F = true →
+      __smtx_inhabited_type F = true →
       __smtx_type_wf_rec F = true →
-      __smtx_is_finite_type F = true →
+      __smtx_is_finite_type uc F = true →
       ∃ l : List SmtValue, ∀ v : SmtValue,
         __smtx_typeof_value v = F →
-        __smtx_value_canonical v = true → v ∈ l) :
+        __smtx_value_canonical uc v = true → v ∈ l) :
     ∀ c : SmtDatatypeCons,
       (∀ F ∈ dtc_fields c, sizeOf F < sizeOf dd) →
-      __smtx_datatype_cons_bounded false c B0 = true →
+      __smtx_datatype_cons_bounded uc false c B0 = true →
       __smtx_dt_cons_wf_rec dd c = true →
       ∃ Ls : List (List SmtValue),
-        covers_fields Ls ((dtc_fields c).map (resolve_ty dd))
+        covers_fields uc Ls ((dtc_fields c).map (resolve_ty dd))
   | SmtDatatypeCons.unit, _, _, _ => ⟨[], by simp [dtc_fields, covers_fields]⟩
   | SmtDatatypeCons.cons F c, hSize, hBnd, hWf => by
-      have hFieldBnd : __smtx_field_type_bounded false F B0 = true := by
+      have hFieldBnd : __smtx_field_type_bounded uc false F B0 = true := by
         simp only [__smtx_datatype_cons_bounded, native_and,
           Bool.and_eq_true] at hBnd
         exact hBnd.1
-      have hTailBnd : __smtx_datatype_cons_bounded false c B0 = true := by
+      have hTailBnd : __smtx_datatype_cons_bounded uc false c B0 = true := by
         simp only [__smtx_datatype_cons_bounded, native_and,
           Bool.and_eq_true] at hBnd
         exact hBnd.2
@@ -1524,7 +1573,7 @@ private theorem cons_covers_exist
       have hHead :
           ∃ L : List SmtValue, ∀ v : SmtValue,
             __smtx_typeof_value v = resolve_ty dd F →
-            __smtx_value_canonical v = true → v ∈ L := by
+            __smtx_value_canonical uc v = true → v ∈ L := by
         by_cases hRef : ∃ r : native_String, F = SmtType.TypeRef r
         · rcases hRef with ⟨r, rfl⟩
           have hrMem : __smtx_dd_has_dt r B0 = true := by
@@ -1537,8 +1586,8 @@ private theorem cons_covers_exist
           have hFWf := resolved_field_inh_wf dd hDecl
             (SmtDatatypeCons.cons F c) hWf F (by simp [dtc_fields])
           rw [resolve_ty_ground dd F hRef'] at hFWf
-          have hFFin : __smtx_is_finite_type F = true := by
-            have hBnd' : __smtx_type_bounded false F = true := by
+          have hFFin : __smtx_is_finite_type uc F = true := by
+            have hBnd' : __smtx_type_bounded uc false F = true := by
               cases F <;> first
                 | exact absurd rfl (hRef' _)
                 | simpa [__smtx_field_type_bounded] using hFieldBnd
@@ -1562,37 +1611,37 @@ private theorem dt_spine_covers
     (hInv : ∀ r : native_String, __smtx_dd_has_dt r B0 = true →
       ∃ l : List SmtValue, ∀ v : SmtValue,
         __smtx_typeof_value v = SmtType.Datatype r dd →
-        __smtx_value_canonical v = true → v ∈ l)
+        __smtx_value_canonical uc v = true → v ∈ l)
     (hGround : ∀ F : SmtType,
       (∀ r : native_String, F ≠ SmtType.TypeRef r) →
       sizeOf F < sizeOf dd →
-      native_inhabited_type F = true →
+      __smtx_inhabited_type F = true →
       __smtx_type_wf_rec F = true →
-      __smtx_is_finite_type F = true →
+      __smtx_is_finite_type uc F = true →
       ∃ l : List SmtValue, ∀ v : SmtValue,
         __smtx_typeof_value v = F →
-        __smtx_value_canonical v = true → v ∈ l) :
+        __smtx_value_canonical uc v = true → v ∈ l) :
     ∀ (d : SmtDatatype) (k0 : Nat),
       (∀ (j : Nat) (c : SmtDatatypeCons), dt_nth_cons d j = some c →
         ∀ F ∈ dtc_fields c, sizeOf F < sizeOf dd) →
-      __smtx_datatype_bounded false d B0 = true →
+      __smtx_datatype_bounded uc false d B0 = true →
       __smtx_dt_wf_rec dd d = true →
       ∃ cover : List SmtValue,
         ∀ (j : Nat) (c : SmtDatatypeCons) (vs : List SmtValue),
           dt_nth_cons d j = some c →
-          list_typed_canonical vs ((dtc_fields c).map (resolve_ty dd)) →
+          list_typed_canonical uc vs ((dtc_fields c).map (resolve_ty dd)) →
           build_spine (SmtValue.DtCons t dd (k0 + j)) vs ∈ cover
   | SmtDatatype.null, k0, _, _, _ =>
       ⟨[], by
         intro j c vs hnth
         simp [dt_nth_cons] at hnth⟩
   | SmtDatatype.sum c rest, k0, hSizeAll, hBnd, hWf => by
-      have hConsBnd : __smtx_datatype_cons_bounded false c B0 = true :=
+      have hConsBnd : __smtx_datatype_cons_bounded uc false c B0 = true :=
         bounded_datatype_cons (SmtDatatype.sum c rest) 0 c rfl hBnd
       have hConsWf : __smtx_dt_cons_wf_rec dd c = true := by
         simp only [__smtx_dt_wf_rec, native_and, Bool.and_eq_true] at hWf
         exact hWf.1
-      have hRestBnd : __smtx_datatype_bounded false rest B0 = true := by
+      have hRestBnd : __smtx_datatype_bounded uc false rest B0 = true := by
         cases rest with
         | null => simp [__smtx_datatype_bounded, native_not]
         | sum c2 d2 =>
@@ -1632,12 +1681,12 @@ well-formed inhabited finite type are covered by a list.
 -/
 theorem finite_type_enumerable
     (A : SmtType)
-    (hInh : native_inhabited_type A = true)
+    (hInh : __smtx_inhabited_type A = true)
     (hRec : __smtx_type_wf_rec A = true)
-    (hFin : __smtx_is_finite_type A = true) :
+    (hFin : __smtx_is_finite_type uc A = true) :
     ∃ l : List SmtValue, ∀ v : SmtValue,
       __smtx_typeof_value v = A →
-      __smtx_value_canonical v = true → v ∈ l := by
+      __smtx_value_canonical uc v = true → v ∈ l := by
   cases A with
   | None =>
       simp [__smtx_type_wf_rec] at hRec
@@ -1656,7 +1705,12 @@ theorem finite_type_enumerable
   | Seq T =>
       simp [__smtx_is_finite_type, __smtx_type_bounded] at hFin
   | USort u =>
-      simp [__smtx_is_finite_type, __smtx_type_bounded] at hFin
+      have hDomFin := (smtx_is_finite_type_usort_iff u).mp hFin
+      refine ⟨hDomFin.toFinset.toList.map (fun r => SmtValue.UValue u r), ?_⟩
+      intro v hTy hCan
+      rcases typed_usort_shape v u hTy with ⟨r, rfl⟩
+      have hMem : r ∈ uc u := (smtx_value_canonical_uvalue_iff u r).mp hCan
+      simp [hMem]
   | Bool =>
       refine ⟨[SmtValue.Boolean false, SmtValue.Boolean true], ?_⟩
       intro v hTy hCan
@@ -1728,12 +1782,12 @@ theorem finite_type_enumerable
       · simp [__smtx_typeof_value, native_ite, hc] at hTy
   | Set T =>
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true := by
         have h := hRec
         simp [__smtx_type_wf_rec, native_and] at h
         exact h
-      have hTFin : __smtx_is_finite_type T = true := by
+      have hTFin : __smtx_is_finite_type uc T = true := by
         simpa [__smtx_is_finite_type, __smtx_type_bounded, native_and,
           native_not] using hFin
       rcases finite_type_enumerable T hRecParts.1 hRecParts.2 hTFin with
@@ -1741,17 +1795,17 @@ theorem finite_type_enumerable
       exact set_cover_exists T lT hlT
   | Map T U =>
       have hRecParts :
-          native_inhabited_type T = true ∧
+          __smtx_inhabited_type T = true ∧
             __smtx_type_wf_rec T = true ∧
-              native_inhabited_type U = true ∧
+              __smtx_inhabited_type U = true ∧
                 __smtx_type_wf_rec U = true := by
         have h := hRec
         simp [__smtx_type_wf_rec, native_and] at h
         exact ⟨h.1.1, h.1.2, h.2.1, h.2.2⟩
-      by_cases hUUnit : __smtx_is_unit_type U = true
+      by_cases hUUnit : __smtx_is_unit_type uc U = true
       · -- unit range: the whole map type is a unit type
-        have hMapUnit : __smtx_is_unit_type (SmtType.Map T U) = true := by
-          have hU : __smtx_type_bounded true U = true := by
+        have hMapUnit : __smtx_is_unit_type uc (SmtType.Map T U) = true := by
+          have hU : __smtx_type_bounded uc true U = true := by
             simpa [__smtx_is_unit_type] using hUUnit
           simp [__smtx_is_unit_type, __smtx_type_bounded, native_or,
             native_and, native_not, hU]
@@ -1760,12 +1814,12 @@ theorem finite_type_enumerable
         have := unit_type_values_default (SmtType.Map T U) hInh hRec
           hMapUnit v hTy hCan
         simp [this]
-      · have hUUnitF : __smtx_is_unit_type U = false := by
-          cases h : __smtx_is_unit_type U
+      · have hUUnitF : __smtx_is_unit_type uc U = false := by
+          cases h : __smtx_is_unit_type uc U
           · rfl
           · exact absurd h hUUnit
-        have hTFin : __smtx_is_finite_type T = true ∧
-            __smtx_is_finite_type U = true := by
+        have hTFin : __smtx_is_finite_type uc T = true ∧
+            __smtx_is_finite_type uc U = true := by
           have h := hFin
           simp only [__smtx_is_finite_type, __smtx_type_bounded, native_or,
             native_and, native_not, Bool.or_eq_true, Bool.and_eq_true,
@@ -1788,14 +1842,14 @@ theorem finite_type_enumerable
       have hUniq : dd_unique dd := dd_unique_of_decl_wf dd dd hRecParts.2
       have hFixMem :
           __smtx_dd_has_dt s
-            (__smtx_datatype_decl_bounded false dd dd
+            (__smtx_datatype_decl_bounded uc false dd dd
               SmtDatatypeDecl.nil) = true := by
         rw [is_finite_datatype_eq] at hFin
         exact hFin
       refine decl_bounded_payload false dd hUniq
         (fun t => ∃ l : List SmtValue, ∀ v : SmtValue,
           __smtx_typeof_value v = SmtType.Datatype t dd →
-          __smtx_value_canonical v = true → v ∈ l)
+          __smtx_value_canonical uc v = true → v ∈ l)
         ?_ s hFixMem
       intro t hMemDD B0 hBnd hInvB
       have hDtWf : __smtx_dt_wf_rec dd (__smtx_dd_lookup t dd) = true :=
@@ -1803,12 +1857,12 @@ theorem finite_type_enumerable
       have hGround : ∀ F : SmtType,
           (∀ r : native_String, F ≠ SmtType.TypeRef r) →
           sizeOf F < sizeOf dd →
-          native_inhabited_type F = true →
+          __smtx_inhabited_type F = true →
           __smtx_type_wf_rec F = true →
-          __smtx_is_finite_type F = true →
+          __smtx_is_finite_type uc F = true →
           ∃ l : List SmtValue, ∀ v : SmtValue,
             __smtx_typeof_value v = F →
-            __smtx_value_canonical v = true → v ∈ l := by
+            __smtx_value_canonical uc v = true → v ∈ l := by
         intro F hRef hMeasure hFInh hFRec hFFin
         exact finite_type_enumerable F hFInh hFRec hFFin
       have hSizeAll : ∀ (j : Nat) (c : SmtDatatypeCons),
@@ -1830,7 +1884,7 @@ theorem finite_type_enumerable
         ⟨c, hnthU, hcr⟩
       subst hcr
       have hTyped' :
-          list_typed_canonical vs ((dtc_fields c).map (resolve_ty dd)) := by
+          list_typed_canonical uc vs ((dtc_fields c).map (resolve_ty dd)) := by
         rw [← dtc_resolve_fields dd c]
         exact hTyped
       have := hCover k c vs hnthU hTyped'

@@ -1,5 +1,8 @@
 module
 
+public import Cpc.Proofs.RealBridge
+import all Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 public import Cpc.Proofs.RuleSupport.ArithPolyNormRelSupport
 import all Cpc.Proofs.RuleSupport.ArithPolyNormRelSupport
 
@@ -285,55 +288,55 @@ private theorem native_zeq_of_not_lt_not_gt {a b : native_Int} :
   have hEq : a = b := Int.le_antisymm hAB hBA
   simpa [native_zeq, SmtEval.native_zeq] using hEq
 
-private theorem native_qlt_of_not_eq_not_gt {a b : native_Rat} :
-    native_qeq a b = false ->
-    native_qlt b a = false ->
-    native_qlt a b = true := by
+private theorem native_qlt_of_not_eq_not_gt {a b : native_Real} :
+    native_req a b = false ->
+    native_rlt b a = false ->
+    native_rlt a b = true := by
   intro hEq hGt
   have hNe : a ≠ b := by
-    simpa [native_qeq, Eo.native_qeq] using hEq
+    simpa [native_req] using hEq
   have hNotGt : ¬ b < a := by
-    simpa [native_qlt, SmtEval.native_qlt] using hGt
-  have hLe : a ≤ b := Rat.not_lt.mp hNotGt
+    simpa [native_rlt] using hGt
+  have hLe : a ≤ b := not_lt.mp hNotGt
   have hLt : a < b := by
     by_cases hlt : a < b
     · exact hlt
-    · have hBA : b ≤ a := Rat.not_lt.mp hlt
-      have hEq : a = b := Rat.le_antisymm hLe hBA
+    · have hBA : b ≤ a := not_lt.mp hlt
+      have hEq : a = b := le_antisymm hLe hBA
       exact False.elim (hNe hEq)
-  simpa [native_qlt, SmtEval.native_qlt] using hLt
+  simpa [native_rlt] using hLt
 
-private theorem native_qgt_of_not_eq_not_lt {a b : native_Rat} :
-    native_qeq a b = false ->
-    native_qlt a b = false ->
-    native_qlt b a = true := by
+private theorem native_qgt_of_not_eq_not_lt {a b : native_Real} :
+    native_req a b = false ->
+    native_rlt a b = false ->
+    native_rlt b a = true := by
   intro hEq hLt
   have hNe : a ≠ b := by
-    simpa [native_qeq, Eo.native_qeq] using hEq
+    simpa [native_req] using hEq
   have hNotLt : ¬ a < b := by
-    simpa [native_qlt, SmtEval.native_qlt] using hLt
-  have hLe : b ≤ a := Rat.not_lt.mp hNotLt
+    simpa [native_rlt] using hLt
+  have hLe : b ≤ a := not_lt.mp hNotLt
   have hLt' : b < a := by
     by_cases hgt : b < a
     · exact hgt
-    · have hAB : a ≤ b := Rat.not_lt.mp hgt
-      have hEq : a = b := Rat.le_antisymm hAB hLe
+    · have hAB : a ≤ b := not_lt.mp hgt
+      have hEq : a = b := le_antisymm hAB hLe
       exact False.elim (hNe hEq)
-  simpa [native_qlt, SmtEval.native_qlt] using hLt'
+  simpa [native_rlt] using hLt'
 
-private theorem native_qeq_of_not_lt_not_gt {a b : native_Rat} :
-    native_qlt a b = false ->
-    native_qlt b a = false ->
-    native_qeq a b = true := by
+private theorem native_qeq_of_not_lt_not_gt {a b : native_Real} :
+    native_rlt a b = false ->
+    native_rlt b a = false ->
+    native_req a b = true := by
   intro hLt hGt
   have hNotLt : ¬ a < b := by
-    simpa [native_qlt, SmtEval.native_qlt] using hLt
+    simpa [native_rlt] using hLt
   have hNotGt : ¬ b < a := by
-    simpa [native_qlt, SmtEval.native_qlt] using hGt
-  have hAB : a ≤ b := Rat.not_lt.mp hNotGt
-  have hBA : b ≤ a := Rat.not_lt.mp hNotLt
-  have hEq : a = b := Rat.le_antisymm hAB hBA
-  simpa [native_qeq, Eo.native_qeq] using hEq
+    simpa [native_rlt] using hGt
+  have hAB : a ≤ b := not_lt.mp hNotGt
+  have hBA : b ≤ a := not_lt.mp hNotLt
+  have hEq : a = b := le_antisymm hAB hBA
+  simpa [native_req] using hEq
 
 private theorem native_zlt_false_of_zleq_true {a b : native_Int} :
     native_zleq b a = true ->
@@ -353,23 +356,23 @@ private theorem native_zgt_false_of_zleq_true {a b : native_Int} :
   have hNotGt : ¬ b < a := Int.not_lt.mpr hLe'
   simpa [native_zlt, SmtEval.native_zlt] using hNotGt
 
-private theorem native_qlt_false_of_qleq_true {a b : native_Rat} :
-    native_qleq b a = true ->
-    native_qlt a b = false := by
+private theorem native_qlt_false_of_qleq_true {a b : native_Real} :
+    native_rleq b a = true ->
+    native_rlt a b = false := by
   intro hLe
   have hLe' : b ≤ a := by
-    simpa [native_qleq, Smtm.native_qleq] using hLe
-  have hNotLt : ¬ a < b := Rat.not_lt.mpr hLe'
-  simpa [native_qlt, SmtEval.native_qlt] using hNotLt
+    simpa [native_rleq] using hLe
+  have hNotLt : ¬ a < b := not_lt.mpr hLe'
+  simpa [native_rlt] using hNotLt
 
-private theorem native_qgt_false_of_qleq_true {a b : native_Rat} :
-    native_qleq a b = true ->
-    native_qlt b a = false := by
+private theorem native_qgt_false_of_qleq_true {a b : native_Real} :
+    native_rleq a b = true ->
+    native_rlt b a = false := by
   intro hLe
   have hLe' : a ≤ b := by
-    simpa [native_qleq, Smtm.native_qleq] using hLe
-  have hNotGt : ¬ b < a := Rat.not_lt.mpr hLe'
-  simpa [native_qlt, SmtEval.native_qlt] using hNotGt
+    simpa [native_rleq] using hLe
+  have hNotGt : ¬ b < a := not_lt.mpr hLe'
+  simpa [native_rlt] using hNotGt
 
 private theorem int_eq_false_of_eval
     (M : SmtModel) (a b : Term) {n m : native_Int}
@@ -412,25 +415,25 @@ private theorem int_gt_false_of_eval
       simpa [__smtx_model_eval_gt, __smtx_model_eval_lt] using hEval
 
 private theorem real_eq_false_of_eval
-    (M : SmtModel) (a b : Term) {q r : native_Rat}
-    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Rational q)
-    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Rational r) :
+    (M : SmtModel) (a b : Term) {q r : native_Real}
+    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q)
+    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) false ->
-    native_qeq q r = false := by
+    native_req q r = false := by
   intro h
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_eq_eq] at h
   cases h with
   | intro_false _ hEval =>
       rw [smtx_eval_eq_term_eq, ha, hb] at hEval
       simp [__smtx_model_eval_eq, native_veq] at hEval
-      simp [native_qeq, Eo.native_qeq, hEval]
+      simp [native_req, hEval]
 
 private theorem real_lt_false_of_eval
-    (M : SmtModel) (a b : Term) {q r : native_Rat}
-    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Rational q)
-    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Rational r) :
+    (M : SmtModel) (a b : Term) {q r : native_Real}
+    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q)
+    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.lt) a) b) false ->
-    native_qlt q r = false := by
+    native_rlt q r = false := by
   intro h
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_lt_eq] at h
   cases h with
@@ -439,11 +442,11 @@ private theorem real_lt_false_of_eval
       simpa [__smtx_model_eval_lt] using hEval
 
 private theorem real_gt_false_of_eval
-    (M : SmtModel) (a b : Term) {q r : native_Rat}
-    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Rational q)
-    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Rational r) :
+    (M : SmtModel) (a b : Term) {q r : native_Real}
+    (ha : __smtx_model_eval M (__eo_to_smt a) = SmtValue.Real q)
+    (hb : __smtx_model_eval M (__eo_to_smt b) = SmtValue.Real r) :
     eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.gt) a) b) false ->
-    native_qlt r q = false := by
+    native_rlt r q = false := by
   intro h
   rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_gt_eq] at h
   cases h with
@@ -611,7 +614,7 @@ private theorem eq_true_of_lt_false_gt_false
     · exact hEqBool
     · rw [eo_to_smt_eq_eq, smtx_eval_eq_term_eq, ha, hb]
       have hEqVal : q = r := by
-        simpa [native_qeq, Eo.native_qeq] using
+        simpa [native_req] using
           native_qeq_of_not_lt_not_gt hLtB hGtB
       simp [__smtx_model_eval_eq, native_veq, hEqVal]
 

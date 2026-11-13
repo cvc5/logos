@@ -1054,8 +1054,7 @@ theorem model_agrees_except_on_env_symm
   model_agrees_except_on_env except bound N M :=
 by
   refine ⟨?_, ?_⟩
-  · exact ⟨by intro s T; exact (hAgree.globals.1 s T).symm,
-      by intro fid T U; exact (hAgree.globals.2 fid T U).symm⟩
+  · exact model_agrees_on_globals_symm hAgree.globals
   · intro s T hKey
     exact (hAgree.vars_eq s T hKey).symm
 
@@ -1106,7 +1105,7 @@ theorem model_agrees_except_on_env_push_left_of_mem_except
   model_agrees_except_on_env except bound
     (native_model_push M s T v) M :=
 by
-  refine ⟨model_agrees_on_globals_push M s T v, ?_⟩
+  refine ⟨model_agrees_on_globals_symm (model_agrees_on_globals_push M s T v), ?_⟩
   intro s' T' hAllowed
   by_cases hKey :
       ({ isVar := true, name := s', ty := T' } : SmtModelKey) =
@@ -1129,7 +1128,8 @@ theorem model_agrees_except_on_env_push_left
 by
   refine
     ⟨model_agrees_on_globals_trans
-      (model_agrees_on_globals_push N s T v) hAgree.globals, ?_⟩
+      (model_agrees_on_globals_symm (model_agrees_on_globals_push N s T v))
+      hAgree.globals, ?_⟩
   intro s' T' hAllowed
   by_cases hKey :
       ({ isVar := true, name := s', ty := T' } : SmtModelKey) =
@@ -1169,8 +1169,7 @@ theorem model_agrees_except_on_eo_env_symm
   model_agrees_except_on_eo_env except bound N M :=
 by
   refine ⟨?_, ?_⟩
-  · exact ⟨by intro s T; exact (hAgree.globals.1 s T).symm,
-      by intro fid T U; exact (hAgree.globals.2 fid T U).symm⟩
+  · exact model_agrees_on_globals_symm hAgree.globals
   · intro s T hKey
     exact (hAgree.vars_eq s T hKey).symm
 
@@ -2685,7 +2684,8 @@ by
         root hXLt hExcept hBound hTrans
         set_choose_arg_has_smt_translation_of_has_smt_translation
         hNoFree hAgree
-        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx])
+        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx,
+          smtx_model_eval_map_diff_eq_of_usortDom hAgree.globals.usortDom])
         ih
   case set_is_empty =>
     exact
@@ -2701,7 +2701,8 @@ by
         root hXLt hExcept hBound hTrans
         set_is_singleton_arg_has_smt_translation_of_has_smt_translation
         hNoFree hAgree
-        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx])
+        (by intro hx; dsimp only [__eo_to_smt]; simp [__smtx_model_eval, hx,
+          smtx_model_eval_map_diff_eq_of_usortDom hAgree.globals.usortDom])
         ih
   case ubv_to_int =>
     exact
@@ -3154,140 +3155,6 @@ by
     rw [__smtx_model_eval.eq_def] <;> simp only
   rw [hM, hN, hXEval, hYEval]
 
-theorem smt_model_eval_eo_to_smt_set_insert_eq_of_contains_atomic_term_list_free_rec_false_mapped
-    (root : Term)
-    {xs except bound : Term} {base : SmtTerm}
-    {exceptVars boundVars : List EoVarKey}
-    {M N : SmtModel}
-    (hXsLt : sizeOf xs < sizeOf root)
-    (hExcept : EoVarEnvPerm except exceptVars)
-    (hBound : EoVarEnvPerm bound boundVars)
-    (hElemNN : __eo_to_smt_typed_list_elem_type xs ≠ SmtType.None)
-    (hNoFree :
-      __contains_atomic_term_list_free_rec xs except bound =
-        Term.Boolean false)
-    (hAgree :
-      model_agrees_except_on_env
-        (exceptVars.map EoVarKey.toSmt) (boundVars.map EoVarKey.toSmt)
-        M N)
-    (hBase :
-      __smtx_model_eval M base = __smtx_model_eval N base)
-    (ih :
-      ∀ {t except' bound' : Term}
-        {exceptVars' boundVars' : List EoVarKey}
-        {M' N' : SmtModel},
-        sizeOf t < sizeOf root ->
-          EoVarEnvPerm except' exceptVars' ->
-          EoVarEnvPerm bound' boundVars' ->
-          eoHasSmtTranslation t ->
-          __contains_atomic_term_list_free_rec t except' bound' =
-            Term.Boolean false ->
-          model_agrees_except_on_env
-            (exceptVars'.map EoVarKey.toSmt)
-            (boundVars'.map EoVarKey.toSmt) M' N' ->
-          __smtx_model_eval M' (__eo_to_smt t) =
-            __smtx_model_eval N' (__eo_to_smt t)) :
-  __smtx_model_eval M (__eo_to_smt_set_insert xs base) =
-    __smtx_model_eval N (__eo_to_smt_set_insert xs base) :=
-by
-  cases xs with
-  | Apply f tail =>
-      cases f with
-      | UOp op =>
-          cases op
-          case _at__at_TypedList_nil =>
-            change
-              __smtx_model_eval M
-                  (native_ite
-                    (native_Teq (__smtx_typeof base)
-                      (SmtType.Set (__eo_to_smt_type tail)))
-                    base SmtTerm.None) =
-                __smtx_model_eval N
-                  (native_ite
-                    (native_Teq (__smtx_typeof base)
-                      (SmtType.Set (__eo_to_smt_type tail)))
-                    base SmtTerm.None)
-            cases
-                native_Teq (__smtx_typeof base)
-                  (SmtType.Set (__eo_to_smt_type tail)) <;>
-              simp [native_ite, __smtx_model_eval, hBase]
-          all_goals
-            exact False.elim
-              (hElemNN (by simp [__eo_to_smt_typed_list_elem_type]))
-      | Apply g head =>
-          cases g with
-          | UOp op =>
-              cases op
-              case _at__at_TypedList_cons =>
-                let headTy := __smtx_typeof (__eo_to_smt head)
-                let tailTy := __eo_to_smt_typed_list_elem_type tail
-                have hGuard : native_Teq headTy tailTy = true := by
-                  by_cases hGuard : native_Teq headTy tailTy = true
-                  · exact hGuard
-                  · exfalso
-                    exact hElemNN (by
-                      simp [__eo_to_smt_typed_list_elem_type, headTy,
-                        tailTy, native_ite, hGuard])
-                have hHeadNN : headTy ≠ SmtType.None := by
-                  change
-                    (native_ite (native_Teq headTy tailTy) headTy
-                        SmtType.None) ≠
-                      SmtType.None at hElemNN
-                  rw [hGuard] at hElemNN
-                  exact hElemNN
-                have hTailNN : tailTy ≠ SmtType.None := by
-                  intro hTailNone
-                  cases hHead : headTy <;>
-                    simp [headTy, tailTy, hHead, hTailNone, native_Teq]
-                      at hGuard hHeadNN
-                have hHeadTrans : eoHasSmtTranslation head := by
-                  unfold eoHasSmtTranslation
-                  simpa [headTy] using hHeadNN
-                rcases
-                  contains_atomic_term_list_free_rec_apply_apply_uop_false_args
-                    hExcept hBound
-                    (term_not_eo_list_cons_of_has_smt_translation hHeadTrans)
-                    hNoFree with
-                  ⟨hHeadNoFree, hTailNoFree⟩
-                have hHeadEval :
-                    __smtx_model_eval M (__eo_to_smt head) =
-                      __smtx_model_eval N (__eo_to_smt head) :=
-                  ih (by simp at hXsLt ⊢; omega)
-                    hExcept hBound hHeadTrans hHeadNoFree hAgree
-                have hTailEval :
-                    __smtx_model_eval M
-                        (__eo_to_smt_set_insert tail base) =
-                      __smtx_model_eval N
-                        (__eo_to_smt_set_insert tail base) :=
-                  smt_model_eval_eo_to_smt_set_insert_eq_of_contains_atomic_term_list_free_rec_false_mapped
-                    root
-                    (hXsLt := by simp at hXsLt ⊢; omega)
-                    hExcept hBound
-                    (by simpa [tailTy] using hTailNN)
-                    hTailNoFree hAgree hBase ih
-                change
-                  __smtx_model_eval M
-                      (SmtTerm.set_union
-                        (SmtTerm.set_singleton (__eo_to_smt head))
-                        (__eo_to_smt_set_insert tail base)) =
-                    __smtx_model_eval N
-                      (SmtTerm.set_union
-                        (SmtTerm.set_singleton (__eo_to_smt head))
-                        (__eo_to_smt_set_insert tail base))
-                simp [__smtx_model_eval, hHeadEval, hTailEval]
-              all_goals
-                exact False.elim
-                  (hElemNN (by simp [__eo_to_smt_typed_list_elem_type]))
-          | _ =>
-            exact False.elim
-              (hElemNN (by simp [__eo_to_smt_typed_list_elem_type]))
-      | _ =>
-        exact False.elim
-          (hElemNN (by simp [__eo_to_smt_typed_list_elem_type]))
-  | _ =>
-      exact False.elim
-        (hElemNN (by simp [__eo_to_smt_typed_list_elem_type]))
-
 theorem smt_model_eval_apply_apply_set_insert_eq_of_contains_atomic_term_list_free_rec_false_mapped
     (root : Term)
     {xs base except bound : Term} {exceptVars boundVars : List EoVarKey}
@@ -3328,30 +3195,17 @@ theorem smt_model_eval_apply_apply_set_insert_eq_of_contains_atomic_term_list_fr
         base)) =
     __smtx_model_eval N
       (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.set_insert) xs)
-        base)) :=
-by
-  rcases
-    set_insert_base_has_smt_translation_and_typed_list_elem_type_non_none
-      hTrans with
-    ⟨hBaseTrans, hElemNN⟩
-  rcases
-    contains_atomic_term_list_free_rec_apply_apply_uop_false_args
-      hExcept hBound
-      (typed_list_elem_type_non_none_not_eo_list_cons hElemNN)
-      hNoFree with
-    ⟨hXsNoFree, hBaseNoFree⟩
-  have hBaseEval :
-      __smtx_model_eval M (__eo_to_smt base) =
-        __smtx_model_eval N (__eo_to_smt base) :=
-    ih hBaseLt hExcept hBound hBaseTrans hBaseNoFree hAgree
-  change
-    __smtx_model_eval M
-        (__eo_to_smt_set_insert xs (__eo_to_smt base)) =
-      __smtx_model_eval N
-        (__eo_to_smt_set_insert xs (__eo_to_smt base))
-  exact
-    smt_model_eval_eo_to_smt_set_insert_eq_of_contains_atomic_term_list_free_rec_false_mapped
-      root hXsLt hExcept hBound hElemNN hXsNoFree hAgree hBaseEval ih
+        base)) := by
+  exact smt_model_eval_apply_apply_uop_binary_eq_of_contains_atomic_term_list_free_rec_false_mapped
+    root hXsLt hBaseLt hExcept hBound hTrans
+    set_insert_args_have_smt_translation_of_non_none hNoFree hAgree
+    (by
+      intro hx hy
+      change __smtx_model_eval M
+        (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt xs)) (__eo_to_smt base)) =
+        __smtx_model_eval N
+        (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt xs)) (__eo_to_smt base))
+      simp only [__smtx_model_eval, hx, hy]) ih
 
 theorem smt_model_eval_apply_apply_apply_ite_eq_of_contains_atomic_term_list_free_rec_false_mapped
     (root : Term)
@@ -3666,7 +3520,7 @@ by
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists vs body))
       exact
-        smtx_model_eval_exists_eq_of_body_eval_eq
+        smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortDom
           (fun v =>
             ih
               (boundVars := (s, T) :: boundVars)
@@ -3742,7 +3596,7 @@ by
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists vs body))
       exact
-        smtx_model_eval_exists_eq_of_body_eval_eq
+        smtx_model_eval_exists_eq_of_body_eval_eq hAgree.globals.usortDom
           (fun v =>
             ih
               (boundVars := (s, T) :: boundVars)
@@ -4754,8 +4608,8 @@ by
             simp only [__eo_to_smt_array_deq_diff]
             cases hXTy : __smtx_typeof (__eo_to_smt x) <;>
               cases hYTy : __smtx_typeof (__eo_to_smt y) <;>
-              simp [__smtx_model_eval, __smtx_model_eval_map_diff,
-                hx, hy])
+              simp [__smtx_model_eval, hx, hy,
+                smtx_model_eval_map_diff_eq_of_usortDom hAgree.globals.usortDom])
           ih
     | exact
         smt_model_eval_apply_apply_uop_binary_eq_of_contains_atomic_term_list_free_rec_false_mapped
@@ -4770,8 +4624,8 @@ by
             simp only [__eo_to_smt_sets_deq_diff]
             cases hXTy : __smtx_typeof (__eo_to_smt x) <;>
               cases hYTy : __smtx_typeof (__eo_to_smt y) <;>
-              simp [__smtx_model_eval, __smtx_model_eval_map_diff,
-                hx, hy])
+              simp [__smtx_model_eval, hx, hy,
+                smtx_model_eval_map_diff_eq_of_usortDom hAgree.globals.usortDom])
           ih
     | exact
         smt_model_eval_apply_apply_uop_binary_eq_of_contains_atomic_term_list_free_rec_false_mapped

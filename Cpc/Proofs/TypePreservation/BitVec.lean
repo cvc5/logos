@@ -1,7 +1,7 @@
 module
 
 public import Cpc.Proofs.TypePreservation.BitVecCmp
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 import all Cpc.Proofs.TypePreservation.Common
 
 public section
@@ -447,9 +447,9 @@ theorem model_eval_repeat_rec_binary :
   | native_nat_zero, w, x => by
       refine ⟨0, ?_⟩
       constructor
-      · simp [__smtx_repeat_rec, SmtEval.native_zmult, Smtm.native_nat_to_int]
+      · simp [__smtx_repeat_rec, SmtEval.native_zmult, SmtEval.native_nat_to_int]
       · simp [SmtEval.native_zeq, SmtEval.native_mod_total, SmtEval.native_zmult,
-          Smtm.native_nat_to_int]
+          SmtEval.native_nat_to_int]
   | native_nat_succ n, w, x => by
       rcases model_eval_repeat_rec_binary n w x with ⟨m, hm, hCanon⟩
       refine ⟨native_mod_total
@@ -464,7 +464,7 @@ theorem model_eval_repeat_rec_binary :
       have hWidthEq' :
           native_zplus w (native_zmult (native_nat_to_int n) w) =
             native_zmult (native_nat_to_int (native_nat_succ n)) w := by
-        simpa [SmtEval.native_zplus, SmtEval.native_zmult, Smtm.native_nat_to_int] using hWidthEq
+        simpa [SmtEval.native_zplus, SmtEval.native_zmult, SmtEval.native_nat_to_int] using hWidthEq
       exact congrArg
         (fun z =>
           SmtValue.Binary z
@@ -513,11 +513,11 @@ theorem typeof_value_model_eval_repeat
   have hNat :
       native_zmult (native_nat_to_int (native_int_to_nat i)) (native_nat_to_int w) =
         native_zmult i (native_nat_to_int w) := by
-    simp [SmtEval.native_zmult, Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+    simp [SmtEval.native_zmult, SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       Int.toNat_of_nonneg hi]
   rw [hNat]
   exact typeof_value_binary_of_nonneg (native_zmult i (native_nat_to_int w)) m hMult (by
-    simpa [SmtEval.native_zmult, Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [SmtEval.native_zmult, SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       Int.toNat_of_nonneg hi] using hCanon)
 
 /-- Lemma about `model_eval_rotate_left_step_binary`. -/
@@ -548,16 +548,6 @@ theorem model_eval_rotate_left_step_binary
       (native_int_pow2 w), ?_, ?_⟩
   · simp [__smtx_model_eval_concat, __smtx_model_eval_extract, w1, w2, hi,
       SmtEval.native_zplus, SmtEval.native_zneg]
-    have hWidthEq : w + -1 + -1 + 1 + (w + -1 + 1 + -(w + -1)) = w := by
-      rw [Int.neg_add]
-      calc
-        w + -1 + -1 + 1 + (w + -1 + 1 + (-w + 1)) = w + (w + -w) := by
-          simp [Int.add_assoc, Int.add_left_comm, Int.add_comm]
-        _ = w := by
-          simpa [Int.add_assoc] using (Int.add_neg_cancel_right w w)
-    constructor
-    · exact hWidthEq
-    · simp [hWidthEq]
   · exact native_mod_total_canonical w
       (native_binary_concat w1
         (native_mod_total
@@ -608,10 +598,10 @@ theorem typeof_value_model_eval_rotate_left
   rw [hm]
   have hw0 : native_zleq 0 (native_nat_to_int w) = true := by
     exact bitvec_width_nonneg (by simpa [h2, hv] using hpres2)
-  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
     SmtEval.native_int_to_nat] using
       typeof_value_binary_of_nonneg (native_nat_to_int w) m hw0
-        (by simpa [Smtm.native_nat_to_int] using hCanon)
+        (by simpa [SmtEval.native_nat_to_int] using hCanon)
 
 /-- Lemma about `model_eval_rotate_right_step_binary`. -/
 theorem model_eval_rotate_right_step_binary
@@ -639,11 +629,6 @@ theorem model_eval_rotate_right_step_binary
       (native_int_pow2 w), ?_, ?_⟩
   · simp [__smtx_model_eval_concat, __smtx_model_eval_extract, w1, w2, hi,
       SmtEval.native_zplus, SmtEval.native_zneg]
-    have hWidthEq : 1 + (w + -1 + 1 + -1) = w := by
-      simp [Int.add_left_comm, Int.add_comm]
-    constructor
-    · exact hWidthEq
-    · simp [hWidthEq]
   · exact native_mod_total_canonical w
       (native_binary_concat w1
         (native_mod_total (native_binary_extract w x 0 0) (native_int_pow2 w1))
@@ -692,10 +677,10 @@ theorem typeof_value_model_eval_rotate_right
   rw [hm]
   have hw0 : native_zleq 0 (native_nat_to_int w) = true := by
     exact bitvec_width_nonneg (by simpa [h2, hv] using hpres2)
-  simpa [native_nat_to_int, native_int_to_nat, Smtm.native_nat_to_int,
+  simpa [native_nat_to_int, native_int_to_nat, SmtEval.native_nat_to_int,
     SmtEval.native_int_to_nat] using
       typeof_value_binary_of_nonneg (native_nat_to_int w) m hw0
-        (by simpa [Smtm.native_nat_to_int] using hCanon)
+        (by simpa [SmtEval.native_nat_to_int] using hCanon)
 
 /-- Shows that evaluating `bvuaddo` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_bvuaddo

@@ -256,7 +256,7 @@ theorem reConcat_nil_eval_empty_of_is_list_nil_true
               simp [__smtx_model_eval, __smtx_model_eval_str_to_re,
                 native_str_to_re, impl_native_re_of_list, native_pack_string,
                 native_pack_seq, native_unpack_seq,
-                impl_native_string_to_values]
+                ]
           | cons _ _ =>
               simp only [__eo_is_list_nil] at hNil
               cases hNil
@@ -376,7 +376,7 @@ theorem reConcat_singleton_elim_rel_eval
             | Numeral _ =>
                 cases hTailEval : __smtx_model_eval M (__eo_to_smt tail) <;>
                   simp [__smtx_model_eval_re_concat, hHeadEval, hTailEval] at hConcatEval'
-            | Rational _ =>
+            | Real _ =>
                 cases hTailEval : __smtx_model_eval M (__eo_to_smt tail) <;>
                   simp [__smtx_model_eval_re_concat, hHeadEval, hTailEval] at hConcatEval'
             | Binary _ _ =>

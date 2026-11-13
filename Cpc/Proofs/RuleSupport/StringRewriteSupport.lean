@@ -1405,9 +1405,9 @@ theorem native_seq_indexof_rec_le_of_prefix_at
       intro offset hOffset hPrefix
       unfold native_seq_indexof_rec
       by_cases hHere : native_seq_prefix_eq pat xs = true
-      · rw [if_pos hHere]
+      · rw [ite_eq_left hHere]
         exact ⟨0, Nat.zero_le _, by simp⟩
-      · rw [if_neg hHere]
+      · rw [ite_eq_right hHere]
         cases offset with
         | zero =>
             simp at hPrefix
@@ -1445,7 +1445,7 @@ theorem native_seq_indexof_zero_le_of_prefix_at
   rw [native_seq_indexof_eq_rec]
   simp only [Int.reduceLT, ↓reduceIte, Int.toNat_zero, Nat.zero_add]
   simp only [List.drop_zero]
-  rw [dif_pos hPatFit, hRec]
+  rw [dite_eq_left hPatFit, hRec]
   constructor
   · exact Int.natCast_nonneg _
   · apply Int.ofNat_le.mpr

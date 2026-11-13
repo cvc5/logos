@@ -1029,8 +1029,6 @@ private theorem assoc_nil_nth_cons_succ
   · rw [__eo_l_1___assoc_nil_nth.eq_3]
     · simp [__eo_requires, __eo_eq, __eo_add, native_zplus, native_ite,
         native_teq, native_not, SmtEval.native_not]
-      congr
-      exact Int.add_neg_cancel_right (rel : Int) (1 : Int)
     · intro h
       cases h
     · intro h
@@ -1217,7 +1215,7 @@ private theorem dt_updater_elim_update_rel
                 (__eo_to_smt_datatype (__eo_dd_lookup s d0)) i : Int) := by
           apply of_decide_eq_true
           simpa [native_zlt, SmtEval.native_zlt, native_nat_to_int,
-            Smtm.native_nat_to_int, D,
+            SmtEval.native_nat_to_int, D,
             TranslationProofs.eo_to_smt_dd_lookup] using hIdx
         exact Int.ofNat_lt.mp hInt
       have hIteNN :

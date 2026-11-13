@@ -3,7 +3,7 @@ module
 public import Cpc.Proofs.TypePreservation.Common
 import all Cpc.Proofs.TypePreservation.Common
 public import Cpc.Proofs.TypePreservation.Helpers
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 
 public section
 
@@ -462,7 +462,7 @@ theorem dt_cons_chain_type_of_non_none :
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral n, s, d, i, hHead, hNN => by
       simp [__smtx_apply_head_value] at hHead
-  | SmtValue.Rational q, s, d, i, hHead, hNN => by
+  | SmtValue.Real q, s, d, i, hHead, hNN => by
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary w n, s, d, i, hHead, hNN => by
       simp [__smtx_apply_head_value] at hHead
@@ -572,7 +572,7 @@ theorem no_value_of_empty_datatype
       simp [__smtx_typeof_value] at hv
   | Numeral _ =>
       simp [__smtx_typeof_value] at hv
-  | Rational _ =>
+  | Real _ =>
       simp [__smtx_typeof_value] at hv
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
@@ -720,7 +720,7 @@ theorem datatype_wf_rec_of_type_wf
     (h : __smtx_type_wf (SmtType.Datatype s dd) = true) :
     __smtx_dt_wf_rec dd (__smtx_dd_lookup s dd) = true := by
   have hPair :
-      native_inhabited_type (SmtType.Datatype s dd) = true ∧
+      __smtx_inhabited_type (SmtType.Datatype s dd) = true ∧
         (__smtx_dd_has_dt s dd = true ∧ __smtx_decl_wf_rec dd dd = true) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and] using h
@@ -748,7 +748,7 @@ theorem apply_arg_nth_type_of_non_none :
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Numeral n, s, d, i, j, hHead, hNN, hj => by
       simp [__smtx_apply_head_value] at hHead
-  | SmtValue.Rational q, s, d, i, j, hHead, hNN, hj => by
+  | SmtValue.Real q, s, d, i, j, hHead, hNN, hj => by
       simp [__smtx_apply_head_value] at hHead
   | SmtValue.Binary w n, s, d, i, j, hHead, hNN, hj => by
       simp [__smtx_apply_head_value] at hHead
@@ -832,8 +832,8 @@ theorem apply_arg_nth_type_of_non_none :
               exact hEq'.symm
             · simp [__smtx_typeof_apply_value, __smtx_typeof_guard, native_ite, hRNone, hEq] at hTyEq
               exact (hSuccNN hTyEq.symm).elim
-        have hcond : Smtm.native_nateq (vsm_num_apply_args f) (vsm_num_apply_args f) = true := by
-          simp [Smtm.native_nateq]
+        have hcond : native_nateq (vsm_num_apply_args f) (vsm_num_apply_args f) = true := by
+          simp [native_nateq]
         simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, native_ite, hcond] using hArgTy
       · have hjSucc : j < Nat.succ (vsm_num_apply_args f) := by
           simpa [vsm_num_apply_args] using hj
@@ -844,8 +844,8 @@ theorem apply_arg_nth_type_of_non_none :
               exact False.elim (hLast hEq)
           | inr hLt =>
               exact hLt
-        have hcond : Smtm.native_nateq j (vsm_num_apply_args f) = false := by
-          simp [Smtm.native_nateq, hLast]
+        have hcond : native_nateq j (vsm_num_apply_args f) = false := by
+          simp [native_nateq, hLast]
         simpa [__smtx_apply_arg_nth_value, vsm_num_apply_args, native_ite, hcond] using
           apply_arg_nth_type_of_non_none hHeadF hFunNN hj'
 
@@ -924,9 +924,9 @@ theorem dt_sel_wrong_fun_type_wf_of_map_wf
     (map_type_wf_components_of_wf (A := SmtType.Int)
       (B := SmtType.Map D R) hM2WF).2
   have hAll :
-      native_inhabited_type (SmtType.Map D R) = true ∧
-        ((native_inhabited_type D = true ∧ __smtx_type_wf_rec D = true) ∧
-          (native_inhabited_type R = true ∧ __smtx_type_wf_rec R = true)) := by
+      __smtx_inhabited_type (SmtType.Map D R) = true ∧
+        ((__smtx_inhabited_type D = true ∧ __smtx_type_wf_rec D = true) ∧
+          (__smtx_inhabited_type R = true ∧ __smtx_type_wf_rec R = true)) := by
     simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
       native_and] using hM3WF
   have hRWF : __smtx_type_wf R = true :=
@@ -968,23 +968,23 @@ theorem typeof_value_model_eval_dt_sel_wrong
     exact (map_type_wf_components_of_wf (A := SmtType.Int)
       (B := SmtType.Map D R) hM2WF).2
   have hDRParts :
-      native_inhabited_type D = true ∧
+      __smtx_inhabited_type D = true ∧
         __smtx_type_wf_rec D = true ∧
-          native_inhabited_type R = true ∧
+          __smtx_inhabited_type R = true ∧
             __smtx_type_wf_rec R = true := by
     have hAll :
-        native_inhabited_type (SmtType.Map D R) = true ∧
-          ((native_inhabited_type D = true ∧ __smtx_type_wf_rec D = true) ∧
-            (native_inhabited_type R = true ∧ __smtx_type_wf_rec R = true)) := by
+        __smtx_inhabited_type (SmtType.Map D R) = true ∧
+          ((__smtx_inhabited_type D = true ∧ __smtx_type_wf_rec D = true) ∧
+            (__smtx_inhabited_type R = true ∧ __smtx_type_wf_rec R = true)) := by
       simpa [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
         native_and] using hM3WF
     exact ⟨hAll.2.1.1, hAll.2.1.2, hAll.2.2.1, hAll.2.2.2⟩
   have hDParts :
-      native_inhabited_type D = true ∧
+      __smtx_inhabited_type D = true ∧
         __smtx_type_wf_rec D = true :=
     ⟨hDRParts.1, hDRParts.2.1⟩
   have hRParts :
-      native_inhabited_type R = true ∧
+      __smtx_inhabited_type R = true ∧
         __smtx_type_wf_rec R = true :=
     ⟨hDRParts.2.2.1, hDRParts.2.2.2⟩
   have hRWF : __smtx_type_wf R = true :=
@@ -1181,7 +1181,7 @@ theorem typeof_apply_non_none_cases
 theorem typeof_value_model_eval_apply_fun
     (M : SmtModel)
     (hM : model_wf M)
-    {fid : native_String}
+    {fid : ModelId}
     {i : SmtValue}
     {A B : SmtType}
     (hA : A ≠ SmtType.None)
@@ -1246,7 +1246,7 @@ theorem typeof_value_model_eval_apply_dt
   | NotValue => simp [__smtx_typeof_value] at hf
   | Boolean b => simp [__smtx_typeof_value] at hf
   | Numeral n => simp [__smtx_typeof_value] at hf
-  | Rational q => simp [__smtx_typeof_value] at hf
+  | Real q => simp [__smtx_typeof_value] at hf
   | Binary w n =>
       cases hWidth : native_zleq 0 w <;>
         cases hMod : native_zeq n (native_mod_total n (native_int_pow2 w)) <;>

@@ -301,7 +301,7 @@ private theorem eval_bvurem_self_eq_zero
       simpa [SmtEval.native_zleq] using hNonneg
     have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
       Int.toNat_of_nonneg hnNonneg
-    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   rw [hWidthEq] at hEvalX
   have hZeroEval := eval_bv_const M 0 n hNonneg

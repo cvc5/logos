@@ -326,13 +326,13 @@ private theorem eval_bv_merge_sign_extend_1
   let I := native_int_to_nat iv
   let J := native_int_to_nat jv
   have hWRound : (W : Int) = w := by
-    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hIRound : (I : Int) = iv := by
-    simpa [I, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [I, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip iv hiv0
   have hJRound : (J : Int) = jv := by
-    simpa [J, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [J, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip jv hjv0
   have hKRound : ((I + J : Nat) : Int) = kv := by
     calc
@@ -345,14 +345,14 @@ private theorem eval_bv_merge_sign_extend_1
       (by simpa [W] using hXSmtTy) with ⟨p, hXEval, hCan⟩
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) = SmtValue.Binary (W : Int) p := by
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
   have hWidth0 : native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hRange := bitvec_payload_range_of_canonical hWidth0 hCan
   have hp0 : (0 : Int) ≤ p := hRange.1
   have hp1 : p < (2 : Int) ^ W := by
-    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int]
+    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int]
       using hRange.2
   unfold bvMergeSignExtend1Lhs bvMergeSignExtend1Rhs
   rw [eval_sign_extend_term, eval_sign_extend_term, eval_sign_extend_term,
@@ -870,13 +870,13 @@ private theorem eval_bv_merge_sign_extend_2
   let I := native_int_to_nat iv
   let J := native_int_to_nat jv
   have hWRound : (W : Int) = w := by
-    simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip w hw0
   have hIRound : (I : Int) = iv := by
-    simpa [I, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [I, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip iv hiv0
   have hJRound : (J : Int) = jv := by
-    simpa [J, native_nat_to_int, Smtm.native_nat_to_int] using
+    simpa [J, native_nat_to_int, SmtEval.native_nat_to_int] using
       native_int_to_nat_roundtrip jv hjv0
   have hJPos : 0 < J := by
     have : (0 : Int) < jv := by
@@ -892,14 +892,14 @@ private theorem eval_bv_merge_sign_extend_2
       (by simpa [W] using hXSmtTy) with ⟨p, hXEval, hCan⟩
   have hXEval' :
       __smtx_model_eval M (__eo_to_smt x) = SmtValue.Binary (W : Int) p := by
-    simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
+    simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
   have hWidth0 : native_zleq 0 (native_nat_to_int W) = true := by
     simp [SmtEval.native_zleq, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hRange := bitvec_payload_range_of_canonical hWidth0 hCan
   have hp0 : (0 : Int) ≤ p := hRange.1
   have hp1 : p < (2 : Int) ^ W := by
-    simpa [natpow2_eq, native_nat_to_int, Smtm.native_nat_to_int]
+    simpa [natpow2_eq, native_nat_to_int, SmtEval.native_nat_to_int]
       using hRange.2
   unfold bvMergeSignExtend2Lhs bvMergeSignExtend2Rhs
   rw [eval_sign_extend_term, eval_zero_extend_term, eval_zero_extend_term,

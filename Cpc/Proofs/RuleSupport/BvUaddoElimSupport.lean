@@ -101,15 +101,15 @@ theorem smt_typeof_uaddo_ext (x : Term) (w : Nat)
     rw [__smtx_typeof.eq_def]
     simp only
     simp [__smtx_typeof_concat, hx, hEmptyTy,
-      Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
-      Smtm.native_nateq, SmtEval.native_zplus, native_ite]
+      SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
+      SmtEval.native_nateq, SmtEval.native_zplus, native_ite]
   change __smtx_typeof
       (SmtTerm.concat (__eo_to_smt uaddoZeroBit)
         (SmtTerm.concat (__eo_to_smt x) (SmtTerm.Binary 0 0))) = _
   rw [__smtx_typeof.eq_def]
   simp only
   simp only [__smtx_typeof_concat, hZeroTy, hInnerTy]
-  simp [SmtEval.native_int_to_nat, Smtm.native_nat_to_int,
+  simp [SmtEval.native_int_to_nat, SmtEval.native_nat_to_int,
     SmtEval.native_zplus, native_int_to_nat, native_nat_to_int]
   have hCast : (1 : Int) + (w : Int) = ((w + 1 : Nat) : Int) := by omega
   rw [hCast]
@@ -184,7 +184,7 @@ theorem smt_typeof_uaddo_nil (x : Term) (w : Nat)
   rw [__smtx_typeof.eq_def]
   simp only
   simp [hWidth, hMod, SmtEval.native_and, native_ite,
-    SmtEval.native_int_to_nat, Smtm.native_nat_to_int]
+    SmtEval.native_int_to_nat, SmtEval.native_nat_to_int]
   exact ⟨hWidth, hMod⟩
 
 theorem smt_typeof_uaddo_sum (x y : Term) (w : Nat)
@@ -335,7 +335,7 @@ theorem typed_uaddo_term (x y n : Term) :
     rw [__smtx_typeof.eq_def]
     simp only
     simp [__smtx_typeof_bv_op_2_ret, hXSmtTyW, hYSmtTyW,
-      Smtm.native_nateq, native_ite]
+      SmtEval.native_nateq, native_ite]
   have hSumSmtTy :=
     smt_typeof_uaddo_sum x y W hXSmtTyW hYSmtTyW hNilEq
   have hBitSmtTy :
@@ -352,8 +352,6 @@ theorem typed_uaddo_term (x y n : Term) :
       simpa [W] using hiLt
     have hOne : native_zplus (native_zplus i 1) (native_zneg i) = 1 := by
       simp [SmtEval.native_zplus, SmtEval.native_zneg]
-      rw [Int.add_comm i 1]
-      exact Int.add_neg_cancel_right 1 i
     unfold __smtx_typeof_extract
     simp only
     rw [hi0, hiLtW, hOne]

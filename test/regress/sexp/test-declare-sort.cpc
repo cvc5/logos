@@ -1,11 +1,8 @@
 ; Exercises ignored include commands, declare-sort (including a non-zero arity)
 ; and declare-fun.
 ;
-; Logos accepts this derivation, but `(Box U)` -- a declared sort constructor
-; applied to a sort -- has no counterpart in Cpc/SmtModel.lean, so the side
-; conditions of correct___eo_is_refutation cannot be discharged for it and
-; `logos` reports `unsupported` rather than `correct`.  It is the regression test
-; for that outcome; see the Correctness section of README.md.
+; The parser maps each ground sort application to an ordinary uninterpreted
+; sort, so the complete derivation is checked and reports `correct`.
 (include "../theories/Builtin.eo")
 (declare-sort U 0)
 (declare-sort Box 1)

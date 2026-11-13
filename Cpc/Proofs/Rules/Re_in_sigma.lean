@@ -43,7 +43,6 @@ private theorem native_str_in_re_allchar_seq (ss : SmtSeq)
   simp [Smtm.native_str_in_re, native_re_allchar, native_seq_len, hValid, hList]
   -- simp leaves `decide X = decide X` with the two `Decidable` instances in
   -- different (but defeq) forms; `rfl` closes that.
-  rfl
 
 private theorem smtx_model_eval_re_in_sigma (ss : SmtSeq)
     (hValid : native_re_str_valid (native_unpack_seq ss) = true) :
@@ -51,7 +50,6 @@ private theorem smtx_model_eval_re_in_sigma (ss : SmtSeq)
       __smtx_model_eval_eq (__smtx_model_eval_str_len (SmtValue.Seq ss)) (SmtValue.Numeral 1) := by
   simp [__smtx_model_eval_str_in_re, __smtx_model_eval_str_len, __smtx_model_eval_eq,
     native_veq, native_str_in_re_allchar_seq, native_seq_len, hValid]
-  rfl
 
 private theorem smtx_typeof_re_allchar :
     __smtx_typeof SmtTerm.re_allchar = SmtType.RegLan := by

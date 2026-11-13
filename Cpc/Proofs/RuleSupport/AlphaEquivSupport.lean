@@ -6,6 +6,8 @@ import all Cpc.Proofs.RuleSupport.SubstituteSimulEvalSupport
 
 public section
 
+variable {uc : SmtUSortDom}
+
 open Eo
 open SmtEval
 open Smtm
@@ -309,7 +311,7 @@ private theorem model_agrees_on_globals_push_diff
     (h : model_agrees_on_globals M N) :
     model_agrees_on_globals
       (native_model_push M t T v) (native_model_push N s T v) := by
-  refine ⟨?_, ?_⟩
+  refine ⟨?_, ?_, h.usortDom⟩
   · intro name ty
     simpa [native_model_lookup, model_key, native_model_push]
       using h.1 name ty
@@ -1096,9 +1098,7 @@ theorem alpha_binder_preserves
   have hBodyBoth :=
     hRec
       (G := a) (bvs' := bvs)
-      (by
-        simp
-        omega)
+      (by simp <;> omega)
       hVsEnv hBvsPerm hBodyTrans hTs hActuals
       (by
         simpa [SubstitutePreservationSupport.substResult, bodySub] using
@@ -1193,25 +1193,27 @@ theorem alpha_preserves_type_and_translation
 witness under the target name on the left and the source name on the right. -/
 theorem native_eval_texists_eq_of_renamed_body
     {M N : SmtModel} {s t : native_String} {T : SmtType}
+    (hCard : M.usortDom = N.usortDom)
     {bodyM bodyN : SmtTerm}
     (hBody : ∀ v : SmtValue,
       __smtx_typeof_value v = T →
-      __smtx_value_canonical v = true →
+      __smtx_value_canonical M.usortDom v = true →
       __smtx_model_eval (native_model_push M t T v) bodyM =
         __smtx_model_eval (native_model_push N s T v) bodyN) :
     (native_eval_exists M t T bodyM : SmtValue) =
       (native_eval_exists N s T bodyN : SmtValue) := by
   classical
+  rw [← hCard]
   let PM : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push M t T v) bodyM =
           SmtValue.Boolean true
   let PN : Prop :=
     ∃ v : SmtValue,
       __smtx_typeof_value v = T ∧
-        __smtx_value_canonical v = true ∧
+        __smtx_value_canonical M.usortDom v = true ∧
         __smtx_model_eval (native_model_push N s T v) bodyN =
           SmtValue.Boolean true
   change (if _ : PM then SmtValue.Boolean true else SmtValue.Boolean false) =
@@ -1264,7 +1266,7 @@ theorem alpha_eval_eo_to_smt_exists
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists sourceTail bodyN))
       simpa [__smtx_model_eval] using
-        native_eval_texists_eq_of_renamed_body
+        native_eval_texists_eq_of_renamed_body hRel.globals.usortDom
           (fun v hValTy hValCanon => by
             have hM' :
                 model_wf
@@ -1277,7 +1279,7 @@ theorem alpha_eval_eo_to_smt_exists
                   (native_model_push N s (__eo_to_smt_type T) v) :=
               model_total_typed_push hN s (__eo_to_smt_type T) v
                 hHeadWf hValTy
-                (by simpa [value_canonical] using hValCanon)
+                (by simpa [value_canonical, hRel.globals.usortDom] using hValCanon)
             exact ih hM' hN'
               (alphaRel_push_mapped hLists hSourceDistinct hTargetDistinct
                 hRel s t T v hPair)
@@ -1306,7 +1308,7 @@ theorem alpha_eval_eo_to_smt_exists
             (SmtTerm.exists s (__eo_to_smt_type T)
               (__eo_to_smt_exists sourceTail bodyN))
       simpa [__smtx_model_eval] using
-        native_eval_texists_eq_of_renamed_body
+        native_eval_texists_eq_of_renamed_body hRel.globals.usortDom
           (fun v hValTy hValCanon => by
             have hM' :
                 model_wf
@@ -1319,7 +1321,7 @@ theorem alpha_eval_eo_to_smt_exists
                   (native_model_push N s (__eo_to_smt_type T) v) :=
               model_total_typed_push hN s (__eo_to_smt_type T) v
                 hHeadWf hValTy
-                (by simpa [value_canonical] using hValCanon)
+                (by simpa [value_canonical, hRel.globals.usortDom] using hValCanon)
             exact ih hM' hN'
               (alphaRel_push_unmapped hLists hSourceDistinct hRel
                 s T v hHeadWf hSourceFree hTargetFree)
@@ -1623,7 +1625,7 @@ theorem alpha_eval_gen_lt
                 (fun {M' N'} hM' hN' hRel' => by
                   have hBodyEq := hRec
                     (G := a) (bound' := fullBound)
-                    (by simp; omega) hFullBoundEnv hFullDisjoint
+                    (by simp <;> omega) hFullBoundEnv hFullDisjoint
                     hBodyTrans hBodySubTrans hBodyNoSource hBodyNoTarget
                     hM' hN' hRel'
                   have hBodyEq' :
@@ -1653,7 +1655,7 @@ theorem alpha_eval_gen_lt
               hTargetDistinct hBinderRename hM hN hRel hBinderWf
               (fun {M' N'} hM' hN' hRel' =>
                 hRec (G := a) (bound' := fullBound)
-                  (by simp; omega) hFullBoundEnv hFullDisjoint
+                  (by simp <;> omega) hFullBoundEnv hFullDisjoint
                   hBodyTrans hBodySubTrans hBodyNoSource hBodyNoTarget
                   hM' hN' hRel')
         · have hRecArg :

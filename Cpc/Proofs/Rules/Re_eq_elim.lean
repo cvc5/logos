@@ -35,12 +35,14 @@ private theorem nativeReExtEq_eq_true_iff (r1 r2 : SmtRegLan) :
           native_str_in_re (impl_native_string_to_values s) r1 =
             native_str_in_re (impl_native_string_to_values s) r2
     · exact hP
-    · rw [dif_neg hP] at h
+    · rw [dite_eq_right hP] at h
       exact absurd h (by decide)
   · intro hP
-    exact dif_pos hP
+    exact dite_eq_left hP
 
 namespace RuleProofs
+
+variable {uc : SmtUSortDom}
 
 /-! ## Term-structure abbreviations for `re_eq_elim`
 
@@ -269,7 +271,7 @@ private theorem native_unpack_string_pack_string (s : native_String) :
 /-- A valid native string packs to a canonical SMT sequence value. -/
 private theorem seq_canonical_pack_string :
     ∀ s : native_String, native_string_valid s = true ->
-      __smtx_seq_canonical (native_pack_string s) = true
+      __smtx_seq_canonical uc (native_pack_string s) = true
   | [], _ => rfl
   | c :: cs, hValid => by
       have hc : native_char_valid c = true := by
@@ -281,15 +283,15 @@ private theorem seq_canonical_pack_string :
         exact hValid d (by simp [hd])
       have ih := seq_canonical_pack_string cs hcs
       change
-        __smtx_seq_canonical
+        __smtx_seq_canonical uc
           (native_pack_seq SmtType.Char ((c :: cs).map SmtValue.Char)) = true
       rw [List.map_cons]
       change
-        native_and (__smtx_value_canonical (SmtValue.Char c))
-          (__smtx_seq_canonical
+        native_and (__smtx_value_canonical uc (SmtValue.Char c))
+          (__smtx_seq_canonical uc
             (native_pack_seq SmtType.Char (cs.map SmtValue.Char))) = true
       have ih' :
-          __smtx_seq_canonical (native_pack_seq SmtType.Char (cs.map SmtValue.Char)) =
+          __smtx_seq_canonical uc (native_pack_seq SmtType.Char (cs.map SmtValue.Char)) =
             true := ih
       change native_and (native_char_valid c) _ = true
       rw [ih', hc]
@@ -466,7 +468,7 @@ private theorem re_eq_elim_smt_value_rel
     by_cases hEx :
         ∃ v : SmtValue,
           __smtx_typeof_value v = __eo_to_smt_type seqCharTy ∧
-            __smtx_value_canonical v = true ∧
+            __smtx_value_canonical M.usortDom v = true ∧
             __smtx_model_eval_not
               (__smtx_model_eval
                 (native_model_push M reqName (__eo_to_smt_type seqCharTy) v)
@@ -475,7 +477,7 @@ private theorem re_eq_elim_smt_value_rel
     · -- a witness exists: the formula is false, and so is `native_re_ext_eq`
       -- `rw` would have to match the goal's `Decidable` instance syntactically;
       -- routing through `congrArg` lets `refine` unify it up to defeq instead
-      refine Eq.trans (congrArg __smtx_model_eval_not (dif_pos hEx)) ?_
+      refine Eq.trans (congrArg __smtx_model_eval_not (dite_eq_left hEx)) ?_
       have hNotHp :
           ¬ (∀ s : native_String, native_string_valid s = true →
               native_str_in_re s R1 = native_str_in_re s R2) := by
@@ -496,7 +498,7 @@ private theorem re_eq_elim_smt_value_rel
       rw [hFalse]
       rfl
     · -- no witness: the formula is true, and so is `native_re_ext_eq`
-      refine Eq.trans (congrArg __smtx_model_eval_not (dif_neg hEx)) ?_
+      refine Eq.trans (congrArg __smtx_model_eval_not (dite_eq_right hEx)) ?_
       have hHp : ∀ s : native_String, native_string_valid s = true →
           native_str_in_re s R1 = native_str_in_re s R2 := by
         intro s hs
@@ -509,7 +511,7 @@ private theorem re_eq_elim_smt_value_rel
             show __smtx_typeof_seq_value (native_pack_string s) =
               SmtType.Seq SmtType.Char
             exact typeof_pack_string s hs
-          · show __smtx_seq_canonical (native_pack_string s) = true
+          · show __smtx_seq_canonical M.usortDom (native_pack_string s) = true
             exact seq_canonical_pack_string s hs
           · rw [hBodyEval (native_pack_string s) (typeof_pack_string s hs),
               native_unpack_string_pack_string s]

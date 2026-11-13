@@ -258,7 +258,7 @@ private theorem eval_bvurem_one_eq_zero
       simpa [SmtEval.native_zleq] using hNonneg
     have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
       Int.toNat_of_nonneg hnNonneg
-    simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+    simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       native_nat_to_int, native_int_to_nat] using hInt
   rw [hWidthEq] at hEvalX1
   have hEvalTyN :
@@ -291,7 +291,7 @@ private theorem eval_bvurem_one_eq_zero
     have hRange0 := bitvec_payload_range_of_canonical hWidth0 hPayloadCanon
     have hPayloadZero : payload = 0 := by
       have hlt : payload < 1 := by
-        simpa [native_int_pow2, native_zexp_total, Smtm.native_nat_to_int,
+        simpa [native_int_pow2, native_zexp_total, SmtEval.native_nat_to_int,
           SmtEval.native_int_to_nat] using hRange0.2
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange0.1
     rw [hPayloadZero]

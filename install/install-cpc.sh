@@ -24,7 +24,7 @@ that moves Cpc has to move it too, which is what --all is for:
 Less commonly, what the package is compiled *to* is what is being changed
 rather than the calculus it is of. What each symbol of the signature means
 is install/defs/Cpc.eos, and what the SMT-LIB symbols it is written against
-mean is a configuration the compiler ships; either can be named:
+mean is install/defs/smt.eos; either can be named:
 
   install/install-cpc.sh --cached --semantics ~/Cpc.eos
   install/install-cpc.sh --cached --smt-semantics ~/smt.eos
@@ -44,7 +44,7 @@ Options:
   --semantics PATH     what the symbols of the signature mean
                        (default: install/defs/Cpc.eos)
   --smt-semantics PATH what the symbols of SMT-LIB those are written against
-                       mean (default: the one the compiler ships)
+                       mean (default: install/defs/smt.eos)
   -h, --help           show this message
 
 Anything else is handed to install-sig.sh, which this runs once per package;
@@ -224,6 +224,10 @@ cat <<DONE
 Build with:
 
   scripts/build.sh ${PACKAGES}
+
+Check the generated semantics and its static-interface agreement with:
+
+  scripts/build.sh Cpc.Proofs.StaticTyping CpcMini.Proofs.StaticTyping
 
 A preserved rule file whose statement the calculus has changed will fail to
 build. Review with git diff before committing.

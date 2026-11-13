@@ -1,5 +1,8 @@
 module
 
+public import Cpc.Proofs.RealBridge
+import all Cpc.Proofs.RealBridge
+import all Cpc.SmtReal
 public import Cpc.Proofs.RuleSupport.ArithPolyNormRelSupport
 import all Cpc.Proofs.RuleSupport.ArithPolyNormRelSupport
 public import Cpc.Proofs.RuleSupport.CnfSupport
@@ -327,125 +330,64 @@ private theorem prog_arith_mult_neg_eq_of_ne_stuck
   rw [mk_arith_mult_neg_eq_of_ne_stuck m r a b hConcl]
 
 theorem native_to_real_lt_eq (a b : native_Int) :
-    native_qlt (native_to_real a) (native_to_real b) = native_zlt a b := by
-  rw [← native_qsub_lt_zero_eq (native_to_real a) (native_to_real b)]
-  exact native_to_real_sub_lt_zero_eq a b
+    native_rlt (a : native_Real) (b : native_Real) = native_zlt a b :=
+  decide_eq_decide.mpr Int.cast_lt
 
 theorem native_to_real_leq_eq (a b : native_Int) :
-    native_qleq (native_to_real a) (native_to_real b) = native_zleq a b := by
-  rw [← native_qsub_leq_zero_eq (native_to_real a) (native_to_real b)]
-  exact native_to_real_sub_leq_zero_eq a b
+    native_rleq (a : native_Real) (b : native_Real) = native_zleq a b :=
+  decide_eq_decide.mpr Int.cast_le
 
 theorem native_to_real_qeq_eq (a b : native_Int) :
-    native_qeq (native_to_real a) (native_to_real b) = native_zeq a b := by
-  rw [← native_qsub_eq_zero_eq (native_to_real a) (native_to_real b)]
-  exact native_to_real_sub_eq_zero_eq a b
+    native_req (a : native_Real) (b : native_Real) = native_zeq a b :=
+  decide_eq_decide.mpr Int.cast_inj
 
-private theorem rat_mul_lt_of_pos_left {c a b : Rat}
-    (hc : 0 < c) (hab : a < b) :
-    c * a < c * b := by
-  rw [Rat.lt_iff_sub_pos]
-  have hdiff : 0 < b - a := (Rat.lt_iff_sub_pos a b).mp hab
-  have hmul : 0 < c * (b - a) :=
-    (Rat.mul_pos_iff_of_pos_left hc).mpr hdiff
-  simpa [Rat.sub_eq_add_neg, Rat.mul_add, Rat.mul_neg, Rat.add_comm] using hmul
-
-private theorem rat_mul_le_of_pos_left {c a b : Rat}
-    (hc : 0 < c) (hab : a ≤ b) :
-    c * a ≤ c * b := by
-  rcases (Rat.le_iff_lt_or_eq.mp hab) with hlt | heq
-  · exact Rat.le_iff_lt_or_eq.mpr (Or.inl (rat_mul_lt_of_pos_left hc hlt))
-  · subst b
-    exact Rat.le_iff_lt_or_eq.mpr (Or.inr rfl)
-
-private theorem rat_mul_lt_of_neg_left {c a b : Rat}
-    (hc : c < 0) (hab : a < b) :
-    c * b < c * a := by
-  have hpos : 0 < -c :=
-    (Rat.lt_neg_iff (a := 0) (b := c)).mpr (by simpa using hc)
-  have hltneg : (-c) * a < (-c) * b :=
-    rat_mul_lt_of_pos_left hpos hab
-  have h := Rat.neg_lt_neg hltneg
-  simpa [Rat.neg_mul, Rat.neg_neg] using h
-
-private theorem rat_mul_le_of_neg_left {c a b : Rat}
-    (hc : c < 0) (hab : a ≤ b) :
-    c * b ≤ c * a := by
-  have hpos : 0 < -c :=
-    (Rat.lt_neg_iff (a := 0) (b := c)).mpr (by simpa using hc)
-  have hleNeg : (-c) * a ≤ (-c) * b :=
-    rat_mul_le_of_pos_left hpos hab
-  have h := Rat.neg_le_neg hleNeg
-  simpa [Rat.neg_mul, Rat.neg_neg] using h
-
-theorem native_qlt_mul_of_pos_left {c a b : native_Rat} :
-    native_qlt (native_mk_rational 0 1) c = true ->
-    native_qlt a b = true ->
-    native_qlt (native_qmult c a) (native_qmult c b) = true := by
+theorem native_qlt_mul_of_pos_left {c a b : native_Real} :
+    native_rlt (native_mk_real 0 1) c = true ->
+    native_rlt a b = true ->
+    native_rlt (c * a) (c * b) = true := by
+  rw [native_mk_real_zero]
   intro hc hab
-  have hc' : (0 : Rat) < c := by
-    simpa [native_qlt, native_mk_rational_zero] using hc
-  have hab' : a < b := by
-    simpa [native_qlt] using hab
-  have hres : c * a < c * b := rat_mul_lt_of_pos_left hc' hab'
-  -- v4.33 `simp` rewrites inside `decide` without refreshing the instance,
-  -- so the goal keeps its `decide _ = true` shape; supply it directly.
-  simp only [native_qlt, native_qmult]
-  exact decide_eq_true hres
+  have hc' : (0 : native_Real) < c := of_decide_eq_true hc
+  have hab' : a < b := of_decide_eq_true hab
+  exact decide_eq_true (mul_lt_mul_of_pos_left hab' hc')
 
-theorem native_qleq_mul_of_pos_left {c a b : native_Rat} :
-    native_qlt (native_mk_rational 0 1) c = true ->
-    native_qleq a b = true ->
-    native_qleq (native_qmult c a) (native_qmult c b) = true := by
+theorem native_qleq_mul_of_pos_left {c a b : native_Real} :
+    native_rlt (native_mk_real 0 1) c = true ->
+    native_rleq a b = true ->
+    native_rleq (c * a) (c * b) = true := by
+  rw [native_mk_real_zero]
   intro hc hab
-  have hc' : (0 : Rat) < c := by
-    simpa [native_qlt, native_mk_rational_zero] using hc
-  have hab' : a ≤ b := by
-    simpa [native_qleq] using hab
-  have hres : c * a ≤ c * b := rat_mul_le_of_pos_left hc' hab'
-  -- v4.33 `simp` rewrites inside `decide` without refreshing the instance,
-  -- so the goal keeps its `decide _ = true` shape; supply it directly.
-  simp only [native_qleq, native_qmult]
-  exact decide_eq_true hres
+  have hc' : (0 : native_Real) < c := of_decide_eq_true hc
+  have hab' : a ≤ b := of_decide_eq_true hab
+  exact decide_eq_true (mul_le_mul_of_nonneg_left hab' hc'.le)
 
-theorem native_qlt_mul_of_neg_left {c a b : native_Rat} :
-    native_qlt c (native_mk_rational 0 1) = true ->
-    native_qlt a b = true ->
-    native_qlt (native_qmult c b) (native_qmult c a) = true := by
+theorem native_qlt_mul_of_neg_left {c a b : native_Real} :
+    native_rlt c (native_mk_real 0 1) = true ->
+    native_rlt a b = true ->
+    native_rlt (c * b) (c * a) = true := by
+  rw [native_mk_real_zero]
   intro hc hab
-  have hc' : c < (0 : Rat) := by
-    simpa [native_qlt, native_mk_rational_zero] using hc
-  have hab' : a < b := by
-    simpa [native_qlt] using hab
-  have hres : c * b < c * a := rat_mul_lt_of_neg_left hc' hab'
-  -- v4.33 `simp` rewrites inside `decide` without refreshing the instance,
-  -- so the goal keeps its `decide _ = true` shape; supply it directly.
-  simp only [native_qlt, native_qmult]
-  exact decide_eq_true hres
+  have hc' : c < (0 : native_Real) := of_decide_eq_true hc
+  have hab' : a < b := of_decide_eq_true hab
+  exact decide_eq_true (mul_lt_mul_of_neg_left hab' hc')
 
-theorem native_qleq_mul_of_neg_left {c a b : native_Rat} :
-    native_qlt c (native_mk_rational 0 1) = true ->
-    native_qleq a b = true ->
-    native_qleq (native_qmult c b) (native_qmult c a) = true := by
+theorem native_qleq_mul_of_neg_left {c a b : native_Real} :
+    native_rlt c (native_mk_real 0 1) = true ->
+    native_rleq a b = true ->
+    native_rleq (c * b) (c * a) = true := by
+  rw [native_mk_real_zero]
   intro hc hab
-  have hc' : c < (0 : Rat) := by
-    simpa [native_qlt, native_mk_rational_zero] using hc
-  have hab' : a ≤ b := by
-    simpa [native_qleq] using hab
-  have hres : c * b ≤ c * a := rat_mul_le_of_neg_left hc' hab'
-  -- v4.33 `simp` rewrites inside `decide` without refreshing the instance,
-  -- so the goal keeps its `decide _ = true` shape; supply it directly.
-  simp only [native_qleq, native_qmult]
-  exact decide_eq_true hres
+  have hc' : c < (0 : native_Real) := of_decide_eq_true hc
+  have hab' : a ≤ b := of_decide_eq_true hab
+  exact decide_eq_true (mul_le_mul_of_nonpos_left hab' hc'.le)
 
-theorem native_qeq_mul_congr_left {c a b : native_Rat} :
-    native_qeq a b = true ->
-    native_qeq (native_qmult c a) (native_qmult c b) = true := by
+theorem native_qeq_mul_congr_left {c a b : native_Real} :
+    native_req a b = true ->
+    native_req (c * a) (c * b) = true := by
   intro hab
-  have hab' : a = b := by
-    simpa [native_qeq] using hab
+  have hab' : a = b := of_decide_eq_true hab
   subst b
-  simp [native_qeq]
+  exact decide_eq_true rfl
 
 private theorem native_to_real_zero :
     native_to_real 0 = native_mk_rational 0 1 := by
@@ -567,11 +509,11 @@ theorem arith_atom_denote_real_of_smt_arith_type
     (M : SmtModel) (hM : model_wf M) (t : Term) :
     (__smtx_typeof (__eo_to_smt t) = SmtType.Int ∨
       __smtx_typeof (__eo_to_smt t) = SmtType.Real) ->
-    ∃ q : native_Rat, arith_atom_denote_real M t = SmtValue.Rational q := by
+    ∃ q : native_Real, arith_atom_denote_real M t = SmtValue.Real q := by
   intro hTy
   rcases hTy with hTy | hTy
   · rcases smt_eval_int_of_type M hM t hTy with ⟨n, hEval⟩
-    refine ⟨native_to_real n, ?_⟩
+    refine ⟨native_int_to_real n, ?_⟩
     unfold arith_atom_denote_real
     rw [hEval]
     simp [__smtx_to_real_coerce]
@@ -629,37 +571,37 @@ private theorem arith_one_denote
     (M : SmtModel) (m : Term) :
     (__eo_typeof m = Term.UOp UserOp.Int ∨ __eo_typeof m = Term.UOp UserOp.Real) ->
     arith_atom_denote_real M (arithOne m) =
-      SmtValue.Rational (native_mk_rational 1 1) := by
+      SmtValue.Real (native_mk_real 1 1) := by
   intro hTy
   rcases hTy with hTy | hTy
   · have hToQ :
         __eo_to_q (arithOne m) = Term.Rational (native_mk_rational 1 1) := by
       simp [arithOne, __eo_nil, __eo_nil_mult, __arith_mk_one, hTy,
         __eo_to_q, native_to_real_one]
-    exact arith_atom_denote_real_of_to_q M (arithOne m)
+    simpa using arith_atom_denote_real_of_to_q M (arithOne m)
       (native_mk_rational 1 1) hToQ
   · have hToQ :
         __eo_to_q (arithOne m) = Term.Rational (native_mk_rational 1 1) := by
       simp [arithOne, __eo_nil, __eo_nil_mult, __arith_mk_one, hTy, __eo_to_q]
-    exact arith_atom_denote_real_of_to_q M (arithOne m)
+    simpa using arith_atom_denote_real_of_to_q M (arithOne m)
       (native_mk_rational 1 1) hToQ
 
 private theorem arith_zero_denote
     (M : SmtModel) (m : Term) :
     (__eo_typeof m = Term.UOp UserOp.Int ∨ __eo_typeof m = Term.UOp UserOp.Real) ->
     arith_atom_denote_real M (arithZero m) =
-      SmtValue.Rational (native_mk_rational 0 1) := by
+      SmtValue.Real (native_mk_real 0 1) := by
   intro hTy
   rcases hTy with hTy | hTy
   · have hToQ :
         __eo_to_q (arithZero m) = Term.Rational (native_mk_rational 0 1) := by
       simp [arithZero, __arith_mk_zero, hTy, __eo_to_q, native_to_real_zero]
-    exact arith_atom_denote_real_of_to_q M (arithZero m)
+    simpa using arith_atom_denote_real_of_to_q M (arithZero m)
       (native_mk_rational 0 1) hToQ
   · have hToQ :
         __eo_to_q (arithZero m) = Term.Rational (native_mk_rational 0 1) := by
       simp [arithZero, __arith_mk_zero, hTy, __eo_to_q]
-    exact arith_atom_denote_real_of_to_q M (arithZero m)
+    simpa using arith_atom_denote_real_of_to_q M (arithZero m)
       (native_mk_rational 0 1) hToQ
 
 private theorem typeof_plus_int_int :
@@ -853,15 +795,15 @@ private theorem scale_smt_type_of_eo_type
 
 private theorem scale_denote
     (M : SmtModel) (hM : model_wf M) (m x : Term)
-    (qm qx : native_Rat) :
+    (qm qx : native_Real) :
     RuleProofs.eo_has_smt_translation m ->
     RuleProofs.eo_has_smt_translation x ->
     (__eo_typeof m = Term.UOp UserOp.Int ∨ __eo_typeof m = Term.UOp UserOp.Real) ->
     __eo_typeof x = __eo_typeof m ->
-    arith_atom_denote_real M m = SmtValue.Rational qm ->
-    arith_atom_denote_real M x = SmtValue.Rational qx ->
+    arith_atom_denote_real M m = SmtValue.Real qm ->
+    arith_atom_denote_real M x = SmtValue.Real qx ->
     arith_atom_denote_real M (scale m x) =
-      SmtValue.Rational (native_qmult qm qx) := by
+      SmtValue.Real (native_rmult qm qx) := by
   intro hmTrans hxTrans hMArith hxTy hmDen hxDen
   have hScaleTy :=
     scale_smt_type_of_eo_type m x hmTrans hxTrans hMArith hxTy
@@ -983,28 +925,28 @@ private theorem bool_of_true_eval
 
 private theorem eval_lt_of_denotes
     (M : SmtModel) (hM : model_wf M) (a b : Term)
-    (qa qb : native_Rat)
+    (qa qb : native_Real)
     (hTy :
       (__smtx_typeof (__eo_to_smt a) = SmtType.Int ∧
         __smtx_typeof (__eo_to_smt b) = SmtType.Int) ∨
       (__smtx_typeof (__eo_to_smt a) = SmtType.Real ∧
         __smtx_typeof (__eo_to_smt b) = SmtType.Real))
-    (ha : arith_atom_denote_real M a = SmtValue.Rational qa)
-    (hb : arith_atom_denote_real M b = SmtValue.Rational qb) :
+    (ha : arith_atom_denote_real M a = SmtValue.Real qa)
+    (hb : arith_atom_denote_real M b = SmtValue.Real qb) :
     __smtx_model_eval M (__eo_to_smt (relTerm (Term.UOp UserOp.lt) a b)) =
-      SmtValue.Boolean (native_qlt qa qb) := by
+      SmtValue.Boolean (native_rlt qa qb) := by
   rcases hTy with hTy | hTy
   · rcases smt_eval_int_of_type M hM a hTy.1 with ⟨na, hEvalA⟩
     rcases smt_eval_int_of_type M hM b hTy.2 with ⟨nb, hEvalB⟩
-    have hqa : qa = native_to_real na := by
-      have h : SmtValue.Rational qa = SmtValue.Rational (native_to_real na) := by
+    have hqa : qa = native_int_to_real na := by
+      have h : SmtValue.Real qa = SmtValue.Real (native_int_to_real na) := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
-    have hqb : qb = native_to_real nb := by
-      have h : SmtValue.Rational qb = SmtValue.Rational (native_to_real nb) := by
+    have hqb : qb = native_int_to_real nb := by
+      have h : SmtValue.Real qb = SmtValue.Real (native_int_to_real nb) := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1017,14 +959,14 @@ private theorem eval_lt_of_denotes
   · rcases smt_eval_real_of_type M hM a hTy.1 with ⟨ra, hEvalA⟩
     rcases smt_eval_real_of_type M hM b hTy.2 with ⟨rb, hEvalB⟩
     have hqa : qa = ra := by
-      have h : SmtValue.Rational qa = SmtValue.Rational ra := by
+      have h : SmtValue.Real qa = SmtValue.Real ra := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
     have hqb : qb = rb := by
-      have h : SmtValue.Rational qb = SmtValue.Rational rb := by
+      have h : SmtValue.Real qb = SmtValue.Real rb := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1037,28 +979,28 @@ private theorem eval_lt_of_denotes
 
 private theorem eval_leq_of_denotes
     (M : SmtModel) (hM : model_wf M) (a b : Term)
-    (qa qb : native_Rat)
+    (qa qb : native_Real)
     (hTy :
       (__smtx_typeof (__eo_to_smt a) = SmtType.Int ∧
         __smtx_typeof (__eo_to_smt b) = SmtType.Int) ∨
       (__smtx_typeof (__eo_to_smt a) = SmtType.Real ∧
         __smtx_typeof (__eo_to_smt b) = SmtType.Real))
-    (ha : arith_atom_denote_real M a = SmtValue.Rational qa)
-    (hb : arith_atom_denote_real M b = SmtValue.Rational qb) :
+    (ha : arith_atom_denote_real M a = SmtValue.Real qa)
+    (hb : arith_atom_denote_real M b = SmtValue.Real qb) :
     __smtx_model_eval M (__eo_to_smt (relTerm (Term.UOp UserOp.leq) a b)) =
-      SmtValue.Boolean (native_qleq qa qb) := by
+      SmtValue.Boolean (native_rleq qa qb) := by
   rcases hTy with hTy | hTy
   · rcases smt_eval_int_of_type M hM a hTy.1 with ⟨na, hEvalA⟩
     rcases smt_eval_int_of_type M hM b hTy.2 with ⟨nb, hEvalB⟩
-    have hqa : qa = native_to_real na := by
-      have h : SmtValue.Rational qa = SmtValue.Rational (native_to_real na) := by
+    have hqa : qa = native_int_to_real na := by
+      have h : SmtValue.Real qa = SmtValue.Real (native_int_to_real na) := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
-    have hqb : qb = native_to_real nb := by
-      have h : SmtValue.Rational qb = SmtValue.Rational (native_to_real nb) := by
+    have hqb : qb = native_int_to_real nb := by
+      have h : SmtValue.Real qb = SmtValue.Real (native_int_to_real nb) := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1071,14 +1013,14 @@ private theorem eval_leq_of_denotes
   · rcases smt_eval_real_of_type M hM a hTy.1 with ⟨ra, hEvalA⟩
     rcases smt_eval_real_of_type M hM b hTy.2 with ⟨rb, hEvalB⟩
     have hqa : qa = ra := by
-      have h : SmtValue.Rational qa = SmtValue.Rational ra := by
+      have h : SmtValue.Real qa = SmtValue.Real ra := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
     have hqb : qb = rb := by
-      have h : SmtValue.Rational qb = SmtValue.Rational rb := by
+      have h : SmtValue.Real qb = SmtValue.Real rb := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1091,28 +1033,28 @@ private theorem eval_leq_of_denotes
 
 private theorem eval_eq_of_denotes
     (M : SmtModel) (hM : model_wf M) (a b : Term)
-    (qa qb : native_Rat)
+    (qa qb : native_Real)
     (hTy :
       (__smtx_typeof (__eo_to_smt a) = SmtType.Int ∧
         __smtx_typeof (__eo_to_smt b) = SmtType.Int) ∨
       (__smtx_typeof (__eo_to_smt a) = SmtType.Real ∧
         __smtx_typeof (__eo_to_smt b) = SmtType.Real))
-    (ha : arith_atom_denote_real M a = SmtValue.Rational qa)
-    (hb : arith_atom_denote_real M b = SmtValue.Rational qb) :
+    (ha : arith_atom_denote_real M a = SmtValue.Real qa)
+    (hb : arith_atom_denote_real M b = SmtValue.Real qb) :
     __smtx_model_eval M (__eo_to_smt (relTerm (Term.UOp UserOp.eq) a b)) =
-      SmtValue.Boolean (native_qeq qa qb) := by
+      SmtValue.Boolean (native_req qa qb) := by
   rcases hTy with hTy | hTy
   · rcases smt_eval_int_of_type M hM a hTy.1 with ⟨na, hEvalA⟩
     rcases smt_eval_int_of_type M hM b hTy.2 with ⟨nb, hEvalB⟩
-    have hqa : qa = native_to_real na := by
-      have h : SmtValue.Rational qa = SmtValue.Rational (native_to_real na) := by
+    have hqa : qa = native_int_to_real na := by
+      have h : SmtValue.Real qa = SmtValue.Real (native_int_to_real na) := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
-    have hqb : qb = native_to_real nb := by
-      have h : SmtValue.Rational qb = SmtValue.Rational (native_to_real nb) := by
+    have hqb : qb = native_int_to_real nb := by
+      have h : SmtValue.Real qb = SmtValue.Real (native_int_to_real nb) := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1126,14 +1068,14 @@ private theorem eval_eq_of_denotes
   · rcases smt_eval_real_of_type M hM a hTy.1 with ⟨ra, hEvalA⟩
     rcases smt_eval_real_of_type M hM b hTy.2 with ⟨rb, hEvalB⟩
     have hqa : qa = ra := by
-      have h : SmtValue.Rational qa = SmtValue.Rational ra := by
+      have h : SmtValue.Real qa = SmtValue.Real ra := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
     have hqb : qb = rb := by
-      have h : SmtValue.Rational qb = SmtValue.Rational rb := by
+      have h : SmtValue.Real qb = SmtValue.Real rb := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1142,32 +1084,32 @@ private theorem eval_eq_of_denotes
     rw [show __eo_to_smt (relTerm (Term.UOp UserOp.eq) a b) =
         SmtTerm.eq (__eo_to_smt a) (__eo_to_smt b) by rfl]
     rw [smtx_eval_eq_term_eq, hEvalA, hEvalB]
-    simp [__smtx_model_eval_eq, native_veq, native_qeq, hqa, hqb]
+    simp [__smtx_model_eval_eq, native_veq, native_req, hqa, hqb]
 
 private theorem eval_gt_of_denotes
     (M : SmtModel) (hM : model_wf M) (a b : Term)
-    (qa qb : native_Rat)
+    (qa qb : native_Real)
     (hTy :
       (__smtx_typeof (__eo_to_smt a) = SmtType.Int ∧
         __smtx_typeof (__eo_to_smt b) = SmtType.Int) ∨
       (__smtx_typeof (__eo_to_smt a) = SmtType.Real ∧
         __smtx_typeof (__eo_to_smt b) = SmtType.Real))
-    (ha : arith_atom_denote_real M a = SmtValue.Rational qa)
-    (hb : arith_atom_denote_real M b = SmtValue.Rational qb) :
+    (ha : arith_atom_denote_real M a = SmtValue.Real qa)
+    (hb : arith_atom_denote_real M b = SmtValue.Real qb) :
     __smtx_model_eval M (__eo_to_smt (relTerm (Term.UOp UserOp.gt) a b)) =
-      SmtValue.Boolean (native_qlt qb qa) := by
+      SmtValue.Boolean (native_rlt qb qa) := by
   rcases hTy with hTy | hTy
   · rcases smt_eval_int_of_type M hM a hTy.1 with ⟨na, hEvalA⟩
     rcases smt_eval_int_of_type M hM b hTy.2 with ⟨nb, hEvalB⟩
-    have hqa : qa = native_to_real na := by
-      have h : SmtValue.Rational qa = SmtValue.Rational (native_to_real na) := by
+    have hqa : qa = native_int_to_real na := by
+      have h : SmtValue.Real qa = SmtValue.Real (native_int_to_real na) := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
-    have hqb : qb = native_to_real nb := by
-      have h : SmtValue.Rational qb = SmtValue.Rational (native_to_real nb) := by
+    have hqb : qb = native_int_to_real nb := by
+      have h : SmtValue.Real qb = SmtValue.Real (native_int_to_real nb) := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1181,14 +1123,14 @@ private theorem eval_gt_of_denotes
   · rcases smt_eval_real_of_type M hM a hTy.1 with ⟨ra, hEvalA⟩
     rcases smt_eval_real_of_type M hM b hTy.2 with ⟨rb, hEvalB⟩
     have hqa : qa = ra := by
-      have h : SmtValue.Rational qa = SmtValue.Rational ra := by
+      have h : SmtValue.Real qa = SmtValue.Real ra := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
     have hqb : qb = rb := by
-      have h : SmtValue.Rational qb = SmtValue.Rational rb := by
+      have h : SmtValue.Real qb = SmtValue.Real rb := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1201,28 +1143,28 @@ private theorem eval_gt_of_denotes
 
 private theorem eval_geq_of_denotes
     (M : SmtModel) (hM : model_wf M) (a b : Term)
-    (qa qb : native_Rat)
+    (qa qb : native_Real)
     (hTy :
       (__smtx_typeof (__eo_to_smt a) = SmtType.Int ∧
         __smtx_typeof (__eo_to_smt b) = SmtType.Int) ∨
       (__smtx_typeof (__eo_to_smt a) = SmtType.Real ∧
         __smtx_typeof (__eo_to_smt b) = SmtType.Real))
-    (ha : arith_atom_denote_real M a = SmtValue.Rational qa)
-    (hb : arith_atom_denote_real M b = SmtValue.Rational qb) :
+    (ha : arith_atom_denote_real M a = SmtValue.Real qa)
+    (hb : arith_atom_denote_real M b = SmtValue.Real qb) :
     __smtx_model_eval M (__eo_to_smt (relTerm (Term.UOp UserOp.geq) a b)) =
-      SmtValue.Boolean (native_qleq qb qa) := by
+      SmtValue.Boolean (native_rleq qb qa) := by
   rcases hTy with hTy | hTy
   · rcases smt_eval_int_of_type M hM a hTy.1 with ⟨na, hEvalA⟩
     rcases smt_eval_int_of_type M hM b hTy.2 with ⟨nb, hEvalB⟩
-    have hqa : qa = native_to_real na := by
-      have h : SmtValue.Rational qa = SmtValue.Rational (native_to_real na) := by
+    have hqa : qa = native_int_to_real na := by
+      have h : SmtValue.Real qa = SmtValue.Real (native_int_to_real na) := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
-    have hqb : qb = native_to_real nb := by
-      have h : SmtValue.Rational qb = SmtValue.Rational (native_to_real nb) := by
+    have hqb : qb = native_int_to_real nb := by
+      have h : SmtValue.Real qb = SmtValue.Real (native_int_to_real nb) := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1236,14 +1178,14 @@ private theorem eval_geq_of_denotes
   · rcases smt_eval_real_of_type M hM a hTy.1 with ⟨ra, hEvalA⟩
     rcases smt_eval_real_of_type M hM b hTy.2 with ⟨rb, hEvalB⟩
     have hqa : qa = ra := by
-      have h : SmtValue.Rational qa = SmtValue.Rational ra := by
+      have h : SmtValue.Real qa = SmtValue.Real ra := by
         rw [← ha]
         unfold arith_atom_denote_real
         rw [hEvalA]
         simp [__smtx_to_real_coerce]
       injection h
     have hqb : qb = rb := by
-      have h : SmtValue.Rational qb = SmtValue.Rational rb := by
+      have h : SmtValue.Real qb = SmtValue.Real rb := by
         rw [← hb]
         unfold arith_atom_denote_real
         rw [hEvalB]
@@ -1389,52 +1331,52 @@ private theorem pos_conclusion_true
   have hScaleBDen := scale_denote M hM m b qm qb hmTrans hbTrans
     hMArith hbTy hmDen hbDen
   have hSignEval := eval_gt_of_denotes M hM m (arithZero m) qm
-    (native_mk_rational 0 1) (sign_pair_smt_type m hmTrans hMArith)
+    (native_mk_real 0 1) (sign_pair_smt_type m hmTrans hMArith)
     hmDen (arith_zero_denote M m hMArith)
-  have hPos : native_qlt (native_mk_rational 0 1) qm = true :=
+  have hPos : native_rlt (native_mk_real 0 1) qm = true :=
     bool_of_true_eval hSignTrue hSignEval
   cases r <;> simp [arithRelOp] at hRel
   case UOp op =>
     cases op <;> simp at hRel
     · have hFEval := eval_eq_of_denotes M hM a b qa qb hPair haDen hbDen
-      have hOrig : native_qeq qa qb = true := bool_of_true_eval hFTrue hFEval
+      have hOrig : native_req qa qb = true := bool_of_true_eval hFTrue hFEval
       have hEval := eval_eq_of_denotes M hM (scale m a) (scale m b)
-        (native_qmult qm qa) (native_qmult qm qb) hScalePair hScaleADen hScaleBDen
+        (native_rmult qm qa) (native_rmult qm qb) hScalePair hScaleADen hScaleBDen
       exact RuleProofs.eo_interprets_of_bool_eval M _ true
         (by simpa [posConclusion, relTerm] using hConclBool)
         (by
           simpa [posConclusion, relTerm] using
-            (by rw [hEval, native_qeq_mul_congr_left hOrig] : __smtx_model_eval M
+            (hEval.trans (congrArg SmtValue.Boolean (native_qeq_mul_congr_left hOrig)) : __smtx_model_eval M
               (__eo_to_smt (relTerm (Term.UOp UserOp.eq) (scale m a) (scale m b))) =
                 SmtValue.Boolean true))
     · have hFEval := eval_lt_of_denotes M hM a b qa qb hPair haDen hbDen
-      have hOrig : native_qlt qa qb = true := bool_of_true_eval hFTrue hFEval
+      have hOrig : native_rlt qa qb = true := bool_of_true_eval hFTrue hFEval
       have hEval := eval_lt_of_denotes M hM (scale m a) (scale m b)
-        (native_qmult qm qa) (native_qmult qm qb) hScalePair hScaleADen hScaleBDen
+        (native_rmult qm qa) (native_rmult qm qb) hScalePair hScaleADen hScaleBDen
       have hScaled := native_qlt_mul_of_pos_left hPos hOrig
       exact RuleProofs.eo_interprets_of_bool_eval M _ true
         (by simpa [posConclusion, relTerm] using hConclBool)
         (by simpa [posConclusion, relTerm, hScaled] using hEval)
     · have hFEval := eval_leq_of_denotes M hM a b qa qb hPair haDen hbDen
-      have hOrig : native_qleq qa qb = true := bool_of_true_eval hFTrue hFEval
+      have hOrig : native_rleq qa qb = true := bool_of_true_eval hFTrue hFEval
       have hEval := eval_leq_of_denotes M hM (scale m a) (scale m b)
-        (native_qmult qm qa) (native_qmult qm qb) hScalePair hScaleADen hScaleBDen
+        (native_rmult qm qa) (native_rmult qm qb) hScalePair hScaleADen hScaleBDen
       have hScaled := native_qleq_mul_of_pos_left hPos hOrig
       exact RuleProofs.eo_interprets_of_bool_eval M _ true
         (by simpa [posConclusion, relTerm] using hConclBool)
         (by simpa [posConclusion, relTerm, hScaled] using hEval)
     · have hFEval := eval_gt_of_denotes M hM a b qa qb hPair haDen hbDen
-      have hOrig : native_qlt qb qa = true := bool_of_true_eval hFTrue hFEval
+      have hOrig : native_rlt qb qa = true := bool_of_true_eval hFTrue hFEval
       have hEval := eval_gt_of_denotes M hM (scale m a) (scale m b)
-        (native_qmult qm qa) (native_qmult qm qb) hScalePair hScaleADen hScaleBDen
+        (native_rmult qm qa) (native_rmult qm qb) hScalePair hScaleADen hScaleBDen
       have hScaled := native_qlt_mul_of_pos_left hPos hOrig
       exact RuleProofs.eo_interprets_of_bool_eval M _ true
         (by simpa [posConclusion, relTerm] using hConclBool)
         (by simpa [posConclusion, relTerm, hScaled] using hEval)
     · have hFEval := eval_geq_of_denotes M hM a b qa qb hPair haDen hbDen
-      have hOrig : native_qleq qb qa = true := bool_of_true_eval hFTrue hFEval
+      have hOrig : native_rleq qb qa = true := bool_of_true_eval hFTrue hFEval
       have hEval := eval_geq_of_denotes M hM (scale m a) (scale m b)
-        (native_qmult qm qa) (native_qmult qm qb) hScalePair hScaleADen hScaleBDen
+        (native_rmult qm qa) (native_rmult qm qb) hScalePair hScaleADen hScaleBDen
       have hScaled := native_qleq_mul_of_pos_left hPos hOrig
       exact RuleProofs.eo_interprets_of_bool_eval M _ true
         (by simpa [posConclusion, relTerm] using hConclBool)
@@ -1479,57 +1421,57 @@ private theorem neg_conclusion_true
   have hScaleBDen := scale_denote M hM m b qm qb hmTrans hbTrans
     hMArith hbTy hmDen hbDen
   have hSignEval := eval_lt_of_denotes M hM m (arithZero m) qm
-    (native_mk_rational 0 1) (sign_pair_smt_type m hmTrans hMArith)
+    (native_mk_real 0 1) (sign_pair_smt_type m hmTrans hMArith)
     hmDen (arith_zero_denote M m hMArith)
-  have hNeg : native_qlt qm (native_mk_rational 0 1) = true :=
+  have hNeg : native_rlt qm (native_mk_real 0 1) = true :=
     bool_of_true_eval hSignTrue hSignEval
   cases r <;> simp [arithRelOp] at hRel
   case UOp op =>
     cases op <;> simp at hRel
     · have hFEval := eval_eq_of_denotes M hM a b qa qb hPair haDen hbDen
-      have hOrig : native_qeq qa qb = true := bool_of_true_eval hFTrue hFEval
+      have hOrig : native_req qa qb = true := bool_of_true_eval hFTrue hFEval
       have hEval := eval_eq_of_denotes M hM (scale m a) (scale m b)
-        (native_qmult qm qa) (native_qmult qm qb) hScalePair hScaleADen hScaleBDen
+        (native_rmult qm qa) (native_rmult qm qb) hScalePair hScaleADen hScaleBDen
       have hEvalTrue :
           __smtx_model_eval M
             (__eo_to_smt (relTerm (Term.UOp UserOp.eq) (scale m a) (scale m b))) =
               SmtValue.Boolean true := by
-        rw [hEval, native_qeq_mul_congr_left hOrig]
+        exact hEval.trans (congrArg SmtValue.Boolean (native_qeq_mul_congr_left hOrig))
       exact RuleProofs.eo_interprets_of_bool_eval M _ true
         (by simpa [negConclusion, __arith_rel_inv, relTerm, scale] using hConclBool)
         (by simpa [negConclusion, __arith_rel_inv, relTerm, scale] using hEvalTrue)
     · have hFEval := eval_lt_of_denotes M hM a b qa qb hPair haDen hbDen
-      have hOrig : native_qlt qa qb = true := bool_of_true_eval hFTrue hFEval
+      have hOrig : native_rlt qa qb = true := bool_of_true_eval hFTrue hFEval
       have hEval := eval_gt_of_denotes M hM (scale m a) (scale m b)
-        (native_qmult qm qa) (native_qmult qm qb) hScalePair hScaleADen hScaleBDen
+        (native_rmult qm qa) (native_rmult qm qb) hScalePair hScaleADen hScaleBDen
       have hScaled := native_qlt_mul_of_neg_left hNeg hOrig
       exact RuleProofs.eo_interprets_of_bool_eval M _ true
         (by simpa [negConclusion, __arith_rel_inv, relTerm, scale] using hConclBool)
         (by simpa [negConclusion, __arith_rel_inv, relTerm, scale, hScaled] using hEval)
     · have hFEval := eval_leq_of_denotes M hM a b qa qb hPair haDen hbDen
-      have hOrig : native_qleq qa qb = true := bool_of_true_eval hFTrue hFEval
+      have hOrig : native_rleq qa qb = true := bool_of_true_eval hFTrue hFEval
       have hEval := eval_geq_of_denotes M hM (scale m a) (scale m b)
-        (native_qmult qm qa) (native_qmult qm qb) hScalePair hScaleADen hScaleBDen
+        (native_rmult qm qa) (native_rmult qm qb) hScalePair hScaleADen hScaleBDen
       have hScaled := native_qleq_mul_of_neg_left hNeg hOrig
       exact RuleProofs.eo_interprets_of_bool_eval M _ true
         (by simpa [negConclusion, __arith_rel_inv, relTerm, scale] using hConclBool)
         (by simpa [negConclusion, __arith_rel_inv, relTerm, scale, hScaled] using hEval)
     · have hFEval := eval_gt_of_denotes M hM a b qa qb hPair haDen hbDen
-      have hOrig : native_qlt qb qa = true := bool_of_true_eval hFTrue hFEval
+      have hOrig : native_rlt qb qa = true := bool_of_true_eval hFTrue hFEval
       have hEval := eval_lt_of_denotes M hM (scale m a) (scale m b)
-        (native_qmult qm qa) (native_qmult qm qb) hScalePair hScaleADen hScaleBDen
+        (native_rmult qm qa) (native_rmult qm qb) hScalePair hScaleADen hScaleBDen
       have hScaled :
-          native_qlt (native_qmult qm qa) (native_qmult qm qb) = true :=
+          native_rlt (qm * qa) (qm * qb) = true :=
         native_qlt_mul_of_neg_left (c := qm) (a := qb) (b := qa) hNeg hOrig
       exact RuleProofs.eo_interprets_of_bool_eval M _ true
         (by simpa [negConclusion, __arith_rel_inv, relTerm, scale] using hConclBool)
         (by simpa [negConclusion, __arith_rel_inv, relTerm, scale, hScaled] using hEval)
     · have hFEval := eval_geq_of_denotes M hM a b qa qb hPair haDen hbDen
-      have hOrig : native_qleq qb qa = true := bool_of_true_eval hFTrue hFEval
+      have hOrig : native_rleq qb qa = true := bool_of_true_eval hFTrue hFEval
       have hEval := eval_leq_of_denotes M hM (scale m a) (scale m b)
-        (native_qmult qm qa) (native_qmult qm qb) hScalePair hScaleADen hScaleBDen
+        (native_rmult qm qa) (native_rmult qm qb) hScalePair hScaleADen hScaleBDen
       have hScaled :
-          native_qleq (native_qmult qm qa) (native_qmult qm qb) = true :=
+          native_rleq (qm * qa) (qm * qb) = true :=
         native_qleq_mul_of_neg_left (c := qm) (a := qb) (b := qa) hNeg hOrig
       exact RuleProofs.eo_interprets_of_bool_eval M _ true
         (by simpa [negConclusion, __arith_rel_inv, relTerm, scale] using hConclBool)
@@ -2420,10 +2362,8 @@ private theorem abs_eq_factor
 private theorem numeral_zero_of_to_real_zero {n : native_Int} :
     native_to_real n = native_mk_rational 0 1 -> n = 0 := by
   intro h
-  have h' : ((n : Rat) / (1 : Rat)) = ((0 : Rat) / (1 : Rat)) := by
-    simpa [native_to_real, native_mk_rational] using h
-  rw [rat_div_one_intCast n, rat_zero_div_one] at h'
-  exact Rat.intCast_inj.mp h'
+  have h' := congrArg (fun q : native_Rat => (q : native_Real)) h
+  simpa using h'
 
 private theorem eval_zero_of_to_q_zero_and_smt_int
     (M : SmtModel) (z : Term)
@@ -2635,7 +2575,7 @@ private theorem MultListProduct.singleton
       have hCons := MultListProduct.cons hTy hEval (MultListProduct.nilReal (M := M))
       simpa [multSingleton, multOp, __eo_nil, __eo_nil_mult, __arith_mk_one,
         hEoTy, __eo_mk_apply, ArithProduct.mul, ArithValue.kind,
-        ArithValue.mul, native_mk_rational] using hCons
+        ArithValue.mul, native_mk_real] using hCons
 
 private theorem model_eval_abs_arith
     (M : SmtModel) (x : Term) (v : ArithValue)
@@ -2730,7 +2670,7 @@ private theorem eval_eq_abs_values (M : SmtModel) (t u : Term)
   cases vt <;> cases vu <;>
     simp [__smtx_model_eval_eq, native_veq, ArithValue.abs,
       ArithValue.smtValue, ArithValue.eqBool, ArithValue.kind,
-      native_zeq, native_qeq] at hKind ⊢
+      native_zeq, native_req] at hKind ⊢
 
 private theorem abs_gt_factor_product
     (M : SmtModel) (hM : model_wf M) (t u : Term) :
@@ -2817,7 +2757,7 @@ private theorem eval_zero_of_to_q_zero_and_smt_arith
         subst r
         rw [eo_to_smt_rational_eq, __smtx_model_eval.eq_3]
         simp [ArithValue.zero, ArithValue.kind, ArithValue.smtValue,
-          native_mk_rational]
+          native_mk_real]
 
 private theorem eq_rhs_smt_type_of_bool_left_arith (t z : Term) (v : ArithValue)
     (hTyT : __smtx_typeof (__eo_to_smt t) = v.smtType)
@@ -2936,7 +2876,7 @@ private theorem MultListFactors.singleton
       have hCons := MultListFactors.cons hTy hEval
         (MultListFactors.nilReal (M := M))
       simpa [multSingleton, multOp, __eo_nil, __eo_nil_mult, __arith_mk_one,
-        hEoTy, __eo_mk_apply, ArithValue.kind, native_mk_rational] using hCons
+        hEoTy, __eo_mk_apply, ArithValue.kind, native_mk_real] using hCons
 
 private theorem eo_typeof_plus_eq_int_args (A B : Term) :
     __eo_typeof_plus A B = Term.Int -> A = Term.Int ∧ B = Term.Int := by
@@ -3189,7 +3129,7 @@ private theorem eval_eq_abs_values (M : SmtModel) (t u : Term)
   cases vt <;> cases vu <;>
     simp [__smtx_model_eval_eq, native_veq, ArithValue.abs,
       ArithValue.smtValue, ArithValue.eqBool, ArithValue.kind,
-      native_zeq, native_qeq] at hKind ⊢
+      native_zeq] at hKind ⊢
 
 private theorem abs_gt_factor_factors
     (M : SmtModel) (hM : model_wf M) (t u : Term) :
@@ -3272,10 +3212,8 @@ private theorem abs_eq_factor_factors
 private theorem numeral_zero_of_to_real_zero {n : native_Int} :
     native_to_real n = native_mk_rational 0 1 -> n = 0 := by
   intro h
-  have h' : ((n : Rat) / (1 : Rat)) = ((0 : Rat) / (1 : Rat)) := by
-    simpa [native_to_real, native_mk_rational] using h
-  rw [rat_div_one_intCast n, rat_zero_div_one] at h'
-  exact Rat.intCast_inj.mp h'
+  have h' := congrArg (fun q : native_Rat => (q : native_Real)) h
+  simpa using h'
 
 private theorem eval_zero_of_to_q_zero_and_smt_arith
     (M : SmtModel) (z : Term) (v : ArithValue)
@@ -3302,8 +3240,7 @@ private theorem eval_zero_of_to_q_zero_and_smt_arith
       case Rational r =>
         subst r
         rw [eo_to_smt_rational_eq, __smtx_model_eval.eq_3]
-        have hz : native_mk_rational 0 1 = (0 : native_Rat) := by native_decide
-        simp [ArithValue.zero, ArithValue.kind, ArithValue.smtValue, hz]
+        simp [ArithValue.zero, ArithValue.kind, ArithValue.smtValue]
 
 private theorem eq_rhs_smt_type_of_bool_left_arith (t z : Term) (v : ArithValue)
     (hTyT : __smtx_typeof (__eo_to_smt t) = v.smtType)
@@ -3323,7 +3260,7 @@ private theorem eval_eq_value_zero (M : SmtModel) (t z : Term) (v : ArithValue)
   rw [smtx_eval_eq_term_eq, htEval, hzEval]
   cases v <;> simp [__smtx_model_eval_eq, native_veq, ArithValue.smtValue,
     ArithValue.eqBool, ArithValue.zero, ArithValue.kind,
-    native_zeq, native_qeq]
+    native_zeq]
 
 private theorem abs_factor_nonzero_factors
     (M : SmtModel) (t z : Term) (v : ArithValue)
@@ -3925,9 +3862,9 @@ private theorem arith_mult_abs_comparison_rec_has_bool_type
                 rw [hRelEq]
                 exact AbsCmpTypeAcc.gt _ _ _ _ _ _ hLeft hRight
               have hRec := ih hBType hAccNew (by
-                rw [if_pos hEqSelfRaw] at hTy
+                rw [ite_eq_left hEqSelfRaw] at hTy
                 exact hTy)
-              rw [if_pos hEqSelfRaw]
+              rw [ite_eq_left hEqSelfRaw]
               exact hRec
         · simp [__eo_ite, __eo_requires, hZero, native_teq,
             native_ite, __eo_l_2___mk_arith_mult_abs_comparison_rec] at hTy
@@ -4242,9 +4179,9 @@ private theorem facts_arith_mult_abs_comparison_rec
                 exact
                   AbsCmpAcc.gt _ _ _ _ _ _ hLeft hRight hNewLt
               have hRec := ih hBTrue hAccNew (by
-                rw [if_pos hEqSelfRaw] at hTy
+                rw [ite_eq_left hEqSelfRaw] at hTy
                 exact hTy)
-              rw [if_pos hEqSelfRaw]
+              rw [ite_eq_left hEqSelfRaw]
               exact hRec
         · simp [__eo_ite, __eo_requires, hZero, native_teq,
             native_ite, __eo_l_2___mk_arith_mult_abs_comparison_rec] at hTy

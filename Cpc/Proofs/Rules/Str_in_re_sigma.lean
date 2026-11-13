@@ -173,7 +173,7 @@ private theorem str_in_re_sigma_rec_allchar_eq
         (Term.Numeral (Int.ofNat n)) (Term.Boolean exact) =
       __str_mk_str_in_re_sigma_rec s r
         (Term.Numeral (Int.ofNat (n + 1))) (Term.Boolean exact) := by
-  simp [__str_mk_str_in_re_sigma_rec, __eo_add, native_zplus, Int.natCast_add]
+  simp [__str_mk_str_in_re_sigma_rec, __eo_add, native_zplus]
 
 private theorem str_in_re_sigma_rec_star_eq
     (s r : Term) (n : Nat) (exact : Bool) (hSNe : s ≠ Term.Stuck) :
@@ -253,7 +253,6 @@ private theorem smtx_model_eval_str_in_re_sigma_rec
                         native_veq, native_seq_len,
                         nativeListInRe_sigmaState_empty_exact, hSSValid,
                         native_unpack_string_strlen_eq]
-                      exact Int.ofNat_inj
                   · exfalso
                     apply hSide
                     exact str_in_re_sigma_rec_str_to_re_nonempty_eq_stuck s str n exact hStr

@@ -118,7 +118,7 @@ private theorem eo_to_smt_type_seq_of_wf
   intro hNone
   rw [TranslationProofs.eo_to_smt_type_seq] at hWf
   simp [__smtx_typeof_guard, hNone, native_ite, native_Teq,
-    __smtx_type_wf, __smtx_type_wf_component, native_inhabited_type,
+    __smtx_type_wf, __smtx_type_wf_component, __smtx_inhabited_type,
     native_not, native_and] at hWf
 
 private theorem smt_typeof_seq_empty_of_wf_type

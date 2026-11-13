@@ -116,10 +116,10 @@ private theorem emod_neg_congr
     rcases hDvd with ⟨k, hk⟩
     refine ⟨-k, ?_⟩
     rw [hk]
-    simp [Int.mul_neg]
+    simp
   have hZeroNeg : ((-a) - (-b)) % m = 0 := by
     have hEq : (-a) - (-b) = - (a - b) := by
-      simp [Int.sub_eq_add_neg, Int.neg_add, Int.add_comm]
+      simp [Int.sub_eq_add_neg, Int.add_comm]
     rw [hEq]
     exact Int.emod_eq_zero_of_dvd hDvdNeg
   exact (Int.emod_eq_emod_iff_emod_sub_eq_zero).mpr hZeroNeg
@@ -319,18 +319,11 @@ private theorem bv_mvar_wf_of_mvar_mul_mvar
 termination_by sizeOf vars1 + sizeOf vars2
 decreasing_by
   simp_wf
-  · have hSize :
-        sizeOf rest1 <
-          sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons a1) rest1) := by
-        simp
-        omega
-    omega
-  · have hSize :
-        sizeOf rest2 <
-          sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons c1) rest2) := by
-        simp
-        omega
-    omega
+  have hSize :
+      sizeOf rest2 <
+        sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons c1) rest2) := by
+    simp <;> omega
+  omega
 
 private theorem bv_mvar_denote_of_mvar_mul_mvar
     (M : SmtModel) {vars1 vars2 : Term}
@@ -384,18 +377,11 @@ private theorem bv_mvar_denote_of_mvar_mul_mvar
 termination_by sizeOf vars1 + sizeOf vars2
 decreasing_by
   simp_wf
-  · have hSize :
-        sizeOf rest1 <
-          sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons a1) rest1) := by
-        simp
-        omega
-    omega
-  · have hSize :
-        sizeOf rest2 <
-          sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons c1) rest2) := by
-        simp
-        omega
-    omega
+  have hSize :
+      sizeOf rest2 <
+        sizeOf (Term.Apply (Term.Apply Term.__eo_List_cons c1) rest2) := by
+    simp <;> omega
+  omega
 
 private theorem bv_mon_int_wf_of_mon_mul_mon
     {m1 m2 : Term}
@@ -484,7 +470,7 @@ private theorem bv_poly_denote_of_poly_neg
           simp [__poly_neg, __eo_mk_apply, __eo_neg, bv_poly_denote,
             bv_mon_denote, native_to_int_to_real, native_to_int_qneg_to_real, ih,
             SmtEval.native_zneg]
-          simp [Int.neg_add, Int.neg_mul]
+          ac_rfl
 
 private theorem bv_poly_int_wf_of_poly_add
     {P1 P2 : Term}
@@ -639,7 +625,6 @@ decreasing_by
                   (Term.Rational (native_to_real c1))))
               p1) := by
         simp
-        omega
     omega
   · have hSize :
         sizeOf p2 <
@@ -650,7 +635,6 @@ decreasing_by
                   (Term.Rational (native_to_real c2))))
               p2) := by
         simp
-        omega
     omega
 
 private theorem bv_poly_denote_of_poly_add
@@ -832,7 +816,6 @@ decreasing_by
                   (Term.Rational (native_to_real c1))))
               p1) := by
         simp
-        omega
     omega
   · have hSize :
         sizeOf p2 <
@@ -843,7 +826,6 @@ decreasing_by
                   (Term.Rational (native_to_real c2))))
               p2) := by
         simp
-        omega
     omega
 
 private theorem bv_poly_int_wf_of_poly_mul_mon
@@ -1183,7 +1165,7 @@ private theorem bvadd_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
         rw [__smtx_typeof.eq_48]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-        Smtm.native_nateq] using hTy'
+        SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -1218,7 +1200,7 @@ private theorem bvmul_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
         rw [__smtx_typeof.eq_49]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-        Smtm.native_nateq] using hTy'
+        SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -1253,7 +1235,7 @@ private theorem bvsub_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           (__smtx_typeof (__eo_to_smt y)) (__smtx_typeof (__eo_to_smt x)) by
         rw [__smtx_typeof.eq_52]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hy, hx, native_ite, native_nateq,
-        Smtm.native_nateq] using hTy'
+        SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'

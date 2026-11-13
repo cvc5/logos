@@ -1,7 +1,7 @@
 module
 
 public import Cpc.Proofs.TypePreservation.Helpers
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 import all Cpc.Proofs.TypePreservation.Common
 
 public section
@@ -511,7 +511,7 @@ theorem typeof_value_seq_nth_wrong
     (ss : SmtSeq)
     (n : native_Int)
     (T : SmtType)
-    (hTInh : native_inhabited_type T = true)
+    (hTInh : __smtx_inhabited_type T = true)
     (hRec : __smtx_type_wf_rec T = true)
     (hss : __smtx_typeof_seq_value ss = SmtType.Seq T) :
     __smtx_typeof_value (__smtx_seq_nth_wrong M ss n (SmtType.Seq T)) = T := by
@@ -2226,7 +2226,7 @@ theorem typeof_value_model_eval_seq_nth
     exact hElemRec h1
   have hTWf : __smtx_type_wf T = true :=
     smtx_typeof_guard_wf_wf_of_non_none T T hGuardNN
-  have hTInh : native_inhabited_type T = true := by
+  have hTInh : __smtx_inhabited_type T = true := by
     cases T <;>
       simp [__smtx_type_wf, __smtx_type_wf_component, __smtx_type_wf_rec,
         native_and] at hTWf hRec ⊢

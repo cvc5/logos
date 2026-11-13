@@ -247,7 +247,6 @@ private theorem facts___eo_prog_str_substr_full_eq_impl
           simpa [__smtx_model_eval_str_len, __smtx_model_eval_eq,
             native_veq, native_seq_len] using hEval
         rw [hLenEq]
-        exact Int.le_refl ni
   have hSSeqTy :
       __smtx_typeof_seq_value ss = SmtType.Seq (__eo_to_smt_type T) := by
     simpa [hSEval, __smtx_typeof_seq_value, __smtx_typeof_value] using hSEvalTy

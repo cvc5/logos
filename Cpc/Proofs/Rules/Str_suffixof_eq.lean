@@ -191,7 +191,7 @@ private theorem eval_str_suffixof_seq_eq_of_len_ge
             true := by
         simp only [Bool.or_eq_true, decide_eq_true_eq]
         exact Or.inl (Or.inl hStartNeg)
-      rw [if_pos hGuard]
+      rw [ite_eq_left hGuard]
     have hSNeEmpty :
         sx ≠ native_pack_seq (__smtx_elem_typeof_seq_value sy) [] := by
       intro hEq

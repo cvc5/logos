@@ -5399,21 +5399,21 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_sbv_to_int_core
   · subst w
     have hRunToIntEq : runToInt = Term.Numeral 0 := by
       dsimp [runToInt]
-      simpa [native_nat_to_int, Smtm.native_nat_to_int] using
+      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using
         EvaluateProofInternal.eo_eval_sbv_to_int_rhs_eq_zero_of_run_typeof_zero x hRunEoBv
     rcases EvaluateProofInternal.model_eval_bitvec_term_binary M hM (__run_evaluate x) 0
         hRunXSmtTy with
       ⟨runN, hRunEval, hRunNNonneg, hRunNLt⟩
     have hRunNEq : runN = 0 := by
       have hlt : runN < 1 := by
-        simpa [native_nat_to_int, Smtm.native_nat_to_int,
+        simpa [native_nat_to_int, SmtEval.native_nat_to_int,
           native_int_pow2, native_zexp_total] using hRunNLt
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRunNNonneg
     subst runN
     have hRunEval0 :
         __smtx_model_eval M (__eo_to_smt (__run_evaluate x)) =
           SmtValue.Binary 0 0 := by
-      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hRunEval
+      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hRunEval
     have hXRelValue :
         RuleProofs.smt_value_rel
           (__smtx_model_eval M (__eo_to_smt x))
@@ -5465,7 +5465,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_sbv_to_int_core
     have hwIntPos : 0 < native_nat_to_int w := by
       have hCast : (Int.ofNat 0) < (Int.ofNat w) :=
         Int.ofNat_lt.mpr hwNatPos
-      simpa [native_nat_to_int, Smtm.native_nat_to_int] using hCast
+      simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hCast
     rcases EvaluateProofInternal.eo_eval_sbv_to_int_rhs_arg_binary_of_pos_run_typeof_int
         x hRunEoBv hwIntPos hRunToIntEoInt with
       ⟨runW, runN, rfl⟩

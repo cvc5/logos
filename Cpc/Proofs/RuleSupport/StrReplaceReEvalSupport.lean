@@ -8,11 +8,14 @@ public import Cpc.Proofs.RuleSupport.CongSupport
 import all Cpc.Proofs.RuleSupport.CongSupport
 public import Cpc.Proofs.RuleSupport.StrInReEvalSupport
 import all Cpc.Proofs.RuleSupport.StrInReEvalSupport
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 
 open Eo
 open SmtEval
 open Smtm
+
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
 
 set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
@@ -528,23 +531,6 @@ private theorem native_str_substr_suffix_drop
     have hnot2 : ¬((↑s.length : Int) - ↑start + 1 <= 0) := by omega
     have hnot3 : ¬((↑start : Int) >= ↑s.length) := by omega
     simp [hnot1, hnot2, hnot3]
-    have hMin :
-        min ((↑s.length : Int) - ↑start + 1)
-            ((↑s.length : Int) - ↑start) =
-          (↑s.length : Int) - ↑start := by
-      apply Int.min_eq_right
-      omega
-    rw [hMin]
-    have hToNat :
-        Int.toNat ((↑s.length : Int) - ↑start) = s.length - start := by
-      apply Int.ofNat.inj
-      change (↑(((↑s.length : Int) - ↑start).toNat) : Int) =
-        ↑(s.length - start)
-      rw [Int.toNat_of_nonneg]
-      · rw [Int.ofNat_sub (Nat.le_of_lt hlt)]
-      · omega
-    rw [hToNat]
-    exact List.take_of_length_le (by rw [List.length_drop]; omega)
   · have hge : s.length ≤ start := Nat.le_of_not_gt hlt
     have hdrop : s.drop start = [] := List.drop_eq_nil_of_le hge
     simp [hdrop]
@@ -914,18 +900,22 @@ private theorem str_eval_replace_re_pair_eval
         hNotNoMatch (by simp) hRNe hTNe]
   simp [__eo_add, native_zplus,
     __eo_mk_apply, __eo_extract, __eo_len, native_str_len, native_zneg]
-  have hPrefixArg : ((↑idx : Int) + -1 + 1) = (↑idx : Int) := by
-    omega
   have hStartArg : ((↑idx : Int) + ↑len) = (↑(idx + len) : Int) := by
     rw [Int.natCast_add]
-  rw [hPrefixArg, hStartArg]
+  have hSuffixArg :
+      (↑str.length : Int) + (-↑len + -↑idx) + 1 =
+        (↑str.length : Int) + -↑(idx + len) + 1 := by
+    rw [Int.natCast_add]
+    omega
+  rw [hStartArg, hSuffixArg]
   rw [show native_str_substr str 0 (↑idx : Int) = str.take idx by
     exact native_str_substr_prefix_take str idx]
   rw [show
       native_str_substr str (↑(idx + len) : Int)
           ((↑str.length : Int) + -↑(idx + len) + 1) =
         str.drop (idx + len) by
-    have hsimpa := native_str_substr_suffix_drop str (idx + len); (try simp at hsimpa ⊢); exact hsimpa]
+    simpa only [Int.ofNat_eq_natCast, Int.sub_eq_add_neg] using
+      native_str_substr_suffix_drop str (idx + len)]
   simpa [List.append_assoc] using
     smtx_model_eval_str_concat_replacement M t repl (str.take idx)
       (str.drop (idx + len)) hTEval hReplTy

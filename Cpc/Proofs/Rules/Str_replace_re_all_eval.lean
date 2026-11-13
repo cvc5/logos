@@ -4,11 +4,14 @@ public import Cpc.Proofs.RuleSupport.StrReplaceReEvalSupport
 import all Cpc.Proofs.RuleSupport.StrReplaceReEvalSupport
 public import Cpc.Proofs.RuleSupport.StrConcatSupport
 import all Cpc.Proofs.RuleSupport.StrConcatSupport
-import all Cpc.SmtModel
+import all Cpc.Proofs.ModelEval
 
 open Eo
 open SmtEval
 open Smtm
+
+-- Keep string coercions on the model's explicit string-to-value embedding.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
 
 set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
@@ -43,12 +46,12 @@ private def replace_re_all_nonempty_re (r : Term) : Term :=
           (Term.Apply (Term.UOp UserOp.str_to_re) (Term.String []))))
       (Term.UOp UserOp.re_all))
 
-private def filteredRe (rv : SmtRegLan) : SmtRegLan :=
+private noncomputable def filteredRe (rv : SmtRegLan) : SmtRegLan :=
   native_re_inter rv
     (native_re_inter (native_re_comp (native_str_to_re [])) native_re_all)
 
 /-- Proof-level string view of the model's value-list replacement recursion. -/
-private def impl_native_re_replace_all_nonempty_list_aux :
+private noncomputable def impl_native_re_replace_all_nonempty_list_aux :
     Nat -> SmtRegLan -> native_String -> native_String -> native_String
   | 0, _r, _replacement, xs => xs
   | _fuel + 1, _r, _replacement, [] => []
@@ -62,11 +65,11 @@ private def impl_native_re_replace_all_nonempty_list_aux :
       | _ =>
           c :: impl_native_re_replace_all_nonempty_list_aux fuel r replacement cs
 
-private def impl_native_re_replace_all_nonempty_list
+private noncomputable def impl_native_re_replace_all_nonempty_list
     (r : SmtRegLan) (replacement xs : native_String) : native_String :=
   impl_native_re_replace_all_nonempty_list_aux (xs.length + 1) r replacement xs
 
-private def native_str_replace_re_all
+private noncomputable def native_str_replace_re_all
     (s : native_String) (r : SmtRegLan) (replacement : native_String) :
     native_String :=
   impl_native_re_replace_all_nonempty_list r replacement s
@@ -529,8 +532,7 @@ private theorem str_eval_replace_re_all_rec_properties
             change Term.Numeral ((Int.ofNat (k + 1)) + (-1 : Int)) =
               Term.Numeral (Int.ofNat k)
             congr
-            simpa [Int.ofNat_eq_natCast, Int.natCast_succ]
-              using Int.add_neg_cancel_right (Int.ofNat k) 1
+            simp [Int.ofNat_eq_natCast]
           have hRawEq :
               __str_eval_replace_re_all_rec
                   (substrWord (c :: cs) 0 (c :: cs).length) (Term.String acc)
@@ -766,8 +768,7 @@ private theorem str_eval_replace_re_all_rec_properties
                         change Term.Numeral ((Int.ofNat (n + 1)) + (-1 : Int)) =
                           Term.Numeral (Int.ofNat n)
                         congr
-                        simpa [Int.ofNat_eq_natCast, Int.natCast_succ]
-                          using Int.add_neg_cancel_right (Int.ofNat n) 1
+                        simp [Int.ofNat_eq_natCast]
                       have hRawMatch :
                           __str_eval_replace_re_all_rec word (Term.String acc) r t
                               (Term.Numeral 0) = matchBranch := by

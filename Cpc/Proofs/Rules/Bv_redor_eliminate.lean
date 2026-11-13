@@ -170,7 +170,7 @@ private theorem native_nat_to_int_of_int_to_nat_of_nonneg (n : native_Int) :
     simpa [SmtEval.native_zleq] using hNonneg
   have hInt : (Int.ofNat (Int.toNat n) : Int) = n :=
     Int.toNat_of_nonneg hn
-  simpa [Smtm.native_nat_to_int, SmtEval.native_int_to_nat,
+  simpa [SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
     native_nat_to_int, native_int_to_nat] using hInt
 
 private theorem native_mod_total_zero_pow2_of_nonneg (n : native_Int) :
@@ -183,7 +183,6 @@ private theorem native_mod_total_zero_pow2_of_nonneg (n : native_Int) :
     have hnot : ¬ n < 0 := Int.not_lt_of_ge hn
     rw [native_int_pow2, native_zexp_total]
     simp [hnot]
-    exact Int.pow_pos (by decide : (0 : Int) < 2)
   simpa [SmtEval.native_mod_total] using
     Int.emod_eq_of_lt (by decide : (0 : Int) <= 0) hPowPos
 
@@ -191,13 +190,12 @@ private theorem smt_typeof_binary_nat_to_int_zero_local (w : native_Nat) :
     __smtx_typeof (SmtTerm.Binary (native_nat_to_int w) 0) =
       SmtType.BitVec w := by
   have hWidth : native_zleq 0 (native_nat_to_int w) = true := by
-    simp [SmtEval.native_zleq, Smtm.native_nat_to_int]
+    simp [SmtEval.native_zleq, SmtEval.native_nat_to_int]
   have hPowPos : 0 < native_int_pow2 (native_nat_to_int w) := by
     have hNonneg : 0 <= native_nat_to_int w := by
-      simp [Smtm.native_nat_to_int]
+      simp [SmtEval.native_nat_to_int]
     have hnot : ¬ native_nat_to_int w < 0 := Int.not_lt_of_ge hNonneg
     simp [SmtEval.native_int_pow2, SmtEval.native_zexp_total, hnot]
-    exact Int.pow_pos (by decide : (0 : Int) < 2)
   have hMod0 :
       native_mod_total 0 (native_int_pow2 (native_nat_to_int w)) = 0 := by
     simp [SmtEval.native_mod_total]
@@ -211,7 +209,7 @@ private theorem smt_typeof_binary_nat_to_int_zero_local (w : native_Nat) :
         SmtType.None := by
     unfold __smtx_typeof
     simp [SmtEval.native_and, hWidth, hMod, native_ite]
-  simpa [SmtEval.native_int_to_nat, Smtm.native_nat_to_int] using
+  simpa [SmtEval.native_int_to_nat, SmtEval.native_nat_to_int] using
     TranslationProofs.smtx_typeof_binary_of_non_none
       (native_nat_to_int w) 0 hNN
 
@@ -236,7 +234,7 @@ private theorem smt_typeof_redor_rhs
   rw [smtx_typeof_bvcomp_term_eq, hXSmtTy]
   rw [smtx_typeof_int_to_bv_numerals n 0 hNonneg]
   simp [__smtx_typeof_bv_op_1, __smtx_typeof_bv_op_2_ret,
-    Smtm.native_nateq, native_ite]
+    SmtEval.native_nateq, native_ite]
 
 private theorem smt_eval_redor_rhs_eq_lhs
     (M : SmtModel) (x : Term) (n : native_Int) :
@@ -295,7 +293,7 @@ private theorem smt_typeof_redor_lhs
     SmtType.BitVec 1
   rw [smt_typeof_binary_nat_to_int_zero_local]
   simp [__eo_to_smt_bv_size, __smtx_typeof_bv_op_1,
-    __smtx_typeof_bv_op_2_ret, native_nateq, Smtm.native_nateq,
+    __smtx_typeof_bv_op_2_ret, native_nateq, SmtEval.native_nateq,
     native_ite]
 
 private theorem typed_redor_body (x w : Term) :

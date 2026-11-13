@@ -11,6 +11,8 @@ import all Cpc.Proofs.Translation.Inversions
 
 public section
 
+noncomputable section
+
 open Eo
 open SmtEval
 open Smtm
@@ -57,7 +59,7 @@ theorem smtx_model_eval_qdiv_term_eq
        let xr := __smtx_to_real_coerce (__smtx_model_eval M x)
        __smtx_model_eval_ite
         (__smtx_model_eval_eq yr
-          (SmtValue.Rational (native_mk_rational 0 1)))
+          (SmtValue.Real (native_mk_real 0 1)))
         (__smtx_model_eval_apply M
           (native_model_lookup M native_qdiv_by_zero_id
             (SmtType.FunType SmtType.Real SmtType.Real))
@@ -82,7 +84,7 @@ theorem smtx_model_eval_int_to_bv_term_eq
 theorem smtx_model_eval_map_diff_term_eq
     (M : SmtModel) (x y : SmtTerm) :
     __smtx_model_eval M (SmtTerm.map_diff x y) =
-      __smtx_model_eval_map_diff
+      __smtx_map_diff M
         (__smtx_model_eval M x) (__smtx_model_eval M y) := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
@@ -1688,7 +1690,7 @@ theorem smtx_model_eval_eq_false_of_not_smt_value_rel
       cases a <;> cases b <;> simp [__smtx_model_eval_eq] at hEq
   | Numeral _ =>
       cases a <;> cases b <;> simp [__smtx_model_eval_eq] at hEq
-  | Rational _ =>
+  | Real _ =>
       cases a <;> cases b <;> simp [__smtx_model_eval_eq] at hEq
   | Binary _ _ =>
       cases a <;> cases b <;> simp [__smtx_model_eval_eq] at hEq

@@ -118,10 +118,10 @@ private theorem rotate_left_append_extract
   rw [BitVec.getElem_rotateLeft hi]
   simp only [Nat.mod_eq_of_lt hR]
   by_cases hiR : i < R
-  · simp only [hiR, dif_pos]
+  · simp only [hiR, dite_eq_left]
     rw [BitVec.getLsbD_eq_getElem (by omega)]
   · have hRi : R ≤ i := Nat.le_of_not_gt hiR
-    simp only [hiR, dif_neg, if_false, Nat.zero_add]
+    simp only [hiR, dite_eq_right, ite_false, Nat.zero_add]
     rw [BitVec.getLsbD_eq_getElem
       (Nat.lt_of_le_of_lt (Nat.sub_le i R) hi)]
     simp
@@ -138,11 +138,11 @@ private theorem rotate_right_append_extract
   rw [BitVec.getElem_rotateRight hi]
   simp only [Nat.mod_eq_of_lt hR]
   by_cases hLow : i < W - R
-  · simp only [hLow, dif_pos]
+  · simp only [hLow, dite_eq_left]
     have hSplit : W - R + R = W := Nat.sub_add_cancel (Nat.le_of_lt hR)
     rw [BitVec.getLsbD_eq_getElem (by omega)]
   · have hHigh : W - R ≤ i := Nat.le_of_not_gt hLow
-    simp only [hLow, dif_neg, if_false, Nat.zero_add]
+    simp only [hLow, dite_eq_right, ite_false, Nat.zero_add]
     rw [BitVec.getLsbD_eq_getElem
       (Nat.lt_of_le_of_lt (Nat.sub_le i (W - R)) hi)]
     simp
@@ -536,7 +536,7 @@ theorem typed_bv_rotate_decomp_term
     simp only [__smtx_typeof_concat]
     rw [hD2Round]
     simp [SmtEval.native_zplus, native_nat_to_int,
-      Smtm.native_nat_to_int]
+      SmtEval.native_nat_to_int]
   have hd1 : (0 : Int) ≤ d1 := by
     simpa [d1, SmtEval.native_zleq] using
       native_zleq_of_zlt_true _ _ hD10
@@ -999,12 +999,12 @@ private theorem eval_bv_rotate_decomp
       let A := native_int_to_nat i
       let R := native_int_to_nat r
       have hWRound : (↑W : Int) = w := by
-        simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
+        simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
           _root_.native_int_to_nat_roundtrip w hw0
       have hR0Native : native_zleq 0 r = true := by
         simpa [SmtEval.native_zleq] using hr0
       have hRRound : (↑R : Int) = r := by
-        simpa [R, native_nat_to_int, Smtm.native_nat_to_int] using
+        simpa [R, native_nat_to_int, SmtEval.native_nat_to_int] using
           _root_.native_int_to_nat_roundtrip r hR0Native
       have hR0 : 0 < R := by
         apply Int.ofNat_lt.mp
@@ -1044,7 +1044,7 @@ private theorem eval_bv_rotate_decomp
       have hXEval' :
           __smtx_model_eval M (__eo_to_smt x) =
             SmtValue.Binary (↑W : Int) p := by
-        simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
+        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
       have hRange := bitvec_payload_range_of_canonical
         (w := (↑W : Int)) (n := p) (by simp [SmtEval.native_zleq]) hCan
       have hp0 : (0 : Int) ≤ p := hRange.1
@@ -1145,12 +1145,12 @@ private theorem eval_bv_rotate_decomp
       let A := native_int_to_nat i
       let R := native_int_to_nat r
       have hWRound : (↑W : Int) = w := by
-        simpa [W, native_nat_to_int, Smtm.native_nat_to_int] using
+        simpa [W, native_nat_to_int, SmtEval.native_nat_to_int] using
           _root_.native_int_to_nat_roundtrip w hw0
       have hR0Native : native_zleq 0 r = true := by
         simpa [SmtEval.native_zleq] using hr0
       have hRRound : (↑R : Int) = r := by
-        simpa [R, native_nat_to_int, Smtm.native_nat_to_int] using
+        simpa [R, native_nat_to_int, SmtEval.native_nat_to_int] using
           _root_.native_int_to_nat_roundtrip r hR0Native
       have hR0 : 0 < R := by
         apply Int.ofNat_lt.mp
@@ -1184,7 +1184,7 @@ private theorem eval_bv_rotate_decomp
       have hXEval' :
           __smtx_model_eval M (__eo_to_smt x) =
             SmtValue.Binary (↑W : Int) p := by
-        simpa [native_nat_to_int, Smtm.native_nat_to_int] using hXEval
+        simpa [native_nat_to_int, SmtEval.native_nat_to_int] using hXEval
       have hRange := bitvec_payload_range_of_canonical
         (w := (↑W : Int)) (n := p) (by simp [SmtEval.native_zleq]) hCan
       have hp0 : (0 : Int) ≤ p := hRange.1

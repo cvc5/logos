@@ -12,21 +12,6 @@ configure_lean_toolchain() {
   logos_configure_lean_toolchain
 }
 
-# Examples that Logos accepts as CPC derivations but whose terms fall outside the
-# SMT-LIB fragment that Cpc/SmtModel.lean defines, so that the side conditions of
-# correct___eo_is_refutation cannot be discharged for them. The `logos`
-# executable reports `incomplete` and exits 2 for these; see the Correctness
-# section of README.md.
-#
-#   test/regress/sexp/test-declare-sort.cpc  declares a sort of arity 1, and the
-#   specification has no counterpart for a sort constructor applied to a sort.
-incomplete_example() {
-  case "$1" in
-    test/regress/sexp/test-declare-sort.cpc) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
 # Run every example in a directory through a checker executable, requiring its
 # final nonempty output line and its exit status to match what is expected.
 run_examples() {
@@ -47,10 +32,6 @@ run_examples() {
 
     want="${expected}"
     want_status=0
-    if incomplete_example "${example}"; then
-      want="incomplete"
-      want_status=2
-    fi
 
     set +e
     output="$(lake exe "${exe}" "${example}" 2>&1)"
@@ -85,6 +66,7 @@ run_proof_hygiene() {
 # check-rule-style.sh is textual and just as cheap.
 run_proof_modularity() {
   bash scripts/check-proof-modularity.sh
+  python3 scripts/check-checker-boundary.py
   echo
   bash scripts/check-rule-style.sh
 }
@@ -137,7 +119,7 @@ run_regressions() {
   python3 scripts/check-parser-tables.py
 
   echo "Checking parser tests..."
-  lake build Logos.Parser Cpc.Parser
+  lake build Logos.Parser Cpc.Parser Cpc.SmtTranslate
   lake env lean test/Parser.lean
   lake env lean test/CpcParser.lean
 
@@ -168,7 +150,7 @@ run_cpc_proofs() {
   )
 
   echo "Compiling representative Cpc proof targets..."
-  lake build "${targets[@]}"
+  lake -d verification build "${targets[@]}"
 
   # Cpc.Proofs.Checker and Cpc.ApiCorrect are excluded below because they need
   # all 591 rule files. This typechecks both with the rule bridge stubbed, so
@@ -189,7 +171,7 @@ run_cpcmini() {
   )
 
   echo "Compiling the CpcMini proofs..."
-  lake build "${targets[@]}"
+  lake -d verification build "${targets[@]}"
 }
 
 group="${1:-all}"
@@ -205,6 +187,10 @@ case "${group}" in
   cpcmini)
     configure_lean_toolchain
     run_cpcmini
+    ;;
+  checker-boundary)
+    configure_lean_toolchain
+    python3 scripts/check-checker-boundary.py --build
     ;;
   proof-hygiene)
     run_proof_hygiene
@@ -223,9 +209,10 @@ case "${group}" in
     run_regressions
     run_cpc_proofs
     run_cpcmini
+    python3 scripts/check-checker-boundary.py --build
     ;;
   *)
-    echo "Usage: $0 [all|regressions|cpc-proofs|cpcmini|proof-hygiene|proof-modularity|regeneration]" >&2
+    echo "Usage: $0 [all|regressions|cpc-proofs|cpcmini|checker-boundary|proof-hygiene|proof-modularity|regeneration]" >&2
     exit 2
     ;;
 esac

@@ -6,6 +6,44 @@ facts, and about the invariants that machine maintains. This page records how
 far that separation has been taken, what a checker for a *different* calculus
 would have to supply, and what is left to do.
 
+## Executable and verification projects
+
+The root Lake project owns the executable definitions. The project in
+`verification/` depends on it and owns model semantics and correctness proofs.
+Its source directory is the repository root, so existing Lean module names and
+proof paths are preserved; explicit, disjoint library globs assign each module
+to one project. `scripts/build.sh` selects the verification workspace for proof
+targets. Future mathematical dependencies, including real-number libraries,
+belong exclusively to the verification project.
+
+For a standalone proof file, use `lake -d verification lean path/to/File.lean`.
+Lake supplies the module artifact paths across both projects; a plain
+`lake env lean` cannot resolve a namespace shared between their build trees.
+
+The executable imports `SmtSyntax`, `SmtTyping`, `SmtTranslate`, and
+`TranslationChecks`. These contain no `SmtValue` or model evaluation.
+`Proofs/Assumptions` re-exports `TranslationChecks` for existing proofs, so
+translatability predicates and per-rule masks still have one definition.
+
+`__smtx_inhabited_type` is a Boolean predicate over types: base types are
+inhabited, a map type when its range is, and a datatype when one of its
+constructors has inhabited fields. It follows the shape of the semantic default
+generator but never builds a value. `Proofs/StaticTyping` connects the two:
+`native_inhabited_type_iff` says the check succeeds exactly when the generator
+constructs a value, for every type including malformed datatype declarations,
+and `type_default_typed` says that on a recursively well-formed type
+(`__smtx_type_wf_rec`) that value has the requested type. These proofs, and
+the canonicity proof in `Proofs/Canonical/TypeDefaultBasic.lean`, use
+`type_default_induct`, an induction principle for the generator proved in
+`Proofs/StaticTyping`. Its motives are named, so the proofs do not depend on the
+order in which the compiler emits the generator's definitions, which decides
+the order of the motives of the `.induct` principle Lean derives.
+
+`scripts/check-checker-boundary.py` audits both executable import closures. With
+`--build` it copies only checker sources and the root Lake configuration to a
+temporary tree and builds both executables and CpcMini. Semantic sources,
+verification dependencies, and cached semantic artifacts are absent.
+
 Sizes below are rounded, and are not kept exact: they move with every change,
 and nothing depends on the precise figure.
 
@@ -17,7 +55,7 @@ essentially as-is.
 | layer | files | Cpc | CpcMini | reusable? |
 | --- | --- | ---: | ---: | --- |
 | checker | `Proofs/{Checker,CheckerState,CheckerCore}.lean`, `Proofs/Invariants/Stability.lean`, `Proofs/RuleSupport/Contract.lean`, `Proofs/Assumptions.lean` | 4K | 4K | yes, except `Assumptions.lean` |
-| common | `Proofs/{Common,CommonBoolOps,TermCompat}.lean` | 1K | 1K | mostly |
+| common | `Proofs/{ModelEval,Common,CommonBoolOps,TermCompat}.lean` | 1K | 1K | mostly |
 | translation | `Proofs/Translation*` | 33K | 5K | no — signature-specific |
 | type preservation | `Proofs/TypePreservation*` | 18K | 6K | no — signature-specific |
 | canonical models | `Proofs/Canonical*` | 10K | <1K | no — signature-specific |
@@ -25,7 +63,8 @@ essentially as-is.
 | rule support | `Proofs/RuleSupport/*` | 350K | <1K | no — rule-specific |
 | rules | `Proofs/Rules/*` | 280K (591 files) | 1K (5 files) | no |
 
-`Logos.lean`, `LogosTerm.lean`, `SmtEval.lean`, `SmtModel*.lean`,
+`Logos.lean`, `LogosTerm.lean`, `SmtEval.lean`, `SmtSyntax.lean`,
+`SmtTyping.lean`, `SmtTranslate.lean`, `SmtModel*.lean`,
 `SmtValueOrder.lean`, `Spec.lean`, `Parser.lean`, `Proofs/RuleLemmas.lean` and
 one stub per rule are emitted by `ethos-eoc` instead; see
 [`../install/README.md`](../install/README.md).
@@ -37,9 +76,15 @@ layer.
 
 ### Module order
 
+`Proofs/StaticTyping.lean` connects the structural inhabitation check to the
+default generator of `SmtModel.lean`. `Proofs/ModelEval.lean` imports that bridge before the
+type-preservation and other proof modules. Its Boolean evaluation lemma also
+generates the exposed evaluator's unfolding theorem once for those imports.
+
 ```
 Proofs/Common.lean            core semantics predicates (eo_interprets, eo_has_bool_type)
-Proofs/Assumptions.lean       input-problem + per-command side conditions
+TranslationChecks.lean       input-problem + per-command side conditions
+Proofs/Assumptions.lean       compatibility import of those side conditions
 Proofs/RuleSupport/Contract.lean   the checker/rule contract
 Proofs/CheckerState.lean      the state machine — no invariant is named here
 Proofs/Invariants/Stability.lean   the one optional invariant
@@ -83,10 +128,10 @@ rewrite or, in the bad case, rewrites with the *wrong* arm. That is what made
 package wrote the proof against its own numbering, and the two texts stopped
 being one text.
 
-The fix is one line of discipline. The arms this layer needs are given names in
-`Proofs/Common.lean` — `typeof_boolean_eq`, `typeof_none_eq`,
-`model_eval_boolean_eq`, `model_eval_and_eq` — each proved by `rfl`, and the
-numbers are used nowhere in the layer. A new checker should adopt the same rule
+The arms this layer needs are given names: `model_eval_boolean_eq` in
+`Proofs/ModelEval.lean`, and `typeof_boolean_eq`, `typeof_none_eq`, and
+`model_eval_and_eq` in `Proofs/Common.lean`. The numbers are used nowhere in
+the layer. A new checker should adopt the same rule
 before its first proof, not after its second package.
 
 ## What a new checker supplies

@@ -11,6 +11,10 @@ open Eo
 open SmtEval
 open Smtm
 
+-- Mathlib's `Monad List` would make the `native_String` to `List SmtValue` coercion
+-- elaborate through `coeM` rather than `impl_native_string_to_values`.
+attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
+
 set_option linter.unusedVariables false
 set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
@@ -4941,7 +4945,7 @@ private theorem bvAnd_args_of_bitvec_type (y x : Term) (w : native_Nat) :
               (__smtx_typeof (__eo_to_smt x)) by
           rw [__smtx_typeof.eq_40]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-        Smtm.native_nateq] using hTy'
+        SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -5001,7 +5005,7 @@ private theorem bvOr_args_of_bitvec_type (y x : Term) (w : native_Nat) :
               (__smtx_typeof (__eo_to_smt x)) by
           rw [__smtx_typeof.eq_41]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-        Smtm.native_nateq] using hTy'
+        SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -5061,7 +5065,7 @@ private theorem bvXor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
               (__smtx_typeof (__eo_to_smt x)) by
           rw [__smtx_typeof.eq_44]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-        Smtm.native_nateq] using hTy'
+        SmtEval.native_nateq] using hTy'
     cases hResult
     rfl
   subst w'
@@ -5080,7 +5084,7 @@ private theorem bvand_result_type_of_has_smt_translation (y x : Term) :
     SmtType.BitVec w
   rw [__smtx_typeof.eq_40]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-    Smtm.native_nateq]
+    SmtEval.native_nateq]
 
 private theorem bvor_result_type_of_has_smt_translation (y x : Term) :
     RuleProofs.eo_has_smt_translation (mkBvOr y x) ->
@@ -5095,7 +5099,7 @@ private theorem bvor_result_type_of_has_smt_translation (y x : Term) :
     SmtType.BitVec w
   rw [__smtx_typeof.eq_41]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-    Smtm.native_nateq]
+    SmtEval.native_nateq]
 
 private theorem bvand_width_eq_of_same_result_type
     (y x y' x' : Term) :
@@ -5156,7 +5160,7 @@ private theorem bvxor_result_type_of_has_smt_translation (y x : Term) :
     SmtType.BitVec w
   rw [__smtx_typeof.eq_44]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-    Smtm.native_nateq]
+    SmtEval.native_nateq]
 
 private theorem bvxor_width_eq_of_same_result_type
     (y x y' x' : Term) :
@@ -5538,7 +5542,6 @@ private theorem native_int_pow2_pos_of_nonneg {w : native_Int}
     0 < native_int_pow2 w := by
   have hnot : ¬ w < 0 := Int.not_lt_of_ge hw
   simp [native_int_pow2, native_zexp_total, hnot]
-  exact Int.pow_pos (by decide)
 
 private theorem native_int_pow2_add_of_nonneg {a b : native_Int}
     (ha : 0 <= a) (hb : 0 <= b) :
@@ -6319,7 +6322,7 @@ private theorem bvEvalCanonicalWidth_of_smt_value_rel_left
   | Numeral nval =>
       rw [hBEval] at hRel
       simp [__smtx_model_eval_eq, native_veq] at hRel
-  | Rational qval =>
+  | Real qval =>
       rw [hBEval] at hRel
       simp [__smtx_model_eval_eq, native_veq] at hRel
   | Map m =>
@@ -10625,7 +10628,7 @@ private theorem bvXor_get_a_norm_eval_canonical
       SmtType.BitVec w
     rw [__smtx_typeof.eq_44]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-      Smtm.native_nateq]
+      SmtEval.native_nateq]
   have hTypeMatch :=
     TranslationProofs.eo_to_smt_typeof_matches_translation t (by
       rw [htTy]
@@ -10693,7 +10696,7 @@ private theorem smt_value_rel_get_a_norm_bvxor
       SmtType.BitVec w
     rw [__smtx_typeof.eq_44]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-      Smtm.native_nateq]
+      SmtEval.native_nateq]
   have hTypeMatch :=
     TranslationProofs.eo_to_smt_typeof_matches_translation t (by
       rw [htTy]
@@ -12946,7 +12949,7 @@ private theorem smt_value_rel_get_ai_norm_bvor
       SmtType.BitVec w
     rw [__smtx_typeof.eq_41]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-      Smtm.native_nateq]
+      SmtEval.native_nateq]
   have hTypeMatch :=
     TranslationProofs.eo_to_smt_typeof_matches_translation t (by
       rw [htTy]
@@ -13130,7 +13133,7 @@ private theorem smt_value_rel_get_ai_norm_bvand
       SmtType.BitVec w
     rw [__smtx_typeof.eq_40]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
-      Smtm.native_nateq]
+      SmtEval.native_nateq]
   have hTypeMatch :=
     TranslationProofs.eo_to_smt_typeof_matches_translation t (by
       rw [htTy]
@@ -15249,7 +15252,7 @@ private theorem reConcat_smt_value_rel_assoc_eval
   simp only [__smtx_model_eval, __smtx_model_eval_re_concat, hxEval, hyEval,
     hzEval]
   simp [__smtx_model_eval_eq, native_re_concat]
-  apply if_pos
+  apply ite_eq_left
   intro str hValid
   exact native_str_in_re_mk_concat_assoc str rx ry rz
 
@@ -15293,7 +15296,7 @@ private theorem reConcat_smt_value_rel_congr_eval
   simp only [__smtx_model_eval, __smtx_model_eval_re_concat, hxEval, hyEval,
     hxEval', hyEval']
   simp [__smtx_model_eval_eq, native_re_concat]
-  apply if_pos
+  apply ite_eq_left
   intro str hValid
   exact native_str_in_re_mk_concat_congr str rx rx' ry ry' hxExt hyExt
 
