@@ -64,6 +64,50 @@ theorem model_eval_and_eq (M : SmtModel) (a b : SmtTerm) :
       __smtx_model_eval_and (__smtx_model_eval M a) (__smtx_model_eval M b) := by
   rfl
 
+/-- The `not` arm of the generated `__smtx_model_eval`. -/
+theorem model_eval_not_eq (M : SmtModel) (a : SmtTerm) :
+    __smtx_model_eval M (SmtTerm.not a) =
+      __smtx_model_eval_not (__smtx_model_eval M a) := by
+  rw [__smtx_model_eval.eq_def]
+
+/-- The `or` arm of the generated `__smtx_model_eval`. -/
+theorem model_eval_or_eq (M : SmtModel) (a b : SmtTerm) :
+    __smtx_model_eval M (SmtTerm.or a b) =
+      __smtx_model_eval_or (__smtx_model_eval M a) (__smtx_model_eval M b) := by
+  rw [__smtx_model_eval.eq_def]
+
+/-- The `=>` arm of the generated `__smtx_model_eval`. -/
+theorem model_eval_imp_eq (M : SmtModel) (a b : SmtTerm) :
+    __smtx_model_eval M (SmtTerm.imp a b) =
+      __smtx_model_eval_imp (__smtx_model_eval M a) (__smtx_model_eval M b) := by
+  rw [__smtx_model_eval.eq_def]
+
+/-- The `xor` arm of the generated `__smtx_model_eval`. -/
+theorem model_eval_xor_eq (M : SmtModel) (a b : SmtTerm) :
+    __smtx_model_eval M (SmtTerm.xor a b) =
+      __smtx_model_eval_xor (__smtx_model_eval M a) (__smtx_model_eval M b) := by
+  rw [__smtx_model_eval.eq_def]
+
+/-- The `=` arm of the generated `__smtx_model_eval`. -/
+theorem model_eval_eq_eq (M : SmtModel) (a b : SmtTerm) :
+    __smtx_model_eval M (SmtTerm.eq a b) =
+      __smtx_model_eval_eq (__smtx_model_eval M a) (__smtx_model_eval M b) := by
+  rw [__smtx_model_eval.eq_def]
+
+/-- The `ite` arm of the generated `__smtx_model_eval`. -/
+theorem model_eval_ite_eq (M : SmtModel) (c a b : SmtTerm) :
+    __smtx_model_eval M (SmtTerm.ite c a b) =
+      __smtx_model_eval_ite (__smtx_model_eval M c) (__smtx_model_eval M a)
+        (__smtx_model_eval M b) := by
+  rw [__smtx_model_eval.eq_def]
+
+/-- The `(_ extract i j)` arm of the generated `__smtx_model_eval`. -/
+theorem model_eval_extract_eq (M : SmtModel) (i j a : SmtTerm) :
+    __smtx_model_eval M (SmtTerm.extract i j a) =
+      __smtx_model_eval_extract (__smtx_model_eval M i) (__smtx_model_eval M j)
+        (__smtx_model_eval M a) := by
+  rw [__smtx_model_eval.eq_def]
+
 /-- Simplifies EO-to-SMT translation for `true`. -/
 private theorem eo_to_smt_true_eq :
     __eo_to_smt (Term.Boolean true) = SmtTerm.Boolean true := by
@@ -332,7 +376,7 @@ def smt_seq_rel (s1 s2 : SmtSeq) : Prop :=
   __smtx_model_eval_eq (SmtValue.Seq s1) (SmtValue.Seq s2) = SmtValue.Boolean true
 
 /-- Relates non-regex SMT equality evaluation to Lean equality of values. -/
-private theorem smtx_model_eval_eq_true_iff_of_not_reglan_pair {v1 v2 : SmtValue}
+theorem smtx_model_eval_eq_true_iff_of_not_reglan_pair {v1 v2 : SmtValue}
     (hReg :
       ¬ ∃ r1 r2, v1 = SmtValue.RegLan r1 ∧ v2 = SmtValue.RegLan r2) :
     __smtx_model_eval_eq v1 v2 = SmtValue.Boolean true ↔ v1 = v2 := by
@@ -344,13 +388,6 @@ private theorem smtx_model_eval_seq_eq_true_iff {s1 s2 : SmtSeq} :
     __smtx_model_eval_eq (SmtValue.Seq s1) (SmtValue.Seq s2) = SmtValue.Boolean true ↔
       s1 = s2 := by
   simp [__smtx_model_eval_eq, native_veq]
-
-/-- Stable rewrite for evaluating SMT equality terms. -/
-private theorem smtx_model_eval_eq_term_eq
-    (M : SmtModel) (x y : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.eq x y) =
-      __smtx_model_eval_eq (__smtx_model_eval M x) (__smtx_model_eval M y) := by
-  rw [__smtx_model_eval.eq_def] <;> simp only
 
 /-- Establishes an equality relating `smtx_model_eval` and `refl_aux`. -/
 private theorem smtx_model_eval_eq_refl_aux
@@ -547,5 +584,76 @@ theorem smtx_typeof_eq_refl (T : SmtType) :
 theorem smtx_model_eval_eq_refl (v : SmtValue) :
   __smtx_model_eval_eq v v = SmtValue.Boolean true := by
   exact (smt_value_rel_iff_model_eval_eq_true v v).mp (smt_value_rel_refl v)
+
+
+/-! ## Adapters for downstream users -/
+
+/-- SMT equality always evaluates to a Boolean. -/
+theorem eval_eq_boolean (v w : SmtValue) :
+    ∃ b, __smtx_model_eval_eq v w = SmtValue.Boolean b := by
+  unfold __smtx_model_eval_eq
+  split <;> exact ⟨_, rfl⟩
+
+/-- An SMT term is unsatisfiable iff it evaluates to `false` in every
+well-formed model. -/
+theorem smt_satisfiability_false_iff (t : SmtTerm) :
+    smt_satisfiability t false ↔
+      ∀ M, model_wf M → __smtx_model_eval M t = SmtValue.Boolean false := by
+  constructor
+  · intro h
+    cases h with
+    | intro_false h => exact h
+  · exact smt_satisfiability.intro_false t
+
+/-- An EO term is true in `M` iff it is Boolean and evaluates to `true`. -/
+theorem eo_interprets_true_iff (M : SmtModel) (t : Term) :
+    eo_interprets M t true ↔
+      eo_has_bool_type t ∧
+        __smtx_model_eval M (__eo_to_smt t) = SmtValue.Boolean true := by
+  unfold eo_interprets
+  constructor
+  · intro h
+    cases h with
+    | intro_true hty hev => exact ⟨hty, hev⟩
+  · rintro ⟨hty, hev⟩
+    exact smt_interprets.intro_true _ _ hty hev
+
+/-- SMT equality is Boolean exactly on two equal, non-`None` types. -/
+theorem typeof_eq_eq_bool_iff (T U : SmtType) :
+    __smtx_typeof_eq T U = SmtType.Bool ↔ T ≠ SmtType.None ∧ T = U := by
+  unfold __smtx_typeof_eq __smtx_typeof_guard
+  by_cases hT : T = SmtType.None <;> by_cases hTU : T = U <;>
+    simp [native_ite, native_Teq, hT, hTU]
+
+/-- `(= a b)` is well typed and valid iff `a` and `b` have the same non-`None`
+type and related values in every well-formed model. -/
+theorem eq_valid_iff (a b : Term) :
+    (eo_has_bool_type (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) ∧
+      ∀ M, model_wf M →
+        eo_interprets M (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) true) ↔
+    (__smtx_typeof (__eo_to_smt a) ≠ SmtType.None ∧
+      __smtx_typeof (__eo_to_smt a) = __smtx_typeof (__eo_to_smt b)) ∧
+    ∀ M, model_wf M →
+      smt_value_rel (__smtx_model_eval M (__eo_to_smt a))
+        (__smtx_model_eval M (__eo_to_smt b)) := by
+  have hBool :
+      eo_has_bool_type (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) ↔
+        __smtx_typeof (__eo_to_smt a) ≠ SmtType.None ∧
+          __smtx_typeof (__eo_to_smt a) = __smtx_typeof (__eo_to_smt b) := by
+    change __smtx_typeof (SmtTerm.eq _ _) = SmtType.Bool ↔ _
+    rw [typeof_eq_eq, typeof_eq_eq_bool_iff]
+  rw [hBool]
+  constructor
+  · rintro ⟨hty, hM⟩
+    refine ⟨hty, fun M hwf => ?_⟩
+    have hEval := ((eo_interprets_true_iff M _).1 (hM M hwf)).2
+    change __smtx_model_eval M (SmtTerm.eq _ _) = _ at hEval
+    rw [model_eval_eq_eq] at hEval
+    exact (smt_value_rel_iff_model_eval_eq_true _ _).2 hEval
+  · rintro ⟨hty, hM⟩
+    refine ⟨hty, fun M hwf => (eo_interprets_true_iff M _).2 ⟨hBool.2 hty, ?_⟩⟩
+    change __smtx_model_eval M (SmtTerm.eq _ _) = _
+    rw [model_eval_eq_eq]
+    exact (smt_value_rel_iff_model_eval_eq_true _ _).1 (hM M hwf)
 
 end RuleProofs
