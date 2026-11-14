@@ -7,8 +7,8 @@
 
 module
 
-public import Cpc.LogosTerm
-import all Cpc.LogosTerm
+public import Cpc.LogosTermOrder
+import all Cpc.LogosTermOrder
 public import Cpc.SmtEval
 import all Cpc.SmtEval
 

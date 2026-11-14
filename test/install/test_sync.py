@@ -27,6 +27,7 @@ out = Path(sys.argv[sys.argv.index("--final-out-dir") + 1]) / "lean"
 files = {
     "Logos.lean": "import Cpc.LogosTerm\npartial def checker := true\n",
     "LogosTerm.lean": "inductive UserOp where\n  | and : UserOp\n",
+    "LogosTermOrder.lean": "-- term order\n",
     "Parser.lean": "-- parser\n",
     "SmtEval.lean": "-- evaluator\n",
     "SmtReal.lean": "-- real numbers\n",

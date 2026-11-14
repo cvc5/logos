@@ -63,8 +63,8 @@ essentially as-is.
 | rule support | `Proofs/RuleSupport/*` | 350K | <1K | no — rule-specific |
 | rules | `Proofs/Rules/*` | 280K (591 files) | 1K (5 files) | no |
 
-`Logos.lean`, `LogosTerm.lean`, `SmtEval.lean`, `SmtSyntax.lean`,
-`SmtTyping.lean`, `SmtTranslate.lean`, `SmtModel*.lean`,
+`Logos.lean`, `LogosTerm.lean`, `LogosTermOrder.lean`, `SmtEval.lean`,
+`SmtSyntax.lean`, `SmtTyping.lean`, `SmtTranslate.lean`, `SmtModel*.lean`,
 `SmtValueOrder.lean`, `Spec.lean`, `Parser.lean`, `Proofs/RuleLemmas.lean` and
 one stub per rule are emitted by `ethos-eoc` instead; see
 [`../install/README.md`](../install/README.md).
