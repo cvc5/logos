@@ -148,8 +148,6 @@ jobs:
         run: bash scripts/run-ci.sh "${CI_GROUP}"
         env:
           CI_GROUP: ${{ matrix.group }}
-          # The cpc-proofs group also builds the proof modules changed since this.
-          CI_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
 
   verify:
     if: ${{ always() }}

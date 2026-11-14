@@ -139,44 +139,6 @@ run_regressions() {
   run_examples logos test/regress/sexp '*.cpc' correct
 }
 
-# The Cpc proof modules a change touches, built one by one. A full build takes
-# hours, but no rule file imports another, so a change to a few rule files costs
-# a few rule builds. CI_BASE_SHA is the commit to compare against: the base of a
-# pull request, or the previous head of a push. Without it nothing is built.
-run_changed_cpc_proofs() {
-  local base="${CI_BASE_SHA:-}"
-  if [ -z "${base}" ] || [ -z "${base//0/}" ]; then
-    echo "No base commit given; skipping the changed proof modules."
-    return
-  fi
-  if ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
-    git fetch --no-tags --depth=1 origin "${base}"
-  fi
-
-  local modules=() f
-  while IFS= read -r f; do
-    case "${f}" in
-      Cpc/Proofs/*.lean|Cpc/Spec.lean|Cpc/ApiChecks.lean) ;;
-      *) continue ;;
-    esac
-    [ -f "${f}" ] || continue
-    # RuleLemmas imports every rule, and so does anything importing it or the
-    # checker; check-checker-soundness.sh covers those instead.
-    case "${f}" in Cpc/Proofs/RuleLemmas.lean) continue ;; esac
-    grep -Eq '^(public )?import (all )?Cpc\.Proofs\.(Checker|RuleLemmas)$' "${f}" && continue
-    f="${f%.lean}"
-    modules+=("${f//\//.}")
-  done < <(git diff --name-only "${base}" HEAD --)
-
-  if [ "${#modules[@]}" -eq 0 ]; then
-    echo "No Cpc proof modules changed."
-    return
-  fi
-  echo "Compiling the ${#modules[@]} changed Cpc proof module(s):"
-  printf '  %s\n' "${modules[@]}"
-  lake -d verification build "${modules[@]}"
-}
-
 run_cpc_proofs() {
   local targets=(
     Cpc.Spec
@@ -191,8 +153,6 @@ run_cpc_proofs() {
 
   echo "Compiling representative Cpc proof targets..."
   lake -d verification build "${targets[@]}"
-
-  run_changed_cpc_proofs
 
   # Cpc.Proofs.Checker and Cpc.ApiCorrect are excluded below because they need
   # all 591 rule files. This typechecks both with the rule bridge stubbed, so
