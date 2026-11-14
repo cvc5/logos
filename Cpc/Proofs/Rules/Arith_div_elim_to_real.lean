@@ -2,6 +2,8 @@ module
 
 public import Cpc.Proofs.RuleSupport.Support
 import all Cpc.Proofs.RuleSupport.Support
+public import Cpc.Proofs.RuleSupport.TypeInversionSupport
+import all Cpc.Proofs.RuleSupport.TypeInversionSupport
 
 open Eo
 open SmtEval

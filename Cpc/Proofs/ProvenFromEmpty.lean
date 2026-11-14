@@ -35,19 +35,6 @@ open Eo
 open SmtEval
 open Smtm
 
-/-- A closed state is not stuck. -/
-theorem stateOk_of_state_closed_true :
-    ∀ {s : CState}, __eo_state_is_closed s = true -> stateOk s := by
-  intro s hClosed
-  induction s with
-  | nil => trivial
-  | Stuck => cases hClosed
-  | cons so s ih =>
-      cases so with
-      | assume_push F => simp [__eo_state_is_closed] at hClosed
-      | assume F => exact ih (by simpa [__eo_state_is_closed] using hClosed)
-      | proven F => exact ih (by simpa [__eo_state_is_closed] using hClosed)
-
 /--
 A fact proven by a command list run from the empty state (no assumptions) is
 well typed and true in every well-formed model, provided the commands meet their

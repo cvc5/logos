@@ -2,6 +2,8 @@ module
 
 public import Cpc.Proofs.RuleSupport.Support
 import all Cpc.Proofs.RuleSupport.Support
+public import Cpc.Proofs.RuleSupport.TypeInversionSupport
+import all Cpc.Proofs.RuleSupport.TypeInversionSupport
 
 open Eo
 open SmtEval
@@ -39,7 +41,7 @@ private theorem eo_typeof_div_int_of_ne_stuck (A B : Term)
   cases A with
   | UOp op =>
       cases op <;> cases B <;> simp [__eo_typeof_div] at h ⊢
-      all_goals (rename_i op'; cases op' <;> simp [__eo_typeof_div] at h ⊢)
+      all_goals (rename_i op'; cases op' <;> simp at h ⊢)
   | _ => simp [__eo_typeof_div] at h
 
 private theorem arg_types_of_prog_arith_int_div_total_over_mod_bool
