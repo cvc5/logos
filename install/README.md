@@ -74,6 +74,7 @@ The signature-wide modules of the package, and one file per proof rule:
 ```text
 Cpc/Logos.lean       Cpc/SmtModelDefs.lean   Cpc/Spec.lean
 Cpc/LogosTerm.lean   Cpc/SmtValueOrder.lean  Cpc/Proofs/RuleLemmas.lean
+Cpc/LogosTermOrder.lean
 Cpc/Parser.lean      Cpc/SmtModel.lean       Cpc/Proofs/Rules/<Rule>.lean
 Cpc/SmtEval.lean
 Cpc/SmtSyntax.lean   Cpc/SmtTyping.lean     Cpc/SmtTranslate.lean

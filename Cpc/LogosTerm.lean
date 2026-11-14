@@ -193,7 +193,7 @@ inductive UserOp : Type where
   | sbv_to_int : UserOp
   | _at__at_aci_sorted : UserOp
 
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 User operators with one index.
@@ -214,7 +214,7 @@ inductive UserOp1 : Type where
   | set_empty : UserOp1
   | int_to_bv : UserOp1
 
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 User operators with two indices.
@@ -225,7 +225,7 @@ inductive UserOp2 : Type where
   | _at_quantifiers_skolemize : UserOp2
   | _at_const : UserOp2
 
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 User operators with three indices.
@@ -234,7 +234,7 @@ inductive UserOp3 : Type where
   | _at_re_unfold_pos_component : UserOp3
   | _at_witness_string_length : UserOp3
 
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 mutual
 
@@ -266,7 +266,7 @@ inductive Term : Type where
   | USort : native_Nat -> Term
   | UConst : native_Nat -> Term -> Term
 
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 Eunoia datatype declarations.
@@ -274,7 +274,7 @@ Eunoia datatype declarations.
 inductive DatatypeDecl : Type where
   | nil : DatatypeDecl
   | cons : native_String -> Datatype -> DatatypeDecl -> DatatypeDecl
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 Eunoia datatypes.
@@ -282,7 +282,7 @@ Eunoia datatypes.
 inductive Datatype : Type where
   | null : Datatype
   | sum : DatatypeCons -> Datatype -> Datatype
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 Eunoia datatype constructors.
@@ -290,23 +290,18 @@ Eunoia datatype constructors.
 inductive DatatypeCons : Type where
   | unit : DatatypeCons
   | cons : Term -> DatatypeCons -> DatatypeCons
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 end
 
--- Equality and ordering of Eunoia terms, which the checker asks for and the
--- Term inductive above is what decides. They stand after the mutual block
--- rather than beside the inductive whose `deriving` makes them possible: a
--- mutual block holds inductives or definitions, never both.
+-- Equality of Eunoia terms, which the checker asks for and the Term inductive
+-- above is what decides. It stands after the mutual block rather than beside
+-- the inductive whose `deriving` makes it possible: a mutual block holds
+-- inductives or definitions, never both. The order on terms, native_tcmp, is
+-- defined in LogosTermOrder.
 
 /- Term equality -/
 def native_teq : Term -> Term -> native_Bool
   | x, y => decide (x = y)
-
-/- Term less than, based on arbitrary ordering -/
-def native_tcmp (a b : Term) : native_Bool :=
-  match compare a b with
-  | Ordering.lt => true
-  | _ => false
 
 end Eo
