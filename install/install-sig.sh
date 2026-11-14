@@ -484,6 +484,7 @@ fi
 LEAN_OUTPUTS=(
   "Logos.lean"
   "LogosTerm.lean"
+  "LogosTermOrder.lean"
   "Parser.lean"
   "SmtEval.lean"
   "SmtReal.lean"
