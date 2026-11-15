@@ -13,17 +13,17 @@ set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
 
 private abbrev qdivTerm (x y : Term) : Term :=
-  Term.Apply (Term.Apply (Term.UOp UserOp.qdiv) x) y
+  Term.Apply (Term.Apply (Term.UOp UserOp.qdiv_total) x) y
 
 private abbrev toRealTerm (x : Term) : Term :=
   Term.Apply (Term.UOp UserOp.to_real) x
 
-private theorem prog_arith_div_elim_to_real_eq
+private theorem prog_arith_div_total_int_to_real_eq
     (x y : Term) (hx : x ≠ Term.Stuck) (hy : y ≠ Term.Stuck) :
-    __eo_prog_arith_div_elim_to_real x y =
+    __eo_prog_arith_div_total_int_to_real x y =
       Term.Apply (Term.Apply (Term.UOp UserOp.eq)
-        (qdivTerm (toRealTerm x) (toRealTerm y))) (qdivTerm x y) := by
-  cases x <;> cases y <;> simp [__eo_prog_arith_div_elim_to_real] at hx hy ⊢
+        (qdivTerm x y)) (qdivTerm (toRealTerm x) (toRealTerm y)) := by
+  cases x <;> cases y <;> simp [__eo_prog_arith_div_total_int_to_real] at hx hy ⊢
 
 private theorem eo_typeof_to_real_int_of_ne_stuck (A : Term)
     (h : __eo_typeof_to_real A ≠ Term.Stuck) : A = Term.Int := by
@@ -39,31 +39,32 @@ private theorem eo_typeof_qdiv_args_ne_stuck (A B : Term)
   · intro hB; subst hB
     cases A <;> simp [__eo_typeof_qdiv] at h
 
-private theorem arg_types_of_prog_arith_div_elim_to_real_bool
+private theorem arg_types_of_prog_arith_div_total_int_to_real_bool
     (x y : Term)
     (hx : x ≠ Term.Stuck) (hy : y ≠ Term.Stuck)
-    (h : __eo_typeof (__eo_prog_arith_div_elim_to_real x y) = Term.Bool) :
+    (h : __eo_typeof (__eo_prog_arith_div_total_int_to_real x y) = Term.Bool) :
     __eo_typeof x = Term.Int ∧ __eo_typeof y = Term.Int := by
-  rw [prog_arith_div_elim_to_real_eq x y hx hy] at h
-  change __eo_typeof_eq (__eo_typeof (qdivTerm (toRealTerm x) (toRealTerm y)))
-    (__eo_typeof (qdivTerm x y)) = Term.Bool at h
-  rcases RuleProofs.eo_typeof_eq_bool_same _ _ h with ⟨_hSame, hNonStuck⟩
+  rw [prog_arith_div_total_int_to_real_eq x y hx hy] at h
+  change __eo_typeof_eq (__eo_typeof (qdivTerm x y))
+    (__eo_typeof (qdivTerm (toRealTerm x) (toRealTerm y))) = Term.Bool at h
+  rcases RuleProofs.eo_typeof_eq_bool_same _ _ h with ⟨hSame, hNonStuckL⟩
+  have hNonStuck := hSame ▸ hNonStuckL
   change __eo_typeof_qdiv (__eo_typeof_to_real (__eo_typeof x))
     (__eo_typeof_to_real (__eo_typeof y)) ≠ Term.Stuck at hNonStuck
   rcases eo_typeof_qdiv_args_ne_stuck _ _ hNonStuck with ⟨hX, hY⟩
   exact ⟨eo_typeof_to_real_int_of_ne_stuck _ hX,
     eo_typeof_to_real_int_of_ne_stuck _ hY⟩
 
-private theorem typed___eo_prog_arith_div_elim_to_real_impl
+private theorem typed___eo_prog_arith_div_total_int_to_real_impl
     (x y : Term) :
   RuleProofs.eo_has_smt_translation x ->
   RuleProofs.eo_has_smt_translation y ->
-  __eo_typeof (__eo_prog_arith_div_elim_to_real x y) = Term.Bool ->
-  RuleProofs.eo_has_bool_type (__eo_prog_arith_div_elim_to_real x y) := by
+  __eo_typeof (__eo_prog_arith_div_total_int_to_real x y) = Term.Bool ->
+  RuleProofs.eo_has_bool_type (__eo_prog_arith_div_total_int_to_real x y) := by
   intro hXTrans hYTrans hResultTy
   have hx := RuleProofs.term_ne_stuck_of_has_smt_translation x hXTrans
   have hy := RuleProofs.term_ne_stuck_of_has_smt_translation y hYTrans
-  rcases arg_types_of_prog_arith_div_elim_to_real_bool x y hx hy hResultTy with
+  rcases arg_types_of_prog_arith_div_total_int_to_real_bool x y hx hy hResultTy with
     ⟨hXTy, hYTy⟩
   have hSmtX : __smtx_typeof (__eo_to_smt x) = SmtType.Int :=
     TranslationProofs.eo_to_smt_well_typed_and_typeof_implies_smt_type
@@ -74,32 +75,32 @@ private theorem typed___eo_prog_arith_div_elim_to_real_impl
   have hLhsTy :
       __smtx_typeof (__eo_to_smt (qdivTerm (toRealTerm x) (toRealTerm y))) =
         SmtType.Real := by
-    change __smtx_typeof (SmtTerm.qdiv (SmtTerm.to_real (__eo_to_smt x))
+    change __smtx_typeof (SmtTerm.qdiv_total (SmtTerm.to_real (__eo_to_smt x))
       (SmtTerm.to_real (__eo_to_smt y))) = SmtType.Real
-    rw [typeof_qdiv_eq, typeof_to_real_eq, typeof_to_real_eq]
+    rw [typeof_qdiv_total_eq, typeof_to_real_eq, typeof_to_real_eq]
     simp [native_ite, native_Teq, hSmtX, hSmtY, __smtx_typeof_arith_overload_op_2_ret]
   have hRhsTy : __smtx_typeof (__eo_to_smt (qdivTerm x y)) = SmtType.Real := by
-    change __smtx_typeof (SmtTerm.qdiv (__eo_to_smt x) (__eo_to_smt y)) = SmtType.Real
-    rw [typeof_qdiv_eq]
+    change __smtx_typeof (SmtTerm.qdiv_total (__eo_to_smt x) (__eo_to_smt y)) = SmtType.Real
+    rw [typeof_qdiv_total_eq]
     simp [hSmtX, hSmtY, __smtx_typeof_arith_overload_op_2_ret]
-  rw [prog_arith_div_elim_to_real_eq x y hx hy]
+  rw [prog_arith_div_total_int_to_real_eq x y hx hy]
   exact RuleProofs.eo_has_bool_type_eq_of_same_smt_type _ _
-    (by rw [hLhsTy, hRhsTy]) (by rw [hLhsTy]; simp)
+    (by rw [hRhsTy, hLhsTy]) (by rw [hRhsTy]; simp)
 
-private theorem facts___eo_prog_arith_div_elim_to_real_impl
+private theorem facts___eo_prog_arith_div_total_int_to_real_impl
     (M : SmtModel) (hM : model_wf M) (x y : Term) :
   RuleProofs.eo_has_smt_translation x ->
   RuleProofs.eo_has_smt_translation y ->
-  __eo_typeof (__eo_prog_arith_div_elim_to_real x y) = Term.Bool ->
-  eo_interprets M (__eo_prog_arith_div_elim_to_real x y) true := by
+  __eo_typeof (__eo_prog_arith_div_total_int_to_real x y) = Term.Bool ->
+  eo_interprets M (__eo_prog_arith_div_total_int_to_real x y) true := by
   intro hXTrans hYTrans hResultTy
   have hProgBool :=
-    typed___eo_prog_arith_div_elim_to_real_impl x y hXTrans hYTrans hResultTy
+    typed___eo_prog_arith_div_total_int_to_real_impl x y hXTrans hYTrans hResultTy
   have hx := RuleProofs.term_ne_stuck_of_has_smt_translation x hXTrans
   have hy := RuleProofs.term_ne_stuck_of_has_smt_translation y hYTrans
-  rcases arg_types_of_prog_arith_div_elim_to_real_bool x y hx hy hResultTy with
+  rcases arg_types_of_prog_arith_div_total_int_to_real_bool x y hx hy hResultTy with
     ⟨hXTy, hYTy⟩
-  rw [prog_arith_div_elim_to_real_eq x y hx hy] at hProgBool ⊢
+  rw [prog_arith_div_total_int_to_real_eq x y hx hy] at hProgBool ⊢
   have hSmtX : __smtx_typeof (__eo_to_smt x) = SmtType.Int :=
     TranslationProofs.eo_to_smt_well_typed_and_typeof_implies_smt_type
       x Term.Int (__eo_to_smt x) rfl hXTrans hXTy
@@ -115,28 +116,28 @@ private theorem facts___eo_prog_arith_div_elim_to_real_impl
   have hEval :
       __smtx_model_eval M (__eo_to_smt (qdivTerm (toRealTerm x) (toRealTerm y))) =
         __smtx_model_eval M (__eo_to_smt (qdivTerm x y)) := by
-    change __smtx_model_eval M (SmtTerm.qdiv (SmtTerm.to_real (__eo_to_smt x))
+    change __smtx_model_eval M (SmtTerm.qdiv_total (SmtTerm.to_real (__eo_to_smt x))
         (SmtTerm.to_real (__eo_to_smt y))) =
-      __smtx_model_eval M (SmtTerm.qdiv (__eo_to_smt x) (__eo_to_smt y))
-    rw [__smtx_model_eval.eq_134, __smtx_model_eval.eq_134,
+      __smtx_model_eval M (SmtTerm.qdiv_total (__eo_to_smt x) (__eo_to_smt y))
+    rw [__smtx_model_eval.eq_135, __smtx_model_eval.eq_135,
       __smtx_model_eval.eq_21, __smtx_model_eval.eq_21, hEvalX, hEvalY]
     rfl
   exact RuleProofs.eo_interprets_eq_of_rel M _ _ hProgBool <| by
     rw [hEval]
     exact RuleProofs.smt_value_rel_refl _
 
-public theorem cmd_step_arith_div_elim_to_real_properties
+public theorem cmd_step_arith_div_total_int_to_real_properties
     (M : SmtModel) (hM : model_wf M)
     (s : CState) (args : CArgList) (premises : CIndexList) :
-  cmdTranslationOk (CCmd.step CRule.arith_div_elim_to_real args premises) ->
+  cmdTranslationOk (CCmd.step CRule.arith_div_total_int_to_real args premises) ->
   AllHaveBoolType (premiseTermList s premises) ->
-  __eo_typeof (__eo_cmd_step_proven s CRule.arith_div_elim_to_real args premises) = Term.Bool ->
+  __eo_typeof (__eo_cmd_step_proven s CRule.arith_div_total_int_to_real args premises) = Term.Bool ->
   StepRuleProperties M (premiseTermList s premises)
-    (__eo_cmd_step_proven s CRule.arith_div_elim_to_real args premises) :=
+    (__eo_cmd_step_proven s CRule.arith_div_total_int_to_real args premises) :=
 by
   intro hCmdTrans _hPremisesBool hResultTy
   have hProg :
-      __eo_cmd_step_proven s CRule.arith_div_elim_to_real args premises ≠
+      __eo_cmd_step_proven s CRule.arith_div_total_int_to_real args premises ≠
         Term.Stuck :=
     term_ne_stuck_of_typeof_bool hResultTy
   cases args with
@@ -167,16 +168,16 @@ by
                     simpa [cArgListTranslationOk] using hArgsTrans.1
                   have hT2Trans : RuleProofs.eo_has_smt_translation a2 := by
                     simpa [cArgListTranslationOk] using hArgsTrans.2
-                  change __eo_typeof (__eo_prog_arith_div_elim_to_real a1 a2) =
+                  change __eo_typeof (__eo_prog_arith_div_total_int_to_real a1 a2) =
                     Term.Bool at hResultTy
                   refine ⟨?_, ?_⟩
                   · intro _hTrue
-                    change eo_interprets M (__eo_prog_arith_div_elim_to_real a1 a2) true
-                    exact facts___eo_prog_arith_div_elim_to_real_impl M hM a1 a2
+                    change eo_interprets M (__eo_prog_arith_div_total_int_to_real a1 a2) true
+                    exact facts___eo_prog_arith_div_total_int_to_real_impl M hM a1 a2
                       hT1Trans hT2Trans hResultTy
                   · change RuleProofs.eo_has_smt_translation
-                      (__eo_prog_arith_div_elim_to_real a1 a2)
+                      (__eo_prog_arith_div_total_int_to_real a1 a2)
                     exact RuleProofs.eo_has_smt_translation_of_has_bool_type
-                      (__eo_prog_arith_div_elim_to_real a1 a2)
-                      (typed___eo_prog_arith_div_elim_to_real_impl a1 a2
+                      (__eo_prog_arith_div_total_int_to_real a1 a2)
+                      (typed___eo_prog_arith_div_total_int_to_real_impl a1 a2
                         hT1Trans hT2Trans hResultTy)

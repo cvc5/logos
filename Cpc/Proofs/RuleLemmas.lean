@@ -194,8 +194,8 @@ import Cpc.Proofs.Rules.Arith_eq_elim_real
 import Cpc.Proofs.Rules.Arith_eq_elim_int
 import Cpc.Proofs.Rules.Arith_to_int_elim_to_real
 import Cpc.Proofs.Rules.Arith_is_int_elim_to_real
-import Cpc.Proofs.Rules.Arith_div_elim_to_real
-import Cpc.Proofs.Rules.Arith_div_total_elim_to_real
+import Cpc.Proofs.Rules.Arith_div_int_to_real
+import Cpc.Proofs.Rules.Arith_div_total_int_to_real
 import Cpc.Proofs.Rules.Arith_mod_over_mod_1
 import Cpc.Proofs.Rules.Arith_mod_over_mod
 import Cpc.Proofs.Rules.Arith_mod_over_mod_mult
@@ -1575,15 +1575,15 @@ by
         intro N hN _hAgree
         exact cmd_step_arith_is_int_elim_to_real_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
-  | arith_div_elim_to_real =>
+  | arith_div_int_to_real =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
-        exact cmd_step_arith_div_elim_to_real_properties N hN s args premises
+        exact cmd_step_arith_div_int_to_real_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
-  | arith_div_total_elim_to_real =>
+  | arith_div_total_int_to_real =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
-        exact cmd_step_arith_div_total_elim_to_real_properties N hN s args premises
+        exact cmd_step_arith_div_total_int_to_real_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | arith_mod_over_mod_1 =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
