@@ -147,8 +147,6 @@ run_cpc_proofs() {
     Cpc.Proofs.Rules.Contra
     Cpc.Proofs.Rules.Trans
     Cpc.Proofs.TypePreservation.Nonvacuity
-    # Imported by downstream tools.
-    Cpc.Proofs.RuleSupport.SubstituteTypeSupport
   )
 
   echo "Compiling representative Cpc proof targets..."
