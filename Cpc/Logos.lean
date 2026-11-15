@@ -5494,6 +5494,18 @@ def __eo_prog_bv_ite_equal_children : Term -> Term -> Term
   | c1, x1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.bvite) c1) x1) x1)) x1)
 
 
+def __eo_prog_bv_ite_const_cond_1 : Term -> Term -> Term
+  | Term.Stuck , _  => Term.Stuck
+  | _ , Term.Stuck  => Term.Stuck
+  | t1, e1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.bvite) (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral 1)) (Term.Numeral 1))) t1) e1)) t1)
+
+
+def __eo_prog_bv_ite_const_cond_2 : Term -> Term -> Term
+  | Term.Stuck , _  => Term.Stuck
+  | _ , Term.Stuck  => Term.Stuck
+  | t1, e1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.bvite) (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral 1)) (Term.Numeral 0))) t1) e1)) e1)
+
+
 def __eo_prog_bv_ite_const_children_1 : Term -> Term
   | Term.Stuck  => Term.Stuck
   | c1 =>
@@ -9667,6 +9679,8 @@ inductive CRule : Type where
   | bv_ssubo_eliminate : CRule
   | bv_nego_eliminate : CRule
   | bv_ite_equal_children : CRule
+  | bv_ite_const_cond_1 : CRule
+  | bv_ite_const_cond_2 : CRule
   | bv_ite_const_children_1 : CRule
   | bv_ite_const_children_2 : CRule
   | bv_ite_equal_cond_1 : CRule
@@ -10346,6 +10360,8 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.bv_ssubo_eliminate, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_bv_ssubo_eliminate a1 a2 a3 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.bv_nego_eliminate, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_bv_nego_eliminate a1 a2 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.bv_ite_equal_children, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_bv_ite_equal_children a1 a2)
+  | CRule.bv_ite_const_cond_1, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_bv_ite_const_cond_1 a1 a2)
+  | CRule.bv_ite_const_cond_2, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_bv_ite_const_cond_2 a1 a2)
   | CRule.bv_ite_const_children_1, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_bv_ite_const_children_1 a1)
   | CRule.bv_ite_const_children_2, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_bv_ite_const_children_2 a1)
   | CRule.bv_ite_equal_cond_1, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 CArgList.nil)))), CIndexList.nil => (__eo_prog_bv_ite_equal_cond_1 a1 a2 a3 a4)

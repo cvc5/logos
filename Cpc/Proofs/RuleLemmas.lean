@@ -330,6 +330,8 @@ import Cpc.Proofs.Rules.Bv_usubo_eliminate
 import Cpc.Proofs.Rules.Bv_ssubo_eliminate
 import Cpc.Proofs.Rules.Bv_nego_eliminate
 import Cpc.Proofs.Rules.Bv_ite_equal_children
+import Cpc.Proofs.Rules.Bv_ite_const_cond_1
+import Cpc.Proofs.Rules.Bv_ite_const_cond_2
 import Cpc.Proofs.Rules.Bv_ite_const_children_1
 import Cpc.Proofs.Rules.Bv_ite_const_children_2
 import Cpc.Proofs.Rules.Bv_ite_equal_cond_1
@@ -2251,6 +2253,16 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_bv_ite_equal_children_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | bv_ite_const_cond_1 =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_bv_ite_const_cond_1_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | bv_ite_const_cond_2 =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_bv_ite_const_cond_2_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | bv_ite_const_children_1 =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by

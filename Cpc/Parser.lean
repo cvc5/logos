@@ -1709,6 +1709,8 @@ private def parserRules : List (String × CRule) := [
   ("bv-ssubo-eliminate", .bv_ssubo_eliminate),
   ("bv-nego-eliminate", .bv_nego_eliminate),
   ("bv-ite-equal-children", .bv_ite_equal_children),
+  ("bv-ite-const-cond-1", .bv_ite_const_cond_1),
+  ("bv-ite-const-cond-2", .bv_ite_const_cond_2),
   ("bv-ite-const-children-1", .bv_ite_const_children_1),
   ("bv-ite-const-children-2", .bv_ite_const_children_2),
   ("bv-ite-equal-cond-1", .bv_ite_equal_cond_1),
