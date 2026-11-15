@@ -1574,6 +1574,7 @@ private def parserRules : List (String × CRule) := [
   ("arith-to-int-elim-to-real", .arith_to_int_elim_to_real),
   ("arith-is-int-elim-to-real", .arith_is_int_elim_to_real),
   ("arith-div-elim-to-real", .arith_div_elim_to_real),
+  ("arith-div-total-elim-to-real", .arith_div_total_elim_to_real),
   ("arith-mod-over-mod-1", .arith_mod_over_mod_1),
   ("arith-mod-over-mod", .arith_mod_over_mod),
   ("arith-mod-over-mod-mult", .arith_mod_over_mod_mult),

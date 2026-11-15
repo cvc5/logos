@@ -4354,6 +4354,12 @@ def __eo_prog_arith_div_elim_to_real : Term -> Term -> Term
   | x1, y1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv) (Term.Apply (Term.UOp UserOp.to_real) x1)) (Term.Apply (Term.UOp UserOp.to_real) y1))) (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv) x1) y1))
 
 
+def __eo_prog_arith_div_total_elim_to_real : Term -> Term -> Term
+  | Term.Stuck , _  => Term.Stuck
+  | _ , Term.Stuck  => Term.Stuck
+  | x1, y1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv_total) (Term.Apply (Term.UOp UserOp.to_real) x1)) (Term.Apply (Term.UOp UserOp.to_real) y1))) (Term.Apply (Term.Apply (Term.UOp UserOp.qdiv_total) x1) y1))
+
+
 def __eo_prog_arith_mod_over_mod_1 : Term -> Term -> Proof -> Term
   | Term.Stuck , _ , _  => Term.Stuck
   | _ , Term.Stuck , _  => Term.Stuck
@@ -9544,6 +9550,7 @@ inductive CRule : Type where
   | arith_to_int_elim_to_real : CRule
   | arith_is_int_elim_to_real : CRule
   | arith_div_elim_to_real : CRule
+  | arith_div_total_elim_to_real : CRule
   | arith_mod_over_mod_1 : CRule
   | arith_mod_over_mod : CRule
   | arith_mod_over_mod_mult : CRule
@@ -10225,6 +10232,7 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.arith_to_int_elim_to_real, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_arith_to_int_elim_to_real a1)
   | CRule.arith_is_int_elim_to_real, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_arith_is_int_elim_to_real a1)
   | CRule.arith_div_elim_to_real, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_arith_div_elim_to_real a1 a2)
+  | CRule.arith_div_total_elim_to_real, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_arith_div_total_elim_to_real a1 a2)
   | CRule.arith_mod_over_mod_1, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_arith_mod_over_mod_1 a1 a2 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.arith_mod_over_mod, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 CArgList.nil)))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_arith_mod_over_mod a1 a2 a3 a4 (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.arith_mod_over_mod_mult, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 CArgList.nil)))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_arith_mod_over_mod_mult a1 a2 a3 a4 (Proof.pf (__eo_state_proven_nth S n1)))
