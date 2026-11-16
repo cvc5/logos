@@ -30,18 +30,6 @@ noncomputable section
 def __eo_to_smt_reserved_datatype_name (s : native_String) : native_Bool :=
   (native_string_prefix_eq (native_string_lit "@") s)
 
-def __eo_to_smt_beta_vars : Term -> Term -> Term
-  | Term.Stuck , _  => Term.Stuck
-  | _ , Term.Stuck  => Term.Stuck
-  | t, as => Term.__eo_List_nil
-
-
-def __eo_to_smt_beta : Term -> Term -> SmtTerm -> SmtTerm -> SmtTerm
-  | t, vs, sa, d => d
-
-
-
-
 mutual
 
 def __eo_to_smt_datatype_cons : DatatypeCons -> SmtDatatypeCons
@@ -96,9 +84,7 @@ def __eo_to_smt : Term -> SmtTerm
   | (Term.Apply (Term.Apply (Term.UOp UserOp.and) x1) x2) => (SmtTerm.and (__eo_to_smt x1) (__eo_to_smt x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.imp) x1) x2) => (SmtTerm.imp (__eo_to_smt x1) (__eo_to_smt x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x1) x2) => (SmtTerm.eq (__eo_to_smt x1) (__eo_to_smt x2))
-  | (Term.Apply f y) =>
-    let _v0 := (__eo_to_smt y)
-    (__eo_to_smt_beta f (__eo_to_smt_beta_vars f (Term.Apply (Term.Apply Term.__eo_List_cons y) Term.__eo_List_nil)) _v0 (SmtTerm.Apply (__eo_to_smt f) _v0))
+  | (Term.Apply f y) => (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y))
   | y => SmtTerm.None
 
 

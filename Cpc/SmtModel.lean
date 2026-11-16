@@ -1500,6 +1500,8 @@ def native_eval_fun_apply (M : SmtModel) (fid : ModelId) (T U : SmtType) (i : Sm
 
 end
 
+mutual
+
 noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.Boolean b1) => (SmtValue.Boolean b1)
   | (SmtTerm.Numeral i1) => (SmtValue.Numeral i1)
@@ -1513,7 +1515,6 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.imp x1 x2) => (__smtx_model_eval_imp (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.xor x1 x2) => (__smtx_model_eval_xor (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.eq x1 x2) => (__smtx_model_eval_eq (__smtx_model_eval M x1) (__smtx_model_eval M x2))
-  | (SmtTerm.bind s1 T2 x3 x4) => (native_eval_bind M s1 T2 x3 x4)
   | (SmtTerm._at_purify x1) => (__smtx_model_eval__at_purify (__smtx_model_eval M x1))
   | (SmtTerm.plus x1 x2) => (__smtx_model_eval_plus (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.neg x1 x2) => (__smtx_model_eval__ (__smtx_model_eval M x1) (__smtx_model_eval M x2))
@@ -1650,17 +1651,40 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.qdiv_total x1 x2) => (__smtx_model_eval_qdiv_total (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.forall s1 T2 x3) => (native_eval_forall M s1 T2 x3)
   | (SmtTerm.exists s1 T2 x3) => (native_eval_exists M s1 T2 x3)
+  | (SmtTerm.bind s1 T2 x3 x4) => (native_eval_bind M s1 T2 x3 x4)
   | (SmtTerm.int_to_bv x1 x2) => (__smtx_model_eval_int_to_bv (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.ubv_to_int x1) => (__smtx_model_eval_ubv_to_int (__smtx_model_eval M x1))
   | (SmtTerm.sbv_to_int x1) => (__smtx_model_eval_sbv_to_int (__smtx_model_eval M x1))
   | (SmtTerm.DtCons s dd i) => (SmtValue.DtCons s dd i)
   | (SmtTerm.Apply (SmtTerm.DtSel s dd i j) x1) => (__smtx_model_eval_dt_sel M s dd i j (__smtx_model_eval M x1))
   | (SmtTerm.Apply (SmtTerm.DtTester s dd i) x1) => (__smtx_model_eval_dt_tester s dd i (__smtx_model_eval M x1))
-  | (SmtTerm.Apply f x1) => (__smtx_model_eval_apply M (__smtx_model_eval M f) (__smtx_model_eval M x1))
+  | (SmtTerm.Apply f x1) =>
+    let _v0 := (__smtx_model_eval M x1)
+    (native_ite (__smtx_is_beta_redex f x1) (__smtx_model_eval_beta M f (_v0 :: [])) (__smtx_model_eval_apply M (__smtx_model_eval M f) _v0))
   | (SmtTerm.Var s T) => (native_model_var_lookup M s T)
   | (SmtTerm.UConst s T) => (native_model_lookup M s T)
+  | (SmtTerm.lambda s1 T2 x3) => SmtValue.NotValue
   | x1 => SmtValue.NotValue
 termination_by structural t => t
+
+/-
+The value of a beta-redex, given the spine f below its outermost argument and
+the values vs of the arguments outside f, innermost first. The arguments are
+all evaluated in the model M of the redex before any binder is pushed, so the
+binders bind simultaneously: no argument sees a variable of the lambda. The
+binders are then pushed outermost first, so a variable a nested lambda binds
+again shadows the outer one, and the body is evaluated under all of them.
+Only reached from a beta-redex, where the values are exactly as many as the
+binders, see __smtx_is_beta_redex; anything else has no value.
+-/
+noncomputable def __smtx_model_eval_beta (M : SmtModel) : SmtTerm -> List SmtValue -> SmtValue
+  | (SmtTerm.Apply f x1), vs => (__smtx_model_eval_beta M f ((__smtx_model_eval M x1) :: vs))
+  | (SmtTerm.lambda s T b), (v :: []) => (__smtx_model_eval (native_model_push M s T v) b)
+  | (SmtTerm.lambda s T b), (v :: vs) => (native_ite (__smtx_is_lambda b) (__smtx_model_eval_beta (native_model_push M s T v) b vs) SmtValue.NotValue)
+  | t, vs => SmtValue.NotValue
+termination_by structural t => t
+
+end
 
 
 

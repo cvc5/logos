@@ -2306,7 +2306,8 @@ decreasing_by
 ; stands for itself -- the body is a term rather than its value -- and the case
 ; says how the body is evaluated, which is a native of the backend: a
 ; quantifier and choice ask what it comes to under every extension of the
-; model, and bind evaluates it under one. A binder is written only where a transformation
+; model, bind evaluates it under one, and lambda only under an application of
+; it. A binder is written only where a transformation
 ; of the input builds one, as any symbol of this set is.
 
 ; exists s:T. F
@@ -2333,6 +2334,27 @@ decreasing_by
 (define-symbol bind ((s <string>) (T SmtType) (t SmtTerm) (F SmtTerm))
   :typeof ("ite" ("Teq" ($smtx_typeof t) T) ($smtx_typeof_guard_wf T ($smtx_typeof F)) none)
   :value ("eval_bind" M s T t F))
+
+; lambda s:T. F, the proof-level binder of CPC and the function argument of a
+; higher-order operator. A lambda means something only as the head of a
+; beta-redex: an application spine (apply ... (apply h a1) ... an) whose head h
+; is a lambda binding exactly n variables, counting the lambdas nested directly
+; under it. On its own, or applied to fewer arguments, it has no type and no
+; value; applied to more, it is a redex applied to the rest.
+;
+; A redex is typed as the application of a function of type (-> T1 ... Tn B),
+; with each Ti well-formed and B the type of the body. Its value is the body
+; under all n binders, where the arguments are all evaluated in the model of
+; the redex before any binder is pushed, so no argument sees a variable of the
+; lambda, and a variable bound again by an inner lambda shadows the outer one.
+;
+; What a redex means is a case of the general application rather than of this
+; symbol, and is still to be given by the compiler, see plugins/model_smt in
+; the ethos tree. Cpc/SmtTyping.lean and Cpc/SmtModel.lean are the reference:
+; __smtx_is_beta_redex, __smtx_typeof_beta and __smtx_model_eval_beta.
+(define-symbol lambda ((s <string>) (T SmtType) (F SmtTerm))
+  :typeof none
+  :value smt.not_value)
 
 ;-----------------------------------------------------------------------------
 (section "The methods of the embedding")

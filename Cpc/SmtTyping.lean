@@ -30,6 +30,40 @@ def native_uconst_id : native_Nat -> native_String
 def native_const_id : native_Nat -> native_String
   | i => (native_string_lit "@c.") ++ (native_string_lit (toString i))
 
+/-
+Beta-redexes. An application spine (Apply (... (Apply h a1) ...) an) has head h
+and n arguments. A lambda binds as many variables as it has nested lambdas
+directly under it. A spine is a beta-redex when its head is a lambda binding
+exactly as many variables as the spine has arguments; only then do typing and
+evaluation give it the meaning of the lambda, see __smtx_typeof_beta and
+__smtx_model_eval_beta. A lambda applied to fewer arguments has no meaning,
+and one applied to more is a redex applied to the rest. None of these look at
+types or values, so they stand outside the mutual blocks.
+-/
+def __smtx_is_lambda : SmtTerm -> native_Bool
+  | (SmtTerm.lambda s T b) => true
+  | t => false
+
+def __smtx_lambda_arity : SmtTerm -> native_Nat
+  | (SmtTerm.lambda s T b) => (__smtx_lambda_arity b) + 1
+  | t => 0
+
+def __smtx_spine_head : SmtTerm -> SmtTerm
+  | (SmtTerm.Apply f x) => (__smtx_spine_head f)
+  | t => t
+
+def __smtx_spine_nargs : SmtTerm -> native_Nat
+  | (SmtTerm.Apply f x) => (__smtx_spine_nargs f) + 1
+  | t => 0
+
+/-
+Whether (Apply f x) is a beta-redex. The spine has at least one argument, so
+this can only hold when its head is a lambda.
+-/
+def __smtx_is_beta_redex (f : SmtTerm) (x : SmtTerm) : native_Bool :=
+  (native_nateq (__smtx_spine_nargs (SmtTerm.Apply f x))
+    (__smtx_lambda_arity (__smtx_spine_head f)))
+
 /- Definition of the static interface of SMT-LIB -/
 
 mutual
@@ -371,7 +405,6 @@ def __smtx_typeof : SmtTerm -> SmtType
   | (SmtTerm.imp x1 x2) => (native_ite (native_Teq (__smtx_typeof x1) SmtType.Bool) (native_ite (native_Teq (__smtx_typeof x2) SmtType.Bool) SmtType.Bool SmtType.None) SmtType.None)
   | (SmtTerm.xor x1 x2) => (native_ite (native_Teq (__smtx_typeof x1) SmtType.Bool) (native_ite (native_Teq (__smtx_typeof x2) SmtType.Bool) SmtType.Bool SmtType.None) SmtType.None)
   | (SmtTerm.eq x1 x2) => (__smtx_typeof_eq (__smtx_typeof x1) (__smtx_typeof x2))
-  | (SmtTerm.bind s1 T2 x3 x4) => (native_ite (native_Teq (__smtx_typeof x3) T2) (__smtx_typeof_guard_wf T2 (__smtx_typeof x4)) SmtType.None)
   | (SmtTerm._at_purify x1) => (__smtx_typeof x1)
   | (SmtTerm.plus x1 x2) => (__smtx_typeof_arith_overload_op_2 (__smtx_typeof x1) (__smtx_typeof x2))
   | (SmtTerm.neg x1 x2) => (__smtx_typeof_arith_overload_op_2 (__smtx_typeof x1) (__smtx_typeof x2))
@@ -519,6 +552,7 @@ def __smtx_typeof : SmtTerm -> SmtType
   | (SmtTerm.qdiv_total x1 x2) => (__smtx_typeof_arith_overload_op_2_ret (__smtx_typeof x1) (__smtx_typeof x2) SmtType.Real)
   | (SmtTerm.forall s1 T2 x3) => (native_ite (native_Teq (__smtx_typeof x3) SmtType.Bool) (__smtx_typeof_guard_wf T2 SmtType.Bool) SmtType.None)
   | (SmtTerm.exists s1 T2 x3) => (native_ite (native_Teq (__smtx_typeof x3) SmtType.Bool) (__smtx_typeof_guard_wf T2 SmtType.Bool) SmtType.None)
+  | (SmtTerm.bind s1 T2 x3 x4) => (native_ite (native_Teq (__smtx_typeof x3) T2) (__smtx_typeof_guard_wf T2 (__smtx_typeof x4)) SmtType.None)
   | (SmtTerm.int_to_bv x1 x2) => (__smtx_typeof_int_to_bv x1 (__smtx_typeof x2))
   | (SmtTerm.ubv_to_int x1) => (__smtx_typeof_bv_op_1_ret (__smtx_typeof x1) SmtType.Int)
   | (SmtTerm.sbv_to_int x1) => (__smtx_typeof_bv_op_1_ret (__smtx_typeof x1) SmtType.Int)
@@ -531,10 +565,22 @@ def __smtx_typeof : SmtTerm -> SmtType
   | (SmtTerm.Apply (SmtTerm.DtTester s dd i) x1) =>
     let _v0 := (SmtType.Datatype s dd)
     (__smtx_typeof_guard (__smtx_typeof_dt_cons_rec _v0 (__smtx_dt_resolve (__smtx_dd_lookup s dd) dd) i) (__smtx_typeof_apply (SmtType.FunType _v0 SmtType.Bool) (__smtx_typeof x1)))
-  | (SmtTerm.Apply f x1) => (__smtx_typeof_apply (__smtx_typeof f) (__smtx_typeof x1))
+  | (SmtTerm.Apply f x1) => (native_ite (__smtx_is_beta_redex f x1) (__smtx_typeof_apply (__smtx_typeof_beta f) (__smtx_typeof x1)) (__smtx_typeof_apply (__smtx_typeof f) (__smtx_typeof x1)))
   | (SmtTerm.Var s T) => (__smtx_typeof_guard_wf T T)
   | (SmtTerm.UConst s T) => (__smtx_typeof_guard_wf T T)
+  | (SmtTerm.lambda s1 T2 x3) => SmtType.None
   | x1 => SmtType.None
+
+/-
+The type of the spine f of a beta-redex, taking its head lambda to be the
+function (-> T1 ... Tn B) it denotes there, with B the type of the body under
+all n binders. Each Ti must be well-formed. The arguments are checked against
+it by the usual typing of an application.
+-/
+def __smtx_typeof_beta : SmtTerm -> SmtType
+  | (SmtTerm.Apply f x1) => (__smtx_typeof_apply (__smtx_typeof_beta f) (__smtx_typeof x1))
+  | (SmtTerm.lambda s T b) => (__smtx_typeof_guard_wf T (SmtType.FunType T (native_ite (__smtx_is_lambda b) (__smtx_typeof_beta b) (__smtx_typeof b))))
+  | t => SmtType.None
 
 
 def __smtx_inhabited_type : SmtType -> native_Bool
