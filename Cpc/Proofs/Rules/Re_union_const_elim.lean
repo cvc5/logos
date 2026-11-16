@@ -1,7 +1,7 @@
 module
 
-public import Cpc.Proofs.RuleSupport.ReInclusionSupport
-import all Cpc.Proofs.RuleSupport.ReInclusionSupport
+public import Cpc.Proofs.RuleSupport.RegexRewriteSupport
+import all Cpc.Proofs.RuleSupport.RegexRewriteSupport
 
 open Eo
 open SmtEval
@@ -22,18 +22,23 @@ private abbrev prem (s r : Term) : Term :=
       (Term.Apply (Term.Apply (Term.UOp UserOp.str_in_re) s) r))
     (Term.Boolean true)
 
-private abbrev lhs (r s : Term) : Term :=
+private abbrev inner (r ys : Term) : Term :=
+  Term.Apply (Term.Apply (Term.UOp UserOp.re_union) r) ys
+
+private abbrev lhs (r ys s : Term) : Term :=
   Term.Apply
     (Term.Apply (Term.UOp UserOp.re_union)
       (Term.Apply (Term.UOp UserOp.str_to_re) s))
-    (Term.Apply (Term.Apply (Term.UOp UserOp.re_union) r)
-      (Term.UOp UserOp.re_none))
+    (inner r ys)
 
-private abbrev rhs (r : Term) : Term :=
-  r
+private abbrev rhs (r ys : Term) : Term :=
+  __eo_list_singleton_elim (Term.UOp UserOp.re_union) (inner r ys)
 
-private abbrev concl (r s : Term) : Term :=
-  Term.Apply (Term.Apply (Term.UOp UserOp.eq) (lhs r s)) (rhs r)
+private abbrev concl (r ys s : Term) : Term :=
+  Term.Apply (Term.Apply (Term.UOp UserOp.eq) (lhs r ys s)) (rhs r ys)
+
+private abbrev mkConcl (r ys s : Term) : Term :=
+  __eo_mk_apply (Term.Apply (Term.UOp UserOp.eq) (lhs r ys s)) (rhs r ys)
 
 private theorem eo_requires_eq_result_of_ne_stuck (x y z : Term) :
     __eo_requires x y z ≠ Term.Stuck -> __eo_requires x y z = z := by
@@ -123,16 +128,18 @@ private theorem eo_typeof_str_to_re_eq_seq_char_of_reglan (T : Term)
       | _ => simp [__eo_typeof_str_to_re] at hNe
   | _ => simp [__eo_typeof_str_to_re] at hNe
 
-private theorem prog_form (r s P : Term)
-    (hNe : __eo_prog_re_union_const_elim r s (Proof.pf P) ≠ Term.Stuck) :
+private theorem prog_form (r ys s P : Term)
+    (hNe : __eo_prog_re_union_const_elim r ys s (Proof.pf P) ≠ Term.Stuck) :
     P = prem s r ∧
-      __eo_prog_re_union_const_elim r s (Proof.pf P) = concl r s := by
+      __eo_prog_re_union_const_elim r ys s (Proof.pf P) = mkConcl r ys s := by
   unfold __eo_prog_re_union_const_elim at hNe ⊢
   split at hNe
   · exact False.elim (hNe rfl)
   · exact False.elim (hNe rfl)
+  · exact False.elim (hNe rfl)
   · rename_i hPrem
     injection hPrem with hPremEq
+    dsimp only at hNe ⊢
     have hReqArg := eo_requires_arg_eq_of_ne_stuck hNe
     have hReqEq := eo_requires_eq_result_of_ne_stuck _ _ _ hNe
     rcases eqs_of_eo_and2_eq_true _ _ _ _ hReqArg with ⟨hs, hr⟩
@@ -149,48 +156,17 @@ private theorem smtx_typeof_str_to_re_of_seq_char
   rw [typeof_str_to_re_eq]
   simp [hSTy, native_ite, native_Teq]
 
-private theorem typed_concl
-    (r s : Term)
-    (hRTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan)
-    (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char) :
-    RuleProofs.eo_has_bool_type (concl r s) := by
-  have hStrToReTy :
-      __smtx_typeof
-          (__eo_to_smt (Term.Apply (Term.UOp UserOp.str_to_re) s)) =
-        SmtType.RegLan :=
-    smtx_typeof_str_to_re_of_seq_char s hSTy
-  have hStrToReSmtTy :
-      __smtx_typeof (SmtTerm.str_to_re (__eo_to_smt s)) = SmtType.RegLan := by
-    have hsimpa := hStrToReTy
-    try simp at hsimpa ⊢
-    exact hsimpa
-  have hNoneTy : __smtx_typeof SmtTerm.re_none = SmtType.RegLan := by
-    rw [__smtx_typeof.eq_def] <;> simp only
-  have hInnerTy :
-      __smtx_typeof
-          (__eo_to_smt
-            (Term.Apply (Term.Apply (Term.UOp UserOp.re_union) r)
-              (Term.UOp UserOp.re_none))) =
-        SmtType.RegLan := by
-    change __smtx_typeof (SmtTerm.re_union (__eo_to_smt r) SmtTerm.re_none) =
-      SmtType.RegLan
-    rw [typeof_re_union_eq]
-    simp [hRTy, hNoneTy, native_ite, native_Teq]
-  have hInnerSmtTy :
-      __smtx_typeof (SmtTerm.re_union (__eo_to_smt r) SmtTerm.re_none) =
-        SmtType.RegLan := by
-    simpa using hInnerTy
-  have hLhsTy :
-      __smtx_typeof (__eo_to_smt (lhs r s)) = SmtType.RegLan := by
-    change __smtx_typeof
-        (SmtTerm.re_union
-          (SmtTerm.str_to_re (__eo_to_smt s))
-          (SmtTerm.re_union (__eo_to_smt r) SmtTerm.re_none)) =
-      SmtType.RegLan
-    rw [typeof_re_union_eq]
-    simp [hStrToReSmtTy, hInnerSmtTy, native_ite, native_Teq]
-  exact RuleProofs.eo_has_bool_type_eq_of_same_smt_type (lhs r s) (rhs r)
-    (by rw [hLhsTy, hRTy]) (by rw [hLhsTy]; simp)
+private theorem smtx_typeof_re_union_of_args (x y : Term)
+    (hx : __smtx_typeof (__eo_to_smt x) = SmtType.RegLan)
+    (hy : __smtx_typeof (__eo_to_smt y) = SmtType.RegLan) :
+    __smtx_typeof
+        (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.re_union) x) y)) =
+      SmtType.RegLan := by
+  change __smtx_typeof
+      (SmtTerm.re_union (__eo_to_smt x) (__eo_to_smt y)) =
+    SmtType.RegLan
+  rw [typeof_re_union_eq]
+  simp [hx, hy, native_ite, native_Teq]
 
 private theorem str_in_re_true_of_prem
     (M : SmtModel) (s r : Term) (ss : SmtSeq) (rv : SmtRegLan)
@@ -230,27 +206,25 @@ private theorem str_in_re_true_of_prem
   injection hValueEq
 
 private theorem smt_value_rel_union_const_elim
-    (pat : native_String) (rv : SmtRegLan)
+    (pat : native_String) (rv rys : SmtRegLan)
     (hPatValid : native_string_valid pat = true)
     (hPatMem : RuleProofs.native_str_in_re pat rv = true) :
     RuleProofs.smt_value_rel
       (SmtValue.RegLan
         (native_re_union (native_str_to_re pat)
-          (native_re_union rv native_re_none)))
-      (SmtValue.RegLan rv) := by
+          (native_re_union rv rys)))
+      (SmtValue.RegLan (native_re_union rv rys)) := by
   rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
   change SmtValue.Boolean
       (native_re_ext_eq
         (native_re_union (native_str_to_re pat)
-          (native_re_union rv native_re_none)) rv) =
+          (native_re_union rv rys)) (native_re_union rv rys)) =
     SmtValue.Boolean true
   congr
   simp
   intro str hValid
   simp only [← RuleProofs.native_str_in_re_eq_model]
-  rw [RuleProofs.native_str_in_re_re_union,
-    RuleProofs.native_str_in_re_re_union,
-    RuleProofs.native_str_in_re_re_none]
+  simp only [RuleProofs.native_str_in_re_re_union]
   cases hRv : RuleProofs.native_str_in_re str rv
   · have hSingletonFalse :
         RuleProofs.native_str_in_re str (native_str_to_re pat) = false := by
@@ -261,25 +235,42 @@ private theorem smt_value_rel_union_const_elim
             simpa [impl_native_string_to_values, List.map_eq_flatMap] using hSg)
         rw [hStrEq, hPatMem] at hRv
         cases hRv
-    simp [hRv, hSingletonFalse]
-  · simp [hRv]
+    simp [hSingletonFalse]
+  · simp
 
-private theorem facts
-    (M : SmtModel) (hM : model_wf M) (r s : Term)
+private theorem type_and_facts
+    (M : SmtModel) (hM : model_wf M) (r ys s : Term)
     (hRTy : __smtx_typeof (__eo_to_smt r) = SmtType.RegLan)
+    (hYsTy : __smtx_typeof (__eo_to_smt ys) = SmtType.RegLan)
     (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char)
-    (hPrem : eo_interprets M (prem s r) true) :
-    eo_interprets M (concl r s) true := by
-  have hBool : RuleProofs.eo_has_bool_type (concl r s) :=
-    typed_concl r s hRTy hSTy
-  have hREvalTy :
-      __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt r)) =
-        SmtType.RegLan := by
-    simpa [hRTy] using
-      smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt r) (by
-        unfold term_has_non_none_type
-        rw [hRTy]
-        simp)
+    (hInnerList :
+      __eo_is_list (Term.UOp UserOp.re_union) (inner r ys) =
+        Term.Boolean true) :
+    RuleProofs.eo_has_bool_type (concl r ys s) ∧
+      (eo_interprets M (prem s r) true ->
+        eo_interprets M (concl r ys s) true) := by
+  have hInnerTy :
+      __smtx_typeof (__eo_to_smt (inner r ys)) = SmtType.RegLan :=
+    smtx_typeof_re_union_of_args r ys hRTy hYsTy
+  have hLhsTy :
+      __smtx_typeof (__eo_to_smt (lhs r ys s)) = SmtType.RegLan :=
+    smtx_typeof_re_union_of_args _ _
+      (smtx_typeof_str_to_re_of_seq_char s hSTy) hInnerTy
+  have hRhsTy :
+      __smtx_typeof (__eo_to_smt (rhs r ys)) = SmtType.RegLan :=
+    RuleProofs.reUnion_singleton_elim_has_reglan_type
+      (inner r ys) hInnerList hInnerTy
+  have hBool : RuleProofs.eo_has_bool_type (concl r ys s) :=
+    RuleProofs.eo_has_bool_type_eq_of_same_smt_type
+      (lhs r ys s) (rhs r ys)
+      (by rw [hLhsTy, hRhsTy])
+      (by rw [hLhsTy]; simp)
+  refine ⟨hBool, ?_⟩
+  intro hPrem
+  rcases RuleProofs.smt_model_eval_reglan_of_type M hM r hRTy with
+    ⟨rv, hREval⟩
+  rcases RuleProofs.smt_model_eval_reglan_of_type M hM ys hYsTy with
+    ⟨rys, hYsEval⟩
   have hSEvalTy :
       __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt s)) =
         SmtType.Seq SmtType.Char := by
@@ -288,7 +279,6 @@ private theorem facts
         unfold term_has_non_none_type
         rw [hSTy]
         simp)
-  rcases reglan_value_canonical hREvalTy with ⟨rv, hREval⟩
   rcases seq_value_canonical hSEvalTy with ⟨ss, hSEval⟩
   have hSsTy : __smtx_typeof_seq_value ss = SmtType.Seq SmtType.Char := by
     simpa [hSEval, __smtx_typeof_value] using hSEvalTy
@@ -300,24 +290,36 @@ private theorem facts
     exact str_in_re_true_of_prem M s r ss rv hSEval hREval hSsTy hPrem
   have hSUnpack :=
     native_unpack_seq_eq_string_to_values_of_typeof_seq_char hSsTy
+  have hInnerEval :
+      __smtx_model_eval M (__eo_to_smt (inner r ys)) =
+        SmtValue.RegLan (native_re_union rv rys) := by
+    change __smtx_model_eval M
+        (SmtTerm.re_union (__eo_to_smt r) (__eo_to_smt ys)) = _
+    simp [__smtx_model_eval, __smtx_model_eval_re_union, hREval, hYsEval]
   have hLhsEval :
-      __smtx_model_eval M (__eo_to_smt (lhs r s)) =
+      __smtx_model_eval M (__eo_to_smt (lhs r ys s)) =
         SmtValue.RegLan
           (native_re_union (native_str_to_re (native_unpack_string ss))
-            (native_re_union rv native_re_none)) := by
+            (native_re_union rv rys)) := by
     change __smtx_model_eval M
         (SmtTerm.re_union
           (SmtTerm.str_to_re (__eo_to_smt s))
-          (SmtTerm.re_union (__eo_to_smt r) SmtTerm.re_none)) =
-      SmtValue.RegLan
-        (native_re_union (native_str_to_re (native_unpack_string ss))
-          (native_re_union rv native_re_none))
+          (SmtTerm.re_union (__eo_to_smt r) (__eo_to_smt ys))) = _
     simp [hSUnpack, __smtx_model_eval, __smtx_model_eval_str_to_re,
-      __smtx_model_eval_re_union, hSEval, hREval]
-  exact RuleProofs.eo_interprets_eq_of_rel M (lhs r s) (rhs r) hBool <| by
-    rw [hLhsEval, hREval]
-    exact smt_value_rel_union_const_elim
-      (native_unpack_string ss) rv hPatValid hPatMem
+      __smtx_model_eval_re_union, hSEval, hREval, hYsEval]
+  have hRhsRel :
+      RuleProofs.smt_value_rel
+        (__smtx_model_eval M (__eo_to_smt (rhs r ys)))
+        (SmtValue.RegLan (native_re_union rv rys)) := by
+    rw [← hInnerEval]
+    exact RuleProofs.reUnion_singleton_elim_rel_eval M (inner r ys)
+      hInnerList ⟨_, hInnerEval⟩
+  exact RuleProofs.eo_interprets_eq_of_rel M (lhs r ys s) (rhs r ys) hBool <| by
+    rw [hLhsEval]
+    exact RuleProofs.smt_value_rel_trans _ _ _
+      (smt_value_rel_union_const_elim
+        (native_unpack_string ss) rv rys hPatValid hPatMem)
+      (RuleProofs.smt_value_rel_symm _ _ hRhsRel)
 
 end ReUnionConstElimProof
 
@@ -335,162 +337,131 @@ by
       Term.Stuck :=
     term_ne_stuck_of_typeof_bool hResultTy
   cases args with
-  | nil =>
-      change Term.Stuck ≠ Term.Stuck at hProg
-      exact False.elim (hProg rfl)
+  | nil => exact False.elim (hProg rfl)
   | cons a1 args =>
-      cases args with
-      | nil =>
-          change Term.Stuck ≠ Term.Stuck at hProg
-          exact False.elim (hProg rfl)
-      | cons a2 args =>
-          cases args with
-          | cons _ _ =>
-              change Term.Stuck ≠ Term.Stuck at hProg
-              exact False.elim (hProg rfl)
-          | nil =>
-              cases premises with
-              | nil =>
-                  change Term.Stuck ≠ Term.Stuck at hProg
-                  exact False.elim (hProg rfl)
-              | cons n premises =>
-                  cases premises with
-                  | cons _ _ =>
-                      change Term.Stuck ≠ Term.Stuck at hProg
-                      exact False.elim (hProg rfl)
-                  | nil =>
-                      have hA1Trans : RuleProofs.eo_has_smt_translation a1 := by
-                        simpa [cmdTranslationOk, cArgListTranslationOk]
-                          using hCmdTrans.1
-                      have hA2Trans : RuleProofs.eo_has_smt_translation a2 := by
-                        simpa [cmdTranslationOk, cArgListTranslationOk]
-                          using hCmdTrans.2.1
-                      show StepRuleProperties M [__eo_state_proven_nth s n]
-                        (__eo_prog_re_union_const_elim a1 a2
-                          (Proof.pf (__eo_state_proven_nth s n)))
-                      generalize hP : __eo_state_proven_nth s n = P
-                      have hProgNe :
-                          __eo_prog_re_union_const_elim a1 a2 (Proof.pf P) ≠
-                            Term.Stuck := by
-                        rw [← hP]
-                        change __eo_cmd_step_proven s CRule.re_union_const_elim
-                            (CArgList.cons a1 (CArgList.cons a2 CArgList.nil))
-                            (CIndexList.cons n CIndexList.nil) ≠ Term.Stuck
-                        exact hProg
-                      obtain ⟨hPShape, hProgEq⟩ :=
-                        ReUnionConstElimProof.prog_form a1 a2 P hProgNe
-                      have hResultTyProg :
-                          __eo_typeof
-                              (__eo_prog_re_union_const_elim a1 a2
-                                (Proof.pf P)) = Term.Bool := by
-                        rw [← hP]
-                        change __eo_typeof
-                            (__eo_cmd_step_proven s CRule.re_union_const_elim
-                              (CArgList.cons a1
-                                (CArgList.cons a2 CArgList.nil))
-                              (CIndexList.cons n CIndexList.nil)) = Term.Bool
-                        exact hResultTy
-                      have hConclTy :
-                          __eo_typeof (ReUnionConstElimProof.concl a1 a2) =
-                            Term.Bool := by
-                        rw [hProgEq] at hResultTyProg
-                        exact hResultTyProg
-                      change __eo_typeof_eq
-                          (__eo_typeof (ReUnionConstElimProof.lhs a1 a2))
-                          (__eo_typeof (ReUnionConstElimProof.rhs a1)) =
-                        Term.Bool at hConclTy
-                      have hLhsNotStuck :
-                          __eo_typeof (ReUnionConstElimProof.lhs a1 a2) ≠
-                            Term.Stuck :=
-                        (RuleProofs.eo_typeof_eq_bool_operands_not_stuck
-                          (__eo_typeof (ReUnionConstElimProof.lhs a1 a2))
-                          (__eo_typeof (ReUnionConstElimProof.rhs a1))
-                          hConclTy).1
-                      have hLhsEqRhsTy :
-                          __eo_typeof (ReUnionConstElimProof.lhs a1 a2) =
-                            __eo_typeof (ReUnionConstElimProof.rhs a1) :=
-                        RuleProofs.eo_typeof_eq_bool_operands_eq
-                          (__eo_typeof (ReUnionConstElimProof.lhs a1 a2))
-                          (__eo_typeof (ReUnionConstElimProof.rhs a1))
-                          hConclTy
-                      have hOuterArgs :
-                          __eo_typeof
-                              (Term.Apply (Term.UOp UserOp.str_to_re) a2) =
-                              Term.UOp UserOp.RegLan ∧
-                            __eo_typeof
-                              (Term.Apply
-                                (Term.Apply (Term.UOp UserOp.re_union) a1)
-                                (Term.UOp UserOp.re_none)) =
-                              Term.UOp UserOp.RegLan := by
-                        change __eo_typeof_re_concat
-                            (__eo_typeof
-                              (Term.Apply (Term.UOp UserOp.str_to_re) a2))
-                            (__eo_typeof
-                              (Term.Apply
-                                (Term.Apply (Term.UOp UserOp.re_union) a1)
-                                (Term.UOp UserOp.re_none))) ≠
-                          Term.Stuck at hLhsNotStuck
-                        exact
-                          ReUnionConstElimProof.eo_typeof_re_concat_ne_stuck_args_reglan
-                            _ _ hLhsNotStuck
-                      have hInnerArgs :
-                          __eo_typeof a1 = Term.UOp UserOp.RegLan ∧
-                            __eo_typeof (Term.UOp UserOp.re_none) =
-                              Term.UOp UserOp.RegLan := by
-                        have hInnerTy := hOuterArgs.2
-                        change __eo_typeof_re_concat (__eo_typeof a1)
-                            (__eo_typeof (Term.UOp UserOp.re_none)) =
-                          Term.UOp UserOp.RegLan at hInnerTy
-                        exact
-                          ReUnionConstElimProof.eo_typeof_re_concat_eq_reglan_args_reglan
-                            _ _ hInnerTy
-                      have hA1Ty : __eo_typeof a1 = Term.UOp UserOp.RegLan :=
-                        hInnerArgs.1
-                      have hA2Ty :
-                          __eo_typeof a2 = Term.Apply Term.Seq Term.Char := by
-                        have hStrToReTy := hOuterArgs.1
-                        change __eo_typeof_str_to_re (__eo_typeof a2) =
-                          Term.UOp UserOp.RegLan at hStrToReTy
-                        exact
-                          ReUnionConstElimProof.eo_typeof_str_to_re_eq_seq_char_of_reglan
-                            (__eo_typeof a2) hStrToReTy
-                      have hA1SmtTy :
-                          __smtx_typeof (__eo_to_smt a1) = SmtType.RegLan := by
-                        have hTyRaw :
-                            __smtx_typeof (__eo_to_smt a1) =
-                              __eo_to_smt_type (__eo_typeof a1) :=
-                          TranslationProofs.eo_to_smt_typeof_matches_translation
-                            a1 hA1Trans
-                        rw [hA1Ty] at hTyRaw
-                        simpa [TranslationProofs.eo_to_smt_type_reglan] using
-                          hTyRaw
-                      have hA2SmtTy :
-                          __smtx_typeof (__eo_to_smt a2) =
-                            SmtType.Seq SmtType.Char := by
-                        have hTyRaw :
-                            __smtx_typeof (__eo_to_smt a2) =
-                              __eo_to_smt_type (__eo_typeof a2) :=
-                          TranslationProofs.eo_to_smt_typeof_matches_translation
-                            a2 hA2Trans
-                        rw [hA2Ty] at hTyRaw
-                        have hsimpa := hTyRaw
-                        try simp [TranslationProofs.eo_to_smt_type_seq, TranslationProofs.eo_to_smt_type_char] at hsimpa ⊢
-                        exact hsimpa
-                      have hProgBool :
-                          RuleProofs.eo_has_bool_type
-                            (__eo_prog_re_union_const_elim a1 a2
-                              (Proof.pf P)) := by
-                        rw [hProgEq]
-                        exact ReUnionConstElimProof.typed_concl a1 a2
-                          hA1SmtTy hA2SmtTy
-                      refine ⟨?_, RuleProofs.eo_has_smt_translation_of_has_bool_type _
-                        hProgBool⟩
-                      intro hEv
-                      have hPrem :
-                          eo_interprets M
-                            (ReUnionConstElimProof.prem a2 a1) true := by
-                        have hHere := hEv.true_here P (by simp)
-                        simpa [hPShape] using hHere
-                      rw [hProgEq]
-                      exact ReUnionConstElimProof.facts M hM a1 a2
-                        hA1SmtTy hA2SmtTy hPrem
+  cases args with
+  | nil => exact False.elim (hProg rfl)
+  | cons a2 args =>
+  cases args with
+  | nil => exact False.elim (hProg rfl)
+  | cons a3 args =>
+  cases args with
+  | cons _ _ => exact False.elim (hProg rfl)
+  | nil =>
+  cases premises with
+  | nil => exact False.elim (hProg rfl)
+  | cons n premises =>
+  cases premises with
+  | cons _ _ => exact False.elim (hProg rfl)
+  | nil =>
+  have hA1Trans : RuleProofs.eo_has_smt_translation a1 := by
+    simpa [cmdTranslationOk, cArgListTranslationOk] using hCmdTrans.1
+  have hA2Trans : RuleProofs.eo_has_smt_translation a2 := by
+    simpa [cmdTranslationOk, cArgListTranslationOk] using hCmdTrans.2.1
+  have hA3Trans : RuleProofs.eo_has_smt_translation a3 := by
+    simpa [cmdTranslationOk, cArgListTranslationOk] using hCmdTrans.2.2.1
+  show StepRuleProperties M [__eo_state_proven_nth s n]
+    (__eo_prog_re_union_const_elim a1 a2 a3
+      (Proof.pf (__eo_state_proven_nth s n)))
+  generalize hP : __eo_state_proven_nth s n = P
+  have hProgNe :
+      __eo_prog_re_union_const_elim a1 a2 a3 (Proof.pf P) ≠ Term.Stuck := by
+    rw [← hP]
+    exact hProg
+  have hResultTyProg :
+      __eo_typeof (__eo_prog_re_union_const_elim a1 a2 a3 (Proof.pf P)) =
+        Term.Bool := by
+    rw [← hP]
+    exact hResultTy
+  obtain ⟨hPShape, hProgMk⟩ :=
+    ReUnionConstElimProof.prog_form a1 a2 a3 P hProgNe
+  have hMkNe : ReUnionConstElimProof.mkConcl a1 a2 a3 ≠ Term.Stuck := by
+    rw [← hProgMk]
+    exact hProgNe
+  have hRhsNe : ReUnionConstElimProof.rhs a1 a2 ≠ Term.Stuck :=
+    eo_mk_apply_arg_ne_stuck_of_ne_stuck _ _ hMkNe
+  have hProgEq :
+      __eo_prog_re_union_const_elim a1 a2 a3 (Proof.pf P) =
+        ReUnionConstElimProof.concl a1 a2 a3 := by
+    rw [hProgMk]
+    exact eo_mk_apply_eq_apply_of_ne_stuck _ _ hMkNe
+  have hInnerList :
+      __eo_is_list (Term.UOp UserOp.re_union)
+          (ReUnionConstElimProof.inner a1 a2) = Term.Boolean true :=
+    RuleProofs.reUnion_singleton_elim_list_of_ne_stuck _ hRhsNe
+  have hYsList :
+      __eo_is_list (Term.UOp UserOp.re_union) a2 = Term.Boolean true :=
+    eo_is_list_tail_true_of_cons_self (Term.UOp UserOp.re_union) a1 a2
+      hInnerList
+  have hA2SmtTy : __smtx_typeof (__eo_to_smt a2) = SmtType.RegLan :=
+    RegexRewriteSupport.reUnion_list_smt_typeof_reglan_of_non_none a2
+      hYsList (by simpa [RuleProofs.eo_has_smt_translation] using hA2Trans)
+  have hConclTy :
+      __eo_typeof (ReUnionConstElimProof.concl a1 a2 a3) = Term.Bool := by
+    rw [hProgEq] at hResultTyProg
+    exact hResultTyProg
+  change __eo_typeof_eq
+      (__eo_typeof (ReUnionConstElimProof.lhs a1 a2 a3))
+      (__eo_typeof (ReUnionConstElimProof.rhs a1 a2)) =
+    Term.Bool at hConclTy
+  have hLhsNotStuck :
+      __eo_typeof (ReUnionConstElimProof.lhs a1 a2 a3) ≠ Term.Stuck :=
+    (RuleProofs.eo_typeof_eq_bool_operands_not_stuck
+      (__eo_typeof (ReUnionConstElimProof.lhs a1 a2 a3))
+      (__eo_typeof (ReUnionConstElimProof.rhs a1 a2))
+      hConclTy).1
+  have hOuterArgs :
+      __eo_typeof (Term.Apply (Term.UOp UserOp.str_to_re) a3) =
+          Term.UOp UserOp.RegLan ∧
+        __eo_typeof (ReUnionConstElimProof.inner a1 a2) =
+          Term.UOp UserOp.RegLan := by
+    change __eo_typeof_re_concat
+        (__eo_typeof (Term.Apply (Term.UOp UserOp.str_to_re) a3))
+        (__eo_typeof (ReUnionConstElimProof.inner a1 a2)) ≠
+      Term.Stuck at hLhsNotStuck
+    exact
+      ReUnionConstElimProof.eo_typeof_re_concat_ne_stuck_args_reglan
+        _ _ hLhsNotStuck
+  have hInnerArgs :
+      __eo_typeof a1 = Term.UOp UserOp.RegLan ∧
+        __eo_typeof a2 = Term.UOp UserOp.RegLan := by
+    have hInnerTy := hOuterArgs.2
+    change __eo_typeof_re_concat (__eo_typeof a1) (__eo_typeof a2) =
+      Term.UOp UserOp.RegLan at hInnerTy
+    exact
+      ReUnionConstElimProof.eo_typeof_re_concat_eq_reglan_args_reglan
+        _ _ hInnerTy
+  have hA3Ty : __eo_typeof a3 = Term.Apply Term.Seq Term.Char := by
+    have hStrToReTy := hOuterArgs.1
+    change __eo_typeof_str_to_re (__eo_typeof a3) =
+      Term.UOp UserOp.RegLan at hStrToReTy
+    exact
+      ReUnionConstElimProof.eo_typeof_str_to_re_eq_seq_char_of_reglan
+        (__eo_typeof a3) hStrToReTy
+  have hA1SmtTy : __smtx_typeof (__eo_to_smt a1) = SmtType.RegLan := by
+    have hTyRaw :
+        __smtx_typeof (__eo_to_smt a1) = __eo_to_smt_type (__eo_typeof a1) :=
+      TranslationProofs.eo_to_smt_typeof_matches_translation a1 hA1Trans
+    rw [hInnerArgs.1] at hTyRaw
+    simpa [TranslationProofs.eo_to_smt_type_reglan] using hTyRaw
+  have hA3SmtTy :
+      __smtx_typeof (__eo_to_smt a3) = SmtType.Seq SmtType.Char := by
+    have hTyRaw :
+        __smtx_typeof (__eo_to_smt a3) = __eo_to_smt_type (__eo_typeof a3) :=
+      TranslationProofs.eo_to_smt_typeof_matches_translation a3 hA3Trans
+    rw [hA3Ty] at hTyRaw
+    have hsimpa := hTyRaw
+    try simp [TranslationProofs.eo_to_smt_type_seq,
+      TranslationProofs.eo_to_smt_type_char] at hsimpa ⊢
+    exact hsimpa
+  have hFacts :=
+    ReUnionConstElimProof.type_and_facts M hM a1 a2 a3
+      hA1SmtTy hA2SmtTy hA3SmtTy hInnerList
+  refine ⟨?_, RuleProofs.eo_has_smt_translation_of_has_bool_type _
+    (by rw [hProgEq]; exact hFacts.1)⟩
+  intro hEv
+  have hPrem : eo_interprets M (ReUnionConstElimProof.prem a3 a1) true := by
+    have hHere := hEv.true_here P (by simp)
+    simpa [hPShape] using hHere
+  rw [hProgEq]
+  exact hFacts.2 hPrem
