@@ -10,6 +10,10 @@ public import Cpc.Proofs.RuleSupport.StrContainsConcatSupport
 import all Cpc.Proofs.RuleSupport.StrContainsConcatSupport
 public import Cpc.Proofs.RuleSupport.StrInReFromIntDigRangeSupport
 import all Cpc.Proofs.RuleSupport.StrInReFromIntDigRangeSupport
+public import Cpc.Proofs.RuleSupport.StrSubstrContainsSupport
+import all Cpc.Proofs.RuleSupport.StrSubstrContainsSupport
+public import Cpc.Proofs.RuleSupport.StrContainsStripFromIntSupport
+import all Cpc.Proofs.RuleSupport.StrContainsStripFromIntSupport
 
 open Eo
 open SmtEval
@@ -21,16 +25,7 @@ set_option maxHeartbeats 10000000
 
 namespace StrContainsStripFromIntPreProof
 
-private abbrev op : Term := Term.UOp UserOp.str_concat
-
-private abbrev concat (x y : Term) : Term :=
-  Term.Apply (Term.Apply op x) y
-
-private abbrev fromInt (n : Term) : Term :=
-  Term.Apply (Term.UOp UserOp.str_from_int) n
-
-private abbrev ctn (x y : Term) : Term :=
-  Term.Apply (Term.Apply (Term.UOp UserOp.str_contains) x) y
+open StrContainsStripFromIntSupport
 
 private abbrev prem (s : Term) : Term :=
   Term.Apply
@@ -52,42 +47,6 @@ private abbrev concl (n x xs s : Term) : Term :=
   Term.Apply (Term.Apply (Term.UOp UserOp.eq) (lhs n x xs s))
     (rhs x xs s)
 
-private theorem mk_apply_fun_ne_stuck_local {f x : Term}
-    (h : __eo_mk_apply f x ≠ Term.Stuck) : f ≠ Term.Stuck := by
-  intro hf
-  subst f
-  cases x <;> simp [__eo_mk_apply] at h
-
-private theorem mk_apply_arg_ne_stuck_local {f x : Term}
-    (h : __eo_mk_apply f x ≠ Term.Stuck) : x ≠ Term.Stuck := by
-  intro hx
-  subst x
-  cases f <;> simp [__eo_mk_apply] at h
-
-private theorem mk_apply_eq_apply_local {f x : Term}
-    (h : __eo_mk_apply f x ≠ Term.Stuck) :
-    __eo_mk_apply f x = Term.Apply f x := by
-  have hf := mk_apply_fun_ne_stuck_local h
-  have hx := mk_apply_arg_ne_stuck_local h
-  cases f <;> cases x <;> simp [__eo_mk_apply] at hf hx ⊢
-
-private theorem requires_eq_of_ne_stuck_local {x y z : Term}
-    (h : __eo_requires x y z ≠ Term.Stuck) : x = y := by
-  unfold __eo_requires at h
-  by_cases hxy : native_teq x y = true
-  · simpa [native_teq] using hxy
-  · simp [hxy, native_ite] at h
-
-private theorem requires_body_of_ne_stuck_local {x y z : Term}
-    (h : __eo_requires x y z ≠ Term.Stuck) : __eo_requires x y z = z := by
-  have hxy := requires_eq_of_ne_stuck_local h
-  subst hxy
-  unfold __eo_requires at h ⊢
-  by_cases hs : x = Term.Stuck
-  · subst hs
-    simp [native_teq, native_ite, native_not, SmtEval.native_not] at h
-  · simp [native_teq, native_ite, native_not, SmtEval.native_not, hs]
-
 private theorem prog_info (n x xs s P : Term)
     (hProg :
       __eo_prog_str_contains_strip_from_int_pre n x xs s (Proof.pf P) ≠
@@ -102,50 +61,18 @@ private theorem prog_info (n x xs s P : Term)
     cases heq
     have hS := RuleProofs.eq_of_requires_eq_true_not_stuck _ _ _ hProg
     subst_vars
-    have hBody := requires_body_of_ne_stuck_local hProg
+    have hBody := requires_body_of_ne_stuck hProg
     rw [hBody] at hProg
-    have hR := mk_apply_arg_ne_stuck_local hProg
-    have hRF := mk_apply_fun_ne_stuck_local hR
-    have hE := mk_apply_arg_ne_stuck_local hRF
-    have hList := requires_eq_of_ne_stuck_local hE
+    have hR := mk_apply_arg_ne_stuck hProg
+    have hRF := mk_apply_fun_ne_stuck hR
+    have hE := mk_apply_arg_ne_stuck hRF
+    have hList := requires_eq_of_ne_stuck hE
     refine ⟨rfl, hList, ?_⟩
     simp only []
-    rw [hBody, mk_apply_eq_apply_local hProg, mk_apply_eq_apply_local hR,
-      mk_apply_eq_apply_local hRF]
+    rw [hBody, mk_apply_eq_apply hProg, mk_apply_eq_apply hR,
+      mk_apply_eq_apply hRF]
 
 /-! ### Native facts -/
-
-private theorem digit_values_of_from_int (z : native_Int) :
-    ∀ v ∈ (native_str_from_int z).map SmtValue.Char,
-      ∃ ch, v = SmtValue.Char ch ∧ impl_native_char_is_digit ch = true := by
-  intro v hv
-  rcases List.mem_map.mp hv with ⟨ch, hch, rfl⟩
-  have hAll := StrInReFromIntDigRangeProof.native_str_from_int_all_digits z
-  rw [List.all_eq_true] at hAll
-  exact ⟨ch, rfl, hAll ch hch⟩
-
-private theorem no_compat_digits
-    (Dv : List SmtValue) (c : SmtValue)
-    (hDigits : ∀ v ∈ Dv,
-      ∃ ch, v = SmtValue.Char ch ∧ impl_native_char_is_digit ch = true)
-    (hc : impl_native_char_is_digit (impl_native_ssm_char_of_value c) = false) :
-    ∀ k, k < Dv.length → ¬ RuleProofs.native_seq_compat (Dv.drop k) [c] := by
-  intro k hk hCompat
-  rcases hDigits _ (List.getElem_mem hk) with ⟨ch, hv, hch⟩
-  have hDrop := List.drop_eq_getElem_cons hk
-  generalize Dv.drop k = d at hCompat hDrop
-  generalize Dv.drop (k + 1) = d' at hDrop
-  subst hDrop
-  have hEq : Dv[k] = c := by
-    rcases hCompat with h | h
-    · rcases (RuleProofs.native_seq_prefix_eq_iff _ _).1 h with ⟨r, hr⟩
-      simp only [List.cons_append, List.cons.injEq] at hr
-      exact hr.1.symm
-    · rcases (RuleProofs.native_seq_prefix_eq_iff _ _).1 h with ⟨r, hr⟩
-      simp only [List.cons_append, List.cons.injEq] at hr
-      exact hr.1
-  rw [← hEq, hv] at hc
-  simp [impl_native_ssm_char_of_value, hch] at hc
 
 private theorem contains_digits_prefix_eq
     (Dv R S : List SmtValue)
@@ -169,39 +96,6 @@ private theorem contains_digits_prefix_eq
 
 /-! ### Premise evaluation -/
 
-private theorem smtx_eval_str_is_digit_term_eq_local
-    (M : SmtModel) (x : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.str_is_digit x) =
-      __smtx_model_eval_str_is_digit (__smtx_model_eval M x) := by
-  rw [__smtx_model_eval.eq_def] <;> simp only
-
-private theorem smtx_eval_str_substr_term_eq_local
-    (M : SmtModel) (x y z : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.str_substr x y z) =
-      __smtx_model_eval_str_substr (__smtx_model_eval M x)
-        (__smtx_model_eval M y) (__smtx_model_eval M z) := by
-  rw [__smtx_model_eval.eq_def] <;> simp only
-
-private theorem smtx_eval_numeral_local (M : SmtModel) (n : native_Int) :
-    __smtx_model_eval M (SmtTerm.Numeral n) = SmtValue.Numeral n := by
-  rw [__smtx_model_eval.eq_def]
-
-private theorem smtx_eval_boolean_local (M : SmtModel) (b : native_Bool) :
-    __smtx_model_eval M (SmtTerm.Boolean b) = SmtValue.Boolean b := by
-  rw [__smtx_model_eval.eq_def]
-
-private theorem is_digit_single_true (c : SmtValue) (T : SmtType)
-    (hd : impl_native_char_is_digit (impl_native_ssm_char_of_value c) = true) :
-    __smtx_model_eval_str_is_digit (SmtValue.Seq (native_pack_seq T [c])) =
-      SmtValue.Boolean true := by
-  have hValid := StrInReFromIntDigRangeProof.native_char_valid_of_digit _ hd
-  have hd' := hd
-  simp [impl_native_char_is_digit] at hd'
-  simp [__smtx_model_eval_str_is_digit, __smtx_model_eval_str_to_code,
-    native_unpack_string, Smtm.native_unpack_pack_seq, native_str_to_code,
-    hValid, __smtx_model_eval_leq, __smtx_model_eval_and, native_and,
-    SmtEval.native_zleq, hd'.1, hd'.2]
-
 private theorem premise_first_char
     (M : SmtModel) (s : Term) (ss : SmtSeq)
     (hSEval : __smtx_model_eval M (__eo_to_smt s) = SmtValue.Seq ss)
@@ -217,9 +111,9 @@ private theorem premise_first_char
               (SmtTerm.str_substr (__eo_to_smt s) (SmtTerm.Numeral 0)
                 (SmtTerm.Numeral 1)))
             (SmtTerm.Boolean false)) = SmtValue.Boolean true at hEval
-      rw [smtx_eval_eq_term_eq, smtx_eval_str_is_digit_term_eq_local,
-        smtx_eval_str_substr_term_eq_local, hSEval, smtx_eval_numeral_local,
-        smtx_eval_numeral_local, smtx_eval_boolean_local] at hEval
+      rw [smtx_eval_eq_term_eq, smtx_eval_str_is_digit_term_eq,
+        StrSubstrContainsSupport.smtx_eval_str_substr_term_eq, hSEval, smtx_eval_numeral,
+        smtx_eval_numeral, smtx_eval_boolean] at hEval
       cases hU : native_unpack_seq ss with
       | nil => exact Or.inl rfl
       | cons c rest =>
@@ -234,36 +128,6 @@ private theorem premise_first_char
             simp [__smtx_model_eval_eq, native_veq] at hEval
 
 /-! ### Typing and semantics of the conclusion -/
-
-private theorem contains_bool_type_local (x y : Term) (T : SmtType)
-    (hX : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
-    (hY : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T) :
-    __smtx_typeof (__eo_to_smt (ctn x y)) = SmtType.Bool := by
-  change __smtx_typeof
-      (SmtTerm.str_contains (__eo_to_smt x) (__eo_to_smt y)) = SmtType.Bool
-  rw [typeof_str_contains_eq]
-  simp [hX, hY, __smtx_typeof_seq_op_2_ret, native_ite, native_Teq]
-
-private theorem seq_eval_local
-    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
-    (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
-    ∃ sx, __smtx_model_eval M (__eo_to_smt x) = SmtValue.Seq sx := by
-  have hValTy :
-      __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt x)) =
-        SmtType.Seq T := by
-    simpa [hxTy] using
-      smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt x) (by
-        unfold term_has_non_none_type
-        rw [hxTy]
-        simp)
-  exact seq_value_canonical hValTy
-
-private theorem seq_char_smt_type_local (x : Term)
-    (hTrans : RuleProofs.eo_has_smt_translation x)
-    (hTy : __eo_typeof x = Term.Apply Term.Seq Term.Char) :
-    __smtx_typeof (__eo_to_smt x) = SmtType.Seq SmtType.Char := by
-  simpa using
-    StrConcatClashSupport.smtx_typeof_seq_of_eo_typeof x Term.Char hTrans hTy
 
 private theorem main_facts
     (M : SmtModel) (hM : model_wf M) (n x xs s : Term)
@@ -281,9 +145,9 @@ private theorem main_facts
         eo_interprets M (concl n x xs s) true) := by
   have hNSmt :=
     StrInReFromIntDigRangeProof.smtx_typeof_of_eo_int n hNTrans hNTy
-  have hXSmt := seq_char_smt_type_local x hXTrans hXTy
-  have hXsSmt := seq_char_smt_type_local xs hXsTrans hXsTy
-  have hSSmt := seq_char_smt_type_local s hSTrans hSTy
+  have hXSmt := seq_char_smt_type x hXTrans hXTy
+  have hXsSmt := seq_char_smt_type xs hXsTrans hXsTy
+  have hSSmt := seq_char_smt_type s hSTrans hSTy
   have hFTy :
       __smtx_typeof (__eo_to_smt (fromInt n)) = SmtType.Seq SmtType.Char := by
     change __smtx_typeof (SmtTerm.str_from_int (__eo_to_smt n)) = _
@@ -295,8 +159,8 @@ private theorem main_facts
   have hETy :=
     StringRewriteSupport.singleton_elim_has_seq_type (concat x xs) _
       hList hTlTy
-  have hLTy := contains_bool_type_local _ s _ hWTy hSSmt
-  have hRTy := contains_bool_type_local _ s _ hETy hSSmt
+  have hLTy := contains_bool_type _ s _ hWTy hSSmt
+  have hRTy := contains_bool_type _ s _ hETy hSSmt
   have hBool : RuleProofs.eo_has_bool_type (concl n x xs s) :=
     RuleProofs.eo_has_bool_type_eq_of_same_smt_type (lhs n x xs s)
       (rhs x xs s) (by rw [hLTy, hRTy]) (by rw [hLTy]; simp)
@@ -310,9 +174,9 @@ private theorem main_facts
         rw [hNSmt]
         simp)
   rcases int_value_canonical hNEvalTy with ⟨z, hNEval⟩
-  rcases seq_eval_local M hM x _ hXSmt with ⟨sx, hXEval⟩
-  rcases seq_eval_local M hM xs _ hXsSmt with ⟨sxs, hXsEval⟩
-  rcases seq_eval_local M hM s _ hSSmt with ⟨ss, hSEval⟩
+  rcases seq_eval M hM x _ hXSmt with ⟨sx, hXEval⟩
+  rcases seq_eval M hM xs _ hXsSmt with ⟨sxs, hXsEval⟩
+  rcases seq_eval M hM s _ hSSmt with ⟨ss, hSEval⟩
   rcases StrContainsConcatSupport.str_concat_unpack_eval M x xs sx sxs
       hXEval hXsEval with ⟨sTl, hTlEval, _hTlUnpack⟩
   have hFEval :

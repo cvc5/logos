@@ -1,11 +1,12 @@
 module
 
-public import Cpc.Proofs.RuleSupport.ReInterCstringSupport
-import all Cpc.Proofs.RuleSupport.ReInterCstringSupport
+public import Cpc.Proofs.RuleSupport.ReConstSupport
+import all Cpc.Proofs.RuleSupport.ReConstSupport
 
 open Eo
 open SmtEval
 open Smtm
+open ReConstSupport
 
 -- Keep string coercions on the model's explicit string-to-value embedding.
 attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
@@ -81,21 +82,6 @@ private theorem prog_form (xs s ys t zs P : Term)
     rw [hs', ht'] at hPremEq
     exact ⟨hPremEq, hReqEq⟩
   · exact False.elim (hNe rfl)
-
-private theorem list_concat_lists_of_ne_stuck (f a b : Term) :
-    __eo_list_concat f a b ≠ Term.Stuck ->
-    __eo_is_list f a = Term.Boolean true ∧
-      __eo_is_list f b = Term.Boolean true := by
-  intro h
-  have hReq :
-      __eo_requires (__eo_is_list f a) (Term.Boolean true)
-          (__eo_requires (__eo_is_list f b) (Term.Boolean true)
-            (__eo_list_concat_rec a b)) ≠ Term.Stuck := by
-    simpa [__eo_list_concat] using h
-  have ha := ReInterCstringProof.eo_requires_arg_eq_of_ne_stuck hReq
-  have hReqEq := ReInterCstringProof.eo_requires_eq_result_of_ne_stuck _ _ _ hReq
-  rw [hReqEq] at hReq
-  exact ⟨ha, ReInterCstringProof.eo_requires_arg_eq_of_ne_stuck hReq⟩
 
 private theorem list_concat_eq_rec (f a b : Term)
     (ha : __eo_is_list f a = Term.Boolean true)
@@ -174,91 +160,6 @@ private theorem typeof_concat_rec_right_reglan (z xs : Term)
     (hTy : __eo_typeof (__eo_list_concat_rec xs z) = Term.UOp UserOp.RegLan) :
     __eo_typeof z = Term.UOp UserOp.RegLan :=
   typeof_concat_rec_right_reglan_aux z (sizeOf xs) xs rfl hList hTy
-
-private theorem reInter_list_smt_typeof_reglan_of_non_none (t : Term) :
-    __eo_is_list (Term.UOp UserOp.re_inter) t = Term.Boolean true ->
-    __smtx_typeof (__eo_to_smt t) ≠ SmtType.None ->
-    __smtx_typeof (__eo_to_smt t) = SmtType.RegLan := by
-  intro hList hNN
-  cases t <;>
-    simp [__eo_is_list, __eo_get_nil_rec, __eo_is_list_nil,
-      __eo_is_ok, __eo_requires, native_ite, native_teq, native_not,
-      SmtEval.native_not] at hList ⊢
-  next op =>
-    cases op <;>
-      simp [__eo_is_list, __eo_get_nil_rec, __eo_is_list_nil,
-        __eo_is_ok, __eo_requires, native_ite, native_teq, native_not,
-        SmtEval.native_not, __smtx_typeof] at hList ⊢
-  next f y =>
-    cases f <;>
-      simp [__eo_is_list, __eo_get_nil_rec, __eo_is_list_nil,
-        __eo_is_ok, __eo_requires, native_ite, native_teq, native_not,
-        SmtEval.native_not] at hList ⊢
-    next g x =>
-      rw [← hList.1] at hNN ⊢
-      have hArgs :
-          __smtx_typeof (__eo_to_smt x) = SmtType.RegLan ∧
-            __smtx_typeof (__eo_to_smt y) = SmtType.RegLan :=
-        reglan_binop_args_of_non_none (op := SmtTerm.re_inter)
-          (typeof_re_inter_eq (__eo_to_smt x) (__eo_to_smt y)) hNN
-      change __smtx_typeof
-          (SmtTerm.re_inter (__eo_to_smt x) (__eo_to_smt y)) =
-        SmtType.RegLan
-      rw [typeof_re_inter_eq]
-      simp [hArgs.1, hArgs.2, native_ite, native_Teq]
-
-private theorem smtx_typeof_re_inter_of_args (x y : Term) :
-    __smtx_typeof (__eo_to_smt x) = SmtType.RegLan ->
-    __smtx_typeof (__eo_to_smt y) = SmtType.RegLan ->
-    __smtx_typeof (__eo_to_smt (mkI x y)) = SmtType.RegLan := by
-  intro hx hy
-  change __smtx_typeof
-      (SmtTerm.re_inter (__eo_to_smt x) (__eo_to_smt y)) =
-    SmtType.RegLan
-  rw [typeof_re_inter_eq]
-  simp [hx, hy, native_ite, native_Teq]
-
-private theorem smtx_typeof_str_to_re_of_seq_char
-    (s : Term)
-    (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char) :
-    __smtx_typeof (__eo_to_smt (reStr s)) = SmtType.RegLan := by
-  change __smtx_typeof (SmtTerm.str_to_re (__eo_to_smt s)) = SmtType.RegLan
-  rw [typeof_str_to_re_eq]
-  simp [hSTy, native_ite, native_Teq]
-
-private theorem smt_seq_eq_of_unpack_eq_same_type
-    (sx sy : SmtSeq) (T : SmtType)
-    (hSxTy : __smtx_typeof_seq_value sx = SmtType.Seq T)
-    (hSyTy : __smtx_typeof_seq_value sy = SmtType.Seq T)
-    (hUnpack : native_unpack_seq sx = native_unpack_seq sy) :
-    sx = sy := by
-  have hSxElem : __smtx_elem_typeof_seq_value sx = T :=
-    elem_typeof_seq_value_of_typeof_seq_value hSxTy
-  have hSyElem : __smtx_elem_typeof_seq_value sy = T :=
-    elem_typeof_seq_value_of_typeof_seq_value hSyTy
-  calc
-    sx = native_pack_seq (__smtx_elem_typeof_seq_value sx)
-        (native_unpack_seq sx) := (native_pack_unpack_seq sx).symm
-    _ = native_pack_seq (__smtx_elem_typeof_seq_value sy)
-        (native_unpack_seq sy) := by
-          rw [hSxElem, hSyElem, hUnpack]
-    _ = sy := native_pack_unpack_seq sy
-
-private theorem seq_char_eval (M : SmtModel) (hM : model_wf M) (s : Term)
-    (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char) :
-    ∃ ss : SmtSeq,
-      __smtx_model_eval M (__eo_to_smt s) = SmtValue.Seq ss ∧
-        __smtx_typeof_seq_value ss = SmtType.Seq SmtType.Char := by
-  have hSEvalTy :
-      __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt s)) =
-        SmtType.Seq SmtType.Char := by
-    simpa [hSTy] using
-      smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt s) (by
-        unfold term_has_non_none_type
-        rw [hSTy]
-        simp)
-  rcases seq_value_canonical hSEvalTy with ⟨ss, hSEval⟩
-  exact ⟨ss, hSEval, by simpa [hSEval, __smtx_typeof_value] using hSEvalTy⟩
 
 private theorem seq_ne_of_prem (M : SmtModel) (s t : Term) (ss tt : SmtSeq)
     (hSEval : __smtx_model_eval M (__eo_to_smt s) = SmtValue.Seq ss)
@@ -431,20 +332,6 @@ private theorem type_and_facts
     apply smt_seq_eq_of_unpack_eq_same_type ss tt SmtType.Char hSsTy hTtTy
     rw [hSUnpack, hTUnpack, ← hStrS, ← hStrT]
 
-
-private theorem smt_seq_char_of_eo_type (a : Term)
-    (hTrans : RuleProofs.eo_has_smt_translation a)
-    (hTy : __eo_typeof a = Term.Apply Term.Seq Term.Char) :
-    __smtx_typeof (__eo_to_smt a) = SmtType.Seq SmtType.Char := by
-  have hTyRaw :
-      __smtx_typeof (__eo_to_smt a) = __eo_to_smt_type (__eo_typeof a) :=
-    TranslationProofs.eo_to_smt_typeof_matches_translation a hTrans
-  rw [hTy] at hTyRaw
-  have hsimpa := hTyRaw
-  try simp [TranslationProofs.eo_to_smt_type_seq,
-    TranslationProofs.eo_to_smt_type_char] at hsimpa ⊢
-  exact hsimpa
-
 private theorem eo_seq_char_of_reStr_typeof (a : Term)
     (h : __eo_typeof (reStr a) = Term.UOp UserOp.RegLan) :
     __eo_typeof a = Term.Apply Term.Seq Term.Char := by
@@ -477,7 +364,7 @@ private theorem main
   have hLhsMkNe : lhsMk xs s ys t zs ≠ Term.Stuck :=
     eo_mk_apply_arg_ne_stuck_of_ne_stuck _ _ hEqFunNe
   obtain ⟨hXsList, hMidMkList⟩ :=
-    list_concat_lists_of_ne_stuck _ _ _ hLhsMkNe
+    RegexRewriteSupport.list_concat_lists_of_ne_stuck _ _ _ hLhsMkNe
   have hMidMkNe : midMk s ys t zs ≠ Term.Stuck := by
     intro h
     rw [h] at hMidMkList
@@ -487,7 +374,7 @@ private theorem main
   have hInnerNe : inner ys t zs ≠ Term.Stuck :=
     eo_mk_apply_arg_ne_stuck_of_ne_stuck _ _ hMidMkNe
   obtain ⟨hYsList, hTailList⟩ :=
-    list_concat_lists_of_ne_stuck _ _ _ hInnerNe
+    RegexRewriteSupport.list_concat_lists_of_ne_stuck _ _ _ hInnerNe
   have hZsList : __eo_is_list (Term.UOp UserOp.re_inter) zs = Term.Boolean true :=
     eo_is_list_tail_true_of_cons_self _ (reStr t) zs hTailList
   have hProgApply :

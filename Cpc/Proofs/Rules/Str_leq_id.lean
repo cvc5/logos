@@ -4,61 +4,17 @@ public import Cpc.Proofs.RuleSupport.CoreSupport
 import all Cpc.Proofs.RuleSupport.CoreSupport
 public import Cpc.Proofs.RuleSupport.NativeSeqSupport
 import all Cpc.Proofs.RuleSupport.NativeSeqSupport
+public import Cpc.Proofs.RuleSupport.StrLeqConcatSupport
+import all Cpc.Proofs.RuleSupport.StrLeqConcatSupport
 
 open Eo
 open SmtEval
 open Smtm
+open StrLeqConcatSupport
 
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 10000000
-
-private theorem eo_typeof_str_lt_args_of_ne_stuck
-    (T U : Term)
-    (h : __eo_typeof_str_lt T U ≠ Term.Stuck) :
-    T = Term.Apply Term.Seq Term.Char ∧ U = Term.Apply Term.Seq Term.Char := by
-  cases T <;> simp [__eo_typeof_str_lt] at h ⊢
-  case Apply f x =>
-    cases f <;> simp at h ⊢
-    case UOp op =>
-      cases op <;> simp at h ⊢
-      case Seq =>
-        cases x <;> simp at h ⊢
-        case UOp opx =>
-          cases opx <;> simp at h ⊢
-          case Char =>
-            cases U <;> simp [__eo_typeof_str_lt] at h ⊢
-            case Apply g y =>
-              cases g <;> simp at h ⊢
-              case UOp opg =>
-                cases opg <;> simp at h ⊢
-                case Seq =>
-                  cases y <;> simp at h ⊢
-                  case UOp opy =>
-                    cases opy <;> simp at h ⊢
-
-private theorem smtx_typeof_of_eo_seq_char
-    (a : Term)
-    (hTrans : RuleProofs.eo_has_smt_translation a)
-    (hTy : __eo_typeof a = Term.Apply Term.Seq Term.Char) :
-    __smtx_typeof (__eo_to_smt a) = SmtType.Seq SmtType.Char := by
-  have hTyRaw :
-      __smtx_typeof (__eo_to_smt a) = __eo_to_smt_type (__eo_typeof a) :=
-    TranslationProofs.eo_to_smt_typeof_matches_translation a hTrans
-  rw [hTy] at hTyRaw
-  rw [TranslationProofs.eo_to_smt_type_seq] at hTyRaw
-  have hCharNN : __eo_to_smt_type Term.Char ≠ SmtType.None := by decide
-  simpa [TranslationProofs.eo_to_smt_type_char] using hTyRaw.trans
-    (TranslationProofs.smtx_typeof_guard_of_non_none
-      (__eo_to_smt_type Term.Char) (SmtType.Seq (__eo_to_smt_type Term.Char))
-      hCharNN)
-
-private theorem smtx_eval_str_leq_term_eq
-    (M : SmtModel) (x y : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.str_leq x y) =
-      __smtx_model_eval_str_leq (__smtx_model_eval M x)
-        (__smtx_model_eval M y) := by
-  rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem prog_str_leq_id_eq_of_ne_stuck (s : Term)
     (hs : s ≠ Term.Stuck) :
@@ -191,7 +147,7 @@ by
               have hA1Ty : __eo_typeof a1 = Term.Apply Term.Seq Term.Char := by
                 change __eo_typeof_str_lt (__eo_typeof a1)
                     (__eo_typeof a1) ≠ Term.Stuck at hLeqNotStuck
-                exact (eo_typeof_str_lt_args_of_ne_stuck _ _ hLeqNotStuck).1
+                exact (eo_typeof_str_leq_args_of_ne_stuck _ _ hLeqNotStuck).1
               have hProps :
                   StepRuleProperties M (premiseTermList s CIndexList.nil)
                     (__eo_prog_str_leq_id a1) := by

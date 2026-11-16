@@ -10,6 +10,10 @@ public import Cpc.Proofs.RuleSupport.StrContainsConcatSupport
 import all Cpc.Proofs.RuleSupport.StrContainsConcatSupport
 public import Cpc.Proofs.RuleSupport.StrInReFromIntDigRangeSupport
 import all Cpc.Proofs.RuleSupport.StrInReFromIntDigRangeSupport
+public import Cpc.Proofs.RuleSupport.StrSubstrContainsSupport
+import all Cpc.Proofs.RuleSupport.StrSubstrContainsSupport
+public import Cpc.Proofs.RuleSupport.StrContainsStripFromIntSupport
+import all Cpc.Proofs.RuleSupport.StrContainsStripFromIntSupport
 public import Cpc.Proofs.RuleSupport.RegexRewriteSupport
 import all Cpc.Proofs.RuleSupport.RegexRewriteSupport
 
@@ -23,16 +27,7 @@ set_option maxHeartbeats 10000000
 
 namespace StrContainsStripFromIntPostProof
 
-private abbrev op : Term := Term.UOp UserOp.str_concat
-
-private abbrev concat (x y : Term) : Term :=
-  Term.Apply (Term.Apply op x) y
-
-private abbrev fromInt (n : Term) : Term :=
-  Term.Apply (Term.UOp UserOp.str_from_int) n
-
-private abbrev ctn (x y : Term) : Term :=
-  Term.Apply (Term.Apply (Term.UOp UserOp.str_contains) x) y
+open StrContainsStripFromIntSupport
 
 private abbrev emp : Term := Term.String []
 
@@ -71,42 +66,6 @@ private abbrev concl (xs x n s : Term) : Term :=
   Term.Apply (Term.Apply (Term.UOp UserOp.eq) (lhs xs x n s))
     (rhs xs x s)
 
-private theorem mk_apply_fun_ne_stuck_local {f x : Term}
-    (h : __eo_mk_apply f x ≠ Term.Stuck) : f ≠ Term.Stuck := by
-  intro hf
-  subst f
-  cases x <;> simp [__eo_mk_apply] at h
-
-private theorem mk_apply_arg_ne_stuck_local {f x : Term}
-    (h : __eo_mk_apply f x ≠ Term.Stuck) : x ≠ Term.Stuck := by
-  intro hx
-  subst x
-  cases f <;> simp [__eo_mk_apply] at h
-
-private theorem mk_apply_eq_apply_local {f x : Term}
-    (h : __eo_mk_apply f x ≠ Term.Stuck) :
-    __eo_mk_apply f x = Term.Apply f x := by
-  have hf := mk_apply_fun_ne_stuck_local h
-  have hx := mk_apply_arg_ne_stuck_local h
-  cases f <;> cases x <;> simp [__eo_mk_apply] at hf hx ⊢
-
-private theorem requires_eq_of_ne_stuck_local {x y z : Term}
-    (h : __eo_requires x y z ≠ Term.Stuck) : x = y := by
-  unfold __eo_requires at h
-  by_cases hxy : native_teq x y = true
-  · simpa [native_teq] using hxy
-  · simp [hxy, native_ite] at h
-
-private theorem requires_body_of_ne_stuck_local {x y z : Term}
-    (h : __eo_requires x y z ≠ Term.Stuck) : __eo_requires x y z = z := by
-  have hxy := requires_eq_of_ne_stuck_local h
-  subst hxy
-  unfold __eo_requires at h ⊢
-  by_cases hs : x = Term.Stuck
-  · subst hs
-    simp [native_teq, native_ite, native_not, SmtEval.native_not] at h
-  · simp [native_teq, native_ite, native_not, SmtEval.native_not, hs]
-
 private theorem prog_info (xs x n s P : Term)
     (hProg :
       __eo_prog_str_contains_strip_from_int_post xs x n s (Proof.pf P) ≠
@@ -123,54 +82,22 @@ private theorem prog_info (xs x n s P : Term)
     rcases RuleProofs.eqs_of_requires_and_eq_true_not_stuck
         _ _ _ _ _ hProg with ⟨h2, h3⟩
     subst_vars
-    have hBody := requires_body_of_ne_stuck_local hProg
+    have hBody := requires_body_of_ne_stuck hProg
     rw [hBody] at hProg
-    have hR := mk_apply_arg_ne_stuck_local hProg
-    have hEqF := mk_apply_fun_ne_stuck_local hProg
-    have hL := mk_apply_arg_ne_stuck_local hEqF
-    have hLF := mk_apply_fun_ne_stuck_local hL
-    have hW := mk_apply_arg_ne_stuck_local hLF
-    have hRF := mk_apply_fun_ne_stuck_local hR
-    have hE := mk_apply_arg_ne_stuck_local hRF
+    have hR := mk_apply_arg_ne_stuck hProg
+    have hEqF := mk_apply_fun_ne_stuck hProg
+    have hL := mk_apply_arg_ne_stuck hEqF
+    have hLF := mk_apply_fun_ne_stuck hL
+    have hW := mk_apply_arg_ne_stuck hLF
+    have hRF := mk_apply_fun_ne_stuck hR
+    have hE := mk_apply_arg_ne_stuck hRF
     refine ⟨rfl, hW, hE, ?_⟩
     simp only []
-    rw [hBody, mk_apply_eq_apply_local hProg, mk_apply_eq_apply_local hEqF,
-      mk_apply_eq_apply_local hL, mk_apply_eq_apply_local hLF,
-      mk_apply_eq_apply_local hR, mk_apply_eq_apply_local hRF]
+    rw [hBody, mk_apply_eq_apply hProg, mk_apply_eq_apply hEqF,
+      mk_apply_eq_apply hL, mk_apply_eq_apply hLF,
+      mk_apply_eq_apply hR, mk_apply_eq_apply hRF]
 
 /-! ### Native facts -/
-
-private theorem digit_values_of_from_int (z : native_Int) :
-    ∀ v ∈ (native_str_from_int z).map SmtValue.Char,
-      ∃ ch, v = SmtValue.Char ch ∧ impl_native_char_is_digit ch = true := by
-  intro v hv
-  rcases List.mem_map.mp hv with ⟨ch, hch, rfl⟩
-  have hAll := StrInReFromIntDigRangeProof.native_str_from_int_all_digits z
-  rw [List.all_eq_true] at hAll
-  exact ⟨ch, rfl, hAll ch hch⟩
-
-private theorem no_compat_digits
-    (Dv : List SmtValue) (c : SmtValue)
-    (hDigits : ∀ v ∈ Dv,
-      ∃ ch, v = SmtValue.Char ch ∧ impl_native_char_is_digit ch = true)
-    (hc : impl_native_char_is_digit (impl_native_ssm_char_of_value c) = false) :
-    ∀ k, k < Dv.length → ¬ RuleProofs.native_seq_compat (Dv.drop k) [c] := by
-  intro k hk hCompat
-  rcases hDigits _ (List.getElem_mem hk) with ⟨ch, hv, hch⟩
-  have hDrop := List.drop_eq_getElem_cons hk
-  generalize Dv.drop k = d at hCompat hDrop
-  generalize Dv.drop (k + 1) = d' at hDrop
-  subst hDrop
-  have hEq : Dv[k] = c := by
-    rcases hCompat with h | h
-    · rcases (RuleProofs.native_seq_prefix_eq_iff _ _).1 h with ⟨r, hr⟩
-      simp only [List.cons_append, List.cons.injEq] at hr
-      exact hr.1.symm
-    · rcases (RuleProofs.native_seq_prefix_eq_iff _ _).1 h with ⟨r, hr⟩
-      simp only [List.cons_append, List.cons.injEq] at hr
-      exact hr.1
-  rw [← hEq, hv] at hc
-  simp [impl_native_ssm_char_of_value, hch] at hc
 
 private theorem contains_digits_suffix_eq
     (R Dv S : List SmtValue)
@@ -197,50 +124,11 @@ private theorem contains_digits_suffix_eq
 
 /-! ### Premise evaluation -/
 
-private theorem smtx_eval_str_is_digit_term_eq_local
-    (M : SmtModel) (x : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.str_is_digit x) =
-      __smtx_model_eval_str_is_digit (__smtx_model_eval M x) := by
-  rw [__smtx_model_eval.eq_def] <;> simp only
-
-private theorem smtx_eval_str_substr_term_eq_local
-    (M : SmtModel) (x y z : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.str_substr x y z) =
-      __smtx_model_eval_str_substr (__smtx_model_eval M x)
-        (__smtx_model_eval M y) (__smtx_model_eval M z) := by
-  rw [__smtx_model_eval.eq_def] <;> simp only
-
-private theorem smtx_eval_numeral_local (M : SmtModel) (n : native_Int) :
-    __smtx_model_eval M (SmtTerm.Numeral n) = SmtValue.Numeral n := by
-  rw [__smtx_model_eval.eq_def]
-
-private theorem smtx_eval_boolean_local (M : SmtModel) (b : native_Bool) :
-    __smtx_model_eval M (SmtTerm.Boolean b) = SmtValue.Boolean b := by
-  rw [__smtx_model_eval.eq_def]
-
-private theorem is_digit_single_true (c : SmtValue) (T : SmtType)
-    (hd : impl_native_char_is_digit (impl_native_ssm_char_of_value c) = true) :
-    __smtx_model_eval_str_is_digit (SmtValue.Seq (native_pack_seq T [c])) =
-      SmtValue.Boolean true := by
-  have hValid := StrInReFromIntDigRangeProof.native_char_valid_of_digit _ hd
-  have hd' := hd
-  simp [impl_native_char_is_digit] at hd'
-  simp [__smtx_model_eval_str_is_digit, __smtx_model_eval_str_to_code,
-    native_unpack_string, Smtm.native_unpack_pack_seq, native_str_to_code,
-    hValid, __smtx_model_eval_leq, __smtx_model_eval_and, native_and,
-    SmtEval.native_zleq, hd'.1, hd'.2]
-
 private theorem smtx_eval_neg_term_eq_local
     (M : SmtModel) (x y : SmtTerm) :
     __smtx_model_eval M (SmtTerm.neg x y) =
       __smtx_model_eval__
         (__smtx_model_eval M x) (__smtx_model_eval M y) := by
-  rw [__smtx_model_eval.eq_def] <;> simp only
-
-private theorem smtx_eval_str_len_term_eq_local
-    (M : SmtModel) (x : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.str_len x) =
-      __smtx_model_eval_str_len (__smtx_model_eval M x) := by
   rw [__smtx_model_eval.eq_def] <;> simp only
 
 private theorem extract_last (L : List SmtValue) (c : SmtValue) :
@@ -274,10 +162,10 @@ private theorem premise_last_char
                   (SmtTerm.Numeral 1))
                 (SmtTerm.Numeral 1)))
             (SmtTerm.Boolean false)) = SmtValue.Boolean true at hEval
-      rw [smtx_eval_eq_term_eq, smtx_eval_str_is_digit_term_eq_local,
-        smtx_eval_str_substr_term_eq_local, smtx_eval_neg_term_eq_local,
-        smtx_eval_str_len_term_eq_local, hSEval, smtx_eval_numeral_local,
-        smtx_eval_boolean_local] at hEval
+      rw [smtx_eval_eq_term_eq, smtx_eval_str_is_digit_term_eq,
+        StrSubstrContainsSupport.smtx_eval_str_substr_term_eq, smtx_eval_neg_term_eq_local,
+        smtx_eval_str_len_term_eq, hSEval, smtx_eval_numeral,
+        smtx_eval_boolean] at hEval
       rcases List.eq_nil_or_concat (native_unpack_seq ss) with hNil | ⟨L, c, hU⟩
       · exact Or.inl hNil
       · rw [List.concat_eq_append] at hU
@@ -291,36 +179,6 @@ private theorem premise_last_char
           simp [__smtx_model_eval_eq, native_veq] at hEval
 
 /-! ### Typing and semantics of the conclusion -/
-
-private theorem contains_bool_type_local (x y : Term) (T : SmtType)
-    (hX : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T)
-    (hY : __smtx_typeof (__eo_to_smt y) = SmtType.Seq T) :
-    __smtx_typeof (__eo_to_smt (ctn x y)) = SmtType.Bool := by
-  change __smtx_typeof
-      (SmtTerm.str_contains (__eo_to_smt x) (__eo_to_smt y)) = SmtType.Bool
-  rw [typeof_str_contains_eq]
-  simp [hX, hY, __smtx_typeof_seq_op_2_ret, native_ite, native_Teq]
-
-private theorem seq_eval_local
-    (M : SmtModel) (hM : model_wf M) (x : Term) (T : SmtType)
-    (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
-    ∃ sx, __smtx_model_eval M (__eo_to_smt x) = SmtValue.Seq sx := by
-  have hValTy :
-      __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt x)) =
-        SmtType.Seq T := by
-    simpa [hxTy] using
-      smt_model_eval_preserves_type_of_non_none M hM (__eo_to_smt x) (by
-        unfold term_has_non_none_type
-        rw [hxTy]
-        simp)
-  exact seq_value_canonical hValTy
-
-private theorem seq_char_smt_type_local (x : Term)
-    (hTrans : RuleProofs.eo_has_smt_translation x)
-    (hTy : __eo_typeof x = Term.Apply Term.Seq Term.Char) :
-    __smtx_typeof (__eo_to_smt x) = SmtType.Seq SmtType.Char := by
-  simpa using
-    StrConcatClashSupport.smtx_typeof_seq_of_eo_typeof x Term.Char hTrans hTy
 
 private theorem rec_type_transfer (z : Term) (T : SmtType) :
     ∀ xs z',
@@ -393,8 +251,8 @@ private theorem main_facts
         eo_interprets M (concl xs x n s) true) := by
   have hNSmt :=
     StrInReFromIntDigRangeProof.smtx_typeof_of_eo_int n hNTrans hNTy
-  have hXSmt := seq_char_smt_type_local x hXTrans hXTy
-  have hSSmt := seq_char_smt_type_local s hSTrans hSTy
+  have hXSmt := seq_char_smt_type x hXTrans hXTy
+  have hSSmt := seq_char_smt_type s hSTrans hSTy
   have hJTailTy := smt_typeof_str_concat_of_seq x emp _ hXSmt emp_type_local
   have hWholeRed :=
     StringRewriteSupport.list_concat_reduce xs (wholeTail x n) hXsList
@@ -415,8 +273,8 @@ private theorem main_facts
   have hETy :=
     StringRewriteSupport.singleton_elim_has_seq_type (joined xs x) _
       hJoinedList hJoinedTy
-  have hLTy := contains_bool_type_local _ s _ hWholeTy hSSmt
-  have hRTy := contains_bool_type_local _ s _ hETy hSSmt
+  have hLTy := contains_bool_type _ s _ hWholeTy hSSmt
+  have hRTy := contains_bool_type _ s _ hETy hSSmt
   have hBool : RuleProofs.eo_has_bool_type (concl xs x n s) :=
     RuleProofs.eo_has_bool_type_eq_of_same_smt_type (lhs xs x n s)
       (rhs xs x s) (by rw [hLTy, hRTy]) (by rw [hLTy]; simp)
@@ -430,8 +288,8 @@ private theorem main_facts
         rw [hNSmt]
         simp)
   rcases int_value_canonical hNEvalTy with ⟨z, hNEval⟩
-  rcases seq_eval_local M hM x _ hXSmt with ⟨sx, hXEval⟩
-  rcases seq_eval_local M hM s _ hSSmt with ⟨ss, hSEval⟩
+  rcases seq_eval M hM x _ hXSmt with ⟨sx, hXEval⟩
+  rcases seq_eval M hM s _ hSSmt with ⟨ss, hSEval⟩
   have hFEval :
       __smtx_model_eval M (__eo_to_smt (fromInt n)) =
         SmtValue.Seq (native_pack_string (native_str_from_int z)) := by
@@ -606,7 +464,7 @@ by
                     (Term.UOp UserOp.str_concat) a1
                     (StrContainsStripFromIntPostProof.wholeTail a2 a3) hWNe
                 have hJList :=
-                  StrContainsStripFromIntPostProof.requires_eq_of_ne_stuck_local
+                  StrContainsStripFromIntSupport.requires_eq_of_ne_stuck
                     hENe
                 have hJNe :
                     StrContainsStripFromIntPostProof.joined a1 a2 ≠

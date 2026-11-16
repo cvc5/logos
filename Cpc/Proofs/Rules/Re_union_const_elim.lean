@@ -1,11 +1,12 @@
 module
 
-public import Cpc.Proofs.RuleSupport.RegexRewriteSupport
-import all Cpc.Proofs.RuleSupport.RegexRewriteSupport
+public import Cpc.Proofs.RuleSupport.ReConstSupport
+import all Cpc.Proofs.RuleSupport.ReConstSupport
 
 open Eo
 open SmtEval
 open Smtm
+open ReConstSupport
 
 -- Keep string coercions on the model's explicit string-to-value embedding.
 attribute [-instance] List.instMonad List.instAlternativeMonad_mathlib
@@ -15,12 +16,6 @@ set_option linter.unusedSimpArgs false
 set_option maxHeartbeats 10000000
 
 namespace ReUnionConstElimProof
-
-private abbrev prem (s r : Term) : Term :=
-  Term.Apply
-    (Term.Apply (Term.UOp UserOp.eq)
-      (Term.Apply (Term.Apply (Term.UOp UserOp.str_in_re) s) r))
-    (Term.Boolean true)
 
 private abbrev inner (r ys : Term) : Term :=
   Term.Apply (Term.Apply (Term.UOp UserOp.re_union) r) ys
@@ -40,97 +35,9 @@ private abbrev concl (r ys s : Term) : Term :=
 private abbrev mkConcl (r ys s : Term) : Term :=
   __eo_mk_apply (Term.Apply (Term.UOp UserOp.eq) (lhs r ys s)) (rhs r ys)
 
-private theorem eo_requires_eq_result_of_ne_stuck (x y z : Term) :
-    __eo_requires x y z ≠ Term.Stuck -> __eo_requires x y z = z := by
-  intro h
-  by_cases hxy : x = y
-  · subst y
-    by_cases hx : x = Term.Stuck
-    · subst x
-      simp [__eo_requires, native_ite, native_teq, native_not,
-        SmtEval.native_not] at h
-    · simp [__eo_requires, hx, native_ite, native_teq, native_not,
-        SmtEval.native_not]
-  · simp [__eo_requires, hxy, native_ite, native_teq] at h
-
-private theorem eo_requires_arg_eq_of_ne_stuck {x y z : Term} :
-    __eo_requires x y z ≠ Term.Stuck -> x = y := by
-  intro hReq
-  by_cases hxy : x = y
-  · exact hxy
-  · have hStuck : __eo_requires x y z = Term.Stuck := by
-      simp [__eo_requires, native_teq, native_ite, hxy]
-    exact False.elim (hReq hStuck)
-
-private theorem eo_eq_eq_true {t s : Term} (h : __eo_eq t s = Term.Boolean true) :
-    s = t := by
-  unfold __eo_eq at h
-  split at h
-  · exact absurd h (by simp)
-  · exact absurd h (by simp)
-  · simp only [Term.Boolean.injEq, native_teq] at h
-    exact of_decide_eq_true h
-
-private theorem eo_and_eq_true {x y : Term}
-    (h : __eo_and x y = Term.Boolean true) :
-    x = Term.Boolean true ∧ y = Term.Boolean true := by
-  unfold __eo_and at h
-  split at h
-  · rename_i b1 b2
-    simp only [Term.Boolean.injEq, SmtEval.native_and, Bool.and_eq_true] at h
-    exact ⟨by rw [h.1], by rw [h.2]⟩
-  · rename_i w1 n1 w2 n2
-    simp only [__eo_requires, native_ite] at h
-    split at h
-    · split at h <;> exact absurd h (by simp)
-    · exact absurd h (by simp)
-  · exact absurd h (by simp)
-
-private theorem eqs_of_eo_and2_eq_true
-    (x1 y1 x2 y2 : Term)
-    (h : __eo_and (__eo_eq x1 y1) (__eo_eq x2 y2) =
-        Term.Boolean true) :
-    y1 = x1 ∧ y2 = x2 := by
-  rcases eo_and_eq_true h with ⟨h1, h2⟩
-  exact ⟨eo_eq_eq_true h1, eo_eq_eq_true h2⟩
-
-private theorem eo_typeof_re_concat_ne_stuck_args_reglan (A B : Term)
-    (h : __eo_typeof_re_concat A B ≠ Term.Stuck) :
-    A = Term.UOp UserOp.RegLan ∧ B = Term.UOp UserOp.RegLan := by
-  cases A with
-  | UOp opA =>
-      cases opA <;> cases B with
-      | UOp opB => cases opB <;> simp [__eo_typeof_re_concat] at h ⊢
-      | _ => simp [__eo_typeof_re_concat] at h
-  | _ => cases B <;> simp [__eo_typeof_re_concat] at h
-
-private theorem eo_typeof_re_concat_eq_reglan_args_reglan (A B : Term)
-    (h : __eo_typeof_re_concat A B = Term.UOp UserOp.RegLan) :
-    A = Term.UOp UserOp.RegLan ∧ B = Term.UOp UserOp.RegLan := by
-  exact eo_typeof_re_concat_ne_stuck_args_reglan A B (by rw [h]; simp)
-
-private theorem eo_typeof_str_to_re_eq_seq_char_of_reglan (T : Term)
-    (h : __eo_typeof_str_to_re T = Term.UOp UserOp.RegLan) :
-    T = Term.Apply Term.Seq Term.Char := by
-  have hNe : __eo_typeof_str_to_re T ≠ Term.Stuck := by
-    rw [h]
-    simp
-  cases T with
-  | Apply f x =>
-      cases f with
-      | UOp op =>
-          cases op <;> simp [__eo_typeof_str_to_re] at hNe ⊢
-          case Seq =>
-            cases x with
-            | UOp opx =>
-                cases opx <;> simp [__eo_typeof_str_to_re] at hNe ⊢
-            | _ => simp [__eo_typeof_str_to_re] at hNe
-      | _ => simp [__eo_typeof_str_to_re] at hNe
-  | _ => simp [__eo_typeof_str_to_re] at hNe
-
 private theorem prog_form (r ys s P : Term)
     (hNe : __eo_prog_re_union_const_elim r ys s (Proof.pf P) ≠ Term.Stuck) :
-    P = prem s r ∧
+    P = strInRePrem s r ∧
       __eo_prog_re_union_const_elim r ys s (Proof.pf P) = mkConcl r ys s := by
   unfold __eo_prog_re_union_const_elim at hNe ⊢
   split at hNe
@@ -140,21 +47,12 @@ private theorem prog_form (r ys s P : Term)
   · rename_i hPrem
     injection hPrem with hPremEq
     dsimp only at hNe ⊢
-    have hReqArg := eo_requires_arg_eq_of_ne_stuck hNe
-    have hReqEq := eo_requires_eq_result_of_ne_stuck _ _ _ hNe
+    have hReqArg := ReInterCstringProof.eo_requires_arg_eq_of_ne_stuck hNe
+    have hReqEq := ReInterCstringProof.eo_requires_eq_result_of_ne_stuck _ _ _ hNe
     rcases eqs_of_eo_and2_eq_true _ _ _ _ hReqArg with ⟨hs, hr⟩
     rw [hs, hr] at hPremEq
     exact ⟨hPremEq, hReqEq⟩
   · exact False.elim (hNe rfl)
-
-private theorem smtx_typeof_str_to_re_of_seq_char
-    (s : Term)
-    (hSTy : __smtx_typeof (__eo_to_smt s) = SmtType.Seq SmtType.Char) :
-    __smtx_typeof (__eo_to_smt (Term.Apply (Term.UOp UserOp.str_to_re) s)) =
-      SmtType.RegLan := by
-  change __smtx_typeof (SmtTerm.str_to_re (__eo_to_smt s)) = SmtType.RegLan
-  rw [typeof_str_to_re_eq]
-  simp [hSTy, native_ite, native_Teq]
 
 private theorem smtx_typeof_re_union_of_args (x y : Term)
     (hx : __smtx_typeof (__eo_to_smt x) = SmtType.RegLan)
@@ -167,43 +65,6 @@ private theorem smtx_typeof_re_union_of_args (x y : Term)
     SmtType.RegLan
   rw [typeof_re_union_eq]
   simp [hx, hy, native_ite, native_Teq]
-
-private theorem str_in_re_true_of_prem
-    (M : SmtModel) (s r : Term) (ss : SmtSeq) (rv : SmtRegLan)
-    (hSEval : __smtx_model_eval M (__eo_to_smt s) = SmtValue.Seq ss)
-    (hREval : __smtx_model_eval M (__eo_to_smt r) = SmtValue.RegLan rv)
-    (hSsTy : __smtx_typeof_seq_value ss = SmtType.Seq SmtType.Char)
-    (hPrem : eo_interprets M (prem s r) true) :
-    native_str_in_re (native_unpack_string ss) rv = true := by
-  have hUnpack :=
-    native_unpack_seq_eq_string_to_values_of_typeof_seq_char hSsTy
-  have hPremRel :=
-    RuleProofs.eo_interprets_eq_rel M
-      (Term.Apply (Term.Apply (Term.UOp UserOp.str_in_re) s) r)
-      (Term.Boolean true) hPrem
-  have hInEval :
-      __smtx_model_eval M
-          (__eo_to_smt
-            (Term.Apply (Term.Apply (Term.UOp UserOp.str_in_re) s) r)) =
-        SmtValue.Boolean (native_str_in_re (native_unpack_string ss) rv) := by
-    change __smtx_model_eval M
-        (SmtTerm.str_in_re (__eo_to_smt s) (__eo_to_smt r)) =
-      SmtValue.Boolean (native_str_in_re (native_unpack_string ss) rv)
-    simp [__smtx_model_eval, __smtx_model_eval_str_in_re, hSEval, hREval,
-      hUnpack]
-  have hTrueEval :
-      __smtx_model_eval M (__eo_to_smt (Term.Boolean true)) =
-        SmtValue.Boolean true := by
-    change __smtx_model_eval M (SmtTerm.Boolean true) = SmtValue.Boolean true
-    rw [__smtx_model_eval.eq_def] <;> simp only
-  rw [hInEval, hTrueEval] at hPremRel
-  have hValueEq :
-      SmtValue.Boolean (native_str_in_re (native_unpack_string ss) rv) =
-        SmtValue.Boolean true :=
-    (RuleProofs.smt_value_rel_iff_eq _ _ (by
-      rintro ⟨r1, r2, hBad, _⟩
-      cases hBad)).1 hPremRel
-  injection hValueEq
 
 private theorem smt_value_rel_union_const_elim
     (pat : native_String) (rv rys : SmtRegLan)
@@ -247,7 +108,7 @@ private theorem type_and_facts
       __eo_is_list (Term.UOp UserOp.re_union) (inner r ys) =
         Term.Boolean true) :
     RuleProofs.eo_has_bool_type (concl r ys s) ∧
-      (eo_interprets M (prem s r) true ->
+      (eo_interprets M (strInRePrem s r) true ->
         eo_interprets M (concl r ys s) true) := by
   have hInnerTy :
       __smtx_typeof (__eo_to_smt (inner r ys)) = SmtType.RegLan :=
@@ -420,7 +281,7 @@ by
         (__eo_typeof (ReUnionConstElimProof.inner a1 a2)) ≠
       Term.Stuck at hLhsNotStuck
     exact
-      ReUnionConstElimProof.eo_typeof_re_concat_ne_stuck_args_reglan
+      ReInterCstringProof.eo_typeof_re_concat_ne_stuck_args_reglan
         _ _ hLhsNotStuck
   have hInnerArgs :
       __eo_typeof a1 = Term.UOp UserOp.RegLan ∧
@@ -429,14 +290,14 @@ by
     change __eo_typeof_re_concat (__eo_typeof a1) (__eo_typeof a2) =
       Term.UOp UserOp.RegLan at hInnerTy
     exact
-      ReUnionConstElimProof.eo_typeof_re_concat_eq_reglan_args_reglan
+      ReInterCstringProof.eo_typeof_re_concat_eq_reglan_args_reglan
         _ _ hInnerTy
   have hA3Ty : __eo_typeof a3 = Term.Apply Term.Seq Term.Char := by
     have hStrToReTy := hOuterArgs.1
     change __eo_typeof_str_to_re (__eo_typeof a3) =
       Term.UOp UserOp.RegLan at hStrToReTy
     exact
-      ReUnionConstElimProof.eo_typeof_str_to_re_eq_seq_char_of_reglan
+      ReInterCstringProof.eo_typeof_str_to_re_eq_seq_char_of_reglan
         (__eo_typeof a3) hStrToReTy
   have hA1SmtTy : __smtx_typeof (__eo_to_smt a1) = SmtType.RegLan := by
     have hTyRaw :
@@ -460,7 +321,7 @@ by
   refine ⟨?_, RuleProofs.eo_has_smt_translation_of_has_bool_type _
     (by rw [hProgEq]; exact hFacts.1)⟩
   intro hEv
-  have hPrem : eo_interprets M (ReUnionConstElimProof.prem a3 a1) true := by
+  have hPrem : eo_interprets M (strInRePrem a3 a1) true := by
     have hHere := hEv.true_here P (by simp)
     simpa [hPShape] using hHere
   rw [hProgEq]
