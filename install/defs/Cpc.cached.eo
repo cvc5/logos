@@ -2468,6 +2468,8 @@
   ($substitute_simul_rec false z (@list x) (@list y) @list.nil))
 (define $rename_simul ((S Type :implicit) (x S) (xs @List) (ys @List))
   ($substitute_simul_rec true x xs ys @list.nil))
+(define $is_unique_list ((xs @List))
+  (eo::eq (eo::list_setof @list xs) xs))
 (program $beta_reduce_type ((T Type) (U Type) (x T) (xs @List :list))
   :signature (Type @List) Type
   (
@@ -2483,9 +2485,11 @@
     ($beta_reduce_type (eo::typeof u) ss)
   (
   (($beta_reduce (_ (lambda (@list x xs) t) a) @list.nil)
-    (eo::define ((st ($substitute x a t)))
-      (eo::ite (eo::eq xs @list.nil) st (lambda xs st))))
-  (($beta_reduce (lambda xs t) ss)  ($substitute_simul t xs ss))
+    (eo::requires ($is_unique_list (@list x xs)) true
+      (eo::define ((st ($substitute x a t)))
+        (eo::ite (eo::eq xs @list.nil) st (lambda xs st)))))
+  (($beta_reduce (lambda xs t) ss)
+    (eo::requires ($is_unique_list xs) true ($substitute_simul t xs ss)))
   (($beta_reduce (f a) ss)          ($beta_reduce f (@list a ss)))
   )
 )
