@@ -639,6 +639,13 @@ def __is_var_list : Term -> Term
   | _ => Term.Stuck
 
 
+def __get_lambda_type : Term -> Term -> Term
+  | _ , Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var s T)) xs), B => (Term.Apply (Term.Apply Term.FunType T) (__get_lambda_type xs B))
+  | Term.__eo_List_nil, B => B
+  | _, _ => Term.Stuck
+
+
 def __eo_prog_scope : Term -> Proof -> Term
   | Term.Stuck , _  => Term.Stuck
   | F, (Proof.pf G) => (Term.Apply (Term.Apply (Term.UOp UserOp.imp) F) G)
@@ -8618,6 +8625,13 @@ def __eo_typeof_eq : Term -> Term -> Term
   | A, __eo_lv_A_2 => (__eo_requires (__eo_eq A __eo_lv_A_2) (Term.Boolean true) Term.Bool)
 
 
+def __eo_typeof_lambda : Term -> Term -> Term -> Term
+  | _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , Term.Stuck  => Term.Stuck
+  | Term.__eo_List, L, B => (__get_lambda_type L B)
+  | _, _, _ => Term.Stuck
+
+
 def __eo_typeof_distinct : Term -> Term
   | (Term.Apply (Term.UOp UserOp._at__at_TypedList) T) => Term.Bool
   | _ => Term.Stuck
@@ -9120,6 +9134,7 @@ def __eo_typeof : Term -> Term
   | (Term.Apply (Term.Apply (Term.UOp UserOp.imp) __eo_x1) __eo_x2) => (__eo_typeof_or (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.xor) __eo_x1) __eo_x2) => (__eo_typeof_or (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_x1) __eo_x2) => (__eo_typeof_eq (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) __eo_x1) __eo_x2) => (__eo_typeof_lambda (__eo_typeof __eo_x1) __eo_x1 (__eo_typeof __eo_x2))
   | (Term.Apply (Term.UOp UserOp.distinct) __eo_x1) => (__eo_typeof_distinct (__eo_typeof __eo_x1))
   | (Term.Apply (Term.UOp UserOp._at_purify) __eo_x1) => (__eo_typeof__at_purify (__eo_typeof __eo_x1))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.plus) __eo_x1) __eo_x2) => (__eo_typeof_plus (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
@@ -9303,6 +9318,7 @@ def __eo_is_closed_rec : Term -> Term -> Term
   | (Term.Var s T), (Term.Apply (Term.Apply Term.__eo_List_cons x) vs) =>
     let _v0 := (Term.Var s T)
     (__eo_ite (__eo_eq _v0 x) (Term.Boolean true) (__eo_is_closed_rec _v0 vs))
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) vs) x), env => (__eo_is_closed_rec x (__eo_list_concat Term.__eo_List_cons vs env))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.forall) vs) x), env => (__eo_is_closed_rec x (__eo_list_concat Term.__eo_List_cons vs env))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.exists) vs) x), env => (__eo_is_closed_rec x (__eo_list_concat Term.__eo_List_cons vs env))
   | (Term.Apply f x), env => (__eo_and (__eo_is_closed_rec f env) (__eo_is_closed_rec x env))

@@ -92,11 +92,12 @@
 (declare-const xor (-> Bool Bool Bool) :left-assoc)
 (declare-parameterized-const = ((A Type :implicit)) (-> A A Bool)
   :chainable and)
-(program $get_lambda_type ((x @List) (xs @List :list) (B Type))
+(program $get_lambda_type
+  ((T Type) (U Type) (s U) (xs @List :list) (B Type))
   :signature (@List Type) Type
   (
-  (($get_lambda_type (@list x xs) B)
-    (-> (eo::typeof x) ($get_lambda_type xs B)))
+  (($get_lambda_type (@list (eo::var s T) xs) B)
+    (-> T ($get_lambda_type xs B)))
   (($get_lambda_type @list.nil B) B)
   )
 )

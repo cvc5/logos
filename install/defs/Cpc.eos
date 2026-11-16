@@ -920,23 +920,83 @@
 (define-symbol @const ((! i :raw) (! u :type))
   :term ("ite" ($eo_to_smt_nat_is_valid i) (UConst ("const_id" ($eo_to_smt_nat i)) u) none))
 
-; The proof-level binder of CPC, together with the methods and the rule that
-; reduce an application of one. SMT-LIB gives these no meaning at all, so
-; instead of a model each says it is left out of the compilation altogether:
-; the desugar stage drops what an exclusion names, and what never reaches the
-; model-smt stage needs no case at all. See Desugar::echo for what it does with
-; them and Pipeline.defs_excludes in tools/eoc/driver.py for how they are taken
-; from the generated file.
+; The proof-level binder of CPC. SMT-LIB has no lambda, so a lambda on its own
+; is no term of the model. What it means is given where it is applied: a
+; beta-redex, i.e. a lambda applied to as many arguments as it binds
+; variables, is the body under one bind per variable, each bound to the value
+; of its argument. A redex is of any number of arguments, so no case of
+; lambda can match one; the generic application of $eo_to_smt, see
+; plugins/model_smt/model_smt.eo in the ethos tree, looks ahead along the
+; spine instead, asking $eo_to_smt_beta_vars which variables the arguments
+; bind and $eo_to_smt_beta for the binds.
 ;
-; No dependency closure is computed, so what dropping the binder would leave
-; behind says so for itself: a method of the signature is written out with
-; define-method and a proof rule with define-rule, and each is left out on the
-; same terms as the symbol.
-(define-symbol lambda ()
-  :exclude)
+; ((lambda (x1 ... xn) b) a1 ... an) is translated to
+;   bind xn := an in ... bind x1 := a1 in b
+; so each argument but the outermost is evaluated with the variables of the
+; arguments outside it already bound. That is the beta-redex as long as no
+; argument has a free occurrence of a variable the lambda binds after it.
+;
+; A lambda applied to fewer arguments than it binds is no redex, and
+; translates to the application of what the lambda translates to, i.e. to an
+; application of none. One applied to more is a redex applied to what is left.
+; -- lambda
+(define-symbol lambda ((! vs :raw) body)
+  :term (lambda vs body) none)
 
-(define-method $get_lambda_type :exclude)
+; The variables xs paired one-to-one with the arguments as, given in reverse
+; onto r, or the empty list when there are not as many of the one as of the
+; other.
+(program $eo_to_smt_beta_zip
+  ((x $eo_Term) (xs $eo_List) (U Type) (a U) (as $eo_List) (r $eo_List))
+  :signature ($eo_List $eo_List $eo_List) $eo_List
+  (
+  (($eo_to_smt_beta_zip (eo.list_cons x xs) (eo.list_cons a as) r)
+    ($eo_to_smt_beta_zip xs as (eo.list_cons x r)))
+  (($eo_to_smt_beta_zip eo.list_nil eo.list_nil r) r)
+  (($eo_to_smt_beta_zip xs as r) eo.list_nil)
+  )
+)
 
+; The variables the arguments as of the spine f bind, outermost first, when
+; the head of f is a lambda binding exactly as many variables as there are
+; arguments, and the empty list otherwise. The arguments are gathered as the
+; spine is walked down, innermost first.
+(program $eo_to_smt_beta_vars
+  ((T Type) (U Type) (vs $eo_List) (body T) (g (-> U T)) (z U) (as $eo_List))
+  :signature (T $eo_List) $eo_List
+  (
+  (($eo_to_smt_beta_vars (lambda vs body) as)
+    ($eo_to_smt_beta_zip vs as eo.list_nil))
+  (($eo_to_smt_beta_vars (g z) as)
+    ($eo_to_smt_beta_vars g (eo.list_cons z as)))
+  (($eo_to_smt_beta_vars body as) eo.list_nil)
+  )
+)
+
+; The spine f applied to an argument already translated to sa, given the
+; variables vs that $eo_to_smt_beta_vars says the arguments bind: one bind per
+; argument, the outermost outside. With no variables the application is no
+; redex, and what it translates to is d.
+(program $eo_to_smt_beta
+  ((T Type) (U Type) (V Type) (t V) (vs $eo_List) (body T) (g (-> U T)) (z U)
+   (s <string>) (X $eo_Term) (xs $eo_List) (sa SmtTerm) (d SmtTerm))
+  :signature (V $eo_List SmtTerm SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_beta t eo.list_nil sa d) d)
+  (($eo_to_smt_beta (lambda vs body)
+      (eo.list_cons (eo.var (eo.string s) X) eo.list_nil) sa d)
+    (bind s X sa body))
+  (($eo_to_smt_beta (g z) (eo.list_cons (eo.var (eo.string s) X) xs) sa d)
+    (bind s X sa ($eo_to_smt_beta g xs z none)))
+  (($eo_to_smt_beta t xs sa d) none)
+  )
+)
+
+; The methods and the rule that reduce an application of the binder are left
+; out of the compilation for now: the desugar stage drops what an exclusion
+; names. See Desugar::echo for what it does with them and
+; Pipeline.defs_excludes in tools/eoc/driver.py, both in the ethos tree, for
+; how they are taken from the generated file.
 (define-method $beta_reduce_type :exclude)
 
 (define-method $beta_reduce :exclude)

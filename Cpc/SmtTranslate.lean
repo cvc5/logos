@@ -27,6 +27,23 @@ Definitions for eo_to_smt_type, eo_to_smt
 -/
 noncomputable section
 
+def __eo_to_smt_beta_zip : Term -> Term -> Term -> Term
+  | Term.Stuck , _ , _  => Term.Stuck
+  | _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply Term.__eo_List_cons x) xs), (Term.Apply (Term.Apply Term.__eo_List_cons a) as), r => (__eo_to_smt_beta_zip xs as (Term.Apply (Term.Apply Term.__eo_List_cons x) r))
+  | Term.__eo_List_nil, Term.__eo_List_nil, r => r
+  | xs, as, r => Term.__eo_List_nil
+
+
+def __eo_to_smt_beta_vars : Term -> Term -> Term
+  | Term.Stuck , _  => Term.Stuck
+  | _ , Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) vs) body), as => (__eo_to_smt_beta_zip vs as Term.__eo_List_nil)
+  | (Term.Apply g z), as => (__eo_to_smt_beta_vars g (Term.Apply (Term.Apply Term.__eo_List_cons z) as))
+  | body, as => Term.__eo_List_nil
+
+
 def __eo_to_smt_array_deq_diff (a : SmtTerm) : SmtType -> SmtTerm -> SmtType -> SmtTerm
   | (SmtType.Map aT aU), b, (SmtType.Map bT bU) => (SmtTerm.map_diff a b)
   | aT, b, bT => SmtTerm.None
@@ -133,6 +150,13 @@ def __eo_to_smt_datatype_decl : DatatypeDecl -> SmtDatatypeDecl
   | DatatypeDecl.nil => SmtDatatypeDecl.nil
 
 
+def __eo_to_smt_beta : Term -> Term -> SmtTerm -> SmtTerm -> SmtTerm
+  | t, Term.__eo_List_nil, sa, d => d
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) vs) body), (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) X)) Term.__eo_List_nil), sa, d => (SmtTerm.bind s (__eo_to_smt_type X) sa (__eo_to_smt body))
+  | (Term.Apply g z), (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) X)) xs), sa, d => (SmtTerm.bind s (__eo_to_smt_type X) sa (__eo_to_smt_beta g xs (__eo_to_smt z) SmtTerm.None))
+  | t, xs, sa, d => SmtTerm.None
+
+
 def __eo_to_smt_distinct_pairs (s : SmtTerm) : Term -> SmtTerm
   | (Term.Apply (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) x) xs) => (SmtTerm.and (SmtTerm.not (SmtTerm.eq s (__eo_to_smt x))) (__eo_to_smt_distinct_pairs s xs))
   | (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) T) => (SmtTerm.Boolean true)
@@ -237,6 +261,7 @@ def __eo_to_smt : Term -> SmtTerm
   | (Term.Apply (Term.Apply (Term.UOp UserOp.imp) x1) x2) => (SmtTerm.imp (__eo_to_smt x1) (__eo_to_smt x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.xor) x1) x2) => (SmtTerm.xor (__eo_to_smt x1) (__eo_to_smt x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x1) x2) => (SmtTerm.eq (__eo_to_smt x1) (__eo_to_smt x2))
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) x1) x2) => SmtTerm.None
   | (Term.Apply (Term.UOp UserOp.distinct) x1) => (native_ite (native_Teq (__eo_to_smt_typed_list_elem_type x1) SmtType.None) SmtTerm.None (__eo_to_smt_distinct x1))
   | (Term.Apply (Term.UOp UserOp._at_purify) x1) => (SmtTerm._at_purify (__eo_to_smt x1))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.plus) x1) x2) => (SmtTerm.plus (__eo_to_smt x1) (__eo_to_smt x2))
@@ -450,7 +475,9 @@ def __eo_to_smt : Term -> SmtTerm
   | (Term.Apply (Term.UOp UserOp.ubv_to_int) x1) => (SmtTerm.ubv_to_int (__eo_to_smt x1))
   | (Term.Apply (Term.UOp UserOp.sbv_to_int) x1) => (SmtTerm.sbv_to_int (__eo_to_smt x1))
   | (Term.UOp2 UserOp2._at_const x1 x2) => (native_ite (__eo_to_smt_nat_is_valid x1) (SmtTerm.UConst (native_const_id (__eo_to_smt_nat x1)) (__eo_to_smt_type x2)) SmtTerm.None)
-  | (Term.Apply f y) => (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y))
+  | (Term.Apply f y) =>
+    let _v0 := (__eo_to_smt y)
+    (__eo_to_smt_beta f (__eo_to_smt_beta_vars f (Term.Apply (Term.Apply Term.__eo_List_cons y) Term.__eo_List_nil)) _v0 (SmtTerm.Apply (__eo_to_smt f) _v0))
   | y => SmtTerm.None
 
 

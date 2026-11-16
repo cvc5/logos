@@ -141,6 +141,13 @@ private def parserOps : List (Logos.Parser.OpDecl Term) := [
     build := fun
       | [] => some (Term.UOp UserOp.eq)
       | _ => none },
+  { name := "lambda"
+    indexArity := 0
+    arity := .exact 2
+    build := fun
+      | [] => some (Term.UOp UserOp.lambda)
+      | _ => none
+    binder := some (fun vs => Logos.Parser.rightAssocNil Term.Apply Term.__eo_List_cons (fun _ => __eo_nil Term.__eo_List_cons Term.__eo_List) vs) },
   { name := "distinct"
     indexArity := 0
     arity := .argList (fun ts => Logos.Parser.rightAssocNil Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) (parserNil (Term.UOp UserOp._at__at_TypedList_cons)) ts)
