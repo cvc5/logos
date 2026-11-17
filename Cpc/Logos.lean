@@ -6341,6 +6341,16 @@ def __eo_prog_sets_minus_self : Term -> Term -> Term
   | _, _ => Term.Stuck
 
 
+def __eo_prog_sets_union_self : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.set_union) x1) x1)) x1)
+
+
+def __eo_prog_sets_inter_self : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.set_inter) x1) x1)) x1)
+
+
 def __eo_prog_sets_is_empty_elim : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | x1, (Term.Apply (Term.UOp UserOp.Set) _at_T0) => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.set_is_empty) x1)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x1) (Term.UOp1 UserOp1.set_empty (Term.Apply (Term.UOp UserOp.Set) _at_T0))))
@@ -9774,6 +9784,8 @@ inductive CRule : Type where
   | sets_union_member : CRule
   | sets_choose_singleton : CRule
   | sets_minus_self : CRule
+  | sets_union_self : CRule
+  | sets_inter_self : CRule
   | sets_is_empty_elim : CRule
   | sets_is_singleton_elim : CRule
   | str_eq_ctn_false : CRule
@@ -10456,6 +10468,8 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.sets_union_member, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), CIndexList.nil => (__eo_prog_sets_union_member a1 a2 a3)
   | CRule.sets_choose_singleton, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_choose_singleton a1)
   | CRule.sets_minus_self, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_sets_minus_self a1 a2)
+  | CRule.sets_union_self, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_union_self a1)
+  | CRule.sets_inter_self, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_inter_self a1)
   | CRule.sets_is_empty_elim, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_sets_is_empty_elim a1 a2)
   | CRule.sets_is_singleton_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_is_singleton_elim a1)
   | CRule.str_eq_ctn_false, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 CArgList.nil)))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_str_eq_ctn_false a1 a2 a3 a4 (Proof.pf (__eo_state_proven_nth S n1)))
