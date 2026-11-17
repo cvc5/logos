@@ -181,6 +181,7 @@ import Cpc.Proofs.Rules.Arith_int_mod_total
 import Cpc.Proofs.Rules.Arith_int_mod_total_one
 import Cpc.Proofs.Rules.Arith_int_mod_total_zero
 import Cpc.Proofs.Rules.Arith_int_mod_total_neg
+import Cpc.Proofs.Rules.Arith_int_div_total_over_mod
 import Cpc.Proofs.Rules.Arith_elim_gt
 import Cpc.Proofs.Rules.Arith_elim_lt
 import Cpc.Proofs.Rules.Arith_elim_int_gt
@@ -193,6 +194,9 @@ import Cpc.Proofs.Rules.Arith_geq_norm1_real
 import Cpc.Proofs.Rules.Arith_eq_elim_real
 import Cpc.Proofs.Rules.Arith_eq_elim_int
 import Cpc.Proofs.Rules.Arith_to_int_elim_to_real
+import Cpc.Proofs.Rules.Arith_is_int_elim_to_real
+import Cpc.Proofs.Rules.Arith_div_int_to_real
+import Cpc.Proofs.Rules.Arith_div_total_int_to_real
 import Cpc.Proofs.Rules.Arith_mod_over_mod_1
 import Cpc.Proofs.Rules.Arith_mod_over_mod
 import Cpc.Proofs.Rules.Arith_mod_over_mod_mult
@@ -328,6 +332,8 @@ import Cpc.Proofs.Rules.Bv_usubo_eliminate
 import Cpc.Proofs.Rules.Bv_ssubo_eliminate
 import Cpc.Proofs.Rules.Bv_nego_eliminate
 import Cpc.Proofs.Rules.Bv_ite_equal_children
+import Cpc.Proofs.Rules.Bv_ite_const_cond_1
+import Cpc.Proofs.Rules.Bv_ite_const_cond_2
 import Cpc.Proofs.Rules.Bv_ite_const_children_1
 import Cpc.Proofs.Rules.Bv_ite_const_children_2
 import Cpc.Proofs.Rules.Bv_ite_equal_cond_1
@@ -1505,6 +1511,11 @@ by
         intro N hN _hAgree
         exact cmd_step_arith_int_mod_total_neg_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | arith_int_div_total_over_mod =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_arith_int_div_total_over_mod_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
   | arith_elim_gt =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
@@ -1564,6 +1575,21 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_arith_to_int_elim_to_real_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | arith_is_int_elim_to_real =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_arith_is_int_elim_to_real_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | arith_div_int_to_real =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_arith_div_int_to_real_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | arith_div_total_int_to_real =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_arith_div_total_int_to_real_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | arith_mod_over_mod_1 =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
@@ -2239,6 +2265,16 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_bv_ite_equal_children_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | bv_ite_const_cond_1 =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_bv_ite_const_cond_1_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | bv_ite_const_cond_2 =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_bv_ite_const_cond_2_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | bv_ite_const_children_1 =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by

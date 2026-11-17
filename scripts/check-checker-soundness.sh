@@ -31,6 +31,8 @@ PKG="${1:-Cpc}"
 RULE_LEMMAS="${PKG}/Proofs/RuleLemmas.lean"
 CHECKER="${PKG}/Proofs/Checker.lean"
 API_CORRECT="${PKG}/ApiCorrect.lean"
+# Downstream tools import this; it builds on Checker.lean the same way.
+PROVEN_FROM_EMPTY="${PKG}/Proofs/ProvenFromEmpty.lean"
 
 for f in "${RULE_LEMMAS}" "${CHECKER}"; do
   [ -f "${f}" ] || { echo "error: ${f} not found." >&2; exit 1; }
@@ -68,6 +70,10 @@ emit_scratch() {
       echo "public import ${PKG}.ApiChecks"
       echo "import all ${PKG}.ApiChecks"
     fi
+    if [ -f "${PROVEN_FROM_EMPTY}" ]; then
+      echo "public import ${PKG}.Proofs.TypePreservation.Nonvacuity"
+      echo "import all ${PKG}.Proofs.TypePreservation.Nonvacuity"
+    fi
     echo
     echo "public section"
     echo
@@ -87,6 +93,10 @@ emit_scratch() {
     if [ -f "${API_CORRECT}" ]; then
       echo
       body_of "${API_CORRECT}"
+    fi
+    if [ -f "${PROVEN_FROM_EMPTY}" ]; then
+      echo
+      body_of "${PROVEN_FROM_EMPTY}"
     fi
     if [ "${canary}" = "canary" ]; then
       echo
@@ -112,6 +122,9 @@ logos_configure_lean_toolchain
 
 echo "Building ${PKG}.Proofs.CheckerCore (the soundness proof is checked against it)..."
 lake -d verification build "${PKG}.Proofs.CheckerCore" >/dev/null
+if [ -f "${PROVEN_FROM_EMPTY}" ]; then
+  lake -d verification build "${PKG}.Proofs.TypePreservation.Nonvacuity" >/dev/null
+fi
 
 run_lean() {
   # Lake supplies per-module artifact paths across the two projects. A plain
@@ -126,7 +139,7 @@ run_lean() {
     | grep -v "declaration uses \`sorry\`" || true
 }
 
-echo "Typechecking ${CHECKER}$([ -f "${API_CORRECT}" ] && echo " and ${API_CORRECT}") with the rule bridge stubbed..."
+echo "Typechecking ${CHECKER}$([ -f "${API_CORRECT}" ] && echo ", ${API_CORRECT}")$([ -f "${PROVEN_FROM_EMPTY}" ] && echo ", ${PROVEN_FROM_EMPTY}") with the rule bridge stubbed..."
 out="$(run_lean)"
 if [ -n "${out}" ]; then
   echo "${out}" >&2
