@@ -505,7 +505,7 @@ private theorem tsp_tuple_update_eval_eq_rec_of_tuple_type
         SmtValue.DtCons (native_string_lit "@Tuple")
           (__eo_to_smt_tuple_decl
             (SmtDatatype.sum c SmtDatatype.null)) native_nat_zero :=
-    tuple_datatype_value_head_zero hEvalTy
+    tuple_value_head_zero_of_type hEvalTy
   change
     __smtx_model_eval M
         (__eo_to_smt_tuple_update (__smtx_typeof (__eo_to_smt t))
@@ -698,7 +698,7 @@ private theorem tsp_prepend_components
         · have hj' : j < k := by omega
           have hNe : j + 1 ≠ k + 1 := by omega
           simpa [tuplePrependValueRec, __smtx_apply_arg_nth_value,
-            SmtEval.native_nateq, hNe] using hA j hj'
+            SmtEval.native_nateq, hNe, hjk] using hA j hj'
 
 private theorem tsp_tuple_unit_typeof :
     __smtx_typeof (__eo_to_smt (Term.UOp UserOp.tuple_unit)) =
@@ -716,7 +716,7 @@ theorem tupleSpine_eval_components
         SmtType.Datatype (native_string_lit "@Tuple")
           (__eo_to_smt_tuple_decl (SmtDatatype.sum c SmtDatatype.null))) ∧
     vsm_num_apply_args (__smtx_model_eval M (__eo_to_smt r)) = hs.length ∧
-    ∀ j h, hs[j]? = some h ->
+    ∀ (j : Nat) (h : Term), hs[j]? = some h ->
       __smtx_apply_arg_nth_value (__smtx_model_eval M (__eo_to_smt r)) j
           hs.length =
         __smtx_model_eval M (__eo_to_smt h) := by
@@ -785,18 +785,18 @@ theorem tupleSpine_eval_components
         rw [hm]
         simpa using hC
       · intro j x hx
-        rw [hEo, hEval, hm]
+        rw [hEo, hEval]
+        try rw [hm]
+        simp only [List.length_cons]
         cases j with
         | zero =>
             simp at hx
             subst hx
-            simpa using h0
+            exact h0
         | succ j =>
             simp at hx
             have hjlt : j < hs.length := (List.getElem?_eq_some_iff.mp hx).1
-            have hAj := hA j hjlt
-            rw [hm] at hAj
-            simpa [hArgs j x hx] using hAj
+            rw [hA j hjlt, hArgs j x hx]
 
 theorem tupleSpine_eval_eq
     (M : SmtModel) (hM : model_wf M) {r : Term} {hs : List Term}
@@ -804,7 +804,7 @@ theorem tupleSpine_eval_eq
     (hRNN : __smtx_typeof (__eo_to_smt r) ≠ SmtType.None)
     (V : SmtValue)
     (hVTy : __smtx_typeof_value V = __smtx_typeof (__eo_to_smt r))
-    (hArgs : ∀ j h, hs[j]? = some h ->
+    (hArgs : ∀ (j : Nat) (h : Term), hs[j]? = some h ->
       __smtx_model_eval M (__eo_to_smt h) =
         __smtx_apply_arg_nth_value V j (vsm_num_apply_args V)) :
     __smtx_model_eval M (__eo_to_smt r) = V := by
@@ -828,7 +828,7 @@ theorem tupleSpine_eval_eq
   · intro j hj
     rw [hCount] at hj ⊢
     have hget : hs[j]? = some hs[j] := List.getElem?_eq_getElem hj
-    rw [hRArgs j _ hget, hArgs j _ hget, hLen]
+    rw [hRArgs j _ hget, hArgs j _ hget]
 
 theorem tuple_select_numeral_eval
     (M : SmtModel) (hM : model_wf M) (x : Term) (c : SmtDatatypeCons)
@@ -872,17 +872,19 @@ theorem tuple_select_numeral_eval
 
 /-! ### `dt-inst` for tuples -/
 
-theorem mk_dt_inst_tuple_rec_spine (x : Term) (hx : x ≠ Term.Stuck) :
-    ∀ (T : Term) (n : Int),
-      __mk_dt_inst_tuple_rec T x (Term.Numeral n) ≠ Term.Stuck ->
-      ∃ hs, TupleSpine (__mk_dt_inst_tuple_rec T x (Term.Numeral n)) hs ∧
-        ∀ j h, hs[j]? = some h ->
+private theorem mk_dt_inst_tuple_rec_spine_aux (x : Term) (hx : x ≠ Term.Stuck)
+    (k : Nat) : ∀ (T : Term) (n : Int), sizeOf T < k ->
+    __mk_dt_inst_tuple_rec T x (Term.Numeral n) ≠ Term.Stuck ->
+      ∃ hs : List Term, TupleSpine (__mk_dt_inst_tuple_rec T x (Term.Numeral n)) hs ∧
+        ∀ (j : Nat) (h : Term), hs[j]? = some h ->
           h = Term.Apply
             (Term.UOp1 UserOp1.tuple_select (Term.Numeral (n + (j : Int)))) x := by
-  intro T
-  induction T with
+  induction k with
+  | zero => intro T n hk; omega
+  | succ k ih =>
+  intro T n hk hNe
+  cases T with
   | UOp op =>
-      intro n hNe
       cases op
       case UnitTuple =>
         have hEq :
@@ -895,8 +897,7 @@ theorem mk_dt_inst_tuple_rec_spine (x : Term) (hx : x ≠ Term.Stuck) :
         exfalso
         apply hNe
         cases x <;> simp_all [__mk_dt_inst_tuple_rec]
-  | Apply f T2 _ihF ihT2 =>
-      intro n hNe
+  | Apply f T2 =>
       have hShape :
           ∃ T1, f = Term.Apply (Term.UOp UserOp.Tuple) T1 := by
         cases f with
@@ -947,7 +948,7 @@ theorem mk_dt_inst_tuple_rec_spine (x : Term) (hx : x ≠ Term.Stuck) :
         cases hR : __mk_dt_inst_tuple_rec T2 x (Term.Numeral (n + 1)) <;>
           simp_all [__eo_mk_apply]
       rw [hMk]
-      rcases ihT2 (n + 1) hRecNe with ⟨hs, hSp, hSel⟩
+      rcases ih T2 (n + 1) (by simp at hk; omega) hRecNe with ⟨hs, hSp, hSel⟩
       refine ⟨_ :: hs, TupleSpine.cons _ _ hs hSp, ?_⟩
       intro j h hj
       cases j with
@@ -957,21 +958,34 @@ theorem mk_dt_inst_tuple_rec_spine (x : Term) (hx : x ≠ Term.Stuck) :
           simp
       | succ j =>
           simp at hj
-          rw [hSel j h hj]
-          congr 3
-          push_cast
-          omega
+          have hShift : n + 1 + (j : Int) = n + ((j + 1 : Nat) : Int) := by
+            push_cast
+            omega
+          rw [hSel j h hj, hShift]
+  | _ =>
+      exfalso
+      apply hNe
+      cases x <;> simp_all [__mk_dt_inst_tuple_rec]
+
+theorem mk_dt_inst_tuple_rec_spine (x : Term) (hx : x ≠ Term.Stuck)
+    (T : Term) (n : Int)
+    (hNe : __mk_dt_inst_tuple_rec T x (Term.Numeral n) ≠ Term.Stuck) :
+      ∃ hs : List Term, TupleSpine (__mk_dt_inst_tuple_rec T x (Term.Numeral n)) hs ∧
+        ∀ (j : Nat) (h : Term), hs[j]? = some h ->
+          h = Term.Apply
+            (Term.UOp1 UserOp1.tuple_select (Term.Numeral (n + (j : Int)))) x :=
+  mk_dt_inst_tuple_rec_spine_aux x hx (sizeOf T + 1) T n (by omega) hNe
 
 theorem mk_dt_inst_tuple_spine (x : Term) (hx : x ≠ Term.Stuck) :
     __mk_dt_inst_tuple (__eo_typeof x) x ≠ Term.Stuck ->
-    ∃ hs, TupleSpine (__mk_dt_inst_tuple (__eo_typeof x) x) hs ∧
-      ∀ j h, hs[j]? = some h ->
+    ∃ hs : List Term, TupleSpine (__mk_dt_inst_tuple (__eo_typeof x) x) hs ∧
+      ∀ (j : Nat) (h : Term), hs[j]? = some h ->
         h = Term.Apply
           (Term.UOp1 UserOp1.tuple_select (Term.Numeral (j : Int))) x := by
   intro hNe
   cases hT : __eo_typeof x with
   | UOp op =>
-      rw [hT] at hNe ⊢
+      rw [hT] at hNe
       cases op
       case UnitTuple =>
         have hEq :
@@ -985,7 +999,7 @@ theorem mk_dt_inst_tuple_spine (x : Term) (hx : x ≠ Term.Stuck) :
         apply hNe
         cases x <;> simp_all [__mk_dt_inst_tuple]
   | Apply f T2 =>
-      rw [hT] at hNe ⊢
+      rw [hT] at hNe
       have hShape :
           ∃ T1, f = Term.Apply (Term.UOp UserOp.Tuple) T1 := by
         cases f with
@@ -1027,7 +1041,7 @@ theorem mk_dt_inst_tuple_spine (x : Term) (hx : x ≠ Term.Stuck) :
 theorem tuple_inst_eval_eq
     (M : SmtModel) (hM : model_wf M) (x r : Term) (hs : List Term)
     (hSp : TupleSpine r hs)
-    (hSel : ∀ j h, hs[j]? = some h ->
+    (hSel : ∀ (j : Nat) (h : Term), hs[j]? = some h ->
       h = Term.Apply
         (Term.UOp1 UserOp1.tuple_select (Term.Numeral (j : Int))) x)
     (hTy : __smtx_typeof (__eo_to_smt x) = __smtx_typeof (__eo_to_smt r))
@@ -1060,27 +1074,29 @@ private theorem tsp_mk_apply_of_ne {x y : Term}
   unfold __eo_mk_apply
   split <;> simp_all
 
-theorem tuple_updater_elim_rhs_spine (nn : Int) (t a : Term) :
-    ∀ (T : Term) (b : Int),
-      __tuple_updater_elim_rhs
+private theorem tuple_updater_elim_rhs_spine_aux (nn : Int) (t a : Term)
+    (k : Nat) : ∀ (T : Term) (b : Int), sizeOf T < k ->
+    __tuple_updater_elim_rhs
           (Term.Apply
             (Term.Apply (Term.UOp1 UserOp1.tuple_update (Term.Numeral nn)) t) a)
           (__tuple_get_selectors_rec T (Term.Numeral b)) ≠ Term.Stuck ->
-      ∃ hs,
+      ∃ hs : List Term,
         TupleSpine
           (__tuple_updater_elim_rhs
             (Term.Apply
               (Term.Apply (Term.UOp1 UserOp1.tuple_update (Term.Numeral nn)) t) a)
             (__tuple_get_selectors_rec T (Term.Numeral b))) hs ∧
-        ∀ j h, hs[j]? = some h ->
+        ∀ (j : Nat) (h : Term), hs[j]? = some h ->
           (nn = b + (j : Int) ∧ h = a) ∨
           (nn ≠ b + (j : Int) ∧
             h = Term.Apply
               (Term.UOp1 UserOp1.tuple_select (Term.Numeral (b + (j : Int)))) t) := by
-  intro T
-  induction T with
+  induction k with
+  | zero => intro T b hk; omega
+  | succ k ih =>
+  intro T b hk hNe
+  cases T with
   | UOp op =>
-      intro b hNe
       cases op
       case UnitTuple =>
         have hEq :
@@ -1098,8 +1114,7 @@ theorem tuple_updater_elim_rhs_spine (nn : Int) (t a : Term) :
         exfalso
         apply hNe
         simp [__tuple_updater_elim_rhs, __tuple_get_selectors_rec]
-  | Apply f T2 _ihF ihT2 =>
-      intro b hNe
+  | Apply f T2 =>
       have hShape :
           ∃ T1, f = Term.Apply (Term.UOp UserOp.Tuple) T1 := by
         cases f with
@@ -1162,14 +1177,14 @@ theorem tuple_updater_elim_rhs_spine (nn : Int) (t a : Term) :
                 R') := by
         simp [__tuple_updater_elim_rhs, __eo_l_1___tuple_updater_elim_rhs, U, R']
       change __tuple_updater_elim_rhs U _ ≠ Term.Stuck at hNe
-      change ∃ hs, TupleSpine (__tuple_updater_elim_rhs U _) hs ∧ _
+      change ∃ hs : List Term, TupleSpine (__tuple_updater_elim_rhs U _) hs ∧ _
       rw [hSels', hRhs] at *
       have hR'Ne : R' ≠ Term.Stuck := by
         intro hStuck
         apply hNe
         rw [hStuck]
         simp [__eo_mk_apply]
-      rcases ihT2 (b + 1) hR'Ne with ⟨hs, hSp, hComp⟩
+      rcases ih T2 (b + 1) (by simp at hk; omega) hR'Ne with ⟨hs, hSp, hComp⟩
       have hShift : ∀ j : Nat, b + 1 + (j : Int) = b + ((j + 1 : Nat) : Int) := by
         intro j
         push_cast
@@ -1199,7 +1214,7 @@ theorem tuple_updater_elim_rhs_spine (nn : Int) (t a : Term) :
             simp at hj
             rcases hComp j h hj with ⟨hEq, hH⟩ | ⟨hEq, hH⟩
             · left
-              exact ⟨by rw [hEq, hShift j], hH⟩
+              exact ⟨by rw [← hShift j]; exact hEq, hH⟩
             · right
               exact ⟨by rw [← hShift j]; exact hEq, by rw [hH, hShift j]⟩
       · have hIte :
@@ -1229,22 +1244,40 @@ theorem tuple_updater_elim_rhs_spine (nn : Int) (t a : Term) :
             simp at hj
             rcases hComp j h hj with ⟨hEq, hH⟩ | ⟨hEq, hH⟩
             · left
-              exact ⟨by rw [hEq, hShift j], hH⟩
+              exact ⟨by rw [← hShift j]; exact hEq, hH⟩
             · right
               exact ⟨by rw [← hShift j]; exact hEq, by rw [hH, hShift j]⟩
   | _ =>
-      intro b hNe
       exfalso
       apply hNe
       simp [__tuple_updater_elim_rhs, __tuple_get_selectors_rec]
+
+theorem tuple_updater_elim_rhs_spine (nn : Int) (t a : Term)
+    (T : Term) (b : Int)
+    (hNe : __tuple_updater_elim_rhs
+          (Term.Apply
+            (Term.Apply (Term.UOp1 UserOp1.tuple_update (Term.Numeral nn)) t) a)
+          (__tuple_get_selectors_rec T (Term.Numeral b)) ≠ Term.Stuck) :
+      ∃ hs : List Term,
+        TupleSpine
+          (__tuple_updater_elim_rhs
+            (Term.Apply
+              (Term.Apply (Term.UOp1 UserOp1.tuple_update (Term.Numeral nn)) t) a)
+            (__tuple_get_selectors_rec T (Term.Numeral b))) hs ∧
+        ∀ (j : Nat) (h : Term), hs[j]? = some h ->
+          (nn = b + (j : Int) ∧ h = a) ∨
+          (nn ≠ b + (j : Int) ∧
+            h = Term.Apply
+              (Term.UOp1 UserOp1.tuple_select (Term.Numeral (b + (j : Int)))) t) :=
+  tuple_updater_elim_rhs_spine_aux nn t a (sizeOf T + 1) T b (by omega) hNe
 
 theorem mk_dt_updater_elim_conc_tuple_spine (nn : Int) (t a rhs : Term) :
     __mk_dt_updater_elim_conc
         (Term.Apply
           (Term.Apply (Term.UOp1 UserOp1.tuple_update (Term.Numeral nn)) t) a)
         rhs = Term.Boolean true ->
-    ∃ hs, TupleSpine rhs hs ∧
-      ∀ j h, hs[j]? = some h ->
+    ∃ hs : List Term, TupleSpine rhs hs ∧
+      ∀ (j : Nat) (h : Term), hs[j]? = some h ->
         (nn = (j : Int) ∧ h = a) ∨
         (nn ≠ (j : Int) ∧
           h = Term.Apply
@@ -1338,7 +1371,7 @@ theorem mk_dt_updater_elim_conc_tuple_spine (nn : Int) (t a rhs : Term) :
 theorem tuple_updater_elim_eval_eq
     (M : SmtModel) (hM : model_wf M) (nn : Int) (t a r : Term)
     (hs : List Term) (hSp : TupleSpine r hs)
-    (hComp : ∀ j h, hs[j]? = some h ->
+    (hComp : ∀ (j : Nat) (h : Term), hs[j]? = some h ->
       (nn = (j : Int) ∧ h = a) ∨
       (nn ≠ (j : Int) ∧
         h = Term.Apply
@@ -1410,7 +1443,7 @@ theorem tuple_updater_elim_eval_eq
   · rw [smt_model_eval_preserves_type_of_non_none M hM _ hUNN, hTy]
   · intro j h hj
     have hjlt : j < hs.length := (List.getElem?_eq_some_iff.mp hj).1
-    rw [hUEval, hUCount, hUArgs j (by omega)]
+    rw [hUEval, hUCount, hUArgs j (by rw [← hLen]; exact hjlt)]
     rcases hComp j h hj with ⟨hnj, hH⟩ | ⟨hnj, hH⟩
     · subst hH
       have hEqNat : native_nateq (native_int_to_nat nn) j = true := by
@@ -1418,10 +1451,14 @@ theorem tuple_updater_elim_eval_eq
           SmtEval.native_int_to_nat, hnj]
       simp [hEqNat]
     · subst hH
+      have hNeToNat : Int.toNat nn ≠ j := by
+        intro h'
+        apply hnj
+        rw [← h']
+        exact (Int.toNat_of_nonneg hNonneg).symm
       have hNeNat : native_nateq (native_int_to_nat nn) j = false := by
         simp [native_nateq, SmtEval.native_nateq, native_int_to_nat,
-          SmtEval.native_int_to_nat]
-        omega
+          SmtEval.native_int_to_nat, hNeToNat]
       simp [hNeNat]
       rw [tuple_select_numeral_eval M hM t c j hTTy,
         tuple_selector_eval_eq_arg M (SmtDatatype.sum c SmtDatatype.null)
