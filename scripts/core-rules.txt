@@ -138,6 +138,7 @@ instantiate
 skolemize
 skolem_intro
 alpha_equiv
+beta_reduce
 quant_var_reordering
 exists_elim
 quant_unused_vars

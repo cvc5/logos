@@ -968,16 +968,6 @@
 (define-symbol lambda ((! vs :raw) body)
   :term (lambda vs body) ($eo_to_smt_lambda vs body))
 
-; The methods and the rule that reduce an application of the binder are left
-; out of the compilation for now: the desugar stage drops what an exclusion
-; names. See Desugar::echo for what it does with them and
-; Pipeline.defs_excludes in tools/eoc/driver.py, both in the ethos tree, for
-; how they are taken from the generated file.
-(define-method $beta_reduce_type :exclude)
-
-(define-method $beta_reduce :exclude)
-
-(define-rule beta-reduce :exclude)
 
 ;-----------------------------------------------------------------------------
 (section "The type constructors")
