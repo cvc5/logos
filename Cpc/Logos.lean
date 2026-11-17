@@ -4159,7 +4159,7 @@ def __mk_dt_collapse_updater_rhs : Term -> Term
   | (Term.Apply (Term.Apply (Term.UOp1 UserOp1.update s) t) a) =>
     let _v0 := (__dt_get_selectors_of_app (__eo_typeof t) t)
     let _v1 := (__eo_list_find Term.__eo_List_cons _v0 s)
-    (__eo_ite (__eo_is_neg _v1) t (__dt_collapse_updater_rhs t a (__eo_add (__eo_add (__eo_len _v0) _v1) (Term.Numeral (-1 : native_Int)))))
+    (__eo_ite (__eo_is_neg _v1) t (__dt_collapse_updater_rhs t a (__eo_add (__eo_add (__eo_list_len Term.__eo_List_cons _v0) (__eo_neg _v1)) (Term.Numeral (-1 : native_Int)))))
   | (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_update n) t) a) => (__tuple_collapse_updater_rhs t a n)
   | _ => Term.Stuck
 
