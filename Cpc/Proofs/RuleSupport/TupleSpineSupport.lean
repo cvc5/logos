@@ -12,6 +12,7 @@ open Smtm
 
 set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
+set_option linter.unusedSimpArgs false
 
 attribute [local simp] native_ite native_teq native_not native_and native_zlt
 
@@ -872,6 +873,43 @@ theorem tuple_select_numeral_eval
 
 /-! ### `dt-inst` for tuples -/
 
+private theorem tsp_mk_apply_of_ne' {x y : Term}
+    (hx : x ≠ Term.Stuck) (hy : y ≠ Term.Stuck) :
+    __eo_mk_apply x y = Term.Apply x y := by
+  unfold __eo_mk_apply
+  split <;> simp_all
+
+private theorem mk_dt_inst_tuple_rec_shape (T x n : Term) :
+    __mk_dt_inst_tuple_rec T x n ≠ Term.Stuck ->
+    T = Term.UOp UserOp.UnitTuple ∨
+      ∃ T1 T2, T = Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2 := by
+  intro hNe
+  unfold __mk_dt_inst_tuple_rec at hNe
+  split at hNe <;>
+    first
+    | exact absurd rfl hNe
+    | exact Or.inl rfl
+    | exact Or.inr ⟨_, _, rfl⟩
+
+private theorem mk_dt_inst_tuple_rec_unit (x n : Term)
+    (hx : x ≠ Term.Stuck) (hn : n ≠ Term.Stuck) :
+    __mk_dt_inst_tuple_rec (Term.UOp UserOp.UnitTuple) x n =
+      Term.UOp UserOp.tuple_unit := by
+  rw [__mk_dt_inst_tuple_rec.eq_def]
+  split <;> simp_all
+
+private theorem mk_dt_inst_tuple_rec_tuple (T1 T2 x : Term) (n : Int)
+    (hx : x ≠ Term.Stuck) :
+    __mk_dt_inst_tuple_rec
+        (Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2) x
+        (Term.Numeral n) =
+      __eo_mk_apply
+        (Term.Apply (Term.UOp UserOp.tuple)
+          (Term.Apply (Term.UOp1 UserOp1.tuple_select (Term.Numeral n)) x))
+        (__mk_dt_inst_tuple_rec T2 x (Term.Numeral (n + 1))) := by
+  rw [__mk_dt_inst_tuple_rec.eq_def]
+  split <;> simp_all [__eo_add, native_zplus, SmtEval.native_zplus]
+
 private theorem mk_dt_inst_tuple_rec_spine_aux (x : Term) (hx : x ≠ Term.Stuck)
     (k : Nat) : ∀ (T : Term) (n : Int), sizeOf T < k ->
     __mk_dt_inst_tuple_rec T x (Term.Numeral n) ≠ Term.Stuck ->
@@ -883,89 +921,32 @@ private theorem mk_dt_inst_tuple_rec_spine_aux (x : Term) (hx : x ≠ Term.Stuck
   | zero => intro T n hk; omega
   | succ k ih =>
   intro T n hk hNe
-  cases T with
-  | UOp op =>
-      cases op
-      case UnitTuple =>
-        have hEq :
-            __mk_dt_inst_tuple_rec (Term.UOp UserOp.UnitTuple) x (Term.Numeral n) =
-              Term.UOp UserOp.tuple_unit := by
-          cases x <;> simp_all [__mk_dt_inst_tuple_rec]
-        rw [hEq]
-        exact ⟨[], TupleSpine.unit, by intro j h hj; simp at hj⟩
-      all_goals
-        exfalso
-        apply hNe
-        cases x <;> simp_all [__mk_dt_inst_tuple_rec]
-  | Apply f T2 =>
-      have hShape :
-          ∃ T1, f = Term.Apply (Term.UOp UserOp.Tuple) T1 := by
-        cases f with
-        | Apply g T1 =>
-            cases g with
-            | UOp op =>
-                cases op
-                case Tuple => exact ⟨T1, rfl⟩
-                all_goals
-                  exfalso
-                  apply hNe
-                  cases x <;> simp_all [__mk_dt_inst_tuple_rec]
-            | _ =>
-                exfalso
-                apply hNe
-                cases x <;> simp_all [__mk_dt_inst_tuple_rec]
-        | _ =>
-            exfalso
-            apply hNe
-            cases x <;> simp_all [__mk_dt_inst_tuple_rec]
-      rcases hShape with ⟨T1, rfl⟩
-      have hEq :
-          __mk_dt_inst_tuple_rec
-              (Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2) x
-              (Term.Numeral n) =
-            __eo_mk_apply
-              (Term.Apply (Term.UOp UserOp.tuple)
-                (Term.Apply (Term.UOp1 UserOp1.tuple_select (Term.Numeral n)) x))
-              (__mk_dt_inst_tuple_rec T2 x (Term.Numeral (n + 1))) := by
-        cases x <;> simp_all [__mk_dt_inst_tuple_rec, __eo_add, native_zplus,
-          SmtEval.native_zplus]
-      rw [hEq] at hNe ⊢
-      have hRecNe :
-          __mk_dt_inst_tuple_rec T2 x (Term.Numeral (n + 1)) ≠ Term.Stuck := by
-        intro hStuck
-        apply hNe
-        rw [hStuck]
-        simp [__eo_mk_apply]
-      have hMk :
-          __eo_mk_apply
-              (Term.Apply (Term.UOp UserOp.tuple)
-                (Term.Apply (Term.UOp1 UserOp1.tuple_select (Term.Numeral n)) x))
-              (__mk_dt_inst_tuple_rec T2 x (Term.Numeral (n + 1))) =
-            Term.Apply
-              (Term.Apply (Term.UOp UserOp.tuple)
-                (Term.Apply (Term.UOp1 UserOp1.tuple_select (Term.Numeral n)) x))
-              (__mk_dt_inst_tuple_rec T2 x (Term.Numeral (n + 1))) := by
-        cases hR : __mk_dt_inst_tuple_rec T2 x (Term.Numeral (n + 1)) <;>
-          simp_all [__eo_mk_apply]
-      rw [hMk]
-      rcases ih T2 (n + 1) (by simp at hk; omega) hRecNe with ⟨hs, hSp, hSel⟩
-      refine ⟨_ :: hs, TupleSpine.cons _ _ hs hSp, ?_⟩
-      intro j h hj
-      cases j with
-      | zero =>
-          simp at hj
-          subst hj
-          simp
-      | succ j =>
-          simp at hj
-          have hShift : n + 1 + (j : Int) = n + ((j + 1 : Nat) : Int) := by
-            push_cast
-            omega
-          rw [hSel j h hj, hShift]
-  | _ =>
-      exfalso
+  rcases mk_dt_inst_tuple_rec_shape T x (Term.Numeral n) hNe with
+    rfl | ⟨T1, T2, rfl⟩
+  · rw [mk_dt_inst_tuple_rec_unit x _ hx (by simp)]
+    exact ⟨[], TupleSpine.unit, by intro j h hj; simp at hj⟩
+  · rw [mk_dt_inst_tuple_rec_tuple T1 T2 x n hx] at hNe ⊢
+    have hRecNe :
+        __mk_dt_inst_tuple_rec T2 x (Term.Numeral (n + 1)) ≠ Term.Stuck := by
+      intro hStuck
       apply hNe
-      cases x <;> simp_all [__mk_dt_inst_tuple_rec]
+      rw [hStuck]
+      simp [__eo_mk_apply]
+    rw [tsp_mk_apply_of_ne' (by simp) hRecNe]
+    rcases ih T2 (n + 1) (by simp at hk; omega) hRecNe with ⟨hs, hSp, hSel⟩
+    refine ⟨_ :: hs, TupleSpine.cons _ _ hs hSp, ?_⟩
+    intro j h hj
+    cases j with
+    | zero =>
+        simp at hj
+        subst hj
+        simp
+    | succ j =>
+        simp at hj
+        have hShift : n + 1 + (j : Int) = n + ((j + 1 : Nat) : Int) := by
+          push_cast
+          omega
+        rw [hSel j h hj, hShift]
 
 theorem mk_dt_inst_tuple_rec_spine (x : Term) (hx : x ≠ Term.Stuck)
     (T : Term) (n : Int)
@@ -976,6 +957,23 @@ theorem mk_dt_inst_tuple_rec_spine (x : Term) (hx : x ≠ Term.Stuck)
             (Term.UOp1 UserOp1.tuple_select (Term.Numeral (n + (j : Int)))) x :=
   mk_dt_inst_tuple_rec_spine_aux x hx (sizeOf T + 1) T n (by omega) hNe
 
+private theorem mk_dt_inst_tuple_shape (T x : Term) (hx : x ≠ Term.Stuck) :
+    __mk_dt_inst_tuple T x ≠ Term.Stuck ->
+    (T = Term.UOp UserOp.UnitTuple ∧
+        __mk_dt_inst_tuple T x = Term.UOp UserOp.tuple_unit) ∨
+      ∃ T1 T2, T = Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2 ∧
+        __mk_dt_inst_tuple T x = __mk_dt_inst_tuple_rec T x (Term.Numeral 0) := by
+  intro hNe
+  have hNe' := hNe
+  unfold __mk_dt_inst_tuple at hNe'
+  split at hNe'
+  · exact absurd rfl hNe'
+  · right
+    exact ⟨_, _, rfl, by rw [__mk_dt_inst_tuple.eq_def]; split <;> simp_all⟩
+  · left
+    exact ⟨rfl, by rw [__mk_dt_inst_tuple.eq_def]; split <;> simp_all⟩
+  · exact absurd rfl hNe'
+
 theorem mk_dt_inst_tuple_spine (x : Term) (hx : x ≠ Term.Stuck) :
     __mk_dt_inst_tuple (__eo_typeof x) x ≠ Term.Stuck ->
     ∃ hs : List Term, TupleSpine (__mk_dt_inst_tuple (__eo_typeof x) x) hs ∧
@@ -983,59 +981,13 @@ theorem mk_dt_inst_tuple_spine (x : Term) (hx : x ≠ Term.Stuck) :
         h = Term.Apply
           (Term.UOp1 UserOp1.tuple_select (Term.Numeral (j : Int))) x := by
   intro hNe
-  cases hT : __eo_typeof x with
-  | UOp op =>
-      rw [hT] at hNe
-      cases op
-      case UnitTuple =>
-        have hEq :
-            __mk_dt_inst_tuple (Term.UOp UserOp.UnitTuple) x =
-              Term.UOp UserOp.tuple_unit := by
-          cases x <;> simp_all [__mk_dt_inst_tuple]
-        rw [hEq]
-        exact ⟨[], TupleSpine.unit, by intro j h hj; simp at hj⟩
-      all_goals
-        exfalso
-        apply hNe
-        cases x <;> simp_all [__mk_dt_inst_tuple]
-  | Apply f T2 =>
-      rw [hT] at hNe
-      have hShape :
-          ∃ T1, f = Term.Apply (Term.UOp UserOp.Tuple) T1 := by
-        cases f with
-        | Apply g T1 =>
-            cases g with
-            | UOp op =>
-                cases op
-                case Tuple => exact ⟨T1, rfl⟩
-                all_goals
-                  exfalso
-                  apply hNe
-                  cases x <;> simp_all [__mk_dt_inst_tuple]
-            | _ =>
-                exfalso
-                apply hNe
-                cases x <;> simp_all [__mk_dt_inst_tuple]
-        | _ =>
-            exfalso
-            apply hNe
-            cases x <;> simp_all [__mk_dt_inst_tuple]
-      rcases hShape with ⟨T1, rfl⟩
-      have hEq :
-          __mk_dt_inst_tuple
-              (Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2) x =
-            __mk_dt_inst_tuple_rec
-              (Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2) x
-              (Term.Numeral 0) := by
-        cases x <;> simp_all [__mk_dt_inst_tuple]
-      rw [hEq] at hNe ⊢
-      rcases mk_dt_inst_tuple_rec_spine x hx _ 0 hNe with ⟨hs, hSp, hSel⟩
-      exact ⟨hs, hSp, by intro j h hj; simpa using hSel j h hj⟩
-  | _ =>
-      exfalso
-      apply hNe
-      rw [hT]
-      cases x <;> simp_all [__mk_dt_inst_tuple]
+  rcases mk_dt_inst_tuple_shape (__eo_typeof x) x hx hNe with
+    ⟨_hT, hEq⟩ | ⟨T1, T2, hT, hEq⟩
+  · rw [hEq]
+    exact ⟨[], TupleSpine.unit, by intro j h hj; simp at hj⟩
+  · rw [hEq] at hNe ⊢
+    rcases mk_dt_inst_tuple_rec_spine x hx _ 0 hNe with ⟨hs, hSp, hSel⟩
+    exact ⟨hs, hSp, by intro j h hj; simpa using hSel j h hj⟩
 
 /-- Semantic core of the tuple case of `dt-inst`. -/
 theorem tuple_inst_eval_eq
@@ -1074,6 +1026,18 @@ private theorem tsp_mk_apply_of_ne {x y : Term}
   unfold __eo_mk_apply
   split <;> simp_all
 
+private theorem tsp_get_selectors_rec_shape (T n : Term) :
+    __tuple_get_selectors_rec T n ≠ Term.Stuck ->
+    T = Term.UOp UserOp.UnitTuple ∨
+      ∃ T1 T2, T = Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2 := by
+  intro hNe
+  unfold __tuple_get_selectors_rec at hNe
+  split at hNe <;>
+    first
+    | exact absurd rfl hNe
+    | exact Or.inl rfl
+    | exact Or.inr ⟨_, _, rfl⟩
+
 private theorem tuple_updater_elim_rhs_spine_aux (nn : Int) (t a : Term)
     (k : Nat) : ∀ (T : Term) (b : Int), sizeOf T < k ->
     __tuple_updater_elim_rhs
@@ -1095,47 +1059,25 @@ private theorem tuple_updater_elim_rhs_spine_aux (nn : Int) (t a : Term)
   | zero => intro T b hk; omega
   | succ k ih =>
   intro T b hk hNe
-  cases T with
-  | UOp op =>
-      cases op
-      case UnitTuple =>
-        have hEq :
-            __tuple_updater_elim_rhs
-                (Term.Apply
-                  (Term.Apply (Term.UOp1 UserOp1.tuple_update (Term.Numeral nn)) t) a)
-                (__tuple_get_selectors_rec (Term.UOp UserOp.UnitTuple)
-                  (Term.Numeral b)) =
-              Term.UOp UserOp.tuple_unit := by
-          simp [__tuple_updater_elim_rhs, __tuple_get_selectors_rec,
-            __eo_l_1___tuple_updater_elim_rhs]
-        rw [hEq]
-        exact ⟨[], TupleSpine.unit, by intro j h hj; simp at hj⟩
-      all_goals
-        exfalso
-        apply hNe
-        simp [__tuple_updater_elim_rhs, __tuple_get_selectors_rec]
-  | Apply f T2 =>
-      have hShape :
-          ∃ T1, f = Term.Apply (Term.UOp UserOp.Tuple) T1 := by
-        cases f with
-        | Apply g T1 =>
-            cases g with
-            | UOp op =>
-                cases op
-                case Tuple => exact ⟨T1, rfl⟩
-                all_goals
-                  exfalso
-                  apply hNe
-                  simp [__tuple_updater_elim_rhs, __tuple_get_selectors_rec]
-            | _ =>
-                exfalso
-                apply hNe
-                simp [__tuple_updater_elim_rhs, __tuple_get_selectors_rec]
-        | _ =>
-            exfalso
-            apply hNe
-            simp [__tuple_updater_elim_rhs, __tuple_get_selectors_rec]
-      rcases hShape with ⟨T1, rfl⟩
+  have hSelsNe : __tuple_get_selectors_rec T (Term.Numeral b) ≠ Term.Stuck := by
+    intro hStuck
+    apply hNe
+    rw [hStuck]
+    simp [__tuple_updater_elim_rhs]
+  rcases tsp_get_selectors_rec_shape T (Term.Numeral b) hSelsNe with
+    rfl | ⟨T1, T2, rfl⟩
+  · have hEq :
+        __tuple_updater_elim_rhs
+            (Term.Apply
+              (Term.Apply (Term.UOp1 UserOp1.tuple_update (Term.Numeral nn)) t) a)
+            (__tuple_get_selectors_rec (Term.UOp UserOp.UnitTuple)
+              (Term.Numeral b)) =
+          Term.UOp UserOp.tuple_unit := by
+      simp [__tuple_updater_elim_rhs, __tuple_get_selectors_rec,
+        __eo_l_1___tuple_updater_elim_rhs]
+    rw [hEq]
+    exact ⟨[], TupleSpine.unit, by intro j h hj; simp at hj⟩
+  · 
       let U :=
         Term.Apply
           (Term.Apply (Term.UOp1 UserOp1.tuple_update (Term.Numeral nn)) t) a
@@ -1247,10 +1189,6 @@ private theorem tuple_updater_elim_rhs_spine_aux (nn : Int) (t a : Term)
               exact ⟨by rw [← hShift j]; exact hEq, hH⟩
             · right
               exact ⟨by rw [← hShift j]; exact hEq, by rw [hH, hShift j]⟩
-  | _ =>
-      exfalso
-      apply hNe
-      simp [__tuple_updater_elim_rhs, __tuple_get_selectors_rec]
 
 theorem tuple_updater_elim_rhs_spine (nn : Int) (t a : Term)
     (T : Term) (b : Int)
@@ -1270,6 +1208,17 @@ theorem tuple_updater_elim_rhs_spine (nn : Int) (t a : Term)
             h = Term.Apply
               (Term.UOp1 UserOp1.tuple_select (Term.Numeral (b + (j : Int)))) t) :=
   tuple_updater_elim_rhs_spine_aux nn t a (sizeOf T + 1) T b (by omega) hNe
+
+private theorem tsp_dt_get_selectors_tuple_shape (T : Term) :
+    __dt_get_selectors T (Term.UOp UserOp.tuple) ≠ Term.Stuck ->
+    ∃ T1 T2, T = Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2 := by
+  intro hNe
+  unfold __dt_get_selectors at hNe
+  split at hNe <;>
+    first
+    | exact absurd rfl hNe
+    | exact ⟨_, _, rfl⟩
+    | (exfalso; simp_all [__eo_dt_selectors, __eo_dt_selectors_main])
 
 theorem mk_dt_updater_elim_conc_tuple_spine (nn : Int) (t a rhs : Term) :
     __mk_dt_updater_elim_conc
@@ -1322,38 +1271,8 @@ theorem mk_dt_updater_elim_conc_tuple_spine (nn : Int) (t a rhs : Term) :
     split <;> simp_all [U]
   have hShape :
       ∃ T1 T2, __eo_typeof t =
-        Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2 := by
-    cases hT : __eo_typeof t with
-    | Apply f T2 =>
-        cases f with
-        | Apply g T1 =>
-            cases g with
-            | UOp op =>
-                cases op
-                case Tuple => exact ⟨T1, T2, rfl⟩
-                all_goals
-                  exfalso
-                  apply hSsNe
-                  rw [hT]
-                  simp [__dt_get_selectors, __eo_dt_selectors,
-                    __eo_dt_selectors_main]
-            | _ =>
-                exfalso
-                apply hSsNe
-                rw [hT]
-                simp [__dt_get_selectors, __eo_dt_selectors,
-                  __eo_dt_selectors_main]
-        | _ =>
-            exfalso
-            apply hSsNe
-            rw [hT]
-            simp [__dt_get_selectors, __eo_dt_selectors,
-              __eo_dt_selectors_main]
-    | _ =>
-        exfalso
-        apply hSsNe
-        rw [hT]
-        simp [__dt_get_selectors, __eo_dt_selectors, __eo_dt_selectors_main]
+        Term.Apply (Term.Apply (Term.UOp UserOp.Tuple) T1) T2 :=
+    tsp_dt_get_selectors_tuple_shape _ hSsNe
   rcases hShape with ⟨T1, T2, hT⟩
   rw [hT] at hMk'
   have hMk'' :

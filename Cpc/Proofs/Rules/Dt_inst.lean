@@ -118,45 +118,28 @@ private theorem mk_dt_inst_prem_cases (prem x : Term) :
     apply hNe
     cases prem <;> rfl
   refine ⟨hx, ?_⟩
-  cases prem with
-  | Boolean b =>
-      cases b with
-      | true =>
-          left
-          refine ⟨rfl, ?_⟩
-          cases x <;> first | rfl | exact absurd rfl hx
-      | false =>
-          exfalso
-          apply hNe
-          cases x <;> first | rfl | exact absurd rfl hx
-  | Apply f x' =>
-      cases f with
-      | UOp1 op c =>
-          cases op with
-          | is =>
-              right
-              have hEq :
-                  __mk_dt_inst_prem (Term.Apply (Term.UOp1 UserOp1.is c) x') x =
-                    __eo_requires (__eo_eq x' x) (Term.Boolean true)
-                      (__mk_dt_inst (__eo_typeof x') c x') := by
-                cases x <;> first | rfl | exact absurd rfl hx
-              rw [hEq] at hNe ⊢
-              have hXX : x' = x :=
-                eo_eq_true_eq (eo_requires_eq_of_ne_stuck _ _ _ hNe)
-              subst hXX
-              exact ⟨c, rfl, eo_requires_eq_result_of_ne_stuck _ _ _ hNe⟩
-          | _ =>
-              exfalso
-              apply hNe
-              cases x <;> first | rfl | exact absurd rfl hx
-      | _ =>
-          exfalso
-          apply hNe
-          cases x <;> first | rfl | exact absurd rfl hx
-  | _ =>
-      exfalso
-      apply hNe
-      cases x <;> first | rfl | exact absurd rfl hx
+  have hNe' := hNe
+  unfold __mk_dt_inst_prem at hNe'
+  split at hNe'
+  · exact absurd rfl hNe'
+  · left
+    refine ⟨rfl, ?_⟩
+    rw [__mk_dt_inst_prem.eq_def]
+    split <;> simp_all
+  · right
+    rename_i c x' _
+    have hXX : x' = x :=
+      eo_eq_true_eq (eo_requires_eq_of_ne_stuck _ _ _ hNe')
+    subst hXX
+    refine ⟨c, rfl, ?_⟩
+    have hVal :
+        __mk_dt_inst_prem (Term.Apply (Term.UOp1 UserOp1.is c) x') x' =
+          __eo_requires (__eo_eq x' x') (Term.Boolean true)
+            (__mk_dt_inst (__eo_typeof x') c x') := by
+      cases x' <;> first | rfl | exact absurd rfl hx
+    rw [hVal]
+    exact eo_requires_eq_result_of_ne_stuck _ _ _ hNe'
+  · exact absurd rfl hNe'
 
 private theorem prog_dt_inst_eq_arg_of_typeof_bool
     (a1 : Term) :
