@@ -146,14 +146,16 @@ private theorem mk_dt_updater_elim_conc_update_cases
       (Term.Apply (Term.Apply (Term.UOp1 UserOp1.update sel) t) a) c
       (__dt_get_selectors (__eo_typeof t) c) = tu := by
   intro hConc
-  unfold __mk_dt_updater_elim_conc at hConc
-  split at hConc
-  · cases hConc
-  · rename_i hEq _
-    cases hEq
-  · rename_i s' t' a' c tu t2 t3 hEq hRhs
-    cases hEq
-    subst hRhs
+  by_cases hShape :
+      ∃ c tu t2 t3,
+        rhs =
+          Term.Apply
+            (Term.Apply
+              (Term.Apply (Term.UOp UserOp.ite)
+                (Term.Apply (Term.UOp1 UserOp1.is c) t2))
+              tu)
+            t3
+  · rcases hShape with ⟨c, tu, t2, t3, rfl⟩
     have hOuterNe :
         __eo_requires (__eo_and (__eo_eq t t2) (__eo_eq t t3))
             (Term.Boolean true)
@@ -162,7 +164,9 @@ private theorem mk_dt_updater_elim_conc_update_cases
                 (Term.Apply (Term.Apply (Term.UOp1 UserOp1.update sel) t) a) c
                 (__dt_get_selectors (__eo_typeof t) c))
               tu (Term.Boolean true)) ≠ Term.Stuck := by
-      rw [hConc]
+      have h := hConc
+      simp only [__mk_dt_updater_elim_conc] at h
+      rw [h]
       simp
     rcases RuleProofs.eqs_of_requires_and_eq_true_not_stuck t t t2 t3 _ hOuterNe with
       ⟨hT2, hT3⟩
@@ -171,7 +175,9 @@ private theorem mk_dt_updater_elim_conc_update_cases
     have hInnerNe :=
       eo_requires_result_ne_stuck_of_ne_stuck_local _ _ _ hOuterNe
     exact ⟨c, tu, rfl, eo_requires_eq_of_ne_stuck_local _ _ _ hInnerNe⟩
-  · cases hConc
+  · exfalso
+    rw [__mk_dt_updater_elim_conc.eq_def] at hConc
+    split at hConc <;> simp_all
 
 private theorem typed___eo_prog_dt_updater_elim_impl
     (a1 : Term) :
@@ -1415,7 +1421,7 @@ private theorem dt_updater_elim_tuple_rel
           (Term.Apply (Term.UOp UserOp.eq)
             (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_update idx) t) a))
           rhs)) :
-    smt_value_rel
+    RuleProofs.smt_value_rel
       (__smtx_model_eval M
         (__eo_to_smt
           (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_update idx) t) a)))

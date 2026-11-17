@@ -199,6 +199,10 @@ private theorem dcu_collapse_rhs_spine (a : Term) (ha : a ≠ Term.Stuck) :
         rw [hIdx, List.set_append_left _ _ hlt]
         exact DtAppSpine.app x hSp'
 
+private theorem dcu_numeral_congr {x y : Int} (h : x = y) :
+    Term.Numeral x = Term.Numeral y := by
+  rw [h]
+
 /-! ### Selector lists -/
 
 private theorem dcu_get_selectors_of_app_root (T : Term) (hT : T ≠ Term.Stuck)
@@ -289,7 +293,7 @@ private theorem dcu_cons_selectors_len
       simp only [__eo_add, native_zplus, SmtEval.native_zplus, dcuK,
         __eo_to_smt_datatype, __eo_to_smt_datatype_cons, __smtx_dt_num_sels,
         __smtx_dtc_num_sels]
-      rw [Term.Numeral.injEq]
+      apply dcu_numeral_congr
       push_cast
       omega
   | Datatype.sum c d, Nat.succ ci, ai, h => by
@@ -382,7 +386,7 @@ private theorem dcu_cons_selectors_find
         · rw [hK]
           omega
         rw [hFind]
-        rw [Term.Numeral.injEq]
+        apply dcu_numeral_congr
         push_cast
         omega
   | Datatype.sum c d, Nat.succ ci, ai, b, h => by
@@ -697,8 +701,8 @@ theorem dt_collapse_updater_found_rel
         Term.Numeral ((dcuK (__eo_dd_resolve s d0) i : Int) - j - 1) := by
     simp only [__eo_add, __eo_neg, native_zplus, SmtEval.native_zplus,
       native_zneg, SmtEval.native_zneg]
-    try congr 1
-    all_goals omega
+    apply dcu_numeral_congr
+    omega
   rw [hIdxEq] at hRhs
   have hRhsNe : rhs ≠ Term.Stuck :=
     RuleProofs.term_ne_stuck_of_has_smt_translation rhs hRhsNN

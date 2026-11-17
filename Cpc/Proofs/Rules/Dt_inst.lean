@@ -72,7 +72,7 @@ private theorem eq_args_of_prog_dt_inst_ne_stuck
                                     intro hStuck
                                     apply hReq
                                     simp [__eo_requires, hStuck, native_ite,
-                                      native_teq]
+                                      native_teq, native_not, SmtEval.native_not]
                                   have hReqEq :
                                       __eo_requires (__mk_dt_inst_prem prem x) t
                                           body = body :=
@@ -1793,8 +1793,7 @@ private theorem dt_inst_tuple_interprets
   have hInnerEval :
       __smtx_model_eval M (SmtTerm.eq (__eo_to_smt x) (__eo_to_smt t)) =
         SmtValue.Boolean true := by
-    simp only [__smtx_model_eval]
-    rw [hEvalEq]
+    rw [smtx_eval_eq_term_eq, hEvalEq]
     cases hV : __smtx_model_eval M (__eo_to_smt x) with
     | RegLan r =>
         exfalso
@@ -1803,9 +1802,7 @@ private theorem dt_inst_tuple_interprets
         rw [hInner.1, hRTy] at hXEvalTy
         simp [__smtx_typeof_value] at hXEvalTy
     | _ => simp [__smtx_model_eval_eq, native_veq]
-  simp only [__smtx_model_eval]
-  rw [show __smtx_model_eval M (SmtTerm.eq (__eo_to_smt x) (__eo_to_smt t)) =
-      SmtValue.Boolean true from hInnerEval]
+  rw [smtx_eval_eq_term_eq, hInnerEval]
   simp [__smtx_model_eval, __smtx_model_eval_eq, native_veq]
 
 private theorem facts___eo_prog_dt_inst_impl
