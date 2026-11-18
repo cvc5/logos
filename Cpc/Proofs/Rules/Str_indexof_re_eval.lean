@@ -959,6 +959,23 @@ private theorem str_indexof_re_eval_idx_term_eq
           str_indexof_re_eval_idx_term (Term.String (c :: cs)) r ≠ Term.Stuck :=
         str_indexof_re_eval_idx_ne_stuck_of_search_ne (Term.String (c :: cs)) r
           offset hSearchNe
+      have hLen : (c :: cs).length < 4294967296 :=
+        str_flatten_nary_intro_string_len_lt (c :: cs) (by
+          intro hFlat
+          apply hIdxNe
+          have hRec :
+              __str_first_match_rec Term.Stuck r
+                  (str_indexof_re_eval_match_regex r) (Term.Numeral 0) =
+                Term.Stuck := by
+            unfold __str_first_match_rec
+            split <;> rfl
+          change __pair_first
+              (__str_first_match_rec
+                (__str_flatten (__str_nary_intro (Term.String (c :: cs)))) r
+                (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
+            Term.Stuck
+          rw [hFlat, hRec]
+          rfl)
       have hMatchTy :
           __smtx_typeof (__eo_to_smt (str_indexof_re_eval_match_regex r)) =
             SmtType.RegLan :=
@@ -979,7 +996,7 @@ private theorem str_indexof_re_eval_idx_term_eq
                 (__str_flatten (__str_nary_intro (Term.String (c :: cs)))) r
                 (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
             Term.Stuck
-          rw [str_flatten_nary_intro_cons, hFirst]
+          rw [str_flatten_nary_intro_cons c cs hLen, hFirst]
           rfl
         exact hIdxNe hIdxStuck
       have hFirstEq :=
@@ -1017,7 +1034,7 @@ private theorem str_indexof_re_eval_idx_term_eq
           (match impl_native_re_find_idx_aux rv (c :: cs) 0 with
           | some (idx, _) => Int.ofNat idx
           | none => -1)
-      rw [str_flatten_nary_intro_cons]
+      rw [str_flatten_nary_intro_cons c cs hLen]
       exact hPairFirst
 
 private theorem str_indexof_re_eval_tail_search_side_aux_model_eval

@@ -5717,7 +5717,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_ternary_uop
     simp [__eo_typeof_str_update, __eo_requires, hUEq,
       native_ite, native_teq, native_not]
   | str_replace_all =>
-    exact EvaluateProofInternal.run_evaluate_typeof_eq_str_replace_all b y x
+    exact EvaluateProofInternal.run_evaluate_typeof_eq_str_replace_all b y x hRunNe
   | _ =>
     exact False.elim (hRun rfl)
 

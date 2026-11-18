@@ -220,6 +220,7 @@ theorem EvaluateProofInternal.str_flatten_nary_intro_singleton
     __str_flatten (__str_nary_intro (Term.String [c])) =
       Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) (Term.String [c]))
         (Term.String []) := by
+  rw [RuleProofs.str_flatten_nary_intro_cons c [] (by simp)]
   rfl
 
 theorem EvaluateProofInternal.str_case_conv_rec_flatten_lower_singleton
@@ -410,23 +411,6 @@ theorem EvaluateProofInternal.substrWord_zero_eq_strCharChain :
       rw [show (0 : native_Int) + 1 = 1 by rfl]
       rw [RuleProofs.substrWord_cons_tail c cs]
       rw [EvaluateProofInternal.substrWord_zero_eq_strCharChain cs]
-
-/-- Flattening a string literal is stuck exactly past the maximum list length. -/
-theorem EvaluateProofInternal.str_flatten_nary_intro_string_stuck
-    (s : native_String) (hLen : ¬ s.length < 4294967296) :
-    __str_flatten (__str_nary_intro (Term.String s)) = Term.Stuck := by
-  cases s with
-  | nil => simp at hLen
-  | cons c cs => exact RuleProofs.str_flatten_nary_intro_cons_stuck c cs hLen
-
-theorem EvaluateProofInternal.str_len_lt_of_flatten_ne_stuck
-    (s : native_String)
-    (hNe : __str_flatten (__str_nary_intro (Term.String s)) ≠ Term.Stuck) :
-    s.length < 4294967296 := by
-  by_cases hLen : s.length < 4294967296
-  · exact hLen
-  · exact False.elim
-      (hNe (EvaluateProofInternal.str_flatten_nary_intro_string_stuck s hLen))
 
 theorem EvaluateProofInternal.str_flatten_nary_intro_string_char_chain
     (s : native_String) (hLen : s.length < 4294967296) :

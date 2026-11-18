@@ -1045,6 +1045,23 @@ theorem str_flatten_nary_intro_cons_len_lt
   · exact hLen
   · exact False.elim (hNe (str_flatten_nary_intro_cons_stuck c cs hLen))
 
+/-- Any string literal: flattening is stuck past the maximum list length. -/
+theorem str_flatten_nary_intro_string_stuck
+    (w : native_String) (hLen : ¬ w.length < 4294967296) :
+    __str_flatten (__str_nary_intro (Term.String w)) = Term.Stuck := by
+  cases w with
+  | nil => simp at hLen
+  | cons c cs => exact str_flatten_nary_intro_cons_stuck c cs hLen
+
+/-- A non-stuck flattening of a string literal bounds its length. -/
+theorem str_flatten_nary_intro_string_len_lt
+    (w : native_String)
+    (hNe : __str_flatten (__str_nary_intro (Term.String w)) ≠ Term.Stuck) :
+    w.length < 4294967296 := by
+  by_cases hLen : w.length < 4294967296
+  · exact hLen
+  · exact False.elim (hNe (str_flatten_nary_intro_string_stuck w hLen))
+
 theorem str_flatten_nary_intro_cons
     (c : native_Char) (cs : native_String)
     (hLen : (c :: cs).length < 4294967296) :

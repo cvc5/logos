@@ -996,6 +996,13 @@ private theorem str_eval_replace_re_eval_eq
         simpa [substrWord] using str_flatten_nary_intro_empty
     | cons c cs =>
         exact str_flatten_nary_intro_cons c cs
+          (str_flatten_nary_intro_string_len_lt (c :: cs) (by
+            intro hFlat
+            apply hRawFlatNe
+            dsimp only [rawFlat]
+            rw [hFlat]
+            unfold __str_first_match_rec
+            split <;> rfl))
   have hRawFlatEqSub :
       rawFlat =
         __str_first_match_rec (substrWord str 0 str.length) r rs

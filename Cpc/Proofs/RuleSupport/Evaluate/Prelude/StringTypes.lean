@@ -274,10 +274,15 @@ theorem EvaluateProofInternal.eo_str_to_lower_body_typeof_seq_char
       __eo_mk_apply, native_ite, native_teq, native_and, native_not]
       at hTy hNe ⊢
   case String s =>
-    rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain]
+    have hLen : s.length < 4294967296 :=
+      RuleProofs.str_flatten_nary_intro_string_len_lt s (by
+        intro hFlat
+        rw [hFlat] at hNe
+        exact hNe (by simp [__str_case_conv_rec]))
+    rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen]
     exact EvaluateProofInternal.str_case_conv_rec_strCharChain_typeof_seq_char_of_ne_stuck
       s true (by
-        simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain] using hNe)
+        simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen] using hNe)
   all_goals
     first
     | change __eo_typeof_str_to_lower (__eo_typeof _) =
@@ -308,10 +313,15 @@ theorem EvaluateProofInternal.eo_str_to_upper_body_typeof_seq_char
       __eo_mk_apply, native_ite, native_teq, native_and, native_not]
       at hTy hNe ⊢
   case String s =>
-    rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain]
+    have hLen : s.length < 4294967296 :=
+      RuleProofs.str_flatten_nary_intro_string_len_lt s (by
+        intro hFlat
+        rw [hFlat] at hNe
+        exact hNe (by simp [__str_case_conv_rec]))
+    rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen]
     exact EvaluateProofInternal.str_case_conv_rec_strCharChain_typeof_seq_char_of_ne_stuck
       s false (by
-        simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain] using hNe)
+        simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen] using hNe)
   all_goals
     first
     | change __eo_typeof_str_to_lower (__eo_typeof _) =
@@ -417,11 +427,18 @@ theorem EvaluateProofInternal.eo_str_to_int_body_typeof_int
           Term.UOp UserOp.Int
         rfl
     | cons c cs =>
-        rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain]
+        have hLen : (c :: cs).length < 4294967296 :=
+          RuleProofs.str_flatten_nary_intro_string_len_lt (c :: cs) (by
+            intro hFlat
+            rw [hFlat] at hNe
+            exact hNe (by
+              simp [__eo_list_rev, __eo_is_list, __eo_requires,
+                __str_to_int_eval_rec, native_ite, native_teq]))
+        rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain _ hLen]
         rw [EvaluateProofInternal.eo_list_rev_strCharChain]
         exact EvaluateProofInternal.str_to_int_eval_rec_strCharChain_typeof_int_of_ne_stuck
           (c :: cs).reverse 1 0 (by
-            simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain,
+            simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain _ hLen,
               EvaluateProofInternal.eo_list_rev_strCharChain] using hNe)
   all_goals
     first
@@ -450,7 +467,7 @@ theorem EvaluateProofInternal.eo_str_rev_body_typeof_seq
       Term.Apply (Term.UOp UserOp.Seq) U := by
   cases x
   case String s =>
-    rw [EvaluateProofInternal.str_rev_result_string]
+    rw [EvaluateProofInternal.str_rev_result_string hNe]
     cases hTy
     rfl
   all_goals

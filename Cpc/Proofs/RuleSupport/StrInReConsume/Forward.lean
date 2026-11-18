@@ -504,7 +504,7 @@ theorem StrInReConsumeInternal.str_flatten_singleton_intro_string_single_local
       Term.Apply
         (Term.Apply (Term.UOp UserOp.str_concat) (Term.String [c]))
         (Term.String []) := by
-  have hsimpa := str_flatten_nary_intro_cons c []
+  have hsimpa := str_flatten_nary_intro_cons c [] (by simp)
   try simp [__str_nary_intro] at hsimpa ⊢
   exact hsimpa
 
@@ -521,7 +521,7 @@ theorem StrInReConsumeInternal.str_flattened_chunks_string_atom_chain_local :
         StrInReConsumeInternal.str_flattened_chunks_string_atom_chain_local cs⟩
 
 theorem StrInReConsumeInternal.str_flattened_chunks_string_flatten_local
-    (w : native_String) :
+    (w : native_String) (hLen : w.length < 4294967296) :
     StrInReConsumeInternal.str_flattened_chunks_local
       (__str_flatten
         (__eo_list_singleton_intro (Term.UOp UserOp.str_concat)
@@ -546,7 +546,7 @@ theorem StrInReConsumeInternal.str_flattened_chunks_string_flatten_local
                 (Term.String (c :: cs))) =
             __str_flatten (__str_nary_intro (Term.String (c :: cs))) by
               rfl]
-        rw [str_flatten_nary_intro_cons,
+        rw [str_flatten_nary_intro_cons c cs hLen,
           ← StrInReConsumeInternal.consume_atom_chain_string_atoms_eq_substrWord (c :: cs)]]
       exact StrInReConsumeInternal.str_flattened_chunks_string_atom_chain_local (c :: cs)
 
@@ -724,7 +724,12 @@ theorem StrInReConsumeInternal.re_split_str_to_re_flatten_true_string_flatten_lo
     (__str_flatten
       (__eo_list_singleton_intro (Term.UOp UserOp.str_concat)
         (Term.String w))) tail
-    (StrInReConsumeInternal.str_flattened_chunks_string_flatten_local w) hTailNorm hSplit
+    (StrInReConsumeInternal.str_flattened_chunks_string_flatten_local w
+      (RuleProofs.str_flatten_nary_intro_string_len_lt w (by
+        intro hFlat
+        apply hSplit
+        rw [hFlat]
+        simp [__re_split_str_to_re]))) hTailNorm hSplit
 
 def StrInReConsumeInternal.re_action_frontier_true_local : Term -> Prop
   | Term.Stuck => False
@@ -875,7 +880,7 @@ theorem StrInReConsumeInternal.re_split_str_to_re_action_frontier_true_local
       simpa [__re_split_str_to_re] using hTail
 
 theorem StrInReConsumeInternal.re_flatten_true_str_to_re_string_frontier_local
-    (w : native_String) :
+    (w : native_String) (hLen : w.length < 4294967296) :
     StrInReConsumeInternal.re_action_frontier_true_local
       (__re_flatten (Term.Boolean true)
         (Term.Apply (Term.UOp UserOp.str_to_re) (Term.String w))) := by
@@ -895,7 +900,7 @@ theorem StrInReConsumeInternal.re_flatten_true_str_to_re_string_frontier_local
         StrInReConsumeInternal.re_split_str_to_re_ne_stuck_of_chunks_local parts eps
           (by
             simpa [parts] using
-              StrInReConsumeInternal.str_flattened_chunks_string_flatten_local (c :: cs))
+              StrInReConsumeInternal.str_flattened_chunks_string_flatten_local (c :: cs) hLen)
           (by simp [eps])
       have hFrontier :
           StrInReConsumeInternal.re_action_frontier_true_local
@@ -905,7 +910,7 @@ theorem StrInReConsumeInternal.re_flatten_true_str_to_re_string_frontier_local
       simpa [eps, parts, __re_flatten] using hFrontier
 
 theorem StrInReConsumeInternal.re_flatten_true_str_to_re_string_norm_local
-    (w : native_String) :
+    (w : native_String) (hLen : w.length < 4294967296) :
     __re_flatten (Term.Boolean true)
         (__re_flatten (Term.Boolean true)
           (Term.Apply (Term.UOp UserOp.str_to_re) (Term.String w))) =
@@ -925,7 +930,7 @@ theorem StrInReConsumeInternal.re_flatten_true_str_to_re_string_norm_local
         StrInReConsumeInternal.re_split_str_to_re_ne_stuck_of_chunks_local parts eps
           (by
             simpa [parts] using
-              StrInReConsumeInternal.str_flattened_chunks_string_flatten_local (c :: cs))
+              StrInReConsumeInternal.str_flattened_chunks_string_flatten_local (c :: cs) hLen)
           (by simp [eps])
       have hTailNorm :
           __re_flatten (Term.Boolean true) eps = eps := by
@@ -939,12 +944,12 @@ theorem StrInReConsumeInternal.re_flatten_true_str_to_re_string_norm_local
       simpa [eps, parts, __re_flatten] using hNorm
 
 theorem StrInReConsumeInternal.re_flatten_true_str_to_re_string_ne_stuck_local
-    (w : native_String) :
+    (w : native_String) (hLen : w.length < 4294967296) :
     __re_flatten (Term.Boolean true)
         (Term.Apply (Term.UOp UserOp.str_to_re) (Term.String w)) ≠
       Term.Stuck :=
   StrInReConsumeInternal.re_action_frontier_true_ne_stuck_local _
-    (StrInReConsumeInternal.re_flatten_true_str_to_re_string_frontier_local w)
+    (StrInReConsumeInternal.re_flatten_true_str_to_re_string_frontier_local w hLen)
 
 theorem StrInReConsumeInternal.smt_typeof_re_split_str_to_re_of_seq_reglan_local
     (parts tail : Term)

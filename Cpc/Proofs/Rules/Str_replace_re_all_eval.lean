@@ -1105,6 +1105,13 @@ private theorem str_replace_re_all_eval_valid_properties
         simpa [substrWord] using str_flatten_nary_intro_empty
     | cons c cs =>
         exact str_flatten_nary_intro_cons c cs
+          (str_flatten_nary_intro_string_len_lt (c :: cs) (by
+            intro hFlat
+            apply hRawNe
+            dsimp only [raw]
+            rw [hFlat]
+            unfold __str_eval_replace_re_all_rec
+            split <;> rfl))
   have hRawNeSub :
       __str_eval_replace_re_all_rec (substrWord str 0 str.length) (Term.String [])
           (replace_re_all_nonempty_re r) t (Term.Numeral 0) ≠ Term.Stuck := by
