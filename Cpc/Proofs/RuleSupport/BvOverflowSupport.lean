@@ -593,14 +593,17 @@ theorem nil_bvmul_bitvec_succ_of_ne_stuck
   change __eo_to_bin (Term.Numeral (native_nat_to_int (w + 1))) (Term.Numeral 1) =
       Term.Binary (native_nat_to_int (w + 1)) 1
   change
-    (native_ite (native_zleq (native_nat_to_int (w + 1)) 4294967296)
+    (native_ite (native_and (native_zleq 0 (native_nat_to_int (w + 1)))
+        (native_zlt (native_nat_to_int (w + 1)) 4294967296))
         (__eo_mk_binary (native_nat_to_int (w + 1)) 1) Term.Stuck) =
       Term.Binary (native_nat_to_int (w + 1)) 1
-  cases hBound : native_zleq (native_nat_to_int (w + 1)) 4294967296
+  cases hBound : native_and (native_zleq 0 (native_nat_to_int (w + 1)))
+        (native_zlt (native_nat_to_int (w + 1)) 4294967296)
   · exfalso
     apply hNe
     change
-      native_ite (native_zleq (native_nat_to_int (w + 1)) 4294967296)
+      native_ite (native_and (native_zleq 0 (native_nat_to_int (w + 1)))
+        (native_zlt (native_nat_to_int (w + 1)) 4294967296))
           (__eo_mk_binary (native_nat_to_int (w + 1)) 1) Term.Stuck =
         Term.Stuck
     rw [hBound]

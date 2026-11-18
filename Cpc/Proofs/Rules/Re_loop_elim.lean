@@ -217,6 +217,12 @@ private theorem re_loop_elim_canonical_true
         eo_requires_result_ne_stuck_of_ne_stuck _ _ _ hOuterNe
       have hExpandedEq : expansion = rhs :=
         eo_requires_arg_eq_of_ne_stuck hInnerNe
+      have hExpNe : expansion ≠ Term.Stuck := by
+        intro h
+        apply hInnerNe
+        rw [h]
+        by_cases hr : rhs = Term.Stuck <;>
+          simp [__eo_requires, native_ite, native_teq, native_not, hr]
       have hProgEq :
           __eo_prog_re_loop_elim orig = orig := by
         simpa [orig] using
@@ -244,6 +250,7 @@ private theorem re_loop_elim_canonical_true
             (__smtx_model_eval M (__eo_to_smt loopTerm)) := by
         simpa [expansion, loopTerm] using
           re_loop_elim_eval_rel M lo hi r rv hrTy hREval hlo hDiffNonneg
+            hExpNe
       have hRel :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt loopTerm))

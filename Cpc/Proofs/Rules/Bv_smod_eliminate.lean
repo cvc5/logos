@@ -1025,7 +1025,7 @@ private theorem smodAddWithY_type_forces_width_bound
     __eo_typeof y = Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral n) ->
     __eo_typeof (smodAddWithY a y) =
       Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral n) ->
-    native_zleq n 4294967296 = true := by
+    native_zlt n 4294967296 = true := by
   intro hATy hYTy hAddTy
   have hNilNe :
       __eo_to_bin (Term.Numeral n) (Term.Numeral 0) ≠ Term.Stuck := by
@@ -1036,13 +1036,13 @@ private theorem smodAddWithY_type_forces_width_bound
     change Term.Stuck =
       Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral n) at hAddTy
     cases hAddTy
-  by_cases hBound : native_zleq n 4294967296 = true
+  by_cases hBound : native_zlt n 4294967296 = true
   · exact hBound
   · have hStuck :
         __eo_to_bin (Term.Numeral n) (Term.Numeral 0) = Term.Stuck := by
-      have hBoundFalse : ¬ n <= 4294967296 := by
-        simpa [native_zleq] using hBound
-      simp [__eo_to_bin, hBoundFalse, native_ite, native_zleq]
+      have hBoundFalse : ¬ n < 4294967296 := by
+        simpa [native_zlt] using hBound
+      simp [__eo_to_bin, hBoundFalse, native_ite, native_zleq, native_and, native_zlt]
     exact False.elim (hNilNe hStuck)
 
 private theorem native_mod_total_zero_pow2_of_nonneg (n : native_Int) :
@@ -1296,7 +1296,7 @@ private theorem eval_smodElimRhs_num
           (smodUrem x y (Term.Numeral (native_zplus n (native_zneg 1))))) =
       Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral n) ->
     native_zleq 0 n = true ->
-    native_zleq n 4294967296 = true ->
+    native_zlt n 4294967296 = true ->
     native_zeq py (native_mod_total py (native_int_pow2 n)) = true ->
     __smtx_model_eval M (__eo_to_smt x) = SmtValue.Binary n px ->
     __smtx_model_eval M (__eo_to_smt y) = SmtValue.Binary n py ->
@@ -1318,7 +1318,7 @@ private theorem eval_smodElimRhs_num
     __eo_to_bin, __eo_mk_binary, __eo_typeof_bvand, __eo_typeof_ite,
     __eo_typeof_eq, __eo_typeof_int_to_bv, __eo_typeof_bvnot,
     __smtx_model_eval_bvsmod, native_ite, native_zplus, native_zneg]
-  simp [__eo_mk_apply, hMax, hNonneg, native_ite]
+  simp [__eo_mk_apply, hMax, hNonneg, native_ite, native_and]
   -- the standalone `rw` is redundant now: `eo_to_smt_ite_term` is in the
   -- `simp only` set below, and the outermost head is no longer the `ite`.
   simp only [eo_to_smt_eq_term, eo_to_smt_and_term, eo_to_smt_ite_term,
@@ -1541,7 +1541,7 @@ private theorem trusted_bv_smod_eliminate_canonical_properties
   have hAddTypes :=
     smodElimRhs_add_branches_type_inv x y (Term.Numeral n)
       (Term.Numeral wmv) n hRhsTy
-  have hMax : native_zleq n 4294967296 = true :=
+  have hMax : native_zlt n 4294967296 = true :=
     smodAddWithY_type_forces_width_bound
       (Term.Apply (Term.UOp UserOp.bvneg)
         (smodUrem x y (Term.Numeral wmv))) y n
@@ -1946,7 +1946,7 @@ private theorem trusted_bv_smod_eliminate_canonical_properties
       condX0Y0, condX1Y0, condX0Y1, branch3, branch2, branch1,
       topBranch, smodWidthZero, smodEq, smodAnd, smodIte,
       __eo_mk_apply, __eo_nil, __eo_nil_bvadd, __eo_to_bin,
-      __eo_mk_binary, hNonneg, hMax, native_ite, native_zplus, native_zneg,
+      __eo_mk_binary, hNonneg, hMax, native_ite, native_and, native_zplus, native_zneg,
       native_mod_total_zero_pow2_of_nonneg n hNonneg]
       using hTopBranchSmtTy
   have hProgBool :
