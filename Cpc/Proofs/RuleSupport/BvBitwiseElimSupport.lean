@@ -1064,7 +1064,7 @@ theorem bvBitwiseElimProgram_eq_term_of_type_bool
             __eo_mk_apply, hNil]
         rw [hProgStuck] at hTy
         have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-          native_decide
+          decide +kernel
         exact False.elim (hBad hTy)
       · rw [hSkeleton]
         simp [bvBitwiseElimProgramSkeleton, bvBitwiseElimTerm,
@@ -1080,7 +1080,7 @@ theorem bvBitwiseElimProgram_eq_term_of_type_bool
             __eo_mk_apply, hNil]
         rw [hProgStuck] at hTy
         have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-          native_decide
+          decide +kernel
         exact False.elim (hBad hTy)
       · rw [hSkeleton]
         simp [bvBitwiseElimProgramSkeleton, bvBitwiseElimTerm,
@@ -1096,7 +1096,7 @@ theorem bvBitwiseElimProgram_eq_term_of_type_bool
             __eo_mk_apply, hNil]
         rw [hProgStuck] at hTy
         have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-          native_decide
+          decide +kernel
         exact False.elim (hBad hTy)
       · rw [hSkeleton]
         simp [bvBitwiseElimProgramSkeleton, bvBitwiseElimTerm,

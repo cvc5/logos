@@ -564,7 +564,7 @@ private theorem dtConsSpineRoot_ne_stuck
 
 private theorem smtx_typeof_eo_to_smt_stuck_none :
     __smtx_typeof (__eo_to_smt Term.Stuck) = SmtType.None := by
-  native_decide
+  decide +kernel
 
 private theorem dtConsSpineRoot_apply_generic
     {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}

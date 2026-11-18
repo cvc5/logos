@@ -39,10 +39,10 @@ theorem eo_to_smt_typeof_ne_none_of_has_smt_translation
 
 theorem smt_typeof_binary_one_one :
     __smtx_typeof (SmtTerm.Binary 1 1) = SmtType.BitVec 1 := by
-  native_decide
+  decide +kernel
 
 theorem smt_typeof_binary_one_zero :
     __smtx_typeof (SmtTerm.Binary 1 0) = SmtType.BitVec 1 := by
-  native_decide
+  decide +kernel
 
 end SubstitutePreservationSupport

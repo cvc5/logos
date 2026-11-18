@@ -515,7 +515,7 @@ private theorem native_int_pow2_nat_succ_3 (n : Nat) :
     (a := Int.ofNat n) (b := 1) hn h1
   have hSucc : (Int.ofNat (Nat.succ n) : Int) = Int.ofNat n + 1 := by
     simp
-  have hPow1 : native_int_pow2 (1 : Int) = 2 := by native_decide
+  have hPow1 : native_int_pow2 (1 : Int) = 2 := by decide +kernel
   rw [hSucc, hAdd, hPow1, Int.mul_comm]
 
 private theorem native_pow2_minus_one_mod_self_3 (w : native_Int) :

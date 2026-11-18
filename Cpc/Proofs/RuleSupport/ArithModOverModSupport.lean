@@ -94,11 +94,11 @@ private theorem native_to_real_eq_intCast (n : native_Int) :
 
 private theorem native_mk_rational_zero :
     native_mk_rational 0 1 = (0 : Rat) := by
-  native_decide
+  decide +kernel
 
 private theorem native_mk_rational_one :
     native_mk_rational 1 1 = (1 : Rat) := by
-  native_decide
+  decide +kernel
 
 private theorem plus_nil_numeral_zero (n : native_Int)
     (h : __eo_is_list plusOp (Term.Numeral n) = Term.Boolean true) :
@@ -242,7 +242,7 @@ theorem AddListEval.is_list
     __eo_is_list plusOp xs = Term.Boolean true := by
   induction h with
   | nil =>
-      native_decide
+      decide +kernel
   | cons _ _ _ ih =>
       unfold __eo_is_list __eo_is_ok
       have hne := get_nil_ne_stuck_of_is_list_true plusOp _ ih
@@ -255,7 +255,7 @@ theorem MulListEval.is_list
     __eo_is_list multOp xs = Term.Boolean true := by
   induction h with
   | nil =>
-      native_decide
+      decide +kernel
   | cons _ _ _ ih =>
       unfold __eo_is_list __eo_is_ok
       have hne := get_nil_ne_stuck_of_is_list_true multOp _ ih

@@ -33,14 +33,14 @@ private theorem typeof_args_of_prog_bv_shl_by_const_0_bool (x1 sz1 : Term) :
   · subst x1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · by_cases hSz1 : sz1 = Term.Stuck
     · subst sz1
       cases x1 <;> simp [__eo_prog_bv_shl_by_const_0] at hX1 hTy
       all_goals
         have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-          native_decide
+          decide +kernel
         exact False.elim (hStuckTy hTy)
     · rw [prog_bv_shl_by_const_0_eq_of_ne_stuck x1 sz1 hX1 hSz1] at hTy
       change __eo_typeof_eq

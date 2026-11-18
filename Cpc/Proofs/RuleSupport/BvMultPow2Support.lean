@@ -1729,7 +1729,7 @@ theorem bvMultPow2Program_eq_term_of_type_bool
       rw [hSkeleton]
       simp [bvMultPow2ProgramSkeleton, __eo_mk_apply, hNil]
     rw [hProgramStuck] at hTy
-    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
     exact False.elim (hBad hTy)
   · by_cases hRhs : bvMultPow2Rhs z exponent u = Term.Stuck
     · have hProgramStuck :
@@ -1737,7 +1737,7 @@ theorem bvMultPow2Program_eq_term_of_type_bool
         rw [hSkeleton]
         simp [bvMultPow2ProgramSkeleton, __eo_mk_apply, hNil, hRhs]
       rw [hProgramStuck] at hTy
-      have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+      have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
       exact False.elim (hBad hTy)
     · rw [hSkeleton]
       simp [bvMultPow2ProgramSkeleton, bvMultPow2Term, bvMultPow2Lhs,

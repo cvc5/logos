@@ -123,7 +123,7 @@ theorem EvaluateProofInternal.smtx_model_eval_bvashr_binary_eq_lshr_of_msb_false
         have hSub : (w - 1) + 1 = w := by
           rw [Int.sub_eq_add_neg]
           rw [Int.add_assoc]
-          have hConst : (-1 : Int) + 1 = 0 := by native_decide
+          have hConst : (-1 : Int) + 1 = 0 := by decide +kernel
           rw [hConst, Int.add_zero]
         rw [hSub]
       _ = 1 := by
@@ -133,7 +133,7 @@ theorem EvaluateProofInternal.smtx_model_eval_bvashr_binary_eq_lshr_of_msb_false
         rw [← Int.add_assoc]
         rw [Int.add_right_neg, Int.zero_add]
   have hPow1 : native_int_pow2 1 = 2 := by
-    native_decide
+    decide +kernel
   have hMsbZero :=
     EvaluateProofInternal.native_veq_bvashr_msb_zero_of_false w n hSign
   simp [__smtx_model_eval_bvashr, __smtx_model_eval__,
@@ -171,7 +171,7 @@ theorem EvaluateProofInternal.smtx_model_eval_bvashr_binary_eq_not_lshr_not_of_m
         have hSub : (w - 1) + 1 = w := by
           rw [Int.sub_eq_add_neg]
           rw [Int.add_assoc]
-          have hConst : (-1 : Int) + 1 = 0 := by native_decide
+          have hConst : (-1 : Int) + 1 = 0 := by decide +kernel
           rw [hConst, Int.add_zero]
         rw [hSub]
       _ = 1 := by
@@ -181,7 +181,7 @@ theorem EvaluateProofInternal.smtx_model_eval_bvashr_binary_eq_not_lshr_not_of_m
         rw [← Int.add_assoc]
         rw [Int.add_right_neg, Int.zero_add]
   have hPow1 : native_int_pow2 1 = 2 := by
-    native_decide
+    decide +kernel
   have hMsbOne :=
     EvaluateProofInternal.native_veq_bvashr_msb_zero_of_true w n hSign
   simp [__smtx_model_eval_bvashr, __smtx_model_eval__,
@@ -226,13 +226,13 @@ theorem EvaluateProofInternal.native_binary_uts_eq_self_of_msb_false
     subst w
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hnEq : n = 0 := by
       have hlt : n < 1 := by
         simpa [hPow0] using hRange.2
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange.1
     subst n
-    native_decide
+    decide +kernel
 
 theorem EvaluateProofInternal.native_binary_not_eq_pow_sub_succ
     (w n : native_Int) :
@@ -290,14 +290,14 @@ theorem EvaluateProofInternal.smt_bv_msb_true_width_pos
     subst w
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hnEq : n = 0 := by
       have hlt : n < 1 := by
         simpa [hPow0] using hRange.2
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange.1
     subst n
     have hSignFalse : EvaluateProofInternal.smt_bv_msb_set 0 0 = false := by
-      native_decide
+      decide +kernel
     rw [hSignFalse] at hSign
     cases hSign
 
@@ -420,7 +420,7 @@ theorem EvaluateProofInternal.native_neg_succ_div_pow2_eq_neg_div_succ
               rw [Int.neg_add]
               change -q + -1 + 1 = -q
               rw [Int.add_assoc]
-              have hConst : (-1 : Int) + 1 = 0 := by native_decide
+              have hConst : (-1 : Int) + 1 = 0 := by decide +kernel
               rw [hConst, Int.add_zero]
             rw [hCoeff]
           _ = -(q + 1) * d + 1 * d := by rw [Int.add_mul]

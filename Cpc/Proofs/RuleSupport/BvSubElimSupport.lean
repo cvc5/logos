@@ -491,7 +491,7 @@ theorem bvSubElimProgram_eq_term_of_type_bool (x y : Term) :
       simp [bvSubElimProgramSkeleton, __eo_mk_apply, hNil]
     rw [hProgStuck] at hTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · rw [hSkeleton]
     simp [bvSubElimProgramSkeleton, bvSubElimTerm, bvSubElimLhs, bvSubElimRhs,
@@ -848,7 +848,7 @@ theorem bvCommutativeAddProgram_eq_term_of_type_bool
       simp [bvCommutativeAddProgramSkeleton, __eo_mk_apply, hNilX]
     rw [hProgStuck] at hTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · by_cases hNilY : __eo_nil (Term.UOp UserOp.bvadd) (__eo_typeof y) = Term.Stuck
     · have hProgStuck : bvCommutativeAddProgram x y = Term.Stuck := by
@@ -856,7 +856,7 @@ theorem bvCommutativeAddProgram_eq_term_of_type_bool
         simp [bvCommutativeAddProgramSkeleton, __eo_mk_apply, hNilX, hNilY]
       rw [hProgStuck] at hTy
       have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-        native_decide
+        decide +kernel
       exact False.elim (hBad hTy)
     · rw [hSkeleton]
       simp [bvCommutativeAddProgramSkeleton, bvCommutativeAddTerm,

@@ -18,7 +18,7 @@ set_option maxHeartbeats 10000000
 
 private theorem eo_typeof_stuck_ne_bool :
     __eo_typeof Term.Stuck ≠ Term.Bool := by
-  native_decide
+  decide +kernel
 
 private theorem eo_requires_eq_of_ne_stuck (x y z : Term) :
     __eo_requires x y z ≠ Term.Stuck ->
@@ -1368,7 +1368,7 @@ private theorem eo_absorb_eq_interprets_true_of_guards
                 (Term.Apply (Term.Apply (Term.UOp UserOp.or) a) b) :=
             eo_has_type_of_eq_left_const
               (Term.Apply (Term.Apply (Term.UOp UserOp.or) a) b)
-              (Term.Boolean true) hEqBool (by native_decide)
+              (Term.Boolean true) hEqBool (by decide +kernel)
           exact RuleProofs.eo_interprets_eq_of_rel M
             (Term.Apply (Term.Apply (Term.UOp UserOp.or) a) b)
             (Term.Boolean true) hEqBool
@@ -1390,7 +1390,7 @@ private theorem eo_absorb_eq_interprets_true_of_guards
                 (Term.Apply (Term.Apply (Term.UOp UserOp.and) a) b) :=
             eo_has_type_of_eq_left_const
               (Term.Apply (Term.Apply (Term.UOp UserOp.and) a) b)
-              (Term.Boolean false) hEqBool (by native_decide)
+              (Term.Boolean false) hEqBool (by decide +kernel)
           exact RuleProofs.eo_interprets_eq_of_rel M
             (Term.Apply (Term.Apply (Term.UOp UserOp.and) a) b)
             (Term.Boolean false) hEqBool
@@ -1415,7 +1415,7 @@ private theorem eo_absorb_eq_interprets_true_of_guards
             have hConstTy :
                 __smtx_typeof (__eo_to_smt (Term.UOp UserOp.re_none)) =
                   SmtType.RegLan := by
-              native_decide
+              decide +kernel
             rw [hSameTy, hConstTy]
           have hEval := absorbTree_re_concat_none_eval M hM hTree hTTy
           have hRel :
@@ -1449,7 +1449,7 @@ private theorem eo_absorb_eq_interprets_true_of_guards
             have hConstTy :
                 __smtx_typeof (__eo_to_smt (Term.UOp UserOp.re_none)) =
                   SmtType.RegLan := by
-              native_decide
+              decide +kernel
             rw [hSameTy, hConstTy]
           have hEval := absorbTree_re_inter_none_eval M hM hTree hTTy
           have hRel :
@@ -1483,7 +1483,7 @@ private theorem eo_absorb_eq_interprets_true_of_guards
             have hConstTy :
                 __smtx_typeof (__eo_to_smt (Term.UOp UserOp.re_all)) =
                   SmtType.RegLan := by
-              native_decide
+              decide +kernel
             rw [hSameTy, hConstTy]
           exact RuleProofs.eo_interprets_eq_of_rel M
             (mkReUnion a b) (Term.UOp UserOp.re_all) hEqBool

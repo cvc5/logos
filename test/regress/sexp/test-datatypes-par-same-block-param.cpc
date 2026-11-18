@@ -1,0 +1,8 @@
+; A bare parametric constructor whose type parameters are a datatype of the
+; same block (#510): the parameters inferred from `red`, `blue` and the
+; selectors must give the same instance as `(Pair Color Color)`.
+(declare-datatypes ((Pair 2) (Color 0)) ((par (T S) ((pair (first T) (second S)))) ((red) (blue))))
+(declare-const p1 (Pair Color Color))
+(assume @a (not (= (pair red blue) (pair (first p1) (second p1)))))
+(assume @b (= (pair red blue) ((as pair (Pair Color Color)) (first p1) (second p1))))
+(step @c false :rule contra :premises (@b @a))

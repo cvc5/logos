@@ -582,7 +582,7 @@ theorem reConcat_list_smt_typeof_reglan_of_non_none (t : Term) :
               change __smtx_typeof
                   (SmtTerm.str_to_re (SmtTerm.String [])) = SmtType.RegLan
               rw [typeof_str_to_re_eq]
-              native_decide
+              decide +kernel
           | cons c cs =>
               simp [__eo_is_list_nil] at hList
     next g x =>

@@ -168,7 +168,7 @@ private theorem guard_wf_eq_of_wf {T : SmtType} (U : SmtType)
   simp [__smtx_typeof_guard_wf, hWf, native_ite]
 
 private theorem type_wf_none_false : __smtx_type_wf SmtType.None = false := by
-  native_decide
+  decide +kernel
 
 private theorem ne_none_of_wf {T : SmtType} (hWf : __smtx_type_wf T = true) :
     T ≠ SmtType.None := by
@@ -497,7 +497,7 @@ private theorem concat_rec_nil
 
 private theorem is_list_nil :
     __eo_is_list Term.__eo_List_cons Term.__eo_List_nil = Term.Boolean true := by
-  native_decide
+  decide +kernel
 
 private theorem concat_var_list_nil
     {env : Term} {vars : List EoVarKey} (hEnv : EoVarEnv env vars) :

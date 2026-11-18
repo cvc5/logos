@@ -338,7 +338,7 @@ by
 theorem typeof_stuck_ne_bool :
   __eo_typeof Term.Stuck ≠ Term.Bool :=
 by
-  native_decide
+  decide +kernel
 
 /-- Establishes an equality relating `eo_is_bool_type` and `true_iff`. -/
 @[simp] theorem eo_is_bool_type_eq_true_iff (t : Term) :

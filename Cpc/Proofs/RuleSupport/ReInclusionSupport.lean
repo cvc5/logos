@@ -3288,7 +3288,7 @@ theorem str_flatten_nary_intro_eval_rel
       __smtx_typeof (__eo_to_smt (__str_nary_intro s)) ≠
         SmtType.None :=
     str_nary_intro_has_smt_translation_of_seq_wf s SmtType.Char hTy
-      type_inhabited_char (by native_decide) hIntroNe
+      type_inhabited_char (by decide +kernel) hIntroNe
   have hIntroTy :
       __smtx_typeof (__eo_to_smt (__str_nary_intro s)) =
         SmtType.Seq SmtType.Char :=

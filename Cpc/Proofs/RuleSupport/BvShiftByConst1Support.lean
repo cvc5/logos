@@ -155,7 +155,7 @@ private theorem smt_typeof_concat_bitvec
 
 private theorem smt_typeof_empty_bitvec :
     __smtx_typeof (__eo_to_smt (Term.Binary 0 0)) = SmtType.BitVec 0 := by
-  native_decide
+  decide +kernel
 
 private theorem shift_lhs_eo_type
     (x amount : Term) (W : native_Int) :
@@ -841,7 +841,7 @@ private theorem lshr_const1_value_local
     simpa [native_mod_total] using Int.emod_eq_of_lt hq0 hqD
   have hqModW : native_mod_total q (native_int_pow2 W) = q := by
     simpa [native_mod_total] using Int.emod_eq_of_lt hq0 hqW
-  have hPowZero : native_int_pow2 0 = 1 := by native_decide
+  have hPowZero : native_int_pow2 0 = 1 := by decide +kernel
   simp only [__smtx_model_eval_bvlshr, __smtx_model_eval_concat,
     __smtx_model_eval_extract, native_binary_extract, native_binary_concat]
   simp [native_zplus, native_zneg, native_zmult, hWidthExtract,
@@ -1039,7 +1039,7 @@ private theorem shl_const1_value_local
   have hPow : native_int_pow2 (D + A) =
       native_int_pow2 D * native_int_pow2 A :=
     native_int_pow2_add_of_nonneg_local1 hD0 hA0
-  have hPowZero : native_int_pow2 0 = 1 := by native_decide
+  have hPowZero : native_int_pow2 0 = 1 := by decide +kernel
   have hDivZero : native_div_total p (native_int_pow2 0) = p := by
     simp [native_div_total, hPowZero]
   have hDivOne : native_div_total p 1 = p := by
@@ -1742,7 +1742,7 @@ private theorem typed_bv_ashr_by_const_1_term
         native_zlt 0
             (native_zplus (native_zplus N 1) (native_zneg N)) = true := by
       rw [hOne]
-      native_decide
+      decide +kernel
     have hRaw := smt_typeof_extract_of_context x W N N hXSmtTy
       hW0 hN0 hNW hSignD0
     simpa [bvAshrByConst1Sign, hOne, native_int_to_nat,
@@ -1951,7 +1951,7 @@ private theorem native_int_pow2_nat_succ_local1 (n : Nat) :
     (a := Int.ofNat n) (b := 1) hn h1
   have hSucc : (Int.ofNat (Nat.succ n) : Int) = Int.ofNat n + 1 := by
     simp
-  have hPow1 : native_int_pow2 (1 : Int) = 2 := by native_decide
+  have hPow1 : native_int_pow2 (1 : Int) = 2 := by decide +kernel
   rw [hSucc, hAdd, hPow1, Int.mul_comm]
 
 private theorem native_pow2_minus_one_mod_self_local1

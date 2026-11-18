@@ -161,10 +161,10 @@ theorem EvaluateProofInternal.eo_eval_sign_extend_rhs_binary_of_typeof_bitvec
       cases h
     | have hTrue :
           native_teq Term.Stuck (Term.Boolean true) = false := by
-        native_decide
+        decide +kernel
       have hFalse :
           native_teq Term.Stuck (Term.Boolean false) = false := by
-        native_decide
+        decide +kernel
       rw [hTrue, hFalse] at h
       simp [native_ite] at h
       change Term.Stuck =
@@ -373,7 +373,7 @@ theorem EvaluateProofInternal.eo_sign_extend_low_payload_eq
     have hPowArg : w + -2 + 1 = w + -1 := by
       rw [Int.add_assoc]
       have hConst : (-2 : native_Int) + 1 = -1 := by
-        native_decide
+        decide +kernel
       rw [hConst]
     have hLe : native_zleq 0 (w + -1) = true := by
       have hTmp : native_zleq 0 (w + -2 + 1) = true := by
@@ -382,7 +382,7 @@ theorem EvaluateProofInternal.eo_sign_extend_low_payload_eq
     have hDiv : native_div_total n (native_int_pow2 0) = n := by
       simp [native_div_total, native_int_pow2, native_zexp_total]
     have hZlt00 : native_zlt 0 0 = false := by
-      native_decide
+      decide +kernel
     simp [__eo_extract, __eo_to_z, __eo_mk_binary,
       EvaluateProofInternal.eo_sign_extend_low_payload, hClamp, hNegPrime, hLe, hDiv, hPowArg,
       hZlt00, native_binary_extract, native_ite, native_or,
@@ -421,11 +421,11 @@ theorem EvaluateProofInternal.eo_sign_extend_msb_eq
       rw [hDelta]
       rfl
     have hLe1 : native_zleq 0 (1 : native_Int) = true := by
-      native_decide
+      decide +kernel
     have hPow1 : native_int_pow2 (1 : native_Int) = 2 := by
-      native_decide
+      decide +kernel
     have hZlt00 : native_zlt 0 0 = false := by
-      native_decide
+      decide +kernel
     simp [__eo_extract, __eo_eq, hClamp1, __eo_mk_binary,
       EvaluateProofInternal.eo_sign_extend_msb_set, hNegPrime, hDelta,
       hLe1, hPow1, hZlt00, native_binary_extract,
@@ -463,11 +463,11 @@ theorem EvaluateProofInternal.eo_sbv_to_int_msb_zero_eq_of_pos
     rw [hDelta]
     rfl
   have hLe1 : native_zleq 0 (1 : native_Int) = true := by
-    native_decide
+    decide +kernel
   have hPow1 : native_int_pow2 (1 : native_Int) = 2 := by
-    native_decide
+    decide +kernel
   have hZlt00 : native_zlt 0 0 = false := by
-    native_decide
+    decide +kernel
   have hClamp1 : native_zlt (w + -1) w = true := by
     simp [native_zlt, SmtEval.native_zlt]
   simp [__eo_extract, __eo_eq, __eo_mk_binary, hNegPrime, hClamp1,
@@ -761,7 +761,7 @@ theorem EvaluateProofInternal.eo_sign_extend_low_payload_eq_mod_of_pos
         have hLeft : w + -2 + 2 = w := by
           rw [Int.add_assoc]
           have hc : (-2 : Int) + 2 = 0 := by
-            native_decide
+            decide +kernel
           rw [hc, Int.add_zero]
         have hRight : (0 : Int) + 2 = 2 := by
           rfl
@@ -889,13 +889,13 @@ theorem EvaluateProofInternal.sign_payload_eq_uts_core
     subst w
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hnEq : n = 0 := by
       have hlt : n < 1 := by
         simpa [hPow0] using hRange.2
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange.1
     subst n
-    native_decide
+    decide +kernel
 
 theorem EvaluateProofInternal.eo_sign_extend_payload_eq_uts
     {w n : native_Int}
@@ -931,13 +931,13 @@ theorem EvaluateProofInternal.eo_sign_extend_payload_eq_uts
     subst w
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hnEq : n = 0 := by
       have hlt : n < 1 := by
         simpa [hPow0] using hRange.2
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange.1
     subst n
-    native_decide
+    decide +kernel
 
 theorem EvaluateProofInternal.eo_signed_bv_value_binary_eq_uts
     {w n : native_Int}

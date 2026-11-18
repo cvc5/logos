@@ -461,7 +461,7 @@ theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_zero
     EvaluateProofInternal.eo_eval_str_from_int_rhs x = Term.String (native_str_from_int 0) := by
   dsimp [EvaluateProofInternal.eo_eval_str_from_int_rhs]
   rw [hRun]
-  native_decide
+  decide +kernel
 
 theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_pos
     {x : Term} {n : native_Int}

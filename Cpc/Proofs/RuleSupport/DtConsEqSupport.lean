@@ -3604,7 +3604,7 @@ theorem dt_distinct_terms_apply_apply_model_eval_eq_false_of_right_tuple_head
     dtConsSpineRoot_reserved_false_of_translation hFSp hFTrans
   have hTupleReserved :
       __eo_to_smt_reserved_datatype_name (native_string_lit "@Tuple") = true := by
-    native_decide
+    decide +kernel
   rw [hLeftEval]
   change
     __smtx_model_eval_eq
@@ -3701,7 +3701,7 @@ theorem dt_distinct_terms_apply_apply_model_eval_eq_false_of_left_tuple_head
     dtConsSpineRoot_reserved_false_of_translation hGSp hGTrans
   have hTupleReserved :
       __eo_to_smt_reserved_datatype_name (native_string_lit "@Tuple") = true := by
-    native_decide
+    decide +kernel
   rw [hRightEval]
   change
     __smtx_model_eval_eq

@@ -1838,7 +1838,7 @@ private theorem zero_width_rec_stuck_op (op : BvOpSpec)
           (Term.Apply (Term.UOp2 UserOp2.extract (Term.Numeral (-1)) (Term.Numeral 0))
             (Term.Binary 0 0)) =
         Term.Stuck := by
-    native_decide
+    decide +kernel
   simp [hType, __eo_nil, __eo_mk_apply]
 
 private theorem is_bin_eq {a : Term} (h : __eo_is_bin a = Term.Boolean true) :

@@ -2146,7 +2146,7 @@ private theorem eo_is_list_of_exists_bool
   cases hxs : xs
   case __eo_List_nil =>
     subst hxs
-    native_decide
+    decide +kernel
   case Apply f a =>
     subst hxs
     cases hf : f

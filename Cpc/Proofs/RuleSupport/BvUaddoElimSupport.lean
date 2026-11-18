@@ -63,7 +63,7 @@ theorem typeof_uaddo_ext (x : Term) (w : Nat)
   have hZeroTy :
       __eo_typeof uaddoZeroBit =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1) := by
-    native_decide
+    decide +kernel
   unfold uaddoExt
   change __eo_typeof_concat (__eo_typeof uaddoZeroBit)
       (__eo_typeof_concat (__eo_typeof x) (__eo_typeof (Term.Binary 0 0))) = _
@@ -93,7 +93,7 @@ theorem smt_typeof_uaddo_ext (x : Term) (w : Nat)
       using smt_typeof_bv_const 0 1 (by decide)
   have hEmptyTy :
       __smtx_typeof (SmtTerm.Binary 0 0) = SmtType.BitVec 0 := by
-    native_decide
+    decide +kernel
   have hInnerTy :
       __smtx_typeof
           (SmtTerm.concat (__eo_to_smt x) (SmtTerm.Binary 0 0)) =
@@ -357,7 +357,7 @@ theorem typed_uaddo_term (x y n : Term) :
     unfold __smtx_typeof_extract
     simp only
     rw [hi0, hiLtW, hOne]
-    native_decide
+    decide +kernel
   have hOneTy :
       __smtx_typeof (__eo_to_smt uaddoOneBit) = SmtType.BitVec 1 := by
     simpa [uaddoOneBit, native_int_to_nat, SmtEval.native_int_to_nat]
@@ -668,7 +668,7 @@ theorem uaddo_program_eq_term_of_type_bool (x y n : Term) :
       rw [hSkeleton]
       simp [uaddoProgramSkeleton, __eo_mk_apply, hNil]
     rw [hProgStuck] at hTy
-    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
     exact False.elim (hBad hTy)
   · rw [hSkeleton]
     simp [uaddoProgramSkeleton, uaddoTerm, uaddoLhs, uaddoRhs,

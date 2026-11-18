@@ -25,7 +25,7 @@ private theorem native_string_lit_empty :
 
 private theorem eo_typeof_stuck_ne_bool :
     __eo_typeof Term.Stuck ≠ Term.Bool := by
-  native_decide
+  decide +kernel
 
 private theorem eo_requires_true_eq_of_type_bool (x body : Term) :
     __eo_typeof (__eo_requires x (Term.Boolean true) body) = Term.Bool ->
@@ -5449,7 +5449,7 @@ private theorem bvConcat_smt_value_rel_right_empty_eval
       simpa [SmtEval.native_zeq] using hMod
     exact hEq.symm
   have hPow0 : native_int_pow2 0 = 1 := by
-    native_decide
+    decide +kernel
   rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
   change __smtx_model_eval_eq
       (__smtx_model_eval M
@@ -14098,7 +14098,7 @@ private theorem bvConcat_smt_value_rel_right_empty_canonical_eval
       simpa [SmtEval.native_zeq] using hxMod
     exact hEq.symm
   have hPow0 : native_int_pow2 0 = 1 := by
-    native_decide
+    decide +kernel
   rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
   change __smtx_model_eval_eq
       (__smtx_model_eval M
@@ -14490,7 +14490,7 @@ private theorem smt_value_rel_get_a_norm_concat
   have hIdCan : BvConcatListCanonical M id := by
     rw [hIdEq]
     exact ⟨0, 0, by simpa [hIdEq] using hIdEval,
-      by native_decide, by native_decide⟩
+      by decide +kernel, by decide +kernel⟩
   have hIdNe : id ≠ Term.Stuck := by
     rw [hIdEq]
     intro h

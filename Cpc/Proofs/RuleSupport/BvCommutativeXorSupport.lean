@@ -579,7 +579,7 @@ theorem bvCommutativeXorProgram_eq_term_of_type_bool
       simp [bvCommutativeXorProgramSkeleton, __eo_mk_apply, hNilX]
     rw [hProgStuck] at hTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · by_cases hNilY :
         __eo_nil (Term.UOp UserOp.bvxor) (__eo_typeof y) = Term.Stuck
@@ -588,7 +588,7 @@ theorem bvCommutativeXorProgram_eq_term_of_type_bool
         simp [bvCommutativeXorProgramSkeleton, __eo_mk_apply, hNilX, hNilY]
       rw [hProgStuck] at hTy
       have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-        native_decide
+        decide +kernel
       exact False.elim (hBad hTy)
     · rw [hSkeleton]
       simp [bvCommutativeXorProgramSkeleton, bvCommutativeXorTerm,
@@ -1121,7 +1121,7 @@ theorem bvXorNotProgram_eq_term_of_type_bool
       simp [bvXorNotProgramSkeleton, __eo_mk_apply, hNilNotX]
     rw [hProgStuck] at hTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · by_cases hNilX :
         __eo_nil (Term.UOp UserOp.bvxor) (__eo_typeof x) = Term.Stuck
@@ -1130,7 +1130,7 @@ theorem bvXorNotProgram_eq_term_of_type_bool
         simp [bvXorNotProgramSkeleton, __eo_mk_apply, hNilNotX, hNilX]
       rw [hProgStuck] at hTy
       have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-        native_decide
+        decide +kernel
       exact False.elim (hBad hTy)
     · rw [hSkeleton]
       simp [bvXorNotProgramSkeleton, bvXorNotTerm, bvXorNotLhs,
@@ -1534,7 +1534,7 @@ theorem bvXorDuplicateProgram_eq_term_of_type_bool
       simp [bvXorDuplicateProgramSkeleton, __eo_mk_apply, hNil]
     rw [hProgStuck] at hTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · rw [hSkeleton]
     simp [bvXorDuplicateProgramSkeleton, bvXorDuplicateTerm,
@@ -2680,7 +2680,7 @@ theorem bvEqXorSolveProgram_eq_term_of_type_bool
       simp [bvEqXorSolveProgramSkeleton, __eo_mk_apply, hNilX]
     rw [hProgStuck] at hTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · by_cases hNilZ :
         __eo_nil (Term.UOp UserOp.bvxor) (__eo_typeof z) = Term.Stuck
@@ -2689,7 +2689,7 @@ theorem bvEqXorSolveProgram_eq_term_of_type_bool
         simp [bvEqXorSolveProgramSkeleton, __eo_mk_apply, hNilX, hNilZ]
       rw [hProgStuck] at hTy
       have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-        native_decide
+        decide +kernel
       exact False.elim (hBad hTy)
     · rw [hSkeleton]
       simp [bvEqXorSolveProgramSkeleton, bvEqXorSolveTerm,

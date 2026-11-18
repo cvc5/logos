@@ -183,7 +183,7 @@ private theorem typed_concl
     smtx_typeof_str_in_re_of_args s (singletonTail r2 rs) hS hSingTy
   have hTrueTy :
       __smtx_typeof (__eo_to_smt (Term.Boolean true)) = SmtType.Bool := by
-    native_decide
+    decide +kernel
   have hInnerAndTy :
       __smtx_typeof
           (__eo_to_smt

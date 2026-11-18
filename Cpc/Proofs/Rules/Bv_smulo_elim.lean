@@ -332,7 +332,7 @@ private theorem nil_bvxor_bit :
     __eo_nil (Term.UOp UserOp.bvxor)
         (Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1)) =
       Term.Binary 1 0 := by
-  native_decide
+  decide +kernel
 
 private theorem nil_bvxor_bitvec_succ_of_ne_stuck
     (w : Nat)
@@ -407,7 +407,7 @@ private theorem bvxor_payload_nat
     have han : an = 0 := by omega
     subst cn
     subst an
-    native_decide
+    decide +kernel
   · have hne : native_zeq (((w : Nat) : Int)) 0 = false := by
       simp [native_zeq]
       omega
@@ -483,10 +483,10 @@ private theorem native_mod_neg_one_pow2_nat (k : Nat) :
   exact Int.emod_eq_of_lt (by omega) (by omega)
 
 private theorem native_binary_uts_zero_bit : native_binary_uts 1 0 = 0 := by
-  native_decide
+  decide +kernel
 
 private theorem native_binary_uts_one_bit : native_binary_uts 1 1 = -1 := by
-  native_decide
+  decide +kernel
 
 private theorem eval_numeral_term (M : SmtModel) (n : Int) :
     __smtx_model_eval M (__eo_to_smt (Term.Numeral n)) =
@@ -838,7 +838,7 @@ private theorem signedOverflowMag_zero_eq_and
   have hB01 : B = 0 ∨ B = 1 := by omega
   rcases hA01 with rfl | rfl <;>
     rcases hB01 with rfl | rfl <;>
-    native_decide
+    decide +kernel
 
 private theorem binary_one_eq_bv1_of_lt_two
     (A : Nat) (hA : A < 2) :
@@ -1477,7 +1477,7 @@ private theorem typeof_sign_extend_one_of_bv
   have hGt :
       __eo_gt (Term.Numeral 1) (Term.Numeral (-1 : native_Int)) =
         Term.Boolean true := by
-    native_decide
+    decide +kernel
   have hAdd :
       __eo_add (Term.Numeral (native_nat_to_int (W + 1))) (Term.Numeral 1) =
         Term.Numeral (native_nat_to_int (W + 2)) := by
@@ -2111,7 +2111,7 @@ private theorem signedExtProduct_topDiff_width_one_eq_overflow
   have hBcases : B = 0 ∨ B = 1 ∨ B = 2 ∨ B = 3 := by omega
   rcases hAcases with rfl | rfl | rfl | rfl <;>
     rcases hBcases with rfl | rfl | rfl | rfl <;>
-    native_decide
+    decide +kernel
 
 private def smuloProdTopDiffBranch (a b : Term) (W : Nat) : Term :=
   __eo_mk_apply
@@ -3503,7 +3503,7 @@ private theorem eval_bv_smulo_expanded_width_succ
         __eo_eq (Term.Numeral (native_nat_to_int (0 + 1)))
           (Term.Numeral 1) =
           Term.Boolean true := by
-      native_decide
+      decide +kernel
     dsimp [bvSmuloExpanded]
     rw [hWidth, hCond]
     simp [__eo_ite, native_ite, native_teq]
@@ -3519,17 +3519,17 @@ private theorem eval_bv_smulo_expanded_width_succ
           __eo_eq (Term.Numeral (native_nat_to_int (1 + 1)))
             (Term.Numeral 1) =
             Term.Boolean false := by
-        native_decide
+        decide +kernel
       have hCond2 :
           __eo_eq (Term.Numeral (native_nat_to_int (1 + 1)))
             (Term.Numeral 2) =
             Term.Boolean true := by
-        native_decide
+        decide +kernel
       have hTop :
           __eo_add (Term.Numeral (native_nat_to_int (1 + 1)))
             (Term.Numeral (-1 : native_Int)) =
           Term.Numeral (native_nat_to_int 1) := by
-        native_decide
+        decide +kernel
       dsimp [bvSmuloExpanded]
       rw [hWidth, hTop, hCond1, hCond2]
       simp [__eo_ite, native_ite, native_teq]
@@ -3643,11 +3643,11 @@ private theorem nil_bvxor_a_ne_of_bvSmuloExpanded_ne
   by_cases hW0 : W = 0
   · subst W
     rw [haTy]
-    native_decide
+    decide +kernel
   by_cases hW1 : W = 1
   · subst W
     rw [haTy]
-    native_decide
+    decide +kernel
   have hWge2 : 2 ≤ W := by omega
   intro hNil
   apply hNe
@@ -3719,11 +3719,11 @@ private theorem nil_bvxor_b_ne_of_bvSmuloExpanded_ne
   by_cases hW0 : W = 0
   · subst W
     rw [hbTy]
-    native_decide
+    decide +kernel
   by_cases hW1 : W = 1
   · subst W
     rw [hbTy]
-    native_decide
+    decide +kernel
   have hWge2 : 2 ≤ W := by omega
   intro hNil
   apply hNe
@@ -3798,7 +3798,7 @@ private theorem nil_bvmul_ne_of_bvSmuloExpanded_ne
             (Term.Numeral (native_nat_to_int 2)) := by
       simpa [native_nat_to_int] using typeof_sign_extend_one_of_bv a 0 haTy
     rw [hExtTy]
-    native_decide
+    decide +kernel
   by_cases hW1 : W = 1
   · subst W
     have hExtTy :
@@ -3807,7 +3807,7 @@ private theorem nil_bvmul_ne_of_bvSmuloExpanded_ne
             (Term.Numeral (native_nat_to_int 3)) := by
       simpa [native_nat_to_int] using typeof_sign_extend_one_of_bv a 1 haTy
     rw [hExtTy]
-    native_decide
+    decide +kernel
   have hWge2 : 2 ≤ W := by omega
   intro hNil
   apply hNe
