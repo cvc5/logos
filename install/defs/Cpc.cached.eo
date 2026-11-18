@@ -2486,8 +2486,9 @@
   (
   (($beta_reduce (_ (lambda (@list x xs) t) a) @list.nil)
     (eo::requires ($is_unique_list (@list x xs)) true
-      (eo::define ((st ($substitute x a t)))
-        (eo::ite (eo::eq xs @list.nil) st (lambda xs st)))))
+      (eo::ite (eo::eq xs @list.nil)
+        ($substitute x a t)
+        ($substitute x a (lambda xs t)))))
   (($beta_reduce (lambda xs t) ss)
     (eo::requires ($is_unique_list xs) true ($substitute_simul t xs ss)))
   (($beta_reduce (f a) ss)          ($beta_reduce f (@list a ss)))
@@ -4613,7 +4614,7 @@
   :conclusion (= (@purify x) x)
 )
 (define $is_unique_var_list ((xs @List))
-  (eo::and ($is_var_list xs) (eo::eq (eo::list_setof @list xs) xs)))
+  (eo::and ($is_var_list xs) ($is_unique_list xs)))
 (program $is_renaming_rec
   ((T Type) (xs @List :list) (ys @List :list) (s1 String) (s2 String))
   :signature (@List @List) Bool
