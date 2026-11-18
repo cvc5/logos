@@ -31,6 +31,8 @@ PKG="${1:-Cpc}"
 RULE_LEMMAS="${PKG}/Proofs/RuleLemmas.lean"
 CHECKER="${PKG}/Proofs/Checker.lean"
 API_CORRECT="${PKG}/ApiCorrect.lean"
+# Downstream tools import this; it builds on Checker.lean the same way.
+PROVEN_FROM_EMPTY="${PKG}/Proofs/ProvenFromEmpty.lean"
 
 for f in "${RULE_LEMMAS}" "${CHECKER}"; do
   [ -f "${f}" ] || { echo "error: ${f} not found." >&2; exit 1; }
@@ -68,6 +70,10 @@ emit_scratch() {
       echo "public import ${PKG}.ApiChecks"
       echo "import all ${PKG}.ApiChecks"
     fi
+    if [ -f "${PROVEN_FROM_EMPTY}" ]; then
+      echo "public import ${PKG}.Proofs.TypePreservation.Nonvacuity"
+      echo "import all ${PKG}.Proofs.TypePreservation.Nonvacuity"
+    fi
     echo
     echo "public section"
     echo
@@ -88,12 +94,30 @@ emit_scratch() {
       echo
       body_of "${API_CORRECT}"
     fi
+    if [ -f "${PROVEN_FROM_EMPTY}" ]; then
+      echo
+      body_of "${PROVEN_FROM_EMPTY}"
+    fi
     if [ "${canary}" = "canary" ]; then
       echo
       echo "theorem __soundness_check_canary : False := by exact __no_such_lemma__"
     fi
+    if [ "${canary}" = "axioms" ]; then
+      echo
+      for thm in ${AXIOM_THEOREMS}; do
+        echo "#print axioms ${thm}"
+      done
+    fi
   } > "${scratch}"
 }
+
+# The soundness theorems whose axioms are checked, and the axioms they may use:
+# Lean's three standard axioms, and `sorryAx` for the two stubs above (the real
+# rule proofs are kept free of `sorry` by check-proof-hygiene.sh).  Anything
+# else -- `Lean.ofReduceBool` from `native_decide` in particular -- would put
+# the compiler in the trusted base of the theorem.
+AXIOM_THEOREMS="correct___eo_is_refutation correct___logos_check_proof"
+ALLOWED_AXIOMS="propext Classical.choice Quot.sound sorryAx"
 
 # The stubs have to be the two real signatures; an empty or truncated extraction
 # would make everything below them fail in confusing ways, or -- worse -- pass.
@@ -112,6 +136,9 @@ logos_configure_lean_toolchain
 
 echo "Building ${PKG}.Proofs.CheckerCore (the soundness proof is checked against it)..."
 lake -d verification build "${PKG}.Proofs.CheckerCore" >/dev/null
+if [ -f "${PROVEN_FROM_EMPTY}" ]; then
+  lake -d verification build "${PKG}.Proofs.TypePreservation.Nonvacuity" >/dev/null
+fi
 
 run_lean() {
   # Lake supplies per-module artifact paths across the two projects. A plain
@@ -126,7 +153,7 @@ run_lean() {
     | grep -v "declaration uses \`sorry\`" || true
 }
 
-echo "Typechecking ${CHECKER}$([ -f "${API_CORRECT}" ] && echo " and ${API_CORRECT}") with the rule bridge stubbed..."
+echo "Typechecking ${CHECKER}$([ -f "${API_CORRECT}" ] && echo ", ${API_CORRECT}")$([ -f "${PROVEN_FROM_EMPTY}" ] && echo ", ${PROVEN_FROM_EMPTY}") with the rule bridge stubbed..."
 out="$(run_lean)"
 if [ -n "${out}" ]; then
   echo "${out}" >&2
@@ -134,6 +161,41 @@ if [ -n "${out}" ]; then
   echo "error: the soundness proof does not typecheck." >&2
   exit 1
 fi
+
+echo "Checking the axioms of the soundness theorems..."
+emit_scratch axioms
+present_theorems=""
+for thm in ${AXIOM_THEOREMS}; do
+  if grep -q "^theorem ${thm}\b" "${scratch}"; then
+    present_theorems="${present_theorems} ${thm}"
+  fi
+done
+AXIOM_THEOREMS="${present_theorems}"
+[ -n "${AXIOM_THEOREMS}" ] \
+  || { echo "error: none of the soundness theorems were found in the scratch module." >&2; exit 1; }
+emit_scratch axioms
+out="$(run_lean)"
+for thm in ${AXIOM_THEOREMS}; do
+  grep -q "'[A-Za-z.]*${thm}' depends on axioms" <<< "${out}" \
+    || { echo "${out}" >&2; echo "error: no axioms report for ${thm}." >&2; exit 1; }
+done
+used="$(tr '\n' ' ' <<< "${out}" | grep -o 'depends on axioms: \[[^]]*\]' \
+  | sed 's/.*\[//; s/\]//' | tr ',' '\n' | tr -d ' ' | sort -u)"
+bad=""
+for ax in ${used}; do
+  case " ${ALLOWED_AXIOMS} " in
+    *" ${ax} "*) ;;
+    *) bad="${bad} ${ax}" ;;
+  esac
+done
+if [ -n "${bad}" ]; then
+  echo "${out}" >&2
+  echo >&2
+  echo "error: the soundness theorems depend on disallowed axioms:${bad}" >&2
+  echo "Lean.ofReduceBool/ofReduceNat come from native_decide, decide +native or bv_decide." >&2
+  exit 1
+fi
+echo "Axioms used:" ${used}
 
 # A check that cannot fail is not a check: confirm the harness actually
 # elaborates the file by appending a declaration that must be rejected.

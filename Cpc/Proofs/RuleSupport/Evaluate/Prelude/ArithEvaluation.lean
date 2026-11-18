@@ -285,22 +285,32 @@ theorem EvaluateProofInternal.eo_int_pow2_result_arg_typeof_int
 theorem EvaluateProofInternal.eo_int_pow2_body_typeof_int
     (x : Term)
     (hTy : __eo_typeof x = Term.UOp UserOp.Int) :
+    (__eo_ite (__eo_is_z x)
+          (__eo_ite (__eo_is_neg x) (Term.Numeral 0)
+            (__eo_pow (Term.Numeral 2) x))
+          (__eo_mk_apply (Term.UOp UserOp.int_pow2) x)) ≠ Term.Stuck ->
     __eo_typeof
         (__eo_ite (__eo_is_z x)
           (__eo_ite (__eo_is_neg x) (Term.Numeral 0)
             (__eo_pow (Term.Numeral 2) x))
           (__eo_mk_apply (Term.UOp UserOp.int_pow2) x)) =
       Term.UOp UserOp.Int := by
+  intro hNe
   cases x <;>
     simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
       __eo_pow, __eo_mk_apply, native_ite, native_teq, native_not,
-      native_and] at hTy ⊢
+      native_and] at hTy hNe ⊢
   all_goals
     first
     | rename_i n
-      cases hNeg : native_zlt n 0 <;>
-        simp [hNeg, __eo_lit_type_Numeral, native_ite]
-      all_goals
+      by_cases hG : native_zleq 0 n = true ∧ native_zlt n 4294967296 = true
+      · cases hNeg : native_zlt n 0 <;>
+          simp [hNeg, hG, __eo_lit_type_Numeral, native_ite]
+        all_goals
+          change Term.UOp UserOp.Int = Term.UOp UserOp.Int
+          rfl
+      · cases hNeg : native_zlt n 0 <;>
+          simp [hNeg, hG, native_ite] at hNe ⊢
         change Term.UOp UserOp.Int = Term.UOp UserOp.Int
         rfl
     | change __eo_typeof_int_pow2 (__eo_typeof _) = Term.UOp UserOp.Int
@@ -311,20 +321,36 @@ theorem EvaluateProofInternal.eo_int_pow2_body_typeof_int
 
 theorem EvaluateProofInternal.eo_int_pow2_eval_numeral_to_smt
     (n : native_Int) :
+    (__eo_ite (__eo_is_z (Term.Numeral n))
+          (__eo_ite (__eo_is_neg (Term.Numeral n)) (Term.Numeral 0)
+            (__eo_pow (Term.Numeral 2) (Term.Numeral n)))
+          (__eo_mk_apply (Term.UOp UserOp.int_pow2) (Term.Numeral n))) ≠
+      Term.Stuck ->
     __eo_to_smt
         (__eo_ite (__eo_is_z (Term.Numeral n))
           (__eo_ite (__eo_is_neg (Term.Numeral n)) (Term.Numeral 0)
             (__eo_pow (Term.Numeral 2) (Term.Numeral n)))
           (__eo_mk_apply (Term.UOp UserOp.int_pow2) (Term.Numeral n))) =
       SmtTerm.Numeral (native_int_pow2 n) := by
+  intro hNe
   by_cases hNeg : n < 0
   · simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
       native_ite, native_teq, native_int_pow2,
       native_zexp_total, native_zlt, native_and, native_not, hNeg]
     rfl
-  · simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
+  · have hLt : n < 4294967296 := by
+      by_contra hGe
+      apply hNe
+      simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
+        __eo_pow, native_ite, native_teq, native_zlt, native_and,
+        native_not, hNeg, hGe]
+    have hNonneg : native_zleq 0 n = true := by
+      show decide ((0 : Int) ≤ n) = true
+      exact decide_eq_true (Int.not_lt.mp hNeg)
+    simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
       __eo_pow, native_ite, native_teq, native_int_pow2,
-      native_zexp_total, native_zlt, native_and, native_not, hNeg]
+      native_zexp_total, native_zlt, native_and, native_not, hNeg,
+      hNonneg, hLt]
     rfl
 
 theorem EvaluateProofInternal.native_int_log_rec_two_eq_nat_log2_go
@@ -481,6 +507,17 @@ theorem EvaluateProofInternal.eo_int_ispow2_result_arg_typeof_int
 theorem EvaluateProofInternal.eo_int_ispow2_body_typeof_bool
     (x : Term)
     (hTy : __eo_typeof x = Term.UOp UserOp.Int) :
+    (let isNeg := __eo_is_neg x
+         let isZ := __eo_is_z x
+         __eo_ite isZ
+          (__eo_ite isNeg (Term.Boolean false)
+            (__eo_eq x
+              (__eo_pow (Term.Numeral 2)
+                (__eo_ite isZ
+                  (__eo_ite isNeg (Term.Numeral 0)
+                    (__eo_log (Term.Numeral 2) x))
+                  (__eo_mk_apply (Term.UOp UserOp.int_log2) x)))))
+          (__eo_mk_apply (Term.UOp UserOp.int_ispow2) x)) ≠ Term.Stuck ->
     __eo_typeof
         (let isNeg := __eo_is_neg x
          let isZ := __eo_is_z x
@@ -494,18 +531,30 @@ theorem EvaluateProofInternal.eo_int_ispow2_body_typeof_bool
                   (__eo_mk_apply (Term.UOp UserOp.int_log2) x)))))
           (__eo_mk_apply (Term.UOp UserOp.int_ispow2) x)) =
       Term.Bool := by
-  cases x <;>
+  intro hNe
+  cases x
+  case Numeral n =>
+    cases hNeg : native_zlt n 0
+    · by_cases hG :
+          native_zleq 0 (native_int_log 2 n) = true ∧
+            native_zlt (native_int_log 2 n) 4294967296 = true
+      · simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
+          __eo_log, __eo_pow, __eo_eq, native_ite, native_teq, native_not,
+          native_and, hNeg, hG]
+      · exfalso
+        apply hNe
+        simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
+          __eo_log, __eo_pow, __eo_eq, native_ite, native_teq, native_not,
+          native_and, hNeg, hG]
+    · simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
+        native_ite, native_teq, native_not, native_and, hNeg,
+        __eo_lit_type_Numeral]
+  all_goals
     simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
       __eo_log, __eo_pow, __eo_eq, __eo_mk_apply, native_ite,
-      native_teq, native_not, native_and] at hTy ⊢
+      native_teq, native_not, native_and] at hTy hNe ⊢
   all_goals
     first
-    | rename_i n
-      cases hNeg : native_zlt n 0 <;>
-        simp [hNeg, __eo_lit_type_Numeral, native_ite]
-      all_goals
-        change Term.Bool = Term.Bool
-        rfl
     | change __eo_typeof_int_ispow2 (__eo_typeof _) = Term.Bool
       rw [hTy]
       rfl

@@ -260,7 +260,7 @@ theorem vsmMkSpine_dtcons_type_aux
         intro hNone
         have hBad := hRetWf n (by omega)
         rw [hNone] at hBad
-        exact (show __smtx_type_wf SmtType.None ≠ true by native_decide) hBad
+        exact (show __smtx_type_wf SmtType.None ≠ true by decide +kernel) hBad
       have hApplyTy : __smtx_typeof_value (SmtValue.Apply head a) =
           dt_cons_applied_type_rec s d0 d i (Nat.succ n) := by
         change __smtx_typeof_apply_value
@@ -2766,7 +2766,7 @@ theorem dt_get_constructors_apply_stuck_of_wf_not_tuple
         __eo_dt_constructors_main, __eo_to_smt_type]
     all_goals
       exfalso
-      exact (show __smtx_type_wf SmtType.None ≠ true by native_decide) hWf
+      exact (show __smtx_type_wf SmtType.None ≠ true by decide +kernel) hWf
   case Apply f U =>
     cases f <;>
       simp_all [__dt_get_constructors, __eo_dt_constructors,
@@ -2774,14 +2774,14 @@ theorem dt_get_constructors_apply_stuck_of_wf_not_tuple
     all_goals
       try
         exfalso
-        exact (show __smtx_type_wf SmtType.None ≠ true by native_decide) hWf
+        exact (show __smtx_type_wf SmtType.None ≠ true by decide +kernel) hWf
     case UOp op =>
       cases op <;>
         simp_all [__dt_get_constructors, __eo_dt_constructors,
           __eo_dt_constructors_main, __eo_to_smt_type]
       all_goals
         exfalso
-        exact (show __smtx_type_wf SmtType.None ≠ true by native_decide) hWf
+        exact (show __smtx_type_wf SmtType.None ≠ true by decide +kernel) hWf
 
 /--
 The non-datatype tracks of the forward direction: tuple/unit-tuple split

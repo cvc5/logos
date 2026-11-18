@@ -1559,7 +1559,7 @@ theorem eo_to_smt_type_eq_typeref
 
 theorem eo_reserved_datatype_name_tuple :
     __eo_reserved_datatype_name (native_string_lit "@Tuple") = true := by
-  native_decide
+  decide +kernel
 
 theorem eo_unreserved_datatype_name_ne_tuple
     {s : native_String}
@@ -2044,7 +2044,7 @@ theorem tuple_diag_wf_components (y x : Term)
     __smtx_type_wf_rec (__eo_to_smt_type y) (__eo_to_smt_type y) = true ∧
     __smtx_type_wf_rec (__eo_to_smt_type x) (__eo_to_smt_type x) = true := by
   have hResTuple : __eo_to_smt_reserved_datatype_name (native_string_lit "@Tuple") = true := by
-    native_decide
+    decide +kernel
   cases hxShape : __eo_to_smt_type x with
   | Datatype sx bx =>
     cases bx with
@@ -2601,7 +2601,7 @@ theorem eo_to_smt_type_ne_tuple_typeref
   subst T
   change native_ite (__eo_reserved_datatype_name (native_string_lit "@Tuple")) SmtType.None
       (SmtType.TypeRef (native_string_lit "@Tuple")) = SmtType.TypeRef (native_string_lit "@Tuple") at h
-  rw [show __eo_reserved_datatype_name (native_string_lit "@Tuple") = true by native_decide] at h
+  rw [show __eo_reserved_datatype_name (native_string_lit "@Tuple") = true by decide +kernel] at h
   simp [native_ite] at h
 
 mutual

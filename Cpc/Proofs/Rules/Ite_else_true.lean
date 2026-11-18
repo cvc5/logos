@@ -29,13 +29,13 @@ private theorem typeof_args_of_prog_ite_else_true_bool (c1 x1 : Term) :
   · subst c1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · by_cases hX1 : x1 = Term.Stuck
     · subst x1
       simp [__eo_prog_ite_else_true] at hTy
       have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-        native_decide
+        decide +kernel
       exact False.elim (hStuckTy hTy)
     · rw [prog_ite_else_true_eq_of_ne_stuck c1 x1 hC1 hX1] at hTy
       change __eo_typeof_eq

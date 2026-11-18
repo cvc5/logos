@@ -1323,7 +1323,7 @@ theorem typeof_mk_apply_and_left_bool {x y : Term} :
   by_cases hY : y = Term.Stuck
   · subst y
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · rw [mk_apply_eq_apply (by simp) hY] at hTy
     change __eo_typeof_or (__eo_typeof x) (__eo_typeof y) = Term.Bool at hTy
@@ -1338,7 +1338,7 @@ theorem typeof_mk_apply_and_right_bool {x y : Term} :
   by_cases hY : y = Term.Stuck
   · subst y
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · rw [mk_apply_eq_apply (by simp) hY] at hTy
     change __eo_typeof_or (__eo_typeof x) (__eo_typeof y) = Term.Bool at hTy
@@ -1353,7 +1353,7 @@ theorem typeof_mk_apply_or_left_bool {x y : Term} :
   by_cases hY : y = Term.Stuck
   · subst y
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · rw [mk_apply_eq_apply (by simp) hY] at hTy
     change __eo_typeof_or (__eo_typeof x) (__eo_typeof y) = Term.Bool at hTy
@@ -1368,7 +1368,7 @@ theorem typeof_mk_apply_or_right_bool {x y : Term} :
   by_cases hY : y = Term.Stuck
   · subst y
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · rw [mk_apply_eq_apply (by simp) hY] at hTy
     change __eo_typeof_or (__eo_typeof x) (__eo_typeof y) = Term.Bool at hTy

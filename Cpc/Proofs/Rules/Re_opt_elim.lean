@@ -94,7 +94,7 @@ private theorem typed___eo_prog_re_opt_elim_impl
   have hEpsTy : __smtx_typeof (__eo_to_smt eps) = SmtType.RegLan := by
     change __smtx_typeof (SmtTerm.str_to_re (SmtTerm.String [])) = SmtType.RegLan
     rw [typeof_str_to_re_eq, __smtx_typeof.eq_4]
-    native_decide
+    decide +kernel
   have hInnerTy :
       __smtx_typeof (__eo_to_smt (Term.Apply (Term.Apply Term.re_union a1) Term.re_none)) =
         SmtType.RegLan := by
@@ -124,7 +124,7 @@ private theorem typed___eo_prog_re_opt_elim_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.RegLan := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hProg : __eo_prog_re_opt_elim a1 = Term.Apply (Term.Apply Term.eq lhs) rhs := by
     cases a1 <;> simp [__eo_prog_re_opt_elim, lhs, rhs, eps] at hA1NotStuck ⊢
@@ -144,7 +144,7 @@ private theorem facts___eo_prog_re_opt_elim_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.RegLan := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hProg : __eo_prog_re_opt_elim a1 = Term.Apply (Term.Apply Term.eq lhs) rhs := by
     cases a1 <;> simp [__eo_prog_re_opt_elim, lhs, rhs, eps] at hA1NotStuck ⊢

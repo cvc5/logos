@@ -147,7 +147,7 @@ theorem term_ne_stuck_of_typeof_bool
   intro hStuck
   rw [hStuck] at hTy
   have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-    native_decide
+    decide +kernel
   exact hStuckTy hTy
 
 /--

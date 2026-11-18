@@ -28,13 +28,13 @@ private theorem typeof_args_of_prog_bool_xor_comm_bool (x1 y1 : Term) :
   · subst x1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · by_cases hY1 : y1 = Term.Stuck
     · subst y1
       simp [__eo_prog_bool_xor_comm] at hTy
       have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-        native_decide
+        decide +kernel
       exact False.elim (hStuckTy hTy)
     · rw [prog_bool_xor_comm_eq_of_ne_stuck x1 y1 hX1 hY1] at hTy
       change __eo_typeof_eq (__eo_typeof (Term.Apply (Term.Apply Term.xor x1) y1))

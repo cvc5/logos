@@ -243,17 +243,17 @@ theorem EvaluateProofInternal.eo_to_bin_typeof_bitvec_of_width_numeral_and_ne_st
       Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) := by
   cases n <;> simp [__eo_to_bin] at hNe ⊢
   case Numeral n =>
-    cases hBound : native_zleq w 4294967296 <;>
+    cases hBound : native_zlt w 4294967296 <;>
       cases hWidth : native_zleq 0 w <;>
-      simp [__eo_mk_binary, hBound, hWidth, native_ite] at hNe ⊢
+      simp [__eo_mk_binary, hBound, hWidth, native_ite, native_and] at hNe ⊢
     all_goals
       first
       | rfl
       | contradiction
   case Binary wn n =>
-    cases hBound : native_zleq w 4294967296 <;>
+    cases hBound : native_zlt w 4294967296 <;>
       cases hWidth : native_zleq 0 w <;>
-      simp [__eo_mk_binary, hBound, hWidth, native_ite] at hNe ⊢
+      simp [__eo_mk_binary, hBound, hWidth, native_ite, native_and] at hNe ⊢
     all_goals
       first
       | rfl
@@ -373,6 +373,15 @@ theorem EvaluateProofInternal.eo_repeat_typeof_bitvec_of_arg_bitvec_and_ne_stuck
     simpa [native_nat_to_int, native_int_to_nat,
       SmtEval.native_nat_to_int, SmtEval.native_int_to_nat,
       Int.toNat_of_nonneg hi0Int]
+  have hGuard :
+      native_and (native_zleq 0 i) (native_zlt i 4294967296) = true := by
+    cases hG : native_and (native_zleq 0 i) (native_zlt i 4294967296)
+    · have hRepStuck :
+          __eo_list_repeat (Term.UOp UserOp.concat) x (Term.Numeral i) =
+            Term.Stuck := by
+        cases x <;> simp [__eo_list_repeat, hG, native_ite]
+      exact False.elim (hNe (by rw [hRepStuck]; rfl))
+    · rfl
   have hNatNeZero : native_int_to_nat i ≠ 0 := by
     intro hZero
     have hIeq0 : i = 0 := by
@@ -395,7 +404,7 @@ theorem EvaluateProofInternal.eo_repeat_typeof_bitvec_of_arg_bitvec_and_ne_stuck
             (Term.Binary w nx) (Term.Numeral i) =
           __eo_list_repeat_rec (Term.UOp UserOp.concat)
             (Term.Binary w nx) (native_int_to_nat i) := by
-      simp [__eo_list_repeat, native_ite, hiNotNeg]
+      simp [__eo_list_repeat, native_ite, hGuard]
     cases hWxNonneg : native_zleq 0 w
     · have hStuck :=
         EvaluateProofInternal.bv_eval_concat_list_repeat_rec_binary_stuck_of_neg
@@ -419,7 +428,7 @@ theorem EvaluateProofInternal.eo_repeat_typeof_bitvec_of_arg_bitvec_and_ne_stuck
             (Term.Numeral i) =
           __eo_list_repeat_rec (Term.UOp UserOp.concat) x
             (native_int_to_nat i) := by
-      cases x <;> simp [__eo_list_repeat, native_ite, hiNotNeg]
+      cases x <;> simp [__eo_list_repeat, native_ite, hGuard]
         at hxNe ⊢
     by_cases hxStuck : x = Term.Stuck
     · subst x
@@ -437,6 +446,7 @@ theorem EvaluateProofInternal.eo_extract_typeof_bitvec_of_arg_bitvec_and_ne_stuc
     (hX :
       __eo_typeof x =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w))
+    (hiW : native_zlt i w = true)
     (hNe :
       __eo_extract x (Term.Numeral j) (Term.Numeral i) ≠
         Term.Stuck) :
@@ -492,7 +502,7 @@ theorem EvaluateProofInternal.eo_extract_typeof_bitvec_of_arg_bitvec_and_ne_stuc
         simpa [native_zleq, SmtEval.native_zleq, native_zplus,
           SmtEval.native_zplus, native_zneg, SmtEval.native_zneg,
           Int.add_assoc] using hNonneg
-      simp [hjNotNeg, hDeltaNeg, native_or, native_ite, __eo_mk_binary,
+      simp [hiW, hjNotNeg, hDeltaNeg, native_or, native_ite, __eo_mk_binary,
         hWidthNonneg]
       rfl
     · have hDeltaLt : i + -j < 0 := by
@@ -509,7 +519,7 @@ theorem EvaluateProofInternal.eo_extract_typeof_bitvec_of_arg_bitvec_and_ne_stuc
           native_zplus (native_zplus i (native_zneg j)) 1 = 0 := by
         simpa [native_zplus, SmtEval.native_zplus, native_zneg,
           SmtEval.native_zneg, Int.add_assoc] using hWidthZeroInt
-      simp [hjNotNeg, hDeltaNeg, native_or, native_ite,
+      simp [hiW, hjNotNeg, hDeltaNeg, native_or, native_ite,
         __eo_lit_type_Binary, __eo_len, __eo_mk_apply, hWidthZero]
       rfl
   all_goals

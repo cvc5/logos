@@ -53,25 +53,25 @@ private theorem native_char_is_digit_digitChar_lt10
     (n : Nat) (hn : n < 10) :
     impl_native_char_is_digit (Char.toNat (Nat.digitChar n)) = true := by
   by_cases h0 : n = 0
-  · subst n; native_decide
+  · subst n; decide +kernel
   by_cases h1 : n = 1
-  · subst n; native_decide
+  · subst n; decide +kernel
   by_cases h2 : n = 2
-  · subst n; native_decide
+  · subst n; decide +kernel
   by_cases h3 : n = 3
-  · subst n; native_decide
+  · subst n; decide +kernel
   by_cases h4 : n = 4
-  · subst n; native_decide
+  · subst n; decide +kernel
   by_cases h5 : n = 5
-  · subst n; native_decide
+  · subst n; decide +kernel
   by_cases h6 : n = 6
-  · subst n; native_decide
+  · subst n; decide +kernel
   by_cases h7 : n = 7
-  · subst n; native_decide
+  · subst n; decide +kernel
   by_cases h8 : n = 8
-  · subst n; native_decide
+  · subst n; decide +kernel
   by_cases h9 : n = 9
-  · subst n; native_decide
+  · subst n; decide +kernel
   · have : False := by omega
     exact False.elim this
 
@@ -132,7 +132,7 @@ theorem native_char_valid_of_digit
     unfold impl_native_char_is_digit at hDigit
     simpa [Bool.and_eq_true] using hDigit
   unfold native_char_valid
-  have h57 : 57 < 196608 := by native_decide
+  have h57 : 57 < 196608 := by decide +kernel
   exact decide_eq_true (Nat.lt_of_le_of_lt hBounds.2 h57)
 
 theorem native_digit_bounds
@@ -149,8 +149,8 @@ theorem nativeListInRe_digit_range_singleton
   have hValid : native_char_valid c = true :=
     native_char_valid_of_digit c hDigit
   have hBounds := native_digit_bounds c hDigit
-  have hLoValid : native_char_valid 48 = true := by native_decide
-  have hHiValid : native_char_valid 57 = true := by native_decide
+  have hLoValid : native_char_valid 48 = true := by decide +kernel
+  have hHiValid : native_char_valid 57 = true := by decide +kernel
   simp [digitRange, zeroStr, nineStr, native_re_range, native_string_lit,
     RuleProofs.nativeListInRe, native_re_deriv, native_re_nullable,
     native_re_elem_valid, impl_native_re_elem_le, hValid, hLoValid, hHiValid,
@@ -223,7 +223,7 @@ private theorem native_str_in_re_from_int_digit_range_star
 
 private theorem eo_typeof_star_range_term :
     __eo_typeof starRangeTerm = Term.UOp UserOp.RegLan := by
-  native_decide
+  decide +kernel
 
 theorem eo_typeof_str_in_re_reglan_eq_seq_char_of_ne_stuck (T : Term)
     (h : __eo_typeof_str_in_re T (Term.UOp UserOp.RegLan) ≠ Term.Stuck) :
@@ -248,7 +248,7 @@ theorem eo_typeof_str_from_code_eq_seq_char_arg_int
     T = Term.UOp UserOp.Int := by
   have hNe : __eo_typeof_str_from_code T ≠ Term.Stuck := by
     rw [h]
-    native_decide
+    decide +kernel
   cases T <;> simp [__eo_typeof_str_from_code] at hNe ⊢
   case UOp op =>
     cases op <;> simp [__eo_typeof_str_from_code] at hNe ⊢
@@ -260,7 +260,7 @@ theorem typeof_arg_of_prog_bool (n : Term) :
   by_cases hN : n = Term.Stuck
   · subst n
     change __eo_typeof Term.Stuck = Term.Bool at hTy
-    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
     exact False.elim (hBad hTy)
   · rw [prog_eq_of_ne_stuck n hN] at hTy
     change __eo_typeof_eq (__eo_typeof (lhs n)) (__eo_typeof (Term.Boolean true)) =
@@ -300,11 +300,11 @@ theorem smtx_typeof_of_eo_int
 
 private theorem smtx_typeof_zero_string :
     __smtx_typeof (SmtTerm.String zeroStr) = SmtType.Seq SmtType.Char := by
-  native_decide
+  decide +kernel
 
 private theorem smtx_typeof_nine_string :
     __smtx_typeof (SmtTerm.String nineStr) = SmtType.Seq SmtType.Char := by
-  native_decide
+  decide +kernel
 
 theorem smtx_typeof_digit_range :
     __smtx_typeof

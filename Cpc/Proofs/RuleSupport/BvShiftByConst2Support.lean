@@ -1046,7 +1046,7 @@ private theorem native_int_pow2_nat_succ_local (n : Nat) :
       hn h1
   have hSucc : (Int.ofNat (Nat.succ n) : Int) = Int.ofNat n + 1 := by
     simp
-  have hPow1 : native_int_pow2 (1 : Int) = 2 := by native_decide
+  have hPow1 : native_int_pow2 (1 : Int) = 2 := by decide +kernel
   rw [hSucc, hAdd]
   rw [hPow1]
   rw [Int.mul_comm]
@@ -1309,7 +1309,7 @@ private theorem typed_bv_ashr_by_const_2_term
     have hD0 : native_zlt 0
         (native_zplus (native_zplus N 1) (native_zneg N)) = true := by
       rw [hOne]
-      native_decide
+      decide +kernel
     have hRaw := smt_typeof_extract_of_context x W N N hXSmtTy
       hW0 hN0 hNW hD0
     simpa [hOne, native_int_to_nat, SmtEval.native_int_to_nat] using hRaw

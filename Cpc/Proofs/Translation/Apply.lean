@@ -230,16 +230,16 @@ private theorem eo_to_smt_typeof_matches_translation_apply_bv_cmp_to_bv1
         SmtType.BitVec 1 := by
     rw [hTranslate, typeof_ite_eq, hCmpTy]
     have hThen : __smtx_typeof (SmtTerm.Binary 1 1) = SmtType.BitVec 1 := by
-      have hWidth : native_zleq 0 1 = true := by native_decide
+      have hWidth : native_zleq 0 1 = true := by decide +kernel
       have hMod : native_zeq 1 (native_mod_total 1 (native_int_pow2 1)) = true := by
-        native_decide
-      have hNat : native_int_to_nat 1 = 1 := by native_decide
+        decide +kernel
+      have hNat : native_int_to_nat 1 = 1 := by decide +kernel
       simp [__smtx_typeof, native_ite, native_and, hWidth, hMod, hNat]
     have hElse : __smtx_typeof (SmtTerm.Binary 1 0) = SmtType.BitVec 1 := by
-      have hWidth : native_zleq 0 1 = true := by native_decide
+      have hWidth : native_zleq 0 1 = true := by decide +kernel
       have hMod : native_zeq 0 (native_mod_total 0 (native_int_pow2 1)) = true := by
-        native_decide
-      have hNat : native_int_to_nat 1 = 1 := by native_decide
+        decide +kernel
+      have hNat : native_int_to_nat 1 = 1 := by decide +kernel
       simp [__smtx_typeof, native_ite, native_and, hWidth, hMod, hNat]
     rw [hThen, hElse]
     simp [__smtx_typeof_ite, native_ite, native_Teq]
@@ -1644,7 +1644,7 @@ private theorem typeof_binary_one_eq :
     unfold __smtx_typeof
     simp [native_ite, SmtEval.native_and, native_zleq, native_zeq, native_mod_total,
       native_int_pow2]
-    native_decide
+    decide +kernel
   simpa [native_int_to_nat, SmtEval.native_int_to_nat] using
     smtx_typeof_binary_of_non_none 1 1 hNN
 
@@ -9785,7 +9785,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_tuple_of_tail_type
         | true => rfl
         | false => rw [hb] at hDtWf'; simp [native_ite] at hDtWf'
       have hRes : __eo_reserved_datatype_name (native_string_lit "@Tuple") = true := by
-        native_decide
+        decide +kernel
       have hNoOp :
           __smtx_type_substitute (native_string_lit "@Tuple") fullD headTy = headTy := by
         rw [hUnfold]

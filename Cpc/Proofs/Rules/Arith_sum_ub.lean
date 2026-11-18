@@ -1093,27 +1093,27 @@ private theorem eo_typeof_right_rel_of_sum_rel_bool
     rcases hOp with rfl | hOp
     · change __eo_typeof_lt (__eo_typeof a2) (__eo_typeof b2) = Term.Bool
       rw [ha2, hb2]
-      native_decide
+      decide +kernel
     · rcases hOp with rfl | rfl
       · change __eo_typeof_eq (__eo_typeof a2) (__eo_typeof b2) = Term.Bool
         rw [ha2, hb2]
-        native_decide
+        decide +kernel
       · change __eo_typeof_lt (__eo_typeof a2) (__eo_typeof b2) = Term.Bool
         rw [ha2, hb2]
-        native_decide
+        decide +kernel
   · rcases eo_typeof_plus_eq_real_args (__eo_typeof a1) (__eo_typeof a2) hReal.1 with ⟨_, ha2⟩
     rcases eo_typeof_plus_eq_real_args (__eo_typeof b1) (__eo_typeof b2) hReal.2 with ⟨_, hb2⟩
     rcases hOp with rfl | hOp
     · change __eo_typeof_lt (__eo_typeof a2) (__eo_typeof b2) = Term.Bool
       rw [ha2, hb2]
-      native_decide
+      decide +kernel
     · rcases hOp with rfl | rfl
       · change __eo_typeof_eq (__eo_typeof a2) (__eo_typeof b2) = Term.Bool
         rw [ha2, hb2]
-        native_decide
+        decide +kernel
       · change __eo_typeof_lt (__eo_typeof a2) (__eo_typeof b2) = Term.Bool
         rw [ha2, hb2]
-        native_decide
+        decide +kernel
 
 private theorem smt_type_eq_int_of_eo_type_and_translation
     (t : Term)

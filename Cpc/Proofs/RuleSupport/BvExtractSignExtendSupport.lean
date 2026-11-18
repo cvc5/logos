@@ -21,7 +21,7 @@ theorem native_binary_uts_eq_bitvec_toInt
   | zero =>
       have hp : p = 0 := by simp at hp1; omega
       subst p
-      native_decide
+      decide +kernel
   | succ w =>
       let x := BitVec.ofInt (w + 1) p
       have hToNat : x.toNat = p.toNat := by

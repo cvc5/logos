@@ -7239,7 +7239,10 @@ theorem StrInReConsumeInternal.str_re_consume_rec_unrev_model_rel_local
             hSsU' with ⟨ssU2, s1V, hSsU2, hS1V, hUnp⟩
         rcases StrInReConsumeInternal.eval_string_unpack_consume_local M [c] with
           ⟨ss1', hss1', hUnp1⟩
-        injection hS1V.symm.trans hss1' with hEq1
+        have hEq1 : s1V = ss1' := by
+          have h := hss1'
+          rw [hS1V] at h
+          exact SmtValue.Seq.inj h
         have hS1W : native_unpack_string s1V = [c] := by
           rw [hEq1]
           exact hUnp1

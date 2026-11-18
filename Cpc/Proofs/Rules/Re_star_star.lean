@@ -67,7 +67,7 @@ private theorem typed___eo_prog_re_star_star_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.RegLan := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hProg :
       __eo_prog_re_star_star a1 = Term.Apply (Term.Apply Term.eq lhs) rhs := by
@@ -84,7 +84,7 @@ private theorem facts___eo_prog_re_star_star_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.RegLan := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hProg :
       __eo_prog_re_star_star a1 =

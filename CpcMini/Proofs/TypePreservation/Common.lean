@@ -21,11 +21,11 @@ namespace Smtm
 
 @[simp] theorem native_char_valid_zero :
     native_char_valid 0 = true := by
-  native_decide
+  decide +kernel
 
 @[simp] theorem native_re_canonical_none :
     __smtx_re_canonical native_re_none = true := by
-  native_decide
+  decide +kernel
 
 /-- The two facts the inhabitation check supplies on a recursively well-formed
 type: the type is not `None`, and the default value has that type. Canonicity

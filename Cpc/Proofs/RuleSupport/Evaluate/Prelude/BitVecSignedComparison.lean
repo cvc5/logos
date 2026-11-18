@@ -64,7 +64,7 @@ theorem EvaluateProofInternal.smtx_model_eval_bvsgt_binary_eq_formula
       _ = 1 := by
         rfl
   have hPow1 : native_int_pow2 1 = 2 := by
-    native_decide
+    decide +kernel
   simp [hArg, hWidth, hPow1, native_veq, native_zeq,
     SmtEval.native_zeq]
 
@@ -309,7 +309,7 @@ theorem EvaluateProofInternal.smt_bvsgt_formula_eq_signed_gt
     have hRange1 := bitvec_payload_range_of_canonical hw0 hCanon1
     have hRange2 := bitvec_payload_range_of_canonical hw0 hCanon2
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hn1Eq : n1 = 0 := by
       have hlt : n1 < 1 := by
         simpa [hPow0] using hRange1.2
@@ -321,7 +321,7 @@ theorem EvaluateProofInternal.smt_bvsgt_formula_eq_signed_gt
     subst n1
     subst n2
     simp [native_veq]
-    native_decide
+    decide +kernel
 
 theorem EvaluateProofInternal.smtx_model_eval_bvsgt_binary_eq_uts
     {w n1 n2 : native_Int}
@@ -463,7 +463,7 @@ theorem EvaluateProofInternal.native_binary_uts_eq_iff_canonical
     have hRange1 := bitvec_payload_range_of_canonical hw0 hCanon1
     have hRange2 := bitvec_payload_range_of_canonical hw0 hCanon2
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hn1Eq : n1 = 0 := by
       have hlt : n1 < 1 := by
         simpa [hPow0] using hRange1.2
@@ -474,7 +474,7 @@ theorem EvaluateProofInternal.native_binary_uts_eq_iff_canonical
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange2.1
     subst n1
     subst n2
-    native_decide
+    decide +kernel
 
 theorem EvaluateProofInternal.native_veq_binary_eq_signed_teq_of_canonical
     {w n1 n2 : native_Int}

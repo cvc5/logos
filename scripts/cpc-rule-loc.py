@@ -53,7 +53,7 @@ EXCLUDE_ROOTS = [
 
 # Files defining the checker's executable rule implementations (`__eo_prog_*`)
 # and everything they can call.
-CHECKER_FILES = ["Cpc/Logos.lean", "Cpc/LogosTerm.lean", "Cpc/SmtEval.lean"]
+CHECKER_FILES = ["Cpc/Logos.lean", "Cpc/LogosTerm.lean", "Cpc/LogosTermOrder.lean", "Cpc/SmtEval.lean"]
 
 
 # --- Shared LOC counter (non-blank, non-comment, Lean-aware) --------------

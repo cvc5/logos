@@ -441,7 +441,7 @@ private theorem typeof_extract_diag_numeral (wmv w : native_Int) :
       rw [Int.add_right_neg]
       rfl
     rw [hLen]
-    native_decide
+    decide +kernel
   by_cases hg1 : native_zlt (-1 : native_Int) wmv = true <;>
     by_cases hg2 : native_zlt wmv w = true <;>
     simp [hg1, hg2, hLenPos, native_ite, native_teq]
@@ -931,13 +931,13 @@ private theorem smt_typeof_rhs_int
         native_zlt 0
           (native_zplus (native_zplus wmv 1) (native_zneg wmv)) = true := by
       rw [hsum]
-      native_decide
+      decide +kernel
     have hwidth : native_int_to_nat
         (native_zplus (native_zplus wmv 1) (native_zneg wmv)) = 1 := by
       rw [hsum]
-      native_decide
+      decide +kernel
     have hNatOne : native_int_to_nat (1 : native_Int) = 1 := by
-      native_decide
+      decide +kernel
     simpa only [__smtx_typeof_extract, native_ite, hge0, hle, hlt, hwidthPos,
       ite_true, hwidth]
       using hNatOne
@@ -946,7 +946,7 @@ private theorem smt_typeof_rhs_int
           (SmtTerm.int_to_bv (SmtTerm.Numeral 1) (SmtTerm.Numeral 0)) =
         SmtType.BitVec 1 := by
     rw [typeof_int_to_bv_eq]
-    native_decide
+    decide +kernel
   have hUbvTy : __smtx_typeof (SmtTerm.ubv_to_int (__eo_to_smt t)) = SmtType.Int := by
     rw [show __smtx_typeof (SmtTerm.ubv_to_int (__eo_to_smt t)) =
         __smtx_typeof_bv_op_1_ret (__smtx_typeof (__eo_to_smt t)) SmtType.Int by

@@ -75,7 +75,7 @@ by
     exact False.elim (hExists rfl)
   all_goals
     have hNeg : native_zleq 0 (native_zneg 1) = false := by
-      native_decide
+      decide +kernel
     dsimp only [__eo_to_smt]
     simp [smtx_typeof_unfolded_eo_list_cons_eq_none, __smtx_typeof,
       __smtx_typeof_apply, __smtx_typeof_eq, __smtx_typeof_guard,
@@ -2169,7 +2169,7 @@ theorem closed_eo_to_smt_exists_bool_of_quantifiers_skolemize_non_none :
                   rw [hcU]
                   intro hUNone
                   rw [hUNone] at hWf
-                  exact absurd hWf (by native_decide)
+                  exact absurd hWf (by decide +kernel)
                 obtain ⟨hRestBool, _⟩ :=
                   closed_choice_non_none_split s (__eo_to_smt_type T)
                     (__eo_to_smt_exists a G) hcNN
@@ -4196,7 +4196,7 @@ by
     simp [native_ite, SmtEval.native_and, native_zleq, native_zeq,
       native_mod_total, native_int_pow2]
     rfl
-  have hNat : native_int_to_nat 1 = 1 := by native_decide
+  have hNat : native_int_to_nat 1 = 1 := by decide +kernel
   simpa [hNat] using TranslationProofs.smtx_typeof_binary_of_non_none 1 1 hNN
 
 theorem smtx_typeof_eq_non_none_closed

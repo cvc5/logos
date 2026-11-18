@@ -132,13 +132,13 @@ private theorem typed___eo_prog_str_indexof_re_none_impl
     intro hStuck
     rw [hStuck] at hTTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hTTy
   have hNNotStuck : n ≠ Term.Stuck := by
     intro hStuck
     rw [hStuck] at hNTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Int := by
-      native_decide
+      decide +kernel
     exact hBad hNTy
   have hProg :
       __eo_prog_str_indexof_re_none t n = Term.Apply (Term.Apply Term.eq lhs) rhs := by
@@ -170,13 +170,13 @@ private theorem facts___eo_prog_str_indexof_re_none_impl
     intro hStuck
     rw [hStuck] at hTTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hTTy
   have hNNotStuck : n ≠ Term.Stuck := by
     intro hStuck
     rw [hStuck] at hNTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Int := by
-      native_decide
+      decide +kernel
     exact hBad hNTy
   have hProg :
       __eo_prog_str_indexof_re_none t n = Term.Apply (Term.Apply Term.eq lhs) rhs := by

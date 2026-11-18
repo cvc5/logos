@@ -78,7 +78,7 @@ private theorem facts
   have hEqTy := RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type lhs rhs
     (by simpa [body, lhs, rhs] using hBool)
   have hRhsTy : __smtx_typeof (__eo_to_smt rhs) = SmtType.RegLan := by
-    native_decide
+    decide +kernel
   have hLhsTy : __smtx_typeof (__eo_to_smt lhs) = SmtType.RegLan := by
     rw [hEqTy.1, hRhsTy]
   have hLhsNN :

@@ -93,7 +93,7 @@ private theorem typeof_args_of_prog_bv_ite_equal_cond_1_bool
 theorem smt_typeof_binary_one_one :
     __smtx_typeof (SmtTerm.Binary 1 1) = SmtType.BitVec 1 := by
   have hNN : __smtx_typeof (SmtTerm.Binary 1 1) ≠ SmtType.None := by
-    native_decide
+    decide +kernel
   simpa [native_int_to_nat] using
     TranslationProofs.smtx_typeof_binary_of_non_none 1 1 hNN
 

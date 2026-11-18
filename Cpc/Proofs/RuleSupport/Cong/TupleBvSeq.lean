@@ -1696,10 +1696,10 @@ theorem congTypeSpine_bvredor_eq_has_bool_type
 
 private theorem typeof_binary_one_eq :
     __smtx_typeof (SmtTerm.Binary 1 1) = SmtType.BitVec 1 := by
-  have hWidth : native_zleq 0 1 = true := by native_decide
+  have hWidth : native_zleq 0 1 = true := by decide +kernel
   have hMod : native_zeq 1 (native_mod_total 1 (native_int_pow2 1)) = true := by
-    native_decide
-  have hNat : native_int_to_nat 1 = 1 := by native_decide
+    decide +kernel
+  have hNat : native_int_to_nat 1 = 1 := by decide +kernel
   unfold __smtx_typeof
   simp [native_ite, SmtEval.native_and, hWidth, hMod, hNat]
 

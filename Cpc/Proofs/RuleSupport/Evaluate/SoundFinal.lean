@@ -571,7 +571,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_extract_core
   rcases EvaluateProofInternal.eo_extract_literal_arg_binary_of_typeof_bitvec
       (__run_evaluate x) i j
       (native_zplus (native_zplus i (native_zneg j)) 1)
-      hj0 hji hRunExtEoBv with
+      hj0 hji rfl hRunExtEoBv with
     ⟨runW, runN, hRunX, _hWidthEq, hRunExtEq⟩
   have hRunExtEq' :
       runExt =

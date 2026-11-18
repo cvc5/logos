@@ -63,14 +63,14 @@ private theorem typeof_args_of_prog_bv_ite_equal_children_bool (c1 x1 : Term) :
   · subst c1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · by_cases hX1 : x1 = Term.Stuck
     · subst x1
       cases c1 <;> simp [__eo_prog_bv_ite_equal_children] at hC1 hTy
       all_goals
         have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-          native_decide
+          decide +kernel
         exact False.elim (hStuckTy hTy)
     · rw [prog_bv_ite_equal_children_eq_of_ne_stuck c1 x1 hC1 hX1] at hTy
       change __eo_typeof_eq
@@ -89,7 +89,7 @@ private theorem typeof_args_of_prog_bv_ite_equal_children_bool (c1 x1 : Term) :
 private theorem smt_typeof_binary_one_one :
     __smtx_typeof (SmtTerm.Binary 1 1) = SmtType.BitVec 1 := by
   have hNN : __smtx_typeof (SmtTerm.Binary 1 1) ≠ SmtType.None := by
-    native_decide
+    decide +kernel
   exact TranslationProofs.smtx_typeof_binary_of_non_none 1 1 hNN
 
 private theorem smt_typeof_c1_bitvec_one

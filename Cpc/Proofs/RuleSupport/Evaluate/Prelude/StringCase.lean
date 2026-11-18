@@ -220,6 +220,7 @@ theorem EvaluateProofInternal.str_flatten_nary_intro_singleton
     __str_flatten (__str_nary_intro (Term.String [c])) =
       Term.Apply (Term.Apply (Term.UOp UserOp.str_concat) (Term.String [c]))
         (Term.String []) := by
+  rw [RuleProofs.str_flatten_nary_intro_cons c [] (by simp)]
   rfl
 
 theorem EvaluateProofInternal.str_case_conv_rec_flatten_lower_singleton
@@ -412,14 +413,14 @@ theorem EvaluateProofInternal.substrWord_zero_eq_strCharChain :
       rw [EvaluateProofInternal.substrWord_zero_eq_strCharChain cs]
 
 theorem EvaluateProofInternal.str_flatten_nary_intro_string_char_chain
-    (s : native_String) :
+    (s : native_String) (hLen : s.length < 4294967296) :
     __str_flatten (__str_nary_intro (Term.String s)) = EvaluateProofInternal.strCharChain s := by
   cases s with
   | nil =>
       rw [RuleProofs.str_flatten_nary_intro_empty]
       rfl
   | cons c cs =>
-      rw [RuleProofs.str_flatten_nary_intro_cons c cs]
+      rw [RuleProofs.str_flatten_nary_intro_cons c cs hLen]
       exact EvaluateProofInternal.substrWord_zero_eq_strCharChain (c :: cs)
 
 theorem EvaluateProofInternal.str_is_prefix_flat_strCharChain :
