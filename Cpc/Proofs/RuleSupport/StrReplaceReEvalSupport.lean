@@ -995,7 +995,15 @@ private theorem str_eval_replace_re_eval_eq
     | nil =>
         simpa [substrWord] using str_flatten_nary_intro_empty
     | cons c cs =>
-        exact str_flatten_nary_intro_cons c cs
+        have hLen : (c :: cs).length < 4294967296 := by
+          by_contra hBig
+          apply hRawFlatNe
+          change __str_first_match_rec
+              (__str_flatten (__str_nary_intro (Term.String (c :: cs))))
+              r rs (Term.Numeral 0) = Term.Stuck
+          rw [str_flatten_nary_intro_cons_big c cs (by omega)]
+          unfold __str_first_match_rec; split <;> simp_all
+        exact str_flatten_nary_intro_cons c cs hLen
   have hRawFlatEqSub :
       rawFlat =
         __str_first_match_rec (substrWord str 0 str.length) r rs

@@ -481,27 +481,46 @@ theorem eo_nil_typedList_eq (T : Term) (hT : T ≠ Term.Stuck) :
       Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) T := by
   cases T <;> simp [__eo_nil, __eo_nil__at__at_TypedList_cons] at hT ⊢
 
+private theorem ctn_list_concat_args_ne_stuck (f a b : Term)
+    (h : __eo_list_concat f a b ≠ Term.Stuck) :
+    a ≠ Term.Stuck ∧ b ≠ Term.Stuck := by
+  have hIs : ∀ g : Term, __eo_is_list g Term.Stuck = Term.Stuck := by
+    intro g
+    cases g <;> rfl
+  constructor
+  · intro ha
+    subst ha
+    apply h
+    simp [__eo_list_concat, hIs, __eo_requires, native_ite, native_teq]
+  · intro hb
+    subst hb
+    apply h
+    simp [__eo_list_concat, hIs, __eo_requires, native_ite, native_teq,
+      native_not]
+
 theorem str_multiset_overapprox_sound
     (M : SmtModel) (hM : model_wf M) (v : SmtValue) :
     ∀ (t : Term) (S : SmtSeq) (T : SmtType),
       __smtx_typeof (__eo_to_smt t) = SmtType.Seq T ->
       __smtx_model_eval M (__eo_to_smt t) = SmtValue.Seq S ->
+      __str_multiset_overapprox t ≠ Term.Stuck ->
       SetsEvalOpSupport.IsTL (__str_multiset_overapprox t) ∧
         valueCount v (native_unpack_seq S) <=
           eoListSeqValueCount M v (__str_multiset_overapprox t) := by
   intro t
   induction t using __str_multiset_overapprox.induct with
   | case1 =>
-      intro S T hTy _
+      intro S T hTy _ _
       change __smtx_typeof SmtTerm.None = SmtType.Seq T at hTy
       simp at hTy
   | case2 s ss ihS ihSs =>
-      intro S T hTy hEval
+      intro S T hTy hEval hONe
       obtain ⟨hsTy, hssTy⟩ := strConcat_args_of_seq_type s ss T hTy
       obtain ⟨⟨Ss, hSs⟩, ⟨Sss, hSss⟩⟩ :=
         strConcat_args_eval_seq_of_concat_eval_seq M s ss ⟨S, hEval⟩
-      obtain ⟨hTLs, hBounds⟩ := ihS Ss T hsTy hSs
-      obtain ⟨hTLss, hBoundss⟩ := ihSs Sss T hssTy hSss
+      have hONeArgs := ctn_list_concat_args_ne_stuck _ _ _ hONe
+      obtain ⟨hTLs, hBounds⟩ := ihS Ss T hsTy hSs hONeArgs.1
+      obtain ⟨hTLss, hBoundss⟩ := ihSs Sss T hssTy hSss hONeArgs.2
       obtain ⟨Sxy, hSxy, hUnpack⟩ := concat_unpack M s ss Ss Sss hSs hSss
       have hSeq : S = Sxy := by
         rw [hEval] at hSxy
@@ -517,7 +536,7 @@ theorem str_multiset_overapprox_sound
         rw [hSeq, hUnpack, valueCount_append]
         omega
   | case3 s n m ihS =>
-      intro S T hTy hEval
+      intro S T hTy hEval hONe
       have hTy' :
           __smtx_typeof
               (SmtTerm.str_substr (__eo_to_smt s) (__eo_to_smt n) (__eo_to_smt m)) =
@@ -532,7 +551,7 @@ theorem str_multiset_overapprox_sound
             rw [hTy']
             exact seq_ne_none T)
       obtain ⟨Ss, hSs⟩ := eval_seq_of_type M hM s U hsTy
-      obtain ⟨hTLs, hBounds⟩ := ihS Ss U hsTy hSs
+      obtain ⟨hTLs, hBounds⟩ := ihS Ss U hsTy hSs hONe
       constructor
       · exact hTLs
       · change valueCount v (native_unpack_seq S) <=
@@ -556,7 +575,7 @@ theorem str_multiset_overapprox_sound
               exact valueCount_extract_le v (native_unpack_seq Ss) i j
             omega
   | case4 s pat repl ihS ihRepl =>
-      intro S T hTy hEval
+      intro S T hTy hEval hONe
       have hTy' :
           __smtx_typeof
               (SmtTerm.str_replace (__eo_to_smt s) (__eo_to_smt pat)
@@ -575,8 +594,9 @@ theorem str_multiset_overapprox_sound
       obtain ⟨Ss, hSs⟩ := eval_seq_of_type M hM s U hsTy
       obtain ⟨Spat, hSpat⟩ := eval_seq_of_type M hM pat U hpatTy
       obtain ⟨Srepl, hSrepl⟩ := eval_seq_of_type M hM repl U hreplTy
-      obtain ⟨hTLs, hBounds⟩ := ihS Ss U hsTy hSs
-      obtain ⟨hTLrepl, hBoundrepl⟩ := ihRepl Srepl U hreplTy hSrepl
+      have hONeArgs := ctn_list_concat_args_ne_stuck _ _ _ hONe
+      obtain ⟨hTLs, hBounds⟩ := ihS Ss U hsTy hSs hONeArgs.1
+      obtain ⟨hTLrepl, hBoundrepl⟩ := ihRepl Srepl U hreplTy hSrepl hONeArgs.2
       constructor
       · exact eo_list_concat_isTL (__str_multiset_overapprox s)
           (__str_multiset_overapprox repl) hTLs hTLrepl
@@ -601,7 +621,7 @@ theorem str_multiset_overapprox_sound
             (native_unpack_seq Spat) (native_unpack_seq Srepl)
         omega
   | case5 s =>
-      intro S T hTy hEval
+      intro S T hTy hEval hONe
       have hsNe : s ≠ Term.Stuck := by
         intro hs
         subst hs
@@ -629,9 +649,10 @@ theorem str_multiset_overapprox_sound
           cases bEmpty <;> simp_all
         by_cases hStrTrue : __eo_is_str s = Term.Boolean true
         · obtain ⟨w, rfl⟩ := eo_is_str_true_cases s hStrTrue
-          have hOver :
+          have hOver0 :
               __str_multiset_overapprox (Term.String w) =
-                __str_multiset_overapprox_word (charChainTerm w) := by
+                __str_multiset_overapprox_word
+                  (__str_flatten (__str_nary_intro (Term.String w))) := by
             change __eo_ite (__str_is_empty (Term.String w))
                 (__eo_mk_apply (Term.UOp UserOp._at__at_TypedList_nil)
                   (__eo_typeof (Term.String w)))
@@ -647,7 +668,17 @@ theorem str_multiset_overapprox_sound
               show __eo_is_str (Term.String w) = Term.Boolean true by
                 simp [__eo_is_str, __eo_is_str_internal, native_teq,
                   SmtEval.native_and, SmtEval.native_not],
-              eo_ite_true, flatten_nary_intro_string]
+              eo_ite_true]
+          have hLenW : w.length < 4294967296 :=
+            str_flatten_nary_intro_string_len_lt w (by
+              intro hF
+              apply hONe
+              rw [hOver0, hF]
+              rfl)
+          have hOver :
+              __str_multiset_overapprox (Term.String w) =
+                __str_multiset_overapprox_word (charChainTerm w) := by
+            rw [hOver0, flatten_nary_intro_string w hLenW]
           obtain ⟨hWordTL, hWordCount⟩ :=
             str_multiset_overapprox_word_charChain_sound M v w
           constructor
@@ -1079,19 +1110,21 @@ theorem str_multiset_overapprox_noAtom
     (M : SmtModel) (hM : model_wf M) :
     ∀ (t : Term) (T : SmtType),
       __smtx_typeof (__eo_to_smt t) = SmtType.Seq T ->
+      __str_multiset_overapprox t ≠ Term.Stuck ->
       SetsEvalOpSupport.IsTL (__str_multiset_overapprox t) ∧
         NoAtomOverlapList M hM T (__str_multiset_overapprox t) := by
   intro t
   induction t using __str_multiset_overapprox.induct with
   | case1 =>
-      intro T hTy
+      intro T hTy _
       change __smtx_typeof SmtTerm.None = SmtType.Seq T at hTy
       simp at hTy
   | case2 s ss ihS ihSs =>
-      intro T hTy
+      intro T hTy hONe
       obtain ⟨hsTy, hssTy⟩ := strConcat_args_of_seq_type s ss T hTy
-      obtain ⟨hTLs, hNoS⟩ := ihS T hsTy
-      obtain ⟨hTLss, hNoSs⟩ := ihSs T hssTy
+      have hONeArgs := ctn_list_concat_args_ne_stuck _ _ _ hONe
+      obtain ⟨hTLs, hNoS⟩ := ihS T hsTy hONeArgs.1
+      obtain ⟨hTLss, hNoSs⟩ := ihSs T hssTy hONeArgs.2
       constructor
       · exact eo_list_concat_isTL (__str_multiset_overapprox s)
           (__str_multiset_overapprox ss) hTLs hTLss
@@ -1099,7 +1132,7 @@ theorem str_multiset_overapprox_noAtom
           (__str_multiset_overapprox s) (__str_multiset_overapprox ss)
           hTLs hTLss hNoS hNoSs
   | case3 s n m ihS =>
-      intro T hTy
+      intro T hTy hONe
       have hTy' :
           __smtx_typeof
               (SmtTerm.str_substr (__eo_to_smt s) (__eo_to_smt n) (__eo_to_smt m)) =
@@ -1122,9 +1155,9 @@ theorem str_multiset_overapprox_noAtom
       subst U
       change SetsEvalOpSupport.IsTL (__str_multiset_overapprox s) ∧
         NoAtomOverlapList M hM T (__str_multiset_overapprox s)
-      exact ihS T hsTy
+      exact ihS T hsTy hONe
   | case4 s pat repl ihS ihRepl =>
-      intro T hTy
+      intro T hTy hONe
       have hTy' :
           __smtx_typeof
               (SmtTerm.str_replace (__eo_to_smt s) (__eo_to_smt pat)
@@ -1148,8 +1181,9 @@ theorem str_multiset_overapprox_noAtom
             native_Teq, native_ite]
         injection hSeq with h
       subst U
-      obtain ⟨hTLs, hNoS⟩ := ihS T hsTy
-      obtain ⟨hTLrepl, hNoRepl⟩ := ihRepl T hreplTy
+      have hONeArgs := ctn_list_concat_args_ne_stuck _ _ _ hONe
+      obtain ⟨hTLs, hNoS⟩ := ihS T hsTy hONeArgs.1
+      obtain ⟨hTLrepl, hNoRepl⟩ := ihRepl T hreplTy hONeArgs.2
       constructor
       · exact eo_list_concat_isTL (__str_multiset_overapprox s)
           (__str_multiset_overapprox repl) hTLs hTLrepl
@@ -1157,7 +1191,7 @@ theorem str_multiset_overapprox_noAtom
           (__str_multiset_overapprox s) (__str_multiset_overapprox repl)
           hTLs hTLrepl hNoS hNoRepl
   | case5 s _hNotStuck hNotConcat _hNotSubstr _hNotReplace =>
-      intro T hTy
+      intro T hTy hONe
       have hsNe : s ≠ Term.Stuck := by
         intro hs
         subst hs
@@ -1183,9 +1217,10 @@ theorem str_multiset_overapprox_noAtom
           cases bEmpty <;> simp_all
         by_cases hStrTrue : __eo_is_str s = Term.Boolean true
         · obtain ⟨w, rfl⟩ := eo_is_str_true_cases s hStrTrue
-          have hOver :
+          have hOver0 :
               __str_multiset_overapprox (Term.String w) =
-                __str_multiset_overapprox_word (charChainTerm w) := by
+                __str_multiset_overapprox_word
+                  (__str_flatten (__str_nary_intro (Term.String w))) := by
             change __eo_ite (__str_is_empty (Term.String w))
                 (__eo_mk_apply (Term.UOp UserOp._at__at_TypedList_nil)
                   (__eo_typeof (Term.String w)))
@@ -1201,7 +1236,17 @@ theorem str_multiset_overapprox_noAtom
               show __eo_is_str (Term.String w) = Term.Boolean true by
                 simp [__eo_is_str, __eo_is_str_internal, native_teq,
                   SmtEval.native_and, SmtEval.native_not],
-              eo_ite_true, flatten_nary_intro_string]
+              eo_ite_true]
+          have hLenW : w.length < 4294967296 :=
+            str_flatten_nary_intro_string_len_lt w (by
+              intro hF
+              apply hONe
+              rw [hOver0, hF]
+              rfl)
+          have hOver :
+              __str_multiset_overapprox (Term.String w) =
+                __str_multiset_overapprox_word (charChainTerm w) := by
+            rw [hOver0, flatten_nary_intro_string w hLenW]
           obtain ⟨hWordTL, _⟩ :=
             str_multiset_overapprox_word_charChain_sound M (SmtValue.Boolean false) w
           constructor
@@ -2532,20 +2577,32 @@ private theorem scratch_eo_list_repeat_rec_zero_eq :
         scratch_eo_list_repeat_rec_zero_eq n, __eo_mk_apply,
         scratch_zeroIntListTerm_ne_stuck]
 
-private theorem scratch_eo_list_repeat_zero_eq (n : Nat) :
+private theorem scratch_eo_list_repeat_zero_eq (n : Nat) (hn : n < 4294967296) :
     __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
         (Term.Numeral 0) (Term.Numeral (Int.ofNat n)) =
       scratch_zeroIntListTerm n := by
   have hnot : native_zlt (↑n : native_Int) 0 = false := by
     simp [native_zlt]
-  simp [__eo_list_repeat, native_ite, native_int_to_nat, hnot,
-    scratch_eo_list_repeat_rec_zero_eq]
+  have hbig : native_zleq 4294967296 (↑n : native_Int) = false := by
+    simp [native_zleq]
+    omega
+  simp [__eo_list_repeat, native_ite, native_int_to_nat, native_or, hnot,
+    hbig, scratch_eo_list_repeat_rec_zero_eq]
+
+private theorem scratch_eo_list_repeat_zero_eq_big (f a : Term) (n : Nat)
+    (hn : 4294967296 ≤ n) :
+    __eo_list_repeat f a (Term.Numeral (Int.ofNat n)) = Term.Stuck := by
+  have hbig : native_zleq 4294967296 (↑n : native_Int) = true := by
+    simp [native_zleq]
+    omega
+  cases f <;> cases a <;>
+    simp [__eo_list_repeat, native_ite, native_or, hbig]
 
 private theorem scratch_eo_list_repeat_zero_eq_zero :
     __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
         (Term.Numeral 0) (Term.Numeral 0) =
       scratch_zeroIntListTerm 0 := by
-  simpa using scratch_eo_list_repeat_zero_eq 0
+  simpa using scratch_eo_list_repeat_zero_eq 0 (by decide)
 
 private theorem scratch_intRangeTerm_ne_stuck :
     ∀ n start, scratch_intRangeTerm start n ≠ Term.Stuck
@@ -2563,8 +2620,45 @@ private theorem scratch_iota_zero_list_eq_range :
       rw [scratch_iota_zero_list_eq_range n (start + 1)]
       simp [__eo_mk_apply, scratch_intRangeTerm_ne_stuck]
 
+theorem scratch_str_flatten_concat_string_eq_big
+    (s : native_String) (tail : Term) (hLen : 4294967296 ≤ s.length) :
+    __str_flatten (mkConcat (Term.String s) tail) = Term.Stuck := by
+  cases s with
+  | nil => simp at hLen
+  | cons c cs =>
+      change
+        __eo_ite (__eo_is_str (Term.String (c :: cs)))
+            (__eo_list_concat (Term.UOp UserOp.str_concat)
+              (__str_flatten_word_rec
+                (__eo_requires
+                  (__eo_is_neg
+                    (Term.Numeral (Int.ofNat (List.length cs + 1))))
+                  (Term.Boolean false)
+                  (__iota_rec
+                    (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+                      (Term.Numeral 0)
+                      (Term.Numeral (Int.ofNat (List.length cs + 1))))
+                    (Term.Numeral 0)))
+                (Term.String (c :: cs)))
+              (__str_flatten tail))
+            (__eo_mk_apply
+              (Term.Apply (Term.UOp UserOp.str_concat)
+                (Term.String (c :: cs)))
+              (__str_flatten tail)) = Term.Stuck
+      have hIsStr :
+          __eo_is_str (Term.String (c :: cs)) = Term.Boolean true := by
+        simp [__eo_is_str, __eo_is_str_internal, native_teq, native_not,
+          SmtEval.native_and]
+      have hIs : __eo_is_list (Term.UOp UserOp.str_concat) Term.Stuck =
+          Term.Stuck := by
+        simp [__eo_is_list]
+      rw [hIsStr, eo_ite_true,
+        scratch_eo_list_repeat_zero_eq_big _ _ _ (by simpa using hLen)]
+      simp [__iota_rec, __eo_requires, native_ite, native_teq, native_not,
+        __str_flatten_word_rec, __eo_list_concat, hIs]
+
 theorem scratch_str_flatten_concat_string_eq
-    (s : native_String) (tail : Term) :
+    (s : native_String) (tail : Term) (hLen : s.length < 4294967296) :
     __str_flatten (mkConcat (Term.String s) tail) =
       __eo_list_concat (Term.UOp UserOp.str_concat)
         (substrWord s 0 s.length) (__str_flatten tail) := by
@@ -2664,7 +2758,8 @@ theorem scratch_str_flatten_concat_string_eq
               omega
             rw [hCountLen]]
         exact eo_requires_self_eq_of_ne_stuck (Term.Boolean false) _ (by simp)
-      rw [hIsStr, eo_ite_true, hReqLen, scratch_eo_list_repeat_zero_eq,
+      rw [hIsStr, eo_ite_true, hReqLen,
+        scratch_eo_list_repeat_zero_eq _ (by simpa using hLen),
         scratch_iota_zero_list_eq_range,
         scratch_str_flatten_word_rec_range_eq_substrWord]
 
@@ -2744,7 +2839,10 @@ theorem scratch_smt_typeof_str_flatten_of_seq :
       have hsNe : s ≠ Term.Stuck := term_ne_stuck_of_smt_seq_type s T hsTy
       by_cases hStrTrue : __eo_is_str s = Term.Boolean true
       · obtain ⟨w, rfl⟩ := eo_is_str_true_cases s hStrTrue
-        have hFlatEq := scratch_str_flatten_concat_string_eq w ss
+        have hLenW : w.length < 4294967296 := by
+          by_contra hBig
+          exact hFlatNe (scratch_str_flatten_concat_string_eq_big w ss (by omega))
+        have hFlatEq := scratch_str_flatten_concat_string_eq w ss hLenW
         have hConcatNe :
             __eo_list_concat (Term.UOp UserOp.str_concat)
                 (substrWord w 0 w.length) (__str_flatten ss) ≠
@@ -3066,7 +3164,10 @@ theorem scratch_flatSeqValueCount_str_flatten_le_eval
       have hsNe : s ≠ Term.Stuck := term_ne_stuck_of_smt_seq_type s T hsTy
       by_cases hStrTrue : __eo_is_str s = Term.Boolean true
       · obtain ⟨w, rfl⟩ := eo_is_str_true_cases s hStrTrue
-        have hFlatEq := scratch_str_flatten_concat_string_eq w ss
+        have hLenW : w.length < 4294967296 := by
+          by_contra hBig
+          exact hFlatNe (scratch_str_flatten_concat_string_eq_big w ss (by omega))
+        have hFlatEq := scratch_str_flatten_concat_string_eq w ss hLenW
         have hConcatNe :
             __eo_list_concat (Term.UOp UserOp.str_concat)
                 (substrWord w 0 w.length) (__str_flatten ss) ≠
@@ -3224,8 +3325,14 @@ theorem str_ctn_multiset_subset_contains_false
       SmtValue.Boolean false := by
   obtain ⟨Shay, hHayEval⟩ := eval_seq_of_type M hM hay T hHayTy
   obtain ⟨Sneedle, hNeedleEval⟩ := eval_seq_of_type M hM needle T hNeedleTy
+  have hOverNe : __str_multiset_overapprox hay ≠ Term.Stuck := by
+    intro hBad
+    rw [hBad] at hStrict
+    revert hStrict
+    cases __str_flatten (__str_nary_intro needle) <;>
+      simp [__str_is_multiset_subset_strict]
   obtain ⟨hOverTL, hNoOver⟩ :=
-    str_multiset_overapprox_noAtom M hM hay T hHayTy
+    str_multiset_overapprox_noAtom M hM hay T hHayTy hOverNe
   obtain ⟨v, hStrictCount⟩ :=
     str_is_multiset_subset_strict_flat_count_lt M hM needle Sneedle T
       (__str_multiset_overapprox hay) (__eo_typeof hay)
@@ -3242,7 +3349,8 @@ theorem str_ctn_multiset_subset_contains_false
       have hHayOver :
           valueCount v (native_unpack_seq Shay) <=
             eoListSeqValueCount M v (__str_multiset_overapprox hay) :=
-        (str_multiset_overapprox_sound M hM v hay Shay T hHayTy hHayEval).2
+        (str_multiset_overapprox_sound M hM v hay Shay T hHayTy hHayEval
+          hOverNe).2
       omega
   rw [strContains_eval_eq M hay needle Shay Sneedle hHayEval hNeedleEval,
     hContainsFalse]

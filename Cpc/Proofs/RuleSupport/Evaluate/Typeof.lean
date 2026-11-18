@@ -509,6 +509,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop
                   (__run_evaluate x))) =
             Term.UOp UserOp.Int :=
         EvaluateProofInternal.eo_int_pow2_body_typeof_int (__run_evaluate x) hRunXEoInt
+          hRunNe
       change
         __eo_typeof
             (__eo_ite (__eo_is_z (__run_evaluate x))
@@ -650,7 +651,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop
                   (__run_evaluate x))) =
             Term.Bool :=
         EvaluateProofInternal.eo_int_ispow2_body_typeof_bool (__run_evaluate x)
-          hRunXEoInt
+          hRunXEoInt hRunNe
       change
         __eo_typeof
             (let isNeg := __eo_is_neg (__run_evaluate x)
@@ -1043,6 +1044,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop
             Term.Apply (Term.UOp UserOp.Seq)
               (Term.UOp UserOp.Char) :=
         EvaluateProofInternal.eo_eval_str_from_int_rhs_typeof_seq_char x hRunXEoInt
+          hRunBodyNe
       change
         __eo_typeof (EvaluateProofInternal.eo_eval_str_from_int_rhs x) =
           __eo_typeof_str_from_code (__eo_typeof x)
@@ -3979,10 +3981,10 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_binary_uop
                 (Term.Numeral (native_nat_to_int w)) :=
           EvaluateProofInternal.eo_to_bin_typeof_bitvec_of_width_numeral_and_ne_stuck
             (native_nat_to_int w) _
-            (by simpa [__bv_bitwidth] using hSel)
-        have hsimpa := hThenTy
-        try simp [__eo_ite, hYEoBv, __bv_bitwidth] at hsimpa ⊢
-        exact hsimpa
+            hSel
+        show __eo_typeof (__eo_to_bin (__bv_bitwidth (__eo_typeof y)) _) = _
+        rw [hYEoBv]
+        exact hThenTy
     have hRhsTy :
         __eo_typeof_bvand (__eo_typeof y)
             (__eo_typeof x) =
@@ -5717,7 +5719,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_ternary_uop
     simp [__eo_typeof_str_update, __eo_requires, hUEq,
       native_ite, native_teq, native_not]
   | str_replace_all =>
-    exact EvaluateProofInternal.run_evaluate_typeof_eq_str_replace_all b y x
+    exact EvaluateProofInternal.run_evaluate_typeof_eq_str_replace_all b y x hRunNe
   | _ =>
     exact False.elim (hRun rfl)
 
@@ -6132,7 +6134,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_apply_uop2
               (native_zplus (native_zplus i (native_zneg j)) 1)) :=
       EvaluateProofInternal.eo_extract_typeof_bitvec_of_arg_bitvec_and_ne_stuck
         (__run_evaluate x) i j (native_nat_to_int w)
-        hj0 hji hRunXBv hRunExtNe
+        hj0 hji hRunXBv hRunExtNe hiw
     have hjNonneg : 0 <= j := by
       simpa [native_zleq, SmtEval.native_zleq] using hj0
     have hLowSuccPos :

@@ -274,10 +274,14 @@ theorem EvaluateProofInternal.eo_str_to_lower_body_typeof_seq_char
       __eo_mk_apply, native_ite, native_teq, native_and, native_not]
       at hTy hNe ⊢
   case String s =>
-    rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain]
+    have hLen : s.length < 4294967296 := by
+      by_contra hBig
+      rw [EvaluateProofInternal.str_flatten_nary_intro_string_big s (by omega)] at hNe
+      exact hNe (by simp [__str_case_conv_rec])
+    rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen]
     exact EvaluateProofInternal.str_case_conv_rec_strCharChain_typeof_seq_char_of_ne_stuck
       s true (by
-        simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain] using hNe)
+        simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen] using hNe)
   all_goals
     first
     | change __eo_typeof_str_to_lower (__eo_typeof _) =
@@ -308,10 +312,14 @@ theorem EvaluateProofInternal.eo_str_to_upper_body_typeof_seq_char
       __eo_mk_apply, native_ite, native_teq, native_and, native_not]
       at hTy hNe ⊢
   case String s =>
-    rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain]
+    have hLen : s.length < 4294967296 := by
+      by_contra hBig
+      rw [EvaluateProofInternal.str_flatten_nary_intro_string_big s (by omega)] at hNe
+      exact hNe (by simp [__str_case_conv_rec])
+    rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen]
     exact EvaluateProofInternal.str_case_conv_rec_strCharChain_typeof_seq_char_of_ne_stuck
       s false (by
-        simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain] using hNe)
+        simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen] using hNe)
   all_goals
     first
     | change __eo_typeof_str_to_lower (__eo_typeof _) =
@@ -417,11 +425,18 @@ theorem EvaluateProofInternal.eo_str_to_int_body_typeof_int
           Term.UOp UserOp.Int
         rfl
     | cons c cs =>
-        rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain]
+        have hLen : (c :: cs).length < 4294967296 := by
+          by_contra hBig
+          rw [EvaluateProofInternal.str_flatten_nary_intro_string_big (c :: cs)
+            (by omega)] at hNe
+          exact hNe (by
+            simp [__eo_list_rev, __eo_is_list, __eo_requires, native_ite, native_teq,
+              __str_to_int_eval_rec])
+        rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain (c :: cs) hLen]
         rw [EvaluateProofInternal.eo_list_rev_strCharChain]
         exact EvaluateProofInternal.str_to_int_eval_rec_strCharChain_typeof_int_of_ne_stuck
           (c :: cs).reverse 1 0 (by
-            simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain,
+            simpa [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain (c :: cs) hLen,
               EvaluateProofInternal.eo_list_rev_strCharChain] using hNe)
   all_goals
     first
@@ -450,7 +465,7 @@ theorem EvaluateProofInternal.eo_str_rev_body_typeof_seq
       Term.Apply (Term.UOp UserOp.Seq) U := by
   cases x
   case String s =>
-    rw [EvaluateProofInternal.str_rev_result_string]
+    rw [EvaluateProofInternal.str_rev_result_string hNe]
     cases hTy
     rfl
   all_goals
@@ -465,12 +480,13 @@ theorem EvaluateProofInternal.eo_str_rev_body_typeof_seq
 
 theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_typeof_seq_char
     (x : Term)
-    (hRunTy : __eo_typeof (__run_evaluate x) = Term.UOp UserOp.Int) :
+    (hRunTy : __eo_typeof (__run_evaluate x) = Term.UOp UserOp.Int)
+    (hNe : EvaluateProofInternal.eo_eval_str_from_int_rhs x ≠ Term.Stuck) :
     __eo_typeof (EvaluateProofInternal.eo_eval_str_from_int_rhs x) =
       Term.Apply (Term.UOp UserOp.Seq) (Term.UOp UserOp.Char) := by
   cases hRunX : __run_evaluate x
   case Numeral n =>
-    rw [EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral (x := x) (n := n) hRunX]
+    rw [EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral (x := x) (n := n) hRunX hNe]
     rfl
   all_goals
     have hRunXNe : __run_evaluate x ≠ Term.Stuck := by
@@ -512,8 +528,60 @@ theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_typeof_seq_char
     simp [__eo_ite, native_ite, native_teq, __eo_is_z,
       __eo_is_z_internal, native_and, native_not]
 
+theorem EvaluateProofInternal.int_ispow2_pow_log2_eq
+    (n : native_Int) (hLog : native_int_log2 n < 4294967296) :
+    __eo_pow (Term.Numeral 2) (Term.Numeral (native_int_log2 n)) =
+      Term.Numeral (native_zexp_total 2 (native_int_log2 n)) := by
+  have hLe : native_zleq 0 (native_int_log2 n) = true := by
+    unfold native_zleq native_int_log2
+    exact decide_eq_true (Int.natCast_nonneg _)
+  have hLt : native_zlt (native_int_log2 n) 4294967296 = true := by
+    unfold native_zlt
+    exact decide_eq_true hLog
+  simp only [__eo_pow, hLe, hLt]
+  rfl
+
+theorem EvaluateProofInternal.int_ispow2_numeral_log_bound
+    (n : native_Int)
+    (hNe :
+      (let isNeg := __eo_is_neg (Term.Numeral n)
+             let isZ := __eo_is_z (Term.Numeral n)
+             __eo_ite isZ
+              (__eo_ite isNeg (Term.Boolean false)
+                (__eo_eq (Term.Numeral n)
+                  (__eo_pow (Term.Numeral 2)
+                    (__eo_ite isZ
+                      (__eo_ite isNeg (Term.Numeral 0)
+                        (__eo_log (Term.Numeral 2) (Term.Numeral n)))
+                      (__eo_mk_apply (Term.UOp UserOp.int_log2)
+                        (Term.Numeral n))))))
+              (__eo_mk_apply (Term.UOp UserOp.int_ispow2)
+                (Term.Numeral n))) ≠ Term.Stuck) :
+    native_int_log2 n < 4294967296 := by
+  by_contra hBig
+  apply hNe
+  have hNotNeg : ¬ n < 0 := by
+    intro hNeg
+    apply hBig
+    have h0 : native_int_log2 n = 0 := by
+      show Int.ofNat (Int.toNat n).log2 = 0
+      rw [Int.toNat_of_nonpos (Int.le_of_lt hNeg)]
+      rfl
+    rw [h0]
+    decide
+  have hPowStuck :
+      __eo_pow (Term.Numeral 2) (Term.Numeral (native_int_log2 n)) = Term.Stuck := by
+    have hLt : native_zlt (native_int_log2 n) 4294967296 = false := by
+      unfold native_zlt
+      exact decide_eq_false hBig
+    simp only [__eo_pow, hLt, native_and, Bool.and_false]
+    rfl
+  simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
+    __eo_log, native_ite, native_teq, native_and, native_not, native_zlt, hNotNeg,
+    EvaluateProofInternal.native_int_log_two_eq_log2, hPowStuck, __eo_eq]
+
 theorem EvaluateProofInternal.int_ispow2_numeral_to_smt_type_bool
-    (n : native_Int) :
+    (n : native_Int) (hLog : native_int_log2 n < 4294967296) :
     __smtx_typeof
         (__eo_to_smt
           (let isNeg := __eo_is_neg (Term.Numeral n)
@@ -535,13 +603,14 @@ theorem EvaluateProofInternal.int_ispow2_numeral_to_smt_type_bool
       native_ite, native_teq, native_and, native_not, native_zlt, hNeg]
     rw [__smtx_typeof.eq_1]
   · simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
-      __eo_eq, __eo_pow, __eo_log, native_ite, native_teq, native_and,
+      __eo_eq, EvaluateProofInternal.int_ispow2_pow_log2_eq n hLog, __eo_log,
+      native_ite, native_teq, native_and,
       native_not, native_zlt, hNeg, EvaluateProofInternal.native_int_log_two_eq_log2,
       eq_comm]
     rw [__smtx_typeof.eq_1]
 
 theorem EvaluateProofInternal.int_ispow2_numeral_eval_rel
-    (M : SmtModel) (n : native_Int) :
+    (M : SmtModel) (n : native_Int) (hLog : native_int_log2 n < 4294967296) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M
         (SmtTerm.and
@@ -582,7 +651,8 @@ theorem EvaluateProofInternal.int_ispow2_numeral_eval_rel
       __smtx_model_eval_eq, __smtx_model_eval_and,
       __smtx_model_eval_int_pow2, __smtx_model_eval_int_log2,
       __eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite, __eo_eq,
-      __eo_pow, __eo_log, native_ite, native_teq, native_and, native_not,
+      EvaluateProofInternal.int_ispow2_pow_log2_eq n hLog, __eo_log, native_ite,
+      native_teq, native_and, native_not,
       native_veq, native_zlt, hGeq, hNeg, EvaluateProofInternal.native_int_log_two_eq_log2,
       native_int_pow2, RuleProofs.smt_value_rel, eq_comm]
 

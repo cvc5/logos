@@ -184,7 +184,26 @@ theorem EvaluateProofInternal.str_replace_all_result_strings_empty
     native_and, native_teq, native_not, native_ite]
 
 theorem EvaluateProofInternal.str_replace_all_result_strings_cons
-    (s repl : native_String) (p : native_Char) (ps : native_String) :
+    (s repl : native_String) (p : native_Char) (ps : native_String)
+    (hNe :
+      __eo_ite
+          (__eo_and
+            (__eo_and (__eo_is_str (Term.String s))
+              (__eo_is_str (Term.String (p :: ps))))
+            (__eo_is_str (Term.String repl)))
+          (__eo_ite (__eo_eq (Term.String (p :: ps)) (Term.String []))
+            (Term.String s)
+            (__str_eval_replace_all_rec
+              (__str_flatten (__str_nary_intro (Term.String s)))
+              (__str_flatten (__str_nary_intro (Term.String (p :: ps))))
+              (Term.String repl) (Term.Numeral 0)
+              (__eo_len (Term.String (p :: ps)))))
+          (Term.Apply
+            (Term.Apply
+              (Term.Apply (Term.UOp UserOp.str_replace_all) (Term.String s))
+              (Term.String (p :: ps)))
+            (Term.String repl)) ≠
+        Term.Stuck) :
     __eo_ite
         (__eo_and
           (__eo_and (__eo_is_str (Term.String s))
@@ -216,14 +235,31 @@ theorem EvaluateProofInternal.str_replace_all_result_strings_cons
       __eo_eq (Term.String (p :: ps)) (Term.String []) =
         Term.Boolean false := by
     simp [__eo_eq, native_teq]
+  rw [hGuard, eo_ite_true, hPatNe, eo_ite_false] at hNe
   rw [hPatNe, eo_ite_false]
-  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s]
-  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain (p :: ps)]
+  have hLenS : s.length < 4294967296 := by
+    by_contra hBig
+    apply hNe
+    rw [EvaluateProofInternal.str_flatten_nary_intro_string_big s (by omega)]
+    unfold __str_eval_replace_all_rec; split <;> simp_all
+  have hLenP : (p :: ps).length < 4294967296 := by
+    by_contra hBig
+    apply hNe
+    rw [EvaluateProofInternal.str_flatten_nary_intro_string_big (p :: ps) (by omega)]
+    unfold __str_eval_replace_all_rec; simp
+  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLenS]
+  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain (p :: ps) hLenP]
   simpa [__eo_len, native_str_len] using
     EvaluateProofInternal.str_eval_replace_all_rec_strCharChain_cons p ps repl s 0
 
 theorem EvaluateProofInternal.run_evaluate_typeof_eq_str_replace_all
-    (b y x : Term) :
+    (b y x : Term)
+    (hRunNe :
+      __run_evaluate
+          (Term.Apply
+            (Term.Apply
+              (Term.Apply (Term.UOp UserOp.str_replace_all) b) y) x) ≠
+        Term.Stuck) :
     __eo_typeof
         (__run_evaluate
           (Term.Apply
@@ -311,7 +347,7 @@ theorem EvaluateProofInternal.run_evaluate_typeof_eq_str_replace_all
                   (Term.String sx))
           conv =>
             lhs
-            rw [EvaluateProofInternal.str_replace_all_result_strings_cons sb sx p ps]
+            rw [EvaluateProofInternal.str_replace_all_result_strings_cons sb sx p ps hRunNe]
           change
             Term.Apply (Term.UOp UserOp.Seq) (Term.UOp UserOp.Char) =
               __eo_typeof_str_replace

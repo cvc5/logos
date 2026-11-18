@@ -39,9 +39,53 @@ private def ubvRangeConclusion (b : Term) (w : native_Nat) : Term :=
           (ubvRangeBound w)))
       (Term.Boolean true))
 
+private theorem ubv_to_int_range_prog_stuck_of_big
+    (b : Term) (w : native_Nat)
+    (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w)
+    (hBig : 4294967296 ≤ w) :
+    __eo_prog_ubv_to_int_range (Term.Apply (Term.UOp UserOp.ubv_to_int) b) =
+      Term.Stuck := by
+  have hbTrans : RuleProofs.eo_has_smt_translation b := by
+    unfold RuleProofs.eo_has_smt_translation
+    rw [hbTy]
+    intro h
+    cases h
+  have hMatch := TranslationProofs.eo_to_smt_typeof_matches_translation b hbTrans
+  have hEoSmt : __eo_to_smt_type (__eo_typeof b) = SmtType.BitVec w := by
+    rw [← hMatch, hbTy]
+  have hEoTy :
+      __eo_typeof b =
+        Term.Apply (Term.UOp UserOp.BitVec)
+          (Term.Numeral (native_nat_to_int w)) :=
+    TranslationProofs.eo_to_smt_type_eq_bitvec hEoSmt
+  have hWidth :
+      __bv_bitwidth (__eo_typeof b) = Term.Numeral (native_nat_to_int w) := by
+    rw [hEoTy]
+    rfl
+  have hNeg : native_zlt (native_nat_to_int w) 0 = false := by
+    unfold native_zlt
+    exact decide_eq_false (Int.not_lt.mpr (Int.natCast_nonneg w))
+  have hGe : native_zlt (native_nat_to_int w) 4294967296 = false := by
+    unfold native_zlt
+    exact decide_eq_false (Int.not_lt.mpr (Int.ofNat_le.mpr hBig))
+  have hPow :
+      __eo_ite (__eo_is_z (Term.Numeral (native_nat_to_int w)))
+          (__eo_ite (__eo_is_neg (Term.Numeral (native_nat_to_int w)))
+            (Term.Numeral 0)
+            (__eo_pow (Term.Numeral 2) (Term.Numeral (native_nat_to_int w))))
+          (__eo_mk_apply (Term.UOp UserOp.int_pow2)
+            (Term.Numeral (native_nat_to_int w))) = Term.Stuck := by
+    simp only [__eo_is_z, __eo_is_z_internal, __eo_is_neg, hNeg, __eo_pow, hGe]
+    cases native_zleq 0 (native_nat_to_int w) <;> rfl
+  rw [__eo_prog_ubv_to_int_range.eq_1]
+  simp only [hWidth]
+  rw [hPow]
+  rfl
+
 private theorem ubv_to_int_range_prog_eq
     (b : Term) (w : native_Nat)
-    (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w) :
+    (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w)
+    (hW32 : w < 4294967296) :
     __eo_prog_ubv_to_int_range (Term.Apply (Term.UOp UserOp.ubv_to_int) b) =
       ubvRangeConclusion b w := by
   have hbTrans : RuleProofs.eo_has_smt_translation b := by
@@ -63,12 +107,29 @@ private theorem ubv_to_int_range_prog_eq
     rfl
   have hnot : ¬ ((native_nat_to_int w) < 0) := by
     simp [native_nat_to_int]
+  have hNeg : native_zlt (native_nat_to_int w) 0 = false := by
+    unfold native_zlt
+    exact decide_eq_false hnot
+  have hLt : native_zlt (native_nat_to_int w) 4294967296 = true := by
+    unfold native_zlt
+    exact decide_eq_true (Int.ofNat_lt.mpr hW32)
+  have hLe : native_zleq 0 (native_nat_to_int w) = true := by
+    unfold native_zleq
+    exact decide_eq_true (Int.natCast_nonneg w)
+  have hPow :
+      __eo_ite (__eo_is_z (Term.Numeral (native_nat_to_int w)))
+          (__eo_ite (__eo_is_neg (Term.Numeral (native_nat_to_int w)))
+            (Term.Numeral 0)
+            (__eo_pow (Term.Numeral 2) (Term.Numeral (native_nat_to_int w))))
+          (__eo_mk_apply (Term.UOp UserOp.int_pow2)
+            (Term.Numeral (native_nat_to_int w))) =
+        Term.Numeral (native_zexp_total 2 (native_nat_to_int w)) := by
+    simp only [__eo_is_z, __eo_is_z_internal, __eo_is_neg, hNeg, __eo_pow, hLe, hLt]
+    rfl
   rw [__eo_prog_ubv_to_int_range.eq_1]
   simp only [hWidth]
-  simp [ubvRangeConclusion, ubvRangeBound, __eo_is_z, __eo_is_z_internal,
-    __eo_is_neg, __eo_ite, __eo_pow, __eo_mk_apply, native_ite, native_teq,
-    native_not, native_and, SmtEval.native_not, SmtEval.native_and,
-    native_zlt, SmtEval.native_zlt, hnot]
+  rw [hPow]
+  rfl
 
 private theorem eo_interprets_leq_of_numerals
     (M : SmtModel) (x y : Term) (a c : native_Int)
@@ -156,7 +217,11 @@ by
                     (op := SmtTerm.ubv_to_int) (ret := SmtType.Int)
                     (by rw [smtx_typeof_ubv_to_int_term_eq]) hUbvNN with
                 ⟨w, hbTy⟩
-              have hProgEq := ubv_to_int_range_prog_eq b w hbTy
+              have hW32 : w < 4294967296 := by
+                by_contra hBig
+                exact hProgNe' (ubv_to_int_range_prog_stuck_of_big b w hbTy
+                  (Nat.not_lt.mp hBig))
+              have hProgEq := ubv_to_int_range_prog_eq b w hbTy hW32
               rw [hProgEq]
               -- Evaluate the bit-vector argument.
               have hbNN : term_has_non_none_type (__eo_to_smt b) := by

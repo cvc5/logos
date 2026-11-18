@@ -166,6 +166,7 @@ theorem EvaluateProofInternal.bv_eval_concat_list_repeat_rec_binary
 theorem EvaluateProofInternal.bv_eval_concat_list_repeat_binary_eval
     (M : SmtModel) (i w n : native_Int)
     (hi0 : native_zleq 0 i = true)
+    (hiBig : native_zleq 4294967296 i = false)
     (hWNonneg : native_zleq 0 w = true) :
     __smtx_model_eval M
         (__eo_to_smt
@@ -184,7 +185,7 @@ theorem EvaluateProofInternal.bv_eval_concat_list_repeat_binary_eval
           (Term.Numeral i) =
         __eo_list_repeat_rec (Term.UOp UserOp.concat) (Term.Binary w n)
           (native_int_to_nat i) := by
-    simp [__eo_list_repeat, native_ite, hiNotNeg]
+    simp [__eo_list_repeat, native_ite, native_or, hiNotNeg, hiBig]
   rcases EvaluateProofInternal.bv_eval_concat_list_repeat_rec_binary w n hWNonneg
       (native_int_to_nat i) with
     ⟨m, hTerm, hEval, _hCanon⟩
@@ -607,6 +608,18 @@ theorem EvaluateProofInternal.eo_repeat_literal_arg_binary_of_typeof_bitvec
             (native_int_pow2 (native_zmult i wx))) =
           true := by
   intro h
+  have hiBig : native_zleq 4294967296 i = false := by
+    cases hb : native_zleq 4294967296 i
+    · rfl
+    · exfalso
+      have hS :
+          __eo_list_repeat (Term.UOp UserOp.concat) x (Term.Numeral i) =
+            Term.Stuck := by
+        cases x <;> simp [__eo_list_repeat, native_ite, native_or, hb]
+      rw [hS] at h
+      change Term.Stuck =
+        Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
+      cases h
   have hi : (1 : Int) <= i := by
     simpa [native_zleq, SmtEval.native_zleq] using hi1
   have hi0Int : (0 : Int) <= i := by
@@ -637,7 +650,7 @@ theorem EvaluateProofInternal.eo_repeat_literal_arg_binary_of_typeof_bitvec
       __eo_list_repeat (Term.UOp UserOp.concat) x (Term.Numeral i) =
         __eo_list_repeat_rec (Term.UOp UserOp.concat) x
           (native_int_to_nat i) := by
-    cases x <;> simp [__eo_list_repeat, native_ite, hiNotNeg] at hxNe ⊢
+    cases x <;> simp [__eo_list_repeat, native_ite, native_or, hiNotNeg, hiBig] at hxNe ⊢
   by_cases hBinary :
       ∃ wx : native_Int, ∃ nx : native_Int, x = Term.Binary wx nx
   · rcases hBinary with ⟨wx, nx, rfl⟩

@@ -554,7 +554,16 @@ private theorem intToBvExpanded_eval_rel
     (w n : Term) (i : native_Int)
     (hw : __eo_to_smt w = SmtTerm.Numeral i)
     (hnTy : __smtx_typeof (__eo_to_smt n) = SmtType.Int)
-    (hi0 : native_zleq 0 i = true) :
+    (hi0 : native_zleq 0 i = true)
+    (hExpNe :
+      __eo_list_singleton_elim (Term.UOp UserOp.concat)
+          (__abconv_int_to_bv_elim n
+            (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+              (Term.Numeral 0) w)
+            (__eo_ite (__eo_is_z w)
+              (__eo_ite (__eo_is_neg w) (Term.Numeral 0)
+                (__eo_pow (Term.Numeral 2) w))
+              (Term.Apply (Term.UOp UserOp.int_pow2) w))) ≠ Term.Stuck) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M
         (__eo_to_smt
@@ -576,6 +585,27 @@ private theorem intToBvExpanded_eval_rel
   have hiNotNeg : native_zlt i 0 = false := by
     simp [native_zlt]
     omega
+  have hBigF : native_zleq 4294967296 i = false := by
+    cases hb : native_zleq 4294967296 i
+    · rfl
+    · exfalso
+      apply hExpNe
+      have hRS :
+          __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+              (Term.Numeral 0) (Term.Numeral i) = Term.Stuck := by
+        simp [__eo_list_repeat, native_ite, native_or, hb]
+      have h3 : ∀ p : Term, __abconv_int_to_bv_elim n Term.Stuck p = Term.Stuck := by
+        intro p
+        unfold __abconv_int_to_bv_elim
+        split <;> simp_all
+      rw [hRS, h3]
+      simp [__eo_list_singleton_elim, __eo_is_list, __eo_requires, native_ite,
+        native_teq]
+  have hLtT : native_zlt i 4294967296 = true := by
+    have hNotLe : ¬ ((4294967296 : Int) ≤ i) := by
+      simpa [native_zleq] using hBigF
+    unfold native_zlt
+    exact decide_eq_true (Int.not_le.mp hNotLe)
   have hNatToInt : native_nat_to_int (native_int_to_nat i) = i := by
     simpa [native_nat_to_int, native_int_to_nat] using
       (Int.toNat_of_nonneg hiNonneg)
@@ -609,7 +639,7 @@ private theorem intToBvExpanded_eval_rel
         __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
             (Term.Numeral 0) (Term.Numeral i) =
           intToBvZeroList (native_int_to_nat i) := by
-      simp [__eo_list_repeat, native_ite, hiNotNeg,
+      simp [__eo_list_repeat, native_ite, native_or, hiNotNeg, hBigF,
         intToBvZeroList_repeat_rec_eq]
     have hPow :
         __eo_ite (__eo_is_z (Term.Numeral i))
@@ -619,7 +649,7 @@ private theorem intToBvExpanded_eval_rel
           Term.Numeral (native_int_pow2 i) := by
       simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_pow,
         __eo_ite, native_ite, native_teq, native_and, native_not,
-        SmtEval.native_not, hiNotNeg, native_int_pow2]
+        SmtEval.native_not, hiNotNeg, hi0, hLtT, native_int_pow2]
     rw [hRepeat, hPow]
     have hPowWidth :
         native_int_pow2 (native_nat_to_int (native_int_to_nat i)) =
@@ -737,6 +767,7 @@ by
                     (__smtx_model_eval M (__eo_to_smt intToBv)) := by
                 simpa [expanded, intToBv] using
                   intToBvExpanded_eval_rel M hM w n i hw hnTy hi0
+                    (by simpa [expanded] using hExpandedNe)
               have hRel :
                   RuleProofs.smt_value_rel
                     (__smtx_model_eval M (__eo_to_smt intToBv))

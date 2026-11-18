@@ -244,6 +244,13 @@ private theorem re_loop_elim_canonical_true
             (__smtx_model_eval M (__eo_to_smt loopTerm)) := by
         simpa [expansion, loopTerm] using
           re_loop_elim_eval_rel M lo hi r rv hrTy hREval hlo hDiffNonneg
+            (by
+              intro hStuck
+              apply hInnerNe
+              change __eo_requires expansion rhs orig = Term.Stuck
+              rw [show expansion = Term.Stuck from hStuck]
+              simp [__eo_requires, native_teq, native_ite, native_not,
+                SmtEval.native_not])
       have hRel :
           RuleProofs.smt_value_rel
             (__smtx_model_eval M (__eo_to_smt loopTerm))

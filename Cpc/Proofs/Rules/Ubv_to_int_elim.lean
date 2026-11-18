@@ -147,14 +147,29 @@ private theorem ubv_iota_repeat_rec_eq (start len : Nat) :
       ubvIotaList start len := by
   rw [ubv_list_repeat_rec_zero_eq, ubv_iota_zeroList_eq]
 
-private theorem ubv_list_repeat_zero_eq (len : Nat) :
+private theorem ubv_list_repeat_zero_eq (len : Nat) (hLen : len < 4294967296) :
     __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons) (Term.Numeral 0)
       (Term.Numeral (native_nat_to_int len)) =
     __eo_list_repeat_rec (Term.UOp UserOp._at__at_TypedList_cons)
       (Term.Numeral 0) len := by
-  have hnot : ¬ ((len : Int) < 0) := by omega
-  simp [__eo_list_repeat, native_zlt, native_int_to_nat, native_nat_to_int,
-    native_ite, hnot]
+  have hnot : native_zlt (native_nat_to_int len) 0 = false := by
+    unfold native_zlt
+    exact decide_eq_false (Int.not_lt.mpr (Int.natCast_nonneg len))
+  have hbig : native_zleq 4294967296 (native_nat_to_int len) = false := by
+    unfold native_zleq
+    exact decide_eq_false (fun h => absurd (Int.ofNat_le.mp h) (Nat.not_le.mpr hLen))
+  rw [__eo_list_repeat.eq_3 _ _ _ (by intro h; cases h) (by intro h; cases h), hnot, hbig]
+  change __eo_list_repeat_rec _ _ (native_int_to_nat (native_nat_to_int len)) = _
+  simp [native_int_to_nat, native_nat_to_int]
+
+private theorem ubv_list_repeat_zero_big (len : Nat) (hLen : 4294967296 ≤ len) :
+    __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons) (Term.Numeral 0)
+      (Term.Numeral (native_nat_to_int len)) = Term.Stuck := by
+  have hbig : native_zleq 4294967296 (native_nat_to_int len) = true := by
+    unfold native_zleq
+    exact decide_eq_true (Int.ofNat_le.mpr hLen)
+  rw [__eo_list_repeat.eq_3 _ _ _ (by intro h; cases h) (by intro h; cases h), hbig]
+  cases native_zlt (native_nat_to_int len) 0 <;> rfl
 
 private theorem ubv_mul_pow_two (start : Nat) :
     __eo_mul
@@ -228,9 +243,54 @@ private theorem ubv_abconv_iota_eq
       rw [eo_mk_apply_of_ne_stuck (plus_head_ne_stuck b start)
         (ubvRawExpansion_ne_stuck b (Nat.succ start) len)]
 
-private theorem ubv_generated_expansion_eq_raw
+private theorem ubv_bitwidth_eq_of_type
     (b : Term) (w : native_Nat)
     (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w) :
+    __bv_bitwidth (__eo_typeof b) = Term.Numeral (native_nat_to_int w) := by
+  have hbTrans : RuleProofs.eo_has_smt_translation b := by
+    unfold RuleProofs.eo_has_smt_translation
+    rw [hbTy]
+    intro h
+    cases h
+  have hMatch := TranslationProofs.eo_to_smt_typeof_matches_translation b hbTrans
+  have hEoSmt : __eo_to_smt_type (__eo_typeof b) = SmtType.BitVec w := by
+    rw [← hMatch, hbTy]
+  have hEoTy :
+      __eo_typeof b =
+        Term.Apply (Term.UOp UserOp.BitVec)
+          (Term.Numeral (native_nat_to_int w)) :=
+    TranslationProofs.eo_to_smt_type_eq_bitvec hEoSmt
+  rw [hEoTy]
+  rfl
+
+private theorem ubv_expansion_stuck_of_big
+    (b : Term) (w : native_Nat)
+    (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w)
+    (hBig : 4294967296 ≤ w) :
+    __eo_list_singleton_elim (Term.UOp UserOp.plus)
+        (__abconv_ubv_to_int_elim b
+          (__eo_requires (__eo_is_neg (__bv_bitwidth (__eo_typeof b)))
+            (Term.Boolean false)
+            (__iota_rec
+              (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+                (Term.Numeral 0) (__bv_bitwidth (__eo_typeof b)))
+              (Term.Numeral 0)))
+          (Term.Numeral 1)) = Term.Stuck := by
+  rw [ubv_bitwidth_eq_of_type b w hbTy, ubv_list_repeat_zero_big w hBig]
+  have h1 : __iota_rec Term.Stuck (Term.Numeral 0) = Term.Stuck := rfl
+  have h2 : ∀ x y : Term, __eo_requires x y Term.Stuck = Term.Stuck := by
+    intro x y
+    simp [__eo_requires, native_ite]
+  have h3 : __abconv_ubv_to_int_elim b Term.Stuck (Term.Numeral 1) = Term.Stuck := by
+    unfold __abconv_ubv_to_int_elim
+    split <;> simp_all
+  rw [h1, h2, h3]
+  simp [__eo_list_singleton_elim, __eo_is_list, __eo_requires, native_ite, native_teq]
+
+private theorem ubv_generated_expansion_eq_raw
+    (b : Term) (w : native_Nat)
+    (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w)
+    (hW32 : w < 4294967296) :
     __abconv_ubv_to_int_elim b
         (__eo_requires (__eo_is_neg (__bv_bitwidth (__eo_typeof b)))
           (Term.Boolean false)
@@ -267,7 +327,7 @@ private theorem ubv_generated_expansion_eq_raw
         ubvIotaList 0 w := by
     have hnot : ¬ ((w : Int) < 0) := by omega
     rw [hWidth]
-    rw [ubv_list_repeat_zero_eq]
+    rw [ubv_list_repeat_zero_eq w hW32]
     change __eo_requires (__eo_is_neg (Term.Numeral (native_nat_to_int w)))
         (Term.Boolean false)
         (__iota_rec
@@ -553,7 +613,17 @@ private theorem ubvRawExpansion_singleton_eval (M : SmtModel)
 private theorem ubv_to_int_expansion_eval_rel
     (M : SmtModel) (hM : model_wf M)
     (b : Term) (w : native_Nat)
-    (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w) :
+    (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w)
+    (hExpNe :
+      __eo_list_singleton_elim (Term.UOp UserOp.plus)
+          (__abconv_ubv_to_int_elim b
+            (__eo_requires (__eo_is_neg (__bv_bitwidth (__eo_typeof b)))
+              (Term.Boolean false)
+              (__iota_rec
+                (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+                  (Term.Numeral 0) (__bv_bitwidth (__eo_typeof b)))
+                (Term.Numeral 0)))
+            (Term.Numeral 1)) ≠ Term.Stuck) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M
         (__eo_to_smt
@@ -584,8 +654,11 @@ private theorem ubv_to_int_expansion_eval_rel
   have hPayloadMod := bitvec_payload_canonical hValueTy
   have hRange := bitvec_payload_range_of_canonical hWidthNonneg hPayloadMod
   have hnNonneg : 0 <= n := hRange.1
+  have hW32 : w < 4294967296 := by
+    by_contra hBig
+    exact hExpNe (ubv_expansion_stuck_of_big b w hbTy (Nat.not_lt.mp hBig))
   have hRawEq :=
-    ubv_generated_expansion_eq_raw b w hbTy
+    ubv_generated_expansion_eq_raw b w hbTy hW32
   have hEvalExpanded :
       __smtx_model_eval M
           (__eo_to_smt
@@ -744,6 +817,7 @@ by
                     (__smtx_model_eval M (__eo_to_smt lhs)) := by
                 simpa [expanded, indices, width, lhs] using
                   ubv_to_int_expansion_eval_rel M hM b w hbTy
+                    (by simpa [expanded, indices, width] using hExpandedNe)
               have hRel :
                   RuleProofs.smt_value_rel
                     (__smtx_model_eval M (__eo_to_smt lhs))

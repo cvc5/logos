@@ -4409,7 +4409,8 @@ theorem StrInReConsumeInternal.consume_str_value_len_string (w : native_String) 
     SmtEval.native_ite, SmtEval.native_and, SmtEval.native_not]
 
 def StrInReConsumeInternal.consume_intro_word_view_string
-    (M : SmtModel) (w : native_String) (S : SmtSeq) (T : SmtType)
+    (M : SmtModel) (w : native_String) (hLen : w.length < 4294967296)
+    (S : SmtSeq) (T : SmtType)
     (hTy :
       __smtx_typeof (__eo_to_smt (Term.String w)) = SmtType.Seq T)
     (hEval :
@@ -4431,7 +4432,7 @@ def StrInReConsumeInternal.consume_intro_word_view_string
         rw [str_flatten_nary_intro_empty]
         rfl
     | cons c cs =>
-        rw [str_flatten_nary_intro_cons,
+        rw [str_flatten_nary_intro_cons c cs hLen,
           ← StrInReConsumeInternal.consume_atom_chain_string_atoms_eq_substrWord (c :: cs)]
   · rw [show __eo_to_smt (Term.String w) = SmtTerm.String w from rfl] at hEval
     simp only [__smtx_model_eval] at hEval
@@ -4577,10 +4578,20 @@ theorem StrInReConsumeInternal.consume_string_flat_rel_reverse_native_bridge
         hFlatRel
     exact (RuleProofs.smt_seq_rel_iff_eq flatSs ss).1 hSeq
   subst flatSs
+  have hLen : w.length < 4294967296 := by
+    cases w with
+    | nil => simp
+    | cons c cs =>
+        by_contra hBig
+        rw [str_flatten_nary_intro_cons_big c cs (by omega)] at hRevEval
+        simp [__eo_list_rev, __eo_is_list, __eo_requires, native_ite,
+          native_teq] at hRevEval
+        change __smtx_model_eval M SmtTerm.None = SmtValue.Seq revSs at hRevEval
+        simp [__smtx_model_eval] at hRevEval
   exact StrInReConsumeInternal.consume_intro_word_view_flat_rel_reverse_native_bridge M
     (Term.String w) ss ss revSs T rv revRv hSeqTy
     (RuleProofs.smt_value_rel_refl (SmtValue.Seq ss))
-    (StrInReConsumeInternal.consume_intro_word_view_string M w ss T hTy hSEval) hRevEval
+    (StrInReConsumeInternal.consume_intro_word_view_string M w hLen ss T hTy hSEval) hRevEval
     hRegRel
 
 theorem native_str_in_re_re_mult_concat_eq_tail_of_no_prefix_local
@@ -10441,7 +10452,7 @@ theorem str_flatten_singleton_intro_string_singleton_local
         (__eo_list_singleton_intro (Term.UOp UserOp.str_concat)
           (Term.String [c])) =
       substrWord [c] 0 1 := by
-  simpa [__str_nary_intro] using (str_flatten_nary_intro_cons c [])
+  simpa [__str_nary_intro] using (str_flatten_nary_intro_cons c [] (by simp))
 
 theorem str_re_consume_range_head_native_eq_of_match_local
     (M : SmtModel) (hM : model_wf M)

@@ -151,19 +151,19 @@ theorem uaddo_nil_eq_zero (x : Term) (w : Nat)
   rw [hExtTy]
   change __eo_to_bin (Term.Numeral (native_nat_to_int (w + 1)))
       (Term.Numeral 0) = _
-  by_cases hBound : native_zleq (native_nat_to_int (w + 1)) 4294967296 = true
-  · have hBoundProp : native_nat_to_int (w + 1) <= 4294967296 := by
-      simpa [SmtEval.native_zleq] using hBound
+  by_cases hBound : native_zlt (native_nat_to_int (w + 1)) 4294967296 = true
+  · have hBoundProp : native_nat_to_int (w + 1) < 4294967296 := by
+      simpa [SmtEval.native_zlt] using hBound
     have hWidthNonneg : 0 <= native_nat_to_int (w + 1) := by
       simpa [native_nat_to_int] using (Int.natCast_nonneg (w + 1))
-    simp [__eo_to_bin, __eo_mk_binary, native_ite, SmtEval.native_zleq,
+    simp [__eo_to_bin, __eo_mk_binary, native_ite, SmtEval.native_zleq, native_zlt,
       hBoundProp, hWidthNonneg, SmtEval.native_mod_total]
   · have hStuck :
         __eo_to_bin (Term.Numeral (native_nat_to_int (w + 1)))
             (Term.Numeral 0) = Term.Stuck := by
-      have hBoundFalse : ¬ native_nat_to_int (w + 1) <= 4294967296 := by
-        simpa [SmtEval.native_zleq] using hBound
-      simp [__eo_to_bin, hBoundFalse, native_ite, SmtEval.native_zleq]
+      have hBoundFalse : ¬ native_nat_to_int (w + 1) < 4294967296 := by
+        simpa [SmtEval.native_zlt] using hBound
+      simp [__eo_to_bin, hBoundFalse, native_ite, SmtEval.native_zlt]
     exact False.elim (hNilNe (by have hsimpa := hStuck; (try simp [uaddoNil, hExtTy] at hsimpa ⊢); exact hsimpa))
 
 theorem smt_typeof_uaddo_nil (x : Term) (w : Nat)

@@ -682,12 +682,19 @@ private theorem compute_card_guard_cases
                       elemTy = SmtType.BitVec (native_int_to_nat w) := by
                     simpa [__eo_to_smt_type, native_ite, hWidthBool]
                       using hElemEq
+                  have hw32 : w < 4294967296 := by
+                    by_contra hBig
+                    simp [__compute_card, __eo_gt, __eo_ite, __eo_is_z,
+                      __eo_is_z_internal, __eo_is_neg, __eo_pow, native_ite,
+                      native_teq, native_and, native_not, SmtEval.native_not,
+                      native_zlt, hnot, hBig] at hGuard
                   have hGuardInt :
                       native_int_pow2 w < Int.ofNat len := by
                     simpa [__compute_card, __eo_gt, __eo_ite, __eo_is_z,
                       __eo_is_z_internal, __eo_is_neg, __eo_pow, native_ite,
                       native_teq, native_and, native_not, SmtEval.native_not,
-                      native_zlt, native_zexp_total, native_int_pow2, hnot]
+                      native_zlt, native_zexp_total, native_int_pow2, hnot,
+                      hWidthBool, hw32]
                       using hGuard
                   have hWidthEq :
                       w = native_nat_to_int (native_int_to_nat w) := by

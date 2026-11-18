@@ -169,25 +169,25 @@ theorem bvAdd_nil_eq_zero_of_type
           (Term.Numeral (native_nat_to_int w)) :=
     TranslationProofs.eo_to_smt_type_eq_bitvec hTy
   subst ty
-  by_cases hBound : native_zleq (native_nat_to_int w) 4294967296 = true
-  · have hBoundProp : native_nat_to_int w <= 4294967296 := by
-      simpa [native_zleq] using hBound
+  by_cases hBound : native_zlt (native_nat_to_int w) 4294967296 = true
+  · have hBoundProp : native_nat_to_int w < 4294967296 := by
+      simpa [native_zlt] using hBound
     have hWidthNonneg : 0 <= native_nat_to_int w := by
       simp [native_nat_to_int]
     change
       __eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0) =
         Term.Binary (native_nat_to_int w) 0
-    simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq,
+    simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq, native_zlt,
       hBoundProp, hWidthNonneg, native_mod_total]
   · have hStuck :
         __eo_nil (Term.UOp UserOp.bvadd)
             (Term.Apply (Term.UOp UserOp.BitVec)
               (Term.Numeral (native_nat_to_int w))) =
           Term.Stuck := by
-      have hBoundFalse : ¬ native_nat_to_int w <= 4294967296 := by
-        simpa [native_zleq] using hBound
+      have hBoundFalse : ¬ native_nat_to_int w < 4294967296 := by
+        simpa [native_zlt] using hBound
       simp [__eo_nil, __eo_nil_bvadd, __eo_to_bin, hBoundFalse,
-        native_ite, native_zleq]
+        native_ite, native_zlt]
     exact False.elim (hNe hStuck)
 
 theorem smt_typeof_bvadd_nil

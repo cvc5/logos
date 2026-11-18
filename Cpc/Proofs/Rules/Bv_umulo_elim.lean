@@ -13,8 +13,25 @@ set_option linter.unnecessarySimpa false
 set_option maxHeartbeats 10000000
 set_option maxRecDepth 1000000
 
+private theorem width_lt_of_nil_bvmul_succ_ne
+    (w : Nat)
+    (hNe :
+      __eo_nil (Term.UOp UserOp.bvmul)
+          (Term.Apply (Term.UOp UserOp.BitVec)
+            (Term.Numeral (native_nat_to_int (w + 1)))) ≠ Term.Stuck) :
+    w + 1 < 4294967296 := by
+  by_contra hb
+  apply hNe
+  change native_ite (native_zlt (native_nat_to_int (w + 1)) 4294967296)
+      (__eo_mk_binary (native_nat_to_int (w + 1)) 1) Term.Stuck = Term.Stuck
+  have hF : native_zlt (native_nat_to_int (w + 1)) 4294967296 = false := by
+    unfold native_zlt
+    exact decide_eq_false (fun h' => hb (Int.ofNat_lt.mp h'))
+  rw [hF]
+  rfl
+
 theorem umulo_indices_eq
-    (w : Nat) (hw : 1 ≤ w) :
+    (w : Nat) (hw : 1 ≤ w) (hW32 : w + 1 < 4294967296) :
     __eo_requires
       (__eo_is_neg
         (__eo_add
@@ -63,12 +80,18 @@ theorem umulo_indices_eq
         intZeroList (w - 1) := by
     change
       native_ite
-        (native_zlt (native_nat_to_int (w - 1)) (0 : native_Int))
+        (native_or (native_zlt (native_nat_to_int (w - 1)) (0 : native_Int))
+          (native_zleq 4294967296 (native_nat_to_int (w - 1))))
         Term.Stuck
         (__eo_list_repeat_rec (Term.UOp UserOp._at__at_TypedList_cons)
           (Term.Numeral 0)
           (native_int_to_nat (native_nat_to_int (w - 1)))) =
         intZeroList (w - 1)
+    have hBigFalse :
+        native_zleq 4294967296 (native_nat_to_int (w - 1)) = false := by
+      unfold native_zleq
+      exact decide_eq_false (fun h => absurd (Int.ofNat_le.mp h)
+        (Nat.not_le.mpr (by omega : w - 1 < 4294967296)))
     have hNegFalse :
         native_zlt (native_nat_to_int (w - 1)) (0 : native_Int) = false := by
       simp only [native_zlt, native_nat_to_int]
@@ -78,8 +101,8 @@ theorem umulo_indices_eq
     have hToNat :
         native_int_to_nat (native_nat_to_int (w - 1)) = w - 1 := by
       simp [native_int_to_nat, native_nat_to_int]
-    rw [hNegFalse, hToNat]
-    simp [native_ite]
+    rw [hNegFalse, hBigFalse, hToNat]
+    simp [native_ite, native_or]
     exact intZeroList_repeat_rec_eq (w - 1)
   have hIota :
       __iota_rec (intZeroList (w - 1)) (Term.Numeral 1) =
@@ -827,7 +850,11 @@ theorem eval_bv_umulo_expanded
           bv1 ((A * B).testBit w) := by
       exact eval_mul_high_or_term M a b w A B haTy hbTy haEval hbEval
         haBound hbBound hNilNe
-    have hIndices := umulo_indices_eq w hw
+    have hW32 : w + 1 < 4294967296 :=
+      width_lt_of_nil_bvmul_succ_ne w (by
+        rw [typeof_zero_extend_one_term a w haTy] at hNilNe
+        exact hNilNe)
+    have hIndices := umulo_indices_eq w hw hW32
     have hIndices' :
         __eo_requires
           (__eo_is_neg

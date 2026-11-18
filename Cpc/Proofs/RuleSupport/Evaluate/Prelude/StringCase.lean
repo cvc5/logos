@@ -411,15 +411,22 @@ theorem EvaluateProofInternal.substrWord_zero_eq_strCharChain :
       rw [RuleProofs.substrWord_cons_tail c cs]
       rw [EvaluateProofInternal.substrWord_zero_eq_strCharChain cs]
 
+theorem EvaluateProofInternal.str_flatten_nary_intro_string_big
+    (s : native_String) (hBig : 4294967296 ≤ s.length) :
+    __str_flatten (__str_nary_intro (Term.String s)) = Term.Stuck := by
+  cases s with
+  | nil => simp at hBig
+  | cons c cs => exact RuleProofs.str_flatten_nary_intro_cons_big c cs hBig
+
 theorem EvaluateProofInternal.str_flatten_nary_intro_string_char_chain
-    (s : native_String) :
+    (s : native_String) (hLen : s.length < 4294967296) :
     __str_flatten (__str_nary_intro (Term.String s)) = EvaluateProofInternal.strCharChain s := by
   cases s with
   | nil =>
       rw [RuleProofs.str_flatten_nary_intro_empty]
       rfl
   | cons c cs =>
-      rw [RuleProofs.str_flatten_nary_intro_cons c cs]
+      rw [RuleProofs.str_flatten_nary_intro_cons c cs hLen]
       exact EvaluateProofInternal.substrWord_zero_eq_strCharChain (c :: cs)
 
 theorem EvaluateProofInternal.str_is_prefix_flat_strCharChain :

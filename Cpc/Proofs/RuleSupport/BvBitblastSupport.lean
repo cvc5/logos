@@ -1978,24 +1978,117 @@ private theorem list_repeat_rec_from_bools {M : SmtModel}
           (__eo_list_repeat_rec (Term.UOp UserOp._at_from_bools) bit n)
           b (List.replicate n b) hb ih
 
+private theorem bb_lr_nat_eq (f a : Term) (K : Nat) (hf : f ≠ Term.Stuck)
+    (ha : a ≠ Term.Stuck) (hK : K < 4294967296) :
+    __eo_list_repeat f a (Term.Numeral (K : Int)) = __eo_list_repeat_rec f a K := by
+  rw [__eo_list_repeat.eq_3 _ _ _ hf ha]
+  have h1 : native_zlt (K : Int) 0 = false := by
+    unfold native_zlt
+    exact decide_eq_false (Int.not_lt.mpr (Int.natCast_nonneg K))
+  have h2 : native_zleq 4294967296 (K : Int) = false := by
+    unfold native_zleq
+    exact decide_eq_false (fun h => absurd (Int.ofNat_le.mp h) (Nat.not_le.mpr hK))
+  rw [h1, h2]
+  change __eo_list_repeat_rec f a (native_int_to_nat (K : Int)) = _
+  simp [native_int_to_nat]
+
+private theorem bb_lr_nat_lt_of_ne (f a : Term) (K : Nat) (hf : f ≠ Term.Stuck)
+    (ha : a ≠ Term.Stuck)
+    (h : __eo_list_repeat f a (Term.Numeral (K : Int)) ≠ Term.Stuck) :
+    K < 4294967296 := by
+  refine Classical.byContradiction (fun hK => ?_)
+  apply h
+  rw [__eo_list_repeat.eq_3 _ _ _ hf ha]
+  have h2 : native_zleq 4294967296 (K : Int) = true := by
+    unfold native_zleq
+    exact decide_eq_true (Int.ofNat_le.mpr (Nat.not_lt.mp hK))
+  rw [h2]
+  cases native_zlt (K : Int) 0 <;> rfl
+
+private theorem bb_lr_nat_big (f a : Term) (K : Nat) (hf : f ≠ Term.Stuck)
+    (ha : a ≠ Term.Stuck) (hK : 4294967296 ≤ K) :
+    __eo_list_repeat f a (Term.Numeral (K : Int)) = Term.Stuck := by
+  rw [__eo_list_repeat.eq_3 _ _ _ hf ha]
+  have h2 : native_zleq 4294967296 (K : Int) = true := by
+    unfold native_zleq
+    exact decide_eq_true (Int.ofNat_le.mpr hK)
+  rw [h2]
+  cases native_zlt (K : Int) 0 <;> rfl
+
+private theorem bb_eo_extract_binary_of_lt (w n i j : native_Int) (h : native_zlt i w = true) :
+    __eo_extract (Term.Binary w n) (Term.Numeral j) (Term.Numeral i) =
+      native_ite (native_or (native_zlt j 0) (native_zlt (native_zplus i (native_zneg j)) 0))
+        (Term.Binary 0 0)
+        (__eo_mk_binary (native_zplus (native_zplus i (native_zneg j)) 1)
+          (native_binary_extract w n i j)) := by
+  simp only [__eo_extract, h]
+  rfl
+
+private theorem bb_const_bitlist_indices_bound {c : Term} (hc : c ≠ Term.Stuck) (W : Nat)
+    (h : __bv_const_to_bitlist_rec c
+      (__eo_requires (__eo_is_neg (Term.Numeral (W : Int))) (Term.Boolean false)
+        (__iota_rec
+          (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+            (Term.Numeral 0) (Term.Numeral (W : Int)))
+          (Term.Numeral 0))) ≠ Term.Stuck) :
+    W < 4294967296 := by
+  refine Classical.byContradiction (fun hK => ?_)
+  apply h
+  rw [bb_lr_nat_big _ _ W (by intro hh; cases hh) (by intro hh; cases hh) (Nat.not_lt.mp hK)]
+  have h1 : __iota_rec Term.Stuck (Term.Numeral 0) = Term.Stuck := rfl
+  have h2 : ∀ x y : Term, __eo_requires x y Term.Stuck = Term.Stuck := by
+    intro x y
+    simp [__eo_requires, native_ite]
+  rw [h1, h2]
+  unfold __bv_const_to_bitlist_rec
+  split <;> simp_all
+
+private theorem bb_eo_pow_two_nat (k : Nat) (hk : k < 4294967296) :
+    __eo_pow (Term.Numeral 2) (Term.Numeral (k : Int)) =
+      Term.Numeral (native_zexp_total 2 (k : Int)) := by
+  have hLe : native_zleq 0 (k : Int) = true := by
+    unfold native_zleq
+    exact decide_eq_true (Int.natCast_nonneg k)
+  have hLt : native_zlt (k : Int) 4294967296 = true := by
+    unfold native_zlt
+    exact decide_eq_true (Int.ofNat_lt.mpr hk)
+  simp only [__eo_pow, hLe, hLt]
+  rfl
+
+private theorem bb_eo_pow2_ite_nat_eq (s : Nat) (E : Term) (hs : s < 4294967296) :
+    __eo_ite (__eo_is_z (Term.Numeral (s : Int)))
+        (__eo_ite (__eo_is_neg (Term.Numeral (s : Int))) (Term.Numeral 0)
+          (__eo_pow (Term.Numeral 2) (Term.Numeral (s : Int))))
+        E =
+      Term.Numeral ((2 ^ s : Nat) : Int) := by
+  have hNeg : native_zlt (s : Int) 0 = false := by
+    unfold native_zlt
+    exact decide_eq_false (Int.not_lt.mpr (Int.natCast_nonneg s))
+  have hLe : native_zleq 0 (s : Int) = true := by
+    unfold native_zleq
+    exact decide_eq_true (Int.natCast_nonneg s)
+  have hLt : native_zlt (s : Int) 4294967296 = true := by
+    unfold native_zlt
+    exact decide_eq_true (Int.ofNat_lt.mpr hs)
+  simp only [__eo_is_z, __eo_is_z_internal, __eo_is_neg, hNeg, __eo_pow, hLe, hLt]
+  change Term.Numeral (native_zexp_total 2 (s : Int)) = _
+  simp only [native_zexp_total, Int.toNat_natCast]
+  have hn : ¬ ((s : Int) < 0) := Int.not_lt.mpr (Int.natCast_nonneg s)
+  simp [hn]
+
 theorem list_repeat_from_bools {M : SmtModel}
     {bit : Term} {b : Bool}
     (hb :
       __smtx_model_eval M (__eo_to_smt bit) =
         SmtValue.Boolean b)
     (hty : __eo_typeof bit ≠ Term.Stuck)
-    (n : Nat) :
+    (n : Nat) (hn32 : n < 4294967296) :
     BitListEval M
       (__eo_list_repeat (Term.UOp UserOp._at_from_bools) bit
         (Term.Numeral (n : Int)))
       (List.replicate n b) := by
-  rw [__eo_list_repeat.eq_3 _ _ _ (by intro h; cases h)
-    (term_ne_stuck_of_eval_boolean hb)]
-  rw [show native_zlt (n : Int) 0 = false by
-    simp [native_zlt]]
-  simp only [native_ite, Bool.false_eq_true, ite_false]
-  rw [show native_int_to_nat (n : Int) = n by
-    simp [native_int_to_nat]]
+  rw [bb_lr_nat_eq _ _ n (by intro h; cases h)
+    (term_ne_stuck_of_eval_boolean hb) hn32]
   exact list_repeat_rec_from_bools hb hty n
 
 theorem bitsValue_replicate_false (n : Nat) :
@@ -3395,6 +3488,10 @@ theorem eval_step_bvneg (M : SmtModel) (hM : model_wf M)
         Term.Numeral (native_nat_to_int w) := by
     rw [hEoTy]
     rfl
+  have hw32 : w < 4294967296 := by
+    have hz := hs.syntax_right.ne_stuck
+    rw [hWidth] at hz
+    exact bb_lr_nat_lt_of_ne _ _ w (by intro h; cases h) (by intro h; cases h) hz
   have hzero :
       BitListEval M
         (__eo_list_repeat (Term.UOp UserOp._at_from_bools)
@@ -3403,7 +3500,7 @@ theorem eval_step_bvneg (M : SmtModel) (hM : model_wf M)
     rw [hWidth]
     simpa [native_nat_to_int] using
       (list_repeat_from_bools (M := M) (bit := Term.Boolean false)
-        (b := false) (by rfl) (by intro h; cases h) w)
+        (b := false) (by rfl) (by intro h; cases h) w hw32)
   have hanot := ha.apply_not
   have hlen := hs.eval_length hanot hzero
   have hout :=
@@ -6363,7 +6460,8 @@ private theorem list_repeat_from_bools_context
     (h :
       __eo_list_repeat (Term.UOp UserOp._at_from_bools) bit n ≠
         Term.Stuck) :
-    ∃ k : Nat, n = Term.Numeral (k : Int) ∧ bit ≠ Term.Stuck := by
+    ∃ k : Nat, n = Term.Numeral (k : Int) ∧ k < 4294967296 ∧
+      bit ≠ Term.Stuck := by
   have hbit : bit ≠ Term.Stuck := by
     intro hb
     subst bit
@@ -6371,13 +6469,21 @@ private theorem list_repeat_from_bools_context
       (by intro hh; cases hh))
   cases n with
   | Numeral i =>
-    rw [__eo_list_repeat.eq_3 _ _ i
-      (by intro hh; cases hh) hbit] at h
     by_cases hi : i < 0
-    · simp [native_ite, native_zlt, hi] at h
-    · refine ⟨i.toNat, ?_, hbit⟩
-      congr 1
-      exact (Int.toNat_of_nonneg (Int.le_of_not_gt hi)).symm
+    · exfalso
+      apply h
+      rw [__eo_list_repeat.eq_3 _ _ i (by intro hh; cases hh) hbit]
+      have hlt : native_zlt i 0 = true := by
+        unfold native_zlt
+        exact decide_eq_true hi
+      rw [hlt]
+      rfl
+    · have hi' : i = ((i.toNat : Nat) : Int) :=
+        (Int.toNat_of_nonneg (Int.le_of_not_gt hi)).symm
+      refine ⟨i.toNat, ?_, ?_, hbit⟩
+      · rw [← hi']
+      · rw [hi'] at h
+        exact bb_lr_nat_lt_of_ne _ _ _ (by intro hh; cases hh) hbit h
   | _ =>
     exfalso
     apply h
@@ -6716,17 +6822,14 @@ private theorem shift_add_multiplier_eval_bits
     hsame.syntax_left.ne_stuck
   rcases list_repeat_from_bools_context bit
       (__bv_bitwidth (__eo_typeof a2)) hrepeatNe with
-    ⟨K, hWidth, hbitNe⟩
+    ⟨K, hWidth, hRep32, hbitNe⟩
   have hrepeatRecNe :
       __eo_list_repeat_rec (Term.UOp UserOp._at_from_bools) bit K ≠
         Term.Stuck := by
     have h := hrepeatNe
     rw [hWidth] at h
-    rw [__eo_list_repeat.eq_3 _ _ (K : Int)
-      (by intro hh; cases hh) hbitNe] at h
-    rw [show native_zlt (K : Int) 0 = false by
-      simp [native_zlt]] at h
-    simpa [native_ite, native_int_to_nat, native_nat_to_int] using h
+    rw [bb_lr_nat_eq _ _ K (by intro hh; cases hh) hbitNe hRep32] at h
+    exact h
   have hbitTyNe : __eo_typeof bit ≠ Term.Stuck :=
     list_repeat_rec_from_bools_type_ne hrepeatRecNe
   have hrepK :
@@ -6737,7 +6840,7 @@ private theorem shift_add_multiplier_eval_bits
     rw [hWidth]
     simpa using
       (list_repeat_from_bools (M := M) (bit := bit) (b := b)
-        hb hbitTyNe K)
+        hb hbitTyNe K hRep32)
   have hKW : K = W := by
     have hlen := hsame.eval_length hrepK ha2
     simp only [List.length_replicate] at hlen
@@ -6751,7 +6854,7 @@ private theorem shift_add_multiplier_eval_bits
     rw [hWidth]
     simpa [native_nat_to_int] using
       (list_repeat_from_bools (M := M) (bit := bit) (b := b)
-        hb hbitTyNe W)
+        hb hbitTyNe W hRep32)
   have hrepLen : (List.replicate W b).length = ys.length := by
     simp [hYLen]
   let initBits :=
@@ -7551,7 +7654,7 @@ private theorem shl_rec_eval {M : SmtModel}
     (s n W : Nat)
     (hcurrentLen : current.length = W)
     (hn : n ≤ controls.length)
-    (hpow : ∀ j < n, 2 ^ (s + j) ≤ W) :
+    (hpow : ∀ j < n, 2 ^ (s + j) ≤ W) (hW32 : W < 4294967296) :
     BitListEval M
       (__bv_mk_bitblast_step_shl_rec currentTerm controlTerm
         (Term.Numeral (s : Int)) (Term.Numeral ((s + n : Nat) : Int)))
@@ -7625,19 +7728,11 @@ private theorem shl_rec_eval {M : SmtModel}
             (Term.Numeral ((s + (n + 1) : Nat) : Int)) bit tail
             hcurrent.ne_stuck (by intro h; cases h)
             (by intro h; cases h)]
-          rw [show
-            __eo_ite (__eo_is_z (Term.Numeral (s : Int)))
-                (__eo_ite (__eo_is_neg (Term.Numeral (s : Int)))
-                  (Term.Numeral 0)
-                  (__eo_pow (Term.Numeral 2)
-                    (Term.Numeral (s : Int))))
-                (Term.Apply (Term.UOp UserOp.int_pow2)
-                  (Term.Numeral (s : Int))) =
-              Term.Numeral ((2 ^ s : Nat) : Int) by
-            have hs : ¬ ((s : Int) < 0) := by omega
-            simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_pow,
-              __eo_ite, native_teq, native_not, native_and,
-              native_zlt, native_ite, native_zexp_total, hs]]
+          rw [bb_eo_pow2_ite_nat_eq s _ (by
+            have hs2 : s < 2 ^ s := Nat.lt_two_pow_self
+            have hk' := hk
+            rw [hcurrentLen] at hk'
+            omega)]
           simp only [__eo_add, native_zplus]
           rw [show (s : Int) + 1 = ((s + 1 : Nat) : Int) by omega]
           simpa [shlBarrelBits, Nat.add_assoc] using hrec
@@ -7653,7 +7748,7 @@ private theorem shr_rec_eval {M : SmtModel}
     (s n W : Nat)
     (hcurrentLen : current.length = W)
     (hn : n ≤ controls.length)
-    (hpow : ∀ j < n, 2 ^ (s + j) ≤ W) :
+    (hpow : ∀ j < n, 2 ^ (s + j) ≤ W) (hW32 : W < 4294967296) :
     BitListEval M
       (__bv_mk_bitblast_step_shr_rec currentTerm controlTerm
         (Term.Numeral (s : Int)) (Term.Numeral ((s + n : Nat) : Int))
@@ -7732,19 +7827,11 @@ private theorem shr_rec_eval {M : SmtModel}
             hcurrent.ne_stuck (by intro h; cases h)
             (by intro h; cases h)
             (term_ne_stuck_of_eval_boolean hsign)]
-          rw [show
-            __eo_ite (__eo_is_z (Term.Numeral (s : Int)))
-                (__eo_ite (__eo_is_neg (Term.Numeral (s : Int)))
-                  (Term.Numeral 0)
-                  (__eo_pow (Term.Numeral 2)
-                    (Term.Numeral (s : Int))))
-                (Term.Apply (Term.UOp UserOp.int_pow2)
-                  (Term.Numeral (s : Int))) =
-              Term.Numeral ((2 ^ s : Nat) : Int) by
-            have hs : ¬ ((s : Int) < 0) := by omega
-            simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_pow,
-              __eo_ite, native_teq, native_not, native_and,
-              native_zlt, native_ite, native_zexp_total, hs]]
+          rw [bb_eo_pow2_ite_nat_eq s _ (by
+            have hs2 : s < 2 ^ s := Nat.lt_two_pow_self
+            have hk' := hk
+            rw [hcurrentLen] at hk'
+            omega)]
           simp only [__eo_add, native_zplus]
           rw [show (s : Int) + 1 = ((s + 1 : Nat) : Int) by omega]
           simpa [shrBarrelBits, Nat.add_assoc] using hrec
@@ -8178,14 +8265,15 @@ private theorem shiftLogTerm_numeral (W : Nat) :
     EvaluateProofInternal.native_int_log_two_eq_log2,
     native_int_log2]
 
-private theorem shiftLszTerm_numeral (W : Nat) :
+private theorem shiftLszTerm_numeral (W : Nat) (hW32 : W < 4294967296) :
     shiftLszTerm (Term.Numeral (W : Int)) =
       Term.Numeral (barrelWidth W : Int) := by
   unfold shiftLszTerm
   simp only [shiftLogTerm_numeral]
+  rw [bb_eo_pow_two_nat W.log2 (by have := Nat.log2_le_self W; omega)]
   have hWnonneg : ¬ ((W : Int) < 0) := by omega
   have hlognonneg : ¬ ((W.log2 : Int) < 0) := by omega
-  simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_pow,
+  simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg,
     __eo_eq, __eo_ite, __eo_add, native_teq, native_not, native_and,
     native_zlt, native_ite, native_zexp_total, hWnonneg, hlognonneg,
     barrelWidth]
@@ -8570,7 +8658,7 @@ private theorem iota_repeat_bitIndexList :
       (bitIndexList_ne_stuck (ih (start + 1)))]
     exact BitIndexList.cons start _ k (ih (start + 1))
 
-private theorem generated_bit_indices (W : Nat) :
+private theorem generated_bit_indices (W : Nat) (hW32 : W < 4294967296) :
     BitIndexList
       (__eo_requires (__eo_is_neg (Term.Numeral (W : Int)))
         (Term.Boolean false)
@@ -8584,13 +8672,7 @@ private theorem generated_bit_indices (W : Nat) :
       Term.Boolean false by
     simp [__eo_is_neg, native_zlt]]
   rw [req_refl _ _ (by intro h; cases h)]
-  rw [__eo_list_repeat.eq_3 _ _ (W : Int)
-    (by intro h; cases h) (by intro h; cases h)]
-  rw [show native_zlt (W : Int) 0 = false by
-    simp [native_zlt]]
-  simp only [native_ite, Bool.false_eq_true, ite_false]
-  rw [show native_int_to_nat (W : Int) = W by
-    simp [native_int_to_nat]]
+  rw [bb_lr_nat_eq _ _ W (by intro h; cases h) (by intro h; cases h) hW32]
   exact iota_repeat_bitIndexList W 0
 
 private theorem BitListEval.list_len_rec {M : SmtModel}
@@ -9820,7 +9902,7 @@ private theorem eval_step_bvurem
     heqSame.syntax_right.ne_stuck
   rcases list_repeat_from_bools_context
       (Term.Boolean false) width hzeroNe with
-    ⟨W, hwidth, _⟩
+    ⟨W, hwidth, hRep32, _⟩
   have hwidth' :
       __bv_bitwidth (__eo_typeof a) =
         Term.Numeral (W : Int) := hwidth
@@ -9847,7 +9929,7 @@ private theorem eval_step_bvurem
     unfold zero width
     rw [hwidth']
     exact list_repeat_from_bools rfl
-      (by intro hh; cases hh) W
+      (by intro hh; cases hh) W hRep32
   have hxsWType :=
     bitListEval_length_eq_smt_type M hM a xs w ha haTy
   have hysWType :=
@@ -9861,7 +9943,7 @@ private theorem eval_step_bvurem
       BitIndexList indices 0 W := by
     unfold indices width
     rw [hwidth']
-    exact generated_bit_indices W
+    exact generated_bit_indices W hRep32
   have hbound : bitsValue xs < 2 ^ W := by
     rw [← hxsW]
     exact bitsValue_lt xs
@@ -9998,7 +10080,7 @@ private theorem eval_step_bvudiv
     heqSame.syntax_right.ne_stuck
   rcases list_repeat_from_bools_context
       (Term.Boolean false) width hzeroNe with
-    ⟨W, hwidth, _⟩
+    ⟨W, hwidth, hRep32, _⟩
   have hwidth' :
       __bv_bitwidth (__eo_typeof a) =
         Term.Numeral (W : Int) := hwidth
@@ -10020,13 +10102,13 @@ private theorem eval_step_bvudiv
     unfold zero width
     rw [hwidth']
     exact list_repeat_from_bools rfl
-      (by intro hh; cases hh) W
+      (by intro hh; cases hh) W hRep32
   have hones :
       BitListEval M ones (List.replicate W true) := by
     unfold ones width
     rw [hwidth']
     exact list_repeat_from_bools rfl
-      (by intro hh; cases hh) W
+      (by intro hh; cases hh) W hRep32
   have hysWType :=
     bitListEval_length_eq_smt_type M hM divisor ys w hb hbTy
   have hysW0 := heqSame.eval_length hb hz
@@ -10037,7 +10119,7 @@ private theorem eval_step_bvudiv
       BitIndexList indices 0 W := by
     unfold indices width
     rw [hwidth']
-    exact generated_bit_indices W
+    exact generated_bit_indices W hRep32
   have hguard :
       __smtx_model_eval M (__eo_to_smt guard) =
         SmtValue.Boolean
@@ -10166,7 +10248,7 @@ private theorem getLsbD_ofInt_canonical
   rw [Int.emod_eq_of_lt hp0 hp1]
 
 private theorem const_bit_term_eq
-    (W i : Nat) (p : Int) (hp0 : 0 ≤ p) :
+    (W i : Nat) (p : Int) (hp0 : 0 ≤ p) (hiW : i < W) :
     __eo_eq
         (__eo_extract (Term.Binary (W : Int) p)
           (Term.Numeral (i : Int)) (Term.Numeral (i : Int)))
@@ -10177,7 +10259,9 @@ private theorem const_bit_term_eq
           (Term.Numeral (i : Int)) (Term.Numeral (i : Int)) =
         __eo_mk_binary 1
           (native_binary_extract (W : Int) p (i : Int) (i : Int)) := by
-    simp only [__eo_extract]
+    rw [bb_eo_extract_binary_of_lt (W : Int) p (i : Int) (i : Int) (by
+      unfold native_zlt
+      exact decide_eq_true (Int.ofNat_lt.mpr hiW))]
     have hi0 : ¬ ((i : Int) < 0) := by omega
     simp only [native_zlt, native_or, native_zplus, native_zneg]
     rw [show decide ((i : Int) < 0) = false by simp [hi0]]
@@ -10207,16 +10291,21 @@ private theorem const_bit_term_eq
 private theorem const_rec_eval
     (M : SmtModel) (W : Nat) (p : Int) (hp0 : 0 ≤ p)
     {indices : Term} {start n : Nat}
-    (hindices : BitIndexList indices start n) :
+    (hindices : BitIndexList indices start n)
+    (hle : start + n ≤ W) :
     BitListEval M
       (__bv_const_to_bitlist_rec (Term.Binary (W : Int) p) indices)
       (reifyBits p.toNat start n) := by
+  revert hle
   induction hindices with
   | nil start =>
+    intro _
     rw [__bv_const_to_bitlist_rec.eq_2 _
       (by intro h; cases h)]
     exact BitListEval.nil
   | cons start tail n htail ih =>
+    intro hle
+    have ih := ih (by omega)
     rw [__bv_const_to_bitlist_rec.eq_3 _
       (Term.Numeral (start : Int)) tail
       (by intro h; cases h)]
@@ -10228,7 +10317,7 @@ private theorem const_rec_eval
         (Term.Binary 1 1)
     have hbitEq :
         bit = Term.Boolean (p.toNat.testBit start) :=
-      const_bit_term_eq W start p hp0
+      const_bit_term_eq W start p hp0 (by omega)
     have hbitEval :
         __smtx_model_eval M (__eo_to_smt bit) =
           SmtValue.Boolean (p.toNat.testBit start) := by
@@ -10318,16 +10407,24 @@ private theorem typed_list_repeat_context
           (Term.UOp UserOp._at__at_TypedList_cons)
           (Term.Numeral 0) n ≠
         Term.Stuck) :
-    ∃ W : Nat, n = Term.Numeral (W : Int) := by
+    ∃ W : Nat, n = Term.Numeral (W : Int) ∧ W < 4294967296 := by
   cases n with
   | Numeral i =>
-    rw [__eo_list_repeat.eq_3 _ _ i
-      (by intro hh; cases hh) (by intro hh; cases hh)] at h
     by_cases hi : i < 0
-    · simp [native_ite, native_zlt, hi] at h
-    · refine ⟨i.toNat, ?_⟩
-      congr 1
-      exact (Int.toNat_of_nonneg (Int.le_of_not_gt hi)).symm
+    · exfalso
+      apply h
+      rw [__eo_list_repeat.eq_3 _ _ i (by intro hh; cases hh) (by intro hh; cases hh)]
+      have hlt : native_zlt i 0 = true := by
+        unfold native_zlt
+        exact decide_eq_true hi
+      rw [hlt]
+      rfl
+    · have hi' : i = ((i.toNat : Nat) : Int) :=
+        (Int.toNat_of_nonneg (Int.le_of_not_gt hi)).symm
+      refine ⟨i.toNat, ?_, ?_⟩
+      · rw [← hi']
+      · rw [hi'] at h
+        exact bb_lr_nat_lt_of_ne _ _ _ (by intro hh; cases hh) (by intro hh; cases hh) h
   | _ =>
     exfalso
     apply h
@@ -10429,7 +10526,7 @@ private theorem eval_step_default_var
         Term.Stuck :=
     iota_indices_ne_stuck hiotaNe
   rcases typed_list_repeat_context width hrepeatNe with
-    ⟨W, hwidth⟩
+    ⟨W, hwidth, hTyp32⟩
   have hbitwidthNe :
       __bv_bitwidth (__eo_typeof a) ≠ Term.Stuck := by
     change width ≠ Term.Stuck
@@ -10458,7 +10555,7 @@ private theorem eval_step_default_var
     var_rec_eval M a W (x.toNat : Int)
       (Int.natCast_nonneg _)
       (by exact_mod_cast x.isLt)
-      hx (generated_bit_indices W)
+      hx (generated_bit_indices W hTyp32)
   change
     __smtx_model_eval M
         (__eo_to_smt (__bv_mk_bitblast_step_var_rec a indices)) =
@@ -10554,14 +10651,21 @@ private theorem eval_step_default_const
         (by exact_mod_cast Nat.two_pow_pos W :
           (0 : Int) < (2 ^ W : Nat))
     exact_mod_cast hlt
-  have hout :=
-    const_rec_eval M W p hp0 (generated_bit_indices W)
-  simp only at hne ⊢
-  rw [show __eo_is_bin (Term.Binary w p) =
-      Term.Boolean true by
+  have hisBin : __eo_is_bin (Term.Binary w p) = Term.Boolean true := by
     simp [__eo_is_bin, __eo_is_bin_internal,
-      SmtEval.native_and, native_not, native_teq, reduceCtorEq]]
-  rw [eo_ite_boolean_true]
+      SmtEval.native_and, native_not, native_teq, reduceCtorEq]
+  simp only at hne ⊢
+  rw [hisBin] at hne ⊢
+  rw [eo_ite_boolean_true] at hne ⊢
+  change
+    __bv_const_to_bitlist_rec (Term.Binary w p)
+        (__eo_requires (__eo_is_neg (Term.Numeral w))
+          (Term.Boolean false)
+          (__iota_rec
+            (__eo_list_repeat
+              (Term.UOp UserOp._at__at_TypedList_cons)
+              (Term.Numeral 0) (Term.Numeral w))
+            (Term.Numeral 0))) ≠ Term.Stuck at hne
   change
     __smtx_model_eval M
         (__eo_to_smt
@@ -10574,7 +10678,11 @@ private theorem eval_step_default_const
                   (Term.Numeral 0) (Term.Numeral w))
                 (Term.Numeral 0))))) =
       __smtx_model_eval M (__eo_to_smt (Term.Binary w p))
-  rw [← hw]
+  rw [← hw] at hne ⊢
+  have hW32 : W < 4294967296 :=
+    bb_const_bitlist_indices_bound (by intro h; cases h) W hne
+  have hout :=
+    const_rec_eval M W p hp0 (generated_bit_indices W hW32) (by omega)
   rw [hout.eval]
   change
     SmtValue.Binary
@@ -10672,6 +10780,19 @@ private def shrBlast (a amount width sign : Term) : Term :=
       (shiftLszTerm width) sign)
     (__eo_list_repeat (Term.UOp UserOp._at_from_bools) sign width)
 
+private theorem to_bin_width_self_bound (W : Nat)
+    (h : __eo_to_bin (Term.Numeral (W : Int)) (Term.Numeral (W : Int)) ≠ Term.Stuck) :
+    (W : Int) < 4294967296 := by
+  refine Classical.byContradiction (fun hb => ?_)
+  apply h
+  have hF : native_zlt (W : Int) 4294967296 = false := by
+    unfold native_zlt
+    exact decide_eq_false hb
+  show native_ite (native_zlt (W : Int) 4294967296)
+    (__eo_mk_binary (W : Int) (W : Int)) Term.Stuck = Term.Stuck
+  rw [hF]
+  rfl
+
 private theorem to_bin_width_self_eq
     (W : Nat)
     (h :
@@ -10681,12 +10802,7 @@ private theorem to_bin_width_self_eq
     __eo_to_bin (Term.Numeral (W : Int))
         (Term.Numeral (W : Int)) =
       Term.Binary (W : Int) (W : Int) := by
-  have hbound : (W : Int) ≤ 4294967296 := by
-    by_cases hb : (W : Int) ≤ 4294967296
-    · exact hb
-    · exfalso
-      apply h
-      simp [__eo_to_bin, native_zleq, native_ite, hb]
+  have hbound : (W : Int) < 4294967296 := to_bin_width_self_bound W h
   have hmod :
       native_mod_total (W : Int)
           (native_int_pow2 (W : Int)) =
@@ -10697,10 +10813,12 @@ private theorem to_bin_width_self_eq
     rw [Int.emod_eq_of_lt]
     · exact Int.natCast_nonneg W
     · exact_mod_cast Nat.lt_two_pow_self
-  unfold __eo_to_bin
-  simp only [native_zleq]
-  rw [show decide ((W : Int) ≤ 4294967296) = true by
-    exact decide_eq_true hbound]
+  show native_ite (native_zlt (W : Int) 4294967296)
+    (__eo_mk_binary (W : Int) (W : Int)) Term.Stuck = _
+  have hT : native_zlt (W : Int) 4294967296 = true := by
+    unfold native_zlt
+    exact decide_eq_true hbound
+  rw [hT]
   simp [__eo_mk_binary, native_zleq, native_ite, hmod]
 
 private theorem shiftConstBits_eval
@@ -10734,7 +10852,8 @@ private theorem shiftConstBits_eval
   have hbin := to_bin_width_self_eq W hbinNe
   have hout :=
     const_rec_eval M W (W : Int) (Int.natCast_nonneg W)
-      (generated_bit_indices W)
+      (generated_bit_indices W (Int.ofNat_lt.mp (to_bin_width_self_bound W hbinNe)))
+      (by omega)
   have hsimpa := hout
   try simp [shiftConstBits, hbin] at hsimpa ⊢
   exact hsimpa
@@ -10784,7 +10903,7 @@ private theorem eval_step_bvshl
     hsame.syntax_right.ne_stuck
   rcases list_repeat_from_bools_context
       (Term.Boolean false) width hzeroNe with
-    ⟨K, hwidth, _⟩
+    ⟨K, hwidth, hRep32, _⟩
   have hwidthNe : __bv_bitwidth (__eo_typeof a) ≠ Term.Stuck := by
     change width ≠ Term.Stuck
     rw [hwidth]
@@ -10820,7 +10939,7 @@ private theorem eval_step_bvshl
   have hlsz :
       shiftLszTerm (Term.Numeral (W : Int)) =
         Term.Numeral (L : Int) := by
-    exact shiftLszTerm_numeral W
+    exact shiftLszTerm_numeral W hRep32
   let const := shiftConstBits (Term.Numeral (W : Int))
   have hcondNe :
       shiftGuard amount (Term.Numeral (W : Int)) ≠ Term.Stuck := by
@@ -10936,7 +11055,7 @@ private theorem eval_step_bvshl
         (__eo_list_repeat (Term.UOp UserOp._at_from_bools)
           (Term.Boolean false) (Term.Numeral (W : Int)))
         (List.replicate W false) := by
-    exact list_repeat_from_bools rfl (by intro h; cases h) W
+    exact list_repeat_from_bools rfl (by intro h; cases h) W hRep32
   have htrue :
       BitListEval M
         (__bv_mk_bitblast_step_shl_rec a amount (Term.Numeral 0)
@@ -10949,6 +11068,7 @@ private theorem eval_step_bvshl
         (by
           intro j hj
           simpa using barrelWidth_pow_le W hW j hj)
+        hRep32
     try simp only [Nat.zero_add] at hsimpa ⊢
     exact hsimpa
   have htrueLen : (shlBarrelBits xs 0 ys L).length = W :=
@@ -11016,7 +11136,7 @@ private theorem eval_step_bvshl
       rw [show
         (bitsValue xs : Int) * ((2 ^ bitsValue ys : Nat) : Int) =
           ((bitsValue xs * 2 ^ bitsValue ys : Nat) : Int) by
-        norm_cast]
+        exact (Int.natCast_mul _ _).symm]
       rw [native_mod_nat, hxW, hval]
     have hpayloadW :
         native_mod_total
@@ -11055,7 +11175,7 @@ private theorem eval_step_bvshl
       rw [show
         (bitsValue xs : Int) * ((2 ^ bitsValue ys : Nat) : Int) =
           ((bitsValue xs * 2 ^ bitsValue ys : Nat) : Int) by
-        norm_cast]
+        exact (Int.natCast_mul _ _).symm]
       rw [native_mod_nat, hxW, Nat.mod_eq_zero_of_dvd hdvd]
       change (0 : Int) = 0
       rfl
@@ -11232,7 +11352,7 @@ private theorem eval_step_bvlshr
     hsame.syntax_right.ne_stuck
   rcases list_repeat_from_bools_context
       (Term.Boolean false) width hzeroNe with
-    ⟨K, hwidth, _⟩
+    ⟨K, hwidth, hRep32, _⟩
   have hwidthNe : __bv_bitwidth (__eo_typeof a) ≠ Term.Stuck := by
     change width ≠ Term.Stuck
     rw [hwidth]
@@ -11268,7 +11388,7 @@ private theorem eval_step_bvlshr
   have hlsz :
       shiftLszTerm (Term.Numeral (W : Int)) =
         Term.Numeral (L : Int) :=
-    shiftLszTerm_numeral W
+    shiftLszTerm_numeral W hRep32
   let const := shiftConstBits (Term.Numeral (W : Int))
   have hcondNe :
       shiftGuard amount (Term.Numeral (W : Int)) ≠ Term.Stuck := by
@@ -11388,7 +11508,7 @@ private theorem eval_step_bvlshr
         (__eo_list_repeat (Term.UOp UserOp._at_from_bools)
           (Term.Boolean false) (Term.Numeral (W : Int)))
         (List.replicate W false) := by
-    exact list_repeat_from_bools rfl (by intro h; cases h) W
+    exact list_repeat_from_bools rfl (by intro h; cases h) W hRep32
   have htrue :
       BitListEval M
         (__bv_mk_bitblast_step_shr_rec a amount (Term.Numeral 0)
@@ -11403,6 +11523,7 @@ private theorem eval_step_bvlshr
         (by
           intro j hj
           simpa using barrelWidth_pow_le W hW j hj)
+        hRep32
     try simp only [Nat.zero_add] at hsimpa ⊢
     exact hsimpa
   have htrueLen : (shrBarrelBits xs 0 ys L false).length = W :=
@@ -11529,7 +11650,7 @@ private theorem eval_step_bvashr
         Term.Stuck :=
     hsame.syntax_right.ne_stuck
   rcases list_repeat_from_bools_context sign width hfillNe with
-    ⟨K, hwidth, hsignNe⟩
+    ⟨K, hwidth, hRep32, hsignNe⟩
   have hwidthNe : __bv_bitwidth (__eo_typeof a) ≠ Term.Stuck := by
     change width ≠ Term.Stuck
     rw [hwidth]
@@ -11565,7 +11686,7 @@ private theorem eval_step_bvashr
   have hlsz :
       shiftLszTerm (Term.Numeral (W : Int)) =
         Term.Numeral (L : Int) :=
-    shiftLszTerm_numeral W
+    shiftLszTerm_numeral W hRep32
   let const := shiftConstBits (Term.Numeral (W : Int))
   have hcondNe :
       shiftGuard amount (Term.Numeral (W : Int)) ≠ Term.Stuck := by
@@ -11679,13 +11800,8 @@ private theorem eval_step_bvashr
       __eo_list_repeat (Term.UOp UserOp._at_from_bools) sign
           (Term.Numeral (W : Int)) ≠
         Term.Stuck at hfillNe
-    rw [__eo_list_repeat.eq_3 _ _ (W : Int)
-      (by intro hh; cases hh) hsignNe] at hfillNe
-    rw [show native_zlt (W : Int) 0 = false by
-      simp [native_zlt]] at hfillNe
-    have hsimpa := hfillNe
-    try simp [native_ite] at hsimpa ⊢
-    exact hsimpa
+    rw [bb_lr_nat_eq _ _ W (by intro hh; cases hh) hsignNe hRep32] at hfillNe
+    exact hfillNe
   have hsignTy : __eo_typeof sign ≠ Term.Stuck :=
     list_repeat_rec_from_bools_type_ne hrepeatRecNe
   have hconst :
@@ -11731,7 +11847,7 @@ private theorem eval_step_bvashr
         (__eo_list_repeat (Term.UOp UserOp._at_from_bools)
           sign (Term.Numeral (W : Int)))
         (List.replicate W s) :=
-    list_repeat_from_bools hsign hsignTy W
+    list_repeat_from_bools hsign hsignTy W hRep32
   have htrue :
       BitListEval M
         (__bv_mk_bitblast_step_shr_rec a amount (Term.Numeral 0)
@@ -11744,6 +11860,7 @@ private theorem eval_step_bvashr
         (by
           intro j hj
           simpa using barrelWidth_pow_le W hW j hj)
+        hRep32
     try simp only [Nat.zero_add] at hsimpa ⊢
     exact hsimpa
   have htrueLen : (shrBarrelBits xs 0 ys L s).length = W :=
@@ -11963,7 +12080,7 @@ private theorem eval_step_sign_extend
   have hrepeatNe : repeated ≠ Term.Stuck :=
     bitblast_concat_right_ne hne
   rcases list_repeat_from_bools_context sign n hrepeatNe with
-    ⟨K, hn, hsignNe⟩
+    ⟨K, hn, hRep32, hsignNe⟩
   subst n
   have hrepeatRecNe :
       __eo_list_repeat_rec (Term.UOp UserOp._at_from_bools)
@@ -11973,13 +12090,8 @@ private theorem eval_step_sign_extend
       __eo_list_repeat (Term.UOp UserOp._at_from_bools) sign
           (Term.Numeral (K : Int)) ≠
         Term.Stuck at hrepeatNe
-    rw [__eo_list_repeat.eq_3 _ _ (K : Int)
-      (by intro hh; cases hh) hsignNe] at hrepeatNe
-    rw [show native_zlt (K : Int) 0 = false by
-      simp [native_zlt]] at hrepeatNe
-    have hsimpa := hrepeatNe
-    try simp [native_ite] at hsimpa ⊢
-    exact hsimpa
+    rw [bb_lr_nat_eq _ _ K (by intro hh; cases hh) hsignNe hRep32] at hrepeatNe
+    exact hrepeatNe
   have hsignTy : __eo_typeof sign ≠ Term.Stuck :=
     list_repeat_rec_from_bools_type_ne hrepeatRecNe
   have hrev := ha.rev
@@ -12016,7 +12128,7 @@ private theorem eval_step_sign_extend
           (__eo_list_repeat (Term.UOp UserOp._at_from_bools) sign
             (Term.Numeral (K : Int)))
           (List.replicate K s)
-      exact list_repeat_from_bools hsignEval hsignTy K
+      exact list_repeat_from_bools hsignEval hsignTy K hRep32
     have hout :
         BitListEval M
           (__bv_bitblast_concat a repeated)

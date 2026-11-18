@@ -328,7 +328,13 @@ private theorem bv_repeat_elim_eval_rel
     (n a : Term) (i : native_Int) (w : native_Nat)
     (hn : __eo_to_smt n = SmtTerm.Numeral i)
     (haTy : __smtx_typeof (__eo_to_smt a) = SmtType.BitVec w)
-    (hi : native_zleq 1 i = true) :
+    (hi : native_zleq 1 i = true)
+    (hExpNe :
+      __eo_list_singleton_elim (Term.UOp UserOp.concat)
+          (__eo_ite
+            (__eo_and (__eo_is_z n) (__eo_not (__eo_is_neg n)))
+            (__eo_list_repeat (Term.UOp UserOp.concat) a n)
+            (Term.Apply (Term.UOp1 UserOp1.repeat n) a)) ≠ Term.Stuck) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M
         (__eo_to_smt
@@ -357,10 +363,22 @@ private theorem bv_repeat_elim_eval_rel
     simp [__eo_and, __eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_not,
       native_teq, native_and, native_not, SmtEval.native_not, native_zlt,
       h0le]
+  have hBigF : native_zleq 4294967296 i = false := by
+    cases hb : native_zleq 4294967296 i
+    · rfl
+    · exfalso
+      apply hExpNe
+      have hRepStuck :
+          __eo_list_repeat (Term.UOp UserOp.concat) a (Term.Numeral i) =
+            Term.Stuck := by
+        cases a <;> simp [__eo_list_repeat, native_ite, native_or, hb] at hANe ⊢
+      rw [hCond, hRepStuck]
+      simp [__eo_ite, native_teq, native_ite, __eo_list_singleton_elim,
+        __eo_is_list, __eo_requires]
   have hList :
       __eo_list_repeat (Term.UOp UserOp.concat) a (Term.Numeral i) =
         __eo_list_repeat_rec (Term.UOp UserOp.concat) a (native_int_to_nat i) := by
-    cases a <;> simp [__eo_list_repeat, native_ite, hiNonneg] at hANe ⊢
+    cases a <;> simp [__eo_list_repeat, native_ite, native_or, hiNonneg, hBigF] at hANe ⊢
   have hEval :=
     bv_list_repeat_singleton_eval_eq_repeat_rec M hM a w haTy
       (native_int_to_nat i)
@@ -493,6 +511,7 @@ by
                     (__smtx_model_eval M (__eo_to_smt rep)) := by
                 simpa [expanded, rep] using
                   bv_repeat_elim_eval_rel M hM n a i w hn haTy hi
+                    (by simpa [expanded, rep] using hExpandedNe)
               have hRel :
                   RuleProofs.smt_value_rel
                     (__smtx_model_eval M (__eo_to_smt rep))

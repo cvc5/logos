@@ -1871,13 +1871,35 @@ private theorem smt_value_rel_of_equal_bv_poly_norm
         TranslationProofs.eo_to_smt_type_typeof_of_smt_type a hATy (by simp)
       exact TranslationProofs.eo_to_smt_type_eq_bitvec hTransTy
     rw [hModulus, hEoTy]
-    have hwNonneg : 0 <= native_nat_to_int w := by
-      simp [native_nat_to_int]
-    have hwNotNeg : ¬ native_nat_to_int w < 0 := by
-      simp [native_nat_to_int]
-    simp [__bv_bitwidth, __eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_pow,
-      __eo_ite, native_ite, native_teq, SmtEval.native_and, SmtEval.native_not,
-      SmtEval.native_zlt, native_int_pow2, native_zexp_total, hwNotNeg, m]
+    have hNeg : native_zlt (native_nat_to_int w) 0 = false := by
+      unfold native_zlt
+      exact decide_eq_false (Int.not_lt.mpr (Int.natCast_nonneg w))
+    have hLe : native_zleq 0 (native_nat_to_int w) = true := by
+      unfold native_zleq
+      exact decide_eq_true (Int.natCast_nonneg w)
+    have hModNe' := hModulusNe
+    rw [hModulus, hEoTy] at hModNe'
+    have hLt : native_zlt (native_nat_to_int w) 4294967296 = true := by
+      cases hc : native_zlt (native_nat_to_int w) 4294967296
+      · exfalso
+        apply hModNe'
+        change __eo_ite (__eo_is_z (Term.Numeral (native_nat_to_int w)))
+            (__eo_ite (__eo_is_neg (Term.Numeral (native_nat_to_int w)))
+              (Term.Numeral 0)
+              (__eo_pow (Term.Numeral 2) (Term.Numeral (native_nat_to_int w))))
+            (__eo_mk_apply (Term.UOp UserOp.int_pow2)
+              (Term.Numeral (native_nat_to_int w))) = Term.Stuck
+        simp only [__eo_is_z, __eo_is_z_internal, __eo_is_neg, hNeg, __eo_pow, hLe, hc]
+        rfl
+      · rfl
+    change __eo_ite (__eo_is_z (Term.Numeral (native_nat_to_int w)))
+        (__eo_ite (__eo_is_neg (Term.Numeral (native_nat_to_int w)))
+          (Term.Numeral 0)
+          (__eo_pow (Term.Numeral 2) (Term.Numeral (native_nat_to_int w))))
+        (__eo_mk_apply (Term.UOp UserOp.int_pow2)
+          (Term.Numeral (native_nat_to_int w))) = Term.Numeral m
+    simp only [__eo_is_z, __eo_is_z_internal, __eo_is_neg, hNeg, __eo_pow, hLe, hLt]
+    rfl
   rw [hModulusEq] at hNormEq hNormNotStuck
   change __poly_mod_coeffs (__get_bv_poly_norm_rec a) (Term.Numeral m) =
       __poly_mod_coeffs (__get_bv_poly_norm_rec b) (Term.Numeral m) at hNormEq

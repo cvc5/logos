@@ -590,10 +590,10 @@ theorem EvaluateProofInternal.eo_zero_extend_literal_arg_binary_of_typeof_bitvec
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
     change
       __eo_typeof
-          (native_ite (native_zleq (native_zplus wx i) 4294967296)
+          (native_ite (native_zlt (native_zplus wx i) 4294967296)
             (__eo_mk_binary (native_zplus wx i) nx) Term.Stuck) =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
-    cases hLeMax : native_zleq (native_zplus wx i) 4294967296
+    cases hLeMax : native_zlt (native_zplus wx i) 4294967296
     · simp [hLeMax, native_ite] at h
       change Term.Stuck =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h

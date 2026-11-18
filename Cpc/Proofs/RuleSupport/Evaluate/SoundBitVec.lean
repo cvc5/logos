@@ -1501,8 +1501,14 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_int_pow2_core
                 (__run_evaluate b)))))
   cases hRun : __run_evaluate b with
   | Numeral runN =>
+      have hRunNB : runN < 4294967296 := by
+        by_contra hBig
+        apply hRunPowNe
+        dsimp only [runPow]
+        rw [hRun]
+        exact EvaluateProofInternal.eo_int_pow2_literal_big runN hBig
       constructor
-      · rw [EvaluateProofInternal.eo_int_pow2_eval_numeral_to_smt]
+      · rw [EvaluateProofInternal.eo_int_pow2_eval_numeral_to_smt runN hRunNB]
         rw [typeof_int_pow2_eq, hBTyInt]
         rw [__smtx_typeof.eq_2]
         simp [native_ite, native_Teq]
@@ -1527,7 +1533,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_int_pow2_core
                 (__smtx_model_eval M (__eo_to_smt b)) by
           rw [__smtx_model_eval.eq_29]]
         rw [hEvalB]
-        rw [EvaluateProofInternal.eo_int_pow2_eval_numeral_to_smt]
+        rw [EvaluateProofInternal.eo_int_pow2_eval_numeral_to_smt runN hRunNB]
         change
           RuleProofs.smt_value_rel
             (SmtValue.Numeral (native_int_pow2 runN))
@@ -1880,6 +1886,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_int_ispow2_core
         (__smtx_model_eval M (__eo_to_smt runIspow))
   cases hRun : __run_evaluate b with
   | Numeral runN =>
+      have hLog : native_int_log2 runN < 4294967296 := by
+        apply EvaluateProofInternal.int_ispow2_numeral_log_bound runN
+        have hNe' := hRunIspowNe
+        dsimp [runIspow] at hNe'
+        rw [hRun] at hNe'
+        exact hNe'
       constructor
       · calc
           __smtx_typeof
@@ -1892,7 +1904,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_int_ispow2_core
           _ = __smtx_typeof (__eo_to_smt runIspow) := by
             dsimp [runIspow]
             rw [hRun]
-            exact (EvaluateProofInternal.int_ispow2_numeral_to_smt_type_bool runN).symm
+            exact (EvaluateProofInternal.int_ispow2_numeral_to_smt_type_bool runN hLog).symm
       · have hRelValue :
             RuleProofs.smt_value_rel
               (__smtx_model_eval M (__eo_to_smt b))
@@ -1911,7 +1923,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_int_ispow2_core
         dsimp [runIspow]
         rw [hRun]
         simpa [__smtx_model_eval, hEvalB] using
-          EvaluateProofInternal.int_ispow2_numeral_eval_rel M runN
+          EvaluateProofInternal.int_ispow2_numeral_eval_rel M runN hLog
   | Stuck =>
       rw [hRun] at hRunBEoType
       change Term.Stuck = Term.UOp UserOp.Int at hRunBEoType
@@ -2490,7 +2502,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_sign_extend_core
             (EvaluateProofInternal.eo_sign_extend_payload (native_nat_to_int w) runN)) := by
     simpa [runSign, hRunX] using
       EvaluateProofInternal.eo_eval_sign_extend_rhs_binary_to_bin
-        (native_nat_to_int w) runN i
+        (native_nat_to_int w) runN i hi
   have hRunSignToBinTy :
       __eo_typeof
           (__eo_to_bin
@@ -2704,6 +2716,20 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_repeat_core
         runRepeat hEvalEqTy
     exact hEq.symm.trans hRepeatEoType
   dsimp [runRepeat] at hRunRepeatEoBv
+  have hiBig : native_zleq 4294967296 i = false := by
+    cases hb : native_zleq 4294967296 i
+    · rfl
+    · exfalso
+      have hS :
+          __eo_list_repeat (Term.UOp UserOp.concat) (__run_evaluate x)
+              (Term.Numeral i) = Term.Stuck := by
+        generalize __run_evaluate x = X
+        cases X <;> simp [__eo_list_repeat, native_ite, native_or, hb]
+      rw [hS] at hRunRepeatEoBv
+      change Term.Stuck =
+        Term.Apply (Term.UOp UserOp.BitVec)
+          (Term.Numeral (native_zmult i (native_nat_to_int w))) at hRunRepeatEoBv
+      cases hRunRepeatEoBv
   rcases EvaluateProofInternal.eo_repeat_literal_arg_binary_of_typeof_bitvec
       (__run_evaluate x) i (native_zmult i (native_nat_to_int w))
       hi1 hRunRepeatEoBv with
@@ -2776,7 +2802,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_repeat_core
         __eo_list_repeat_rec (Term.UOp UserOp.concat)
           (Term.Binary (native_nat_to_int w) runN)
           (native_int_to_nat i) := by
-    simp [__eo_list_repeat, native_ite, hiNotNeg]
+    simp [__eo_list_repeat, native_ite, native_or, hiNotNeg, hiBig]
   rcases EvaluateProofInternal.bv_eval_concat_list_repeat_rec_binary
       (native_nat_to_int w) runN hRunWNonneg (native_int_to_nat i) with
     ⟨repM', hRepeatTerm', hRepeatEvalRec, _hRepCanon'⟩
@@ -4476,17 +4502,36 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
         (__smtx_model_eval M (__eo_to_smt b)) runWB runB hBRelValue
     by_cases hRunBZero : runB = 0
     · subst runB
+      have hWTd : widthTerm = Term.Numeral (native_nat_to_int w) := by
+        dsimp only [widthTerm]
+        rw [hAEoBv]
+        rfl
+      have hDivMax : runDiv = maxTerm := by
+        dsimp only [runDiv, runBTerm]
+        rw [hRunB]
+        rfl
+      have hwBd : native_nat_to_int w < 4294967296 := by
+        by_contra hBig
+        apply hRunDivNe
+        rw [hDivMax]
+        dsimp only [maxTerm]
+        rw [hWTd]
+        exact EvaluateProofInternal.eo_to_bin_numeral_big _ _ hBig
+      have hMaxEq :
+          maxTerm =
+            __eo_to_bin (Term.Numeral (native_nat_to_int w))
+              (Term.Numeral (native_binary_max (native_nat_to_int w))) := by
+        dsimp only [maxTerm]
+        rw [hWTd, EvaluateProofInternal.eo_int_pow2_literal_eq _ hwBd]
+        rfl
       have hMaxType :
           __eo_typeof
               (__eo_to_bin (Term.Numeral (native_nat_to_int w))
                 (Term.Numeral (native_binary_max (native_nat_to_int w)))) =
             Term.Apply (Term.UOp UserOp.BitVec)
               (Term.Numeral (native_nat_to_int w)) := by
-        dsimp [runDiv, runBTerm, maxTerm, widthTerm] at hRunDivEoBv
-        rw [hRunB] at hRunDivEoBv
-        have hsimpa := hRunDivEoBv
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, SmtEval.native_nat_to_int] at hsimpa ⊢
-        exact hsimpa
+        rw [← hMaxEq, ← hDivMax]
+        exact hRunDivEoBv
       have hRunDivEq :
           runDiv =
             Term.Binary (native_nat_to_int w)
@@ -4496,11 +4541,8 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
           EvaluateProofInternal.eo_to_bin_numeral_eq_of_typeof_bitvec
             (native_binary_max (native_nat_to_int w))
             (native_nat_to_int w) (native_nat_to_int w) hMaxType
-        dsimp [runDiv, runBTerm, maxTerm, widthTerm]
-        rw [hRunB]
-        have hsimpa := hToBin
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, SmtEval.native_nat_to_int] at hsimpa ⊢
-        exact hsimpa
+        rw [hDivMax, hMaxEq]
+        exact hToBin
       rw [hRunDivEq]
       constructor
       · rw [show
@@ -6138,16 +6180,16 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsgt_core
         (Term.Apply (Term.Apply (Term.UOp UserOp.bvsgt) a) b)
         runCmp hEvalEqTy
     exact hEq.symm.trans hBvSgtEoType
-  have hRunANe : __run_evaluate a ≠ Term.Stuck := by
-    have hSignedNe :
-        EvaluateProofInternal.eo_signed_bv_value (__run_evaluate a) ≠ Term.Stuck :=
-      EvaluateProofInternal.eo_gt_left_ne_stuck (by simpa [runCmp] using hRunCmpNe)
-    exact EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedNe
-  have hRunBNe : __run_evaluate b ≠ Term.Stuck := by
-    have hSignedNe :
-        EvaluateProofInternal.eo_signed_bv_value (__run_evaluate b) ≠ Term.Stuck :=
-      EvaluateProofInternal.eo_gt_right_ne_stuck (by simpa [runCmp] using hRunCmpNe)
-    exact EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedNe
+  have hSignedANe :
+      EvaluateProofInternal.eo_signed_bv_value (__run_evaluate a) ≠ Term.Stuck :=
+    EvaluateProofInternal.eo_gt_left_ne_stuck (by simpa [runCmp] using hRunCmpNe)
+  have hRunANe : __run_evaluate a ≠ Term.Stuck :=
+    EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedANe
+  have hSignedBNe :
+      EvaluateProofInternal.eo_signed_bv_value (__run_evaluate b) ≠ Term.Stuck :=
+    EvaluateProofInternal.eo_gt_right_ne_stuck (by simpa [runCmp] using hRunCmpNe)
+  have hRunBNe : __run_evaluate b ≠ Term.Stuck :=
+    EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedBNe
   have hAProgTy : __eo_typeof (__eo_prog_evaluate a) = Term.Bool :=
     EvaluateProofInternal.eo_prog_evaluate_typeof_bool_of_smt_type_bitvec a w hATransA hATy
       hRunANe
@@ -6205,10 +6247,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsgt_core
         rw [hRunA, hRunB]
         rw [EvaluateProofInternal.eo_signed_bv_value_binary_eq_uts
           (w := native_nat_to_int w) (n := runA)
-          hRunWANonneg hRunACanon]
+          hRunWANonneg hRunACanon (hRunA ▸ hSignedANe)]
         rw [EvaluateProofInternal.eo_signed_bv_value_binary_eq_uts
           (w := native_nat_to_int w) (n := runB)
-          hRunWBNonneg hRunBCanon]
+          hRunWBNonneg hRunBCanon (hRunB ▸ hSignedBNe)]
         simp [__eo_gt]
       have hARelValue :
           RuleProofs.smt_value_rel
@@ -6667,24 +6709,24 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsge_core
         (Term.Apply (Term.Apply (Term.UOp UserOp.bvsge) a) b)
         runCmp hEvalEqTy
     exact hEq.symm.trans hBvSgeEoType
-  have hRunANe : __run_evaluate a ≠ Term.Stuck := by
+  have hSignedANe :
+      EvaluateProofInternal.eo_signed_bv_value (__run_evaluate a) ≠ Term.Stuck := by
     have hGtNe :
         __eo_gt (EvaluateProofInternal.eo_signed_bv_value (__run_evaluate a))
           (EvaluateProofInternal.eo_signed_bv_value (__run_evaluate b)) ≠ Term.Stuck :=
       EvaluateProofInternal.eo_or_left_ne_stuck (by simpa [runCmp] using hRunCmpNe)
-    have hSignedNe :
-        EvaluateProofInternal.eo_signed_bv_value (__run_evaluate a) ≠ Term.Stuck :=
-      EvaluateProofInternal.eo_gt_left_ne_stuck hGtNe
-    exact EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedNe
-  have hRunBNe : __run_evaluate b ≠ Term.Stuck := by
+    exact EvaluateProofInternal.eo_gt_left_ne_stuck hGtNe
+  have hRunANe : __run_evaluate a ≠ Term.Stuck :=
+    EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedANe
+  have hSignedBNe :
+      EvaluateProofInternal.eo_signed_bv_value (__run_evaluate b) ≠ Term.Stuck := by
     have hGtNe :
         __eo_gt (EvaluateProofInternal.eo_signed_bv_value (__run_evaluate a))
           (EvaluateProofInternal.eo_signed_bv_value (__run_evaluate b)) ≠ Term.Stuck :=
       EvaluateProofInternal.eo_or_left_ne_stuck (by simpa [runCmp] using hRunCmpNe)
-    have hSignedNe :
-        EvaluateProofInternal.eo_signed_bv_value (__run_evaluate b) ≠ Term.Stuck :=
-      EvaluateProofInternal.eo_gt_right_ne_stuck hGtNe
-    exact EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedNe
+    exact EvaluateProofInternal.eo_gt_right_ne_stuck hGtNe
+  have hRunBNe : __run_evaluate b ≠ Term.Stuck :=
+    EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedBNe
   have hAProgTy : __eo_typeof (__eo_prog_evaluate a) = Term.Bool :=
     EvaluateProofInternal.eo_prog_evaluate_typeof_bool_of_smt_type_bitvec a w hATransA hATy
       hRunANe
@@ -6749,10 +6791,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsge_core
         rw [hRunA, hRunB]
         rw [EvaluateProofInternal.eo_signed_bv_value_binary_eq_uts
           (w := native_nat_to_int w) (n := runA)
-          hRunWANonneg hRunACanon]
+          hRunWANonneg hRunACanon (hRunA ▸ hSignedANe)]
         rw [EvaluateProofInternal.eo_signed_bv_value_binary_eq_uts
           (w := native_nat_to_int w) (n := runB)
-          hRunWBNonneg hRunBCanon]
+          hRunWBNonneg hRunBCanon (hRunB ▸ hSignedBNe)]
         simp [__eo_or, __eo_gt, __eo_eq]
       have hARelValue :
           RuleProofs.smt_value_rel
@@ -7003,24 +7045,24 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsle_core
         (Term.Apply (Term.Apply (Term.UOp UserOp.bvsle) a) b)
         runCmp hEvalEqTy
     exact hEq.symm.trans hBvSleEoType
-  have hRunBNe : __run_evaluate b ≠ Term.Stuck := by
+  have hSignedBNe :
+      EvaluateProofInternal.eo_signed_bv_value (__run_evaluate b) ≠ Term.Stuck := by
     have hGtNe :
         __eo_gt (EvaluateProofInternal.eo_signed_bv_value (__run_evaluate b))
           (EvaluateProofInternal.eo_signed_bv_value (__run_evaluate a)) ≠ Term.Stuck :=
       EvaluateProofInternal.eo_or_left_ne_stuck (by simpa [runCmp] using hRunCmpNe)
-    have hSignedNe :
-        EvaluateProofInternal.eo_signed_bv_value (__run_evaluate b) ≠ Term.Stuck :=
-      EvaluateProofInternal.eo_gt_left_ne_stuck hGtNe
-    exact EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedNe
-  have hRunANe : __run_evaluate a ≠ Term.Stuck := by
+    exact EvaluateProofInternal.eo_gt_left_ne_stuck hGtNe
+  have hRunBNe : __run_evaluate b ≠ Term.Stuck :=
+    EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedBNe
+  have hSignedANe :
+      EvaluateProofInternal.eo_signed_bv_value (__run_evaluate a) ≠ Term.Stuck := by
     have hGtNe :
         __eo_gt (EvaluateProofInternal.eo_signed_bv_value (__run_evaluate b))
           (EvaluateProofInternal.eo_signed_bv_value (__run_evaluate a)) ≠ Term.Stuck :=
       EvaluateProofInternal.eo_or_left_ne_stuck (by simpa [runCmp] using hRunCmpNe)
-    have hSignedNe :
-        EvaluateProofInternal.eo_signed_bv_value (__run_evaluate a) ≠ Term.Stuck :=
-      EvaluateProofInternal.eo_gt_right_ne_stuck hGtNe
-    exact EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedNe
+    exact EvaluateProofInternal.eo_gt_right_ne_stuck hGtNe
+  have hRunANe : __run_evaluate a ≠ Term.Stuck :=
+    EvaluateProofInternal.eo_signed_bv_value_arg_ne_stuck hSignedANe
   have hAProgTy : __eo_typeof (__eo_prog_evaluate a) = Term.Bool :=
     EvaluateProofInternal.eo_prog_evaluate_typeof_bool_of_smt_type_bitvec a w hATransA hATy
       hRunANe
@@ -7085,10 +7127,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvsle_core
         rw [hRunA, hRunB]
         rw [EvaluateProofInternal.eo_signed_bv_value_binary_eq_uts
           (w := native_nat_to_int w) (n := runA)
-          hRunWANonneg hRunACanon]
+          hRunWANonneg hRunACanon (hRunA ▸ hSignedANe)]
         rw [EvaluateProofInternal.eo_signed_bv_value_binary_eq_uts
           (w := native_nat_to_int w) (n := runB)
-          hRunWBNonneg hRunBCanon]
+          hRunWBNonneg hRunBCanon (hRunB ▸ hSignedBNe)]
         simp [__eo_or, __eo_gt, __eo_eq]
       have hARelValue :
           RuleProofs.smt_value_rel
@@ -7406,17 +7448,31 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvshl_core
     by_cases hGt : native_zlt (native_nat_to_int w) runB = true
     · have hGtInt : native_nat_to_int w < runB := by
         simpa [native_zlt, SmtEval.native_zlt] using hGt
+      have hWTz : widthTerm = Term.Numeral (native_nat_to_int w) := by
+        dsimp only [widthTerm]
+        rw [hAEoBv]
+        rfl
+      have hCondT : __eo_gt runAmt widthTerm = Term.Boolean true := by
+        dsimp only [runAmt]
+        rw [hRunB, hWTz]
+        show Term.Boolean (native_zlt (native_nat_to_int w) runB) = Term.Boolean true
+        rw [hGt]
+      have hShiftZero :
+          runShift =
+            __eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0) := by
+        have hIteT : ∀ A B : Term, __eo_ite (Term.Boolean true) A B = A := by
+          intro A B
+          simp [__eo_ite, native_ite, native_teq]
+        dsimp only [runShift]
+        rw [hCondT, hIteT, hWTz]
       have hZeroTy :
           __eo_typeof
               (__eo_to_bin (Term.Numeral (native_nat_to_int w))
                 (Term.Numeral 0)) =
             Term.Apply (Term.UOp UserOp.BitVec)
               (Term.Numeral (native_nat_to_int w)) := by
-        dsimp [runShift, runAmt, widthTerm, powAmt] at hRunShiftEoBv
-        rw [hRunB] at hRunShiftEoBv
-        have hsimpa := hRunShiftEoBv
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_gt, __eo_ite, native_ite, hGt] at hsimpa ⊢
-        exact hsimpa
+        rw [← hShiftZero]
+        exact hRunShiftEoBv
       have hRunShiftEq :
           runShift =
             Term.Binary (native_nat_to_int w)
@@ -7425,11 +7481,8 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvshl_core
         have hToBin :=
           EvaluateProofInternal.eo_to_bin_numeral_eq_of_typeof_bitvec 0
             (native_nat_to_int w) (native_nat_to_int w) hZeroTy
-        dsimp [runShift, runAmt, widthTerm, powAmt]
-        rw [hRunB]
-        have hsimpa := hToBin
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_gt, __eo_ite, native_ite, hGt] at hsimpa ⊢
-        exact hsimpa
+        rw [hShiftZero]
+        exact hToBin
       rw [hRunShiftEq]
       constructor
       · rw [show
@@ -7507,10 +7560,28 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvshl_core
         have hRunWAEq : runWA = native_nat_to_int w :=
           EvaluateProofInternal.native_nat_to_int_of_int_to_nat_eq hRunWANonneg hRunWANat
         subst runWA
+        have hRunBB : runB < 4294967296 := by
+          by_contra hBig
+          apply hRunShiftNe
+          have hLe : runB ≤ native_nat_to_int w := by
+            have h := hGtFalse
+            simp [native_zlt, SmtEval.native_zlt] at h
+            exact h
+          have hwBig : ¬ native_nat_to_int w < 4294967296 := by
+            unfold native_Int at *
+            omega
+          have hWT : widthTerm = Term.Numeral (native_nat_to_int w) := by
+            dsimp only [widthTerm]
+            rw [hAEoBv]
+            rfl
+          dsimp only [runShift]
+          rw [hWT, EvaluateProofInternal.eo_to_bin_numeral_big _ _ hwBig,
+            EvaluateProofInternal.eo_to_bin_numeral_big _ _ hwBig]
+          simp [__eo_ite, native_ite]
         have hPowAmt : powAmt = Term.Numeral (native_int_pow2 runB) := by
           dsimp [powAmt, runAmt]
           rw [hRunB]
-          exact EvaluateProofInternal.eo_int_pow2_literal_eq runB
+          exact EvaluateProofInternal.eo_int_pow2_literal_eq runB hRunBB
         have hProdTy :
             __eo_typeof
                 (__eo_to_bin (Term.Numeral (native_nat_to_int w))
@@ -7816,17 +7887,31 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvlshr_core
     by_cases hGt : native_zlt (native_nat_to_int w) runB = true
     · have hGtInt : native_nat_to_int w < runB := by
         simpa [native_zlt, SmtEval.native_zlt] using hGt
+      have hWTz : widthTerm = Term.Numeral (native_nat_to_int w) := by
+        dsimp only [widthTerm]
+        rw [hAEoBv]
+        rfl
+      have hCondT : __eo_gt runAmt widthTerm = Term.Boolean true := by
+        dsimp only [runAmt]
+        rw [hRunB, hWTz]
+        show Term.Boolean (native_zlt (native_nat_to_int w) runB) = Term.Boolean true
+        rw [hGt]
+      have hShiftZero :
+          runShift =
+            __eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0) := by
+        have hIteT : ∀ A B : Term, __eo_ite (Term.Boolean true) A B = A := by
+          intro A B
+          simp [__eo_ite, native_ite, native_teq]
+        dsimp only [runShift]
+        rw [hCondT, hIteT, hWTz]
       have hZeroTy :
           __eo_typeof
               (__eo_to_bin (Term.Numeral (native_nat_to_int w))
                 (Term.Numeral 0)) =
             Term.Apply (Term.UOp UserOp.BitVec)
               (Term.Numeral (native_nat_to_int w)) := by
-        dsimp [runShift, runAmt, widthTerm, powAmt] at hRunShiftEoBv
-        rw [hRunB] at hRunShiftEoBv
-        have hsimpa := hRunShiftEoBv
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_gt, __eo_ite, native_ite, hGt] at hsimpa ⊢
-        exact hsimpa
+        rw [← hShiftZero]
+        exact hRunShiftEoBv
       have hRunShiftEq :
           runShift =
             Term.Binary (native_nat_to_int w)
@@ -7835,11 +7920,8 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvlshr_core
         have hToBin :=
           EvaluateProofInternal.eo_to_bin_numeral_eq_of_typeof_bitvec 0
             (native_nat_to_int w) (native_nat_to_int w) hZeroTy
-        dsimp [runShift, runAmt, widthTerm, powAmt]
-        rw [hRunB]
-        have hsimpa := hToBin
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_gt, __eo_ite, native_ite, hGt] at hsimpa ⊢
-        exact hsimpa
+        rw [hShiftZero]
+        exact hToBin
       rw [hRunShiftEq]
       constructor
       · rw [show
@@ -7926,10 +8008,28 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvlshr_core
         have hRunWAEq : runWA = native_nat_to_int w :=
           EvaluateProofInternal.native_nat_to_int_of_int_to_nat_eq hRunWANonneg hRunWANat
         subst runWA
+        have hRunBB : runB < 4294967296 := by
+          by_contra hBig
+          apply hRunShiftNe
+          have hLe : runB ≤ native_nat_to_int w := by
+            have h := hGtFalse
+            simp [native_zlt, SmtEval.native_zlt] at h
+            exact h
+          have hwBig : ¬ native_nat_to_int w < 4294967296 := by
+            unfold native_Int at *
+            omega
+          have hWT : widthTerm = Term.Numeral (native_nat_to_int w) := by
+            dsimp only [widthTerm]
+            rw [hAEoBv]
+            rfl
+          dsimp only [runShift]
+          rw [hWT, EvaluateProofInternal.eo_to_bin_numeral_big _ _ hwBig,
+            EvaluateProofInternal.eo_to_bin_numeral_big _ _ hwBig]
+          simp [__eo_ite, native_ite]
         have hPowAmt : powAmt = Term.Numeral (native_int_pow2 runB) := by
           dsimp [powAmt, runAmt]
           rw [hRunB]
-          exact EvaluateProofInternal.eo_int_pow2_literal_eq runB
+          exact EvaluateProofInternal.eo_int_pow2_literal_eq runB hRunBB
         have hDivTy :
             __eo_typeof
                 (__eo_to_bin (Term.Numeral (native_nat_to_int w))
@@ -8135,6 +8235,9 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvashr_core
     rw [hStuck] at hEvalTy
     change Term.Stuck = Term.Bool at hEvalTy
     cases hEvalTy
+  have hToBinStuck : ∀ X : Term, __eo_to_bin X Term.Stuck = Term.Stuck := by
+    intro X
+    cases X <;> rfl
   have hMkNe :
       __eo_mk_apply
           (Term.Apply (Term.UOp UserOp.eq)
@@ -8264,6 +8367,27 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvashr_core
       have hRunWAEq : runWA = native_nat_to_int w :=
         EvaluateProofInternal.native_nat_to_int_of_int_to_nat_eq hRunWANonneg hRunWANat
       subst runWA
+      have hRunBB : runB < 4294967296 := by
+        by_contra hBig
+        apply hRunShiftNe
+        dsimp [runShift, EvaluateProofInternal.eo_eval_bvashr_rhs]
+        rw [hRunB]
+        have hPowStuck :
+            __eo_ite (__eo_is_z (__eo_to_z (Term.Binary (native_nat_to_int w) runB)))
+                (__eo_ite (__eo_is_neg (__eo_to_z (Term.Binary (native_nat_to_int w) runB)))
+                  (Term.Numeral 0)
+                  (__eo_pow (Term.Numeral 2)
+                    (__eo_to_z (Term.Binary (native_nat_to_int w) runB))))
+                (__eo_mk_apply (Term.UOp UserOp.int_pow2)
+                  (__eo_to_z (Term.Binary (native_nat_to_int w) runB))) =
+              Term.Stuck :=
+          EvaluateProofInternal.eo_int_pow2_literal_big runB hBig
+        rw [hPowStuck]
+        have hZ : ∀ X : Term, __eo_zdiv X Term.Stuck = Term.Stuck := by
+          intro X
+          cases X <;> rfl
+        rw [hZ]
+        exact hToBinStuck _
       have hPowAmt :
           __eo_ite (__eo_is_z (Term.Numeral runB))
               (__eo_ite (__eo_is_neg (Term.Numeral runB)) (Term.Numeral 0)
@@ -8271,7 +8395,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvashr_core
               (__eo_mk_apply (Term.UOp UserOp.int_pow2)
                 (Term.Numeral runB)) =
             Term.Numeral (native_int_pow2 runB) :=
-        EvaluateProofInternal.eo_int_pow2_literal_eq runB
+        EvaluateProofInternal.eo_int_pow2_literal_eq runB hRunBB
       have hDivTy :
           __eo_typeof
               (__eo_to_bin (Term.Numeral (native_nat_to_int w))
@@ -8285,7 +8409,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvashr_core
         rw [hRunA, hRunB] at hRunShiftEoBv
         rw [EvaluateProofInternal.eo_signed_bv_value_binary_eq_uts
           (w := native_nat_to_int w) (n := runA)
-          hRunWANonneg hRunACanon] at hRunShiftEoBv
+          hRunWANonneg hRunACanon (by
+            intro hS
+            apply hRunShiftNe
+            dsimp [runShift, EvaluateProofInternal.eo_eval_bvashr_rhs]
+            rw [hRunA, hS]
+            exact hToBinStuck _)] at hRunShiftEoBv
         simp [__eo_to_z] at hRunShiftEoBv
         rw [hPowAmt] at hRunShiftEoBv
         have hsimpa := hRunShiftEoBv
@@ -8309,7 +8438,12 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvashr_core
         rw [hRunA, hRunB]
         rw [EvaluateProofInternal.eo_signed_bv_value_binary_eq_uts
           (w := native_nat_to_int w) (n := runA)
-          hRunWANonneg hRunACanon]
+          hRunWANonneg hRunACanon (by
+            intro hS
+            apply hRunShiftNe
+            dsimp [runShift, EvaluateProofInternal.eo_eval_bvashr_rhs]
+            rw [hRunA, hS]
+            exact hToBinStuck _)]
         simp [__eo_to_z]
         rw [hPowAmt]
         have hsimpa := hToBin

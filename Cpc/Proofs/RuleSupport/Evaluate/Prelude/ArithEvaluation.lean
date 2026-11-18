@@ -284,7 +284,12 @@ theorem EvaluateProofInternal.eo_int_pow2_result_arg_typeof_int
 
 theorem EvaluateProofInternal.eo_int_pow2_body_typeof_int
     (x : Term)
-    (hTy : __eo_typeof x = Term.UOp UserOp.Int) :
+    (hTy : __eo_typeof x = Term.UOp UserOp.Int)
+    (hNe :
+      __eo_ite (__eo_is_z x)
+          (__eo_ite (__eo_is_neg x) (Term.Numeral 0)
+            (__eo_pow (Term.Numeral 2) x))
+          (__eo_mk_apply (Term.UOp UserOp.int_pow2) x) ≠ Term.Stuck) :
     __eo_typeof
         (__eo_ite (__eo_is_z x)
           (__eo_ite (__eo_is_neg x) (Term.Numeral 0)
@@ -294,12 +299,14 @@ theorem EvaluateProofInternal.eo_int_pow2_body_typeof_int
   cases x <;>
     simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
       __eo_pow, __eo_mk_apply, native_ite, native_teq, native_not,
-      native_and] at hTy ⊢
+      native_and] at hTy hNe ⊢
   all_goals
     first
     | rename_i n
       cases hNeg : native_zlt n 0 <;>
-        simp [hNeg, __eo_lit_type_Numeral, native_ite]
+        simp [hNeg, __eo_lit_type_Numeral, native_ite] at hNe ⊢
+      all_goals
+        try simp [hNe, __eo_lit_type_Numeral]
       all_goals
         change Term.UOp UserOp.Int = Term.UOp UserOp.Int
         rfl
@@ -310,7 +317,7 @@ theorem EvaluateProofInternal.eo_int_pow2_body_typeof_int
     | rfl
 
 theorem EvaluateProofInternal.eo_int_pow2_eval_numeral_to_smt
-    (n : native_Int) :
+    (n : native_Int) (hnBound : n < 4294967296) :
     __eo_to_smt
         (__eo_ite (__eo_is_z (Term.Numeral n))
           (__eo_ite (__eo_is_neg (Term.Numeral n)) (Term.Numeral 0)
@@ -320,11 +327,14 @@ theorem EvaluateProofInternal.eo_int_pow2_eval_numeral_to_smt
   by_cases hNeg : n < 0
   · simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
       native_ite, native_teq, native_int_pow2,
-      native_zexp_total, native_zlt, native_and, native_not, hNeg]
+      native_zexp_total, native_zlt, native_zleq, native_and, native_not, hNeg,
+      hnBound]
     rfl
-  · simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
+  · have hn0 : 0 ≤ n := Int.not_lt.mp hNeg
+    simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite, hn0,
       __eo_pow, native_ite, native_teq, native_int_pow2,
-      native_zexp_total, native_zlt, native_and, native_not, hNeg]
+      native_zexp_total, native_zlt, native_zleq, native_and, native_not, hNeg,
+      hnBound]
     rfl
 
 theorem EvaluateProofInternal.native_int_log_rec_two_eq_nat_log2_go
@@ -480,7 +490,19 @@ theorem EvaluateProofInternal.eo_int_ispow2_result_arg_typeof_int
 
 theorem EvaluateProofInternal.eo_int_ispow2_body_typeof_bool
     (x : Term)
-    (hTy : __eo_typeof x = Term.UOp UserOp.Int) :
+    (hTy : __eo_typeof x = Term.UOp UserOp.Int)
+    (hNe :
+        (let isNeg := __eo_is_neg x
+         let isZ := __eo_is_z x
+         __eo_ite isZ
+          (__eo_ite isNeg (Term.Boolean false)
+            (__eo_eq x
+              (__eo_pow (Term.Numeral 2)
+                (__eo_ite isZ
+                  (__eo_ite isNeg (Term.Numeral 0)
+                    (__eo_log (Term.Numeral 2) x))
+                  (__eo_mk_apply (Term.UOp UserOp.int_log2) x)))))
+          (__eo_mk_apply (Term.UOp UserOp.int_ispow2) x)) ≠ Term.Stuck) :
     __eo_typeof
         (let isNeg := __eo_is_neg x
          let isZ := __eo_is_z x
@@ -497,15 +519,16 @@ theorem EvaluateProofInternal.eo_int_ispow2_body_typeof_bool
   cases x <;>
     simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
       __eo_log, __eo_pow, __eo_eq, __eo_mk_apply, native_ite,
-      native_teq, native_not, native_and] at hTy ⊢
+      native_teq, native_not, native_and] at hTy hNe ⊢
   all_goals
     first
     | rename_i n
       cases hNeg : native_zlt n 0 <;>
-        simp [hNeg, __eo_lit_type_Numeral, native_ite]
+        simp [hNeg, __eo_lit_type_Numeral, native_ite] at hNe ⊢
       all_goals
-        change Term.Bool = Term.Bool
-        rfl
+        first
+        | (change Term.Bool = Term.Bool; rfl)
+        | (split_ifs at hNe ⊢ <;> simp_all <;> rfl)
     | change __eo_typeof_int_ispow2 (__eo_typeof _) = Term.Bool
       rw [hTy]
       rfl
