@@ -193,7 +193,7 @@ theorem upoly_derivative_rec_cpoly {P : Term} {p : ℝ[X]} (hP : CPoly P p) (i :
   | cons a p' l hp ih =>
       have hEq : __upoly_derivative_rec (UC a, p') (Term.Rational i) =
           upolyCons (i * a) (__upoly_derivative_rec p' (Term.Rational (i + 1))) := by
-        have h1 : native_mk_rational 1 1 = (1 : Rat) := by native_decide
+        have h1 : native_mk_rational 1 1 = (1 : Rat) := by decide +kernel
         simp [__upoly_derivative_rec, upolyCons, __eo_add, __eo_mul, native_qplus, native_qmult, h1]
       rw [hEq]
       have := upolyCons_cpoly (ih (i + 1) (canon_tail hcl)) (i * a)
@@ -208,7 +208,7 @@ theorem upoly_derivative_cpoly {P : Term} {p : ℝ[X]} (hP : CPoly P p) :
   | zero => simp [__upoly_derivative]; exact cpoly_zero
   | cons a p' l hp =>
       have hEq : __upoly_derivative (UC a, p') = __upoly_derivative_rec p' (Term.Rational 1) := by
-        have h1 : native_mk_rational 1 1 = (1 : Rat) := by native_decide
+        have h1 : native_mk_rational 1 1 = (1 : Rat) := by decide +kernel
         simp [__upoly_derivative, h1]
       rw [hEq]
       have := upoly_derivative_rec_cpoly ⟨l, hp, canon_tail hcl, rfl⟩ 1
@@ -427,7 +427,7 @@ private theorem eo_requires_eq_body' {x y z : Term} (h : __eo_requires x y z ≠
 
 private theorem qdiv_rat {a b : Rat} (hb : b ≠ 0) :
     __eo_qdiv (Term.Rational a) (Term.Rational b) = Term.Rational (a / b) := by
-  have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+  have h0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
   simp [__eo_qdiv, native_ite, native_qeq, h0, Ne.symm hb, native_qdiv_total]
 
 private theorem upoly_mul_stuck_left' (Q : Term) : __upoly_mul Term.Stuck Q = Term.Stuck := by
@@ -473,8 +473,8 @@ private theorem chain_cons_eq (a b ql cl rest : Term) (ha : a ≠ Term.Stuck) (h
             (__eo_gt (__upoly_deg b) (__upoly_deg c)))
             (__eo_gt (__eo_mul m k) (Term.Rational 0)))
           (__upoly_rem_seq_chain b c rest) (Term.Boolean false)) := by
-  have h1 : native_mk_rational 1 1 = (1 : Rat) := by native_decide
-  have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+  have h1 : native_mk_rational 1 1 = (1 : Rat) := by decide +kernel
+  have h0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
   rw [__upoly_rem_seq_chain.eq_def]
   simp only [seqCons, seqEntry]
   simp [h1, h0]
@@ -653,7 +653,7 @@ private theorem check_cons_eq (P Q q0 l0 q1 l1 rest : Term) (hP : P ≠ Term.Stu
               (__eo_qdiv (__upoly_lc (__upoly_of_list l1)) (__upoly_lc Q))) (Term.Rational 0)))
           (__upoly_rem_seq_chain (__upoly_of_list l0) (__upoly_of_list l1) rest)
           (Term.Boolean false)) := by
-  have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+  have h0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
   rw [__upoly_rem_seq_check.eq_def]
   simp only [seqCons, seqEntry]
   simp [h0]
@@ -729,7 +729,7 @@ theorem sign_variations_rec_eq : ∀ {t : Term} {vs : List Rat}, RatList t vs ->
   | nil => intro x; split <;> simp [__sign_variations_rec]
   | cons y q l hq ih =>
       intro x
-      have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+      have h0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
       have hEq : __sign_variations_rec (Term.Rational x)
           (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Rational y)) q) =
           __eo_ite (__eo_is_eq (Term.Rational y) (Term.Rational 0)) (__sign_variations_rec (Term.Rational x) q)
@@ -882,7 +882,7 @@ theorem seq_sign_variations (v : Term) (hv : v ≠ Term.Stuck) (g : ℝ[X] -> Si
     __sign_variations_rec (Term.Rational 0) (__cov_seq_values s v) =
       Term.Numeral (List.signVariations ((sturmSeq p q).map g) : Int) := by
   obtain ⟨vs, hvs, hmap⟩ := seq_values_gen v hv g helem hS
-  have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+  have h0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
   rw [sign_variations_rec_eq hvs 0]
   simp only [↓reduceIte]
   congr 2
@@ -981,7 +981,7 @@ theorem upoly_divides_sound {b : Term} {pb : ℝ[X]} (hb : CPoly b pb) (hb0 : pb
 
 private theorem upoly_of_term_atom_cpoly (x t : Term) (hx : x ≠ Term.Stuck)
     (h : upolyOfTermAtom x t ≠ Term.Stuck) : ∃ p, CPoly (upolyOfTermAtom x t) p := by
-  have hm1 : native_mk_rational 1 1 = (1 : Rat) := by native_decide
+  have hm1 : native_mk_rational 1 1 = (1 : Rat) := by decide +kernel
   by_cases hq : ∃ q : Rat, __eo_to_q t = Term.Rational q
   · rcases hq with ⟨q, hq⟩
     refine ⟨_, (show upolyCons q UZ = _ from ?_) ▸ upolyCons_cpoly cpoly_zero q⟩

@@ -56,7 +56,7 @@ private theorem prog_sgn_inv_intro_inv (p l r lo hi s sl sr : Term)
     __eo_prog_sgn_inv_intro p l r lo hi s sl sr =
       Term.Apply (Term.Apply (Term.UOp1 UserOp1._at_sgn_inv
         (__upoly_to_list (__upoly_of_term (__upoly_term_var p) p))) l) r := by
-  have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+  have h0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
   unfold __eo_prog_sgn_inv_intro at h ⊢
   split at h
   all_goals try exact absurd rfl h
@@ -227,7 +227,7 @@ private theorem sgn_inv_intro_sound (M : SmtModel) (hM : model_wf M)
     · exact Or.inl h
     · exact Or.inr ⟨c, a, b, d, rfl, hT'⟩
   -- the count of sign variations
-  have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+  have h0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
   have hV : ∀ v, v = MINF ∨ v = PINF ∨ (∃ a : Rat, v = Term.Rational a) ->
       ∃ n : Int, varsAt s v = Term.Numeral n := by
     rintro v (rfl | rfl | ⟨a, rfl⟩)

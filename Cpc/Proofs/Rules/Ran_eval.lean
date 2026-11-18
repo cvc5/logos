@@ -87,7 +87,7 @@ private theorem ran_eval_sound (M : SmtModel) (hM : model_wf M) (x r p X1 X2 : T
   subst hp'
   obtain ⟨hpA, hSem⟩ := covLit_true M hM neg rel p z hz hX2
   have hNot0 : ¬ litSem neg rel 0 := by
-    have hz0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+    have hz0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
     rw [hz0, cov_lit_holds_rat] at hHolds
     simpa using hHolds
   -- the polynomial

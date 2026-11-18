@@ -228,7 +228,7 @@ theorem eo_requires_left_ne_stuck {x y z : Term} (h : __eo_requires x y z ≠ Te
 
 private theorem cov_atom_poly_shape (A : Term) (h : __cov_atom_poly A ≠ Term.Stuck) :
     ∃ r : CovRel, ∃ p z, A = r.atom p z ∧ __eo_to_q z = Term.Rational 0 ∧ __cov_atom_poly A = p := by
-  have hz : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+  have hz : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
   unfold __cov_atom_poly at h ⊢
   split at h
   · obtain ⟨h1, h2⟩ := eo_requires_eq_body h
@@ -270,7 +270,7 @@ theorem cov_lit_poly_shape (F : Term) (h : __cov_lit_poly F ≠ Term.Stuck) :
 theorem cov_lit_holds_rat (neg : Bool) (r : CovRel) (p z : Term) (q : Rat) :
     __cov_lit_holds (covLit neg r p z) (Term.Rational q) =
       Term.Boolean (decide (litSem neg r (q : Real))) := by
-  have hz : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+  have hz : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
   cases neg <;> cases r <;>
     simp [covLit, litSem, CovRel.atom, CovRel.op, CovRel.holds, __cov_lit_holds,
       __cov_atom_holds, __eo_is_neg, __eo_gt, __eo_not, __eo_and, native_qlt, native_not,
@@ -765,7 +765,7 @@ theorem validRan_sturm {q : Term} {a b : Rat} {s : Term}
   obtain ⟨l, hl, hP⟩ := upoly_of_list_cpoly hPS
   cases ratList_unique hl hq
   obtain ⟨_, _, σ, hσ, Ps, hS, hsc⟩ := rem_seq_check_bridge hP (upoly_derivative_cpoly hP) hrem
-  have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+  have h0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
   rw [h0] at hvar
   simp only [sturm_vars_at hσ hS hsc] at hvar
   have hV : SturmTarski.signVariationsSturmAb (toPoly lst) (Polynomial.derivative (toPoly lst)) a b = 1 := by
@@ -1228,7 +1228,7 @@ theorem cov_is_root_sound (M : SmtModel) (hM : model_wf M) {P : Term} {pp : Poly
         __eo_ite (__eo_and (__eo_is_q (Term.Rational r)) (__eo_is_eq st Term.__eo_List_nil))
           (__eo_is_eq (__upoly_eval P (Term.Rational r)) (Term.Rational 0)) (Term.Boolean false) := by
       rw [__cov_is_root.eq_def]
-      have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+      have h0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
       split <;> simp_all
     rw [hEq] at h
     rcases eo_ite_true_cases h with ⟨_, h⟩ | ⟨_, h⟩
@@ -1249,7 +1249,7 @@ theorem cov_is_root_sound (M : SmtModel) (hM : model_wf M) {P : Term} {pp : Poly
                 (__sign_variations_rec (Term.Rational 0) (__cov_seq_values st b)))
               (Term.Boolean false)))
           (Term.Boolean false) := by
-      have h0 : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+      have h0 : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
       simp [__cov_is_root, validRan, h0]
     rw [hEq] at h
     rcases eo_ite_true_cases h with ⟨hV, h⟩ | ⟨_, h⟩

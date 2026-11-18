@@ -76,7 +76,7 @@ def upolyCons (a : Rat) (P : Term) : Term :=
     (Term.UOp UserOp._at__at_upoly_zero)
     (__eo_cons (Term.UOp UserOp._at__at_upoly) (Term.Rational a) P)
 
-theorem native_mk_rational_zero' : native_mk_rational 0 1 = (0 : Rat) := by native_decide
+theorem native_mk_rational_zero' : native_mk_rational 0 1 = (0 : Rat) := by decide +kernel
 
 theorem upolyCons_eq {P : Term} {l : List Rat} (h : UPolyWf P l) (a : Rat) :
     upolyCons a P =
@@ -338,7 +338,7 @@ theorem upoly_of_term_cases (x t : Term) (hx : x ≠ Term.Stuck) (ht : t ≠ Ter
     (∃ a, t = Term.Apply (Term.UOp UserOp.to_real) a ∧
         __upoly_of_term x t = __upoly_of_term x a) ∨
     __upoly_of_term x t = upolyOfTermAtom x t := by
-  have hm1 : native_mk_rational 1 1 = (1 : Rat) := by native_decide
+  have hm1 : native_mk_rational 1 1 = (1 : Rat) := by decide +kernel
   rw [__upoly_of_term.eq_def]
   split
   · exact absurd rfl hx
@@ -364,7 +364,7 @@ private theorem upoly_const_den (q : Rat) :
 private theorem upoly_of_term_atom_den {H : Term -> Prop} {ρ : Term -> Real} (hρ : OfTermVal H ρ)
     (x t : Term) (hx : x ≠ Term.Stuck) (h : upolyOfTermAtom x t ≠ Term.Stuck) :
     ∃ f, UPolyDen (upolyOfTermAtom x t) f ∧ ρ t = f (ρ x) := by
-  have hm1 : native_mk_rational 1 1 = (1 : Rat) := by native_decide
+  have hm1 : native_mk_rational 1 1 = (1 : Rat) := by decide +kernel
   by_cases hq : ∃ q : Rat, __eo_to_q t = Term.Rational q ∧ ρ t = q
   · rcases hq with ⟨q, hq, hρq⟩
     refine ⟨fun _ => (q : Real), ?_, hρq⟩
