@@ -139,6 +139,14 @@ theorem smtx_typeof_tuple_unit_translation :
       SmtType.Datatype (native_string_lit "@Tuple")
         (SmtDatatypeDecl.cons (native_string_lit "@Tuple")
           (SmtDatatype.sum SmtDatatypeCons.unit SmtDatatype.null) SmtDatatypeDecl.nil) := by
-  native_decide -- TODO-native
+  -- `__smtx_inhabited_type` and `__smtx_decl_inhabited` are defined by
+  -- well-founded recursion, which the kernel does not unfold, so `decide`
+  -- cannot evaluate this; their equation lemmas can.
+  simp [__smtx_typeof, __smtx_typeof_guard_wf, __smtx_type_wf, __smtx_type_wf_component,
+    __smtx_inhabited_type, __smtx_decl_inhabited, __smtx_dt_inhabited,
+    __smtx_dt_cons_inhabited, __smtx_type_wf_rec, __smtx_dd_has_dt, __smtx_decl_wf_rec,
+    __smtx_dt_wf_rec, __smtx_dt_cons_wf_rec, __smtx_typeof_dt_cons_rec, __smtx_dt_resolve,
+    __smtx_dd_lookup, __smtx_dtc_resolve, native_ite, native_and, native_or, native_not,
+    native_streq]
 
 end TranslationProofs
