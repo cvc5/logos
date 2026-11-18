@@ -713,7 +713,7 @@ theorem substitute_simul_apply_rotate_right_preserves_type_and_translation_of_ty
 
 private theorem smt_typeof_binary_one_one :
     __smtx_typeof (SmtTerm.Binary 1 1) = SmtType.BitVec 1 := by
-  native_decide
+  decide +kernel
 
 private theorem eo_typeof_at_bit_arg_bitvec_of_ne_stuck
     {A C : Term}

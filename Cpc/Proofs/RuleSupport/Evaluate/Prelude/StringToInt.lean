@@ -268,7 +268,17 @@ theorem EvaluateProofInternal.list_all_reverse_eq {α : Type} (p : α -> Bool) :
 
 theorem EvaluateProofInternal.str_to_int_result_string
     {str : native_String}
-    (hValid : native_string_valid str = true) :
+    (hValid : native_string_valid str = true)
+    (hNe :
+      __eo_ite (__eo_is_str (Term.String str))
+          (__eo_ite (__eo_eq (Term.String str) (Term.String []))
+            (Term.Numeral (-1 : native_Int))
+            (__str_to_int_eval_rec
+              (__eo_list_rev (Term.UOp UserOp.str_concat)
+                (__str_flatten (__str_nary_intro (Term.String str))))
+              (Term.Numeral 1) (Term.Numeral 0)))
+          (__eo_mk_apply (Term.UOp UserOp.str_to_int) (Term.String str)) ≠
+        Term.Stuck) :
     __eo_ite (__eo_is_str (Term.String str))
         (__eo_ite (__eo_eq (Term.String str) (Term.String []))
           (Term.Numeral (-1 : native_Int))
@@ -291,7 +301,16 @@ theorem EvaluateProofInternal.str_to_int_result_string
           Term.Boolean false by
         simp [__eo_eq, native_teq]]
       rw [eo_ite_false]
-      rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain]
+      have hLen : (c :: cs).length < 4294967296 :=
+        RuleProofs.str_flatten_nary_intro_string_len_lt (c :: cs) (by
+          intro hFlat
+          apply hNe
+          rw [hIsStr, eo_ite_true, show __eo_eq (Term.String (c :: cs)) (Term.String []) =
+              Term.Boolean false by
+            simp [__eo_eq, native_teq], eo_ite_false, hFlat]
+          simp [__eo_list_rev, __eo_is_list, __eo_requires, __str_to_int_eval_rec,
+            native_ite, native_teq])
+      rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain _ hLen]
       rw [EvaluateProofInternal.eo_list_rev_strCharChain]
       have hRevValid :
           native_string_valid (c :: cs).reverse = true := by

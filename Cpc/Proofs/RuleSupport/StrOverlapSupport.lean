@@ -528,11 +528,12 @@ theorem substrWord_eq_charChainTerm (w : native_String) :
       rfl
 
 /-- `flatten (nary_intro (String w))` is exactly the canonical char-chain. -/
-theorem flatten_nary_intro_string (w : native_String) :
+theorem flatten_nary_intro_string (w : native_String)
+    (hLen : w.length < 4294967296) :
     __str_flatten (__str_nary_intro (Term.String w)) = charChainTerm w := by
   cases w with
   | nil => rw [str_flatten_nary_intro_empty]; rfl
-  | cons c cs => rw [str_flatten_nary_intro_cons, substrWord_eq_charChainTerm]
+  | cons c cs => rw [str_flatten_nary_intro_cons c cs hLen, substrWord_eq_charChainTerm]
 
 /-- The rule's `gt` side condition (`= false`) forces a full overlap drop count. -/
 theorem overlap_cond_implies_overlapDrop_full (w w' : native_String)
@@ -540,8 +541,24 @@ theorem overlap_cond_implies_overlapDrop_full (w w' : native_String)
         (__str_overlap_rec (__str_flatten (__str_nary_intro (Term.String w)))
           (__str_flatten (__str_nary_intro (Term.String w')))) = Term.Boolean false) :
     overlapDrop w w' = w.length := by
-  rw [str_value_len_string, flatten_nary_intro_string, flatten_nary_intro_string,
-    str_overlap_rec_charChain] at hcond
+  have hrecNe : __str_overlap_rec (__str_flatten (__str_nary_intro (Term.String w)))
+      (__str_flatten (__str_nary_intro (Term.String w'))) ≠ Term.Stuck := by
+    intro hs
+    rw [hs] at hcond
+    cases __str_value_len (Term.String w) <;> simp [__eo_gt] at hcond
+  have hw := str_flatten_nary_intro_string_len_lt w (by
+    intro h
+    apply hrecNe
+    rw [h]
+    simp [__str_overlap_rec])
+  have hw' := str_flatten_nary_intro_string_len_lt w' (by
+    intro h
+    apply hrecNe
+    rw [h]
+    cases __str_flatten (__str_nary_intro (Term.String w)) <;>
+      simp [__str_overlap_rec])
+  rw [str_value_len_string, flatten_nary_intro_string w hw,
+    flatten_nary_intro_string w' hw', str_overlap_rec_charChain] at hcond
   simp only [__eo_gt, native_zlt] at hcond
   have hd : decide (Int.ofNat (overlapDrop w w') < Int.ofNat w.length) = false := by
     injection hcond
@@ -1657,7 +1674,8 @@ theorem charAtoms_shape (w : native_String) :
 
 def introWordView_string (M : SmtModel) (w : native_String) (S : SmtSeq) (T : SmtType)
     (hTy : __smtx_typeof (__eo_to_smt (Term.String w)) = SmtType.Seq T)
-    (hEval : __smtx_model_eval M (__eo_to_smt (Term.String w)) = SmtValue.Seq S) :
+    (hEval : __smtx_model_eval M (__eo_to_smt (Term.String w)) = SmtValue.Seq S)
+    (hflatNe : __str_flatten (__str_nary_intro (Term.String w)) ≠ Term.Stuck) :
     IntroWordView M (Term.String w) S T := by
   refine {
     atoms := w.map (fun ch => Term.String [ch]),
@@ -1669,7 +1687,8 @@ def introWordView_string (M : SmtModel) (w : native_String) (S : SmtSeq) (T : Sm
     hAtomTy := charAtoms_type w T hTy,
     hAtomShape := charAtoms_shape w
   }
-  · rw [flatten_nary_intro_string, ← atomChainTerm_charAtoms]
+  · rw [flatten_nary_intro_string w (str_flatten_nary_intro_string_len_lt w hflatNe),
+      ← atomChainTerm_charAtoms]
   · rw [str_value_len_string]
     simp
   · rw [show __eo_to_smt (Term.String w) = SmtTerm.String w from rfl] at hEval
@@ -3282,7 +3301,7 @@ theorem str_flatten_nary_intro_explicitCharEmpty_stuck :
         (Term.UOp1 UserOp1.seq_empty
           (Term.Apply (Term.UOp UserOp.Seq) (Term.UOp UserOp.Char)))) =
       Term.Stuck := by
-  native_decide
+  decide +kernel
 
 theorem str_is_compatible_explicitCharEmpty_cons_stuck (a : Term) (xs : List Term)
     (ex : Term)
@@ -3678,7 +3697,7 @@ theorem no_compat_dispatch (M : SmtModel) (hM : model_wf M)
     obtain ⟨nD, hLenD⟩ := hlenDEx
     rcases value_len_numeral_cases d nD hLenD with
         ⟨wd, rfl⟩ | ⟨ed, ssd, rfl⟩ | ⟨Ud, rfl⟩ | ⟨ed, rfl⟩
-    · exact finish vc (introWordView_string M wd Sd T hdTy hSd)
+    · exact finish vc (introWordView_string M wd Sd T hdTy hSd hdflatNe)
     · have hTailListD :
           __eo_is_list (Term.UOp UserOp.str_concat) ssd = Term.Boolean true :=
         concatSeqUnit_tail_list_of_gt_false ed ssd
@@ -3695,7 +3714,7 @@ theorem no_compat_dispatch (M : SmtModel) (hM : model_wf M)
   obtain ⟨nC, hLenC⟩ := hlenCEx
   rcases value_len_numeral_cases c nC hLenC with
       ⟨wc, rfl⟩ | ⟨ec, ssc, rfl⟩ | ⟨Uc, rfl⟩ | ⟨ec, rfl⟩
-  · exact dispatchD (introWordView_string M wc Sc T hcTy hSc)
+  · exact dispatchD (introWordView_string M wc Sc T hcTy hSc hcflatNe)
   · have hTailListC :
         __eo_is_list (Term.UOp UserOp.str_concat) ssc = Term.Boolean true :=
       concatSeqUnit_tail_list_of_gt_false ec ssc
@@ -3752,7 +3771,7 @@ theorem no_compat_dispatch_endpoint_left (M : SmtModel) (hM : model_wf M)
     obtain ⟨nD, hLenD⟩ := hlenDEx
     rcases value_len_numeral_cases d nD hLenD with
         ⟨wd, rfl⟩ | ⟨ed, ssd, rfl⟩ | ⟨Ud, rfl⟩ | ⟨ed, rfl⟩
-    · exact finish vc (introWordView_string M wd Sd T hdTy hSd)
+    · exact finish vc (introWordView_string M wd Sd T hdTy hSd hdflatNe)
     · have hTailListD :
           __eo_is_list (Term.UOp UserOp.str_concat) ssd = Term.Boolean true :=
         concatSeqUnit_tail_list_of_value_len_numeral ed ssd nD hLenD
@@ -3768,7 +3787,7 @@ theorem no_compat_dispatch_endpoint_left (M : SmtModel) (hM : model_wf M)
   obtain ⟨nC, hLenC⟩ := hlenCEx
   rcases value_len_numeral_cases c nC hLenC with
       ⟨wc, rfl⟩ | ⟨ec, ssc, rfl⟩ | ⟨Uc, rfl⟩ | ⟨ec, rfl⟩
-  · exact dispatchD (introWordView_string M wc Sc T hcTy hSc)
+  · exact dispatchD (introWordView_string M wc Sc T hcTy hSc hcflatNe)
   · have hTailListC :
         __eo_is_list (Term.UOp UserOp.str_concat) ssc = Term.Boolean true :=
       concatSeqUnit_tail_list_of_gt_false ec ssc
@@ -3845,7 +3864,7 @@ theorem no_compat_dispatch_endpoint_right (M : SmtModel) (hM : model_wf M)
     obtain ⟨nD, hLenD⟩ := hlenDEx
     rcases value_len_numeral_cases d nD hLenD with
         ⟨wd, rfl⟩ | ⟨ed, ssd, rfl⟩ | ⟨Ud, rfl⟩ | ⟨ed, rfl⟩
-    · exact finish vc (introWordView_string M wd Sd T hdTy hSd)
+    · exact finish vc (introWordView_string M wd Sd T hdTy hSd hdflatNe)
     · have hTailListD :
           __eo_is_list (Term.UOp UserOp.str_concat) ssd = Term.Boolean true :=
         concatSeqUnit_tail_list_of_value_len_numeral ed ssd nD hLenD
@@ -3861,7 +3880,7 @@ theorem no_compat_dispatch_endpoint_right (M : SmtModel) (hM : model_wf M)
   obtain ⟨nC, hLenC⟩ := hlenCEx
   rcases value_len_numeral_cases c nC hLenC with
       ⟨wc, rfl⟩ | ⟨ec, ssc, rfl⟩ | ⟨Uc, rfl⟩ | ⟨ec, rfl⟩
-  · exact dispatchD (introWordView_string M wc Sc T hcTy hSc)
+  · exact dispatchD (introWordView_string M wc Sc T hcTy hSc hcflatNe)
   · have hTailListC :
         __eo_is_list (Term.UOp UserOp.str_concat) ssc = Term.Boolean true :=
       concatSeqUnit_tail_list_of_value_len_numeral ec ssc nC hLenC

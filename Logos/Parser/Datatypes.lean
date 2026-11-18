@@ -178,7 +178,12 @@ private partial def normalizeSort (repr : DatatypeTerms T) (cfg : Config T R C C
       return t
   | .datatype s dd => do
       let t := repr.build (.datatype s dd)
-      if (← get).datatypes.any (fun d => d.value == t) then return t
+      let state ← get
+      -- The template of an arity-zero member of a parametric block stands for
+      -- its one instance, built with the block (`datatypeBindings`).
+      if let some (_, ty) := state.instances.find? (fun (app, _) => app.value == t) then
+        return ty.value
+      if state.datatypes.any (fun d => d.value == t) then return t
       let dd ← dd.mapM fun (name, d) => do
         let d ← d.mapM fun c => c.mapM fun t => normalizeSort repr cfg (repr.view t)
         return (name, d)

@@ -202,7 +202,7 @@ private theorem smt_typeof_concat_empty_right_eq
   have hRound := native_nat_to_int_int_to_nat_eq w hWNonneg
   have hBinary0Ty :
       __smtx_typeof (SmtTerm.Binary 0 0) = SmtType.BitVec 0 := by
-    native_decide
+    decide +kernel
   change __smtx_typeof (SmtTerm.concat (__eo_to_smt x) (SmtTerm.Binary 0 0)) =
     SmtType.BitVec (native_int_to_nat w)
   rw [typeof_concat_eq, hXSmtTy, hBinary0Ty]
@@ -337,7 +337,7 @@ private theorem concat_empty_right_value
       simpa [SmtEval.native_zeq] using hCanon
     exact hEq.symm
   have hPow0 : native_int_pow2 0 = (1 : native_Int) := by
-    native_decide
+    decide +kernel
   simp [__smtx_model_eval_concat, native_binary_concat, SmtEval.native_zplus,
     SmtEval.native_zmult, hPow0, hMod]
 

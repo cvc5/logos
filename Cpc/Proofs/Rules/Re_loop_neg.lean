@@ -123,7 +123,7 @@ private theorem eo_typeof_re_loop_eq_reglan_inv
       Tr = Term.UOp UserOp.RegLan := by
   have hNe : __eo_typeof_re_loop Tn n Tm m Tr ≠ Term.Stuck := by
     rw [h]
-    native_decide
+    decide +kernel
   unfold __eo_typeof_re_loop at h hNe
   split at h
   · cases h

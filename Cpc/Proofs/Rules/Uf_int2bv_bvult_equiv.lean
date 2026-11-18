@@ -83,14 +83,14 @@ private theorem typeof_args_of_prog_uf_int2bv_bvult_equiv_bool (t1 s1 : Term) :
   · subst t1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · by_cases hS1 : s1 = Term.Stuck
     · subst s1
       cases t1 <;> simp [__eo_prog_uf_int2bv_bvult_equiv] at hT1 hTy
       all_goals
         have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-          native_decide
+          decide +kernel
         exact False.elim (hStuckTy hTy)
     · rw [prog_uf_int2bv_bvult_equiv_eq_of_ne_stuck t1 s1 hT1 hS1] at hTy
       change __eo_typeof_eq

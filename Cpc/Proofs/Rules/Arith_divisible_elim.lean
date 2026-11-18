@@ -102,7 +102,7 @@ private theorem typeof_args_of_prog_arith_divisible_elim_bool
       (__eo_typeof_eq (__eo_typeof_div (__eo_typeof t) (__eo_typeof n))
         (__eo_typeof (Term.Numeral 0))) = Term.Bool at hResultTy
   have hZeroTy : __eo_typeof (Term.Numeral 0) = Term.Int := by
-    native_decide
+    decide +kernel
   rw [hZeroTy] at hResultTy
   cases hn : __eo_typeof n with
   | UOp op =>

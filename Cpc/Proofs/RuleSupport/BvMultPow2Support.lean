@@ -525,18 +525,18 @@ private theorem bv_mult_pow2_nil_eq_one
   rw [hZTy]
   change __eo_to_bin (Term.Numeral W) (Term.Numeral 1) = Term.Binary W 1
   change
-    native_ite (native_zleq W 4294967296)
+    native_ite (native_and (native_zleq 0 W) (native_zlt W 4294967296))
         (__eo_mk_binary W 1) Term.Stuck = Term.Binary W 1
-  cases hBound : native_zleq W 4294967296
+  cases hBound : native_and (native_zleq 0 W) (native_zlt W 4294967296)
   · exfalso
     apply hNilNe
     unfold bvMultPow2Nil
     rw [hZTy]
-    change native_ite (native_zleq W 4294967296)
+    change native_ite (native_and (native_zleq 0 W) (native_zlt W 4294967296))
         (__eo_mk_binary W 1) Term.Stuck = Term.Stuck
     rw [hBound]
     rfl
-  · simp [native_ite, hBound]
+  · simp only [native_ite, hBound, ite_true]
     simp [__eo_mk_binary, native_ite, hW0]
     have hPowGtOne : (1 : Int) < native_int_pow2 W := by
       have hWInt : (0 : Int) < W := by
@@ -1729,7 +1729,7 @@ theorem bvMultPow2Program_eq_term_of_type_bool
       rw [hSkeleton]
       simp [bvMultPow2ProgramSkeleton, __eo_mk_apply, hNil]
     rw [hProgramStuck] at hTy
-    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
     exact False.elim (hBad hTy)
   · by_cases hRhs : bvMultPow2Rhs z exponent u = Term.Stuck
     · have hProgramStuck :
@@ -1737,7 +1737,7 @@ theorem bvMultPow2Program_eq_term_of_type_bool
         rw [hSkeleton]
         simp [bvMultPow2ProgramSkeleton, __eo_mk_apply, hNil, hRhs]
       rw [hProgramStuck] at hTy
-      have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+      have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
       exact False.elim (hBad hTy)
     · rw [hSkeleton]
       simp [bvMultPow2ProgramSkeleton, bvMultPow2Term, bvMultPow2Lhs,

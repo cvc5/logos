@@ -549,12 +549,43 @@ private theorem intToBvElim_shape_of_ne_stuck (A : Term) :
       exact hShape ⟨w, n, b, hEq⟩
     exact False.elim (h hStuck)
 
+private theorem abconv_int_to_bv_elim_stuck_list (n p : Term) :
+    __abconv_int_to_bv_elim n Term.Stuck p = Term.Stuck := by
+  unfold __abconv_int_to_bv_elim
+  split <;> simp_all
+
+/-- Past the maximum width the generated zero list is stuck, and so is the
+expansion. -/
+private theorem intToBvExpanded_stuck_of_large
+    (w n : Term) (i : native_Int)
+    (hw : __eo_to_smt w = SmtTerm.Numeral i)
+    (hiLt : ¬ i < 4294967296) :
+    __eo_list_singleton_elim (Term.UOp UserOp.concat)
+        (__abconv_int_to_bv_elim n
+          (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+            (Term.Numeral 0) w)
+          (__eo_ite (__eo_is_z w)
+            (__eo_ite (__eo_is_neg w) (Term.Numeral 0)
+              (__eo_pow (Term.Numeral 2) w))
+            (Term.Apply (Term.UOp UserOp.int_pow2) w))) = Term.Stuck := by
+  have hwTerm : w = Term.Numeral i :=
+    TranslationProofs.eo_to_smt_eq_numeral w i hw
+  subst w
+  have hRepeat :
+      __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+          (Term.Numeral 0) (Term.Numeral i) = Term.Stuck := by
+    simp [__eo_list_repeat, native_ite, native_and, native_zlt, hiLt]
+  rw [hRepeat, abconv_int_to_bv_elim_stuck_list]
+  simp [__eo_list_singleton_elim, __eo_is_list, __eo_requires, native_ite,
+    native_teq]
+
 private theorem intToBvExpanded_eval_rel
     (M : SmtModel) (hM : model_wf M)
     (w n : Term) (i : native_Int)
     (hw : __eo_to_smt w = SmtTerm.Numeral i)
     (hnTy : __smtx_typeof (__eo_to_smt n) = SmtType.Int)
-    (hi0 : native_zleq 0 i = true) :
+    (hi0 : native_zleq 0 i = true)
+    (hiLt : i < 4294967296) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M
         (__eo_to_smt
@@ -576,6 +607,8 @@ private theorem intToBvExpanded_eval_rel
   have hiNotNeg : native_zlt i 0 = false := by
     simp [native_zlt]
     omega
+  have hiLtB : native_zlt i 4294967296 = true := by
+    simpa [native_zlt] using hiLt
   have hNatToInt : native_nat_to_int (native_int_to_nat i) = i := by
     simpa [native_nat_to_int, native_int_to_nat] using
       (Int.toNat_of_nonneg hiNonneg)
@@ -609,7 +642,7 @@ private theorem intToBvExpanded_eval_rel
         __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
             (Term.Numeral 0) (Term.Numeral i) =
           intToBvZeroList (native_int_to_nat i) := by
-      simp [__eo_list_repeat, native_ite, hiNotNeg,
+      simp [__eo_list_repeat, native_ite, native_and, hi0, hiLtB,
         intToBvZeroList_repeat_rec_eq]
     have hPow :
         __eo_ite (__eo_is_z (Term.Numeral i))
@@ -619,7 +652,7 @@ private theorem intToBvExpanded_eval_rel
           Term.Numeral (native_int_pow2 i) := by
       simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_pow,
         __eo_ite, native_ite, native_teq, native_and, native_not,
-        SmtEval.native_not, hiNotNeg, native_int_pow2]
+        SmtEval.native_not, hiNotNeg, hi0, hiLtB, native_int_pow2]
     rw [hRepeat, hPow]
     have hPowWidth :
         native_int_pow2 (native_nat_to_int (native_int_to_nat i)) =
@@ -731,12 +764,17 @@ by
                 exact hIntToBvNN
               rcases int_to_bv_args_of_non_none hIntToBvTermNN with
                 ⟨i, hw, hnTy, hi0⟩
+              have hiLt : i < 4294967296 := by
+                by_cases hiLt : i < 4294967296
+                · exact hiLt
+                · exact False.elim (hExpandedNe
+                    (intToBvExpanded_stuck_of_large w n i hw hiLt))
               have hRelExpanded :
                   RuleProofs.smt_value_rel
                     (__smtx_model_eval M (__eo_to_smt expanded))
                     (__smtx_model_eval M (__eo_to_smt intToBv)) := by
                 simpa [expanded, intToBv] using
-                  intToBvExpanded_eval_rel M hM w n i hw hnTy hi0
+                  intToBvExpanded_eval_rel M hM w n i hw hnTy hi0 hiLt
               have hRel :
                   RuleProofs.smt_value_rel
                     (__smtx_model_eval M (__eo_to_smt intToBv))

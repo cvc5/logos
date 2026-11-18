@@ -583,7 +583,7 @@ private theorem bv_urem_pow2_context
     simpa [hDForm] using hD0Raw
   have hDNonneg : native_zleq 0 D = true :=
     native_zleq_of_zlt_true _ _ hD0
-  have hGtZero : native_zlt (-1 : native_Int) 0 = true := by native_decide
+  have hGtZero : native_zlt (-1 : native_Int) 0 = true := by decide +kernel
   have hGtD : native_zlt (-1 : native_Int) D = true := by
     have hDInt : (0 : Int) ≤ D := by
       simpa [SmtEval.native_zleq] using hDNonneg
@@ -677,7 +677,7 @@ private theorem typed_bv_urem_pow2_term
     change __smtx_typeof
         (SmtTerm.int_to_bv (SmtTerm.Numeral A) (SmtTerm.Numeral 0)) = _
     exact smtx_typeof_int_to_bv_numerals A 0 hA0
-  have hZero0 : native_zleq 0 (0 : native_Int) = true := by native_decide
+  have hZero0 : native_zleq 0 (0 : native_Int) = true := by decide +kernel
   have hExtractTy :
       __smtx_typeof
           (__eo_to_smt
@@ -926,7 +926,7 @@ private theorem bv_udiv_pow2_value_local
     exact Int.emod_eq_of_lt hq0 hqW
   have hZeroModP : native_mod_total 0 (native_int_pow2 P) = 0 := by
     simp [native_mod_total]
-  have hPowZero : native_int_pow2 0 = 1 := by native_decide
+  have hPowZero : native_int_pow2 0 = 1 := by decide +kernel
   have hWidthExtract : N + 1 + -P = D := by
     rw [hN]
     rw [Int.sub_add_cancel]
@@ -1096,7 +1096,7 @@ private theorem bv_urem_pow2_value_local
     exact Int.emod_eq_of_lt hp0 hpW
   have hZeroModA : native_mod_total 0 (native_int_pow2 A) = 0 := by
     simp [native_mod_total]
-  have hPowZero : native_int_pow2 0 = 1 := by native_decide
+  have hPowZero : native_int_pow2 0 = 1 := by decide +kernel
   have hDivOne : native_div_total p (native_int_pow2 0) = p := by
     simp [native_div_total, hPowZero]
   have hDivOne' : native_div_total p 1 = p := by

@@ -419,6 +419,8 @@ import Cpc.Proofs.Rules.Sets_minus_member
 import Cpc.Proofs.Rules.Sets_union_member
 import Cpc.Proofs.Rules.Sets_choose_singleton
 import Cpc.Proofs.Rules.Sets_minus_self
+import Cpc.Proofs.Rules.Sets_union_self
+import Cpc.Proofs.Rules.Sets_inter_self
 import Cpc.Proofs.Rules.Sets_is_empty_elim
 import Cpc.Proofs.Rules.Sets_is_singleton_elim
 import Cpc.Proofs.Rules.Str_eq_ctn_false
@@ -2711,6 +2713,16 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_sets_minus_self_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | sets_union_self =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_sets_union_self_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | sets_inter_self =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_sets_inter_self_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | sets_is_empty_elim =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by

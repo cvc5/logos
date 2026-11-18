@@ -3207,7 +3207,7 @@ private def cexD : Datatype :=
 example :
     __eo_to_smt_datatype (__eo_dt_lift cexS cexDRef cexD) ≠
       __smtx_dt_lift cexS (__eo_to_smt_datatype cexDRef) (__eo_to_smt_datatype cexD) := by
-  native_decide
+  decide +kernel
 
 /-- Therefore the universally-quantified commutation `eo_to_smt_datatype_lift` cannot hold. -/
 theorem eo_to_smt_datatype_lift_not_general :
@@ -3215,7 +3215,7 @@ theorem eo_to_smt_datatype_lift_not_general :
         __eo_to_smt_datatype (__eo_dt_lift s dRef d) =
           __smtx_dt_lift s (__eo_to_smt_datatype dRef) (__eo_to_smt_datatype d)) := by
   intro h
-  exact absurd (h cexS cexDRef cexD) (by native_decide)
+  exact absurd (h cexS cexDRef cexD) (by decide +kernel)
 
 /-! ### Concrete refutation of unconstrained substitution
 
@@ -3251,12 +3251,12 @@ private def cexSubstInto : Datatype :=
     Datatype.null
 
 example : cexSubstTarget1 ≠ cexSubstTarget2 := by
-  native_decide
+  decide +kernel
 
 example :
     __eo_to_smt_datatype cexSubstTarget1 =
       __eo_to_smt_datatype cexSubstTarget2 := by
-  native_decide
+  decide +kernel
 
 example :
     __eo_to_smt_datatype
@@ -3267,7 +3267,7 @@ example :
         (__smtx_dt_lift cexS (__eo_to_smt_datatype cexSubstTarget1)
           (__eo_to_smt_datatype cexSubstReplacement))
         (__eo_to_smt_datatype cexSubstTarget1) := by
-  native_decide
+  decide +kernel
 
 example :
     __eo_to_smt_datatype
@@ -3275,7 +3275,7 @@ example :
       __smtx_dt_substitute cexSubstSub
         (__eo_to_smt_datatype cexSubstReplacement)
         (__eo_to_smt_datatype cexSubstInto) := by
-  native_decide
+  decide +kernel
 
 theorem eo_to_smt_datatype_substitute_not_general :
     ¬ (∀ (sub : native_String) (d0 d : Datatype),
@@ -3289,7 +3289,7 @@ theorem eo_to_smt_datatype_substitute_not_general :
         __smtx_dt_substitute cexSubstSub
           (__eo_to_smt_datatype cexSubstReplacement)
           (__eo_to_smt_datatype cexSubstInto) by
-      native_decide)
+      decide +kernel)
     (h cexSubstSub cexSubstReplacement cexSubstInto)
 
 mutual

@@ -22,6 +22,23 @@ private theorem ubv_to_int_range_shape_of_ne_stuck (A : Term) :
       exact hShape ⟨b, hEq⟩
     exact False.elim (h hStuck)
 
+private theorem eo_pow_numeral_of_bound (a n : native_Int)
+    (h0 : 0 ≤ n) (h : n < 4294967296) :
+    __eo_pow (Term.Numeral a) (Term.Numeral n) =
+      Term.Numeral (native_zexp_total a n) := by
+  have hc : native_and (native_zleq 0 n) (native_zlt n 4294967296) = true := by
+    simp [native_and, native_zleq, native_zlt, SmtEval.native_and,
+      SmtEval.native_zleq, SmtEval.native_zlt, h0, h]
+  simp only [__eo_pow, hc, native_ite, ite_true]
+
+private theorem eo_pow_numeral_of_not_bound (a n : native_Int)
+    (h : ¬ n < 4294967296) :
+    __eo_pow (Term.Numeral a) (Term.Numeral n) = Term.Stuck := by
+  have hc : native_and (native_zleq 0 n) (native_zlt n 4294967296) = false := by
+    simp [native_and, native_zlt, SmtEval.native_and, SmtEval.native_zlt, h]
+  simp only [__eo_pow, hc, native_ite]
+  rfl
+
 /-- The bound appearing in the conclusion, once the bit-width is known. -/
 private def ubvRangeBound (w : native_Nat) : Term :=
   Term.Numeral (native_zexp_total 2 (native_nat_to_int w))
@@ -41,7 +58,9 @@ private def ubvRangeConclusion (b : Term) (w : native_Nat) : Term :=
 
 private theorem ubv_to_int_range_prog_eq
     (b : Term) (w : native_Nat)
-    (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w) :
+    (hbTy : __smtx_typeof (__eo_to_smt b) = SmtType.BitVec w)
+    (hNe : __eo_prog_ubv_to_int_range
+      (Term.Apply (Term.UOp UserOp.ubv_to_int) b) ≠ Term.Stuck) :
     __eo_prog_ubv_to_int_range (Term.Apply (Term.UOp UserOp.ubv_to_int) b) =
       ubvRangeConclusion b w := by
   have hbTrans : RuleProofs.eo_has_smt_translation b := by
@@ -63,12 +82,27 @@ private theorem ubv_to_int_range_prog_eq
     rfl
   have hnot : ¬ ((native_nat_to_int w) < 0) := by
     simp [native_nat_to_int]
-  rw [__eo_prog_ubv_to_int_range.eq_1]
-  simp only [hWidth]
-  simp [ubvRangeConclusion, ubvRangeBound, __eo_is_z, __eo_is_z_internal,
-    __eo_is_neg, __eo_ite, __eo_pow, __eo_mk_apply, native_ite, native_teq,
-    native_not, native_and, SmtEval.native_not, SmtEval.native_and,
-    native_zlt, SmtEval.native_zlt, hnot]
+  rw [__eo_prog_ubv_to_int_range.eq_1] at hNe ⊢
+  simp only [hWidth] at hNe ⊢
+  by_cases hB : native_nat_to_int w < 4294967296
+  · have h0 : (0 : native_Int) ≤ native_nat_to_int w := by
+      simp [native_nat_to_int]
+    have hp := eo_pow_numeral_of_bound 2 (native_nat_to_int w) h0 hB
+    have hz : __eo_is_z (Term.Numeral (native_nat_to_int w)) = Term.Boolean true := rfl
+    have hn : __eo_is_neg (Term.Numeral (native_nat_to_int w)) = Term.Boolean false := by
+      simp [__eo_is_neg, native_zlt, SmtEval.native_zlt, hnot]
+    rw [hz, hn]
+    simp only [__eo_ite, native_ite, native_teq, hp]
+    rfl
+  · exfalso
+    apply hNe
+    have hp := eo_pow_numeral_of_not_bound 2 (native_nat_to_int w) hB
+    have hz : __eo_is_z (Term.Numeral (native_nat_to_int w)) = Term.Boolean true := rfl
+    have hn : __eo_is_neg (Term.Numeral (native_nat_to_int w)) = Term.Boolean false := by
+      simp [__eo_is_neg, native_zlt, SmtEval.native_zlt, hnot]
+    rw [hz, hn]
+    simp only [__eo_ite, native_ite, native_teq, hp]
+    rfl
 
 private theorem eo_interprets_leq_of_numerals
     (M : SmtModel) (x y : Term) (a c : native_Int)
@@ -156,7 +190,7 @@ by
                     (op := SmtTerm.ubv_to_int) (ret := SmtType.Int)
                     (by rw [smtx_typeof_ubv_to_int_term_eq]) hUbvNN with
                 ⟨w, hbTy⟩
-              have hProgEq := ubv_to_int_range_prog_eq b w hbTy
+              have hProgEq := ubv_to_int_range_prog_eq b w hbTy hProgNe'
               rw [hProgEq]
               -- Evaluate the bit-vector argument.
               have hbNN : term_has_non_none_type (__eo_to_smt b) := by

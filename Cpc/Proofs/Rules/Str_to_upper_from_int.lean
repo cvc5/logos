@@ -40,7 +40,7 @@ private theorem typeof_arg_of_prog_str_to_upper_from_int_bool (n1 : Term) :
   · subst n1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · rw [prog_str_to_upper_from_int_eq_of_ne_stuck n1 hN1] at hTy
     change __eo_typeof_eq

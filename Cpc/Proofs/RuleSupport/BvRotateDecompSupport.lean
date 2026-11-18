@@ -494,7 +494,7 @@ theorem typed_bv_rotate_decomp_term
             (SmtTerm.rotate_right (SmtTerm.Numeral i) (__eo_to_smt x)) = _
         rw [typeof_rotate_right_eq]
         simp [__smtx_typeof_rotate_right, hXSmtTy, native_ite, hi0]
-  have hZero0 : native_zleq 0 (0 : native_Int) = true := by native_decide
+  have hZero0 : native_zleq 0 (0 : native_Int) = true := by decide +kernel
   have hExt1Ty :
       __smtx_typeof
           (__eo_to_smt

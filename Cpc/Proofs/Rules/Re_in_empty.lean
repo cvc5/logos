@@ -83,7 +83,7 @@ private theorem typed___eo_prog_re_in_empty_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hProg :
       __eo_prog_re_in_empty a1 = Term.Apply (Term.Apply Term.eq lhs) rhs := by
@@ -109,7 +109,7 @@ private theorem facts___eo_prog_re_in_empty_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hProg :
       __eo_prog_re_in_empty a1 = Term.Apply (Term.Apply Term.eq lhs) rhs := by

@@ -338,7 +338,7 @@ theorem typed_usubo_term (x y n : Term) :
     unfold __smtx_typeof_extract
     simp only
     rw [hi0, hiLtW, hOne]
-    native_decide
+    decide +kernel
   have hOneSmtTy : __smtx_typeof (__eo_to_smt usuboOne) =
       SmtType.BitVec 1 := by
     simpa [usuboOne, native_int_to_nat, SmtEval.native_int_to_nat]

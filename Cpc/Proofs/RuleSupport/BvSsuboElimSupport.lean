@@ -574,7 +574,7 @@ theorem eval_bvSsuboRhs
 private theorem bvSsuboFormula_eq_sign_circuit (sx sy sd : Bool) :
     bvSsuboFormula sx sy sd =
       ((!sx && sy && sd) || (sx && !sy && !sd)) := by
-  cases sx <;> cases sy <;> cases sd <;> native_decide
+  cases sx <;> cases sy <;> cases sd <;> decide +kernel
 
 theorem bvSsuboFormula_eq_ssubOverflow
     (W A B : Nat) (hA : A < 2 ^ W) (hB : B < 2 ^ W) :

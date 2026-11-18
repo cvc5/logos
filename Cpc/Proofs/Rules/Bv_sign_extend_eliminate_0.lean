@@ -30,7 +30,7 @@ private theorem typeof_arg_of_prog_bv_sign_extend_eliminate_0_bool (x1 : Term) :
   · subst x1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · rw [prog_bv_sign_extend_eliminate_0_eq_of_ne_stuck x1 hX1] at hTy
     change __eo_typeof_eq
@@ -287,7 +287,7 @@ private theorem native_binary_uts_mod_self_of_canonical
     subst w
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hnEq : n = 0 := by
       have hlt : n < 1 := by
         simpa [hPow0] using hRange.2

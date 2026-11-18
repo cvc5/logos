@@ -1218,7 +1218,7 @@ theorem findMem (M : SmtModel) :
           (Term.Numeral k) = Term.Numeral (-1 : native_Int) from by
         cases a <;> first | (exact absurd rfl ha) | rfl,
         show __eo_is_neg (Term.Numeral (-1 : native_Int)) = Term.Boolean true from by
-          native_decide] at hneg
+          decide +kernel] at hneg
       cases hneg
   | case3 t hc1 hc2 =>
       intro hTL

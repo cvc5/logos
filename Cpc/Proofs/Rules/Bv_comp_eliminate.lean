@@ -39,14 +39,14 @@ private theorem typeof_args_of_prog_bv_comp_eliminate_bool (x1 y1 : Term) :
   · subst x1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · by_cases hY1 : y1 = Term.Stuck
     · subst y1
       cases x1 <;> simp [__eo_prog_bv_comp_eliminate] at hX1 hTy
       all_goals
         have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-          native_decide
+          decide +kernel
         exact False.elim (hStuckTy hTy)
     · rw [prog_bv_comp_eliminate_eq_of_ne_stuck x1 y1 hX1 hY1] at hTy
       change __eo_typeof_eq
@@ -182,7 +182,7 @@ private theorem smt_typeof_bv_one_one :
           true :=
       native_mod_total_canonical 1 1
     have hNonneg : native_zleq 0 1 = true := by
-      native_decide
+      decide +kernel
     simp [SmtEval.native_and, native_ite, hMod, hNonneg]
   exact TranslationProofs.smtx_typeof_binary_of_non_none 1 (native_mod_total 1 (native_int_pow2 1)) hNN
 
@@ -203,7 +203,7 @@ private theorem smt_typeof_bv_zero_one :
           true :=
       native_mod_total_canonical 1 0
     have hNonneg : native_zleq 0 1 = true := by
-      native_decide
+      decide +kernel
     simp [SmtEval.native_and, native_ite, hMod, hNonneg]
   exact TranslationProofs.smtx_typeof_binary_of_non_none 1 (native_mod_total 0 (native_int_pow2 1)) hNN
 
@@ -307,10 +307,10 @@ private theorem eval_bv_one_one (M : SmtModel) :
         (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral 1)) (Term.Numeral 1))) =
       SmtValue.Binary 1 1 := by
   have hNonneg : native_zleq 0 1 = true := by
-    native_decide
+    decide +kernel
   have hEval := eval_bv_const M 1 1 hNonneg
   have hMod : native_mod_total 1 (native_int_pow2 1) = 1 := by
-    native_decide
+    decide +kernel
   simpa [hMod] using hEval
 
 private theorem eval_bv_zero_one (M : SmtModel) :
@@ -318,10 +318,10 @@ private theorem eval_bv_zero_one (M : SmtModel) :
         (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral 1)) (Term.Numeral 0))) =
       SmtValue.Binary 1 0 := by
   have hNonneg : native_zleq 0 1 = true := by
-    native_decide
+    decide +kernel
   have hEval := eval_bv_const M 0 1 hNonneg
   have hMod : native_mod_total 0 (native_int_pow2 1) = 0 := by
-    native_decide
+    decide +kernel
   simpa [hMod] using hEval
 
 private theorem eval_bvcomp_eliminate
