@@ -766,14 +766,13 @@ private theorem eo_list_repeat_rec_zero_eq :
       simp [__eo_list_repeat_rec, zeroIntListTerm, eo_list_repeat_rec_zero_eq n,
         __eo_mk_apply, zeroIntListTerm_ne_stuck]
 
-private theorem eo_list_repeat_zero_eq (n : Nat) :
+private theorem eo_list_repeat_zero_eq (n : Nat) (hn : n < 4294967296) :
     __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
         (Term.Numeral 0) (Term.Numeral (Int.ofNat n)) =
       zeroIntListTerm n := by
-  have hnot : native_zlt (↑n : native_Int) 0 = false := by
-    simp [native_zlt]
-  simp [__eo_list_repeat, native_ite, native_int_to_nat, hnot,
-    eo_list_repeat_rec_zero_eq]
+  have hnot : ¬ 4294967296 ≤ n := by omega
+  simp [__eo_list_repeat, native_ite, native_and, native_zleq, native_zlt,
+    native_int_to_nat, hnot, eo_list_repeat_rec_zero_eq]
 
 private theorem intRangeTerm_ne_stuck :
     ∀ n start, intRangeTerm start n ≠ Term.Stuck
@@ -1002,8 +1001,53 @@ private theorem eo_list_concat_str_concat_substrWord_empty
         str_concat_empty_is_list, eo_requires_true_true,
         eo_list_concat_rec_substrWord_empty s n start]
 
+/-- Flattening a word longer than the maximum list length is stuck. -/
+theorem str_flatten_nary_intro_cons_stuck
+    (c : native_Char) (cs : native_String)
+    (hLen : ¬ (c :: cs).length < 4294967296) :
+    __str_flatten (__str_nary_intro (Term.String (c :: cs))) = Term.Stuck := by
+  rw [str_nary_intro_cons c cs]
+  have hIsStr : __eo_is_str (Term.String (c :: cs)) = Term.Boolean true := by
+    simp [__eo_is_str, __eo_is_str_internal, native_teq, SmtEval.native_and,
+      SmtEval.native_not]
+  have hRepeat :
+      __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+          (Term.Numeral 0) (Term.Numeral (Int.ofNat (c :: cs).length)) =
+        Term.Stuck := by
+    have hLe : ¬ ((cs.length : Int) + 1 < 4294967296) := by
+      simp only [List.length_cons] at hLen
+      omega
+    simp [__eo_list_repeat, native_ite, native_and, native_zlt, hLe]
+  have hWordRec : ∀ t,
+      __str_flatten_word_rec Term.Stuck t = Term.Stuck := by
+    intro t
+    unfold __str_flatten_word_rec
+    split <;> simp_all
+  have hConcat : ∀ x,
+      __eo_list_concat (Term.UOp UserOp.str_concat) Term.Stuck x =
+        Term.Stuck := by
+    intro x
+    simp [__eo_list_concat, __eo_is_list, __eo_requires, native_ite,
+      native_teq]
+  simp only [__str_flatten, __eo_len, native_str_len, __eo_is_neg]
+  rw [hIsStr]
+  simp only [__eo_ite, native_teq, native_ite]
+  rw [hRepeat]
+  simp [__iota_rec, __eo_requires, native_ite, native_teq, native_not,
+    hWordRec, hConcat]
+
+theorem str_flatten_nary_intro_cons_len_lt
+    (c : native_Char) (cs : native_String)
+    (hNe : __str_flatten (__str_nary_intro (Term.String (c :: cs))) ≠
+      Term.Stuck) :
+    (c :: cs).length < 4294967296 := by
+  by_cases hLen : (c :: cs).length < 4294967296
+  · exact hLen
+  · exact False.elim (hNe (str_flatten_nary_intro_cons_stuck c cs hLen))
+
 theorem str_flatten_nary_intro_cons
-    (c : native_Char) (cs : native_String) :
+    (c : native_Char) (cs : native_String)
+    (hLen : (c :: cs).length < 4294967296) :
     __str_flatten (__str_nary_intro (Term.String (c :: cs))) =
       substrWord (c :: cs) 0 (c :: cs).length := by
   rw [str_nary_intro_cons c cs]
@@ -1041,7 +1085,7 @@ theorem str_flatten_nary_intro_cons
   simp only [__str_flatten, __eo_len, native_str_len, __eo_is_neg]
   rw [hIsStr]
   simp only [__eo_ite, native_teq, native_ite]
-  rw [hTail, hReqLen, eo_list_repeat_zero_eq, iota_zero_list_eq_range,
+  rw [hTail, hReqLen, eo_list_repeat_zero_eq _ hLen, iota_zero_list_eq_range,
     str_flatten_word_rec_range_eq_substrWord]
   exact eo_list_concat_str_concat_substrWord_empty (c :: cs) (c :: cs).length 0
 
@@ -8226,7 +8270,12 @@ theorem smtx_model_eval_str_in_re_eval_side
   | cons c cs =>
       have hValid : native_string_valid (c :: cs) = true :=
         native_string_valid_of_smtx_typeof_eo_string (c :: cs) hSTy
-      rw [str_flatten_nary_intro_cons] at hSideNe ⊢
+      have hLen : (c :: cs).length < 4294967296 := by
+        apply str_flatten_nary_intro_cons_len_lt c cs
+        intro hStuck
+        rw [hStuck] at hSideNe
+        exact hSideNe (by cases r <;> rfl)
+      rw [str_flatten_nary_intro_cons c cs hLen] at hSideNe ⊢
       exact
         smtx_model_eval_str_in_re_eval_substrWord M hM (c :: cs) r rv
           hValid hRTy hREval hSideNe

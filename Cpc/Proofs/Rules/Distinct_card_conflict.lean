@@ -684,11 +684,18 @@ private theorem compute_card_guard_cases
                       using hElemEq
                   have hGuardInt :
                       native_int_pow2 w < Int.ofNat len := by
-                    simpa [__compute_card, __eo_gt, __eo_ite, __eo_is_z,
-                      __eo_is_z_internal, __eo_is_neg, __eo_pow, native_ite,
-                      native_teq, native_and, native_not, SmtEval.native_not,
-                      native_zlt, native_zexp_total, native_int_pow2, hnot]
-                      using hGuard
+                    by_cases hB : w < 4294967296
+                    · simpa [__compute_card, __eo_gt, __eo_ite, __eo_is_z,
+                        __eo_is_z_internal, __eo_is_neg, __eo_pow, native_ite,
+                        native_teq, native_and, native_not, SmtEval.native_not,
+                        native_zlt, native_zexp_total, native_int_pow2, hnot,
+                        hWidthBool, hB]
+                        using hGuard
+                    · exfalso
+                      simp [__compute_card, __eo_gt, __eo_ite, __eo_is_z,
+                        __eo_is_z_internal, __eo_is_neg, __eo_pow, native_ite,
+                        native_teq, native_and, native_not, SmtEval.native_not,
+                        native_zlt, hnot, hB] at hGuard
                   have hWidthEq :
                       w = native_nat_to_int (native_int_to_nat w) := by
                     calc
