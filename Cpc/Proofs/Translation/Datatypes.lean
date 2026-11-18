@@ -18,7 +18,7 @@ namespace TranslationProofs
 /-- Computes `__eo_typeof` for `tuple_unit`. -/
 @[simp] theorem eo_typeof_tuple_unit :
     __eo_typeof (Term.UOp UserOp.tuple_unit) = (Term.UOp UserOp.UnitTuple) := by
-  native_decide
+  decide +kernel
 
 /-- Simplifies EO-to-SMT translation for `term_tuple_unit`. -/
 @[simp] theorem eo_to_smt_term_tuple_unit :
@@ -139,6 +139,6 @@ theorem smtx_typeof_tuple_unit_translation :
       SmtType.Datatype (native_string_lit "@Tuple")
         (SmtDatatypeDecl.cons (native_string_lit "@Tuple")
           (SmtDatatype.sum SmtDatatypeCons.unit SmtDatatype.null) SmtDatatypeDecl.nil) := by
-  native_decide
+  native_decide -- TODO-native
 
 end TranslationProofs

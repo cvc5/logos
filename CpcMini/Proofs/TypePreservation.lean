@@ -69,7 +69,7 @@ private theorem mini_result_components_wf_dt_cons_rec
 
 private theorem mini_seq_char_wf :
     __smtx_type_wf (SmtType.Seq SmtType.Char) = true := by
-  native_decide
+  decide +kernel
 
 private theorem mini_generic_apply_type_of_not_special
     {f x : SmtTerm}

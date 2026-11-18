@@ -810,7 +810,7 @@ theorem eval_bv_umulo_expanded
     have hCond :
         __eo_eq (Term.Numeral (native_nat_to_int 1)) (Term.Numeral 1) =
           Term.Boolean true := by
-      native_decide
+      decide +kernel
     rw [hCond]
     simp [__eo_ite, native_ite, native_teq]
     rw [hOrigEval]
@@ -1013,7 +1013,7 @@ theorem nil_bvmul_ne_of_bvUmuloExpanded_ne
             (Term.Apply (Term.UOp UserOp.BitVec)
               (Term.Numeral (native_nat_to_int 2))) =
           Term.Binary (native_nat_to_int 2) 1 := by
-      native_decide
+      decide +kernel
     rw [hNilOk] at hNil
     cases hNil
   · intro hNil

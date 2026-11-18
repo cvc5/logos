@@ -174,13 +174,13 @@ private theorem typed___eo_prog_str_replace_re_all_none_impl
     intro hStuck
     rw [hStuck] at hTTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hTTy
   have hReplNotStuck : repl ≠ Term.Stuck := by
     intro hStuck
     rw [hStuck] at hReplTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hReplTy
   have hProg :
       __eo_prog_str_replace_re_all_none t repl = Term.Apply (Term.Apply Term.eq lhs) rhs := by
@@ -212,13 +212,13 @@ private theorem facts___eo_prog_str_replace_re_all_none_impl
     intro hStuck
     rw [hStuck] at hTTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hTTy
   have hReplNotStuck : repl ≠ Term.Stuck := by
     intro hStuck
     rw [hStuck] at hReplTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hReplTy
   have hProg :
       __eo_prog_str_replace_re_all_none t repl = Term.Apply (Term.Apply Term.eq lhs) rhs := by

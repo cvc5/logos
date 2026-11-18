@@ -132,13 +132,13 @@ theorem EvaluateProofInternal.sbv_to_int_payload_eq_uts_core
     subst w
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hnEq : n = 0 := by
       have hlt : n < 1 := by
         simpa [hPow0] using hRange.2
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange.1
     subst n
-    native_decide
+    decide +kernel
 
 def EvaluateProofInternal.eo_eval_sbv_to_int_rhs (x : Term) : Term :=
   let _v0 := __run_evaluate x
@@ -170,13 +170,13 @@ theorem EvaluateProofInternal.eo_eval_sbv_to_int_rhs_binary_eq_uts
   · subst w
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hnEq : n = 0 := by
       have hlt : n < 1 := by
         simpa [hPow0] using hRange.2
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange.1
     subst n
-    native_decide
+    decide +kernel
   · have hw0Int : 0 <= w := by
       simpa [native_zleq, SmtEval.native_zleq] using hw0
     have hwpos : 0 < w := by
@@ -251,7 +251,7 @@ theorem EvaluateProofInternal.eo_eval_sbv_to_int_rhs_arg_binary_of_pos_typeof_in
     have hwz : ¬ w = 0 := by
       intro h
       subst w
-      exact (by native_decide : ¬ (0 : native_Int) < 0) hwpos
+      exact (by decide +kernel : ¬ (0 : native_Int) < 0) hwpos
     have h0w : ¬ (0 : native_Int) = w := by
       intro h
       exact hwz h.symm
@@ -306,7 +306,7 @@ theorem EvaluateProofInternal.eo_eval_sbv_to_int_rhs_arg_binary_of_pos_run_typeo
     have hkz : ¬ k = 0 := by
       intro h
       subst k
-      exact (by native_decide : ¬ (0 : native_Int) < 0) hkpos
+      exact (by decide +kernel : ¬ (0 : native_Int) < 0) hkpos
     have h0k : ¬ (0 : native_Int) = k := by
       intro h
       exact hkz h.symm
@@ -352,7 +352,7 @@ theorem EvaluateProofInternal.eo_eval_sbv_to_int_rhs_typeof_int_of_pos_run_typeo
     have hkz : ¬ k = 0 := by
       intro h
       subst k
-      exact (by native_decide : ¬ (0 : native_Int) < 0) hkpos
+      exact (by decide +kernel : ¬ (0 : native_Int) < 0) hkpos
     have h0k : ¬ (0 : native_Int) = k := by
       intro h
       exact hkz h.symm

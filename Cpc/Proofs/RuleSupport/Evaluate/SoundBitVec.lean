@@ -705,7 +705,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_is_int_core
       rw [hFirst] at hEvalTy <;>
       simp [__eo_eq, __eo_mk_apply] at hEvalTy <;>
       exact False.elim
-        ((by native_decide : __eo_typeof Term.Stuck ≠ Term.Bool) hEvalTy)
+        ((by decide +kernel : __eo_typeof Term.Stuck ≠ Term.Bool) hEvalTy)
   have hRunXNe : __run_evaluate x ≠ Term.Stuck :=
     EvaluateProofInternal.eo_to_q_arg_ne_stuck hRunToQNe
   have hXReal : __smtx_typeof (__eo_to_smt x) = SmtType.Real :=
@@ -2005,7 +2005,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_at_bvsize_core
     | _ =>
         exfalso
         have hNeg : native_zleq 0 (native_zneg 1) = false := by
-          native_decide
+          decide +kernel
         apply hApplyNN
         rw [hTy]
         simp [__eo_to_smt_bv_size, hNeg, native_ite]

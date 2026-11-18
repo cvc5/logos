@@ -3660,7 +3660,7 @@ private theorem reUnion_list_find_rec_nonneg_contains
             exact reUnion_contains_right M x y str hXEval hYEval hYIn
       | case5 nil z n hNilNe hZNe hNNe hNot =>
           have hNeg : native_zlt (-1 : native_Int) 0 = true := by
-            native_decide
+            decide +kernel
           simp [__eo_list_find_rec, __eo_is_neg, hNeg] at hFind
 
 private theorem reUnion_list_find_nonneg_contains
@@ -4303,7 +4303,7 @@ private theorem reInter_list_find_rec_nonneg_contains
             exact ih hYList hYWF hZWF hTailFind hYIn
       | case5 nil z n hNilNe hZNe hNNe hNot =>
           have hNeg : native_zlt (-1 : native_Int) 0 = true := by
-            native_decide
+            decide +kernel
           simp [__eo_list_find_rec, __eo_is_neg, hNeg] at hFind
 
 private theorem reInter_list_find_nonneg_contains
@@ -4528,7 +4528,7 @@ private theorem reUnion_l4_union_eval_rel
     simp [__smtx_model_eval, __smtx_model_eval_re_union, hAEval, hBEval]
   · exact reUnion_typeof_of_args a (mkReUnion b (Term.UOp UserOp.re_none))
       hATy (reUnion_typeof_of_args b (Term.UOp UserOp.re_none) hBTy
-        (by native_decide))
+        (by decide +kernel))
   · rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
     simp [__smtx_model_eval_eq]
     intro str _hValid
@@ -4846,7 +4846,7 @@ private theorem reInter_l4_inter_eval_rel
     simp [__smtx_model_eval, __smtx_model_eval_re_inter, hAEval, hBEval]
   · exact reInter_typeof_of_args a (mkReInter b (Term.UOp UserOp.re_all))
       hATy (reInter_typeof_of_args b (Term.UOp UserOp.re_all) hBTy
-        (by native_decide))
+        (by decide +kernel))
   · rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
     simp [__smtx_model_eval_eq]
     intro str hValid
@@ -6255,7 +6255,7 @@ private theorem re_ac_merge_inter_none_left_eval_rel
     rw [__smtx_model_eval.eq_105]
   · rw [hMergeEq]
     change __smtx_typeof SmtTerm.re_none = SmtType.RegLan
-    native_decide
+    decide +kernel
   · rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
     simp [__smtx_model_eval_eq]
     intro str _hValid
@@ -6420,7 +6420,7 @@ private theorem re_concat_merge_eval_rel
         rw [__smtx_model_eval.eq_105]
       · rw [hMergeEq]
         change __smtx_typeof SmtTerm.re_none = SmtType.RegLan
-        native_decide
+        decide +kernel
       · exact smt_value_rel_reglan_of_eq (by
           simp [native_re_concat, native_re_none])
     · by_cases hBConcat : ∃ br brr, b = mkReConcat br brr
@@ -6638,7 +6638,7 @@ private theorem re_concat_merge_re_mult_eval_rel
         SmtValue.RegLan native_re_none
       rw [__smtx_model_eval.eq_105]
     · change __smtx_typeof SmtTerm.re_none = SmtType.RegLan
-      native_decide
+      decide +kernel
     · exact smt_value_rel_reglan_of_eq (by
         simp [native_re_concat, native_re_none])
   · by_cases hEps :
@@ -7001,7 +7001,7 @@ private theorem native_re_deriv_str_to_re_cons_valid
 
 @[simp] private theorem native_zeq_one_str_len_nil :
     native_zeq 1 (native_str_len ([] : native_String)) = false := by
-  native_decide
+  decide +kernel
 
 @[simp] private theorem native_zeq_one_str_len_single (c : native_Char) :
     native_zeq 1 (native_str_len [c]) = true := by
@@ -7320,7 +7320,7 @@ theorem smtx_model_eval_derivative_single_rel
             SmtValue.RegLan (native_str_to_re [])
           simp [__smtx_model_eval, __smtx_model_eval_str_to_re,
             ]
-        · native_decide
+        · decide +kernel
         · exact smt_value_rel_reglan_of_eq
             (native_re_deriv_allchar_valid c hc).symm
       case re_none =>
@@ -7330,7 +7330,7 @@ theorem smtx_model_eval_derivative_single_rel
         cases hREval
         refine ⟨native_re_none, ?_, ?_, ?_⟩
         · simp [__smtx_model_eval]
-        · native_decide
+        · decide +kernel
         · exact smt_value_rel_reglan_of_eq (by
             simp [native_re_none, native_re_deriv])
       case re_all =>
@@ -7340,7 +7340,7 @@ theorem smtx_model_eval_derivative_single_rel
         cases hREval
         refine ⟨native_re_all, ?_, ?_, ?_⟩
         · simp [__smtx_model_eval]
-        · native_decide
+        · decide +kernel
         · exact smt_value_rel_reglan_of_eq
             (native_re_deriv_all_valid c hc).symm
   | Term.Apply f x, rv, hRTy, hREval, hDerNe => by
@@ -7425,7 +7425,7 @@ theorem smtx_model_eval_derivative_single_rel
                         Term.UOp UserOp.re_none := by
                     simp [__derivative]
                   simpa [hDerEq] using
-                    (by native_decide :
+                    (by decide +kernel :
                       __smtx_typeof
                           (__eo_to_smt (Term.UOp UserOp.re_none)) =
                         SmtType.RegLan)
@@ -7535,7 +7535,7 @@ theorem smtx_model_eval_derivative_single_rel
                       simp [__derivative, eo_extract_zero_zero_cons,
                         eo_extract_tail_cons, __eo_eq, native_teq, hNe, native_ite]
                     simpa [hDerEq] using
-                      (by native_decide :
+                      (by decide +kernel :
                         __smtx_typeof (__eo_to_smt (Term.UOp UserOp.re_none)) =
                           SmtType.RegLan)
                   · exact smt_value_rel_reglan_of_eq (by
@@ -7925,7 +7925,7 @@ theorem smtx_model_eval_derivative_single_rel
                     change __smtx_typeof
                         (SmtTerm.str_to_re (SmtTerm.String [])) =
                       SmtType.RegLan
-                    native_decide
+                    decide +kernel
                   change __smtx_typeof
                       (__eo_to_smt
                         (__derivative (Term.String [c])
@@ -7987,7 +7987,7 @@ theorem smtx_model_eval_derivative_single_rel
                             (Term.String [hi])))) =
                     SmtType.RegLan
                   rw [hDerEq]
-                  native_decide
+                  decide +kernel
                 · exact smt_value_rel_reglan_of_eq (by
                     simp [native_re_range, native_re_deriv, native_re_none,
                       native_re_elem_valid, impl_native_re_elem_le,
@@ -8040,7 +8040,7 @@ theorem smtx_model_eval_derivative_single_rel
                             (Term.String [hi])))) =
                     SmtType.RegLan
                   rw [hDerEq]
-                  native_decide
+                  decide +kernel
                 · exact smt_value_rel_reglan_of_eq (by
                     simp [native_re_range, native_re_deriv, native_re_none,
                       native_re_elem_valid, impl_native_re_elem_le,
@@ -8092,7 +8092,7 @@ theorem smtx_model_eval_derivative_single_rel
                             (Term.String [hi])))) =
                     SmtType.RegLan
                   rw [hDerEq]
-                  native_decide
+                  decide +kernel
                 · exact smt_value_rel_reglan_of_eq (by
                     simp [native_re_range, native_re_deriv, native_re_none,
                       native_re_elem_valid, impl_native_re_elem_le,

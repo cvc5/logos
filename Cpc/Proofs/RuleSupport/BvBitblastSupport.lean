@@ -3715,7 +3715,7 @@ private theorem eval_step_bvslt_or_le_aux
     have hrev :
         __eo_list_rev (Term.UOp UserOp._at_from_bools)
             (Term.Binary 0 0) =
-          Term.Binary 0 0 := by native_decide
+          Term.Binary 0 0 := by decide +kernel
     rw [hrev] at hExpanded
     simp [__bv_bitblast_slt_impl] at hExpanded
   have hbsNe : bs ≠ [] := by
@@ -3725,7 +3725,7 @@ private theorem eval_step_bvslt_or_le_aux
     have hrev :
         __eo_list_rev (Term.UOp UserOp._at_from_bools)
             (Term.Binary 0 0) =
-          Term.Binary 0 0 := by native_decide
+          Term.Binary 0 0 := by decide +kernel
     rw [hrev] at hExpanded
     simp [__bv_bitblast_slt_impl] at hExpanded
   have har := ha.rev

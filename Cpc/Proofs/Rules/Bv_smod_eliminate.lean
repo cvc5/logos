@@ -1278,9 +1278,9 @@ private theorem smod_sign_extract_type (n p : native_Int) :
   simp only [native_zplus, native_zneg]
   rw [hWidth]
   unfold __smtx_typeof_value
-  rw [show native_zleq 0 1 = true by native_decide]
+  rw [show native_zleq 0 1 = true by decide +kernel]
   rw [hCanon]
-  native_decide
+  decide +kernel
 
 set_option maxHeartbeats 20000000 in
 set_option synthInstance.maxHeartbeats 10000000 in

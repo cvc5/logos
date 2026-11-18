@@ -119,13 +119,13 @@ private theorem typed___eo_prog_re_diff_elim_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.RegLan := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hA2NotStuck : a2 ≠ Term.Stuck := by
     intro hStuck
     rw [hStuck] at hA2Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.RegLan := by
-      native_decide
+      decide +kernel
     exact hBad hA2Ty
   have hProg :
       __eo_prog_re_diff_elim a1 a2 = Term.Apply (Term.Apply Term.eq lhs) rhs := by
@@ -161,13 +161,13 @@ private theorem facts___eo_prog_re_diff_elim_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.RegLan := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hA2NotStuck : a2 ≠ Term.Stuck := by
     intro hStuck
     rw [hStuck] at hA2Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.RegLan := by
-      native_decide
+      decide +kernel
     exact hBad hA2Ty
   have hProg :
       __eo_prog_re_diff_elim a1 a2 = Term.Apply (Term.Apply Term.eq lhs) rhs := by

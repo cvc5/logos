@@ -390,7 +390,7 @@ private theorem ubvBitAddend_eval
         (native_zneg (native_nat_to_int start)) = 1 := by
     change ((start : Int) + 1 + -(start : Int)) = 1
     omega
-  have hPow1 : native_int_pow2 1 = 2 := by native_decide
+  have hPow1 : native_int_pow2 1 = 2 := by decide +kernel
   simp [__smtx_model_eval_extract, __smtx_model_eval_eq,
     __smtx_model_eval_ite, native_veq, native_binary_extract,
     hWidth, hPow1, native_int_pow2_nat]

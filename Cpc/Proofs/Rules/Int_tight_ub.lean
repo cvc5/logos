@@ -23,17 +23,17 @@ by
   cases args with
   | cons _ _ =>
       change __eo_typeof Term.Stuck = Term.Bool at hResultTy
-      exact False.elim ((by native_decide : __eo_typeof Term.Stuck ≠ Term.Bool) hResultTy)
+      exact False.elim ((by decide +kernel : __eo_typeof Term.Stuck ≠ Term.Bool) hResultTy)
   | nil =>
     cases premises with
     | nil =>
         change __eo_typeof Term.Stuck = Term.Bool at hResultTy
-        exact False.elim ((by native_decide : __eo_typeof Term.Stuck ≠ Term.Bool) hResultTy)
+        exact False.elim ((by decide +kernel : __eo_typeof Term.Stuck ≠ Term.Bool) hResultTy)
     | cons n premisesTail =>
     cases premisesTail with
     | cons _ _ =>
         change __eo_typeof Term.Stuck = Term.Bool at hResultTy
-        exact False.elim ((by native_decide : __eo_typeof Term.Stuck ≠ Term.Bool) hResultTy)
+        exact False.elim ((by decide +kernel : __eo_typeof Term.Stuck ≠ Term.Bool) hResultTy)
     | nil =>
     let P := __eo_state_proven_nth s n
     have hPremBool : RuleProofs.eo_has_bool_type P :=

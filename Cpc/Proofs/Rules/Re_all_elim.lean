@@ -21,11 +21,11 @@ private theorem typed___eo_prog_re_all_elim :
       change __smtx_typeof SmtTerm.re_all =
         __smtx_typeof (SmtTerm.re_mult SmtTerm.re_allchar)
       rw [__smtx_typeof.eq_106, typeof_re_mult_eq, __smtx_typeof.eq_104]
-      native_decide)
+      decide +kernel)
     (by
       change __smtx_typeof SmtTerm.re_all ≠ SmtType.None
       rw [__smtx_typeof.eq_106]
-      native_decide)
+      decide +kernel)
 
 private theorem facts___eo_prog_re_all_elim (M : SmtModel) :
   eo_interprets M __eo_prog_re_all_elim true := by

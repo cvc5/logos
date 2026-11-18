@@ -384,7 +384,7 @@ private theorem arith_reduction_mod_total_zero_eq_stuck (a : Term) :
 private theorem false_of_typeof_stuck_bool
     (h : __eo_typeof Term.Stuck = Term.Bool) : False := by
   have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-    native_decide
+    decide +kernel
   exact hBad h
 
 private def smtDivTotalQuot (x y : SmtTerm) : SmtTerm :=

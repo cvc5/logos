@@ -142,7 +142,7 @@ private inductive DtCycleTupleTailPath : Term -> Term -> Prop where
 
 private theorem tuple_uop_type_none :
     __smtx_typeof (__eo_to_smt (Term.UOp UserOp.tuple)) = SmtType.None := by
-  native_decide
+  decide +kernel
 
 private theorem tuple_apply_head_has_smt_translation
     (head tail : Term) :

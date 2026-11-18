@@ -1739,7 +1739,7 @@ theorem bvConcatPullup1ConcatTypes
   intro hYsList hZTy hYTy hYsTy
   have hEmptyList :
       __eo_is_list (Term.UOp UserOp.concat) (Term.Binary 0 0) =
-        Term.Boolean true := by native_decide
+        Term.Boolean true := by decide +kernel
   have hEmptyTy := bvConcat_empty_smt_type
   have hYEmptyList := eo_is_list_cons_self_true_of_tail_list
     (Term.UOp UserOp.concat) y (Term.Binary 0 0) (by decide) hEmptyList
@@ -1795,7 +1795,7 @@ theorem bvConcatPullup1FullEval
   intro hYsList hZTy hYTy hYsTy
   have hEmptyList :
       __eo_is_list (Term.UOp UserOp.concat) (Term.Binary 0 0) =
-        Term.Boolean true := by native_decide
+        Term.Boolean true := by decide +kernel
   have hYEmptyList := eo_is_list_cons_self_true_of_tail_list
     (Term.UOp UserOp.concat) y (Term.Binary 0 0) (by decide) hEmptyList
   have hZEmptyList := eo_is_list_cons_self_true_of_tail_list

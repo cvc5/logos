@@ -2856,7 +2856,7 @@ private theorem str_len_l1_true_order
   have hMNe : m ≠ Term.Stuck := by
     intro hSt
     subst m
-    exact (by native_decide :
+    exact (by decide +kernel :
       __smtx_typeof (__eo_to_smt Term.Stuck) ≠ SmtType.Int) hMInt
   cases s with
   | Apply f x =>
@@ -2935,7 +2935,7 @@ private theorem str_len_l1_false_order
   have hMNe : m ≠ Term.Stuck := by
     intro hSt
     subst m
-    exact (by native_decide :
+    exact (by decide +kernel :
       __smtx_typeof (__eo_to_smt Term.Stuck) ≠ SmtType.Int) hMInt
   cases s with
   | Apply f x =>
@@ -3755,7 +3755,7 @@ private theorem str_arith_entail_is_approx_int_eval_order_bool
         · have hMNe : m ≠ Term.Stuck := by
             intro hSt
             subst m
-            exact (by native_decide :
+            exact (by decide +kernel :
               __smtx_typeof (__eo_to_smt Term.Stuck) ≠ SmtType.Int) hMInt
           cases s with
           | Apply f x =>
@@ -3817,7 +3817,7 @@ private theorem str_arith_entail_is_approx_int_eval_order_bool
         · have hMNe : m ≠ Term.Stuck := by
             intro hSt
             subst m
-            exact (by native_decide :
+            exact (by decide +kernel :
               __smtx_typeof (__eo_to_smt Term.Stuck) ≠ SmtType.Int) hMInt
           cases s with
           | Apply f x =>
@@ -3879,7 +3879,7 @@ private theorem str_arith_entail_is_approx_int_eval_order_bool
         · have hMNe : m ≠ Term.Stuck := by
             intro hSt
             subst m
-            exact (by native_decide :
+            exact (by decide +kernel :
               __smtx_typeof (__eo_to_smt Term.Stuck) ≠ SmtType.Int) hMInt
           cases n with
           | Apply f x =>
@@ -4107,7 +4107,7 @@ private theorem str_arith_entail_is_approx_int_eval_order_bool
         · have hMNe : m ≠ Term.Stuck := by
             intro hSt
             subst m
-            exact (by native_decide :
+            exact (by decide +kernel :
               __smtx_typeof (__eo_to_smt Term.Stuck) ≠ SmtType.Int) hMInt
           cases n with
           | Apply f x =>

@@ -80,7 +80,7 @@ private theorem typeof_mk_not_arg_bool {A : Term} :
   · subst A
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hBad hTy)
   · rw [CnfSupport.mk_apply_eq_apply (f := Term.UOp UserOp.not) (a := A)
       (by simp) hA] at hTy

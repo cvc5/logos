@@ -3301,7 +3301,7 @@ theorem str_flatten_nary_intro_explicitCharEmpty_stuck :
         (Term.UOp1 UserOp1.seq_empty
           (Term.Apply (Term.UOp UserOp.Seq) (Term.UOp UserOp.Char)))) =
       Term.Stuck := by
-  native_decide
+  decide +kernel
 
 theorem str_is_compatible_explicitCharEmpty_cons_stuck (a : Term) (xs : List Term)
     (ex : Term)

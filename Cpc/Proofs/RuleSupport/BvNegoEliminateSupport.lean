@@ -154,7 +154,7 @@ theorem bv_nego_min_type_inv (n w : Term) :
   have hOneTy :
       __eo_typeof (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral 1)) (Term.Numeral 1)) =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1) := by
-    native_decide
+    decide +kernel
   have hEmptyTy :
       __eo_typeof (Term.Binary 0 0) =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 0) := by
@@ -308,13 +308,13 @@ theorem smt_typeof_bv_nego_min (i : native_Int) :
     smt_typeof_bv_const 0 i hi
   have hEmptyTy : __smtx_typeof (SmtTerm.Binary 0 0) =
       SmtType.BitVec (native_int_to_nat 0) := by
-    native_decide
+    decide +kernel
   rw [hOneTy, hZeroTy, hEmptyTy]
   have hRoundI := native_nat_to_int_int_to_nat_eq i hi
   have hRound0 : native_nat_to_int (native_int_to_nat 0) = (0 : native_Int) := by
-    native_decide
+    decide +kernel
   have hRound1 : native_nat_to_int (native_int_to_nat 1) = (1 : native_Int) := by
-    native_decide
+    decide +kernel
   have hWidth := native_int_to_nat_one_plus i hi
   simp [__smtx_typeof_concat, hRoundI, hRound0, hRound1, hWidth,
     SmtEval.native_zplus]
@@ -412,7 +412,7 @@ theorem eval_bv_nego_min
     simp only [__smtx_model_eval]
   rw [hOne, hZero, hEmpty]
   have hOneMod : native_mod_total 1 (native_int_pow2 1) = 1 := by
-    native_decide
+    decide +kernel
   have hZeroMod : native_mod_total 0 (native_int_pow2 i) = 0 :=
     native_mod_zero_pow2 hi
   have hInnerZero : native_mod_total 0

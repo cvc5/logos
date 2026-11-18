@@ -101,7 +101,7 @@ theorem prog_form (n P : Term)
 
 theorem eo_typeof_concat_range_term :
     __eo_typeof concatRangeTerm = Term.UOp UserOp.RegLan := by
-  native_decide
+  decide +kernel
 
 theorem typeof_arg_of_concl_bool (n : Term) :
     __eo_typeof (concl n) = Term.Bool ->

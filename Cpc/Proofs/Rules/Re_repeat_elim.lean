@@ -66,14 +66,14 @@ private theorem re_repeat_args_of_result_bool (n1 x1 : Term) :
   · subst n1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · by_cases hX1 : x1 = Term.Stuck
     · subst x1
       cases n1 <;> simp [__eo_prog_re_repeat_elim] at hN1 hTy
       all_goals
         have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-          native_decide
+          decide +kernel
         exact False.elim (hStuckTy hTy)
     · rw [prog_re_repeat_elim_eq_of_ne_stuck n1 x1 hN1 hX1] at hTy
       have hLeftNN :

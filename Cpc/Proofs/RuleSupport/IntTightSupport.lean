@@ -402,7 +402,7 @@ theorem int_tight_lb_has_smt_translation_numeral
 private theorem false_of_typeof_stuck_bool {P : Prop}
     (hTy : __eo_typeof Term.Stuck = Term.Bool) : P := by
   have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by
-    native_decide
+    decide +kernel
   exact False.elim (hBad hTy)
 
 private theorem false_of_rational_lt_tight_ub

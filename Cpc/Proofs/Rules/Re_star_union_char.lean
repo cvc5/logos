@@ -52,7 +52,7 @@ private theorem smtx_typeof_sigma :
   change __smtx_typeof (SmtTerm.re_mult SmtTerm.re_allchar) =
     SmtType.RegLan
   rw [typeof_re_mult_eq, __smtx_typeof.eq_104]
-  native_decide
+  decide +kernel
 
 private theorem smtx_model_eval_allchar (M : SmtModel) :
     __smtx_model_eval M (__eo_to_smt allchar) =

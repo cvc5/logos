@@ -21,11 +21,11 @@ private theorem typed___eo_prog_re_star_none :
       change __smtx_typeof (SmtTerm.re_mult SmtTerm.re_none) =
         __smtx_typeof (SmtTerm.str_to_re (SmtTerm.String (native_string_lit "")))
       rw [typeof_re_mult_eq, __smtx_typeof.eq_105, typeof_str_to_re_eq, __smtx_typeof.eq_4]
-      native_decide)
+      decide +kernel)
     (by
       change __smtx_typeof (SmtTerm.re_mult SmtTerm.re_none) ≠ SmtType.None
       rw [typeof_re_mult_eq, __smtx_typeof.eq_105]
-      native_decide)
+      decide +kernel)
 
 private theorem facts___eo_prog_re_star_none (M : SmtModel) :
   eo_interprets M __eo_prog_re_star_none true := by
