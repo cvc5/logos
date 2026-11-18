@@ -5037,6 +5037,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_str_from_int_core
         runFrom = Term.String (native_str_from_int runN) := by
       simpa [runFrom] using
         EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral (x := x) (n := runN) hRunX
+          hRunFromNe
     rw [hRunFromString]
     constructor
     · change
@@ -5505,7 +5506,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_sbv_to_int_core
       dsimp [runToInt]
       exact
         EvaluateProofInternal.eo_eval_sbv_to_int_rhs_binary_eq_uts
-          (w := runW) (n := runN) hRunWNonneg hRunCanon
+          (w := runW) (n := runN) hRunWNonneg hRunCanon hRunToIntNe
     change
       __smtx_typeof
           (SmtTerm.sbv_to_int (SmtTerm.Binary runW runN)) =

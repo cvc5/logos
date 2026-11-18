@@ -914,7 +914,7 @@ theorem unit_type_values_default
       rw [hOne] at hMem
       have hZero : r = 0 := Set.mem_singleton_iff.mp hMem
       subst hZero
-      simp [__smtx_type_default]
+      simp [__smtx_type_default, native_id_zero]
   | BitVec w =>
       cases w with
       | succ w =>

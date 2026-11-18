@@ -89,27 +89,25 @@ theorem EvaluateProofInternal.eo_to_bin_literal_width_of_typeof_bitvec
   cases y <;> intro h <;>
     simp [__eo_to_bin, __eo_mk_binary, native_ite] at h
   case Numeral n =>
-    cases hLe : native_zleq wi 4294967296 <;> simp [hLe] at h
-    · change Term.Stuck =
-        Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
-      cases h
-    · cases hNonneg : native_zleq 0 wi <;> simp [hNonneg] at h
-      · change Term.Stuck =
+    cases hNonneg : native_zleq 0 wi <;>
+      cases hLt : native_zlt wi 4294967296 <;>
+      simp [hNonneg, hLt, native_and] at h
+    all_goals first
+      | (change Term.Stuck =
           Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
-        cases h
-      · cases h
-        rfl
+         cases h)
+      | (cases h
+         rfl)
   case Binary wb nb =>
-    cases hLe : native_zleq wi 4294967296 <;> simp [hLe] at h
-    · change Term.Stuck =
-        Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
-      cases h
-    · cases hNonneg : native_zleq 0 wi <;> simp [hNonneg] at h
-      · change Term.Stuck =
+    cases hNonneg : native_zleq 0 wi <;>
+      cases hLt : native_zlt wi 4294967296 <;>
+      simp [hNonneg, hLt, native_and] at h
+    all_goals first
+      | (change Term.Stuck =
           Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
-        cases h
-      · cases h
-        rfl
+         cases h)
+      | (cases h
+         rfl)
   all_goals
     change Term.Stuck =
       Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
@@ -125,22 +123,17 @@ theorem EvaluateProofInternal.eo_to_bin_numeral_eq_of_typeof_bitvec
   intro h
   change
     __eo_typeof
-        (native_ite (native_zleq wi 4294967296)
+        (native_ite (native_and (native_zleq 0 wi) (native_zlt wi 4294967296))
           (__eo_mk_binary wi p) Term.Stuck) =
       Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
-  cases hLe : native_zleq wi 4294967296
-  · simp [hLe, native_ite] at h
-    change Term.Stuck =
-      Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
-    cases h
-  · simp [hLe, native_ite, __eo_mk_binary] at h
-    cases hNonneg : native_zleq 0 wi
-    · simp [hNonneg] at h
-      change Term.Stuck =
+  cases hNonneg : native_zleq 0 wi <;>
+    cases hLt : native_zlt wi 4294967296 <;>
+    simp [hNonneg, hLt, native_and, native_ite, __eo_mk_binary] at h
+  all_goals first
+    | (change Term.Stuck =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
-      cases h
-    · simp [hNonneg] at h
-      simp [__eo_to_bin, __eo_mk_binary, hLe, hNonneg, native_ite]
+       cases h)
+    | simp [__eo_to_bin, __eo_mk_binary, hNonneg, hLt, native_and, native_ite]
 
 theorem EvaluateProofInternal.eo_eval_sign_extend_rhs_binary_of_typeof_bitvec
     (x : Term) (i w : native_Int) :
@@ -182,7 +175,8 @@ theorem EvaluateProofInternal.eo_extract_literal_arg_binary_of_typeof_bitvec
     (x : Term) (i j w : native_Int)
     (hj0 : native_zleq 0 j = true)
     (hWidth : native_zlt 0
-      (native_zplus (native_zplus i 1) (native_zneg j)) = true) :
+      (native_zplus (native_zplus i 1) (native_zneg j)) = true)
+    (hw : w = native_zplus (native_zplus i (native_zneg j)) 1) :
     __eo_typeof (__eo_extract x (Term.Numeral j) (Term.Numeral i)) =
       Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) ->
     ∃ wx : native_Int, ∃ nx : native_Int,
@@ -218,6 +212,41 @@ theorem EvaluateProofInternal.eo_extract_literal_arg_binary_of_typeof_bitvec
             native_zplus (native_zplus i (native_zneg j)) 1 := by
         simpa [native_zlt, SmtEval.native_zlt] using hWidthPosNative
       simpa [native_zleq, SmtEval.native_zleq] using Int.le_of_lt hPos
+    -- The high index is clamped to `wx - 1`; the requested width rules that out.
+    have hiLt : native_zlt i wx = true := by
+      cases hiLtB : native_zlt i wx
+      · exfalso
+        have hGe : @LE.le Int _ wx i := by
+          simpa [native_zlt, SmtEval.native_zlt] using hiLtB
+        have hWidthInt : (0 : Int) < (i : Int) + 1 + -(j : Int) := by
+          simpa [native_zlt, SmtEval.native_zlt, native_zplus,
+            SmtEval.native_zplus, native_zneg, SmtEval.native_zneg] using hWidth
+        have hwInt : @Eq Int w (i + -j + 1) := by
+          simpa [native_zplus, SmtEval.native_zplus, native_zneg,
+            SmtEval.native_zneg] using hw
+        have hTy := h
+        simp [__eo_extract, hiLtB, hjNotNeg, native_ite, native_or,
+          __eo_mk_binary, native_zplus, SmtEval.native_zplus, native_zneg,
+          SmtEval.native_zneg] at hTy
+        split_ifs at hTy
+        all_goals
+          first
+          | (change Term.Stuck = _ at hTy
+             cases hTy)
+          | (have hW := (Term.Numeral.inj ((Term.Apply.inj hTy).2)).symm
+             have hW' : @Eq Int w _ := hW
+             omega)
+      · rfl
+    have hExt :
+        __eo_extract (Term.Binary wx nx) (Term.Numeral j) (Term.Numeral i) =
+          native_ite
+            (native_or (native_zlt j 0) (native_zlt (i + -j) 0))
+            (Term.Binary 0 0)
+            (__eo_mk_binary (native_zplus (i + -j) 1)
+              (native_binary_extract wx nx i j)) := by
+      simp only [__eo_extract, hiLt]
+      rfl
+    rw [hExt] at h ⊢
     change
       __eo_typeof
           (native_ite
@@ -320,13 +349,15 @@ theorem EvaluateProofInternal.eo_sign_extend_low_payload_eq
         (__eo_extract (Term.Binary w n) (Term.Numeral 0)
           (Term.Numeral (native_zplus w (native_zneg 2)))) =
       Term.Numeral (EvaluateProofInternal.eo_sign_extend_low_payload w n) := by
+  have hClamp : native_zlt (w + -2) w = true := by
+    simp [native_zlt, SmtEval.native_zlt]
   by_cases hNeg :
       native_zlt (native_zplus w (native_zneg 2)) 0 = true
   · have hNegPrime : native_zlt (w + -2) 0 = true := by
       simpa [native_zplus, SmtEval.native_zplus, native_zneg,
         SmtEval.native_zneg] using hNeg
     simp [__eo_extract, __eo_to_z, EvaluateProofInternal.eo_sign_extend_low_payload,
-      hNegPrime, native_ite, native_or, native_zplus,
+      hClamp, hNegPrime, native_ite, native_or, native_zplus,
       SmtEval.native_zplus, native_zneg, SmtEval.native_zneg]
   · have hNegFalse :
         native_zlt (native_zplus w (native_zneg 2)) 0 = false := by
@@ -353,7 +384,7 @@ theorem EvaluateProofInternal.eo_sign_extend_low_payload_eq
     have hZlt00 : native_zlt 0 0 = false := by
       native_decide
     simp [__eo_extract, __eo_to_z, __eo_mk_binary,
-      EvaluateProofInternal.eo_sign_extend_low_payload, hNegPrime, hLe, hDiv, hPowArg,
+      EvaluateProofInternal.eo_sign_extend_low_payload, hClamp, hNegPrime, hLe, hDiv, hPowArg,
       hZlt00, native_binary_extract, native_ite, native_or,
       native_zplus, SmtEval.native_zplus, native_zneg,
       SmtEval.native_zneg]
@@ -366,12 +397,14 @@ theorem EvaluateProofInternal.eo_sign_extend_msb_eq
           (Term.Numeral (native_zplus w (native_zneg 1))))
         (Term.Binary 1 1) =
       Term.Boolean (EvaluateProofInternal.eo_sign_extend_msb_set w n) := by
+  have hClamp1 : native_zlt (w + -1) w = true := by
+    simp [native_zlt, SmtEval.native_zlt]
   by_cases hNeg :
       native_zlt (native_zplus w (native_zneg 1)) 0 = true
   · have hNegPrime : native_zlt (w + -1) 0 = true := by
       simpa [native_zplus, SmtEval.native_zplus, native_zneg,
         SmtEval.native_zneg] using hNeg
-    simp [__eo_extract, __eo_eq, EvaluateProofInternal.eo_sign_extend_msb_set,
+    simp [__eo_extract, __eo_eq, hClamp1, EvaluateProofInternal.eo_sign_extend_msb_set,
       hNegPrime, native_ite, native_or, native_teq,
       native_zplus, SmtEval.native_zplus, native_zneg,
       SmtEval.native_zneg]
@@ -393,7 +426,7 @@ theorem EvaluateProofInternal.eo_sign_extend_msb_eq
       native_decide
     have hZlt00 : native_zlt 0 0 = false := by
       native_decide
-    simp [__eo_extract, __eo_eq, __eo_mk_binary,
+    simp [__eo_extract, __eo_eq, hClamp1, __eo_mk_binary,
       EvaluateProofInternal.eo_sign_extend_msb_set, hNegPrime, hDelta,
       hLe1, hPow1, hZlt00, native_binary_extract,
       native_ite, native_or, native_teq, native_zeq,
@@ -435,14 +468,52 @@ theorem EvaluateProofInternal.eo_sbv_to_int_msb_zero_eq_of_pos
     native_decide
   have hZlt00 : native_zlt 0 0 = false := by
     native_decide
-  simp [__eo_extract, __eo_eq, __eo_mk_binary, hNegPrime,
+  have hClamp1 : native_zlt (w + -1) w = true := by
+    simp [native_zlt, SmtEval.native_zlt]
+  simp [__eo_extract, __eo_eq, __eo_mk_binary, hNegPrime, hClamp1,
     hDelta, hLe1, hPow1, hZlt00, native_binary_extract,
     native_ite, native_or, native_teq, native_zeq,
     SmtEval.native_zeq, native_zplus, SmtEval.native_zplus,
     native_zneg, SmtEval.native_zneg, Int.sub_eq_add_neg]
   constructor <;> intro h <;> exact h.symm
 
-theorem EvaluateProofInternal.eo_int_pow2_literal_eq (k : native_Int) :
+/-- `__eo_pow 2 k` on an in-range numeral exponent. -/
+theorem EvaluateProofInternal.eo_pow_two_numeral_of_range (k : native_Int)
+    (hk0 : 0 ≤ k) (hk : k < 4294967296) :
+    __eo_pow (Term.Numeral 2) (Term.Numeral k) =
+      Term.Numeral (native_zexp_total 2 k) := by
+  have hG : native_and (native_zleq 0 k) (native_zlt k 4294967296) = true := by
+    have h1 : native_zleq 0 k = true := decide_eq_true hk0
+    have h2 : native_zlt k 4294967296 = true := decide_eq_true hk
+    rw [h1, h2]
+    rfl
+  show native_ite (native_and (native_zleq 0 k) (native_zlt k 4294967296))
+      (Term.Numeral (native_zexp_total 2 k)) Term.Stuck = _
+  rw [hG]
+  rfl
+
+/-- `__eo_pow 2 k` is stuck on an exponent at or above `2^32`. -/
+theorem EvaluateProofInternal.eo_pow_two_numeral_stuck_of_ge (k : native_Int)
+    (hk : ¬ k < 4294967296) :
+    __eo_pow (Term.Numeral 2) (Term.Numeral k) = Term.Stuck := by
+  have h2 : native_zlt k 4294967296 = false := decide_eq_false hk
+  have hG : native_and (native_zleq 0 k) (native_zlt k 4294967296) = false := by
+    rw [h2]
+    cases native_zleq 0 k <;> rfl
+  show native_ite (native_and (native_zleq 0 k) (native_zlt k 4294967296))
+      (Term.Numeral (native_zexp_total 2 k)) Term.Stuck = _
+  rw [hG]
+  rfl
+
+theorem EvaluateProofInternal.native_pred_lt_pow32_of_le {w : native_Int}
+    (h : w ≤ 4294967296) :
+    native_zplus w (native_zneg 1) < 4294967296 := by
+  have h1 : w + -1 < w + 0 := Int.add_lt_add_left (by decide) w
+  rw [Int.add_zero] at h1
+  exact Int.lt_of_lt_of_le h1 h
+
+theorem EvaluateProofInternal.eo_int_pow2_literal_eq (k : native_Int)
+    (hkLt : k < 4294967296) :
     __eo_ite (__eo_is_z (Term.Numeral k))
       (__eo_ite (__eo_is_neg (Term.Numeral k)) (Term.Numeral 0)
         (__eo_pow (Term.Numeral 2) (Term.Numeral k)))
@@ -456,12 +527,48 @@ theorem EvaluateProofInternal.eo_int_pow2_literal_eq (k : native_Int) :
       hlt, native_int_pow2, native_zexp_total, hk]
   · have hlt : native_zlt k 0 = false := by
       simpa [native_zlt, SmtEval.native_zlt] using hk
+    rw [EvaluateProofInternal.eo_pow_two_numeral_of_range k (Int.not_lt.mp hk) hkLt]
     simp [__eo_ite, __eo_is_z, __eo_is_z_internal, __eo_is_neg,
-      __eo_pow, native_ite, native_teq, native_and, native_not,
+      native_ite, native_teq, native_and, native_not,
       hlt, native_int_pow2, native_zexp_total, hk]
 
+/-- The `int_pow2` body on a numeral at or above `2^32` is stuck. -/
+theorem EvaluateProofInternal.eo_int_pow2_literal_stuck_of_ge (k : native_Int)
+    (hkGe : ¬ k < 4294967296) :
+    __eo_ite (__eo_is_z (Term.Numeral k))
+      (__eo_ite (__eo_is_neg (Term.Numeral k)) (Term.Numeral 0)
+        (__eo_pow (Term.Numeral 2) (Term.Numeral k)))
+      (__eo_mk_apply (Term.UOp UserOp.int_pow2) (Term.Numeral k)) =
+    Term.Stuck := by
+  have hk : ¬ k < 0 := fun h => hkGe (Int.lt_trans h (by decide))
+  have hlt : native_zlt k 0 = false := by
+    simpa [native_zlt, SmtEval.native_zlt] using hk
+  rw [EvaluateProofInternal.eo_pow_two_numeral_stuck_of_ge k hkGe]
+  simp [__eo_ite, __eo_is_z, __eo_is_z_internal, __eo_is_neg,
+    native_ite, native_teq, native_and, native_not, hlt]
+
+/-- A non-stuck sign-extension result has an in-range target width. -/
+theorem EvaluateProofInternal.eo_eval_sign_extend_rhs_width_lt_of_ne_stuck
+    (w n i : native_Int)
+    (hNe :
+      EvaluateProofInternal.eo_eval_sign_extend_rhs (Term.Binary w n) (Term.Numeral i) ≠
+        Term.Stuck) :
+    native_zplus w i < 4294967296 := by
+  by_contra hGe
+  apply hNe
+  have hF : native_zlt (native_zplus w i) 4294967296 = false := decide_eq_false hGe
+  have hG :
+      native_and (native_zleq 0 (native_zplus w i))
+          (native_zlt (native_zplus w i) 4294967296) = false := by
+    rw [hF]
+    cases native_zleq 0 (native_zplus w i) <;> rfl
+  dsimp [EvaluateProofInternal.eo_eval_sign_extend_rhs]
+  change __eo_to_bin (Term.Numeral (native_zplus w i)) _ = Term.Stuck
+  generalize hv : (__eo_ite _ _ _ : Term) = v
+  cases v <;> simp only [__eo_to_bin] <;> rw [hG] <;> rfl
+
 theorem EvaluateProofInternal.eo_eval_sign_extend_rhs_binary_to_bin
-    (w n i : native_Int) :
+    (w n i : native_Int) (hwLe : w ≤ 4294967296) :
     EvaluateProofInternal.eo_eval_sign_extend_rhs (Term.Binary w n) (Term.Numeral i) =
       __eo_to_bin (Term.Numeral (native_zplus w i))
         (Term.Numeral (EvaluateProofInternal.eo_sign_extend_payload w n)) := by
@@ -495,7 +602,8 @@ theorem EvaluateProofInternal.eo_eval_sign_extend_rhs_binary_to_bin
             (Term.Numeral (native_zplus w (native_zneg 2)))))) =
       _
   rw [EvaluateProofInternal.eo_sign_extend_msb_eq, EvaluateProofInternal.eo_sign_extend_low_payload_eq,
-    EvaluateProofInternal.eo_int_pow2_literal_eq]
+    EvaluateProofInternal.eo_int_pow2_literal_eq (native_zplus w (native_zneg 1))
+      (EvaluateProofInternal.native_pred_lt_pow32_of_le hwLe)]
   cases hMsb : EvaluateProofInternal.eo_sign_extend_msb_set w n
   · simp [EvaluateProofInternal.eo_sign_extend_payload, hMsb, __eo_ite, native_ite,
       native_teq]
@@ -837,47 +945,57 @@ theorem EvaluateProofInternal.eo_signed_bv_value_binary_eq_uts
     (hCanon :
       native_zeq n
           (native_mod_total n (native_int_pow2 w)) =
-        true) :
+        true)
+    (hNe : EvaluateProofInternal.eo_signed_bv_value (Term.Binary w n) ≠ Term.Stuck) :
     EvaluateProofInternal.eo_signed_bv_value (Term.Binary w n) =
       Term.Numeral (native_binary_uts w n) := by
-  dsimp [EvaluateProofInternal.eo_signed_bv_value]
-  change
-    __eo_ite
-        (__eo_eq
-          (__eo_extract (Term.Binary w n)
-            (Term.Numeral (native_zplus w (native_zneg 1)))
-            (Term.Numeral (native_zplus w (native_zneg 1))))
-          (Term.Binary 1 1))
-        (__eo_add
-          (__eo_neg
-            (__eo_ite
-              (__eo_is_z
-                (Term.Numeral (native_zplus w (native_zneg 1))))
+  have hValEq :
+      EvaluateProofInternal.eo_signed_bv_value (Term.Binary w n) =
+      __eo_ite
+          (__eo_eq
+            (__eo_extract (Term.Binary w n)
+              (Term.Numeral (native_zplus w (native_zneg 1)))
+              (Term.Numeral (native_zplus w (native_zneg 1))))
+            (Term.Binary 1 1))
+          (__eo_add
+            (__eo_neg
               (__eo_ite
-                (__eo_is_neg
+                (__eo_is_z
                   (Term.Numeral (native_zplus w (native_zneg 1))))
-                (Term.Numeral 0)
-                (__eo_pow (Term.Numeral 2)
-                  (Term.Numeral (native_zplus w (native_zneg 1)))))
-              (__eo_mk_apply (Term.UOp UserOp.int_pow2)
-                (Term.Numeral (native_zplus w (native_zneg 1))))))
+                (__eo_ite
+                  (__eo_is_neg
+                    (Term.Numeral (native_zplus w (native_zneg 1))))
+                  (Term.Numeral 0)
+                  (__eo_pow (Term.Numeral 2)
+                    (Term.Numeral (native_zplus w (native_zneg 1)))))
+                (__eo_mk_apply (Term.UOp UserOp.int_pow2)
+                  (Term.Numeral (native_zplus w (native_zneg 1))))))
+            (__eo_to_z
+              (__eo_extract (Term.Binary w n) (Term.Numeral 0)
+                (Term.Numeral (native_zplus w (native_zneg 2))))))
           (__eo_to_z
             (__eo_extract (Term.Binary w n) (Term.Numeral 0)
-              (Term.Numeral (native_zplus w (native_zneg 2))))))
-        (__eo_to_z
-          (__eo_extract (Term.Binary w n) (Term.Numeral 0)
-            (Term.Numeral (native_zplus w (native_zneg 2))))) =
-      Term.Numeral (native_binary_uts w n)
-  rw [EvaluateProofInternal.eo_sign_extend_msb_eq, EvaluateProofInternal.eo_sign_extend_low_payload_eq,
-    EvaluateProofInternal.eo_int_pow2_literal_eq]
+              (Term.Numeral (native_zplus w (native_zneg 2))))) := rfl
+  rw [hValEq] at hNe ⊢
+  rw [EvaluateProofInternal.eo_sign_extend_msb_eq,
+    EvaluateProofInternal.eo_sign_extend_low_payload_eq] at hNe ⊢
+  revert hNe
   cases hMsb : EvaluateProofInternal.eo_sign_extend_msb_set w n
-  · rw [eo_ite_false]
+  · intro _hNe
+    rw [eo_ite_false]
     exact congrArg Term.Numeral
       (by
         simpa [EvaluateProofInternal.eo_sign_extend_payload, hMsb] using
           EvaluateProofInternal.eo_sign_extend_payload_eq_uts
             (w := w) (n := n) hw0 hCanon)
-  · rw [eo_ite_true]
+  · intro hNe
+    rw [eo_ite_true] at hNe ⊢
+    have hPredLt : native_zplus w (native_zneg 1) < 4294967296 := by
+      by_contra hGe
+      apply hNe
+      rw [EvaluateProofInternal.eo_int_pow2_literal_stuck_of_ge _ hGe]
+      rfl
+    rw [EvaluateProofInternal.eo_int_pow2_literal_eq _ hPredLt]
     simp [__eo_add, __eo_neg]
     simpa [EvaluateProofInternal.eo_sign_extend_payload, hMsb] using
       EvaluateProofInternal.eo_sign_extend_payload_eq_uts

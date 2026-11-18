@@ -834,7 +834,10 @@ theorem StrInReConsumeInternal.consume_parts_reprod_str_flatten_local :
   | case3 t tail hNC ih =>
       rcases StrInReConsumeInternal.consume_is_str_shape_local t with hStr | hStr
       · rcases StrInReConsumeInternal.consume_is_str_true_string_local t hStr with ⟨w, rfl⟩
-        rw [str_flatten_concat_string_eq_local w tail]
+        by_cases hLen : w.length < 4294967296
+        swap
+        · exact Or.inr (str_flatten_concat_string_stuck_local w tail hLen)
+        rw [str_flatten_concat_string_eq_local w tail hLen]
         rcases ih with hT | hT
         · exact StrInReConsumeInternal.consume_parts_reprod_list_concat_local _ _
             (StrInReConsumeInternal.consume_parts_reprod_substrWord_local w w.length 0) hT

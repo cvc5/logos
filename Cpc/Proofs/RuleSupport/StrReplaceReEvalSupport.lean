@@ -929,6 +929,11 @@ private theorem replace_re_match_ne_stuck_of_eval_ne_stuck
   cases s <;> cases r <;> cases t <;>
     simp [__str_eval_replace_re] at hNe
 
+private theorem str_first_match_rec_stuck_left_local (r rs n : Term) :
+    __str_first_match_rec Term.Stuck r rs n = Term.Stuck := by
+  unfold __str_first_match_rec
+  split <;> simp_all
+
 private theorem str_eval_replace_re_eval_eq
     (M : SmtModel) (hM : model_wf M)
     (str : native_String) (r t side : Term) (rv : SmtRegLan) (repl : SmtSeq)
@@ -1001,8 +1006,7 @@ private theorem str_eval_replace_re_eval_eq
             apply hRawFlatNe
             dsimp only [rawFlat]
             rw [hFlat]
-            unfold __str_first_match_rec
-            split <;> rfl))
+            exact str_first_match_rec_stuck_left_local _ _ _))
   have hRawFlatEqSub :
       rawFlat =
         __str_first_match_rec (substrWord str 0 str.length) r rs

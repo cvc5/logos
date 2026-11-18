@@ -834,6 +834,29 @@ private theorem str_indexof_re_eval_first_match_rec_eq_find_aux
           simp [hPref, __eo_ite, native_teq, native_ite]
           exact hTail
 
+private theorem str_first_match_rec_stuck_left_local (r rs n : Term) :
+    __str_first_match_rec Term.Stuck r rs n = Term.Stuck := by
+  unfold __str_first_match_rec
+  split <;> simp_all
+
+private theorem str_indexof_re_eval_idx_term_string_eq
+    (w : native_String) (r : Term) :
+    str_indexof_re_eval_idx_term (Term.String w) r =
+      __pair_first
+        (__str_first_match_rec
+          (__str_flatten (__str_nary_intro (Term.String w))) r
+          (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) := by
+  have hIsStr : __eo_is_str (Term.String w) = Term.Boolean true := by
+    simp [__eo_is_str, __eo_is_str_internal, native_teq, native_not,
+      SmtEval.native_and]
+  unfold str_indexof_re_eval_idx_term str_indexof_re_eval_first_match_term
+  rw [hIsStr]
+  generalize __str_first_match_rec _ _ _ _ = X
+  by_cases hX : X = Term.Stuck
+  · subst hX
+    rfl
+  · simp [__eo_requires, native_ite, native_teq, native_not]
+
 private theorem str_indexof_re_eval_idx_term_eq
     (M : SmtModel) (hM : model_wf M)
     (tail : native_String) (r : Term) (offset : native_Int)
@@ -896,10 +919,11 @@ private theorem str_indexof_re_eval_idx_term_eq
         have hIdxStuck :
             str_indexof_re_eval_idx_term (Term.String []) r = Term.Stuck := by
           change __pair_first
-              (__str_first_match_rec (Term.String []) r
+              (__str_first_match_rec
+                (__str_flatten (__str_nary_intro (Term.String []))) r
                 (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
             Term.Stuck
-          rw [hStep, hFirst]
+          rw [str_flatten_nary_intro_empty, hStep, hFirst]
           rfl
         exact hIdxNe hIdxStuck
       have hBool := eo_ite_cond_eq_true_or_false_of_ne_stuck test thenTerm
@@ -918,10 +942,11 @@ private theorem str_indexof_re_eval_idx_term_eq
           simp only [impl_native_string_to_values, List.map]
           rw [hFind]
           change __pair_first
-              (__str_first_match_rec (Term.String []) r
+              (__str_first_match_rec
+                (__str_flatten (__str_nary_intro (Term.String []))) r
                 (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
             Term.Numeral (-1)
-          rw [hStep]
+          rw [str_flatten_nary_intro_empty, hStep]
           simp [hTestFalse, elseTerm, __eo_ite, native_ite, native_teq,
             __pair_first]
       | some len =>
@@ -948,10 +973,11 @@ private theorem str_indexof_re_eval_idx_term_eq
           simp only [impl_native_string_to_values, List.map]
           rw [hFind]
           change __pair_first
-              (__str_first_match_rec (Term.String []) r
+              (__str_first_match_rec
+                (__str_flatten (__str_nary_intro (Term.String []))) r
                 (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
             Term.Numeral 0
-          rw [hStep]
+          rw [str_flatten_nary_intro_empty, hStep]
           simp [hTestTrue, second, thenTerm, __eo_ite,
             native_ite, native_teq, __eo_mk_apply, __pair_first]
   | cons c cs =>
@@ -967,13 +993,8 @@ private theorem str_indexof_re_eval_idx_term_eq
               __str_first_match_rec Term.Stuck r
                   (str_indexof_re_eval_match_regex r) (Term.Numeral 0) =
                 Term.Stuck := by
-            unfold __str_first_match_rec
-            split <;> rfl
-          change __pair_first
-              (__str_first_match_rec
-                (__str_flatten (__str_nary_intro (Term.String (c :: cs)))) r
-                (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
-            Term.Stuck
+            exact str_first_match_rec_stuck_left_local _ _ _
+          rw [str_indexof_re_eval_idx_term_string_eq]
           rw [hFlat, hRec]
           rfl)
       have hMatchTy :
@@ -991,11 +1012,7 @@ private theorem str_indexof_re_eval_idx_term_eq
         intro hFirst
         have hIdxStuck :
             str_indexof_re_eval_idx_term (Term.String (c :: cs)) r = Term.Stuck := by
-          change __pair_first
-              (__str_first_match_rec
-                (__str_flatten (__str_nary_intro (Term.String (c :: cs)))) r
-                (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
-            Term.Stuck
+          rw [str_indexof_re_eval_idx_term_string_eq]
           rw [str_flatten_nary_intro_cons c cs hLen, hFirst]
           rfl
         exact hIdxNe hIdxStuck
@@ -1003,39 +1020,15 @@ private theorem str_indexof_re_eval_idx_term_eq
         str_indexof_re_eval_first_match_rec_eq_find_aux M hM (c :: cs) r
           (str_indexof_re_eval_match_regex r) rv 0 hTailValid hRTy hREval
           hMatchTy hMatchEval hFirstNe
-      have hPairFirst :
-          __pair_first
-              (__str_first_match_rec (substrWord (c :: cs) 0 (c :: cs).length) r
-                (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
-            Term.Numeral
-              (match impl_native_re_find_idx_aux rv (c :: cs) 0 with
-              | some (idx, _) => Int.ofNat idx
-              | none => -1) := by
-        have hFirstEq0 :
-            __str_first_match_rec (substrWord (c :: cs) 0 (c :: cs).length) r
-                (str_indexof_re_eval_match_regex r) (Term.Numeral 0) =
-              match impl_native_re_find_idx_aux rv (c :: cs) 0 with
-              | some (idx, len) => str_indexof_re_eval_match_pair idx (idx + len)
-              | none => str_indexof_re_eval_no_match_pair := by
-          simpa using hFirstEq
-        rw [hFirstEq0]
-        cases hFind : impl_native_re_find_idx_aux rv (c :: cs) 0 with
-        | none =>
-            simp [str_indexof_re_eval_no_match_pair, __pair_first]
-        | some p =>
-            cases p with
-            | mk idx len =>
-                simp [str_indexof_re_eval_match_pair, __pair_first]
-      change __pair_first
-          (__str_first_match_rec
-            (__str_flatten (__str_nary_intro (Term.String (c :: cs)))) r
-            (str_indexof_re_eval_match_regex r) (Term.Numeral 0)) =
-        Term.Numeral
-          (match impl_native_re_find_idx_aux rv (c :: cs) 0 with
-          | some (idx, _) => Int.ofNat idx
-          | none => -1)
-      rw [str_flatten_nary_intro_cons c cs hLen]
-      exact hPairFirst
+      rw [str_indexof_re_eval_idx_term_string_eq]
+      rw [str_flatten_nary_intro_cons c cs hLen,
+        show (Term.Numeral 0 : Term) = Term.Numeral (Int.ofNat 0) from rfl,
+        hFirstEq]
+      split
+      · next idx len hFind =>
+          simp [str_indexof_re_eval_match_pair, __pair_first]
+      · next hFind =>
+          simp [str_indexof_re_eval_no_match_pair, __pair_first]
 
 private theorem str_indexof_re_eval_tail_search_side_aux_model_eval
     (M : SmtModel) (hM : model_wf M)

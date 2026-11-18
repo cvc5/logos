@@ -482,12 +482,13 @@ theorem EvaluateProofInternal.eo_str_rev_body_typeof_seq
 
 theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_typeof_seq_char
     (x : Term)
-    (hRunTy : __eo_typeof (__run_evaluate x) = Term.UOp UserOp.Int) :
+    (hRunTy : __eo_typeof (__run_evaluate x) = Term.UOp UserOp.Int)
+    (hNe : EvaluateProofInternal.eo_eval_str_from_int_rhs x ≠ Term.Stuck) :
     __eo_typeof (EvaluateProofInternal.eo_eval_str_from_int_rhs x) =
       Term.Apply (Term.UOp UserOp.Seq) (Term.UOp UserOp.Char) := by
   cases hRunX : __run_evaluate x
   case Numeral n =>
-    rw [EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral (x := x) (n := n) hRunX]
+    rw [EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral (x := x) (n := n) hRunX hNe]
     rfl
   all_goals
     have hRunXNe : __run_evaluate x ≠ Term.Stuck := by
@@ -529,8 +530,90 @@ theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_typeof_seq_char
     simp [__eo_ite, native_ite, native_teq, __eo_is_z,
       __eo_is_z_internal, native_and, native_not]
 
+private theorem ispow2_pow_two_of_range (k : native_Int)
+    (hk0 : 0 ≤ k) (hk : k < 4294967296) :
+    __eo_pow (Term.Numeral 2) (Term.Numeral k) =
+      Term.Numeral (native_zexp_total 2 k) := by
+  have hG : native_and (native_zleq 0 k) (native_zlt k 4294967296) = true := by
+    have h1 : native_zleq 0 k = true := decide_eq_true hk0
+    have h2 : native_zlt k 4294967296 = true := decide_eq_true hk
+    rw [h1, h2]
+    rfl
+  show native_ite (native_and (native_zleq 0 k) (native_zlt k 4294967296))
+      (Term.Numeral (native_zexp_total 2 k)) Term.Stuck = _
+  rw [hG]
+  rfl
+
+private theorem ispow2_pow_two_stuck_of_ge (k : native_Int)
+    (hk : ¬ k < 4294967296) :
+    __eo_pow (Term.Numeral 2) (Term.Numeral k) = Term.Stuck := by
+  have h2 : native_zlt k 4294967296 = false := decide_eq_false hk
+  have hG : native_and (native_zleq 0 k) (native_zlt k 4294967296) = false := by
+    rw [h2]
+    cases native_zleq 0 k <;> rfl
+  show native_ite (native_and (native_zleq 0 k) (native_zlt k 4294967296))
+      (Term.Numeral (native_zexp_total 2 k)) Term.Stuck = _
+  rw [hG]
+  rfl
+
+/-- On a nonnegative numeral, the `int_ispow2` body is an equality against
+`__eo_pow 2 (log2 n)`. -/
+private theorem ispow2_body_nonneg_eq (n : native_Int) (hNeg : ¬ n < 0) :
+    (let isNeg := __eo_is_neg (Term.Numeral n)
+           let isZ := __eo_is_z (Term.Numeral n)
+           __eo_ite isZ
+            (__eo_ite isNeg (Term.Boolean false)
+              (__eo_eq (Term.Numeral n)
+                (__eo_pow (Term.Numeral 2)
+                  (__eo_ite isZ
+                    (__eo_ite isNeg (Term.Numeral 0)
+                      (__eo_log (Term.Numeral 2) (Term.Numeral n)))
+                    (__eo_mk_apply (Term.UOp UserOp.int_log2)
+                      (Term.Numeral n))))))
+            (__eo_mk_apply (Term.UOp UserOp.int_ispow2)
+              (Term.Numeral n))) =
+      __eo_eq (Term.Numeral n)
+        (__eo_pow (Term.Numeral 2) (Term.Numeral (native_int_log2 n))) := by
+  simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
+    __eo_log, native_ite, native_teq, native_and, native_not, native_zlt,
+    hNeg, EvaluateProofInternal.native_int_log_two_eq_log2]
+
+/-- A non-stuck `int_ispow2` body on a nonnegative numeral has `log2 n < 2^32`. -/
+private theorem ispow2_log_lt_of_ne (n : native_Int) (hNeg : ¬ n < 0)
+    (hNe : (let isNeg := __eo_is_neg (Term.Numeral n)
+           let isZ := __eo_is_z (Term.Numeral n)
+           __eo_ite isZ
+            (__eo_ite isNeg (Term.Boolean false)
+              (__eo_eq (Term.Numeral n)
+                (__eo_pow (Term.Numeral 2)
+                  (__eo_ite isZ
+                    (__eo_ite isNeg (Term.Numeral 0)
+                      (__eo_log (Term.Numeral 2) (Term.Numeral n)))
+                    (__eo_mk_apply (Term.UOp UserOp.int_log2)
+                      (Term.Numeral n))))))
+            (__eo_mk_apply (Term.UOp UserOp.int_ispow2)
+              (Term.Numeral n))) ≠ Term.Stuck) :
+    native_int_log2 n < 4294967296 := by
+  by_contra hGe
+  apply hNe
+  rw [ispow2_body_nonneg_eq n hNeg, ispow2_pow_two_stuck_of_ge _ hGe]
+  rfl
+
 theorem EvaluateProofInternal.int_ispow2_numeral_to_smt_type_bool
-    (n : native_Int) :
+    (n : native_Int)
+    (hNe : (let isNeg := __eo_is_neg (Term.Numeral n)
+           let isZ := __eo_is_z (Term.Numeral n)
+           __eo_ite isZ
+            (__eo_ite isNeg (Term.Boolean false)
+              (__eo_eq (Term.Numeral n)
+                (__eo_pow (Term.Numeral 2)
+                  (__eo_ite isZ
+                    (__eo_ite isNeg (Term.Numeral 0)
+                      (__eo_log (Term.Numeral 2) (Term.Numeral n)))
+                    (__eo_mk_apply (Term.UOp UserOp.int_log2)
+                      (Term.Numeral n))))))
+            (__eo_mk_apply (Term.UOp UserOp.int_ispow2)
+              (Term.Numeral n))) ≠ Term.Stuck) :
     __smtx_typeof
         (__eo_to_smt
           (let isNeg := __eo_is_neg (Term.Numeral n)
@@ -551,14 +634,28 @@ theorem EvaluateProofInternal.int_ispow2_numeral_to_smt_type_bool
   · simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
       native_ite, native_teq, native_and, native_not, native_zlt, hNeg]
     rw [__smtx_typeof.eq_1]
-  · simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
-      __eo_eq, __eo_pow, __eo_log, native_ite, native_teq, native_and,
-      native_not, native_zlt, hNeg, EvaluateProofInternal.native_int_log_two_eq_log2,
-      eq_comm]
+  · have hLog := ispow2_log_lt_of_ne n hNeg hNe
+    have hLog0 : 0 ≤ native_int_log2 n := by
+      simp [native_int_log2]
+    rw [ispow2_body_nonneg_eq n hNeg, ispow2_pow_two_of_range _ hLog0 hLog]
+    simp [__eo_eq, native_teq, eq_comm]
     rw [__smtx_typeof.eq_1]
 
 theorem EvaluateProofInternal.int_ispow2_numeral_eval_rel
-    (M : SmtModel) (n : native_Int) :
+    (M : SmtModel) (n : native_Int)
+    (hNe : (let isNeg := __eo_is_neg (Term.Numeral n)
+           let isZ := __eo_is_z (Term.Numeral n)
+           __eo_ite isZ
+            (__eo_ite isNeg (Term.Boolean false)
+              (__eo_eq (Term.Numeral n)
+                (__eo_pow (Term.Numeral 2)
+                  (__eo_ite isZ
+                    (__eo_ite isNeg (Term.Numeral 0)
+                      (__eo_log (Term.Numeral 2) (Term.Numeral n)))
+                    (__eo_mk_apply (Term.UOp UserOp.int_log2)
+                      (Term.Numeral n))))))
+            (__eo_mk_apply (Term.UOp UserOp.int_ispow2)
+              (Term.Numeral n))) ≠ Term.Stuck) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M
         (SmtTerm.and
@@ -595,11 +692,14 @@ theorem EvaluateProofInternal.int_ispow2_numeral_eval_rel
       unfold native_zleq
       rw [decide_eq_true_eq]
       exact Int.le_of_not_gt hNeg
+    have hLog := ispow2_log_lt_of_ne n hNeg hNe
+    have hLog0 : 0 ≤ native_int_log2 n := by
+      simp [native_int_log2]
+    rw [ispow2_body_nonneg_eq n hNeg, ispow2_pow_two_of_range _ hLog0 hLog]
     simp [__smtx_model_eval, __smtx_model_eval_geq, __smtx_model_eval_leq,
       __smtx_model_eval_eq, __smtx_model_eval_and,
       __smtx_model_eval_int_pow2, __smtx_model_eval_int_log2,
-      __eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite, __eo_eq,
-      __eo_pow, __eo_log, native_ite, native_teq, native_and, native_not,
-      native_veq, native_zlt, hGeq, hNeg, EvaluateProofInternal.native_int_log_two_eq_log2,
-      native_int_pow2, RuleProofs.smt_value_rel, eq_comm]
+      __eo_eq, native_ite, native_teq, native_and, native_not,
+      native_veq, native_zlt, hGeq, native_int_pow2,
+      RuleProofs.smt_value_rel, eq_comm]
 

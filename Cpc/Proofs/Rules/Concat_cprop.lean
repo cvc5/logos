@@ -2622,6 +2622,13 @@ private theorem str_is_compatible_full_word_flatten_rec_ne_false_of_append_eval
                 cases hEq)
               hFlatList hAccCompat
 termination_by x => sizeOf x
+-- The default `decreasing_tactic` diverges here (it loops in `subst_vars`), so
+-- discharge the size goals by rewriting along the constructor equations.
+decreasing_by
+  all_goals
+    simp_wf
+    simp only [*, Term.Apply.sizeOf_spec, Term.UOp.sizeOf_spec, mkConcat]
+    omega
 
 private theorem str_is_compatible_full_word_flatten_ne_false_of_append_eval
     (M : SmtModel) (hM : model_wf M) :
@@ -7101,6 +7108,10 @@ private theorem facts_concat_cprop_true_formula
                 swap
                 · rw [RuleProofs.str_flatten_nary_intro_string_stuck
                     (c :: (d :: ds).dropLast) hDLen,
+                    show __eo_list_rev (Term.UOp UserOp.str_concat) Term.Stuck =
+                      Term.Stuck by
+                      simp [__eo_list_rev, __eo_is_list, __eo_requires,
+                        native_ite, native_teq],
                     strConcatDrop_stuck_local] at hBad
                   simp [__str_is_compatible] at hBad
                 rw [RuleProofs.str_flatten_nary_intro_cons c

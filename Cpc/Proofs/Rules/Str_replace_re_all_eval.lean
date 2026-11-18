@@ -991,6 +991,12 @@ private theorem strConcat_singleton_elim_rel
       simpa [__eo_list_singleton_elim_2] using
         RuleProofs.smt_value_rel_refl _
 
+private theorem str_eval_replace_re_all_rec_stuck_left_local
+    (acc r t skip : Term) :
+    __str_eval_replace_re_all_rec Term.Stuck acc r t skip = Term.Stuck := by
+  unfold __str_eval_replace_re_all_rec
+  split <;> simp_all
+
 private theorem str_replace_re_all_eval_valid_properties
     (M : SmtModel) (hM : model_wf M)
     (s r t u : Term)
@@ -1110,8 +1116,7 @@ private theorem str_replace_re_all_eval_valid_properties
             apply hRawNe
             dsimp only [raw]
             rw [hFlat]
-            unfold __str_eval_replace_re_all_rec
-            split <;> rfl))
+            exact str_eval_replace_re_all_rec_stuck_left_local _ _ _ _))
   have hRawNeSub :
       __str_eval_replace_re_all_rec (substrWord str 0 str.length) (Term.String [])
           (replace_re_all_nonempty_re r) t (Term.Numeral 0) ≠ Term.Stuck := by

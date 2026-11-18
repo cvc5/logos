@@ -2381,14 +2381,13 @@ private theorem reIncl_eo_list_repeat_rec_zero_eq :
         reIncl_eo_list_repeat_rec_zero_eq n, __eo_mk_apply,
         reIncl_zeroIntListTerm_ne_stuck]
 
-private theorem reIncl_eo_list_repeat_zero_eq (n : Nat) :
+private theorem reIncl_eo_list_repeat_zero_eq (n : Nat) (hn : n < 4294967296) :
     __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
         (Term.Numeral 0) (Term.Numeral (Int.ofNat n)) =
       reIncl_zeroIntListTerm n := by
-  have hnot : native_zlt (↑n : native_Int) 0 = false := by
-    simp [native_zlt]
-  simp [__eo_list_repeat, native_ite, native_int_to_nat, hnot,
-    reIncl_eo_list_repeat_rec_zero_eq]
+  have hnot : ¬ 4294967296 ≤ n := by omega
+  simp [__eo_list_repeat, native_ite, native_and, native_zleq, native_zlt,
+    native_int_to_nat, hnot, reIncl_eo_list_repeat_rec_zero_eq]
 
 private theorem reIncl_intRangeTerm_ne_stuck :
     ∀ n start, reIncl_intRangeTerm start n ≠ Term.Stuck
@@ -2407,7 +2406,7 @@ private theorem reIncl_iota_zero_list_eq_range :
       simp [__eo_mk_apply, reIncl_intRangeTerm_ne_stuck]
 
 theorem str_flatten_concat_string_eq_local
-    (s : native_String) (tail : Term) :
+    (s : native_String) (tail : Term) (hLen : s.length < 4294967296) :
     __str_flatten (mkConcat (Term.String s) tail) =
       __eo_list_concat (Term.UOp UserOp.str_concat)
         (substrWord s 0 s.length) (__str_flatten tail) := by
@@ -2451,7 +2450,7 @@ theorem str_flatten_concat_string_eq_local
         show __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
             (Term.Numeral 0) (Term.Numeral 0) =
           reIncl_zeroIntListTerm 0 by
-            simpa using reIncl_eo_list_repeat_zero_eq 0,
+            simpa using reIncl_eo_list_repeat_zero_eq 0 (by decide),
         reIncl_iota_zero_list_eq_range,
         reIncl_str_flatten_word_rec_range_eq_substrWord]
       simp [substrWord]
@@ -2511,9 +2510,65 @@ theorem str_flatten_concat_string_eq_local
               omega
             rw [hCountLen]]
         exact eo_requires_self_eq_of_ne_stuck (Term.Boolean false) _ (by simp)
-      rw [hIsStr, eo_ite_true, hReqLen, reIncl_eo_list_repeat_zero_eq,
+      rw [hIsStr, eo_ite_true, hReqLen, 
+        reIncl_eo_list_repeat_zero_eq (List.length cs + 1) hLen,
         reIncl_iota_zero_list_eq_range,
         reIncl_str_flatten_word_rec_range_eq_substrWord]
+
+theorem str_flatten_concat_string_stuck_local
+    (s : native_String) (tail : Term) (hLen : ¬ s.length < 4294967296) :
+    __str_flatten (mkConcat (Term.String s) tail) = Term.Stuck := by
+  cases s with
+  | nil => simp at hLen
+  | cons c cs =>
+      change
+        __eo_ite (__eo_is_str (Term.String (c :: cs)))
+            (__eo_list_concat (Term.UOp UserOp.str_concat)
+              (__str_flatten_word_rec
+                (__eo_requires
+                  (__eo_is_neg
+                    (Term.Numeral (Int.ofNat (List.length cs + 1))))
+                  (Term.Boolean false)
+                  (__iota_rec
+                    (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+                      (Term.Numeral 0)
+                      (Term.Numeral (Int.ofNat (List.length cs + 1))))
+                    (Term.Numeral 0)))
+                (Term.String (c :: cs)))
+              (__str_flatten tail))
+            (__eo_mk_apply
+              (Term.Apply (Term.UOp UserOp.str_concat)
+                (Term.String (c :: cs)))
+              (__str_flatten tail)) =
+          Term.Stuck
+      have hIsStr :
+          __eo_is_str (Term.String (c :: cs)) = Term.Boolean true := by
+        simp [__eo_is_str, __eo_is_str_internal, native_teq, native_not,
+          SmtEval.native_and]
+      have hRep :
+          __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+              (Term.Numeral 0)
+              (Term.Numeral (Int.ofNat (List.length cs + 1))) = Term.Stuck := by
+        have hLe : ¬ ((cs.length : Int) + 1 < 4294967296) := by
+          simp only [List.length_cons] at hLen
+          omega
+        simp [__eo_list_repeat, native_ite, native_and, native_zlt, hLe]
+      have hWordRec : ∀ t,
+          __str_flatten_word_rec Term.Stuck t = Term.Stuck := by
+        intro t
+        unfold __str_flatten_word_rec
+        split <;> simp_all
+      rw [hIsStr, eo_ite_true, hRep]
+      simp [__iota_rec, __eo_requires, native_ite, native_teq, native_not,
+        hWordRec, __eo_list_concat, __eo_is_list]
+
+theorem str_flatten_concat_string_len_lt_local
+    (s : native_String) (tail : Term)
+    (hNe : __str_flatten (mkConcat (Term.String s) tail) ≠ Term.Stuck) :
+    s.length < 4294967296 := by
+  by_cases hLen : s.length < 4294967296
+  · exact hLen
+  · exact False.elim (hNe (str_flatten_concat_string_stuck_local s tail hLen))
 
 private theorem eo_is_str_false_of_not_string
     (t : Term) (ht : t ≠ Term.Stuck)
@@ -2984,6 +3039,7 @@ private theorem str_flatten_list_eval_rel
                 __eo_list_concat (Term.UOp UserOp.str_concat)
                   (substrWord w 0 w.length) (__str_flatten tail) :=
             str_flatten_concat_string_eq_local w tail
+              (str_flatten_concat_string_len_lt_local w tail hFlatNe)
           intro hTailStuck
           apply hFlatNe
           rw [hFlatEq, hTailStuck]
@@ -3017,6 +3073,7 @@ private theorem str_flatten_list_eval_rel
         have hFlatEq :
             __str_flatten (mkConcat (Term.String w) tail) = flatTerm := by
           simpa [flatTerm] using str_flatten_concat_string_eq_local w tail
+            (str_flatten_concat_string_len_lt_local w tail hFlatNe)
         have hSubTy :
             __smtx_typeof (__eo_to_smt (substrWord w 0 w.length)) =
               SmtType.Seq T :=

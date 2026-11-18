@@ -166,6 +166,7 @@ theorem EvaluateProofInternal.bv_eval_concat_list_repeat_rec_binary
 theorem EvaluateProofInternal.bv_eval_concat_list_repeat_binary_eval
     (M : SmtModel) (i w n : native_Int)
     (hi0 : native_zleq 0 i = true)
+    (hiLt : native_zlt i 4294967296 = true)
     (hWNonneg : native_zleq 0 w = true) :
     __smtx_model_eval M
         (__eo_to_smt
@@ -184,7 +185,7 @@ theorem EvaluateProofInternal.bv_eval_concat_list_repeat_binary_eval
           (Term.Numeral i) =
         __eo_list_repeat_rec (Term.UOp UserOp.concat) (Term.Binary w n)
           (native_int_to_nat i) := by
-    simp [__eo_list_repeat, native_ite, hiNotNeg]
+    simp [__eo_list_repeat, native_ite, native_and, hi0, hiLt]
   rcases EvaluateProofInternal.bv_eval_concat_list_repeat_rec_binary w n hWNonneg
       (native_int_to_nat i) with
     ⟨m, hTerm, hEval, _hCanon⟩
@@ -633,11 +634,24 @@ theorem EvaluateProofInternal.eo_repeat_literal_arg_binary_of_typeof_bitvec
     have hBad : (0 : Int) < 0 := by
       simpa [hIeq0] using hiPos
     exact (by decide : ¬ (0 : Int) < 0) hBad
+  have hiLt : native_zlt i 4294967296 = true := by
+    cases hLt : native_zlt i 4294967296
+    · exfalso
+      have hRep :
+          __eo_list_repeat (Term.UOp UserOp.concat) x (Term.Numeral i) =
+            Term.Stuck := by
+        cases x <;> simp [__eo_list_repeat, native_ite, native_and, hLt]
+      rw [hRep] at h
+      simp [__bv_eval_concat] at h
+      change Term.Stuck =
+        Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
+      cases h
+    · rfl
   have hList (hxNe : x ≠ Term.Stuck) :
       __eo_list_repeat (Term.UOp UserOp.concat) x (Term.Numeral i) =
         __eo_list_repeat_rec (Term.UOp UserOp.concat) x
           (native_int_to_nat i) := by
-    cases x <;> simp [__eo_list_repeat, native_ite, hiNotNeg] at hxNe ⊢
+    cases x <;> simp [__eo_list_repeat, native_ite, native_and, hi0, hiLt] at hxNe ⊢
   by_cases hBinary :
       ∃ wx : native_Int, ∃ nx : native_Int, x = Term.Binary wx nx
   · rcases hBinary with ⟨wx, nx, rfl⟩

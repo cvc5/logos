@@ -131,7 +131,7 @@ theorem EvaluateProofInternal.eo_iota_zero_int_list :
 
 theorem EvaluateProofInternal.eo_iota_list_repeat_int_of_nonneg
     {k i : native_Int}
-    (hNonneg : ¬ k < 0) :
+    (hNonneg : ¬ k < 0) (hSmall : k < 4294967296) :
     __iota_rec
         (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
           (Term.Numeral 0) (Term.Numeral k))
@@ -140,8 +140,10 @@ theorem EvaluateProofInternal.eo_iota_list_repeat_int_of_nonneg
   have hNegBool : native_zlt k 0 = false := by
     rw [show native_zlt k 0 = decide (k < 0) by rfl]
     exact decide_eq_false hNonneg
-  simp [__eo_list_repeat, native_ite, hNegBool,
-    EvaluateProofInternal.eo_list_repeat_rec_int_zero, EvaluateProofInternal.eo_iota_zero_int_list]
+  have hk0 : 0 ≤ k := Int.le_of_not_gt hNonneg
+  simp [__eo_list_repeat, native_ite, native_and, native_zleq, native_zlt, hk0,
+    hSmall, EvaluateProofInternal.eo_list_repeat_rec_int_zero,
+    EvaluateProofInternal.eo_iota_zero_int_list]
 
 theorem EvaluateProofInternal.native_digitChar_toNat_of_lt10 {d : Nat} (hd : d < 10) :
     Char.toNat (Nat.digitChar d) = 48 + d := by
@@ -464,7 +466,8 @@ theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_zero
 theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_pos
     {x : Term} {n : native_Int}
     (hRun : __run_evaluate x = Term.Numeral n)
-    (hPos : 0 < n) :
+    (hPos : 0 < n)
+    (hNe : EvaluateProofInternal.eo_eval_str_from_int_rhs x ≠ Term.Stuck) :
     EvaluateProofInternal.eo_eval_str_from_int_rhs x = Term.String (native_str_from_int n) := by
   have hReduced :
       EvaluateProofInternal.eo_eval_str_from_int_rhs x =
@@ -493,11 +496,28 @@ theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_pos
       rw [show native_zlt (native_zplus (native_int_log 10 n) 1) 0 =
         decide (native_zplus (native_int_log 10 n) 1 < 0) by rfl]
       exact decide_eq_false hFuelNonneg
+    have hSmall : native_zplus (native_int_log 10 n) 1 < 4294967296 := by
+      by_cases hSmall : native_zplus (native_int_log 10 n) 1 < 4294967296
+      · exact hSmall
+      · apply False.elim (hNe _)
+        dsimp [EvaluateProofInternal.eo_eval_str_from_int_rhs]
+        rw [hRun]
+        simp only [__eo_log, __eo_add]
+        have hRep :
+            __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+                (Term.Numeral 0)
+                (Term.Numeral (native_zplus (native_int_log 10 n) 1)) =
+              Term.Stuck := by
+          simp [__eo_list_repeat, native_ite, native_and, native_zlt, hSmall]
+        rw [hRep]
+        simp [__iota_rec, __eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
+          __eo_requires, native_ite, native_teq, native_and, native_not,
+          hNegBool, hFuelNegBool, __str_from_int_eval_rec]
     dsimp [EvaluateProofInternal.eo_eval_str_from_int_rhs]
     rw [hRun]
     simp only [__eo_log, __eo_add]
     rw [EvaluateProofInternal.eo_iota_list_repeat_int_of_nonneg (k :=
-      native_zplus (native_int_log 10 n) 1) (i := 0) hFuelNonneg]
+      native_zplus (native_int_log 10 n) 1) (i := 0) hFuelNonneg hSmall]
     simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_ite,
       __eo_requires, native_ite, native_teq, native_and, native_not,
       hNegBool, hFuelNegBool]
@@ -522,7 +542,8 @@ theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_pos
 
 theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral
     {x : Term} {n : native_Int}
-    (hRun : __run_evaluate x = Term.Numeral n) :
+    (hRun : __run_evaluate x = Term.Numeral n)
+    (hNe : EvaluateProofInternal.eo_eval_str_from_int_rhs x ≠ Term.Stuck) :
     EvaluateProofInternal.eo_eval_str_from_int_rhs x = Term.String (native_str_from_int n) := by
   by_cases hNeg : n < 0
   · exact EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_neg hRun hNeg
@@ -536,7 +557,7 @@ theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral
         · have hLeZero : n ≤ 0 := Int.le_of_not_gt hPos
           have hEq : n = 0 := Int.le_antisymm hLeZero hNonneg
           exact False.elim (hZero hEq)
-      exact EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_pos hRun hPos
+      exact EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral_pos hRun hPos hNe
 
 theorem EvaluateProofInternal.eo_eval_str_from_int_rhs_run_non_numeral
     {x t : Term}
