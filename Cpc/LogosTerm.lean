@@ -249,7 +249,7 @@ User operators with four indices.
 inductive UserOp4 : Type where
   | _at_ran : UserOp4
 
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 mutual
 
