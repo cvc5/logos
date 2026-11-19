@@ -1421,7 +1421,7 @@ private theorem typeof_uneg_eq
     (t : SmtTerm) :
     __smtx_typeof (SmtTerm.uneg t) =
       __smtx_typeof_arith_overload_op_1 (__smtx_typeof t) := by
-  rw [__smtx_typeof.eq_25]
+  rw [__smtx_typeof.eq_26]
 
 /-- Computes the type of applying a regular-language constant as a head. -/
 private theorem typeof_apply_reglan_head_eq_none

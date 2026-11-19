@@ -983,17 +983,17 @@ theorem eo_typeof_bvnego_arg_bitvec_of_ne_stuck {A : Term}
 theorem smt_typeof_bvnot_eq (t : SmtTerm) :
     __smtx_typeof (SmtTerm.bvnot t) =
       __smtx_typeof_bv_op_1 (__smtx_typeof t) := by
-  rw [__smtx_typeof.eq_39]
+  rw [__smtx_typeof.eq_40]
 
 theorem smt_typeof_bvneg_eq (t : SmtTerm) :
     __smtx_typeof (SmtTerm.bvneg t) =
       __smtx_typeof_bv_op_1 (__smtx_typeof t) := by
-  rw [__smtx_typeof.eq_47]
+  rw [__smtx_typeof.eq_48]
 
 theorem smt_typeof_bvnego_eq (t : SmtTerm) :
     __smtx_typeof (SmtTerm.bvnego t) =
       __smtx_typeof_bv_op_1_ret (__smtx_typeof t) SmtType.Bool := by
-  rw [__smtx_typeof.eq_72]
+  rw [__smtx_typeof.eq_73]
 
 theorem smt_typeof_bvcomp_eq (t u : SmtTerm) :
     __smtx_typeof (SmtTerm.bvcomp t u) =

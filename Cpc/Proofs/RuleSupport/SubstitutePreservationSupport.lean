@@ -4649,7 +4649,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                   (SmtTerm._at_purify
                                                     (__eo_to_smt X)) ≠
                                                 SmtType.None
-                                            rw [__smtx_typeof.eq_13]
+                                            rw [__smtx_typeof.eq_14]
                                             simpa [RuleProofs.eo_has_smt_translation]
                                               using hXTrans)
                                           (fun hATrans hATy =>
@@ -5190,7 +5190,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                               ⟨n, hSmtArg⟩
                                                             rw [hSmtArg]
                                                             simp [__eo_to_smt_bv_size,
-                                                              __smtx_typeof.eq_13,
+                                                              __smtx_typeof.eq_14,
                                                               __smtx_typeof.eq_2,
                                                               native_ite, native_zleq,
                                                               SmtEval.native_zleq,

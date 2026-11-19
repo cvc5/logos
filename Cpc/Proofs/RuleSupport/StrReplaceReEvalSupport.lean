@@ -1141,7 +1141,7 @@ private theorem str_replace_re_eval_valid_properties
         (native_pack_seq SmtType.Char
           (native_str_replace_re (impl_native_string_to_values str) rv
             (native_unpack_seq repl)))
-    rw [__smtx_model_eval.eq_101, __smtx_model_eval.eq_4, hREval, hTEval]
+    rw [__smtx_model_eval.eq_103, __smtx_model_eval.eq_4, hREval, hTEval]
     simp [__smtx_model_eval_str_replace_re,
       native_pack_string, impl_native_string_to_values,
       Smtm.native_unpack_pack_seq, elem_typeof_pack_seq]

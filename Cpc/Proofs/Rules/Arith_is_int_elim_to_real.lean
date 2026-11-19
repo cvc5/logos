@@ -98,8 +98,8 @@ private theorem facts___eo_prog_arith_is_int_elim_to_real_impl
   have hEvalLhs :
       __smtx_model_eval M (__eo_to_smt (isIntToRealTerm t)) =
         SmtValue.Boolean true := by
-    rw [eo_to_smt_is_int_to_real_eq, __smtx_model_eval.eq_23,
-      __smtx_model_eval.eq_21, hEvalT]
+    rw [eo_to_smt_is_int_to_real_eq, __smtx_model_eval.eq_25,
+      __smtx_model_eval.eq_23, hEvalT]
     change __smtx_model_eval_eq
         (SmtValue.Real (native_int_to_real
           (native_real_to_int (native_int_to_real n))))
