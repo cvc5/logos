@@ -10,6 +10,7 @@ public import Cpc.Proofs.RuleSupport.DtCollapseSelectorSupport
 import all Cpc.Proofs.RuleSupport.DtCollapseSelectorSupport
 public import Cpc.Proofs.RuleSupport.DtCollapseTesterSupport
 import all Cpc.Proofs.RuleSupport.DtCollapseTesterSupport
+public import Cpc.Proofs.RuleSupport.DtCollapseUpdaterSupport
 
 open Eo
 open SmtEval
@@ -124,63 +125,62 @@ private theorem eq_rhs_stuck_not_bool (lhs : Term) :
     decide +kernel
   exact hTypes.2 hNone
 
-private theorem eo_len_stuck_of_list_find_is_neg_bool
-    (selectors sel : Term) (b : Bool) :
-    __eo_is_neg (__eo_list_find Term.__eo_List_cons selectors sel) =
-      Term.Boolean b ->
-    __eo_len selectors = Term.Stuck := by
-  intro h
-  cases selectors <;>
-    simp [__eo_list_find, __eo_is_list, __eo_get_nil_rec, __eo_is_list_nil,
-      __eo_requires, __eo_is_ok, __eo_is_neg, __eo_len, native_ite,
-      native_teq, native_not, SmtEval.native_not] at h ⊢
-
-private theorem dt_collapse_updater_rhs_index_stuck (t a : Term) :
-    __dt_collapse_updater_rhs t a Term.Stuck = Term.Stuck := by
-  cases t <;> cases a <;> simp [__dt_collapse_updater_rhs]
-
-private theorem dt_collapse_updater_guard_true_of_rhs_non_stuck
+private theorem dt_collapse_updater_guard_cases
     (sel t a rhs : Term) :
-    (let selectors := __dt_get_selectors_of_app (__eo_typeof t) t
-     let idx := __eo_list_find Term.__eo_List_cons selectors sel
-     (if __eo_is_neg idx = Term.Boolean true then
-        t
-      else if __eo_is_neg idx = Term.Boolean false then
-        __dt_collapse_updater_rhs t a
-          (__eo_add (__eo_add (__eo_len selectors) idx)
-            (Term.Numeral (-1 : native_Int)))
-      else Term.Stuck) = rhs) ->
+    __mk_dt_collapse_updater_rhs
+        (Term.Apply (Term.Apply (Term.UOp1 UserOp1.update sel) t) a) = rhs ->
     rhs ≠ Term.Stuck ->
-    __eo_is_neg
+    (__eo_is_neg
         (__eo_list_find Term.__eo_List_cons
           (__dt_get_selectors_of_app (__eo_typeof t) t) sel) =
-      Term.Boolean true ∧ rhs = t := by
+      Term.Boolean true ∧ rhs = t) ∨
+    (__eo_is_neg
+        (__eo_list_find Term.__eo_List_cons
+          (__dt_get_selectors_of_app (__eo_typeof t) t) sel) =
+      Term.Boolean false ∧
+      __dt_collapse_updater_rhs t a
+          (__eo_add
+            (__eo_add
+              (__eo_list_len Term.__eo_List_cons
+                (__dt_get_selectors_of_app (__eo_typeof t) t))
+              (__eo_neg
+                (__eo_list_find Term.__eo_List_cons
+                  (__dt_get_selectors_of_app (__eo_typeof t) t) sel)))
+            (Term.Numeral (-1 : native_Int))) = rhs) := by
   intro hGuard hRhs
-  let selectors := __dt_get_selectors_of_app (__eo_typeof t) t
-  let idx := __eo_list_find Term.__eo_List_cons selectors sel
-  cases hNeg : __eo_is_neg idx with
+  change
+    __eo_ite
+        (__eo_is_neg
+          (__eo_list_find Term.__eo_List_cons
+            (__dt_get_selectors_of_app (__eo_typeof t) t) sel))
+        t
+        (__dt_collapse_updater_rhs t a
+          (__eo_add
+            (__eo_add
+              (__eo_list_len Term.__eo_List_cons
+                (__dt_get_selectors_of_app (__eo_typeof t) t))
+              (__eo_neg
+                (__eo_list_find Term.__eo_List_cons
+                  (__dt_get_selectors_of_app (__eo_typeof t) t) sel)))
+            (Term.Numeral (-1 : native_Int)))) = rhs at hGuard
+  cases hNeg :
+      __eo_is_neg
+        (__eo_list_find Term.__eo_List_cons
+          (__dt_get_selectors_of_app (__eo_typeof t) t) sel) with
   | Boolean b =>
+      rw [hNeg] at hGuard
       cases b
-      · exfalso
-        have hLen : __eo_len selectors = Term.Stuck :=
-          eo_len_stuck_of_list_find_is_neg_bool selectors sel false
-            (by simpa [idx] using hNeg)
-        have hCollapse :
-            __dt_collapse_updater_rhs t a
-                (__eo_add (__eo_add (__eo_len selectors) idx)
-                  (Term.Numeral (-1 : native_Int))) =
-              Term.Stuck := by
-          rw [hLen]
-          simp [__eo_add, dt_collapse_updater_rhs_index_stuck]
-        apply hRhs
-        simpa [selectors, idx, hNeg, hCollapse] using hGuard.symm
-      · constructor
-        · simp
-        · simpa [selectors, idx, hNeg] using hGuard.symm
+      · right
+        refine ⟨rfl, ?_⟩
+        simpa [__eo_ite, native_ite, native_teq] using hGuard
+      · left
+        refine ⟨rfl, ?_⟩
+        simpa [__eo_ite, native_ite, native_teq] using hGuard.symm
   | _ =>
       exfalso
+      rw [hNeg] at hGuard
       apply hRhs
-      simpa [selectors, idx, hNeg] using hGuard.symm
+      simpa [__eo_ite, native_ite, native_teq] using hGuard.symm
 
 private theorem smt_model_eval_ne_notvalue_of_non_none
     (M : SmtModel) (hM : model_wf M) (x : SmtTerm) :
@@ -1978,7 +1978,6 @@ private theorem facts___eo_prog_dt_collapse_updater_impl
           | UOp1 op sel =>
               cases op with
               | update =>
-                  simp [__mk_dt_collapse_updater_rhs] at hGuard
                   have hTypes :=
                     RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
                       (((Term.UOp1 UserOp1.update sel).Apply t).Apply a)
@@ -1990,9 +1989,12 @@ private theorem facts___eo_prog_dt_collapse_updater_impl
                   have hRhsNe : rhs ≠ Term.Stuck :=
                     RuleProofs.term_ne_stuck_of_has_smt_translation rhs
                       hRhsTrans
-                  rcases dt_collapse_updater_guard_true_of_rhs_non_stuck
+                  rcases dt_collapse_updater_guard_cases
                       sel t a rhs hGuard hRhsNe with
-                    ⟨hFindNeg, hRhsEq⟩
+                    ⟨hFindNeg, hRhsEq⟩ | ⟨hFindPos, hRhsEq⟩
+                  swap
+                  · exact dt_collapse_updater_found_rel M hM sel t a rhs
+                      hFindPos hRhsEq hBool
                   rw [hRhsEq]
                   change RuleProofs.smt_value_rel
                     (__smtx_model_eval M

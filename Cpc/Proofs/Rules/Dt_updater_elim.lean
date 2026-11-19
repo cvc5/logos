@@ -10,6 +10,7 @@ public import Cpc.Proofs.Translation.Apply
 import all Cpc.Proofs.Translation.Apply
 public import Cpc.Proofs.Translation.Full
 import all Cpc.Proofs.Translation.Full
+public import Cpc.Proofs.RuleSupport.TupleSpineSupport
 
 open Eo
 open SmtEval
@@ -57,32 +58,15 @@ private theorem eo_requires_result_ne_stuck_of_ne_stuck_local
 private theorem eq_args_of_prog_dt_updater_elim_ne_stuck
     (a1 : Term) :
   __eo_prog_dt_updater_elim a1 ≠ Term.Stuck ->
-  ∃ u t a c tu t2 t3,
+  ∃ u t a rhs,
     a1 =
       Term.Apply
         (Term.Apply (Term.UOp UserOp.eq)
           (Term.Apply (Term.Apply u t) a))
-        (Term.Apply
-          (Term.Apply
-            (Term.Apply (Term.UOp UserOp.ite)
-              (Term.Apply (Term.UOp1 UserOp1.is c) t2))
-            tu)
-          t3) ∧
-    t2 = t ∧
-    t3 = t ∧
-    __mk_dt_updater_elim_rhs
-      (Term.Apply (Term.Apply u t) a) c
-      (__dt_get_selectors (__eo_typeof t) c) = tu ∧
-    __eo_prog_dt_updater_elim a1 =
-      Term.Apply
-        (Term.Apply (Term.UOp UserOp.eq)
-          (Term.Apply (Term.Apply u t) a))
-        (Term.Apply
-          (Term.Apply
-            (Term.Apply (Term.UOp UserOp.ite)
-              (Term.Apply (Term.UOp1 UserOp1.is c) t))
-            tu)
-          t) := by
+        rhs ∧
+    __mk_dt_updater_elim_conc (Term.Apply (Term.Apply u t) a) rhs =
+      Term.Boolean true ∧
+    __eo_prog_dt_updater_elim a1 = a1 := by
   intro hProg
   cases a1 with
   | Apply f rhs =>
@@ -96,133 +80,25 @@ private theorem eq_args_of_prog_dt_updater_elim_ne_stuck
                   | Apply lhsF a =>
                       cases lhsF with
                       | Apply u t =>
-                          cases rhs with
-                          | Apply rhsF t3 =>
-                              cases rhsF with
-                              | Apply rhsG tu =>
-                                  cases rhsG with
-                                  | Apply rhsH cond =>
-                                      cases rhsH with
-                                      | UOp opIte =>
-                                          cases opIte with
-                                          | ite =>
-                                              cases cond with
-                                              | Apply condF t2 =>
-                                                  cases condF with
-                                                  | UOp1 opIs c =>
-                                                      cases opIs with
-                                                      | is =>
-                                                          let upd :=
-                                                            Term.Apply
-                                                              (Term.Apply u t) a
-                                                          let body :=
-                                                            Term.Apply
-                                                              (Term.Apply
-                                                                (Term.UOp UserOp.eq)
-                                                                upd)
-                                                              (Term.Apply
-                                                                (Term.Apply
-                                                                  (Term.Apply
-                                                                    (Term.UOp UserOp.ite)
-                                                                    (Term.Apply
-                                                                      (Term.UOp1 UserOp1.is c) t))
-                                                                  tu)
-                                                                t)
-                                                          let inner :=
-                                                            __eo_requires
-                                                              (__mk_dt_updater_elim_rhs
-                                                                upd c
-                                                                (__dt_get_selectors
-                                                                  (__eo_typeof t) c))
-                                                              tu body
-                                                          have hOuter :
-                                                              __eo_requires
-                                                                (__eo_and
-                                                                  (__eo_eq t t2)
-                                                                  (__eo_eq t t3))
-                                                                (Term.Boolean true)
-                                                                inner ≠
-                                                                Term.Stuck := by
-                                                            simpa [__eo_prog_dt_updater_elim,
-                                                              upd, body, inner] using hProg
-                                                          rcases
-                                                              RuleProofs.eqs_of_requires_and_eq_true_not_stuck
-                                                                t t t2 t3 inner hOuter with
-                                                            ⟨hT2, hT3⟩
-                                                          have hInnerNe :
-                                                              inner ≠ Term.Stuck :=
-                                                            eo_requires_result_ne_stuck_of_ne_stuck_local
-                                                              (__eo_and
-                                                                (__eo_eq t t2)
-                                                                (__eo_eq t t3))
-                                                              (Term.Boolean true)
-                                                              inner hOuter
-                                                          have hMk :
-                                                              __mk_dt_updater_elim_rhs
-                                                                upd c
-                                                                (__dt_get_selectors
-                                                                  (__eo_typeof t) c) =
-                                                                tu :=
-                                                            eo_requires_eq_of_ne_stuck_local
-                                                              (__mk_dt_updater_elim_rhs
-                                                                upd c
-                                                                (__dt_get_selectors
-                                                                  (__eo_typeof t) c))
-                                                              tu body hInnerNe
-                                                          have hInnerEq :
-                                                              inner = body :=
-                                                            eo_requires_eq_result_of_ne_stuck_local
-                                                              (__mk_dt_updater_elim_rhs
-                                                                upd c
-                                                                (__dt_get_selectors
-                                                                  (__eo_typeof t) c))
-                                                              tu body hInnerNe
-                                                          have hOuterEq :
-                                                              __eo_requires
-                                                                (__eo_and
-                                                                  (__eo_eq t t2)
-                                                                  (__eo_eq t t3))
-                                                                (Term.Boolean true)
-                                                                inner =
-                                                                inner :=
-                                                            eo_requires_eq_result_of_ne_stuck_local
-                                                              (__eo_and
-                                                                (__eo_eq t t2)
-                                                                (__eo_eq t t3))
-                                                              (Term.Boolean true)
-                                                              inner hOuter
-                                                          refine
-                                                            ⟨u, t, a, c, tu, t2, t3,
-                                                              rfl, hT2, hT3, hMk, ?_⟩
-                                                          subst t2
-                                                          subst t3
-                                                          simpa [__eo_prog_dt_updater_elim,
-                                                            upd, body, inner, hInnerEq]
-                                                            using hOuterEq
-                                                      | _ =>
-                                                          change Term.Stuck ≠ Term.Stuck at hProg
-                                                          exact False.elim (hProg rfl)
-                                                  | _ =>
-                                                      change Term.Stuck ≠ Term.Stuck at hProg
-                                                      exact False.elim (hProg rfl)
-                                              | _ =>
-                                                  change Term.Stuck ≠ Term.Stuck at hProg
-                                                  exact False.elim (hProg rfl)
-                                          | _ =>
-                                              change Term.Stuck ≠ Term.Stuck at hProg
-                                              exact False.elim (hProg rfl)
-                                      | _ =>
-                                          change Term.Stuck ≠ Term.Stuck at hProg
-                                          exact False.elim (hProg rfl)
-                                  | _ =>
-                                      change Term.Stuck ≠ Term.Stuck at hProg
-                                      exact False.elim (hProg rfl)
-                              | _ =>
-                                  change Term.Stuck ≠ Term.Stuck at hProg
-                                  exact False.elim (hProg rfl)
-                          | _ =>
-                              change Term.Stuck ≠ Term.Stuck at hProg
-                              exact False.elim (hProg rfl)
+                          let upd := Term.Apply (Term.Apply u t) a
+                          let body :=
+                            Term.Apply
+                              (Term.Apply (Term.UOp UserOp.eq) upd) rhs
+                          have hReq :
+                              __eo_requires
+                                  (__mk_dt_updater_elim_conc upd rhs)
+                                  (Term.Boolean true) body ≠ Term.Stuck := by
+                            simpa [__eo_prog_dt_updater_elim, upd, body]
+                              using hProg
+                          have hConc :
+                              __mk_dt_updater_elim_conc upd rhs =
+                                Term.Boolean true :=
+                            eo_requires_eq_of_ne_stuck_local _ _ _ hReq
+                          have hReqEq :=
+                            eo_requires_eq_result_of_ne_stuck_local _ _ _ hReq
+                          refine ⟨u, t, a, rhs, rfl, hConc, ?_⟩
+                          simpa [__eo_prog_dt_updater_elim, upd, body]
+                            using hReqEq
                       | _ =>
                           change Term.Stuck ≠ Term.Stuck at hProg
                           exact False.elim (hProg rfl)
@@ -250,11 +126,58 @@ private theorem prog_dt_updater_elim_eq_arg_of_typeof_bool
   have hProg : __eo_prog_dt_updater_elim a1 ≠ Term.Stuck :=
     term_ne_stuck_of_typeof_bool hTy
   rcases eq_args_of_prog_dt_updater_elim_ne_stuck a1 hProg with
-    ⟨u, t, a, c, tu, t2, t3, hA1Eq, hT2, hT3, _hMk, hProgEq⟩
-  subst hA1Eq
-  subst t2
-  subst t3
+    ⟨_u, _t, _a, _rhs, _hA1Eq, _hConc, hProgEq⟩
   exact hProgEq
+
+private theorem mk_dt_updater_elim_conc_update_cases
+    (sel t a rhs : Term) :
+  __mk_dt_updater_elim_conc
+      (Term.Apply (Term.Apply (Term.UOp1 UserOp1.update sel) t) a) rhs =
+    Term.Boolean true ->
+  ∃ c tu,
+    rhs =
+      Term.Apply
+        (Term.Apply
+          (Term.Apply (Term.UOp UserOp.ite)
+            (Term.Apply (Term.UOp1 UserOp1.is c) t))
+          tu)
+        t ∧
+    __mk_dt_updater_elim_rhs
+      (Term.Apply (Term.Apply (Term.UOp1 UserOp1.update sel) t) a) c
+      (__dt_get_selectors (__eo_typeof t) c) = tu := by
+  intro hConc
+  by_cases hShape :
+      ∃ c tu t2 t3,
+        rhs =
+          Term.Apply
+            (Term.Apply
+              (Term.Apply (Term.UOp UserOp.ite)
+                (Term.Apply (Term.UOp1 UserOp1.is c) t2))
+              tu)
+            t3
+  · rcases hShape with ⟨c, tu, t2, t3, rfl⟩
+    have hOuterNe :
+        __eo_requires (__eo_and (__eo_eq t t2) (__eo_eq t t3))
+            (Term.Boolean true)
+            (__eo_requires
+              (__mk_dt_updater_elim_rhs
+                (Term.Apply (Term.Apply (Term.UOp1 UserOp1.update sel) t) a) c
+                (__dt_get_selectors (__eo_typeof t) c))
+              tu (Term.Boolean true)) ≠ Term.Stuck := by
+      have h := hConc
+      simp only [__mk_dt_updater_elim_conc] at h
+      rw [h]
+      simp
+    rcases RuleProofs.eqs_of_requires_and_eq_true_not_stuck t t t2 t3 _ hOuterNe with
+      ⟨hT2, hT3⟩
+    subst hT2
+    subst hT3
+    have hInnerNe :=
+      eo_requires_result_ne_stuck_of_ne_stuck_local _ _ _ hOuterNe
+    exact ⟨c, tu, rfl, eo_requires_eq_of_ne_stuck_local _ _ _ hInnerNe⟩
+  · exfalso
+    rw [__mk_dt_updater_elim_conc.eq_def] at hConc
+    split at hConc <;> simp_all
 
 private theorem typed___eo_prog_dt_updater_elim_impl
     (a1 : Term) :
@@ -1486,64 +1409,33 @@ private theorem dt_updater_elim_update_rel
           intro s d i j hEq
           exact hIsDtSel ⟨s, d, i, j, hEq⟩)
 
-private theorem dt_updater_elim_non_update_absurd
-    (u t a c tu : Term) :
-  (∀ sel, u ≠ Term.UOp1 UserOp1.update sel) ->
-  __mk_dt_updater_elim_rhs
-      (Term.Apply (Term.Apply u t) a)
-      c
-      (__dt_get_selectors (__eo_typeof t) c) = tu ->
-  RuleProofs.eo_has_bool_type
-      (Term.Apply
-        (Term.Apply (Term.UOp UserOp.eq)
-          (Term.Apply (Term.Apply u t) a))
+private theorem dt_updater_elim_tuple_rel
+    (M : SmtModel) (hM : model_wf M) (idx t a rhs : Term)
+    (hConc :
+      __mk_dt_updater_elim_conc
+          (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_update idx) t) a)
+          rhs = Term.Boolean true)
+    (hBool :
+      RuleProofs.eo_has_bool_type
         (Term.Apply
-          (Term.Apply
-            (Term.Apply (Term.UOp UserOp.ite)
-              (Term.Apply (Term.UOp1 UserOp1.is c) t))
-            tu)
-          t)) ->
-  False := by
-  intro hNotUpdate hMk hBool
-  by_cases hTupleUpdate : ∃ idx, u = Term.UOp1 UserOp1.tuple_update idx
-  · rcases hTupleUpdate with ⟨idx, hU⟩
-    subst u
-    by_cases hTupleCtor : c = Term.UOp UserOp.tuple
-    · subst c
-      exact
-        (eq_rhs_ite_bad_tester_not_bool
-          (Term.Apply
-            (Term.Apply (Term.UOp1 UserOp1.tuple_update idx) t) a)
-          (Term.UOp UserOp.tuple) t tu rfl) hBool
-    · have hStuckRhs :
-          __mk_dt_updater_elim_rhs
-              (Term.Apply
-                (Term.Apply (Term.UOp1 UserOp1.tuple_update idx) t) a)
-              c (__dt_get_selectors (__eo_typeof t) c) =
-            Term.Stuck :=
-        mk_dt_updater_elim_rhs_tuple_update_stuck_of_ne_tuple
-          idx t a c (__dt_get_selectors (__eo_typeof t) c) hTupleCtor
-      rw [hStuckRhs] at hMk
-      exact
-        (eq_rhs_ite_stuck_subst_not_bool
-          (Term.Apply
-            (Term.Apply (Term.UOp1 UserOp1.tuple_update idx) t) a)
-          c t tu hMk) hBool
-  · have hStuckRhs :
-        __mk_dt_updater_elim_rhs
-            (Term.Apply (Term.Apply u t) a)
-            c (__dt_get_selectors (__eo_typeof t) c) =
-          Term.Stuck :=
-      mk_dt_updater_elim_rhs_non_updater_stuck u t a c
-        (__dt_get_selectors (__eo_typeof t) c)
-        hNotUpdate
-        (by
-          intro idx hU
-          exact hTupleUpdate ⟨idx, hU⟩)
-    rw [hStuckRhs] at hMk
-    exact
-      (eq_rhs_ite_stuck_subst_not_bool
-        (Term.Apply (Term.Apply u t) a) c t tu hMk) hBool
+          (Term.Apply (Term.UOp UserOp.eq)
+            (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_update idx) t) a))
+          rhs)) :
+    RuleProofs.smt_value_rel
+      (__smtx_model_eval M
+        (__eo_to_smt
+          (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_update idx) t) a)))
+      (__smtx_model_eval M (__eo_to_smt rhs)) := by
+  have hTypes :=
+    RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type _ _ hBool
+  rcases tuple_update_idx_numeral_of_non_none idx t a hTypes.2 with ⟨nn, rfl⟩
+  rcases mk_dt_updater_elim_conc_tuple_spine nn t a rhs hConc with
+    ⟨hs, hSp, hComp⟩
+  have hRNN : __smtx_typeof (__eo_to_smt rhs) ≠ SmtType.None := by
+    rw [← hTypes.1]
+    exact hTypes.2
+  rw [← tuple_updater_elim_eval_eq M hM nn t a rhs hs hSp hComp hTypes.1 hRNN]
+  exact RuleProofs.smt_value_rel_refl _
 
 private theorem facts___eo_prog_dt_updater_elim_impl
     (M : SmtModel) (hM : model_wf M) (a1 : Term) :
@@ -1554,66 +1446,38 @@ private theorem facts___eo_prog_dt_updater_elim_impl
   have hProg : __eo_prog_dt_updater_elim a1 ≠ Term.Stuck :=
     term_ne_stuck_of_typeof_bool hResultTy
   rcases eq_args_of_prog_dt_updater_elim_ne_stuck a1 hProg with
-    ⟨u, t, a, c, tu, t2, t3, hA1Eq, hT2, hT3, hMk, hProgEq⟩
+    ⟨u, t, a, rhs, hA1Eq, hConc, hProgEq⟩
   have hBool :
       RuleProofs.eo_has_bool_type
         (Term.Apply
           (Term.Apply (Term.UOp UserOp.eq)
             (Term.Apply (Term.Apply u t) a))
-          (Term.Apply
-            (Term.Apply
-              (Term.Apply (Term.UOp UserOp.ite)
-                (Term.Apply (Term.UOp1 UserOp1.is c) t))
-              tu)
-            t)) := by
-    have hTy :
-        __eo_typeof
-          (Term.Apply
-            (Term.Apply (Term.UOp UserOp.eq)
-              (Term.Apply (Term.Apply u t) a))
-            (Term.Apply
-              (Term.Apply
-                (Term.Apply (Term.UOp UserOp.ite)
-                  (Term.Apply (Term.UOp1 UserOp1.is c) t))
-                tu)
-              t)) =
-          Term.Bool := by
-      simpa [hProgEq] using hResultTy
-    have hA1Trans' :
-        RuleProofs.eo_has_smt_translation
-          (Term.Apply
-            (Term.Apply (Term.UOp UserOp.eq)
-              (Term.Apply (Term.Apply u t) a))
-            (Term.Apply
-              (Term.Apply
-                (Term.Apply (Term.UOp UserOp.ite)
-                  (Term.Apply (Term.UOp1 UserOp1.is c) t))
-                tu)
-              t)) := by
-      subst hA1Eq
-      subst t2
-      subst t3
-      simpa using hA1Trans
-    exact RuleProofs.eo_typeof_bool_implies_has_bool_type _ hA1Trans' hTy
-  rw [hProgEq]
+          rhs) := by
+    have hTy := hResultTy
+    rw [hProgEq, hA1Eq] at hTy
+    exact RuleProofs.eo_typeof_bool_implies_has_bool_type _
+      (by simpa [hA1Eq] using hA1Trans) hTy
+  rw [hProgEq, hA1Eq]
   apply RuleProofs.eo_interprets_eq_of_rel M
   · exact hBool
   · cases u with
     | UOp1 op sel =>
         cases op with
         | update =>
+            rcases mk_dt_updater_elim_conc_update_cases sel t a rhs hConc with
+              ⟨c, tu, hRhs, hMk⟩
+            subst hRhs
             exact dt_updater_elim_update_rel M hM sel t a c tu hMk hBool
+        | tuple_update =>
+            exact dt_updater_elim_tuple_rel M hM sel t a rhs hConc hBool
         | _ =>
-            exact False.elim
-              (dt_updater_elim_non_update_absurd
-                _ t a c tu
-                (by intro sel' h; cases h)
-                hMk hBool)
+            exfalso
+            unfold __mk_dt_updater_elim_conc at hConc
+            split at hConc <;> simp_all
     | _ =>
-        exact False.elim
-          (dt_updater_elim_non_update_absurd _ t a c tu
-            (by intro sel h; cases h)
-            hMk hBool)
+        exfalso
+        unfold __mk_dt_updater_elim_conc at hConc
+        split at hConc <;> simp_all
 
 public theorem cmd_step_dt_updater_elim_properties
     (M : SmtModel) (hM : model_wf M)

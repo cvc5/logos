@@ -4849,10 +4849,26 @@
     ($mk_dt_inst_rec ($dt_get_selectors D c) x ($dt_inst_cons_of D c)))
   )
 )
-(declare-rule dt-inst ((D Type) (T Type) (c T) (x D) (t D))
-  :args ((= (is c x) (= x t)))
-  :requires ((($mk_dt_inst (eo::typeof x) c x) t))
-  :conclusion (= (is c x) (= x t))
+(program $mk_dt_inst_tuple
+  ((D Type) (T1 Type) (T2 Type :list) (xt (Tuple T1 T2)) (xu UnitTuple))
+  :signature (Type D) D
+  (
+  (($mk_dt_inst_tuple (Tuple T1 T2) xt)
+    ($mk_dt_inst_tuple_rec (Tuple T1 T2) xt 0))
+  (($mk_dt_inst_tuple UnitTuple xu) tuple.unit)
+  )
+)
+(program $mk_dt_inst_prem ((D Type) (C Type) (c C) (x D))
+  :signature (Bool D) D
+  (
+  (($mk_dt_inst_prem true x)      ($mk_dt_inst_tuple (eo::typeof x) x))
+  (($mk_dt_inst_prem (is c x) x)  ($mk_dt_inst (eo::typeof x) c x))
+  )
+)
+(declare-rule dt-inst ((D Type) (x D) (t D) (prem Bool))
+  :args ((= prem (= x t)))
+  :requires ((($mk_dt_inst_prem prem x) t))
+  :conclusion (= prem (= x t))
 )
 (declare-rule dt-collapse-selector
   ((D Type) (T Type) (S1 Type) (S2 Type) (s (-> S1 S2)) (t D) (ti T))
@@ -4944,7 +4960,8 @@
     (eo::define ((index (eo::list_find eo::List::cons ss s)))
       (eo::ite (eo::is_neg index)
         t
-        ($dt_collapse_updater_rhs t a (eo::add (eo::len ss) index -1))))))
+        ($dt_collapse_updater_rhs t a
+          (eo::add (eo::list_len eo::List::cons ss) (eo::neg index) -1))))))
   (($mk_dt_collapse_updater_rhs (tuple.update n t a))
     ($tuple_collapse_updater_rhs t a n))
   )
@@ -4995,13 +5012,29 @@
     ($tuple_updater_elim_rhs (tuple.update n t a) ss))
   )
 )
+(program $mk_dt_updater_elim_conc
+  ((D Type) (T Type) (C Type) (s (-> D T)) (t D) (a T) (n Int) (c C) (tu D))
+  :signature (D D) Bool
+  (
+  (($mk_dt_updater_elim_conc (tuple.update n t a) tu)
+    (eo::requires
+      ($mk_dt_updater_elim_rhs (tuple.update n t a) tuple
+        ($dt_get_selectors (eo::typeof t) tuple))
+      tu
+      true))
+  (($mk_dt_updater_elim_conc (update s t a) (ite (is c t) tu t))
+    (eo::requires
+      ($mk_dt_updater_elim_rhs (update s t a) c
+        ($dt_get_selectors (eo::typeof t) c))
+      tu
+      true))
+  )
+)
 (declare-rule dt-updater-elim
-  ((D Type) (T Type) (C Type) (t D) (a T) (u (-> D T D)) (tu D) (c C))
-  :args ((= (u t a) (ite (is c t) tu t)))
-  :requires
-    ((($mk_dt_updater_elim_rhs (u t a) c ($dt_get_selectors (eo::typeof t) c))
-        tu))
-  :conclusion (= (u t a) (ite (is c t) tu t))
+  ((D Type) (T Type) (t D) (a T) (u (-> D T D)) (rhs D))
+  :args ((= (u t a) rhs))
+  :requires ((($mk_dt_updater_elim_conc (u t a) rhs) true))
+  :conclusion (= (u t a) rhs)
 )
 
 ; ==== rules/Rewrites.eo ====
