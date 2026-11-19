@@ -2326,13 +2326,48 @@ decreasing_by
   :typeof ("ite" ("Teq" ($smtx_typeof F) Bool) ($smtx_typeof_guard_wf T T) none)
   :value ("eval_choice" M s T F))
 
-; bind s:T := t in F evaluates F in the model extended with s bound to the
-; value of t. Together with choice, this is used to express (skolemized)
-; nested quantifiers. It has the type of F, provided t has type T and T is
-; well-formed.
-(define-symbol bind ((s <string>) (T SmtType) (t SmtTerm) (F SmtTerm))
-  :typeof ("ite" ("Teq" ($smtx_typeof t) T) ($smtx_typeof_guard_wf T ($smtx_typeof F)) none)
-  :value ("eval_bind" M s T t F))
+; The bindings of a let: each binds a name, at the type it is declared with,
+; to a term.
+(declare-constructor nil () :builds SmtBindings)
+
+(declare-constructor cons ((s <string>) (T SmtType) (t SmtTerm) (bs SmtBindings))
+  :builds SmtBindings)
+
+; The type of a let whose body is of type U: each bound term is of the type its
+; variable is declared with, which is well formed.
+(program $smtx_typeof_bindings
+  ((s <string>) (T SmtType) (t SmtTerm) (bs SmtBindings) (U SmtType))
+  :signature (SmtBindings SmtType) SmtType
+  (
+  (($smtx_typeof_bindings $sbd_nil U) U)
+  (($smtx_typeof_bindings ($sbd_cons s T t bs) U)
+    ("ite" ("Teq" ($smtx_typeof t) T) ($smtx_typeof_guard_wf T ($smtx_typeof_bindings bs U)) none))
+  )
+)
+
+; The model N extended with the bindings bs of a let, in parallel: every bound
+; term is evaluated in M, the model the let is evaluated in, so none sees
+; another binding of the same let. A later binding of a name shadows an
+; earlier one.
+(program $smtx_model_push_bindings
+  ((M SmtModel) (N SmtModel) (s <string>) (T SmtType) (t SmtTerm) (bs SmtBindings))
+  :signature (SmtModel SmtModel SmtBindings) SmtModel
+  (
+  (($smtx_model_push_bindings M N $sbd_nil) N)
+  (($smtx_model_push_bindings M N ($sbd_cons s T t bs))
+    ($smtx_model_push_bindings M ("model_push" N s T ($smtx_model_eval M t)) bs))
+  )
+  :lean "termination_by structural bs => bs"
+)
+
+; bind bs in F is a let: it evaluates F in the model extended with the
+; bindings bs, in parallel. Together with choice, this is used to express
+; (skolemized) nested quantifiers, and it is what a beta-redex of the input
+; transforms into. It has the type of F, provided each bound term has the type
+; its variable is declared with.
+(define-symbol bind ((bs SmtBindings) (F SmtTerm))
+  :typeof ($smtx_typeof_bindings bs ($smtx_typeof F))
+  :value ($smtx_model_eval ($smtx_model_push_bindings M M bs) F))
 
 ;-----------------------------------------------------------------------------
 (section "The methods of the embedding")

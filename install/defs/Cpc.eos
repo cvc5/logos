@@ -52,6 +52,11 @@
 (define-macro smt.cons_field (T c)        ($dtc_cons T c))
 (define-macro smt.cons_unit ()            $dtc_unit)
 
+; -- the bindings of a let
+; A let binds a list of names, each at a type, to terms, in parallel.
+(define-macro smt.bindings_cons (s T t bs) ($sbd_cons s T t bs))
+(define-macro smt.bindings_nil ()          $sbd_nil)
+
 ;-----------------------------------------------------------------------------
 (section "The core symbols")
 ;-----------------------------------------------------------------------------
@@ -872,11 +877,11 @@
   :term ($eo_to_smt_tuple_update (smt.typeof t) n t u))
 
 ;-----------------------------------------------------------------------------
-(section "Quantifiers, skolems, and the binder left out")
+(section "Quantifiers, skolems, and lambda")
 ;-----------------------------------------------------------------------------
 
-; Quantifiers, the constants the desugar stage introduces, and the binder the
-; compilation has no place for.
+; Quantifiers, the constants the desugar stage introduces, and the proof-level
+; binder lambda.
 
 ; -- $eo_to_smt_exists
 (program $eo_to_smt_exists
@@ -909,7 +914,7 @@
     (choice s T ($eo_to_smt_exists vs G)))
   (($eo_to_smt_quantifiers_skolemize (eo.list_cons (eo.var (eo.string s) T) vs) G ("n_succ" n))
     ($eo_to_smt_quantifiers_skolemize vs
-      (bind s T (choice s T ($eo_to_smt_exists vs G)) G) n))
+      (bind (smt.bindings_cons s T (choice s T ($eo_to_smt_exists vs G)) smt.bindings_nil) G) n))
   (($eo_to_smt_quantifiers_skolemize vs G t) none)
   )
 )
@@ -920,28 +925,122 @@
 (define-symbol @const ((! i :raw) (! u :type))
   :term ("ite" ($eo_to_smt_nat_is_valid i) (UConst ("const_id" ($eo_to_smt_nat i)) u) none))
 
-; The proof-level binder of CPC, together with the methods and the rule that
-; reduce an application of one. SMT-LIB gives these no meaning at all, so
-; instead of a model each says it is left out of the compilation altogether:
-; the desugar stage drops what an exclusion names, and what never reaches the
-; model-smt stage needs no case at all. See Desugar::echo for what it does with
-; them and Pipeline.defs_excludes in tools/eoc/driver.py for how they are taken
-; from the generated file.
-;
-; No dependency closure is computed, so what dropping the binder would leave
-; behind says so for itself: a method of the signature is written out with
-; define-method and a proof rule with define-rule, and each is left out on the
-; same terms as the symbol.
-(define-symbol lambda ()
-  :exclude)
+; The proof-level binder of CPC. SMT-LIB has no lambda, so a lambda on its own
+; transforms into no term at all. What does have a meaning is a beta-redex, an
+; application spine headed by one, (_ (lambda (x1 ... xn) t) a1 ... am): when
+; it applies the lambda to exactly as many arguments as it binds variables, it
+; transforms into the let that binds each xi to ai, in parallel, around t, and
+; otherwise into no term. The programs below read such a spine as written, and
+; lambda says what a spine headed by it becomes at the end of the section.
 
-(define-method $get_lambda_type :exclude)
+; The variable list of the lambda heading the spine t.
+; -- $eo_to_smt_lambda_vs
+(program $eo_to_smt_lambda_vs
+  ((T Type) (U Type) (B Type) (vs $eo_List) (body B) (f (-> U T)) (a U) (t T))
+  :signature (T) $eo_List
+  (
+  (($eo_to_smt_lambda_vs (lambda vs body)) vs)
+  (($eo_to_smt_lambda_vs (f a))            ($eo_to_smt_lambda_vs f))
+  )
+)
 
-(define-method $beta_reduce_type :exclude)
+; The number of arguments the spine t applies its lambda to.
+; -- $eo_to_smt_lambda_arity
+(program $eo_to_smt_lambda_arity
+  ((T Type) (U Type) (B Type) (vs $eo_List) (body B) (f (-> U T)) (a U) (t T))
+  :signature (T) <nat>
+  (
+  (($eo_to_smt_lambda_arity (lambda vs body)) "n_zero")
+  (($eo_to_smt_lambda_arity (f a))            ("n_succ" ($eo_to_smt_lambda_arity f)))
+  (($eo_to_smt_lambda_arity t)                "n_zero")
+  )
+)
 
-(define-method $beta_reduce :exclude)
+; The n-th element of the list vs.
+; -- $eo_to_smt_lambda_nth
+(program $eo_to_smt_lambda_nth
+  ((v $eo_Term) (vs $eo_List) (n <nat>))
+  :signature ($eo_List <nat>) $eo_Term
+  (
+  (($eo_to_smt_lambda_nth (eo.list_cons v vs) "n_zero")    v)
+  (($eo_to_smt_lambda_nth (eo.list_cons v vs) ("n_succ" n)) ($eo_to_smt_lambda_nth vs n))
+  )
+)
 
-(define-rule beta-reduce :exclude)
+; Whether vs is a list of exactly n variables.
+; -- $eo_to_smt_lambda_vars
+(program $eo_to_smt_lambda_vars
+  ((s <string>) (T $eo_Term) (vs $eo_List) (n <nat>))
+  :signature ($eo_List <nat>) <bool>
+  (
+  (($eo_to_smt_lambda_vars eo.list_nil "n_zero") "true")
+  (($eo_to_smt_lambda_vars (eo.list_cons (eo.var (eo.string s) T) vs) ("n_succ" n))
+    ($eo_to_smt_lambda_vars vs n))
+  (($eo_to_smt_lambda_vars vs n) "false")
+  )
+)
+
+; The binding of the variable v to the (transformed) a, in front of bs. v is a
+; variable wherever this is used, see $eo_to_smt_lambda_vars.
+; -- $eo_to_smt_lambda_binding
+(program $eo_to_smt_lambda_binding
+  ((s <string>) (T $eo_Term) (v $eo_Term) (a SmtTerm) (bs SmtBindings))
+  :signature ($eo_Term SmtTerm SmtBindings) SmtBindings
+  (
+  (($eo_to_smt_lambda_binding (eo.var (eo.string s) T) a bs) (smt.bindings_cons s T a bs))
+  (($eo_to_smt_lambda_binding v a bs)                         bs)
+  )
+)
+
+; The spine t as a let of the body of the lambda heading it, given bs, the
+; bindings of the n arguments after t, and d, what the application is if t is
+; not headed by a lambda: walking the spine from its last argument in, each
+; argument is bound to its variable in front of the bindings of the arguments
+; after it, so the bindings come out in the order of the variables. vs is the
+; variable list of the lambda, and at the lambda the spine is a let only if it
+; applies it to exactly as many arguments as it binds variables. Whether t is
+; headed by a lambda is decided by what t is rather than by a test, so that an
+; application headed by anything else is d by its cases alone.
+; -- $eo_to_smt_lambda_app
+(program $eo_to_smt_lambda_app
+  ((T Type) (U Type) (B Type) (vs $eo_List) (us $eo_List) (body B) (f (-> U T)) (a U) (t T)
+   (bs SmtBindings) (n <nat>) (d SmtTerm))
+  :signature ($eo_List T SmtBindings <nat> SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_lambda_app vs (lambda us body) bs n d)
+    ("ite" ($eo_to_smt_lambda_vars us n) (bind bs body) none))
+  (($eo_to_smt_lambda_app vs (f a) bs n d)
+    ($eo_to_smt_lambda_app vs f
+      ($eo_to_smt_lambda_binding ($eo_to_smt_lambda_nth vs ($eo_to_smt_lambda_arity f)) a bs)
+      ("n_succ" n) d))
+  (($eo_to_smt_lambda_app vs t bs n d) d)
+  )
+)
+
+; -- lambda
+; An :apply case is given arg, what the last argument of the spine transforms
+; into, and app, what the application is in the embedding, and says what it
+; matches of the rest. The first matches the lambda applied to one argument,
+; and the second a longer spine (f a), or an application headed by anything
+; else; f is read as written and a as what it transforms into, which are what
+; the parameters of lambda stand for: in that case vs is f and body is a. The
+; first step of the spine is taken here, so that every term transformed is a
+; subterm of it.
+(define-symbol lambda ((! vs :raw) body)
+  :term (lambda vs body) none
+  :apply (lambda vs body)
+    ("ite" ($eo_to_smt_lambda_vars vs ("n_succ" "n_zero"))
+      (bind ($eo_to_smt_lambda_binding ($eo_to_smt_lambda_nth vs "n_zero") arg smt.bindings_nil) body)
+      none)
+  :apply (vs body)
+    (eo::define ((us ($eo_to_smt_lambda_vs vs)))
+    (eo::define ((k ($eo_to_smt_lambda_arity vs)))
+      ($eo_to_smt_lambda_app us vs
+        ($eo_to_smt_lambda_binding ($eo_to_smt_lambda_nth us k) body
+          ($eo_to_smt_lambda_binding ($eo_to_smt_lambda_nth us ("n_succ" k)) arg
+            smt.bindings_nil))
+        ("n_succ" ("n_succ" "n_zero"))
+        app))))
 
 ;-----------------------------------------------------------------------------
 (section "The type constructors")
