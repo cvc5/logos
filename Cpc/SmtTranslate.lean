@@ -27,48 +27,6 @@ Definitions for eo_to_smt_type, eo_to_smt
 -/
 noncomputable section
 
-/-
-An application spine headed by a lambda is `(_ (lambda vs body) a1 ... am)`,
-i.e. `Term.Apply (... (Term.Apply L a1) ...) am` with `L` the lambda term
-`Term.Apply (Term.Apply (Term.UOp UserOp.lambda) vs) body`. The helpers below
-read such a spine as written; none of them translates anything.
--/
-
-/-- Whether `t` is a lambda term or an application spine headed by one. -/
-def __eo_to_smt_lambda_headed : Term -> native_Bool
-  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) vs) body) => true
-  | (Term.Apply f a) => (__eo_to_smt_lambda_headed f)
-  | t => false
-
-
-/-- The variable list of the lambda heading the spine `t`. -/
-def __eo_to_smt_lambda_vs : Term -> Term
-  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) vs) body) => vs
-  | (Term.Apply f a) => (__eo_to_smt_lambda_vs f)
-  | t => Term.Stuck
-
-
-/-- The number of arguments the spine `t` applies its lambda to. -/
-def __eo_to_smt_lambda_arity : Term -> native_Nat
-  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) vs) body) => native_nat_zero
-  | (Term.Apply f a) => (native_nat_succ (__eo_to_smt_lambda_arity f))
-  | t => native_nat_zero
-
-
-/-- The `n`-th element of the list `vs`. -/
-def __eo_to_smt_lambda_nth : Term -> native_Nat -> Term
-  | (Term.Apply (Term.Apply Term.__eo_List_cons v) vs), native_nat_zero => v
-  | (Term.Apply (Term.Apply Term.__eo_List_cons v) vs), (native_nat_succ n) => (__eo_to_smt_lambda_nth vs n)
-  | _, _ => Term.Stuck
-
-
-/-- Whether `vs` is a list of exactly `n` variables. -/
-def __eo_to_smt_lambda_vars : Term -> native_Nat -> native_Bool
-  | Term.__eo_List_nil, native_nat_zero => true
-  | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs), (native_nat_succ n) => (__eo_to_smt_lambda_vars vs n)
-  | vs, n => false
-
-
 def __eo_to_smt_array_deq_diff (a : SmtTerm) : SmtType -> SmtTerm -> SmtType -> SmtTerm
   | (SmtType.Map aT aU), b, (SmtType.Map bT bU) => (SmtTerm.map_diff a b)
   | aT, b, bT => SmtTerm.None
@@ -153,6 +111,30 @@ def __eo_to_smt_sets_deq_diff (a : SmtTerm) : SmtType -> SmtTerm -> SmtType -> S
   | aT, b, bT => SmtTerm.None
 
 
+def __eo_to_smt_lambda_vs : Term -> Term
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) vs) body) => vs
+  | (Term.Apply f a) => (__eo_to_smt_lambda_vs f)
+  | _ => Term.Stuck
+
+
+def __eo_to_smt_lambda_arity : Term -> native_Nat
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) vs) body) => native_nat_zero
+  | (Term.Apply f a) => (native_nat_succ (__eo_to_smt_lambda_arity f))
+  | t => native_nat_zero
+
+
+def __eo_to_smt_lambda_nth : Term -> native_Nat -> Term
+  | (Term.Apply (Term.Apply Term.__eo_List_cons v) vs), native_nat_zero => v
+  | (Term.Apply (Term.Apply Term.__eo_List_cons v) vs), (native_nat_succ n) => (__eo_to_smt_lambda_nth vs n)
+  | _, _ => Term.Stuck
+
+
+def __eo_to_smt_lambda_vars : Term -> native_Nat -> native_Bool
+  | Term.__eo_List_nil, native_nat_zero => true
+  | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs), (native_nat_succ n) => (__eo_to_smt_lambda_vars vs n)
+  | vs, n => false
+
+
 def __eo_to_smt_reserved_datatype_name (s : native_String) : native_Bool :=
   (native_string_prefix_eq (native_string_lit "@") s)
 
@@ -173,27 +155,6 @@ def __eo_to_smt_datatype : Datatype -> SmtDatatype
 def __eo_to_smt_datatype_decl : DatatypeDecl -> SmtDatatypeDecl
   | (DatatypeDecl.cons s d dd) => (SmtDatatypeDecl.cons s (__eo_to_smt_datatype d) (__eo_to_smt_datatype_decl dd))
   | DatatypeDecl.nil => SmtDatatypeDecl.nil
-
-
-/--
-The binding of the variable `v` to the (translated) `a`, put in front of `bs`.
-`v` is a variable wherever this is used (see `__eo_to_smt_lambda_vars`).
--/
-def __eo_to_smt_lambda_binding : Term -> SmtTerm -> SmtBindings -> SmtBindings
-  | (Term.Var (Term.String s) T), a, bs => (SmtBindings.cons s (__eo_to_smt_type T) a bs)
-  | v, a, bs => bs
-
-
-/--
-The spine `t`, headed by a lambda over `vs`, as a `let` of its body: walking the
-spine from its last argument in, each argument is bound to its variable in front
-of the bindings `bs` of the arguments after it, so the bindings come out in the
-order of the variables. Every call is on a subterm of `t`.
--/
-def __eo_to_smt_lambda_app (vs : Term) : Term -> SmtBindings -> SmtTerm
-  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body), bs => (SmtTerm.bind bs (__eo_to_smt body))
-  | (Term.Apply f a), bs => (__eo_to_smt_lambda_app vs f (__eo_to_smt_lambda_binding (__eo_to_smt_lambda_nth vs (__eo_to_smt_lambda_arity f)) (__eo_to_smt a) bs))
-  | t, bs => SmtTerm.None
 
 
 def __eo_to_smt_distinct_pairs (s : SmtTerm) : Term -> SmtTerm
@@ -248,6 +209,17 @@ def __eo_to_smt_quantifiers_skolemize : Term -> SmtTerm -> native_Nat -> SmtTerm
   | vs, G, t => SmtTerm.None
 
 
+def __eo_to_smt_lambda_binding : Term -> SmtTerm -> SmtBindings -> SmtBindings
+  | (Term.Var (Term.String s) T), a, bs => (SmtBindings.cons s (__eo_to_smt_type T) a bs)
+  | v, a, bs => bs
+
+
+def __eo_to_smt_lambda_app : Term -> Term -> SmtBindings -> native_Nat -> SmtTerm -> SmtTerm
+  | vs, (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body), bs, n, d => (native_ite (__eo_to_smt_lambda_vars us n) (SmtTerm.bind bs (__eo_to_smt body)) SmtTerm.None)
+  | vs, (Term.Apply f a), bs, n, d => (__eo_to_smt_lambda_app vs f (__eo_to_smt_lambda_binding (__eo_to_smt_lambda_nth vs (__eo_to_smt_lambda_arity f)) (__eo_to_smt a) bs) (native_nat_succ n) d)
+  | vs, t, bs, n, d => d
+
+
 def __eo_to_smt_type : Term -> SmtType
   | Term.Bool => SmtType.Bool
   | (Term.DatatypeType s dd) => (native_ite (__eo_to_smt_reserved_datatype_name s) SmtType.None (SmtType.Datatype s (__eo_to_smt_datatype_decl dd)))
@@ -281,6 +253,15 @@ def __eo_to_smt_type : Term -> SmtType
     let _v0 := (__eo_to_smt_type x1)
     (__smtx_typeof_guard _v0 (SmtType.Set _v0))
   | T => SmtType.None
+
+
+def __eo_to_smt_apply (arg : SmtTerm) (app : SmtTerm) : Term -> SmtTerm
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) x1) x2) => (native_ite (__eo_to_smt_lambda_vars x1 (native_nat_succ native_nat_zero)) (SmtTerm.bind (__eo_to_smt_lambda_binding (__eo_to_smt_lambda_nth x1 native_nat_zero) arg SmtBindings.nil) (__eo_to_smt x2)) SmtTerm.None)
+  | (Term.Apply x1 x2) =>
+    let _v0 := (__eo_to_smt_lambda_arity x1)
+    let _v1 := (__eo_to_smt_lambda_vs x1)
+    (__eo_to_smt_lambda_app _v1 x1 (__eo_to_smt_lambda_binding (__eo_to_smt_lambda_nth _v1 _v0) (__eo_to_smt x2) (__eo_to_smt_lambda_binding (__eo_to_smt_lambda_nth _v1 (native_nat_succ _v0)) arg SmtBindings.nil)) (native_nat_succ (native_nat_succ native_nat_zero)) app)
+  | f => app
 
 
 def __eo_to_smt : Term -> SmtTerm
@@ -514,21 +495,9 @@ def __eo_to_smt : Term -> SmtTerm
   | (Term.Apply (Term.UOp UserOp.ubv_to_int) x1) => (SmtTerm.ubv_to_int (__eo_to_smt x1))
   | (Term.Apply (Term.UOp UserOp.sbv_to_int) x1) => (SmtTerm.sbv_to_int (__eo_to_smt x1))
   | (Term.UOp2 UserOp2._at_const x1 x2) => (native_ite (__eo_to_smt_nat_is_valid x1) (SmtTerm.UConst (native_const_id (__eo_to_smt_nat x1)) (__eo_to_smt_type x2)) SmtTerm.None)
-  -- An application spine headed by a lambda, of any length: the (parallel) let
-  -- of its body when it has exactly as many arguments as the lambda binds
-  -- variables, and otherwise no term. Every other application is translated
-  -- as before. This is a `match` rather than a `native_ite` so that, where the
-  -- head is known not to be a lambda, the case reduces definitionally to the
-  -- application it was before.
   | (Term.Apply f y) =>
-    match __eo_to_smt_lambda_headed f with
-    | true =>
-      (let vs := (__eo_to_smt_lambda_vs f)
-       let k := (__eo_to_smt_lambda_arity f)
-       (native_ite (__eo_to_smt_lambda_vars vs (native_nat_succ k))
-         (__eo_to_smt_lambda_app vs f (__eo_to_smt_lambda_binding (__eo_to_smt_lambda_nth vs k) (__eo_to_smt y) SmtBindings.nil))
-         SmtTerm.None))
-    | false => (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y))
+    let _v0 := (__eo_to_smt y)
+    (__eo_to_smt_apply _v0 (SmtTerm.Apply (__eo_to_smt f) _v0) f)
   | y => SmtTerm.None
 
 

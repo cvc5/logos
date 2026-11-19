@@ -200,9 +200,7 @@ inductive SmtTerm : Type where
 deriving Repr, DecidableEq, Inhabited
 
 /-
-The bindings of an SMT-LIB `let`, `((x1 T1 t1) ... (xn Tn tn))`. They are
-parallel: `SmtTerm.bind bs body` evaluates every `ti` in the model it is
-evaluated in, and only `body` sees the variables bound.
+The SmtBindings of the embedding.
 -/
 inductive SmtBindings : Type where
   | nil : SmtBindings

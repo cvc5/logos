@@ -1496,6 +1496,12 @@ end
 
 mutual
 
+noncomputable def __smtx_model_push_bindings (M : SmtModel) (N : SmtModel) : SmtBindings -> SmtModel
+  | SmtBindings.nil => N
+  | (SmtBindings.cons s T t bs) => (__smtx_model_push_bindings M (native_model_push N s T (__smtx_model_eval M t)) bs)
+termination_by structural bs => bs
+
+
 noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.Boolean b1) => (SmtValue.Boolean b1)
   | (SmtTerm.Numeral i1) => (SmtValue.Numeral i1)
@@ -1645,7 +1651,7 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.qdiv_total x1 x2) => (__smtx_model_eval_qdiv_total (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.forall s1 T2 x3) => (native_eval_forall M s1 T2 x3)
   | (SmtTerm.exists s1 T2 x3) => (native_eval_exists M s1 T2 x3)
-  | (SmtTerm.bind bs x1) => (__smtx_model_eval (__smtx_model_push_bindings M M bs) x1)
+  | (SmtTerm.bind bs1 x2) => (__smtx_model_eval (__smtx_model_push_bindings M M bs1) x2)
   | (SmtTerm.int_to_bv x1 x2) => (__smtx_model_eval_int_to_bv (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.ubv_to_int x1) => (__smtx_model_eval_ubv_to_int (__smtx_model_eval M x1))
   | (SmtTerm.sbv_to_int x1) => (__smtx_model_eval_sbv_to_int (__smtx_model_eval M x1))
@@ -1658,20 +1664,8 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | x1 => SmtValue.NotValue
 termination_by structural t => t
 
-/-
-The model `N` extended with the bindings `bs` of a `let`, in parallel: every
-bound term is evaluated in `M`, the model the `let` is evaluated in, so none
-sees another binding of the same `let`. A later binding of a name shadows an
-earlier one.
--/
-noncomputable def __smtx_model_push_bindings (M : SmtModel) (N : SmtModel) : SmtBindings -> SmtModel
-  | SmtBindings.nil => N
-  | (SmtBindings.cons s T x bs) => (__smtx_model_push_bindings M (native_model_push N s T (__smtx_model_eval M x)) bs)
-termination_by structural bs => bs
 
 end
-
-
 
 
 def model_fun_wf (M : SmtModel) : Prop :=
