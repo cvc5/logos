@@ -1885,7 +1885,7 @@ private theorem eo_to_smt_apply_apply_apply_uop_generic_full
     (hStrIndexofRe : op ≠ UserOp.str_indexof_re)
     (hStringsOccurIndex : op ≠ UserOp._at_strings_occur_index)
     (hStringsOccurIndexRe : op ≠ UserOp._at_strings_occur_index_re)
-    (hLambda : op ≠ UserOp.lambda) :
+    (hNP : ¬ SmtPendingLam (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp op) z) y))) :
       __eo_to_smt
           (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) z) y) x) =
         SmtTerm.Apply
@@ -1907,7 +1907,7 @@ private theorem eo_to_smt_apply_apply_apply_uop_generic_full
       | exact False.elim (hStrIndexofRe rfl)
       | exact False.elim (hStringsOccurIndex rfl)
       | exact False.elim (hStringsOccurIndexRe rfl)
-      | exact False.elim (hLambda rfl)
+      | exact eo_to_smt_apply_eq_of_not_pending rfl hNP
 
 private theorem eo_typeof_apply_apply_apply_uop_generic_full
     (op : UserOp) (z y x : Term)
@@ -2879,10 +2879,11 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
               (fun term _ hNN => go term hNN)
               hNotDistinct hNonNone
           refine ⟨hEq, ?_⟩
-          by_cases hSp : IsLamSpine f
-          · obtain ⟨us, body, r, hs⟩ := hSp
+          by_cases hSp : SmtPendingLam (__eo_to_smt f)
+          · obtain ⟨us, body, r, hs⟩ := eo_to_smt_pending_spine f hSp
             exact (eo_to_smt_typeof_matches_translation_lam_spine (LamSpine.app x hs)
-              (List.cons_ne_nil _ _) (fun u hu hNN => go u hNN) hNonNone).2
+              (lamVars_of_pending_app x hs hSp hNonNone)
+              (fun u hu hNN => go u hNN) hNonNone).2
           have hTermNN :
               term_has_non_none_type (__eo_to_smt (Term.Apply f x)) := by
             unfold term_has_non_none_type
@@ -4087,9 +4088,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                               (__eo_typeof y) (__eo_typeof x) =
                             Term.DtcAppType a b
                         exact hTy))
-                  have hLambda : op ≠ UserOp.lambda := by
-                    rintro rfl
-                    exact hSp ⟨z, y, [], LamSpine.lam z y⟩
+                  have hLambda := hSp
                   exact eo_type_valid_of_nested_generic_apply_eq_dtcapp_full
                     (g := Term.Apply (Term.UOp op) z) (y := y) (x := x)
                     (A := a) (B := b)
@@ -4110,13 +4109,13 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                     (g := Term.Apply g0 z) (y := y) (x := x) (A := a) (B := b)
                     (go (Term.Apply (Term.Apply g0 z) y))
                     (by
-                      cases g0 <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_spine rfl hSp
+                      cases g0 <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp
                       case UOp op =>
                         exact False.elim (hG0UOp ⟨op, rfl⟩)
                       case Apply g1 w =>
-                        cases g1 <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_spine rfl hSp
+                        cases g1 <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp
                         case UOp op =>
-                          cases op <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_spine rfl hSp
+                          cases op <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp
                           case _at_strings_replace_all_result =>
                             exact False.elim
                               (false_of_typeof_strings_replace_all_result_eq_dtcapp_full

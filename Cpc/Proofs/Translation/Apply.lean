@@ -287,13 +287,13 @@ private theorem eo_to_smt_distinct_ne_dt_sel
     (xs : Term) (s : native_String) (d : SmtDatatypeDecl) (i j : native_Nat) :
     __eo_to_smt_distinct xs ≠ SmtTerm.DtSel s d i j := by
   intro h
-  cases xs <;> try cases h
+  cases xs <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f x =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case UOp op =>
       cases op <;> cases h
     case Apply g y =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
         cases op <;> cases h
 
@@ -301,13 +301,13 @@ private theorem eo_to_smt_distinct_ne_dt_tester
     (xs : Term) (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
     __eo_to_smt_distinct xs ≠ SmtTerm.DtTester s d i := by
   intro h
-  cases xs <;> try cases h
+  cases xs <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f x =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case UOp op =>
       cases op <;> cases h
     case Apply g y =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
         cases op <;> cases h
 
@@ -315,13 +315,13 @@ private theorem eo_to_smt_distinct_ne_dt_cons
     (xs : Term) (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
     __eo_to_smt_distinct xs ≠ SmtTerm.DtCons s d i := by
   intro h
-  cases xs <;> try cases h
+  cases xs <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f x =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case UOp op =>
       cases op <;> cases h
     case Apply g y =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
         cases op <;> cases h
 
@@ -442,7 +442,7 @@ private theorem eo_to_smt_tuple_select_ne_dt_sel
     __eo_to_smt_tuple_select T n t ≠ SmtTerm.DtSel s d i j := by
   intro h
   simp [__eo_to_smt_tuple_select] at h
-  split at h <;> try cases h
+  split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case h_1 =>
     unfold native_ite at h
     split at h <;> cases h
@@ -453,7 +453,7 @@ private theorem eo_to_smt_tuple_select_ne_dt_tester
     __eo_to_smt_tuple_select T n t ≠ SmtTerm.DtTester s d i := by
   intro h
   simp [__eo_to_smt_tuple_select] at h
-  split at h <;> try cases h
+  split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case h_1 =>
     unfold native_ite at h
     split at h <;> cases h
@@ -464,7 +464,7 @@ private theorem eo_to_smt_tuple_select_ne_dt_cons
     __eo_to_smt_tuple_select T n t ≠ SmtTerm.DtCons s d i := by
   intro h
   simp [__eo_to_smt_tuple_select] at h
-  split at h <;> try cases h
+  split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case h_1 =>
     unfold native_ite at h
     split at h <;> cases h
@@ -473,7 +473,7 @@ private theorem eo_to_smt_updater_ne_dt_sel
     (sel t u : SmtTerm) (s : native_String) (d : SmtDatatypeDecl) (i j : native_Nat) :
     __eo_to_smt_updater sel t u ≠ SmtTerm.DtSel s d i j := by
   intro h
-  cases sel <;> try cases h
+  cases sel <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case DtSel s' d' i' j' =>
     cases hIdx : native_zlt (native_nat_to_int j')
         (native_nat_to_int (__smtx_dt_num_sels (__smtx_dd_lookup s' d') i')) <;>
@@ -483,7 +483,7 @@ private theorem eo_to_smt_updater_ne_dt_tester
     (sel t u : SmtTerm) (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
     __eo_to_smt_updater sel t u ≠ SmtTerm.DtTester s d i := by
   intro h
-  cases sel <;> try cases h
+  cases sel <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case DtSel s' d' i' j' =>
     cases hIdx : native_zlt (native_nat_to_int j')
         (native_nat_to_int (__smtx_dt_num_sels (__smtx_dd_lookup s' d') i')) <;>
@@ -493,7 +493,7 @@ private theorem eo_to_smt_updater_ne_dt_cons
     (sel t u : SmtTerm) (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
     __eo_to_smt_updater sel t u ≠ SmtTerm.DtCons s d i := by
   intro h
-  cases sel <;> try cases h
+  cases sel <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case DtSel s' d' i' j' =>
     cases hIdx : native_zlt (native_nat_to_int j')
         (native_nat_to_int (__smtx_dt_num_sels (__smtx_dd_lookup s' d') i')) <;>
@@ -505,7 +505,7 @@ private theorem eo_to_smt_tuple_update_ne_dt_sel
     __eo_to_smt_tuple_update T n t u ≠ SmtTerm.DtSel s d i j := by
   intro h
   simp [__eo_to_smt_tuple_update] at h
-  split at h <;> try cases h
+  split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case h_1 =>
     unfold native_ite at h
     split at h
@@ -518,7 +518,7 @@ private theorem eo_to_smt_tuple_update_ne_dt_tester
     __eo_to_smt_tuple_update T n t u ≠ SmtTerm.DtTester s d i := by
   intro h
   simp [__eo_to_smt_tuple_update] at h
-  split at h <;> try cases h
+  split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case h_1 =>
     unfold native_ite at h
     split at h
@@ -531,7 +531,7 @@ private theorem eo_to_smt_tuple_update_ne_dt_cons
     __eo_to_smt_tuple_update T n t u ≠ SmtTerm.DtCons s d i := by
   intro h
   simp [__eo_to_smt_tuple_update] at h
-  split at h <;> try cases h
+  split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case h_1 =>
     unfold native_ite at h
     split at h
@@ -908,13 +908,13 @@ private theorem eo_to_smt_exists_top_ne_dt_sel
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.exists) xs) body) ≠
       SmtTerm.DtSel s d i j := by
   intro h
-  cases xs <;> try cases h
+  cases xs <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f vs =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case Apply g v =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case __eo_List_cons =>
-        cases v <;> try cases h
+        cases v <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case Var name T =>
           cases name <;> cases h
 
@@ -923,13 +923,13 @@ private theorem eo_to_smt_exists_top_ne_dt_tester
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.exists) xs) body) ≠
       SmtTerm.DtTester s d i := by
   intro h
-  cases xs <;> try cases h
+  cases xs <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f vs =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case Apply g v =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case __eo_List_cons =>
-        cases v <;> try cases h
+        cases v <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case Var name T =>
           cases name <;> cases h
 
@@ -938,13 +938,13 @@ private theorem eo_to_smt_exists_top_ne_dt_cons
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.exists) xs) body) ≠
       SmtTerm.DtCons s d i := by
   intro h
-  cases xs <;> try cases h
+  cases xs <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f vs =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case Apply g v =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case __eo_List_cons =>
-        cases v <;> try cases h
+        cases v <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case Var name T =>
           cases name <;> cases h
 
@@ -973,13 +973,13 @@ private theorem eo_to_smt_quant_skolemize_top_ne_dt_sel
     (q idx : Term) (s : native_String) (d : SmtDatatypeDecl) (i j : native_Nat) :
     __eo_to_smt (Term._at_quantifiers_skolemize q idx) ≠ SmtTerm.DtSel s d i j := by
   intro h
-  cases q <;> try cases h
+  cases q <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f body =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case Apply g xs =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
-        cases op <;> try cases h
+        cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case «forall» =>
           change native_ite (__eo_to_smt_nat_is_valid idx)
               (__eo_to_smt_quantifiers_skolemize
@@ -987,20 +987,20 @@ private theorem eo_to_smt_quant_skolemize_top_ne_dt_sel
               SmtTerm.None =
             SmtTerm.DtSel s d i j at h
           unfold native_ite at h
-          split at h <;> try cases h
+          split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
           exact eo_to_smt_quant_skolemize_ne_dt_sel _ _ _ _ _ _ _ h
 
 private theorem eo_to_smt_quant_skolemize_top_ne_dt_tester
     (q idx : Term) (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
     __eo_to_smt (Term._at_quantifiers_skolemize q idx) ≠ SmtTerm.DtTester s d i := by
   intro h
-  cases q <;> try cases h
+  cases q <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f body =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case Apply g xs =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
-        cases op <;> try cases h
+        cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case «forall» =>
           change native_ite (__eo_to_smt_nat_is_valid idx)
               (__eo_to_smt_quantifiers_skolemize
@@ -1008,20 +1008,20 @@ private theorem eo_to_smt_quant_skolemize_top_ne_dt_tester
               SmtTerm.None =
             SmtTerm.DtTester s d i at h
           unfold native_ite at h
-          split at h <;> try cases h
+          split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
           exact eo_to_smt_quant_skolemize_ne_dt_tester _ _ _ _ _ _ h
 
 private theorem eo_to_smt_quant_skolemize_top_ne_dt_cons
     (q idx : Term) (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
     __eo_to_smt (Term._at_quantifiers_skolemize q idx) ≠ SmtTerm.DtCons s d i := by
   intro h
-  cases q <;> try cases h
+  cases q <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f body =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case Apply g xs =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
-        cases op <;> try cases h
+        cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case «forall» =>
           change native_ite (__eo_to_smt_nat_is_valid idx)
               (__eo_to_smt_quantifiers_skolemize
@@ -1029,16 +1029,16 @@ private theorem eo_to_smt_quant_skolemize_top_ne_dt_cons
               SmtTerm.None =
             SmtTerm.DtCons s d i at h
           unfold native_ite at h
-          split at h <;> try cases h
+          split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
           exact eo_to_smt_quant_skolemize_ne_dt_cons _ _ _ _ _ _ h
 
 theorem eo_to_smt_apply_ne_dt_sel
     (f x : Term) (s : native_String) (d : SmtDatatypeDecl) (i j : native_Nat) :
     __eo_to_smt (Term.Apply f x) ≠ SmtTerm.DtSel s d i j := by
   intro h
-  cases f <;> try cases h
+  cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case UOp op =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case distinct =>
       exact eo_to_smt_distinct_top_ne_dt_sel x s d i j h
     case _at_bvsize =>
@@ -1050,21 +1050,21 @@ theorem eo_to_smt_apply_ne_dt_sel
       unfold native_ite at h
       split at h <;> cases h
   case UOp1 op y =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case tuple_select =>
       exact eo_to_smt_tuple_select_ne_dt_sel _ _ _ _ _ _ _ h
   case UOp2 op y z =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply g y =>
-    cases g <;> try cases h
+    cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case UOp1 op z =>
-      cases op <;> try cases h
+      cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case update =>
         exact eo_to_smt_updater_ne_dt_sel _ _ _ _ _ _ _ h
       case tuple_update =>
         exact eo_to_smt_tuple_update_ne_dt_sel _ _ _ _ _ _ _ _ h
     case UOp op =>
-      cases op <;> try cases h
+      cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case «forall» =>
         exact eo_to_smt_forall_top_ne_dt_sel _ _ _ _ _ _ h
       case «exists» =>
@@ -1078,7 +1078,7 @@ theorem eo_to_smt_apply_ne_dt_sel
         exact eo_to_smt_sets_deq_diff_ne_dt_sel
           (__eo_to_smt y) (__eo_to_smt x) s d i j h
     case Apply k z =>
-      cases k <;> try cases h
+      cases k <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
         cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case Apply g w =>
@@ -1090,9 +1090,9 @@ theorem eo_to_smt_apply_ne_dt_tester
     (f x : Term) (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
     __eo_to_smt (Term.Apply f x) ≠ SmtTerm.DtTester s d i := by
   intro h
-  cases f <;> try cases h
+  cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case UOp op =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case distinct =>
       exact eo_to_smt_distinct_top_ne_dt_tester x s d i h
     case _at_bvsize =>
@@ -1104,21 +1104,21 @@ theorem eo_to_smt_apply_ne_dt_tester
       unfold native_ite at h
       split at h <;> cases h
   case UOp1 op y =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case tuple_select =>
       exact eo_to_smt_tuple_select_ne_dt_tester _ _ _ _ _ _ h
   case UOp2 op y z =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply g y =>
-    cases g <;> try cases h
+    cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case UOp1 op z =>
-      cases op <;> try cases h
+      cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case update =>
         exact eo_to_smt_updater_ne_dt_tester _ _ _ _ _ _ h
       case tuple_update =>
         exact eo_to_smt_tuple_update_ne_dt_tester _ _ _ _ _ _ _ h
     case UOp op =>
-      cases op <;> try cases h
+      cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case «forall» =>
         exact eo_to_smt_forall_top_ne_dt_tester _ _ _ _ _ h
       case «exists» =>
@@ -1132,7 +1132,7 @@ theorem eo_to_smt_apply_ne_dt_tester
         exact eo_to_smt_sets_deq_diff_ne_dt_tester
           (__eo_to_smt y) (__eo_to_smt x) s d i h
     case Apply k z =>
-      cases k <;> try cases h
+      cases k <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
         cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case Apply g w =>
@@ -1144,9 +1144,9 @@ private theorem eo_to_smt_apply_ne_dt_cons
     (f x : Term) (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
     __eo_to_smt (Term.Apply f x) ≠ SmtTerm.DtCons s d i := by
   intro h
-  cases f <;> try cases h
+  cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case UOp op =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case distinct =>
       exact eo_to_smt_distinct_top_ne_dt_cons x s d i h
     case _at_bvsize =>
@@ -1158,21 +1158,21 @@ private theorem eo_to_smt_apply_ne_dt_cons
       unfold native_ite at h
       split at h <;> cases h
   case UOp1 op y =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case tuple_select =>
       exact eo_to_smt_tuple_select_ne_dt_cons _ _ _ _ _ _ h
   case UOp2 op y z =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply g y =>
-    cases g <;> try cases h
+    cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case UOp1 op z =>
-      cases op <;> try cases h
+      cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case update =>
         exact eo_to_smt_updater_ne_dt_cons _ _ _ _ _ _ h
       case tuple_update =>
         exact eo_to_smt_tuple_update_ne_dt_cons _ _ _ _ _ _ _ h
     case UOp op =>
-      cases op <;> try cases h
+      cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case «forall» =>
         exact eo_to_smt_forall_top_ne_dt_cons _ _ _ _ _ h
       case «exists» =>
@@ -1186,7 +1186,7 @@ private theorem eo_to_smt_apply_ne_dt_cons
         exact eo_to_smt_sets_deq_diff_ne_dt_cons
           (__eo_to_smt y) (__eo_to_smt x) s d i h
     case Apply k z =>
-      cases k <;> try cases h
+      cases k <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
         cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case Apply g w =>
@@ -10387,7 +10387,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_uop_application_head_
     have hTranslate :
         __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.distinct) y) x) =
           SmtTerm.Apply (__eo_to_smt (Term.Apply (Term.UOp UserOp.distinct) y)) (__eo_to_smt x) := by
-      rfl
+      eo_to_smt_generic_rfl
     rw [hTranslate]
     exact smtx_typeof_eo_to_smt_distinct_top_apply_eq_none y (__eo_to_smt x)
   case not =>
@@ -11371,18 +11371,14 @@ private theorem eo_to_smt_typeof_matches_translation_apply_uop_application_head_
     exact eo_to_smt_typeof_matches_translation_apply_apply_none_head
       UserOp._at__at_aci_sorted y x (by rfl) hNonNone
   case lambda =>
-    -- A bare lambda translates to no term.
-    exact eo_to_smt_typeof_matches_translation_of_smt_none _
-      (by
-        change __smtx_typeof SmtTerm.None = SmtType.None
-        exact smtx_typeof_none) hNonNone
+    exact (eo_to_smt_typeof_matches_translation_lambda y x ihBelowAll hNonNone).1
   all_goals
     exact eo_to_smt_typeof_matches_translation_apply_apply_generic_from_ih
       _ y x ihFAll ihXAll
       (generic_apply_type_of_non_special_head _ _
         (by intro s d i j h; exact (eo_to_smt_apply_ne_dt_sel _ y s d i j h).elim)
         (by intro s d i h; exact (eo_to_smt_apply_ne_dt_tester _ y s d i h).elim))
-      (by rfl) (by rfl) hNonNone
+      (by eo_to_smt_generic_rfl) (by rfl) hNonNone
 
 /-- Handles `(UOp op) y` heads in the nested-application apply proof. -/
 private theorem eo_to_smt_typeof_matches_translation_apply_uop_application_head
@@ -14724,7 +14720,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_apply_head
       exact genericFallback _ ihFAll
         (by intro s d i j h; exact (eo_to_smt_apply_ne_dt_sel _ y s d i j h).elim)
         (by intro s d i h; exact (eo_to_smt_apply_ne_dt_tester _ y s d i h).elim)
-        (by rfl)
+        (by eo_to_smt_generic_rfl)
         (by rfl)
         hNonNone
   case Apply f z =>
@@ -14747,7 +14743,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_apply_head
     exact genericFallback _ ihFAll
         (by intro s d i j h; exact (eo_to_smt_apply_ne_dt_sel _ y s d i j h).elim)
         (by intro s d i h; exact (eo_to_smt_apply_ne_dt_tester _ y s d i h).elim)
-        (by rfl)
+        (by eo_to_smt_generic_rfl)
         (by rfl)
         hNonNone
 
@@ -15344,7 +15340,7 @@ theorem eo_to_smt_typeof_matches_translation_apply
                       (__eo_to_smt z))) SmtTerm.None) SmtTerm.None =
               SmtTerm.DtSel s d i j at h
             unfold native_ite at h
-            split at h <;> try cases h
+            split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
             split at h <;> cases h)
           (by
             intro s d i h
@@ -15356,7 +15352,7 @@ theorem eo_to_smt_typeof_matches_translation_apply
                       (__eo_to_smt z))) SmtTerm.None) SmtTerm.None =
               SmtTerm.DtTester s d i at h
             unfold native_ite at h
-            split at h <;> try cases h
+            split at h <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
             split at h <;> cases h))
         (by rfl)
         (by rfl)

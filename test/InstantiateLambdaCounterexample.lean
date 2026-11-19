@@ -10,21 +10,19 @@ import all Cpc.SmtTyping
 import all Cpc.TranslationChecks
 
 /-!
-Counterexample to SMT-translatability preservation by `instantiate`.
+Regression test: `instantiate` with a saturated lambda of function type.
 
 Run with:
   lake env lean -j1 -DwarningAsError=true test/InstantiateLambdaCounterexample.lean
 
 Let `actual = ((lambda (u : Bool) g) false)`, where `g : Bool -> Bool`.
 The saturated lambda translates to a parallel let and has function type.
-Instantiating `forall (f : Bool -> Bool). f true` with `actual` passes the
-instantiation and command-translation guards, and produces an EO Bool.
-However, its result `actual true` has no SMT translation: lambda-spine
-translation rejects the additional application of the returned function.
-
-This refutes the unconditional translation-preservation obligation, without
-assuming that the universally quantified premise is true in any model.
-All computations below are checked by Lean's kernel.
+Instantiating `forall (f : Bool -> Bool). f true` with `actual` produces
+`actual true`. Under the earlier lambda-spine translation that result had no
+SMT translation, since the spine rejected the extra argument. Each
+application is now translated from what its function and argument translate
+to, so `actual true` is the SMT application of the let to `true`, of type
+Bool. All computations below are checked by Lean's kernel.
 -/
 
 public section
@@ -80,24 +78,25 @@ theorem result_eo_type : __eo_typeof result = .Bool := by
   rw [result_eq]
   decide +kernel
 
-theorem result_translation_none : __eo_to_smt result = .None := by
+theorem result_translation :
+    __eo_to_smt result = .Apply (__eo_to_smt actual) (.Boolean true) := by
+  rw [result_eq]
+  rfl
+
+theorem result_smt_type_bool :
+    __smtx_typeof (__eo_to_smt result) = .Bool := by
   rw [result_eq]
   decide +kernel
 
-theorem result_smt_type_none :
-    __smtx_typeof (__eo_to_smt result) = .None := by
-  rw [result_translation_none]
-  decide +kernel
-
-/-- A valid instantiate command with a Boolean-translatable premise and an
-EO Boolean result can still produce a result without an SMT type. -/
-theorem counterexample :
+/-- The instantiation of a Boolean-translatable premise with this actual has
+an SMT translation at the type of its EO result. -/
+theorem no_counterexample :
     cmdTranslationOk (.step .instantiate (.cons ss .nil) (.cons 0 .nil)) ∧
     __smtx_typeof (__eo_to_smt premise) = .Bool ∧
     __is_instantiation xs ss = .Boolean true ∧
     __eo_typeof result = .Bool ∧
-    __smtx_typeof (__eo_to_smt result) = .None :=
+    __smtx_typeof (__eo_to_smt result) = .Bool :=
   ⟨command_translation_ok, premise_smt_type, instantiation_guard,
-    result_eo_type, result_smt_type_none⟩
+    result_eo_type, result_smt_type_bool⟩
 
 end InstantiateLambdaCounterexample

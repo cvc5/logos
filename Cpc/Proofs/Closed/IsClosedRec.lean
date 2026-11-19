@@ -44,14 +44,13 @@ by
   exact TranslationProofs.typeof_apply_apply_none_head_eq
     (__eo_to_smt v) (__eo_to_smt vs)
 
-/-- A raw EO binder list is not headed by a lambda, so the lambda-spine
-translation of it falls back to its default. -/
-theorem eo_to_smt_lambda_spine_eo_list_cons (v : Term) (y d : SmtTerm) :
-  __eo_to_smt_lambda_spine (Term.Apply Term.__eo_List_cons v) y d = d :=
+/-- A raw EO binder list is not a lambda, so an application of one translates
+to the SMT application. -/
+theorem eo_to_smt_apply_eo_list_cons (v : Term) (y : SmtTerm) :
+  __eo_to_smt_apply (__eo_to_smt (Term.Apply Term.__eo_List_cons v)) y =
+    SmtTerm.Apply (__eo_to_smt (Term.Apply Term.__eo_List_cons v)) y :=
 by
-  first
-    | rfl
-    | simp [__eo_to_smt_lambda_spine, __eo_to_smt_lambda_app]
+  rfl
 
 /-- Datatype constructors with a `None` field are not well-formed. -/
 theorem smtx_dt_cons_wf_rec_cons_none_eq_false
@@ -88,7 +87,7 @@ by
     try rw [TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
       (TranslationProofs.not_isLamSpine_of_head (by simp [TranslationProofs.eoSpineHead]))]
     try dsimp only [__eo_to_smt]
-    simp [eo_to_smt_lambda_spine_eo_list_cons,
+    simp [eo_to_smt_apply_eo_list_cons,
       smtx_typeof_unfolded_eo_list_cons_eq_none, __smtx_typeof,
       __smtx_typeof_apply, __smtx_typeof_eq, __smtx_typeof_guard,
       __smtx_typeof_guard_wf, __smtx_typeof_ite, __smtx_typeof_bv_op_1,
@@ -6471,7 +6470,7 @@ theorem false_of_lam_spine_raw_list
         body = Term.Apply (Term.Apply Term.__eo_List_cons v) vs) :
   P :=
 by
-  obtain ⟨_, hBody, hArgs⟩ := hs.parts_typed hr hTrans
+  obtain ⟨_, hBody, hArgs⟩ := hs.parts_typed_any hTrans
   rcases hMem with hMem | rfl
   · exact False.elim (term_not_eo_list_cons_of_has_smt_translation (hArgs _ hMem) v vs rfl)
   · exact False.elim (term_not_eo_list_cons_of_has_smt_translation hBody v vs rfl)
@@ -6496,8 +6495,9 @@ by
 body (under the variables of its lambda) and arguments it agrees on. -/
 theorem is_closed_rec_lam_spine_prefix_eq_and_bool
     {env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnv env vars)
-    {us body : Term} {s : native_String} {T vs' : Term}
-    (hUs : us = Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs')
+    {us body : Term}
+    (hUs : us = Term.__eo_List_nil ∨ ∃ s T vs',
+      us = Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs')
     (hBody :
       __is_closed_rec body (__eo_list_concat Term.__eo_List_cons us env) =
           __eo_is_closed_rec body (__eo_list_concat Term.__eo_List_cons us env) ∧
@@ -6512,7 +6512,13 @@ theorem is_closed_rec_lam_spine_prefix_eq_and_bool
       __is_closed_rec t env = __eo_is_closed_rec t env ∧
         ∃ b, __eo_is_closed_rec t env = Term.Boolean b
   | _, _, TranslationProofs.LamSpine.lam _ _, _ => by
-      subst hUs
+      rcases hUs with rfl | ⟨s, T, vs', rfl⟩
+      · rcases hBody with ⟨hBodyEq, b, hBodyBool⟩
+        refine ⟨?_, b, ?_⟩
+        · cases hEnv <;>
+            simpa [__is_closed_rec, __eo_is_closed_rec, __eo_list_concat, hBodyEq]
+              using eo_and_true_left_eq_of_boolean hBodyBool
+        · cases hEnv <;> simpa [__eo_is_closed_rec] using hBodyBool
       rcases hBody with ⟨hBodyEq, b, hBodyBool⟩
       refine ⟨?_, b, ?_⟩
       · cases hEnv <;>
@@ -6540,7 +6546,7 @@ theorem is_closed_rec_lam_spine_prefix_eq_and_bool
 `is_closed_rec_lam_spine_prefix_eq_and_bool`. -/
 theorem is_closed_rec_lam_spine_eq_and_bool
     {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
-    (hr : r ≠ []) {env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnv env vars)
+    {env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnv env vars)
     (hTrans : eoHasSmtTranslation t)
     (hRec :
       ∀ {u env' : Term} {vars' : List SmtVarKey},
@@ -6551,14 +6557,14 @@ theorem is_closed_rec_lam_spine_eq_and_bool
                 ∃ b, __eo_is_closed_rec u env' = Term.Boolean b) :
     __is_closed_rec t env = __eo_is_closed_rec t env ∧
       ∃ b, __eo_is_closed_rec t env = Term.Boolean b := by
-  obtain ⟨hv, hBodyNN, hArgsNN⟩ := hs.parts_typed hr hTrans
-  have hLen : r.length = r.length - 1 + 1 := by
-    cases r with
-    | nil => exact absurd rfl hr
-    | cons _ _ => simp
-  rw [hLen] at hv
-  obtain ⟨s, T, vs', hUs, _⟩ := TranslationProofs.lambda_vars_succ_inv hv
-  rw [← hLen] at hv
+  obtain ⟨⟨m, hv⟩, hBodyNN, hArgsNN⟩ := hs.parts_typed_any hTrans
+  have hUs : us = Term.__eo_List_nil ∨ ∃ s T vs',
+      us = Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs' := by
+    cases m with
+    | zero => exact Or.inl (TranslationProofs.lambda_vars_zero_inv hv)
+    | succ m =>
+        obtain ⟨s, T, vs', hUs, _⟩ := TranslationProofs.lambda_vars_succ_inv hv
+        exact Or.inr ⟨s, T, vs', hUs⟩
   have hUsEnv := eoSmtVarEnv_of_lambda_vars _ hv
   exact is_closed_rec_lam_spine_prefix_eq_and_bool hEnv hUs
     (hRec (Or.inl rfl) (EoSmtVarEnv.concat hUsEnv hEnv) hBodyNN)
@@ -6589,7 +6595,7 @@ theorem is_closed_rec_apply_generic_or_spine
     have hs' := TranslationProofs.LamSpine.app x hs
     obtain ⟨hBodyLt, hArgsLt⟩ := hs'.sizeOf_lt
     exact is_closed_rec_lam_spine_eq_and_bool hs'
-      (List.cons_ne_nil _ _) hEnv hTrans (fun hu => hRec (by
+      hEnv hTrans (fun hu => hRec (by
         rcases hu with rfl | hu
         · exact hBodyLt
         · exact hArgsLt _ hu))
@@ -8006,19 +8012,14 @@ theorem is_closed_rec_apply_apply_uop_nonquantifier_eq_and_bool_of_has_smt_trans
         ∃ b, __eo_is_closed_rec x env = Term.Boolean b)
     (hY :
       __is_closed_rec y env = __eo_is_closed_rec y env ∧
-        ∃ b, __eo_is_closed_rec y env = Term.Boolean b) :
+        ∃ b, __eo_is_closed_rec y env = Term.Boolean b)
+    (hNotLambda : op ≠ UserOp.lambda := by decide) :
   __is_closed_rec (Term.Apply (Term.Apply (Term.UOp op) x) y) env =
     __eo_is_closed_rec (Term.Apply (Term.Apply (Term.UOp op) x) y) env ∧
     ∃ b,
       __eo_is_closed_rec (Term.Apply (Term.Apply (Term.UOp op) x) y) env =
         Term.Boolean b :=
 by
-  -- A bare lambda translates to no term.
-  have hNotLambda : op ≠ UserOp.lambda := by
-    rintro rfl
-    exact hTrans (by
-      change __smtx_typeof SmtTerm.None = SmtType.None
-      exact TranslationProofs.smtx_typeof_none)
   exact
     is_closed_rec_apply_apply_uop_nonquantifier_eq_and_bool_of_args
       (hNotLambda := hNotLambda) hEnv hNotForall hNotExists
@@ -8042,7 +8043,8 @@ theorem is_closed_rec_apply_apply_uop_nonquantifier_eq_and_bool_of_has_smt_trans
     (ihY :
       eoHasSmtTranslation y ->
         __is_closed_rec y env = __eo_is_closed_rec y env ∧
-          ∃ b, __eo_is_closed_rec y env = Term.Boolean b) :
+          ∃ b, __eo_is_closed_rec y env = Term.Boolean b)
+    (hNotLambda : op ≠ UserOp.lambda := by decide) :
   __is_closed_rec (Term.Apply (Term.Apply (Term.UOp op) x) y) env =
     __eo_is_closed_rec (Term.Apply (Term.Apply (Term.UOp op) x) y) env ∧
     ∃ b,
@@ -8051,7 +8053,7 @@ theorem is_closed_rec_apply_apply_uop_nonquantifier_eq_and_bool_of_has_smt_trans
 by
   exact
     is_closed_rec_apply_apply_uop_nonquantifier_eq_and_bool_of_has_smt_translation_and_args
-      hEnv hNotForall hNotExists hTrans (ihX hXTrans) (ihY hYTrans)
+      hEnv hNotForall hNotExists hTrans (ihX hXTrans) (ihY hYTrans) hNotLambda
 
 theorem is_closed_rec_apply_purify_eq_and_bool_of_has_smt_translation
     {x env : Term} {vars : List SmtVarKey}
@@ -14294,7 +14296,7 @@ by
     have hs := TranslationProofs.LamSpine.app x
       (TranslationProofs.LamSpine.app (Term.Apply (Term.Apply Term.__eo_List_cons v) vs)
         (TranslationProofs.LamSpine.lam w z))
-    obtain ⟨_, _, hArgs⟩ := hs.parts_typed (List.cons_ne_nil _ _) hTrans
+    obtain ⟨_, _, hArgs⟩ := hs.parts_typed_any hTrans
     exact False.elim
       (term_not_eo_list_cons_of_has_smt_translation (hArgs _ (by simp)) v vs rfl)
   by_cases hReplaceAll :
@@ -14455,8 +14457,7 @@ by
       | app _ hs' =>
           obtain ⟨_, _, hArgs⟩ :=
             (TranslationProofs.LamSpine.app body
-              (TranslationProofs.LamSpine.app _ hs')).parts_typed
-              (List.cons_ne_nil _ _) hTrans
+              (TranslationProofs.LamSpine.app _ hs')).parts_typed_any hTrans
           exact term_not_eo_list_cons_of_has_smt_translation (hArgs _ (by simp)) v vs rfl
     unfold eoHasSmtTranslation at hTrans
     rw [TranslationProofs.eo_to_smt_apply_apply_apply_apply_eq_of_head_not_uop
@@ -14598,10 +14599,12 @@ theorem is_closed_rec_apply_apply_uop_any_eq_and_bool_of_has_smt_translation
 by
   cases op
   case lambda =>
-    -- A bare lambda translates to no term.
-    exact absurd (by
-      change __smtx_typeof SmtTerm.None = SmtType.None
-      exact TranslationProofs.smtx_typeof_none) hTrans
+    exact is_closed_rec_lam_spine_eq_and_bool
+      (TranslationProofs.LamSpine.lam x y) hEnv hTrans
+      (fun hu => ih (by
+        rcases hu with rfl | hu
+        · exact hYLt
+        · cases hu))
   case or =>
     exact
       is_closed_rec_apply_apply_or_eq_and_bool_of_has_smt_translation
@@ -15641,7 +15644,7 @@ by
   case lambda =>
     exact is_closed_rec_lam_spine_eq_and_bool
       (TranslationProofs.LamSpine.app z (TranslationProofs.LamSpine.lam x y))
-      (List.cons_ne_nil _ _) hEnv hTrans
+      hEnv hTrans
       (fun hu => ih (by
         rcases hu with rfl | hu
         · exact hYLt
@@ -16433,7 +16436,7 @@ by
     exact is_closed_rec_lam_spine_eq_and_bool
       (TranslationProofs.LamSpine.app x
         (TranslationProofs.LamSpine.app y (TranslationProofs.LamSpine.lam w z)))
-      (List.cons_ne_nil _ _) hEnv hTrans
+      hEnv hTrans
       (fun hu => ih (by
         rcases hu with rfl | hu
         · exact hZLt

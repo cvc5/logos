@@ -337,6 +337,7 @@ def SmtTermClosedIn (vars : List SmtVarKey) : SmtTerm -> Prop
   | SmtTerm.exists s T body => SmtTermClosedIn ((s, T) :: vars) body
   | SmtTerm.forall s T body => SmtTermClosedIn ((s, T) :: vars) body
   | SmtTerm.choice s T body => SmtTermClosedIn ((s, T) :: vars) body
+  | SmtTerm.lam s T body => SmtTermClosedIn ((s, T) :: vars) body
   | SmtTerm.bind bs x =>
       SmtBindingsClosedIn vars bs ∧ SmtTermClosedIn (SmtBindings.keys bs ++ vars) x
   | SmtTerm.map_diff x y => SmtTermClosedIn vars x ∧ SmtTermClosedIn vars y
@@ -3471,16 +3472,17 @@ by
     (hRec hEnv
       (eo_is_closed_rec_apply_uop_arg_eq_true hEnv hClosed))
 
-/-! ### Beta redexes -/
+/-! ### Lambdas and their applications -/
 
-/-- The SMT variables of a list of EO variables, in order. -/
+/-- The SMT variables of a list of EO variables, in order, up to the first
+element that is not one. -/
 @[expose] def eoVarKeys : Term -> List SmtVarKey
   | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs =>
       (s, __eo_to_smt_type T) :: eoVarKeys vs
   | _ => []
 
 theorem eoSmtVarEnv_of_lambda_vars :
-    ∀ (m : Nat) {us : Term}, __eo_to_smt_lambda_vars us m = true ->
+    ∀ (m : Nat) {us : Term}, TranslationProofs.lamVars us m = true ->
       EoSmtVarEnv us (eoVarKeys us)
   | 0, us, h => by
       rw [TranslationProofs.lambda_vars_zero_inv h]
@@ -3489,35 +3491,37 @@ theorem eoSmtVarEnv_of_lambda_vars :
       obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lambda_vars_succ_inv h
       exact EoSmtVarEnv.cons (eoSmtVarEnv_of_lambda_vars m hvs)
 
-theorem eoVarKeys_length :
-    ∀ (m : Nat) {us : Term}, __eo_to_smt_lambda_vars us m = true ->
-      (eoVarKeys us).length = m
-  | 0, us, h => by
-      rw [TranslationProofs.lambda_vars_zero_inv h]
-      rfl
-  | m + 1, us, h => by
-      obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lambda_vars_succ_inv h
-      change (eoVarKeys vs).length + 1 = m + 1
-      rw [eoVarKeys_length m hvs]
+theorem lamVarsPrefix_nth :
+    ∀ (k : Nat) {us : Term} {m : Nat},
+      TranslationProofs.lamVarsPrefix us m = true -> k < m ->
+      ∃ s T, TranslationProofs.lamNth us k = Term.Var (Term.String s) T
+  | k, us, 0, _, hk => absurd hk (Nat.not_lt_zero _)
+  | 0, us, m + 1, h, _ => by
+      obtain ⟨s, T, vs, rfl, _⟩ := TranslationProofs.lamVarsPrefix_succ_inv h
+      exact ⟨s, T, rfl⟩
+  | k + 1, us, m + 1, h, hk => by
+      obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lamVarsPrefix_succ_inv h
+      exact lamVarsPrefix_nth k hvs (by omega)
 
 theorem eoVarKeys_getElem? :
     ∀ (p : Nat) {us : Term} {m : Nat} {s : native_String} {T : Term},
-      __eo_to_smt_lambda_vars us m = true -> p < m ->
-      __eo_to_smt_lambda_nth us p = Term.Var (Term.String s) T ->
+      TranslationProofs.lamVarsPrefix us m = true -> p < m ->
+      TranslationProofs.lamNth us p = Term.Var (Term.String s) T ->
       (eoVarKeys us)[p]? = some (s, __eo_to_smt_type T)
   | p, us, 0, s, T, _, hp, _ => absurd hp (Nat.not_lt_zero _)
   | 0, us, m + 1, s, T, h, _, hn => by
-      obtain ⟨s', T', vs, rfl, _⟩ := TranslationProofs.lambda_vars_succ_inv h
+      obtain ⟨s', T', vs, rfl, _⟩ := TranslationProofs.lamVarsPrefix_succ_inv h
       change Term.Var (Term.String s') T' = Term.Var (Term.String s) T at hn
       cases hn
       rfl
   | p + 1, us, m + 1, s, T, h, hp, hn => by
-      obtain ⟨s', T', vs, rfl, hvs⟩ := TranslationProofs.lambda_vars_succ_inv h
+      obtain ⟨s', T', vs, rfl, hvs⟩ := TranslationProofs.lamVarsPrefix_succ_inv h
       exact eoVarKeys_getElem? p hvs (by omega) hn
 
-/-- The variables a beta redex binds are those of its lambda. -/
+/-- The variables the arguments of a spine are bound to are the first ones of
+its lambda. -/
 theorem lamBindings_keys {us : Term} {m : Nat}
-    (hvars : __eo_to_smt_lambda_vars us m = true) :
+    (hvars : TranslationProofs.lamVarsPrefix us m = true) :
     ∀ (r : List Term) (bs : SmtBindings), r.length ≤ m ->
       SmtBindings.keys (TranslationProofs.lamBindings us r bs) =
         (eoVarKeys us).take r.length ++ SmtBindings.keys bs
@@ -3525,9 +3529,10 @@ theorem lamBindings_keys {us : Term} {m : Nat}
       simp [TranslationProofs.lamBindings]
   | a :: r, bs, hlen => by
       simp only [List.length_cons] at hlen
-      obtain ⟨s, T, hn, _⟩ := TranslationProofs.lambda_vars_split r.length hvars (by omega)
+      obtain ⟨s, T, hn⟩ := lamVarsPrefix_nth r.length hvars (by omega)
       change SmtBindings.keys (TranslationProofs.lamBindings us r
-          (__eo_to_smt_lambda_binding (__eo_to_smt_lambda_nth us r.length) (__eo_to_smt a) bs)) = _
+          (TranslationProofs.lamBinding (TranslationProofs.lamNth us r.length)
+            (__eo_to_smt a) bs)) = _
       rw [hn]
       change SmtBindings.keys (TranslationProofs.lamBindings us r
           (SmtBindings.cons s (__eo_to_smt_type T) (__eo_to_smt a) bs)) = _
@@ -3537,7 +3542,69 @@ theorem lamBindings_keys {us : Term} {m : Nat}
         List.append_assoc, List.singleton_append]
       rfl
 
-/-- The pieces of an EO-closed beta redex are EO-closed: its body under the
+/-- The variables of a list that begins with `k` of them are its first `k`,
+followed by those of the rest. -/
+theorem eoVarKeys_drop :
+    ∀ (k : Nat) (us : Term), TranslationProofs.lamVarsPrefix us k = true ->
+      eoVarKeys us = (eoVarKeys us).take k ++ eoVarKeys (TranslationProofs.eoListDrop k us)
+  | 0, us, _ => by simp [TranslationProofs.eoListDrop]
+  | k + 1, us, h => by
+      obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lamVarsPrefix_succ_inv h
+      change (s, __eo_to_smt_type T) :: eoVarKeys vs =
+        ((s, __eo_to_smt_type T) :: eoVarKeys vs).take (k + 1) ++
+          eoVarKeys (TranslationProofs.eoListDrop k vs)
+      rw [List.take_succ_cons, List.cons_append, ← eoVarKeys_drop k vs hvs]
+
+/-- A list that begins with `k` variables, and whose rest is a list of `m`
+variables, is a list of `k + m` variables. -/
+theorem lamVars_of_prefix_drop :
+    ∀ (k : Nat) {m : Nat} (us : Term), TranslationProofs.lamVarsPrefix us k = true ->
+      TranslationProofs.lamVars (TranslationProofs.eoListDrop k us) m = true ->
+      TranslationProofs.lamVars us (k + m) = true
+  | 0, m, us, _, h => by simpa [TranslationProofs.eoListDrop] using h
+  | k + 1, m, us, hp, h => by
+      obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lamVarsPrefix_succ_inv hp
+      rw [Nat.add_right_comm]
+      exact lamVars_of_prefix_drop k vs hvs h
+
+/-- The curried chain of a lambda's variables is closed when its body is, under
+those variables. -/
+theorem smtTermClosedIn_curry :
+    ∀ (D : Term) (B : SmtTerm) (V : List SmtVarKey),
+      SmtTermClosedIn ((eoVarKeys D).reverse ++ V) B ->
+        SmtTermClosedIn V (__eo_to_smt_lambda_curry D B)
+  | D, B, V, h => by
+      unfold __eo_to_smt_lambda_curry
+      split
+      · simpa [eoVarKeys] using h
+      · rename_i s T vs
+        change SmtTermClosedIn ((s, __eo_to_smt_type T) :: V)
+          (__eo_to_smt_lambda_curry vs B)
+        apply smtTermClosedIn_curry vs B
+        simpa [eoVarKeys, List.reverse_cons, List.append_assoc] using h
+      · trivial
+termination_by D => sizeOf D
+decreasing_by all_goals simp_wf; omega
+
+/-- The curried chain of a list that is not one of variables is closed. -/
+theorem smtTermClosedIn_curry_of_not_vars :
+    ∀ (D : Term), (∀ m, TranslationProofs.lamVars D m ≠ true) ->
+      ∀ (B : SmtTerm) (V : List SmtVarKey),
+        SmtTermClosedIn V (__eo_to_smt_lambda_curry D B)
+  | D, hD, B, V => by
+      unfold __eo_to_smt_lambda_curry
+      split
+      · exact absurd rfl (hD 0)
+      · rename_i s T vs
+        change SmtTermClosedIn ((s, __eo_to_smt_type T) :: V)
+          (__eo_to_smt_lambda_curry vs B)
+        exact smtTermClosedIn_curry_of_not_vars vs
+          (fun m hm => hD (m + 1) hm) B _
+      · trivial
+termination_by D => sizeOf D
+decreasing_by all_goals simp_wf; omega
+
+/-- The pieces of an EO-closed lambda spine are EO-closed: its body under the
 variables of its lambda, and its arguments. -/
 theorem eo_is_closed_rec_lam_spine_parts
     {env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnvPerm env vars) :
@@ -3563,10 +3630,12 @@ theorem eo_is_closed_rec_lam_spine_parts
       · exact hCases.2
       · exact hArgs a' ha'
 
-/-- The translation of an EO-closed beta redex is closed. -/
+/-- The translation of an EO-closed lambda spine whose arguments are all bound
+to variables of its lambda is closed. -/
 theorem smtTermClosedIn_eo_to_smt_lam_spine
     {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
-    (hr : r ≠ []) {env : Term} {vars : List SmtVarKey}
+    (hp : TranslationProofs.lamVarsPrefix us r.length = true)
+    {env : Term} {vars : List SmtVarKey}
     (hEnv : EoSmtVarEnvPerm env vars)
     (hRec :
       ∀ {u env' : Term} {vars' : List SmtVarKey},
@@ -3577,27 +3646,31 @@ theorem smtTermClosedIn_eo_to_smt_lam_spine
     (hClosed : __eo_is_closed_rec t env = Term.Boolean true) :
   SmtTermClosedIn vars (__eo_to_smt t) :=
 by
-  rw [hs.eo_to_smt hr]
-  cases hv : __eo_to_smt_lambda_vars us r.length
-  · change SmtTermClosedIn vars SmtTerm.None
-    trivial
-  · change SmtTermClosedIn vars
-      (SmtTerm.bind (TranslationProofs.lamBindings us r SmtBindings.nil) (__eo_to_smt body))
-    obtain ⟨hBodyLt, hArgsLt⟩ := hs.sizeOf_lt
-    obtain ⟨hBodyClosed, hArgsClosed⟩ := eo_is_closed_rec_lam_spine_parts hEnv hs hClosed
-    refine ⟨?_, ?_⟩
-    · refine (SmtBindingsClosedIn.iff_mem _).2 ?_
-      intro s T v hm
-      rcases TranslationProofs.lamBindings_mem_inv us r SmtBindings.nil hm with hm | ⟨a, ha, rfl⟩
-      · cases hm
-      · exact hRec (hArgsLt a ha) hEnv (hArgsClosed a ha)
-    · have hBody := hRec hBodyLt
+  rw [hs.eo_to_smt_prefix.1 hp]
+  obtain ⟨hBodyLt, hArgsLt⟩ := hs.sizeOf_lt
+  obtain ⟨hBodyClosed, hArgsClosed⟩ := eo_is_closed_rec_lam_spine_parts hEnv hs hClosed
+  refine ⟨?_, ?_⟩
+  · refine (SmtBindingsClosedIn.iff_mem _).2 ?_
+    intro s T v hm
+    rcases TranslationProofs.lamBindings_mem_inv us r SmtBindings.nil hm with hm | ⟨a, ha, rfl⟩
+    · cases hm
+    · exact hRec (hArgsLt a ha) hEnv (hArgsClosed a ha)
+  · by_cases hvl : ∃ m, TranslationProofs.lamVars (TranslationProofs.eoListDrop r.length us) m = true
+    · obtain ⟨m, hm⟩ := hvl
+      have hv := lamVars_of_prefix_drop r.length us hp hm
+      have hBody := hRec hBodyLt
         (EoSmtVarEnvPerm.concat_rev (eoSmtVarEnv_of_lambda_vars _ hv) hEnv) hBodyClosed
+      apply smtTermClosedIn_curry
       refine SmtTermClosedIn.mono ?_ hBody
-      intro s T hm
-      rw [lamBindings_keys hv r SmtBindings.nil (Nat.le_refl _),
-        ← eoVarKeys_length _ hv, List.take_length]
-      simpa [SmtBindings.keys] using hm
+      intro s T hm'
+      rw [lamBindings_keys hp r SmtBindings.nil (Nat.le_refl _)]
+      have hsplit := eoVarKeys_drop r.length us hp
+      simp only [List.mem_append, List.mem_reverse] at hm' ⊢
+      rw [hsplit] at hm'
+      simp only [List.mem_append] at hm'
+      simp only [SmtBindings.keys, List.append_nil]
+      tauto
+    · exact smtTermClosedIn_curry_of_not_vars _ (fun m h => hvl ⟨m, h⟩) _ _
 
 theorem smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
     {f x env : Term} {vars : List SmtVarKey}
@@ -3636,8 +3709,7 @@ theorem smtTermClosedIn_eo_to_smt_apply_generic_below
     {f x env : Term} {vars : List SmtVarKey}
     (hgen :
       __eo_to_smt (Term.Apply f x) =
-        __eo_to_smt_lambda_spine f (__eo_to_smt x)
-          (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt x)))
+        __eo_to_smt_apply (__eo_to_smt f) (__eo_to_smt x))
     (hNotForall :
       ∀ vs, f ≠ Term.Apply (Term.UOp UserOp.forall) vs)
     (hNotExists :
@@ -3655,17 +3727,17 @@ theorem smtTermClosedIn_eo_to_smt_apply_generic_below
       intro vs h; cases h) :
   SmtTermClosedIn vars (__eo_to_smt (Term.Apply f x)) :=
 by
-  by_cases hSp : TranslationProofs.IsLamSpine f
-  · obtain ⟨us, body, r, hs⟩ := hSp
+  by_cases hp : TranslationProofs.SmtPendingLam (__eo_to_smt f)
+  · obtain ⟨us, body, r, hs⟩ := TranslationProofs.eo_to_smt_pending_spine f hp
     exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.app x hs)
-      (List.cons_ne_nil _ _) hEnv hRec hClosed
+      (TranslationProofs.lamVarsPrefix_of_pending_app x hs hp) hEnv hRec hClosed
   have hFLt : sizeOf f < sizeOf (Term.Apply f x) := by
     simp
     omega
   have hXLt : sizeOf x < sizeOf (Term.Apply f x) := by
     simp
   exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-    (TranslationProofs.eo_to_smt_apply_eq_of_not_spine hgen hSp)
+    (TranslationProofs.eo_to_smt_apply_eq_of_not_pending hgen hp)
     hNotForall hNotExists hEnv
     (fun hEnv' hClosed' => hRec hFLt hEnv' hClosed')
     (fun hEnv' hClosed' => hRec hXLt hEnv' hClosed')
@@ -6300,9 +6372,8 @@ by
     exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_qdiv_total hx hy)
   case lambda =>
-    -- A bare lambda translates to no term.
-    change SmtTermClosedIn vars SmtTerm.None
-    trivial
+    exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.lam x y) rfl hEnv
+      (fun _ hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   case «forall» =>
     exact smtTermClosedIn_eo_to_smt_forall_of_closed_rec_using
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
@@ -7293,9 +7364,8 @@ by
     exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_qdiv_total hx hy)
   case lambda =>
-    -- A bare lambda translates to no term.
-    change SmtTermClosedIn vars SmtTerm.None
-    trivial
+    exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.lam x y) rfl hEnv
+      hRec hClosed
   case «forall» =>
     exact smtTermClosedIn_eo_to_smt_forall_of_closed_rec_using
       hEnv recY hClosed
