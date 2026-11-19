@@ -6,6 +6,7 @@ public import Cpc.Proofs.Translation.Special
 public import Cpc.Proofs.Translation.Inversions
 public import Cpc.Proofs.Translation.Heads
 public import Cpc.Proofs.Translation.EoTypeofCore
+public import Cpc.Proofs.Translation.Lambda
 public import Cpc.Proofs.TypePreservation.Full
 import all Cpc.Spec
 import all Cpc.Proofs.TypePreservation.Datatypes
@@ -6166,7 +6167,8 @@ by
 
 theorem eo_to_smt_apply_apply_apply_apply_eq_of_head_not_uop
     (g y x z body : Term)
-    (hNotUOp : ∀ op, g ≠ Term.UOp op) :
+    (hNotUOp : ∀ op, g ≠ Term.UOp op)
+    (hNotSpine : ¬ IsLamSpine (Term.Apply (Term.Apply (Term.Apply g y) x) z)) :
     __eo_to_smt
         (Term.Apply
           (Term.Apply
@@ -6184,14 +6186,15 @@ by
   case UOp op =>
     exact False.elim (hNotUOp op rfl)
   all_goals
-    rfl
+    exact eo_to_smt_apply_eq_of_not_spine rfl hNotSpine
 
 theorem eo_to_smt_apply_apply_apply_apply_uop_generic_eq
     (op : UserOp) (w z y x : Term)
     (hNotReplaceAllResult :
       op ≠ UserOp._at_strings_replace_all_result)
     (hNotReplaceReAllResult :
-      op ≠ UserOp._at_strings_replace_re_all_result) :
+      op ≠ UserOp._at_strings_replace_re_all_result)
+    (hNotLambda : op ≠ UserOp.lambda) :
     __eo_to_smt
         (Term.Apply
           (Term.Apply
@@ -6210,8 +6213,11 @@ by
     exact False.elim (hNotReplaceAllResult rfl)
   case _at_strings_replace_re_all_result =>
     exact False.elim (hNotReplaceReAllResult rfl)
+  case lambda =>
+    exact False.elim (hNotLambda rfl)
   all_goals
-    rfl
+    exact eo_to_smt_apply_eq_of_not_spine rfl
+      (not_isLamSpine_of_head (by simp [eoSpineHead]))
 
 private theorem smt_strings_num_occur_type_and_first_replace_non_none
     (replace : SmtTerm → SmtTerm → SmtTerm → SmtTerm)
@@ -11364,6 +11370,12 @@ private theorem eo_to_smt_typeof_matches_translation_apply_uop_application_head_
   case _at__at_aci_sorted =>
     exact eo_to_smt_typeof_matches_translation_apply_apply_none_head
       UserOp._at__at_aci_sorted y x (by rfl) hNonNone
+  case lambda =>
+    -- A bare lambda translates to no term.
+    exact eo_to_smt_typeof_matches_translation_of_smt_none _
+      (by
+        change __smtx_typeof SmtTerm.None = SmtType.None
+        exact smtx_typeof_none) hNonNone
   all_goals
     exact eo_to_smt_typeof_matches_translation_apply_apply_generic_from_ih
       _ y x ihFAll ihXAll
@@ -14578,8 +14590,9 @@ private theorem eo_to_smt_typeof_matches_translation_apply_binary_application_he
         eo_to_smt_typeof_matches_translation_apply_apply_apply_at_strings_occur_index
           x y z ihZ ihY ihX hNonNone
     all_goals
-      exact eo_to_smt_typeof_matches_translation_apply_apply_apply_generic_application_head
-        _ z y x ihFAll ihXAll (by rfl) (by rfl) hNonNone
+      exact eo_to_smt_typeof_matches_translation_generic_or_spine _ x ihBelowAll (by rfl)
+        (fun hT => eo_to_smt_typeof_matches_translation_apply_apply_apply_generic_application_head
+          _ z y x ihFAll ihXAll hT (by rfl) hNonNone) hNonNone
   case Apply g w =>
     cases g
     case UOp op =>
@@ -14595,14 +14608,17 @@ private theorem eo_to_smt_typeof_matches_translation_apply_binary_application_he
           eo_to_smt_typeof_matches_translation_apply_apply_apply_apply_at_strings_replace_re_all_result
             x y z w ihW ihZ ihY ihX hNonNone
       all_goals
-        exact eo_to_smt_typeof_matches_translation_apply_apply_apply_generic_application_head
-          _ z y x ihFAll ihXAll (by rfl) (by rfl) hNonNone
+        exact eo_to_smt_typeof_matches_translation_generic_or_spine _ x ihBelowAll (by rfl)
+          (fun hT => eo_to_smt_typeof_matches_translation_apply_apply_apply_generic_application_head
+            _ z y x ihFAll ihXAll hT (by rfl) hNonNone) hNonNone
     all_goals
-      exact eo_to_smt_typeof_matches_translation_apply_apply_apply_generic_application_head
-        _ z y x ihFAll ihXAll (by rfl) (by rfl) hNonNone
+      exact eo_to_smt_typeof_matches_translation_generic_or_spine _ x ihBelowAll (by rfl)
+        (fun hT => eo_to_smt_typeof_matches_translation_apply_apply_apply_generic_application_head
+          _ z y x ihFAll ihXAll hT (by rfl) hNonNone) hNonNone
   all_goals
-    exact eo_to_smt_typeof_matches_translation_apply_apply_apply_generic_application_head
-      _ z y x ihFAll ihXAll (by rfl) (by rfl) hNonNone
+    exact eo_to_smt_typeof_matches_translation_generic_or_spine _ x ihBelowAll (by rfl)
+      (fun hT => eo_to_smt_typeof_matches_translation_apply_apply_apply_generic_application_head
+        _ z y x ihFAll ihXAll hT (by rfl) hNonNone) hNonNone
 
 /-- Handles `(f z) y` heads in the nested-application apply proof. -/
 private theorem eo_to_smt_typeof_matches_translation_apply_binary_application_head

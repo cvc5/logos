@@ -931,7 +931,8 @@
 ; it applies the lambda to exactly as many arguments as it binds variables, it
 ; transforms into the let that binds each xi to ai, in parallel, around t, and
 ; otherwise into no term. The programs below read such a spine as written, and
-; lambda says what a spine headed by it becomes at the end of the section.
+; the case of $eo_to_smt at the end of the section is what says a spine is read
+; that way.
 
 ; The variable list of the lambda heading the spine t.
 ; -- $eo_to_smt_lambda_vs
@@ -1017,30 +1018,52 @@
   )
 )
 
-; -- lambda
-; An :apply case is given arg, what the last argument of the spine transforms
-; into, and app, what the application is in the embedding, and says what it
-; matches of the rest. The first matches the lambda applied to one argument,
-; and the second a longer spine (f a), or an application headed by anything
-; else; f is read as written and a as what it transforms into, which are what
-; the parameters of lambda stand for: in that case vs is f and body is a. The
-; first step of the spine is taken here, so that every term transformed is a
-; subterm of it.
-(define-symbol lambda ((! vs :raw) body)
-  :term (lambda vs body) none
-  :apply (lambda vs body)
+; The application (t y), for t an application itself, given y, what y
+; transforms into, and d, what the application is in the embedding: the let
+; of the body of the lambda it is headed by, if it is, and d if it is not. The
+; lambda applied to one argument is matched as it is; a longer spine (f a) is
+; walked by $eo_to_smt_lambda_app, the bindings of its last two arguments being
+; made here. Every term transformed is a subterm of t, and y is given already
+; transformed, so the transformation is seen to terminate.
+; -- $eo_to_smt_lambda_spine
+(program $eo_to_smt_lambda_spine
+  ((T Type) (U Type) (B Type) (vs $eo_List) (body B) (f (-> U T)) (a U) (t T)
+   (y SmtTerm) (d SmtTerm))
+  :signature (T SmtTerm SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_lambda_spine (lambda vs body) y d)
     ("ite" ($eo_to_smt_lambda_vars vs ("n_succ" "n_zero"))
-      (bind ($eo_to_smt_lambda_binding ($eo_to_smt_lambda_nth vs "n_zero") arg smt.bindings_nil) body)
-      none)
-  :apply (vs body)
-    (eo::define ((us ($eo_to_smt_lambda_vs vs)))
-    (eo::define ((k ($eo_to_smt_lambda_arity vs)))
-      ($eo_to_smt_lambda_app us vs
-        ($eo_to_smt_lambda_binding ($eo_to_smt_lambda_nth us k) body
-          ($eo_to_smt_lambda_binding ($eo_to_smt_lambda_nth us ("n_succ" k)) arg
+      (bind ($eo_to_smt_lambda_binding ($eo_to_smt_lambda_nth vs "n_zero") y smt.bindings_nil) body)
+      none))
+  (($eo_to_smt_lambda_spine (f a) y d)
+    (eo::define ((us ($eo_to_smt_lambda_vs f)))
+    (eo::define ((k ($eo_to_smt_lambda_arity f)))
+      ($eo_to_smt_lambda_app us f
+        ($eo_to_smt_lambda_binding ($eo_to_smt_lambda_nth us k) a
+          ($eo_to_smt_lambda_binding ($eo_to_smt_lambda_nth us ("n_succ" k)) y
             smt.bindings_nil))
         ("n_succ" ("n_succ" "n_zero"))
-        app))))
+        d))))
+  (($eo_to_smt_lambda_spine t y d) d)
+  )
+)
+
+; -- lambda
+(define-symbol lambda ((! vs :raw) body)
+  :term (lambda vs body) none)
+
+; A case of $eo_to_smt itself rather than of a symbol, which comes after the
+; case of every symbol: an application whose head is an application, that no
+; symbol of the signature matched, is a beta-redex if it is headed by a lambda
+; and otherwise the application it is in the embedding. Its parameters are
+; ones $eo_to_smt declares, see plugins/model_smt/model_smt.eo in ethos.
+(program $eo_to_smt
+  ((T Type) (U Type) (T1 Type) (f (-> U T)) (y U) (x1 T1))
+  :signature (T) SmtTerm
+  (
+  (($eo_to_smt (_ (f x1) y)) ($eo_to_smt_lambda_spine (f x1) y (apply (f x1) y)))
+  )
+)
 
 ;-----------------------------------------------------------------------------
 (section "The type constructors")
