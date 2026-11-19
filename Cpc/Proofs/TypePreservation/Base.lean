@@ -767,7 +767,7 @@ theorem smtx_typeof_bindings_of_non_none :
         cases hTest : native_Teq (__smtx_typeof v) T
         · simp [hTest, native_ite] at h
         · rfl
-      simp only [hEq, native_ite, if_true] at h ⊢
+      simp only [hEq, native_ite, ite_true] at h ⊢
       have hWf := smtx_typeof_guard_wf_wf_of_non_none T _ h
       have hG := smtx_typeof_guard_wf_of_non_none T _ h
       rw [hG] at h ⊢
