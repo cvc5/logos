@@ -517,15 +517,18 @@ def __eo_to_smt : Term -> SmtTerm
   -- An application spine headed by a lambda, of any length: the (parallel) let
   -- of its body when it has exactly as many arguments as the lambda binds
   -- variables, and otherwise no term. Every other application is translated
-  -- as before.
+  -- as before. This is a `match` rather than a `native_ite` so that, where the
+  -- head is known not to be a lambda, the case reduces definitionally to the
+  -- application it was before.
   | (Term.Apply f y) =>
-    (native_ite (__eo_to_smt_lambda_headed f)
+    match __eo_to_smt_lambda_headed f with
+    | true =>
       (let vs := (__eo_to_smt_lambda_vs f)
        let k := (__eo_to_smt_lambda_arity f)
        (native_ite (__eo_to_smt_lambda_vars vs (native_nat_succ k))
          (__eo_to_smt_lambda_app vs f (__eo_to_smt_lambda_binding (__eo_to_smt_lambda_nth vs k) (__eo_to_smt y) SmtBindings.nil))
          SmtTerm.None))
-      (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y)))
+    | false => (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y))
   | y => SmtTerm.None
 
 
