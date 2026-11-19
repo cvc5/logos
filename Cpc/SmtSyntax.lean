@@ -67,6 +67,8 @@ inductive SmtTerm : Type where
   | imp : SmtTerm -> SmtTerm -> SmtTerm
   | xor : SmtTerm -> SmtTerm -> SmtTerm
   | eq : SmtTerm -> SmtTerm -> SmtTerm
+  | lam : native_String -> SmtType -> SmtTerm -> SmtTerm
+  | bind : SmtBindings -> SmtTerm -> SmtTerm
   | _at_purify : SmtTerm -> SmtTerm
   | plus : SmtTerm -> SmtTerm -> SmtTerm
   | neg : SmtTerm -> SmtTerm -> SmtTerm
@@ -192,7 +194,6 @@ inductive SmtTerm : Type where
   | qdiv_total : SmtTerm -> SmtTerm -> SmtTerm
   | forall : native_String -> SmtType -> SmtTerm -> SmtTerm
   | exists : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | bind : SmtBindings -> SmtTerm -> SmtTerm
   | int_to_bv : SmtTerm -> SmtTerm -> SmtTerm
   | ubv_to_int : SmtTerm -> SmtTerm
   | sbv_to_int : SmtTerm -> SmtTerm

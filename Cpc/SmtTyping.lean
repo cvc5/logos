@@ -67,6 +67,14 @@ def __smtx_type_wf : SmtType -> native_Bool
   | T => (__smtx_type_wf_component T)
 
 
+def __smtx_typeof_guard_wf (T : SmtType) (U : SmtType) : SmtType :=
+  (native_ite (__smtx_type_wf T) U SmtType.None)
+
+def __smtx_typeof_bindings : SmtBindings -> SmtType -> SmtType
+  | SmtBindings.nil, U => U
+  | (SmtBindings.cons s T t bs), U => (native_ite (native_Teq (__smtx_typeof t) T) (__smtx_typeof_guard_wf T (__smtx_typeof_bindings bs U)) SmtType.None)
+
+
 def __smtx_typeof_arith_overload_op_2 : SmtType -> SmtType -> SmtType
   | SmtType.Int, SmtType.Int => SmtType.Int
   | SmtType.Real, SmtType.Real => SmtType.Real
@@ -162,9 +170,6 @@ def __smtx_typeof_bv_op_1_ret : SmtType -> SmtType -> SmtType
   | (SmtType.BitVec n), T => T
   | T, U => SmtType.None
 
-
-def __smtx_typeof_guard_wf (T : SmtType) (U : SmtType) : SmtType :=
-  (native_ite (__smtx_type_wf T) U SmtType.None)
 
 def __smtx_typeof_seq_op_1_ret : SmtType -> SmtType -> SmtType
   | (SmtType.Seq x1), x2 => x2
@@ -319,11 +324,6 @@ def __smtx_typeof_sets_op_2_ret : SmtType -> SmtType -> SmtType -> SmtType
   | T, U, V => SmtType.None
 
 
-def __smtx_typeof_bindings : SmtBindings -> SmtType -> SmtType
-  | SmtBindings.nil, U => U
-  | (SmtBindings.cons s T t bs), U => (native_ite (native_Teq (__smtx_typeof t) T) (__smtx_typeof_guard_wf T (__smtx_typeof_bindings bs U)) SmtType.None)
-
-
 def __smtx_typeof_int_to_bv : SmtTerm -> SmtType -> SmtType
   | (SmtTerm.Numeral x1), SmtType.Int => (native_ite (native_zleq 0 x1) (SmtType.BitVec (native_int_to_nat x1)) SmtType.None)
   | x2, x3 => SmtType.None
@@ -376,6 +376,7 @@ def __smtx_typeof : SmtTerm -> SmtType
   | (SmtTerm.imp x1 x2) => (native_ite (native_Teq (__smtx_typeof x1) SmtType.Bool) (native_ite (native_Teq (__smtx_typeof x2) SmtType.Bool) SmtType.Bool SmtType.None) SmtType.None)
   | (SmtTerm.xor x1 x2) => (native_ite (native_Teq (__smtx_typeof x1) SmtType.Bool) (native_ite (native_Teq (__smtx_typeof x2) SmtType.Bool) SmtType.Bool SmtType.None) SmtType.None)
   | (SmtTerm.eq x1 x2) => (__smtx_typeof_eq (__smtx_typeof x1) (__smtx_typeof x2))
+  | (SmtTerm.bind bs1 x2) => (__smtx_typeof_bindings bs1 (__smtx_typeof x2))
   | (SmtTerm._at_purify x1) => (__smtx_typeof x1)
   | (SmtTerm.plus x1 x2) => (__smtx_typeof_arith_overload_op_2 (__smtx_typeof x1) (__smtx_typeof x2))
   | (SmtTerm.neg x1 x2) => (__smtx_typeof_arith_overload_op_2 (__smtx_typeof x1) (__smtx_typeof x2))
@@ -523,7 +524,6 @@ def __smtx_typeof : SmtTerm -> SmtType
   | (SmtTerm.qdiv_total x1 x2) => (__smtx_typeof_arith_overload_op_2_ret (__smtx_typeof x1) (__smtx_typeof x2) SmtType.Real)
   | (SmtTerm.forall s1 T2 x3) => (native_ite (native_Teq (__smtx_typeof x3) SmtType.Bool) (__smtx_typeof_guard_wf T2 SmtType.Bool) SmtType.None)
   | (SmtTerm.exists s1 T2 x3) => (native_ite (native_Teq (__smtx_typeof x3) SmtType.Bool) (__smtx_typeof_guard_wf T2 SmtType.Bool) SmtType.None)
-  | (SmtTerm.bind bs1 x2) => (__smtx_typeof_bindings bs1 (__smtx_typeof x2))
   | (SmtTerm.int_to_bv x1 x2) => (__smtx_typeof_int_to_bv x1 (__smtx_typeof x2))
   | (SmtTerm.ubv_to_int x1) => (__smtx_typeof_bv_op_1_ret (__smtx_typeof x1) SmtType.Int)
   | (SmtTerm.sbv_to_int x1) => (__smtx_typeof_bv_op_1_ret (__smtx_typeof x1) SmtType.Int)

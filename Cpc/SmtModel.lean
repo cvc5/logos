@@ -1524,6 +1524,8 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.imp x1 x2) => (__smtx_model_eval_imp (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.xor x1 x2) => (__smtx_model_eval_xor (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.eq x1 x2) => (__smtx_model_eval_eq (__smtx_model_eval M x1) (__smtx_model_eval M x2))
+  | (SmtTerm.lam s1 T2 x3) => SmtValue.NotValue
+  | (SmtTerm.bind bs1 x2) => (native_eval_bind M bs1 x2)
   | (SmtTerm._at_purify x1) => (__smtx_model_eval__at_purify (__smtx_model_eval M x1))
   | (SmtTerm.plus x1 x2) => (__smtx_model_eval_plus (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.neg x1 x2) => (__smtx_model_eval__ (__smtx_model_eval M x1) (__smtx_model_eval M x2))
@@ -1660,7 +1662,6 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.qdiv_total x1 x2) => (__smtx_model_eval_qdiv_total (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.forall s1 T2 x3) => (native_eval_forall M s1 T2 x3)
   | (SmtTerm.exists s1 T2 x3) => (native_eval_exists M s1 T2 x3)
-  | (SmtTerm.bind bs1 x2) => (native_eval_bind M bs1 x2)
   | (SmtTerm.int_to_bv x1 x2) => (__smtx_model_eval_int_to_bv (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.ubv_to_int x1) => (__smtx_model_eval_ubv_to_int (__smtx_model_eval M x1))
   | (SmtTerm.sbv_to_int x1) => (__smtx_model_eval_sbv_to_int (__smtx_model_eval M x1))
