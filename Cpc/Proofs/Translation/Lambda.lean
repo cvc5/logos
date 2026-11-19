@@ -220,8 +220,8 @@ termination_by t => sizeOf t
 
 theorem eo_to_smt_apply_of_not_spine (arg app : SmtTerm) (f : Term)
     (hns : ¬ IsLamSpine f) :
-    __eo_to_smt_apply arg app f = app := by
-  rw [__eo_to_smt_apply.eq_def]
+    __eo_to_smt_lambda_spine f arg app = app := by
+  rw [__eo_to_smt_lambda_spine.eq_def]
   split
   · rename_i us body
     exact absurd ⟨us, body, [], LamSpine.lam us body⟩ hns
@@ -235,8 +235,8 @@ SMT application. -/
 theorem eo_to_smt_apply_eq_of_not_spine {f y : Term}
     (hgen :
       __eo_to_smt (Term.Apply f y) =
-        __eo_to_smt_apply (__eo_to_smt y)
-          (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y)) f)
+        __eo_to_smt_lambda_spine f (__eo_to_smt y)
+          (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y)))
     (hns : ¬ IsLamSpine f) :
     __eo_to_smt (Term.Apply f y) = SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y) := by
   rw [hgen, eo_to_smt_apply_of_not_spine _ _ f hns]
@@ -441,8 +441,8 @@ theorem eo_to_smt_typeof_matches_translation_generic_or_spine
           eo_type_valid (__eo_typeof u))
     (hgen :
       __eo_to_smt (Term.Apply f y) =
-        __eo_to_smt_apply (__eo_to_smt y)
-          (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y)) f)
+        __eo_to_smt_lambda_spine f (__eo_to_smt y)
+          (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y)))
     (hGeneric :
       __eo_to_smt (Term.Apply f y) = SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y) ->
       __smtx_typeof (__eo_to_smt (Term.Apply f y)) =

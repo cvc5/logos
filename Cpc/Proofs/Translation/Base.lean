@@ -519,8 +519,8 @@ theorem eo_to_smt_lambda_app_shape (vs : Term) :
 termination_by t => sizeOf t
 
 theorem eo_to_smt_apply_shape (arg app : SmtTerm) (f : Term) :
-    EoToSmtApplyShape (__eo_to_smt_apply arg app f) app := by
-  rw [__eo_to_smt_apply.eq_def]
+    EoToSmtApplyShape (__eo_to_smt_lambda_spine f arg app) app := by
+  rw [__eo_to_smt_lambda_spine.eq_def]
   split
   · rename_i x1 x2
     cases __eo_to_smt_lambda_vars x1 (native_nat_succ native_nat_zero)
@@ -532,7 +532,7 @@ theorem eo_to_smt_apply_shape (arg app : SmtTerm) (f : Term) :
 /-- A generic application translates to the SMT application, no term, or a
 `let` (when it is a beta redex). -/
 theorem eo_to_smt_apply_generic_cases {f y : Term} {r : SmtTerm}
-    (h : __eo_to_smt_apply (__eo_to_smt y) (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y)) f = r) :
+    (h : __eo_to_smt_lambda_spine f (__eo_to_smt y) (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y)) = r) :
     r = SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y) ∨ r = SmtTerm.None ∨
       ∃ bs b, r = SmtTerm.bind bs b := by
   subst h
