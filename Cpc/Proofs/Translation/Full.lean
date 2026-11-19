@@ -3396,6 +3396,13 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
               cases g <;> dsimp [__eo_typeof] at hTy hTypeNN
               case UOp op =>
                 cases op <;> dsimp [__eo_typeof] at hTy hTypeNN
+                case lambda =>
+                  have hv := (eo_to_smt_typeof_matches_translation_lambda y x
+                    (fun u _ hNN => go u hNN) hNonNone).2
+                  have hTy' : __eo_typeof
+                      (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) y) x) = Term.DtcAppType a b := hTy
+                  rw [hTy'] at hv
+                  exact hv
                 case select =>
                   exact eo_type_valid_of_select_eq_dtcapp_full
                     (go y) (go x) hTermNN hTy
