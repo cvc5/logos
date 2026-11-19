@@ -706,7 +706,12 @@ private theorem tsp_tuple_unit_typeof :
       SmtType.Datatype (native_string_lit "@Tuple")
         (__eo_to_smt_tuple_decl
           (SmtDatatype.sum SmtDatatypeCons.unit SmtDatatype.null)) := by
-  native_decide
+  change __smtx_typeof
+      (SmtTerm.DtCons (native_string_lit "@Tuple")
+        (__eo_to_smt_tuple_decl
+          (SmtDatatype.sum SmtDatatypeCons.unit SmtDatatype.null)) 0) = _
+  simpa [__eo_to_smt_tuple_decl] using
+    TranslationProofs.smtx_typeof_tuple_unit_translation
 
 theorem tupleSpine_eval_components
     (M : SmtModel) (hM : model_wf M) {r : Term} {hs : List Term}
