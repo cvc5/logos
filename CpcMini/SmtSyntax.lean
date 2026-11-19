@@ -42,7 +42,7 @@ inductive SmtType : Type where
   | FunType : SmtType -> SmtType -> SmtType
   | DtcAppType : SmtType -> SmtType -> SmtType
 
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 SMT-LIB terms.
@@ -75,7 +75,7 @@ The SmtDatatype of the embedding.
 inductive SmtDatatype : Type where
   | null : SmtDatatype
   | sum : SmtDatatypeCons -> SmtDatatype -> SmtDatatype
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 The SmtDatatypeCons of the embedding.
@@ -83,7 +83,7 @@ The SmtDatatypeCons of the embedding.
 inductive SmtDatatypeCons : Type where
   | unit : SmtDatatypeCons
   | cons : SmtType -> SmtDatatypeCons -> SmtDatatypeCons
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 The SmtDatatypeDecl of the embedding.
@@ -91,7 +91,7 @@ The SmtDatatypeDecl of the embedding.
 inductive SmtDatatypeDecl : Type where
   | nil : SmtDatatypeDecl
   | cons : native_String -> SmtDatatype -> SmtDatatypeDecl -> SmtDatatypeDecl
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 
 
