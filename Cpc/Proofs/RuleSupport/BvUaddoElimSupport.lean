@@ -63,7 +63,7 @@ theorem typeof_uaddo_ext (x : Term) (w : Nat)
   have hZeroTy :
       __eo_typeof uaddoZeroBit =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1) := by
-    native_decide
+    decide +kernel
   unfold uaddoExt
   change __eo_typeof_concat (__eo_typeof uaddoZeroBit)
       (__eo_typeof_concat (__eo_typeof x) (__eo_typeof (Term.Binary 0 0))) = _
@@ -93,7 +93,7 @@ theorem smt_typeof_uaddo_ext (x : Term) (w : Nat)
       using smt_typeof_bv_const 0 1 (by decide)
   have hEmptyTy :
       __smtx_typeof (SmtTerm.Binary 0 0) = SmtType.BitVec 0 := by
-    native_decide
+    decide +kernel
   have hInnerTy :
       __smtx_typeof
           (SmtTerm.concat (__eo_to_smt x) (SmtTerm.Binary 0 0)) =
@@ -151,19 +151,21 @@ theorem uaddo_nil_eq_zero (x : Term) (w : Nat)
   rw [hExtTy]
   change __eo_to_bin (Term.Numeral (native_nat_to_int (w + 1)))
       (Term.Numeral 0) = _
-  by_cases hBound : native_zleq (native_nat_to_int (w + 1)) 4294967296 = true
-  · have hBoundProp : native_nat_to_int (w + 1) <= 4294967296 := by
-      simpa [SmtEval.native_zleq] using hBound
+  by_cases hBound : SmtEval.native_zlt (native_nat_to_int (w + 1)) 4294967296 = true
+  · have hBoundProp : native_nat_to_int (w + 1) < 4294967296 := by
+      simpa [SmtEval.native_zlt] using hBound
     have hWidthNonneg : 0 <= native_nat_to_int (w + 1) := by
       simpa [native_nat_to_int] using (Int.natCast_nonneg (w + 1))
     simp [__eo_to_bin, __eo_mk_binary, native_ite, SmtEval.native_zleq,
+      SmtEval.native_zlt, SmtEval.native_and,
       hBoundProp, hWidthNonneg, SmtEval.native_mod_total]
   · have hStuck :
         __eo_to_bin (Term.Numeral (native_nat_to_int (w + 1)))
             (Term.Numeral 0) = Term.Stuck := by
-      have hBoundFalse : ¬ native_nat_to_int (w + 1) <= 4294967296 := by
-        simpa [SmtEval.native_zleq] using hBound
-      simp [__eo_to_bin, hBoundFalse, native_ite, SmtEval.native_zleq]
+      have hBoundFalse : ¬ native_nat_to_int (w + 1) < 4294967296 := by
+        simpa [SmtEval.native_zlt] using hBound
+      simp [__eo_to_bin, hBoundFalse, native_ite, SmtEval.native_zleq,
+        SmtEval.native_zlt, SmtEval.native_and]
     exact False.elim (hNilNe (by have hsimpa := hStuck; (try simp [uaddoNil, hExtTy] at hsimpa ⊢); exact hsimpa))
 
 theorem smt_typeof_uaddo_nil (x : Term) (w : Nat)
@@ -355,7 +357,7 @@ theorem typed_uaddo_term (x y n : Term) :
     unfold __smtx_typeof_extract
     simp only
     rw [hi0, hiLtW, hOne]
-    native_decide
+    decide +kernel
   have hOneTy :
       __smtx_typeof (__eo_to_smt uaddoOneBit) = SmtType.BitVec 1 := by
     simpa [uaddoOneBit, native_int_to_nat, SmtEval.native_int_to_nat]
@@ -666,7 +668,7 @@ theorem uaddo_program_eq_term_of_type_bool (x y n : Term) :
       rw [hSkeleton]
       simp [uaddoProgramSkeleton, __eo_mk_apply, hNil]
     rw [hProgStuck] at hTy
-    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
     exact False.elim (hBad hTy)
   · rw [hSkeleton]
     simp [uaddoProgramSkeleton, uaddoTerm, uaddoLhs, uaddoRhs,

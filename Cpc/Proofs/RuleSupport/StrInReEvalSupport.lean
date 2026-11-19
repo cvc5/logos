@@ -766,14 +766,13 @@ private theorem eo_list_repeat_rec_zero_eq :
       simp [__eo_list_repeat_rec, zeroIntListTerm, eo_list_repeat_rec_zero_eq n,
         __eo_mk_apply, zeroIntListTerm_ne_stuck]
 
-private theorem eo_list_repeat_zero_eq (n : Nat) :
+private theorem eo_list_repeat_zero_eq (n : Nat) (hn : n < 4294967296) :
     __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
         (Term.Numeral 0) (Term.Numeral (Int.ofNat n)) =
       zeroIntListTerm n := by
-  have hnot : native_zlt (↑n : native_Int) 0 = false := by
-    simp [native_zlt]
-  simp [__eo_list_repeat, native_ite, native_int_to_nat, hnot,
-    eo_list_repeat_rec_zero_eq]
+  have hnot : ¬ 4294967296 ≤ n := by omega
+  simp [__eo_list_repeat, native_ite, native_and, native_zleq, native_zlt,
+    native_int_to_nat, hnot, eo_list_repeat_rec_zero_eq]
 
 private theorem intRangeTerm_ne_stuck :
     ∀ n start, intRangeTerm start n ≠ Term.Stuck
@@ -1002,8 +1001,70 @@ private theorem eo_list_concat_str_concat_substrWord_empty
         str_concat_empty_is_list, eo_requires_true_true,
         eo_list_concat_rec_substrWord_empty s n start]
 
+/-- Flattening a word longer than the maximum list length is stuck. -/
+theorem str_flatten_nary_intro_cons_stuck
+    (c : native_Char) (cs : native_String)
+    (hLen : ¬ (c :: cs).length < 4294967296) :
+    __str_flatten (__str_nary_intro (Term.String (c :: cs))) = Term.Stuck := by
+  rw [str_nary_intro_cons c cs]
+  have hIsStr : __eo_is_str (Term.String (c :: cs)) = Term.Boolean true := by
+    simp [__eo_is_str, __eo_is_str_internal, native_teq, SmtEval.native_and,
+      SmtEval.native_not]
+  have hRepeat :
+      __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+          (Term.Numeral 0) (Term.Numeral (Int.ofNat (c :: cs).length)) =
+        Term.Stuck := by
+    have hLe : ¬ ((cs.length : Int) + 1 < 4294967296) := by
+      simp only [List.length_cons] at hLen
+      omega
+    simp [__eo_list_repeat, native_ite, native_and, native_zlt, hLe]
+  have hWordRec : ∀ t,
+      __str_flatten_word_rec Term.Stuck t = Term.Stuck := by
+    intro t
+    unfold __str_flatten_word_rec
+    split <;> simp_all
+  have hConcat : ∀ x,
+      __eo_list_concat (Term.UOp UserOp.str_concat) Term.Stuck x =
+        Term.Stuck := by
+    intro x
+    simp [__eo_list_concat, __eo_is_list, __eo_requires, native_ite,
+      native_teq]
+  simp only [__str_flatten, __eo_len, native_str_len, __eo_is_neg]
+  rw [hIsStr]
+  simp only [__eo_ite, native_teq, native_ite]
+  rw [hRepeat]
+  simp [__iota_rec, __eo_requires, native_ite, native_teq, native_not,
+    hWordRec, hConcat]
+
+theorem str_flatten_nary_intro_cons_len_lt
+    (c : native_Char) (cs : native_String)
+    (hNe : __str_flatten (__str_nary_intro (Term.String (c :: cs))) ≠
+      Term.Stuck) :
+    (c :: cs).length < 4294967296 := by
+  by_cases hLen : (c :: cs).length < 4294967296
+  · exact hLen
+  · exact False.elim (hNe (str_flatten_nary_intro_cons_stuck c cs hLen))
+
+/-- Any string literal: flattening is stuck past the maximum list length. -/
+theorem str_flatten_nary_intro_string_stuck
+    (w : native_String) (hLen : ¬ w.length < 4294967296) :
+    __str_flatten (__str_nary_intro (Term.String w)) = Term.Stuck := by
+  cases w with
+  | nil => simp at hLen
+  | cons c cs => exact str_flatten_nary_intro_cons_stuck c cs hLen
+
+/-- A non-stuck flattening of a string literal bounds its length. -/
+theorem str_flatten_nary_intro_string_len_lt
+    (w : native_String)
+    (hNe : __str_flatten (__str_nary_intro (Term.String w)) ≠ Term.Stuck) :
+    w.length < 4294967296 := by
+  by_cases hLen : w.length < 4294967296
+  · exact hLen
+  · exact False.elim (hNe (str_flatten_nary_intro_string_stuck w hLen))
+
 theorem str_flatten_nary_intro_cons
-    (c : native_Char) (cs : native_String) :
+    (c : native_Char) (cs : native_String)
+    (hLen : (c :: cs).length < 4294967296) :
     __str_flatten (__str_nary_intro (Term.String (c :: cs))) =
       substrWord (c :: cs) 0 (c :: cs).length := by
   rw [str_nary_intro_cons c cs]
@@ -1041,7 +1102,7 @@ theorem str_flatten_nary_intro_cons
   simp only [__str_flatten, __eo_len, native_str_len, __eo_is_neg]
   rw [hIsStr]
   simp only [__eo_ite, native_teq, native_ite]
-  rw [hTail, hReqLen, eo_list_repeat_zero_eq, iota_zero_list_eq_range,
+  rw [hTail, hReqLen, eo_list_repeat_zero_eq _ hLen, iota_zero_list_eq_range,
     str_flatten_word_rec_range_eq_substrWord]
   exact eo_list_concat_str_concat_substrWord_empty (c :: cs) (c :: cs).length 0
 
@@ -3599,7 +3660,7 @@ private theorem reUnion_list_find_rec_nonneg_contains
             exact reUnion_contains_right M x y str hXEval hYEval hYIn
       | case5 nil z n hNilNe hZNe hNNe hNot =>
           have hNeg : native_zlt (-1 : native_Int) 0 = true := by
-            native_decide
+            decide +kernel
           simp [__eo_list_find_rec, __eo_is_neg, hNeg] at hFind
 
 private theorem reUnion_list_find_nonneg_contains
@@ -4242,7 +4303,7 @@ private theorem reInter_list_find_rec_nonneg_contains
             exact ih hYList hYWF hZWF hTailFind hYIn
       | case5 nil z n hNilNe hZNe hNNe hNot =>
           have hNeg : native_zlt (-1 : native_Int) 0 = true := by
-            native_decide
+            decide +kernel
           simp [__eo_list_find_rec, __eo_is_neg, hNeg] at hFind
 
 private theorem reInter_list_find_nonneg_contains
@@ -4467,7 +4528,7 @@ private theorem reUnion_l4_union_eval_rel
     simp [__smtx_model_eval, __smtx_model_eval_re_union, hAEval, hBEval]
   · exact reUnion_typeof_of_args a (mkReUnion b (Term.UOp UserOp.re_none))
       hATy (reUnion_typeof_of_args b (Term.UOp UserOp.re_none) hBTy
-        (by native_decide))
+        (by decide +kernel))
   · rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
     simp [__smtx_model_eval_eq]
     intro str _hValid
@@ -4785,7 +4846,7 @@ private theorem reInter_l4_inter_eval_rel
     simp [__smtx_model_eval, __smtx_model_eval_re_inter, hAEval, hBEval]
   · exact reInter_typeof_of_args a (mkReInter b (Term.UOp UserOp.re_all))
       hATy (reInter_typeof_of_args b (Term.UOp UserOp.re_all) hBTy
-        (by native_decide))
+        (by decide +kernel))
   · rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
     simp [__smtx_model_eval_eq]
     intro str hValid
@@ -6194,7 +6255,7 @@ private theorem re_ac_merge_inter_none_left_eval_rel
     rw [__smtx_model_eval.eq_105]
   · rw [hMergeEq]
     change __smtx_typeof SmtTerm.re_none = SmtType.RegLan
-    native_decide
+    decide +kernel
   · rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
     simp [__smtx_model_eval_eq]
     intro str _hValid
@@ -6359,7 +6420,7 @@ private theorem re_concat_merge_eval_rel
         rw [__smtx_model_eval.eq_105]
       · rw [hMergeEq]
         change __smtx_typeof SmtTerm.re_none = SmtType.RegLan
-        native_decide
+        decide +kernel
       · exact smt_value_rel_reglan_of_eq (by
           simp [native_re_concat, native_re_none])
     · by_cases hBConcat : ∃ br brr, b = mkReConcat br brr
@@ -6577,7 +6638,7 @@ private theorem re_concat_merge_re_mult_eval_rel
         SmtValue.RegLan native_re_none
       rw [__smtx_model_eval.eq_105]
     · change __smtx_typeof SmtTerm.re_none = SmtType.RegLan
-      native_decide
+      decide +kernel
     · exact smt_value_rel_reglan_of_eq (by
         simp [native_re_concat, native_re_none])
   · by_cases hEps :
@@ -6940,7 +7001,7 @@ private theorem native_re_deriv_str_to_re_cons_valid
 
 @[simp] private theorem native_zeq_one_str_len_nil :
     native_zeq 1 (native_str_len ([] : native_String)) = false := by
-  native_decide
+  decide +kernel
 
 @[simp] private theorem native_zeq_one_str_len_single (c : native_Char) :
     native_zeq 1 (native_str_len [c]) = true := by
@@ -7259,7 +7320,7 @@ theorem smtx_model_eval_derivative_single_rel
             SmtValue.RegLan (native_str_to_re [])
           simp [__smtx_model_eval, __smtx_model_eval_str_to_re,
             ]
-        · native_decide
+        · decide +kernel
         · exact smt_value_rel_reglan_of_eq
             (native_re_deriv_allchar_valid c hc).symm
       case re_none =>
@@ -7269,7 +7330,7 @@ theorem smtx_model_eval_derivative_single_rel
         cases hREval
         refine ⟨native_re_none, ?_, ?_, ?_⟩
         · simp [__smtx_model_eval]
-        · native_decide
+        · decide +kernel
         · exact smt_value_rel_reglan_of_eq (by
             simp [native_re_none, native_re_deriv])
       case re_all =>
@@ -7279,7 +7340,7 @@ theorem smtx_model_eval_derivative_single_rel
         cases hREval
         refine ⟨native_re_all, ?_, ?_, ?_⟩
         · simp [__smtx_model_eval]
-        · native_decide
+        · decide +kernel
         · exact smt_value_rel_reglan_of_eq
             (native_re_deriv_all_valid c hc).symm
   | Term.Apply f x, rv, hRTy, hREval, hDerNe => by
@@ -7364,7 +7425,7 @@ theorem smtx_model_eval_derivative_single_rel
                         Term.UOp UserOp.re_none := by
                     simp [__derivative]
                   simpa [hDerEq] using
-                    (by native_decide :
+                    (by decide +kernel :
                       __smtx_typeof
                           (__eo_to_smt (Term.UOp UserOp.re_none)) =
                         SmtType.RegLan)
@@ -7474,7 +7535,7 @@ theorem smtx_model_eval_derivative_single_rel
                       simp [__derivative, eo_extract_zero_zero_cons,
                         eo_extract_tail_cons, __eo_eq, native_teq, hNe, native_ite]
                     simpa [hDerEq] using
-                      (by native_decide :
+                      (by decide +kernel :
                         __smtx_typeof (__eo_to_smt (Term.UOp UserOp.re_none)) =
                           SmtType.RegLan)
                   · exact smt_value_rel_reglan_of_eq (by
@@ -7864,7 +7925,7 @@ theorem smtx_model_eval_derivative_single_rel
                     change __smtx_typeof
                         (SmtTerm.str_to_re (SmtTerm.String [])) =
                       SmtType.RegLan
-                    native_decide
+                    decide +kernel
                   change __smtx_typeof
                       (__eo_to_smt
                         (__derivative (Term.String [c])
@@ -7926,7 +7987,7 @@ theorem smtx_model_eval_derivative_single_rel
                             (Term.String [hi])))) =
                     SmtType.RegLan
                   rw [hDerEq]
-                  native_decide
+                  decide +kernel
                 · exact smt_value_rel_reglan_of_eq (by
                     simp [native_re_range, native_re_deriv, native_re_none,
                       native_re_elem_valid, impl_native_re_elem_le,
@@ -7979,7 +8040,7 @@ theorem smtx_model_eval_derivative_single_rel
                             (Term.String [hi])))) =
                     SmtType.RegLan
                   rw [hDerEq]
-                  native_decide
+                  decide +kernel
                 · exact smt_value_rel_reglan_of_eq (by
                     simp [native_re_range, native_re_deriv, native_re_none,
                       native_re_elem_valid, impl_native_re_elem_le,
@@ -8031,7 +8092,7 @@ theorem smtx_model_eval_derivative_single_rel
                             (Term.String [hi])))) =
                     SmtType.RegLan
                   rw [hDerEq]
-                  native_decide
+                  decide +kernel
                 · exact smt_value_rel_reglan_of_eq (by
                     simp [native_re_range, native_re_deriv, native_re_none,
                       native_re_elem_valid, impl_native_re_elem_le,
@@ -8226,7 +8287,12 @@ theorem smtx_model_eval_str_in_re_eval_side
   | cons c cs =>
       have hValid : native_string_valid (c :: cs) = true :=
         native_string_valid_of_smtx_typeof_eo_string (c :: cs) hSTy
-      rw [str_flatten_nary_intro_cons] at hSideNe ⊢
+      have hLen : (c :: cs).length < 4294967296 := by
+        apply str_flatten_nary_intro_cons_len_lt c cs
+        intro hStuck
+        rw [hStuck] at hSideNe
+        exact hSideNe (by cases r <;> rfl)
+      rw [str_flatten_nary_intro_cons c cs hLen] at hSideNe ⊢
       exact
         smtx_model_eval_str_in_re_eval_substrWord M hM (c :: cs) r rv
           hValid hRTy hREval hSideNe

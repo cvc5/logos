@@ -71,23 +71,23 @@ theorem value_canonical_reglan (r : SmtRegLan)
 
 theorem value_canonical_char_zero :
     value_canonical uc (SmtValue.Char 0) := by
-  exact value_canonical_char 0 (by native_decide)
+  exact value_canonical_char 0 (by decide +kernel)
 
 theorem value_canonical_char_one :
     value_canonical uc (SmtValue.Char 1) := by
-  exact value_canonical_char 1 (by native_decide)
+  exact value_canonical_char 1 (by decide +kernel)
 
 theorem value_canonical_reglan_allchar :
     value_canonical uc (SmtValue.RegLan native_re_allchar) := by
-  exact value_canonical_reglan native_re_allchar (by native_decide)
+  exact value_canonical_reglan native_re_allchar (by decide +kernel)
 
 theorem value_canonical_reglan_none :
     value_canonical uc (SmtValue.RegLan native_re_none) := by
-  exact value_canonical_reglan native_re_none (by native_decide)
+  exact value_canonical_reglan native_re_none (by decide +kernel)
 
 theorem value_canonical_reglan_all :
     value_canonical uc (SmtValue.RegLan native_re_all) := by
-  exact value_canonical_reglan native_re_all (by native_decide)
+  exact value_canonical_reglan native_re_all (by decide +kernel)
 
 /-- A value of an uninterpreted sort is canonical when its identifier is in the
 sort's domain. -/

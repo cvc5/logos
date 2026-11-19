@@ -28,13 +28,13 @@ private theorem typeof_args_of_prog_ite_then_lookahead_not_self_bool (c1 x1 : Te
   · subst c1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · by_cases hX1 : x1 = Term.Stuck
     · subst x1
       simp [__eo_prog_ite_then_lookahead_not_self] at hTy
       have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-        native_decide
+        decide +kernel
       exact False.elim (hStuckTy hTy)
     · rw [prog_ite_then_lookahead_not_self_eq_of_ne_stuck c1 x1 hC1 hX1] at hTy
       change __eo_typeof_eq

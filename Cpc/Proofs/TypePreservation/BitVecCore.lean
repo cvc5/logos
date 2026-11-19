@@ -254,10 +254,10 @@ theorem typeof_value_model_eval_bvcomp_value
   cases b
   · simpa [__smtx_model_eval_ite, native_int_to_nat,
       SmtEval.native_int_to_nat] using
-      typeof_value_binary_of_nonneg 1 0 (by native_decide) (by native_decide)
+      typeof_value_binary_of_nonneg 1 0 (by decide +kernel) (by decide +kernel)
   · simpa [__smtx_model_eval_ite, native_int_to_nat,
       SmtEval.native_int_to_nat] using
-      typeof_value_binary_of_nonneg 1 1 (by native_decide) (by native_decide)
+      typeof_value_binary_of_nonneg 1 1 (by decide +kernel) (by decide +kernel)
 
 /-- Shows that evaluating `bvugt_value` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_bvugt_value

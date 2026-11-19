@@ -474,13 +474,13 @@ private theorem typed___eo_prog_str_in_re_contains_impl
     intro hStuck
     rw [hStuck] at hTTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hTTy
   have hSNotStuck : s ≠ Term.Stuck := by
     intro hStuck
     rw [hStuck] at hSTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hSTy
   have hProg :
       __eo_prog_str_in_re_contains t s =
@@ -570,13 +570,13 @@ private theorem facts___eo_prog_str_in_re_contains_impl
       intro hStuck
       rw [hStuck] at hTTy
       have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-        native_decide
+        decide +kernel
       exact hBad hTTy
     have hSNotStuck : s ≠ Term.Stuck := by
       intro hStuck
       rw [hStuck] at hSTy
       have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-        native_decide
+        decide +kernel
       exact hBad hSTy
     have hProg :
         __eo_prog_str_in_re_contains t s =
@@ -617,13 +617,13 @@ private theorem facts___eo_prog_str_in_re_contains_impl
     intro hStuck
     rw [hStuck] at hTTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hTTy
   have hSNotStuck : s ≠ Term.Stuck := by
     intro hStuck
     rw [hStuck] at hSTy
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hSTy
   have hProg :
       __eo_prog_str_in_re_contains t s =

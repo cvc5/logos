@@ -384,7 +384,7 @@ private theorem extractLead_operand_context
     have hEmpty :
         __eo_typeof (Term.Binary 0 0) =
           Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 0) := by
-      native_decide
+      decide +kernel
     change __eo_typeof_concat (__eo_typeof tail)
       (__eo_typeof (Term.Binary 0 0)) = _
     rw [hTailTy, hEmpty]

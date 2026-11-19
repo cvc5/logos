@@ -1499,26 +1499,21 @@ private theorem re_loop_elim_outer_eval_eq
 
 private theorem re_list_repeat_numeral_eq_rec
     (a : Term) (i : native_Int)
-    (hi : 0 ≤ i)
+    (hi : 0 ≤ i) (hi32 : i < 4294967296)
     (haNe : a ≠ Term.Stuck) :
     __eo_list_repeat (Term.UOp UserOp.re_concat) a (Term.Numeral i) =
       __eo_list_repeat_rec (Term.UOp UserOp.re_concat) a
         (native_int_to_nat i) := by
-  have hNonneg : native_zlt i 0 = false := by
-    simp [native_zlt]
-    omega
-  cases a <;> simp [__eo_list_repeat, native_ite, hNonneg] at haNe ⊢
+  cases a <;> simp [__eo_list_repeat, native_ite, native_and, native_zleq,
+    native_zlt, hi, hi32] at haNe ⊢
 
 private theorem typed_zero_list_repeat_numeral_eq
-    (i : native_Int) (hi : 0 ≤ i) :
+    (i : native_Int) (hi : 0 ≤ i) (hi32 : i < 4294967296) :
     __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
         (Term.Numeral 0) (Term.Numeral i) =
       zeroList (native_int_to_nat i) := by
-  have hNonneg : native_zlt i 0 = false := by
-    simp [native_zlt]
-    omega
-  simp [__eo_list_repeat, native_ite, hNonneg,
-    typed_zero_list_repeat_rec_eq]
+  simp [__eo_list_repeat, native_ite, native_and, native_zleq, native_zlt,
+    hi, hi32, typed_zero_list_repeat_rec_eq]
 
 private theorem int_to_nat_sub_add
     (lo hi : native_Int)
@@ -1540,7 +1535,16 @@ theorem re_loop_elim_eval_rel
     (haTy : __smtx_typeof (__eo_to_smt a) = SmtType.RegLan)
     (haEval : __smtx_model_eval M (__eo_to_smt a) = SmtValue.RegLan rv)
     (hlo : 0 ≤ lo)
-    (hdiff : 0 ≤ hi - lo) :
+    (hdiff : 0 ≤ hi - lo)
+    (hExpNe :
+      __eo_list_singleton_elim (Term.UOp UserOp.re_union)
+          (__str_mk_re_loop_elim_rec
+            (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+              (Term.Numeral 0)
+              (Term.Numeral (native_zplus (native_zneg lo) hi)))
+            a
+            (__eo_list_repeat (Term.UOp UserOp.re_concat) a
+              (Term.Numeral lo))) ≠ Term.Stuck) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M
         (__eo_to_smt
@@ -1565,18 +1569,57 @@ theorem re_loop_elim_eval_rel
   have hDiffNonneg : 0 ≤ diff := by
     simpa [diff] using hdiff
   have hANe := term_ne_stuck_of_smt_reglan a haTy
+  have hElimStuck :
+      __eo_list_singleton_elim (Term.UOp UserOp.re_union) Term.Stuck =
+        Term.Stuck := by
+    simp [__eo_list_singleton_elim, __eo_is_list, __eo_requires, native_ite,
+      native_teq]
+  have hlo32 : lo < 4294967296 := by
+    by_cases hlo32 : lo < 4294967296
+    · exact hlo32
+    · apply False.elim (hExpNe _)
+      have hRep :
+          __eo_list_repeat (Term.UOp UserOp.re_concat) a (Term.Numeral lo) =
+            Term.Stuck := by
+        cases a <;> simp [__eo_list_repeat, native_ite, native_and,
+          native_zlt, hlo32] at hANe ⊢
+      rw [hRep]
+      have hRec : ∀ x,
+          __str_mk_re_loop_elim_rec x a Term.Stuck = Term.Stuck := by
+        intro x
+        unfold __str_mk_re_loop_elim_rec
+        split <;> simp_all
+      rw [hRec, hElimStuck]
+  have hDiff32 : diff < 4294967296 := by
+    by_cases hDiff32 : diff < 4294967296
+    · exact hDiff32
+    · apply False.elim (hExpNe _)
+      have hRep :
+          __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+              (Term.Numeral 0)
+              (Term.Numeral (native_zplus (native_zneg lo) hi)) =
+            Term.Stuck := by
+        rw [hDiffExpr]
+        simp [__eo_list_repeat, native_ite, native_and, native_zlt, hDiff32]
+      rw [hRep]
+      have hRec : ∀ y z,
+          __str_mk_re_loop_elim_rec Term.Stuck y z = Term.Stuck := by
+        intro y z
+        unfold __str_mk_re_loop_elim_rec
+        split <;> simp_all
+      rw [hRec, hElimStuck]
   have hRepeatR :
       __eo_list_repeat (Term.UOp UserOp.re_concat) a (Term.Numeral lo) =
         __eo_list_repeat_rec (Term.UOp UserOp.re_concat) a
           (native_int_to_nat lo) :=
-    re_list_repeat_numeral_eq_rec a lo hlo hANe
+    re_list_repeat_numeral_eq_rec a lo hlo hlo32 hANe
   have hRepeatZeros :
       __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
           (Term.Numeral 0)
           (Term.Numeral (native_zplus (native_zneg lo) hi)) =
         zeroList diffNat := by
     rw [hDiffExpr]
-    exact typed_zero_list_repeat_numeral_eq diff hDiffNonneg
+    exact typed_zero_list_repeat_numeral_eq diff hDiffNonneg hDiff32
   have hExpandedEval :
       __smtx_model_eval M
         (__eo_to_smt

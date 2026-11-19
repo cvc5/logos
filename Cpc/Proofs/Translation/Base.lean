@@ -24,22 +24,22 @@ abbrev __eo_reserved_datatype_name : native_String -> native_Bool :=
 /-- Computes `__eo_typeof` for `boolean`. -/
 @[simp] theorem eo_typeof_boolean (b : native_Bool) :
     __eo_typeof (Term.Boolean b) = Term.Bool := by
-  cases b <;> native_decide
+  cases b <;> decide +kernel
 
 /-- Computes `__eo_typeof` for `re_allchar`. -/
 @[simp] theorem eo_typeof_re_allchar :
     __eo_typeof (Term.UOp UserOp.re_allchar) = Term.UOp UserOp.RegLan := by
-  native_decide
+  decide +kernel
 
 /-- Computes `__eo_typeof` for `re_none`. -/
 @[simp] theorem eo_typeof_re_none :
     __eo_typeof (Term.UOp UserOp.re_none) = Term.UOp UserOp.RegLan := by
-  native_decide
+  decide +kernel
 
 /-- Computes `__eo_typeof` for `re_all`. -/
 @[simp] theorem eo_typeof_re_all :
     __eo_typeof (Term.UOp UserOp.re_all) = Term.UOp UserOp.RegLan := by
-  native_decide
+  decide +kernel
 
 /-- Simplifies EO-to-SMT translation for `boolean`. -/
 @[simp] theorem eo_to_smt_boolean (b : native_Bool) :
@@ -491,7 +491,7 @@ theorem smtx_bv_sizeof_term_non_none
                  SmtTerm.None) =
             SmtType.None := by
         have hNeg : native_zleq 0 (native_zneg 1) = false := by
-          native_decide
+          decide +kernel
         rw [hTy]
         simp [__eo_to_smt_bv_size, hNeg, native_ite]
         unfold __smtx_typeof

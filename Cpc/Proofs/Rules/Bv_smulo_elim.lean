@@ -332,7 +332,7 @@ private theorem nil_bvxor_bit :
     __eo_nil (Term.UOp UserOp.bvxor)
         (Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1)) =
       Term.Binary 1 0 := by
-  native_decide
+  decide +kernel
 
 private theorem nil_bvxor_bitvec_succ_of_ne_stuck
     (w : Nat)
@@ -347,19 +347,22 @@ private theorem nil_bvxor_bitvec_succ_of_ne_stuck
   change __eo_to_bin (Term.Numeral (native_nat_to_int (w + 1))) (Term.Numeral 0) =
       Term.Binary (native_nat_to_int (w + 1)) 0
   change
-    (native_ite (native_zleq (native_nat_to_int (w + 1)) 4294967296)
+    (native_ite (native_and (native_zleq 0 (native_nat_to_int (w + 1)))
+        (native_zlt (native_nat_to_int (w + 1)) 4294967296))
         (__eo_mk_binary (native_nat_to_int (w + 1)) 0) Term.Stuck) =
       Term.Binary (native_nat_to_int (w + 1)) 0
-  cases hBound : native_zleq (native_nat_to_int (w + 1)) 4294967296
+  cases hBound : native_and (native_zleq 0 (native_nat_to_int (w + 1)))
+        (native_zlt (native_nat_to_int (w + 1)) 4294967296)
   · exfalso
     apply hNe
     change
-      native_ite (native_zleq (native_nat_to_int (w + 1)) 4294967296)
+      native_ite (native_and (native_zleq 0 (native_nat_to_int (w + 1)))
+        (native_zlt (native_nat_to_int (w + 1)) 4294967296))
           (__eo_mk_binary (native_nat_to_int (w + 1)) 0) Term.Stuck =
         Term.Stuck
     rw [hBound]
     rfl
-  · simp [native_ite, hBound]
+  · simp only [native_ite, hBound, ite_true]
     have hNonneg : native_zleq 0 (native_nat_to_int (w + 1)) = true := by
       exact decide_eq_true (Int.natCast_nonneg (w + 1))
     simp [__eo_mk_binary, native_ite, hNonneg]
@@ -404,7 +407,7 @@ private theorem bvxor_payload_nat
     have han : an = 0 := by omega
     subst cn
     subst an
-    native_decide
+    decide +kernel
   · have hne : native_zeq (((w : Nat) : Int)) 0 = false := by
       simp [native_zeq]
       omega
@@ -480,10 +483,10 @@ private theorem native_mod_neg_one_pow2_nat (k : Nat) :
   exact Int.emod_eq_of_lt (by omega) (by omega)
 
 private theorem native_binary_uts_zero_bit : native_binary_uts 1 0 = 0 := by
-  native_decide
+  decide +kernel
 
 private theorem native_binary_uts_one_bit : native_binary_uts 1 1 = -1 := by
-  native_decide
+  decide +kernel
 
 private theorem eval_numeral_term (M : SmtModel) (n : Int) :
     __smtx_model_eval M (__eo_to_smt (Term.Numeral n)) =
@@ -835,7 +838,7 @@ private theorem signedOverflowMag_zero_eq_and
   have hB01 : B = 0 ∨ B = 1 := by omega
   rcases hA01 with rfl | rfl <;>
     rcases hB01 with rfl | rfl <;>
-    native_decide
+    decide +kernel
 
 private theorem binary_one_eq_bv1_of_lt_two
     (A : Nat) (hA : A < 2) :
@@ -1474,7 +1477,7 @@ private theorem typeof_sign_extend_one_of_bv
   have hGt :
       __eo_gt (Term.Numeral 1) (Term.Numeral (-1 : native_Int)) =
         Term.Boolean true := by
-    native_decide
+    decide +kernel
   have hAdd :
       __eo_add (Term.Numeral (native_nat_to_int (W + 1))) (Term.Numeral 1) =
         Term.Numeral (native_nat_to_int (W + 2)) := by
@@ -2108,7 +2111,7 @@ private theorem signedExtProduct_topDiff_width_one_eq_overflow
   have hBcases : B = 0 ∨ B = 1 ∨ B = 2 ∨ B = 3 := by omega
   rcases hAcases with rfl | rfl | rfl | rfl <;>
     rcases hBcases with rfl | rfl | rfl | rfl <;>
-    native_decide
+    decide +kernel
 
 private def smuloProdTopDiffBranch (a b : Term) (W : Nat) : Term :=
   __eo_mk_apply
@@ -2772,8 +2775,29 @@ private theorem smulo_rec_type
         newPpc, nilAnd, ppcAndHead, ppcAndNil, v1AndHead, headAnd,
         headOrHead, headOrZero, newRes] using hTailTy
 
+/-- A non-stuck `bvxor` nil at width `w + 1` bounds the width below `2^32`. -/
+private theorem nil_bvxor_succ_width_lt
+    (w : Nat)
+    (hNe :
+      __eo_nil (Term.UOp UserOp.bvxor)
+          (Term.Apply (Term.UOp UserOp.BitVec)
+            (Term.Numeral (native_nat_to_int (w + 1)))) ≠ Term.Stuck) :
+    ((w + 1 : Nat) : Int) < 4294967296 := by
+  by_contra hGe
+  apply hNe
+  change
+    native_ite (native_and (native_zleq 0 (native_nat_to_int (w + 1)))
+      (native_zlt (native_nat_to_int (w + 1)) 4294967296))
+        (__eo_mk_binary (native_nat_to_int (w + 1)) 0) Term.Stuck =
+      Term.Stuck
+  have hLt : native_zlt (native_nat_to_int (w + 1)) 4294967296 = false := by
+    simp only [native_zlt, decide_eq_false_iff_not]
+    exact hGe
+  rw [hLt]
+  simp [native_and, native_ite]
+
 private theorem smulo_indices_eq
-    (W : Nat) (hW : 2 ≤ W) :
+    (W : Nat) (hW : 2 ≤ W) (hWB : ((W - 2 : Nat) : Int) < 4294967296) :
     __eo_requires
       (__eo_is_neg
         (__eo_add
@@ -2824,23 +2848,28 @@ private theorem smulo_indices_eq
         intZeroList (W - 2) := by
     change
       native_ite
-        (native_zlt (native_nat_to_int (W - 2)) (0 : native_Int))
-        Term.Stuck
+        (native_and (native_zleq 0 (native_nat_to_int (W - 2)))
+          (native_zlt (native_nat_to_int (W - 2)) 4294967296))
         (__eo_list_repeat_rec (Term.UOp UserOp._at__at_TypedList_cons)
           (Term.Numeral 0)
-          (native_int_to_nat (native_nat_to_int (W - 2)))) =
+          (native_int_to_nat (native_nat_to_int (W - 2))))
+        Term.Stuck =
         intZeroList (W - 2)
-    have hNegFalse :
-        native_zlt (native_nat_to_int (W - 2)) (0 : native_Int) = false := by
-      simp only [native_zlt, native_nat_to_int]
-      refine decide_eq_false ?_
-      show ¬ (((W - 2 : Nat) : Int) < 0)
-      omega
+    have hGuard :
+        native_and (native_zleq 0 (native_nat_to_int (W - 2)))
+          (native_zlt (native_nat_to_int (W - 2)) 4294967296) = true := by
+      have h0 : native_zleq 0 (native_nat_to_int (W - 2)) = true :=
+        decide_eq_true (Int.natCast_nonneg (W - 2))
+      have h1 : native_zlt (native_nat_to_int (W - 2)) 4294967296 = true := by
+        simp only [native_zlt, decide_eq_true_iff]
+        exact hWB
+      rw [h0, h1]
+      rfl
     have hToNat :
         native_int_to_nat (native_nat_to_int (W - 2)) = W - 2 := by
       simp [native_int_to_nat, native_nat_to_int]
-    rw [hNegFalse, hToNat]
-    simp [native_ite]
+    rw [hGuard, hToNat]
+    simp only [native_ite]
     exact intZeroList_repeat_rec_eq (W - 2)
   have hIota :
       __iota_rec (intZeroList (W - 2)) (Term.Numeral 1) =
@@ -2848,6 +2877,86 @@ private theorem smulo_indices_eq
     simpa [native_nat_to_int] using iota_rec_range_eq (W - 2) 1
   rw [hNotNeg, hRepeat, hIota]
   simp [__eo_requires, native_ite, native_teq, native_not, SmtEval.native_not]
+
+/-- The index list of the expansion is either the expected range or stuck. -/
+private theorem smulo_indices_cases
+    (W : Nat) (hW : 2 ≤ W) :
+    __eo_requires
+      (__eo_is_neg
+        (__eo_add
+          (__eo_add (Term.Numeral 1)
+            (__eo_add (Term.Numeral (-1 : native_Int))
+              (Term.Numeral (native_nat_to_int (W - 1)))))
+          (Term.Numeral (-1 : native_Int))))
+      (Term.Boolean false)
+      (__iota_rec
+        (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+          (Term.Numeral 0)
+          (__eo_add
+            (__eo_add (Term.Numeral 1)
+              (__eo_add (Term.Numeral (-1 : native_Int))
+                (Term.Numeral (native_nat_to_int (W - 1)))))
+            (Term.Numeral (-1 : native_Int))))
+        (Term.Numeral 1)) = intRangeList 1 (W - 2) ∨
+    __eo_requires
+      (__eo_is_neg
+        (__eo_add
+          (__eo_add (Term.Numeral 1)
+            (__eo_add (Term.Numeral (-1 : native_Int))
+              (Term.Numeral (native_nat_to_int (W - 1)))))
+          (Term.Numeral (-1 : native_Int))))
+      (Term.Boolean false)
+      (__iota_rec
+        (__eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+          (Term.Numeral 0)
+          (__eo_add
+            (__eo_add (Term.Numeral 1)
+              (__eo_add (Term.Numeral (-1 : native_Int))
+                (Term.Numeral (native_nat_to_int (W - 1)))))
+            (Term.Numeral (-1 : native_Int))))
+        (Term.Numeral 1)) = Term.Stuck := by
+  by_cases hWB : ((W - 2 : Nat) : Int) < 4294967296
+  · exact Or.inl (smulo_indices_eq W hW hWB)
+  · right
+    have hInner :
+        __eo_add (Term.Numeral (-1 : native_Int))
+            (Term.Numeral (native_nat_to_int (W - 1))) =
+          Term.Numeral (native_nat_to_int (W - 2)) := by
+      have hEq : ((-1 : Int) + ((W - 1 : Nat) : Int) : Int) =
+          ((W - 2 : Nat) : Int) := by
+        omega
+      simp [__eo_add, native_zplus, native_nat_to_int, hEq]
+    have hLen :
+        __eo_add
+            (__eo_add (Term.Numeral 1)
+              (Term.Numeral (native_nat_to_int (W - 2))))
+            (Term.Numeral (-1 : native_Int)) =
+          Term.Numeral (native_nat_to_int (W - 2)) := by
+      have hEq : ((1 : Int) + ((W - 2 : Nat) : Int) + (-1 : Int) : Int) =
+          ((W - 2 : Nat) : Int) := by
+        omega
+      simp [__eo_add, native_zplus, native_nat_to_int, hEq]
+    rw [hInner, hLen]
+    have hRepeat :
+        __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
+            (Term.Numeral 0)
+            (Term.Numeral (native_nat_to_int (W - 2))) = Term.Stuck := by
+      change
+        native_ite
+          (native_and (native_zleq 0 (native_nat_to_int (W - 2)))
+            (native_zlt (native_nat_to_int (W - 2)) 4294967296))
+          (__eo_list_repeat_rec (Term.UOp UserOp._at__at_TypedList_cons)
+            (Term.Numeral 0)
+            (native_int_to_nat (native_nat_to_int (W - 2))))
+          Term.Stuck = Term.Stuck
+      have hLt : native_zlt (native_nat_to_int (W - 2)) 4294967296 = false := by
+        simp only [native_zlt, decide_eq_false_iff_not]
+        exact hWB
+      rw [hLt]
+      simp [native_and, native_ite]
+    rw [hRepeat]
+    change __eo_requires _ _ Term.Stuck = Term.Stuck
+    simp [__eo_requires, native_ite]
 
 private def smuloScanTerm (a b : Term) (W : Nat) : Term :=
   let xb := smuloSignedMagTerm b W
@@ -3394,7 +3503,7 @@ private theorem eval_bv_smulo_expanded_width_succ
         __eo_eq (Term.Numeral (native_nat_to_int (0 + 1)))
           (Term.Numeral 1) =
           Term.Boolean true := by
-      native_decide
+      decide +kernel
     dsimp [bvSmuloExpanded]
     rw [hWidth, hCond]
     simp [__eo_ite, native_ite, native_teq]
@@ -3410,17 +3519,17 @@ private theorem eval_bv_smulo_expanded_width_succ
           __eo_eq (Term.Numeral (native_nat_to_int (1 + 1)))
             (Term.Numeral 1) =
             Term.Boolean false := by
-        native_decide
+        decide +kernel
       have hCond2 :
           __eo_eq (Term.Numeral (native_nat_to_int (1 + 1)))
             (Term.Numeral 2) =
             Term.Boolean true := by
-        native_decide
+        decide +kernel
       have hTop :
           __eo_add (Term.Numeral (native_nat_to_int (1 + 1)))
             (Term.Numeral (-1 : native_Int)) =
           Term.Numeral (native_nat_to_int 1) := by
-        native_decide
+        decide +kernel
       dsimp [bvSmuloExpanded]
       rw [hWidth, hTop, hCond1, hCond2]
       simp [__eo_ite, native_ite, native_teq]
@@ -3483,7 +3592,10 @@ private theorem eval_bv_smulo_expanded_width_succ
           clear haBound hbBound haEval hbEval A B
           omega
         simpa [native_zplus, native_nat_to_int] using hEq
-      have hIndices := smulo_indices_eq W hWge2
+      have hWB : ((W - 2 : Nat) : Int) < 4294967296 := by
+        have hSucc := nil_bvxor_succ_width_lt W (by simpa [haTy] using hNilXorA)
+        omega
+      have hIndices := smulo_indices_eq W hWge2 hWB
       dsimp [bvSmuloExpanded]
       rw [hWidth, hNm2, hTop, hCond1, hCond2]
       rw [hIndices]
@@ -3531,11 +3643,11 @@ private theorem nil_bvxor_a_ne_of_bvSmuloExpanded_ne
   by_cases hW0 : W = 0
   · subst W
     rw [haTy]
-    native_decide
+    decide +kernel
   by_cases hW1 : W = 1
   · subst W
     rw [haTy]
-    native_decide
+    decide +kernel
   have hWge2 : 2 ≤ W := by omega
   intro hNil
   apply hNe
@@ -3587,12 +3699,12 @@ private theorem nil_bvxor_a_ne_of_bvSmuloExpanded_ne
     have hEq : (W : Int) + 1 + (-1 : Int) = (W : Int) := by
       omega
     simpa [native_zplus, native_nat_to_int] using hEq
-  have hIndices := smulo_indices_eq W hWge2
   dsimp [bvSmuloExpanded]
-  rw [hWidth, hNm2, hTop, hCond1, hCond2, hIndices, hNil]
-  simp [__eo_ite, native_ite, native_teq,
-    eo_mk_apply_arg_stuck, eo_mk_apply_fun_stuck,
-    __bv_smulo_elim_rec, smulo_rec_list_stuck_eq, smulo_rec_res_stuck_eq]
+  rcases smulo_indices_cases W hWge2 with hIndices | hIndices <;>
+  · rw [hWidth, hNm2, hTop, hCond1, hCond2, hIndices, hNil]
+    simp [__eo_ite, native_ite, native_teq,
+      eo_mk_apply_arg_stuck, eo_mk_apply_fun_stuck,
+      __bv_smulo_elim_rec, smulo_rec_list_stuck_eq, smulo_rec_res_stuck_eq]
 
 private theorem nil_bvxor_b_ne_of_bvSmuloExpanded_ne
     (a b : Term) (W : Nat)
@@ -3607,11 +3719,11 @@ private theorem nil_bvxor_b_ne_of_bvSmuloExpanded_ne
   by_cases hW0 : W = 0
   · subst W
     rw [hbTy]
-    native_decide
+    decide +kernel
   by_cases hW1 : W = 1
   · subst W
     rw [hbTy]
-    native_decide
+    decide +kernel
   have hWge2 : 2 ≤ W := by omega
   intro hNil
   apply hNe
@@ -3663,12 +3775,12 @@ private theorem nil_bvxor_b_ne_of_bvSmuloExpanded_ne
     have hEq : (W : Int) + 1 + (-1 : Int) = (W : Int) := by
       omega
     simpa [native_zplus, native_nat_to_int] using hEq
-  have hIndices := smulo_indices_eq W hWge2
   dsimp [bvSmuloExpanded]
-  rw [hWidth, hNm2, hTop, hCond1, hCond2, hIndices, hNil]
-  simp [__eo_ite, native_ite, native_teq,
-    eo_mk_apply_arg_stuck, eo_mk_apply_fun_stuck,
-    __bv_smulo_elim_rec, smulo_rec_list_stuck_eq, smulo_rec_res_stuck_eq]
+  rcases smulo_indices_cases W hWge2 with hIndices | hIndices <;>
+  · rw [hWidth, hNm2, hTop, hCond1, hCond2, hIndices, hNil]
+    simp [__eo_ite, native_ite, native_teq,
+      eo_mk_apply_arg_stuck, eo_mk_apply_fun_stuck,
+      __bv_smulo_elim_rec, smulo_rec_list_stuck_eq, smulo_rec_res_stuck_eq]
 
 private theorem nil_bvmul_ne_of_bvSmuloExpanded_ne
     (a b : Term) (W : Nat)
@@ -3686,7 +3798,7 @@ private theorem nil_bvmul_ne_of_bvSmuloExpanded_ne
             (Term.Numeral (native_nat_to_int 2)) := by
       simpa [native_nat_to_int] using typeof_sign_extend_one_of_bv a 0 haTy
     rw [hExtTy]
-    native_decide
+    decide +kernel
   by_cases hW1 : W = 1
   · subst W
     have hExtTy :
@@ -3695,7 +3807,7 @@ private theorem nil_bvmul_ne_of_bvSmuloExpanded_ne
             (Term.Numeral (native_nat_to_int 3)) := by
       simpa [native_nat_to_int] using typeof_sign_extend_one_of_bv a 1 haTy
     rw [hExtTy]
-    native_decide
+    decide +kernel
   have hWge2 : 2 ≤ W := by omega
   intro hNil
   apply hNe
@@ -3754,12 +3866,12 @@ private theorem nil_bvmul_ne_of_bvSmuloExpanded_ne
     have hEq : (W : Int) + 1 + (-1 : Int) = (W : Int) := by
       omega
     simpa [native_zplus, native_nat_to_int] using hEq
-  have hIndices := smulo_indices_eq W hWge2
   dsimp [bvSmuloExpanded]
-  rw [hWidth, hNm2, hTop, hCond1, hCond2, hIndices, hNil']
-  simp [__eo_ite, native_ite, native_teq,
-    eo_mk_apply_arg_stuck, eo_mk_apply_fun_stuck,
-    __bv_smulo_elim_rec, smulo_rec_list_stuck_eq, smulo_rec_res_stuck_eq]
+  rcases smulo_indices_cases W hWge2 with hIndices | hIndices <;>
+  · rw [hWidth, hNm2, hTop, hCond1, hCond2, hIndices, hNil']
+    simp [__eo_ite, native_ite, native_teq,
+      eo_mk_apply_arg_stuck, eo_mk_apply_fun_stuck,
+      __bv_smulo_elim_rec, smulo_rec_list_stuck_eq, smulo_rec_res_stuck_eq]
 
 private theorem eval_bv_smulo_expanded
     (M : SmtModel) (hM : model_wf M) (a b : Term)

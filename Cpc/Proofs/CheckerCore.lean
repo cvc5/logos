@@ -153,13 +153,13 @@ by
       constructor
       · simp [__eo_state_proven_nth]
       · change __eo_typeof (Term.Boolean true) = Term.Bool
-        native_decide
+        decide +kernel
   | Stuck =>
       intro n
       constructor
       · simp [__eo_state_proven_nth]
       · change __eo_typeof (Term.Boolean true) = Term.Bool
-        native_decide
+        decide +kernel
   | cons so s ih =>
       intro n
       by_cases hZero : n = 0

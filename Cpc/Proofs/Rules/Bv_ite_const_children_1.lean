@@ -49,11 +49,11 @@ private theorem typeof_bvite_const_children_not_stuck_implies_cond
     · have hOneTy :
           __eo_typeof (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral 1)) (Term.Numeral 1)) =
             Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1) := by
-        native_decide
+        decide +kernel
       have hZeroTy :
           __eo_typeof (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral 1)) (Term.Numeral 0)) =
             Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1) := by
-        native_decide
+        decide +kernel
       rw [hZeroTy, hOneTy]
       simp [__eo_typeof_bvite, hn]
 
@@ -65,7 +65,7 @@ private theorem typeof_arg_of_prog_bv_ite_const_children_1_bool (c1 : Term) :
   · subst c1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · rw [prog_bv_ite_const_children_1_eq_of_ne_stuck c1 hC1] at hTy
     change __eo_typeof_eq
@@ -88,20 +88,20 @@ private theorem typeof_arg_of_prog_bv_ite_const_children_1_bool (c1 : Term) :
 private theorem smt_typeof_binary_one_one :
     __smtx_typeof (SmtTerm.Binary 1 1) = SmtType.BitVec 1 := by
   have hNN : __smtx_typeof (SmtTerm.Binary 1 1) ≠ SmtType.None := by
-    native_decide
+    decide +kernel
   exact TranslationProofs.smtx_typeof_binary_of_non_none 1 1 hNN
 
 private theorem smt_typeof_bv_one_one :
     __smtx_typeof
       (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral 1)) (Term.Numeral 1))) =
       SmtType.BitVec 1 := by
-  native_decide
+  decide +kernel
 
 private theorem smt_typeof_bv_zero_one :
     __smtx_typeof
       (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral 1)) (Term.Numeral 0))) =
       SmtType.BitVec 1 := by
-  native_decide
+  decide +kernel
 
 private theorem smt_eval_bv_one_one (M : SmtModel) :
     __smtx_model_eval M
@@ -111,7 +111,7 @@ private theorem smt_eval_bv_one_one (M : SmtModel) :
       (SmtTerm.int_to_bv (SmtTerm.Numeral 1) (SmtTerm.Numeral 1)) =
     SmtValue.Binary 1 1
   simp [native_ite, SmtEval.native_zleq]
-  native_decide
+  decide +kernel
 
 private theorem smt_eval_binary_one_one (M : SmtModel) :
     __smtx_model_eval M (SmtTerm.Binary 1 1) =
@@ -126,7 +126,7 @@ private theorem smt_eval_bv_zero_one (M : SmtModel) :
       (SmtTerm.int_to_bv (SmtTerm.Numeral 1) (SmtTerm.Numeral 0)) =
     SmtValue.Binary 1 0
   simp [native_ite, SmtEval.native_zleq]
-  native_decide
+  decide +kernel
 
 private theorem smt_typeof_c1_bitvec_one
     (c1 : Term) :
@@ -232,7 +232,7 @@ private theorem eval_bvite_const_children_1
       native_zeq payload (native_mod_total payload (native_int_pow2 1)) = true := by
     exact bitvec_payload_canonical (by simpa [hEvalC, native_nat_to_int] using hEvalTy)
   have hWidth : native_zleq 0 1 = true := by
-    native_decide
+    decide +kernel
   have hRange := bitvec_payload_range_of_canonical hWidth hPayloadCanon
   have hPayloadCases : payload = 0 ∨ payload = 1 := by
     have hLtTwo : payload < 2 := by
@@ -254,7 +254,7 @@ private theorem eval_bvite_const_children_1
         rw [__smtx_model_eval.eq_def] <;> simp only]
   rw [hEvalC]
   have hNatOne : native_nat_to_int 1 = 1 := by
-    native_decide
+    decide +kernel
   rcases hPayloadCases with hPayload | hPayload
   · subst payload
     simp [__smtx_model_eval_eq, __smtx_model_eval_ite,

@@ -37,9 +37,9 @@ private theorem typeof_arg_of_prog_arith_int_mod_total_one_bool
   change __eo_typeof_eq (__eo_typeof_div (__eo_typeof t1) (__eo_typeof (Term.Numeral 1)))
     (__eo_typeof (Term.Numeral 0)) = Term.Bool at h
   have hNum1Ty : __eo_typeof (Term.Numeral 1) = Term.Int := by
-    native_decide
+    decide +kernel
   have hNum0Ty : __eo_typeof (Term.Numeral 0) = Term.Int := by
-    native_decide
+    decide +kernel
   rw [hNum1Ty, hNum0Ty] at h
   cases hTy : __eo_typeof t1 with
   | UOp op =>

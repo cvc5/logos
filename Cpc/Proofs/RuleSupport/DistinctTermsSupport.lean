@@ -2281,7 +2281,7 @@ private theorem tuple_ctor_head_no_smt_translation :
 
 private theorem native_reserved_datatype_name_tuple :
     __eo_to_smt_reserved_datatype_name (native_string_lit "@Tuple") = true := by
-  native_decide
+  decide +kernel
 
 private theorem dtcons_reserved_false_of_translation
     {s : native_String} {d : DatatypeDecl} {i : native_Nat} :

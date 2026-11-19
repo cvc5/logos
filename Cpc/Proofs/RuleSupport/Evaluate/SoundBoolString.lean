@@ -2812,7 +2812,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_str_leq_core
         runLeq = Term.Boolean leqBool := by
       dsimp [runLeq, leqBool]
       rw [hRunA, hRunB]
-      exact EvaluateProofInternal.str_leq_result_strings hSxValid hSyValid
+      have hNe := hRunLeqNe
+      dsimp only [runLeq] at hNe
+      rw [hRunA, hRunB] at hNe
+      exact EvaluateProofInternal.str_leq_result_strings hSxValid hSyValid hNe
     rw [hRunLeqEq]
     constructor
     · change
@@ -3354,6 +3357,16 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_str_replace_all_core
       (Term.Apply (Term.Apply (Term.UOp UserOp.str_replace_all) s) pat)
       repl
   change __run_evaluate whole ≠ whole at hActive
+  have hRunWholeNe : __run_evaluate whole ≠ Term.Stuck := by
+    intro hStuck
+    change
+      __eo_typeof
+          (__eo_mk_apply (Term.Apply (Term.UOp UserOp.eq) whole)
+            (__run_evaluate whole)) =
+        Term.Bool at _hEvalTy
+    rw [hStuck] at _hEvalTy
+    change Term.Stuck = Term.Bool at _hEvalTy
+    cases _hEvalTy
   change
     __smtx_typeof (__eo_to_smt whole) =
         __smtx_typeof (__eo_to_smt (__run_evaluate whole)) ∧
@@ -3443,6 +3456,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_str_replace_all_core
               (EvaluateProofInternal.native_str_replace_all_chain (p :: ps) replStr 0 str) := by
         have hsimpa :=
           EvaluateProofInternal.str_replace_all_result_strings_cons str replStr p ps
+            (by exact hRunWholeNe)
         try simp [whole] at hsimpa ⊢
         exact hsimpa
       rw [hRun]
@@ -4081,7 +4095,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_str_to_int_core
         runInt = Term.Numeral (native_str_to_int s) := by
       dsimp [runInt]
       rw [hs]
-      exact EvaluateProofInternal.str_to_int_result_string hValid
+      have hNe := hRunIntNe
+      dsimp only [runInt] at hNe
+      rw [hs] at hNe
+      exact EvaluateProofInternal.str_to_int_result_string hValid hNe
     rw [hRunIntString]
     constructor
     · change
@@ -4293,7 +4310,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_str_to_lower_core
         runLower = Term.String (native_str_to_lower s) := by
       dsimp [runLower]
       rw [hs]
-      exact EvaluateProofInternal.str_to_lower_result_string hValid
+      have hNe := hRunLowerNe
+      dsimp only [runLower] at hNe
+      rw [hs] at hNe
+      exact EvaluateProofInternal.str_to_lower_result_string hValid hNe
     rw [hRunLowerString]
     constructor
     · change
@@ -4513,7 +4533,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_str_to_upper_core
         runUpper = Term.String (native_str_to_upper s) := by
       dsimp [runUpper]
       rw [hs]
-      exact EvaluateProofInternal.str_to_upper_result_string hValid
+      have hNe := hRunUpperNe
+      dsimp only [runUpper] at hNe
+      rw [hs] at hNe
+      exact EvaluateProofInternal.str_to_upper_result_string hValid hNe
     rw [hRunUpperString]
     constructor
     · change
@@ -4730,7 +4753,10 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_str_rev_core
         runRev = Term.String s.reverse := by
       dsimp [runRev]
       rw [hs]
-      exact EvaluateProofInternal.str_rev_result_string
+      have hNe := hRunRevNe
+      dsimp only [runRev] at hNe
+      rw [hs] at hNe
+      exact EvaluateProofInternal.str_rev_result_string hNe
     rw [hRunRevString]
     constructor
     · change
@@ -5011,6 +5037,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_str_from_int_core
         runFrom = Term.String (native_str_from_int runN) := by
       simpa [runFrom] using
         EvaluateProofInternal.eo_eval_str_from_int_rhs_run_numeral (x := x) (n := runN) hRunX
+          hRunFromNe
     rw [hRunFromString]
     constructor
     · change
@@ -5479,7 +5506,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_sbv_to_int_core
       dsimp [runToInt]
       exact
         EvaluateProofInternal.eo_eval_sbv_to_int_rhs_binary_eq_uts
-          (w := runW) (n := runN) hRunWNonneg hRunCanon
+          (w := runW) (n := runN) hRunWNonneg hRunCanon hRunToIntNe
     change
       __smtx_typeof
           (SmtTerm.sbv_to_int (SmtTerm.Binary runW runN)) =

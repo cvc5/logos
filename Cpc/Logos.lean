@@ -177,8 +177,8 @@ def __eo_mul : Term -> Term -> Term
 
 
 def __eo_pow : Term -> Term -> Term
-  | (Term.Numeral n1), (Term.Numeral n2) => (Term.Numeral (native_zexp_total n1 n2))
-  | (Term.Rational r1), (Term.Numeral n2) => (Term.Rational (native_qexp_total r1 n2))
+  | (Term.Numeral n1), (Term.Numeral n2) => (native_ite (native_and (native_zleq 0 n2) (native_zlt n2 4294967296)) (Term.Numeral (native_zexp_total n1 n2)) Term.Stuck)
+  | (Term.Rational r1), (Term.Numeral n2) => (native_ite (native_and (native_zleq 0 n2) (native_zlt n2 4294967296)) (Term.Rational (native_qexp_total r1 n2)) Term.Stuck)
   | _, _ => Term.Stuck
 
 
@@ -234,8 +234,9 @@ def __eo_concat : Term -> Term -> Term
 def __eo_extract : Term -> Term -> Term -> Term
   | (Term.String s1), (Term.Numeral n2), (Term.Numeral n3) => (Term.String (native_str_substr s1 n2 (native_zplus (native_zplus n3 (native_zneg n2)) 1)))
   | (Term.Binary w n1), (Term.Numeral n2), (Term.Numeral n3) =>
-    let _v0 := (native_zplus n3 (native_zneg n2))
-    (native_ite (native_or (native_zlt n2 0) (native_zlt _v0 0)) (Term.Binary 0 0) (__eo_mk_binary (native_zplus _v0 1) (native_binary_extract w n1 n3 n2)))
+    let _v1 := (native_ite (native_zlt n3 w) n3 (native_zplus w (native_zneg 1)))
+    let _v2 := (native_zplus _v1 (native_zneg n2))
+    (native_ite (native_or (native_zlt n2 0) (native_zlt _v2 0)) (Term.Binary 0 0) (__eo_mk_binary (native_zplus _v2 1) (native_binary_extract w n1 _v1 n2)))
   | _, _, _ => Term.Stuck
 
 
@@ -259,8 +260,8 @@ def __eo_to_q : Term -> Term
 
 
 def __eo_to_bin : Term -> Term -> Term
-  | (Term.Numeral w), (Term.Numeral n1) => (native_ite (native_zleq w 4294967296) (__eo_mk_binary w n1) Term.Stuck)
-  | (Term.Numeral w), (Term.Binary w1 n1) => (native_ite (native_zleq w 4294967296) (__eo_mk_binary w n1) Term.Stuck)
+  | (Term.Numeral w), (Term.Numeral n1) => (native_ite (native_and (native_zleq 0 w) (native_zlt w 4294967296)) (__eo_mk_binary w n1) Term.Stuck)
+  | (Term.Numeral w), (Term.Binary w1 n1) => (native_ite (native_and (native_zleq 0 w) (native_zlt w 4294967296)) (__eo_mk_binary w n1) Term.Stuck)
   | _, _ => Term.Stuck
 
 
@@ -594,7 +595,7 @@ def __eo_list_repeat_rec : Term -> Term -> native_Nat -> Term
 def __eo_list_repeat : Term -> Term -> Term -> Term
   | Term.Stuck , _ , _  => Term.Stuck
   | _ , Term.Stuck , _  => Term.Stuck
-  | f, a, (Term.Numeral i) => (native_ite (native_zlt i 0) Term.Stuck (__eo_list_repeat_rec f a (native_int_to_nat i)))
+  | f, a, (Term.Numeral i) => (native_ite (native_and (native_zleq 0 i) (native_zlt i 4294967296)) (__eo_list_repeat_rec f a (native_int_to_nat i)) Term.Stuck)
   | _, _, _ => Term.Stuck
 
 
@@ -6362,6 +6363,16 @@ def __eo_prog_sets_minus_self : Term -> Term -> Term
   | _, _ => Term.Stuck
 
 
+def __eo_prog_sets_union_self : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.set_union) x1) x1)) x1)
+
+
+def __eo_prog_sets_inter_self : Term -> Term
+  | Term.Stuck  => Term.Stuck
+  | x1 => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.set_inter) x1) x1)) x1)
+
+
 def __eo_prog_sets_is_empty_elim : Term -> Term -> Term
   | Term.Stuck , _  => Term.Stuck
   | x1, (Term.Apply (Term.UOp UserOp.Set) _at_T0) => (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.set_is_empty) x1)) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x1) (Term.UOp1 UserOp1.set_empty (Term.Apply (Term.UOp UserOp.Set) _at_T0))))
@@ -9795,6 +9806,8 @@ inductive CRule : Type where
   | sets_union_member : CRule
   | sets_choose_singleton : CRule
   | sets_minus_self : CRule
+  | sets_union_self : CRule
+  | sets_inter_self : CRule
   | sets_is_empty_elim : CRule
   | sets_is_singleton_elim : CRule
   | str_eq_ctn_false : CRule
@@ -10477,6 +10490,8 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.sets_union_member, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), CIndexList.nil => (__eo_prog_sets_union_member a1 a2 a3)
   | CRule.sets_choose_singleton, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_choose_singleton a1)
   | CRule.sets_minus_self, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_sets_minus_self a1 a2)
+  | CRule.sets_union_self, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_union_self a1)
+  | CRule.sets_inter_self, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_inter_self a1)
   | CRule.sets_is_empty_elim, (CArgList.cons a1 (CArgList.cons a2 CArgList.nil)), CIndexList.nil => (__eo_prog_sets_is_empty_elim a1 a2)
   | CRule.sets_is_singleton_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_sets_is_singleton_elim a1)
   | CRule.str_eq_ctn_false, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 (CArgList.cons a4 CArgList.nil)))), (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_str_eq_ctn_false a1 a2 a3 a4 (Proof.pf (__eo_state_proven_nth S n1)))

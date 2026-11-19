@@ -254,7 +254,7 @@ private theorem eval_bv1_of_smt_type_bitvec_one
         true := by
     exact bitvec_payload_canonical (by simpa [hEvalT, native_nat_to_int, native_int_to_nat] using hEvalTy)
   have hWidth : native_zleq 0 1 = true := by
-    native_decide
+    decide +kernel
   have hRange := bitvec_payload_range_of_canonical hWidth hPayloadCanon
   have hPayloadCases : payload = 0 ∨ payload = 1 := by
     have hLtTwo : payload < 2 := by

@@ -711,7 +711,7 @@ theorem dcs_translation {c T : Term} (hs : DCS c)
 
 private theorem qds_stuck_type_not_wf :
     __smtx_type_wf (__eo_to_smt_type Term.Stuck) ≠ true := by
-  native_decide
+  decide +kernel
 
 private theorem qds_eo_typeof_apply_stuck_head (V : Term) :
     __eo_typeof_apply Term.Stuck V = Term.Stuck := by
@@ -991,7 +991,7 @@ private theorem qds_smt_type_tuple_shape_of_wf
               (SmtDatatypeCons.cons A c) SmtDatatype.null)) := by
   cases B <;> try
     { exfalso
-      apply (show __smtx_type_wf SmtType.None ≠ true by native_decide)
+      apply (show __smtx_type_wf SmtType.None ≠ true by decide +kernel)
       simpa [__eo_to_smt_type_tuple] using hWf }
   case Datatype s tailDD =>
     cases tailDD with
@@ -999,14 +999,14 @@ private theorem qds_smt_type_tuple_shape_of_wf
         exfalso
         have : __smtx_type_wf SmtType.None = true := by
           simpa [__eo_to_smt_type_tuple] using hWf
-        exact (show __smtx_type_wf SmtType.None ≠ true by native_decide) this
+        exact (show __smtx_type_wf SmtType.None ≠ true by decide +kernel) this
     | cons s₂ tailD restDD =>
         cases tailD with
         | null =>
             exfalso
             have : __smtx_type_wf SmtType.None = true := by
               simpa [__eo_to_smt_type_tuple] using hWf
-            exact (show __smtx_type_wf SmtType.None ≠ true by native_decide) this
+            exact (show __smtx_type_wf SmtType.None ≠ true by decide +kernel) this
         | sum c restD =>
             cases restD with
             | sum c' restD' =>
@@ -1014,7 +1014,7 @@ private theorem qds_smt_type_tuple_shape_of_wf
                 have : __smtx_type_wf SmtType.None = true := by
                   simpa [__eo_to_smt_type_tuple] using hWf
                 exact (show __smtx_type_wf SmtType.None ≠ true by
-                  native_decide) this
+                  decide +kernel) this
             | null =>
                 cases restDD with
                 | cons s₃ d₃ restDD' =>
@@ -1022,7 +1022,7 @@ private theorem qds_smt_type_tuple_shape_of_wf
                     have : __smtx_type_wf SmtType.None = true := by
                       simpa [__eo_to_smt_type_tuple] using hWf
                     exact (show __smtx_type_wf SmtType.None ≠ true by
-                      native_decide) this
+                      decide +kernel) this
                 | nil =>
                     let gate :=
                       native_and
@@ -1046,7 +1046,7 @@ private theorem qds_smt_type_tuple_shape_of_wf
                           rw [hGate] at hWf
                           exact hWf
                         exact (show __smtx_type_wf SmtType.None ≠ true by
-                          native_decide) this
+                          decide +kernel) this
                       · rfl
                     have hParts :
                         (native_streq s (native_string_lit "@Tuple") = true ∧
@@ -1100,7 +1100,7 @@ theorem qds_tuple_type_shape_of_wf
         (native_ite (__smtx_type_wf raw) raw SmtType.None) = true at hWf
       rw [hRawWf] at hWf
       exact False.elim ((show __smtx_type_wf SmtType.None ≠ true by
-        native_decide) hWf)
+        decide +kernel) hWf)
     · rfl
   obtain ⟨c, hTail, hRaw⟩ := qds_smt_type_tuple_shape_of_wf hGate
   refine ⟨c, hTail, ?_⟩
@@ -1354,7 +1354,7 @@ private theorem qds_tuple_selector_type
   have hRNN : R ≠ SmtType.None := by
     intro hNone
     rw [hNone] at hRetWfR
-    exact (show __smtx_type_wf SmtType.None ≠ true by native_decide) hRetWfR
+    exact (show __smtx_type_wf SmtType.None ≠ true by decide +kernel) hRetWfR
   constructor
   · rw [Smtm.typeof_dt_sel_apply_eq]
     change __smtx_typeof_guard_wf R
@@ -1478,7 +1478,7 @@ private theorem qds_tuple_seed_type
   have hANone : A ≠ SmtType.None := by
     intro hNone
     rw [hNone] at hHeadWf
-    exact (show __smtx_type_wf SmtType.None ≠ true by native_decide) hHeadWf
+    exact (show __smtx_type_wf SmtType.None ≠ true by decide +kernel) hHeadWf
   have hLt : 0 < __smtx_dt_num_sels resolved native_nat_zero := by
     cases A <;>
       simp [resolved, fullD, fullDD, __smtx_dt_resolve,
@@ -1614,7 +1614,7 @@ private theorem qds_tuple_prepend_rec_type
             hTailResolve, hFullResolve,
             __smtx_ret_typeof_sel_rec]] at hWf
         rw [hNone] at hWf
-        exact (show __smtx_type_wf SmtType.None ≠ true by native_decide) hWf
+        exact (show __smtx_type_wf SmtType.None ≠ true by decide +kernel) hWf
       have hRecHead : qdsSmtApplyHead recTerm =
           SmtTerm.DtCons (native_string_lit "@Tuple") fullDD
             native_nat_zero := by

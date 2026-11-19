@@ -37,7 +37,7 @@ private theorem smtx_typeof_re_mult_allchar :
 
 private theorem eo_typeof_re_mult_re_allchar :
     __eo_typeof (Term.Apply Term.re_mult Term.re_allchar) = Term.RegLan := by
-  native_decide
+  decide +kernel
 
 private theorem eo_typeof_str_in_re_reglan_eq_seq_char_of_ne_stuck (T : Term)
     (h : __eo_typeof_str_in_re T Term.RegLan ≠ Term.Stuck) :
@@ -86,7 +86,7 @@ private theorem typed___eo_prog_re_in_sigma_star_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hProg :
       __eo_prog_re_in_sigma_star a1 = Term.Apply (Term.Apply Term.eq lhs) rhs := by
@@ -114,7 +114,7 @@ private theorem facts___eo_prog_re_in_sigma_star_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hProg :
       __eo_prog_re_in_sigma_star a1 = Term.Apply (Term.Apply Term.eq lhs) rhs := by

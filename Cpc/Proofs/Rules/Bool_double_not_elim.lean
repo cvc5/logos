@@ -26,7 +26,7 @@ private theorem typeof_arg_of_prog_bool_double_not_elim_bool (t1 : Term) :
   · subst t1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · rw [prog_bool_double_not_elim_eq_of_ne_stuck t1 hT1] at hTy
     change __eo_typeof_eq (__eo_typeof (Term.Apply Term.not (Term.Apply Term.not t1)))

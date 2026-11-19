@@ -83,19 +83,19 @@ theorem typeof_extract_bit_of_bv
     have hEq : (↑start + -↑start + 1 : Int) = 1 := by omega
     simp [__eo_add, __eo_neg, native_zplus, native_zneg, native_nat_to_int, hEq]
   rw [hStartGtNeg, hWStart, hWidth]
-  native_decide
+  decide +kernel
 
 theorem nil_bvand_bit :
     __eo_nil (Term.UOp UserOp.bvand)
         (Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1)) =
       Term.Binary 1 1 := by
-  native_decide
+  decide +kernel
 
 theorem nil_bvor_bit :
     __eo_nil (Term.UOp UserOp.bvor)
         (Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1)) =
       Term.Binary 1 0 := by
-  native_decide
+  decide +kernel
 
 def bv1 (b : Bool) : SmtValue :=
   SmtValue.Binary 1 (if b then (1 : Int) else 0)
@@ -118,7 +118,7 @@ theorem extract_bit_binary_eval
   have hpowi : native_int_pow2 (↑i) = (2 ^ i : Int) := by
     simpa [native_nat_to_int] using native_int_pow2_nat i
   have hpow1 : native_int_pow2 1 = (2 : Int) := by
-    native_decide
+    decide +kernel
   rw [hpowi, hpow1]
   have hpa : ((Int.toNat pa : Nat) : Int) = pa := by
     simpa using (Int.toNat_of_nonneg hpa0)
@@ -209,7 +209,7 @@ theorem concat_zero_right_value
   rw [hWidth]
   unfold native_binary_concat
   simp [native_zplus, native_zmult]
-  have hpow0 : native_int_pow2 0 = (1 : Int) := by native_decide
+  have hpow0 : native_int_pow2 0 = (1 : Int) := by decide +kernel
   rw [hpow0]
   simp
   have hmod :
@@ -593,14 +593,17 @@ theorem nil_bvmul_bitvec_succ_of_ne_stuck
   change __eo_to_bin (Term.Numeral (native_nat_to_int (w + 1))) (Term.Numeral 1) =
       Term.Binary (native_nat_to_int (w + 1)) 1
   change
-    (native_ite (native_zleq (native_nat_to_int (w + 1)) 4294967296)
+    (native_ite (native_and (native_zleq 0 (native_nat_to_int (w + 1)))
+        (native_zlt (native_nat_to_int (w + 1)) 4294967296))
         (__eo_mk_binary (native_nat_to_int (w + 1)) 1) Term.Stuck) =
       Term.Binary (native_nat_to_int (w + 1)) 1
-  cases hBound : native_zleq (native_nat_to_int (w + 1)) 4294967296
+  cases hBound : native_and (native_zleq 0 (native_nat_to_int (w + 1)))
+        (native_zlt (native_nat_to_int (w + 1)) 4294967296)
   · exfalso
     apply hNe
     change
-      native_ite (native_zleq (native_nat_to_int (w + 1)) 4294967296)
+      native_ite (native_and (native_zleq 0 (native_nat_to_int (w + 1)))
+        (native_zlt (native_nat_to_int (w + 1)) 4294967296))
           (__eo_mk_binary (native_nat_to_int (w + 1)) 1) Term.Stuck =
         Term.Stuck
     rw [hBound]

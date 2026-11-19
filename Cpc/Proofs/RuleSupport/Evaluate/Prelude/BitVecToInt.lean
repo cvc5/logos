@@ -132,13 +132,13 @@ theorem EvaluateProofInternal.sbv_to_int_payload_eq_uts_core
     subst w
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hnEq : n = 0 := by
       have hlt : n < 1 := by
         simpa [hPow0] using hRange.2
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange.1
     subst n
-    native_decide
+    decide +kernel
 
 def EvaluateProofInternal.eo_eval_sbv_to_int_rhs (x : Term) : Term :=
   let _v0 := __run_evaluate x
@@ -162,20 +162,21 @@ theorem EvaluateProofInternal.eo_eval_sbv_to_int_rhs_binary_eq_uts
     {w n : native_Int}
     (hw0 : native_zleq 0 w = true)
     (hCanon :
-      native_zeq n (native_mod_total n (native_int_pow2 w)) = true) :
+      native_zeq n (native_mod_total n (native_int_pow2 w)) = true)
+    (hNe : EvaluateProofInternal.eo_eval_sbv_to_int_rhs (Term.Binary w n) ≠ Term.Stuck) :
     EvaluateProofInternal.eo_eval_sbv_to_int_rhs (Term.Binary w n) =
       Term.Numeral (native_binary_uts w n) := by
   by_cases hwz : w = 0
   · subst w
     have hRange := bitvec_payload_range_of_canonical hw0 hCanon
     have hPow0 : native_int_pow2 0 = 1 := by
-      native_decide
+      decide +kernel
     have hnEq : n = 0 := by
       have hlt : n < 1 := by
         simpa [hPow0] using hRange.2
       exact Int.le_antisymm (Int.le_of_lt_add_one hlt) hRange.1
     subst n
-    native_decide
+    decide +kernel
   · have hw0Int : 0 <= w := by
       simpa [native_zleq, SmtEval.native_zleq] using hw0
     have hwpos : 0 < w := by
@@ -189,46 +190,48 @@ theorem EvaluateProofInternal.eo_eval_sbv_to_int_rhs_binary_eq_uts
         intro h
         exact hwz h.symm
       simp [__eo_eq, native_teq, h0w]
-    have hPowExpr :
-        __eo_ite (__eo_is_z (Term.Numeral w))
-          (__eo_ite (__eo_is_neg (Term.Numeral w)) (Term.Numeral 0)
-            (__eo_pow (Term.Numeral 2) (Term.Numeral w)))
-          (__eo_mk_apply (Term.UOp UserOp.int_pow2) (Term.Numeral w)) =
-        Term.Numeral (native_int_pow2 w) :=
-      EvaluateProofInternal.eo_int_pow2_literal_eq w
-    dsimp [EvaluateProofInternal.eo_eval_sbv_to_int_rhs]
-    change
-      __eo_ite (__eo_eq (Term.Numeral w) (Term.Numeral 0))
-          (Term.Numeral 0)
-          (__eo_ite
-            (__eo_eq
-              (__eo_extract (Term.Binary w n)
-                (Term.Numeral (native_zplus w (native_zneg 1)))
-                (Term.Numeral (native_zplus w (native_zneg 1))))
-              (Term.Binary 1 0))
-            (Term.Numeral n)
-            (__eo_add (Term.Numeral n)
-              (__eo_neg
-                (__eo_ite (__eo_is_z (Term.Numeral w))
-                  (__eo_ite (__eo_is_neg (Term.Numeral w))
-                    (Term.Numeral 0)
-                    (__eo_pow (Term.Numeral 2) (Term.Numeral w)))
-                  (__eo_mk_apply (Term.UOp UserOp.int_pow2)
-                    (Term.Numeral w)))))) =
-        Term.Numeral (native_binary_uts w n)
+    have hRhsEq :
+        EvaluateProofInternal.eo_eval_sbv_to_int_rhs (Term.Binary w n) =
+        __eo_ite (__eo_eq (Term.Numeral w) (Term.Numeral 0))
+            (Term.Numeral 0)
+            (__eo_ite
+              (__eo_eq
+                (__eo_extract (Term.Binary w n)
+                  (Term.Numeral (native_zplus w (native_zneg 1)))
+                  (Term.Numeral (native_zplus w (native_zneg 1))))
+                (Term.Binary 1 0))
+              (Term.Numeral n)
+              (__eo_add (Term.Numeral n)
+                (__eo_neg
+                  (__eo_ite (__eo_is_z (Term.Numeral w))
+                    (__eo_ite (__eo_is_neg (Term.Numeral w))
+                      (Term.Numeral 0)
+                      (__eo_pow (Term.Numeral 2) (Term.Numeral w)))
+                    (__eo_mk_apply (Term.UOp UserOp.int_pow2)
+                      (Term.Numeral w)))))) := rfl
+    rw [hRhsEq] at hNe ⊢
     rw [hEqW0, eo_ite_false,
-      EvaluateProofInternal.eo_sbv_to_int_msb_zero_eq_of_pos (w := w) (n := n) hwpos]
+      EvaluateProofInternal.eo_sbv_to_int_msb_zero_eq_of_pos (w := w) (n := n) hwpos] at hNe ⊢
+    revert hNe
     cases hSignZero :
         native_zeq
           (native_mod_total
             (native_div_total n (native_int_pow2 (w - 1))) 2)
           0
-    · rw [eo_ite_false, hPowExpr]
+    · intro hNe
+      rw [eo_ite_false] at hNe ⊢
+      have hwLt : w < 4294967296 := by
+        by_contra hGe
+        apply hNe
+        rw [EvaluateProofInternal.eo_int_pow2_literal_stuck_of_ge w hGe]
+        rfl
+      rw [EvaluateProofInternal.eo_int_pow2_literal_eq w hwLt]
       simp [__eo_add, __eo_neg]
       simpa [hSignZero] using
         EvaluateProofInternal.sbv_to_int_payload_eq_uts_core
           (w := w) (n := n) hw0 hCanon
-    · rw [eo_ite_true]
+    · intro _hNe
+      rw [eo_ite_true]
       exact congrArg Term.Numeral
         (by
           simpa [hSignZero] using
@@ -248,7 +251,7 @@ theorem EvaluateProofInternal.eo_eval_sbv_to_int_rhs_arg_binary_of_pos_typeof_in
     have hwz : ¬ w = 0 := by
       intro h
       subst w
-      exact (by native_decide : ¬ (0 : native_Int) < 0) hwpos
+      exact (by decide +kernel : ¬ (0 : native_Int) < 0) hwpos
     have h0w : ¬ (0 : native_Int) = w := by
       intro h
       exact hwz h.symm
@@ -303,7 +306,7 @@ theorem EvaluateProofInternal.eo_eval_sbv_to_int_rhs_arg_binary_of_pos_run_typeo
     have hkz : ¬ k = 0 := by
       intro h
       subst k
-      exact (by native_decide : ¬ (0 : native_Int) < 0) hkpos
+      exact (by decide +kernel : ¬ (0 : native_Int) < 0) hkpos
     have h0k : ¬ (0 : native_Int) = k := by
       intro h
       exact hkz h.symm
@@ -349,7 +352,7 @@ theorem EvaluateProofInternal.eo_eval_sbv_to_int_rhs_typeof_int_of_pos_run_typeo
     have hkz : ¬ k = 0 := by
       intro h
       subst k
-      exact (by native_decide : ¬ (0 : native_Int) < 0) hkpos
+      exact (by decide +kernel : ¬ (0 : native_Int) < 0) hkpos
     have h0k : ¬ (0 : native_Int) = k := by
       intro h
       exact hkz h.symm
@@ -388,11 +391,23 @@ theorem EvaluateProofInternal.eo_eval_sbv_to_int_rhs_typeof_int_of_pos_run_typeo
                     (__eo_mk_apply (Term.UOp UserOp.int_pow2)
                       (Term.Numeral w))))) =
             Term.UOp UserOp.Int
-        simp [__eo_ite, native_ite, native_teq, __eo_is_z,
-          __eo_is_z_internal, __eo_is_neg, __eo_neg, __eo_add,
-          __eo_pow, __eo_mk_apply, native_and, native_not, hNeg]
-        change __eo_lit_type_Numeral (Term.Numeral _) =
-          Term.UOp UserOp.Int
+        have hwLt : w < 4294967296 := by
+          by_contra hGe
+          apply hNe
+          dsimp [EvaluateProofInternal.eo_eval_sbv_to_int_rhs]
+          rw [hGuard, eo_ite_false, hSign]
+          change
+            __eo_add (Term.Numeral n)
+                (__eo_neg
+                  (__eo_ite (__eo_is_z (Term.Numeral w))
+                    (__eo_ite (__eo_is_neg (Term.Numeral w))
+                      (Term.Numeral 0)
+                      (__eo_pow (Term.Numeral 2) (Term.Numeral w)))
+                    (__eo_mk_apply (Term.UOp UserOp.int_pow2)
+                      (Term.Numeral w)))) = Term.Stuck
+          rw [EvaluateProofInternal.eo_int_pow2_literal_stuck_of_ge w hGe]
+          rfl
+        rw [EvaluateProofInternal.eo_int_pow2_literal_eq w hwLt]
         rfl
       · change __eo_typeof (Term.Numeral n) = Term.UOp UserOp.Int
         rfl

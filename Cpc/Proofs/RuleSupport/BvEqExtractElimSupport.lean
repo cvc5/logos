@@ -281,7 +281,7 @@ theorem typed_bv_eq_extract_elim2_term
     simpa [bvEqExtractElim2Slice, SmtEval.native_zplus,
       SmtEval.native_zneg] using
       (smt_typeof_extract_of_context x w jv 0 hXSmtTy hw0
-        (by native_decide) hjw
+        (by decide +kernel) hjw
         (by simpa [SmtEval.native_zplus, SmtEval.native_zneg] using hD0))
   have hLeftBool :
       RuleProofs.eo_has_bool_type

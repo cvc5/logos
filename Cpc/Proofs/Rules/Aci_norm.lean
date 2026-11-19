@@ -25,7 +25,7 @@ private theorem native_string_lit_empty :
 
 private theorem eo_typeof_stuck_ne_bool :
     __eo_typeof Term.Stuck ≠ Term.Bool := by
-  native_decide
+  decide +kernel
 
 private theorem eo_requires_true_eq_of_type_bool (x body : Term) :
     __eo_typeof (__eo_requires x (Term.Boolean true) body) = Term.Bool ->
@@ -5449,7 +5449,7 @@ private theorem bvConcat_smt_value_rel_right_empty_eval
       simpa [SmtEval.native_zeq] using hMod
     exact hEq.symm
   have hPow0 : native_int_pow2 0 = 1 := by
-    native_decide
+    decide +kernel
   rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
   change __smtx_model_eval_eq
       (__smtx_model_eval M
@@ -8581,7 +8581,7 @@ private theorem bvAnd_nil_eq_allOnes_of_type
           (Term.Numeral (native_nat_to_int w)) :=
     TranslationProofs.eo_to_smt_type_eq_bitvec hTy
   subst ty
-  by_cases hBound : native_zleq (native_nat_to_int w) 4294967296 = true
+  by_cases hBound : native_zlt (native_nat_to_int w) 4294967296 = true
   · have hMod :
         native_mod_total
             (native_binary_not (native_nat_to_int w) 0)
@@ -8594,15 +8594,19 @@ private theorem bvAnd_nil_eq_allOnes_of_type
           Int.sub_eq_add_neg]
       rw [hNot]
       exact native_pow2_minus_one_mod_self_nat w
-    have hBoundProp : native_nat_to_int w <= 4294967296 := by
-      simpa [native_zleq] using hBound
-    have hWidthNonneg : 0 <= native_nat_to_int w := by
-      simp [native_nat_to_int]
+    have hLe : native_zleq 0 (native_nat_to_int w) = true := by
+      simp [native_zleq, native_nat_to_int]
+    have hGuard :
+        native_and (native_zleq 0 (native_nat_to_int w))
+            (native_zlt (native_nat_to_int w) 4294967296) = true := by
+      rw [hLe, hBound]
+      rfl
     have hToBin :
         __eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0) =
           Term.Binary (native_nat_to_int w) 0 := by
-      simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq,
-        hBoundProp, hWidthNonneg, native_mod_total]
+      show native_ite _ _ _ = _
+      rw [hGuard]
+      simp [native_ite, __eo_mk_binary, hLe, native_mod_total]
     change __eo_not
         (__eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0)) =
       Term.Binary (native_nat_to_int w)
@@ -8614,22 +8618,35 @@ private theorem bvAnd_nil_eq_allOnes_of_type
             (Term.Apply (Term.UOp UserOp.BitVec)
               (Term.Numeral (native_nat_to_int w))) =
           Term.Stuck := by
-      have hBoundFalse : ¬ native_nat_to_int w <= 4294967296 := by
-        simpa [native_zleq] using hBound
-      simp [__eo_nil, __eo_nil_bvand, __eo_to_bin, hBoundFalse,
-        native_ite, native_zleq, __eo_not]
+      have hGuardF :
+          native_and (native_zleq 0 (native_nat_to_int w))
+              (native_zlt (native_nat_to_int w) 4294967296) = false := by
+        rw [Bool.not_eq_true] at hBound
+        rw [hBound]
+        cases native_zleq 0 (native_nat_to_int w) <;> rfl
+      have hToBinStuck :
+          __eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0) =
+            Term.Stuck := by
+        show native_ite _ _ _ = _
+        rw [hGuardF]
+        rfl
+      change __eo_not
+          (__eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0)) =
+        Term.Stuck
+      rw [hToBinStuck]
+      rfl
     exact False.elim (hNe hStuck)
 
 private theorem bvZero_to_bin_eq_of_bound (w : Nat) :
-    native_zleq (native_nat_to_int w) 4294967296 = true ->
+    native_zlt (native_nat_to_int w) 4294967296 = true ->
     __eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0) =
       Term.Binary (native_nat_to_int w) 0 := by
   intro hBound
-  have hBoundProp : native_nat_to_int w <= 4294967296 := by
-    simpa [native_zleq] using hBound
+  have hBoundProp : native_nat_to_int w < 4294967296 := by
+    simpa [native_zlt] using hBound
   have hWidthNonneg : 0 <= native_nat_to_int w := by
     simp [native_nat_to_int]
-  simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq,
+  simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq, native_zlt, native_and,
     hBoundProp, hWidthNonneg, native_mod_total]
 
 private theorem bvOr_zero_is_list_nil (w : Nat) :
@@ -8659,7 +8676,7 @@ private theorem bvOr_nil_eq_zero_of_type
           (Term.Numeral (native_nat_to_int w)) :=
     TranslationProofs.eo_to_smt_type_eq_bitvec hTy
   subst ty
-  by_cases hBound : native_zleq (native_nat_to_int w) 4294967296 = true
+  by_cases hBound : native_zlt (native_nat_to_int w) 4294967296 = true
   · change
       __eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0) =
         Term.Binary (native_nat_to_int w) 0
@@ -8669,10 +8686,10 @@ private theorem bvOr_nil_eq_zero_of_type
             (Term.Apply (Term.UOp UserOp.BitVec)
               (Term.Numeral (native_nat_to_int w))) =
           Term.Stuck := by
-      have hBoundFalse : ¬ native_nat_to_int w <= 4294967296 := by
-        simpa [native_zleq] using hBound
+      have hBoundFalse : ¬ native_nat_to_int w < 4294967296 := by
+        simpa [native_zlt] using hBound
       simp [__eo_nil, __eo_nil_bvor, __eo_to_bin, hBoundFalse,
-        native_ite, native_zleq]
+        native_ite, native_zleq, native_zlt, native_and]
     exact False.elim (hNe hStuck)
 
 private theorem bvXor_nil_eq_zero_of_type
@@ -8688,7 +8705,7 @@ private theorem bvXor_nil_eq_zero_of_type
           (Term.Numeral (native_nat_to_int w)) :=
     TranslationProofs.eo_to_smt_type_eq_bitvec hTy
   subst ty
-  by_cases hBound : native_zleq (native_nat_to_int w) 4294967296 = true
+  by_cases hBound : native_zlt (native_nat_to_int w) 4294967296 = true
   · change
       __eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0) =
         Term.Binary (native_nat_to_int w) 0
@@ -8698,10 +8715,10 @@ private theorem bvXor_nil_eq_zero_of_type
             (Term.Apply (Term.UOp UserOp.BitVec)
               (Term.Numeral (native_nat_to_int w))) =
           Term.Stuck := by
-      have hBoundFalse : ¬ native_nat_to_int w <= 4294967296 := by
-        simpa [native_zleq] using hBound
+      have hBoundFalse : ¬ native_nat_to_int w < 4294967296 := by
+        simpa [native_zlt] using hBound
       simp [__eo_nil, __eo_nil_bvxor, __eo_to_bin, hBoundFalse,
-        native_ite, native_zleq]
+        native_ite, native_zleq, native_zlt, native_and]
     exact False.elim (hNe hStuck)
 
 private theorem bvXor_smt_value_rel_right_zero_eval
@@ -14081,7 +14098,7 @@ private theorem bvConcat_smt_value_rel_right_empty_canonical_eval
       simpa [SmtEval.native_zeq] using hxMod
     exact hEq.symm
   have hPow0 : native_int_pow2 0 = 1 := by
-    native_decide
+    decide +kernel
   rw [RuleProofs.smt_value_rel_iff_model_eval_eq_true]
   change __smtx_model_eval_eq
       (__smtx_model_eval M
@@ -14473,7 +14490,7 @@ private theorem smt_value_rel_get_a_norm_concat
   have hIdCan : BvConcatListCanonical M id := by
     rw [hIdEq]
     exact ⟨0, 0, by simpa [hIdEq] using hIdEval,
-      by native_decide, by native_decide⟩
+      by decide +kernel, by decide +kernel⟩
   have hIdNe : id ≠ Term.Stuck := by
     rw [hIdEq]
     intro h
