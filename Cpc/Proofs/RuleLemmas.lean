@@ -151,7 +151,6 @@ import Cpc.Proofs.Rules.Instantiate
 import Cpc.Proofs.Rules.Skolemize
 import Cpc.Proofs.Rules.Skolem_intro
 import Cpc.Proofs.Rules.Alpha_equiv
-import Cpc.Proofs.Rules.Beta_reduce
 import Cpc.Proofs.Rules.Quant_var_reordering
 import Cpc.Proofs.Rules.Exists_elim
 import Cpc.Proofs.Rules.Quant_unused_vars
@@ -1362,11 +1361,6 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_alpha_equiv_properties N hN s args premises
-          (by simpa using hCmdTrans) hPremisesBool hResultTy
-  | beta_reduce =>
-      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
-        intro N hN _hAgree
-        exact cmd_step_beta_reduce_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | quant_var_reordering =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by

@@ -1537,7 +1537,6 @@ private def parserRules : List (String × CRule) := [
   ("skolemize", .skolemize),
   ("skolem_intro", .skolem_intro),
   ("alpha_equiv", .alpha_equiv),
-  ("beta-reduce", .beta_reduce),
   ("quant_var_reordering", .quant_var_reordering),
   ("exists-elim", .exists_elim),
   ("quant-unused-vars", .quant_unused_vars),

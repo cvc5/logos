@@ -3882,11 +3882,6 @@ def __eo_prog_alpha_equiv : Term -> Term -> Term -> Term
   | t, vs, ts => (__eo_requires (__eo_and (__eo_and (__eo_and (__is_var_list vs) (__eo_eq (__eo_list_setof Term.__eo_List_cons vs) vs)) (__eo_and (__is_var_list ts) (__eo_eq (__eo_list_setof Term.__eo_List_cons ts) ts))) (__is_renaming_rec vs ts)) (Term.Boolean true) (__eo_requires (__contains_atomic_term_list_free_rec t vs Term.__eo_List_nil) (Term.Boolean false) (__eo_requires (__contains_atomic_term_list_free_rec t ts Term.__eo_List_nil) (Term.Boolean false) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.eq) t) (__substitute_simul_rec (Term.Boolean true) t vs ts Term.__eo_List_nil)))))
 
 
-def __eo_prog_beta_reduce : Term -> Term
-  | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) => (__eo_requires (__beta_reduce a Term.__eo_List_nil) b (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b))
-  | _ => Term.Stuck
-
-
 def __eo_prog_quant_var_reordering : Term -> Term
   | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.forall) x) F)) (Term.Apply (Term.Apply (Term.UOp UserOp.forall) y) __eo_lv_F_2)) => (__eo_requires (__eo_eq F __eo_lv_F_2) (Term.Boolean true) (__eo_requires (__eo_list_meq Term.__eo_List_cons x y) (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.Apply (Term.UOp UserOp.forall) x) F)) (Term.Apply (Term.Apply (Term.UOp UserOp.forall) y) F))))
   | _ => Term.Stuck
@@ -9558,7 +9553,6 @@ inductive CRule : Type where
   | skolemize : CRule
   | skolem_intro : CRule
   | alpha_equiv : CRule
-  | beta_reduce : CRule
   | quant_var_reordering : CRule
   | exists_elim : CRule
   | quant_unused_vars : CRule
@@ -10243,7 +10237,6 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.skolemize, CArgList.nil, (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_skolemize (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.skolem_intro, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_skolem_intro a1)
   | CRule.alpha_equiv, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), CIndexList.nil => (__eo_prog_alpha_equiv a1 a2 a3)
-  | CRule.beta_reduce, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_beta_reduce a1)
   | CRule.quant_var_reordering, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_quant_var_reordering a1)
   | CRule.exists_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_exists_elim a1)
   | CRule.quant_unused_vars, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_quant_unused_vars a1)

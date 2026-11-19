@@ -463,6 +463,23 @@ macro_rules
             else
               SmtValue.NotValue)
 
+-- The bindings of a let are evaluated in parallel: each bound term in the model
+-- M the let is evaluated in, and a later binding of a name shadows an earlier
+-- one. The extended model is __smtx_model_eval.push_bindings M M bs.
+macro_rules
+  | `(native_eval_bind $M $bs $body) => do
+      let evalId := Lean.mkIdent `__smtx_model_eval
+      let pushId := Lean.mkIdent `native_model_push
+      let goId := Lean.mkIdent `push_bindings
+      let modelId := Lean.mkIdent `SmtModel
+      let bindingsId := Lean.mkIdent `SmtBindings
+      let nilId := Lean.mkIdent `SmtBindings.nil
+      let consId := Lean.mkIdent `SmtBindings.cons
+      `(let rec $goId:ident (N : $modelId) : $bindingsId -> $modelId
+          | $nilId => N
+          | $consId s T t bs => $goId ($pushId N s T ($evalId $M t)) bs;
+        $evalId ($goId $M $bs) $body)
+
 def native_unpack_seq : SmtSeq -> List SmtValue
   | (SmtSeq.cons v vs) => v :: (native_unpack_seq vs)
   | (SmtSeq.empty _) => []
@@ -1494,14 +1511,6 @@ def native_eval_fun_apply (M : SmtModel) (fid : ModelId) (T U : SmtType) (i : Sm
 
 end
 
-mutual
-
-noncomputable def __smtx_model_push_bindings (M : SmtModel) (N : SmtModel) : SmtBindings -> SmtModel
-  | SmtBindings.nil => N
-  | (SmtBindings.cons s T t bs) => (__smtx_model_push_bindings M (native_model_push N s T (__smtx_model_eval M t)) bs)
-termination_by structural bs => bs
-
-
 noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.Boolean b1) => (SmtValue.Boolean b1)
   | (SmtTerm.Numeral i1) => (SmtValue.Numeral i1)
@@ -1651,7 +1660,7 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.qdiv_total x1 x2) => (__smtx_model_eval_qdiv_total (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.forall s1 T2 x3) => (native_eval_forall M s1 T2 x3)
   | (SmtTerm.exists s1 T2 x3) => (native_eval_exists M s1 T2 x3)
-  | (SmtTerm.bind bs1 x2) => (__smtx_model_eval (__smtx_model_push_bindings M M bs1) x2)
+  | (SmtTerm.bind bs1 x2) => (native_eval_bind M bs1 x2)
   | (SmtTerm.int_to_bv x1 x2) => (__smtx_model_eval_int_to_bv (__smtx_model_eval M x1) (__smtx_model_eval M x2))
   | (SmtTerm.ubv_to_int x1) => (__smtx_model_eval_ubv_to_int (__smtx_model_eval M x1))
   | (SmtTerm.sbv_to_int x1) => (__smtx_model_eval_sbv_to_int (__smtx_model_eval M x1))
@@ -1665,7 +1674,6 @@ noncomputable def __smtx_model_eval (M : SmtModel) : SmtTerm -> SmtValue
 termination_by structural t => t
 
 
-end
 
 
 def model_fun_wf (M : SmtModel) : Prop :=
