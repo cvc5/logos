@@ -640,6 +640,13 @@ def __is_var_list : Term -> Term
   | _ => Term.Stuck
 
 
+def __get_lambda_type : Term -> Term -> Term
+  | _ , Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var s T)) xs), B => (Term.Apply (Term.Apply Term.FunType T) (__get_lambda_type xs B))
+  | Term.__eo_List_nil, B => B
+  | _, _ => Term.Stuck
+
+
 def __eo_prog_scope : Term -> Proof -> Term
   | Term.Stuck , _  => Term.Stuck
   | F, (Proof.pf G) => (Term.Apply (Term.Apply (Term.UOp UserOp.imp) F) G)
@@ -2345,6 +2352,26 @@ def __substitute_simul_rec : Term -> Term -> Term -> Term -> Term -> Term
   | isr, x, xs, ss, bvs => (__eo_requires (__is_closed_rec x Term.__eo_List_nil) (Term.Boolean true) x)
 
 
+def __beta_reduce_type : Term -> Term -> Term
+  | Term.Stuck , _  => Term.Stuck
+  | (Term.Apply (Term.Apply Term.FunType T) U), (Term.Apply (Term.Apply Term.__eo_List_cons x) xs) => (__beta_reduce_type U xs)
+  | T, Term.__eo_List_nil => T
+  | _, _ => Term.Stuck
+
+
+def __beta_reduce : Term -> Term -> Term
+  | _ , Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) (Term.Apply (Term.Apply Term.__eo_List_cons x) xs)) t) a), Term.__eo_List_nil =>
+    let _v0 := (Term.Apply (Term.Apply Term.__eo_List_cons a) Term.__eo_List_nil)
+    let _v1 := (Term.Apply Term.__eo_List_cons x)
+    let _v2 := (Term.Apply _v1 Term.__eo_List_nil)
+    let _v3 := (Term.Apply _v1 xs)
+    (__eo_requires (__eo_eq (__eo_list_setof Term.__eo_List_cons _v3) _v3) (Term.Boolean true) (__eo_ite (__eo_eq xs Term.__eo_List_nil) (__substitute_simul_rec (Term.Boolean false) t _v2 _v0 Term.__eo_List_nil) (__substitute_simul_rec (Term.Boolean false) (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) xs) t) _v2 _v0 Term.__eo_List_nil)))
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) xs) t), ss => (__eo_requires (__eo_eq (__eo_list_setof Term.__eo_List_cons xs) xs) (Term.Boolean true) (__substitute_simul_rec (Term.Boolean false) t xs ss Term.__eo_List_nil))
+  | (Term.Apply f a), ss => (__beta_reduce f (Term.Apply (Term.Apply Term.__eo_List_cons a) ss))
+  | _, _ => Term.Stuck
+
+
 def __str_is_empty : Term -> Term
   | Term.Stuck  => Term.Stuck
   | (Term.UOp1 UserOp1.seq_empty (Term.Apply (Term.UOp UserOp.Seq) U)) => (Term.Boolean true)
@@ -3853,6 +3880,11 @@ def __eo_prog_alpha_equiv : Term -> Term -> Term -> Term
   | _ , Term.Stuck , _  => Term.Stuck
   | _ , _ , Term.Stuck  => Term.Stuck
   | t, vs, ts => (__eo_requires (__eo_and (__eo_and (__eo_and (__is_var_list vs) (__eo_eq (__eo_list_setof Term.__eo_List_cons vs) vs)) (__eo_and (__is_var_list ts) (__eo_eq (__eo_list_setof Term.__eo_List_cons ts) ts))) (__is_renaming_rec vs ts)) (Term.Boolean true) (__eo_requires (__contains_atomic_term_list_free_rec t vs Term.__eo_List_nil) (Term.Boolean false) (__eo_requires (__contains_atomic_term_list_free_rec t ts Term.__eo_List_nil) (Term.Boolean false) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.eq) t) (__substitute_simul_rec (Term.Boolean true) t vs ts Term.__eo_List_nil)))))
+
+
+def __eo_prog_beta_reduce : Term -> Term
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) => (__eo_requires (__beta_reduce a Term.__eo_List_nil) b (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b))
+  | _ => Term.Stuck
 
 
 def __eo_prog_quant_var_reordering : Term -> Term
@@ -8629,6 +8661,13 @@ def __eo_typeof_eq : Term -> Term -> Term
   | A, __eo_lv_A_2 => (__eo_requires (__eo_eq A __eo_lv_A_2) (Term.Boolean true) Term.Bool)
 
 
+def __eo_typeof_lambda : Term -> Term -> Term -> Term
+  | _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , Term.Stuck  => Term.Stuck
+  | Term.__eo_List, L, B => (__get_lambda_type L B)
+  | _, _, _ => Term.Stuck
+
+
 def __eo_typeof_distinct : Term -> Term
   | (Term.Apply (Term.UOp UserOp._at__at_TypedList) T) => Term.Bool
   | _ => Term.Stuck
@@ -9131,6 +9170,7 @@ def __eo_typeof : Term -> Term
   | (Term.Apply (Term.Apply (Term.UOp UserOp.imp) __eo_x1) __eo_x2) => (__eo_typeof_or (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.xor) __eo_x1) __eo_x2) => (__eo_typeof_or (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.eq) __eo_x1) __eo_x2) => (__eo_typeof_eq (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) __eo_x1) __eo_x2) => (__eo_typeof_lambda (__eo_typeof __eo_x1) __eo_x1 (__eo_typeof __eo_x2))
   | (Term.Apply (Term.UOp UserOp.distinct) __eo_x1) => (__eo_typeof_distinct (__eo_typeof __eo_x1))
   | (Term.Apply (Term.UOp UserOp._at_purify) __eo_x1) => (__eo_typeof__at_purify (__eo_typeof __eo_x1))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.plus) __eo_x1) __eo_x2) => (__eo_typeof_plus (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
@@ -9314,6 +9354,7 @@ def __eo_is_closed_rec : Term -> Term -> Term
   | (Term.Var s T), (Term.Apply (Term.Apply Term.__eo_List_cons x) vs) =>
     let _v0 := (Term.Var s T)
     (__eo_ite (__eo_eq _v0 x) (Term.Boolean true) (__eo_is_closed_rec _v0 vs))
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) vs) x), env => (__eo_is_closed_rec x (__eo_list_concat Term.__eo_List_cons vs env))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.forall) vs) x), env => (__eo_is_closed_rec x (__eo_list_concat Term.__eo_List_cons vs env))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.exists) vs) x), env => (__eo_is_closed_rec x (__eo_list_concat Term.__eo_List_cons vs env))
   | (Term.Apply f x), env => (__eo_and (__eo_is_closed_rec f env) (__eo_is_closed_rec x env))
@@ -9517,6 +9558,7 @@ inductive CRule : Type where
   | skolemize : CRule
   | skolem_intro : CRule
   | alpha_equiv : CRule
+  | beta_reduce : CRule
   | quant_var_reordering : CRule
   | exists_elim : CRule
   | quant_unused_vars : CRule
@@ -10201,6 +10243,7 @@ def __eo_cmd_step_proven (S : CState) : CRule -> CArgList -> CIndexList -> Term
   | CRule.skolemize, CArgList.nil, (CIndexList.cons n1 CIndexList.nil) => (__eo_prog_skolemize (Proof.pf (__eo_state_proven_nth S n1)))
   | CRule.skolem_intro, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_skolem_intro a1)
   | CRule.alpha_equiv, (CArgList.cons a1 (CArgList.cons a2 (CArgList.cons a3 CArgList.nil))), CIndexList.nil => (__eo_prog_alpha_equiv a1 a2 a3)
+  | CRule.beta_reduce, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_beta_reduce a1)
   | CRule.quant_var_reordering, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_quant_var_reordering a1)
   | CRule.exists_elim, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_exists_elim a1)
   | CRule.quant_unused_vars, (CArgList.cons a1 CArgList.nil), CIndexList.nil => (__eo_prog_quant_unused_vars a1)

@@ -192,11 +192,21 @@ inductive SmtTerm : Type where
   | qdiv_total : SmtTerm -> SmtTerm -> SmtTerm
   | forall : native_String -> SmtType -> SmtTerm -> SmtTerm
   | exists : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | bind : native_String -> SmtType -> SmtTerm -> SmtTerm -> SmtTerm
+  | bind : SmtBindings -> SmtTerm -> SmtTerm
   | int_to_bv : SmtTerm -> SmtTerm -> SmtTerm
   | ubv_to_int : SmtTerm -> SmtTerm
   | sbv_to_int : SmtTerm -> SmtTerm
 
+deriving Repr, DecidableEq, Inhabited
+
+/-
+The bindings of an SMT-LIB `let`, `((x1 T1 t1) ... (xn Tn tn))`. They are
+parallel: `SmtTerm.bind bs body` evaluates every `ti` in the model it is
+evaluated in, and only `body` sees the variables bound.
+-/
+inductive SmtBindings : Type where
+  | nil : SmtBindings
+  | cons : native_String -> SmtType -> SmtTerm -> SmtBindings -> SmtBindings
 deriving Repr, DecidableEq, Inhabited
 
 /-

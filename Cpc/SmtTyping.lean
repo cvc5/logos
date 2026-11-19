@@ -67,6 +67,9 @@ def __smtx_type_wf : SmtType -> native_Bool
   | T => (__smtx_type_wf_component T)
 
 
+def __smtx_typeof_guard_wf (T : SmtType) (U : SmtType) : SmtType :=
+  (native_ite (__smtx_type_wf T) U SmtType.None)
+
 def __smtx_typeof_arith_overload_op_2 : SmtType -> SmtType -> SmtType
   | SmtType.Int, SmtType.Int => SmtType.Int
   | SmtType.Real, SmtType.Real => SmtType.Real
@@ -162,9 +165,6 @@ def __smtx_typeof_bv_op_1_ret : SmtType -> SmtType -> SmtType
   | (SmtType.BitVec n), T => T
   | T, U => SmtType.None
 
-
-def __smtx_typeof_guard_wf (T : SmtType) (U : SmtType) : SmtType :=
-  (native_ite (__smtx_type_wf T) U SmtType.None)
 
 def __smtx_typeof_seq_op_1_ret : SmtType -> SmtType -> SmtType
   | (SmtType.Seq x1), x2 => x2
@@ -518,7 +518,7 @@ def __smtx_typeof : SmtTerm -> SmtType
   | (SmtTerm.qdiv_total x1 x2) => (__smtx_typeof_arith_overload_op_2_ret (__smtx_typeof x1) (__smtx_typeof x2) SmtType.Real)
   | (SmtTerm.forall s1 T2 x3) => (native_ite (native_Teq (__smtx_typeof x3) SmtType.Bool) (__smtx_typeof_guard_wf T2 SmtType.Bool) SmtType.None)
   | (SmtTerm.exists s1 T2 x3) => (native_ite (native_Teq (__smtx_typeof x3) SmtType.Bool) (__smtx_typeof_guard_wf T2 SmtType.Bool) SmtType.None)
-  | (SmtTerm.bind s1 T2 x3 x4) => (native_ite (native_Teq (__smtx_typeof x3) T2) (__smtx_typeof_guard_wf T2 (__smtx_typeof x4)) SmtType.None)
+  | (SmtTerm.bind bs x1) => (__smtx_typeof_bindings bs (__smtx_typeof x1))
   | (SmtTerm.int_to_bv x1 x2) => (__smtx_typeof_int_to_bv x1 (__smtx_typeof x2))
   | (SmtTerm.ubv_to_int x1) => (__smtx_typeof_bv_op_1_ret (__smtx_typeof x1) SmtType.Int)
   | (SmtTerm.sbv_to_int x1) => (__smtx_typeof_bv_op_1_ret (__smtx_typeof x1) SmtType.Int)
@@ -535,6 +535,16 @@ def __smtx_typeof : SmtTerm -> SmtType
   | (SmtTerm.Var s T) => (__smtx_typeof_guard_wf T T)
   | (SmtTerm.UConst s T) => (__smtx_typeof_guard_wf T T)
   | x1 => SmtType.None
+
+
+/-
+The type of a `let` whose body is of type `U`: each bound term is of the type
+its variable is declared with, which is well formed. Variables are typed by
+the type they carry, so a bound term is typed the same in or out of the let.
+-/
+def __smtx_typeof_bindings : SmtBindings -> SmtType -> SmtType
+  | SmtBindings.nil, U => U
+  | (SmtBindings.cons s T x bs), U => (native_ite (native_Teq (__smtx_typeof x) T) (__smtx_typeof_guard_wf T (__smtx_typeof_bindings bs U)) SmtType.None)
 
 
 def __smtx_inhabited_type : SmtType -> native_Bool
