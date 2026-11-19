@@ -584,19 +584,23 @@ theorem model_eval_canonical_of_supported
       exact model_eval_canonical_of_bool_type M hM _ (forall_term_typeof_of_non_none hTy)
   case choice s T body htc =>
       simpa [__smtx_model_eval] using native_eval_tchoice_canonical M s T body
-  case bind s T x1 x2 hbt hs1 hs2 ih1 ih2 =>
-      have ht1 : term_has_non_none_type x1 := bind_arg1_non_none_of_non_none hTy
-      have ht2 : term_has_non_none_type x2 := bind_arg2_non_none_of_non_none hTy
-      have hTx1 : __smtx_typeof x1 = T := bind_arg1_type_of_non_none hTy
-      have hWf : __smtx_type_wf T = true := bind_binder_type_wf_of_non_none hTy
-      have hx1ty : __smtx_typeof_value (__smtx_model_eval M x1) = __smtx_typeof x1 :=
-        smt_model_eval_preserves_type_of_non_none M hM x1 ht1
-      have hx1canon : value_canonical M.usortDom (__smtx_model_eval M x1) :=
-        ih1 M hM ht1
-      have hM' : model_wf (native_model_push M s T (__smtx_model_eval M x1)) :=
-        model_total_typed_push hM s T (__smtx_model_eval M x1) hWf (hx1ty.trans hTx1) hx1canon
-      rw [smtx_model_eval_bind_eq]
-      exact ih2 _ hM' ht2
+  case bind bs x hbt hbs hs ihbs ihs =>
+      have hVals : ∀ s T v, SmtBindings.Mem bs s T v ->
+          __smtx_type_wf T = true ∧
+            __smtx_typeof_value (__smtx_model_eval M v) = T ∧
+            value_canonical M.usortDom (__smtx_model_eval M v) := by
+        intro s T v hm
+        have hvNN : term_has_non_none_type v := bind_binding_non_none_of_non_none hTy hm
+        exact ⟨bind_binding_type_wf_of_non_none hTy hm,
+          (smt_model_eval_preserves_type_of_non_none M hM v hvNN).trans
+            (bind_binding_type_of_non_none hTy hm),
+          ihbs s T v hm M hM hvNN⟩
+      have hM' : model_wf (__smtx_model_push_bindings M M bs) :=
+        model_total_typed_push_bindings M bs M hM rfl hVals
+      have hDom : (__smtx_model_push_bindings M M bs).usortDom = M.usortDom :=
+        model_push_bindings_usortDom M M bs
+      rw [smtx_model_eval_bind_eq, ← hDom]
+      exact ihs _ hM' (bind_body_non_none_of_non_none hTy)
   case not ht hs ih =>
       exact model_eval_not_term_canonical M _
   case or ht1 hs1 ht2 hs2 ih1 ih2 =>

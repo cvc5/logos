@@ -21,6 +21,11 @@ set_option maxHeartbeats 10000000
 
 abbrev SmtVarKey : Type := native_String × SmtType
 
+/-- The variables a `let` binds, in the order of its bindings. -/
+def SmtBindings.keys : SmtBindings -> List SmtVarKey
+  | SmtBindings.nil => []
+  | SmtBindings.cons s T _ bs => (s, T) :: SmtBindings.keys bs
+
 /-- Agreement on the currently bound SMT variables. -/
 def model_agrees_on_vars (vars : List SmtVarKey) (M N : SmtModel) : Prop :=
   ∀ s T, (s, T) ∈ vars ->
@@ -105,6 +110,31 @@ by
         simp [native_model_var_lookup, native_model_push]
       · simpa [native_model_var_lookup, native_model_push, hKey]
           using hAgree.vars_eq s' T' hTail
+
+/-- Models that agree on `vars`, extended with the same bindings whose terms
+evaluate alike, agree on the bound variables as well. -/
+theorem model_agrees_on_env_push_bindings
+    {M N : SmtModel} :
+  ∀ (bs : SmtBindings) {vars : List SmtVarKey} {A B : SmtModel},
+    (∀ s T v, SmtBindings.Mem bs s T v -> __smtx_model_eval M v = __smtx_model_eval N v) ->
+    model_agrees_on_env vars A B ->
+    model_agrees_on_env (SmtBindings.keys bs ++ vars)
+      (__smtx_model_push_bindings M A bs) (__smtx_model_push_bindings N B bs)
+  | SmtBindings.nil, vars, A, B, _, h => by
+      rw [model_push_bindings_nil, model_push_bindings_nil]
+      exact h
+  | SmtBindings.cons s T v bs, vars, A, B, hv, h => by
+      rw [model_push_bindings_cons, model_push_bindings_cons,
+        hv s T v (SmtBindings.Mem.head s T v bs)]
+      have hRest := model_agrees_on_env_push_bindings bs
+        (fun s' T' v' hm => hv s' T' v' (SmtBindings.Mem.tail s T v hm))
+        (model_agrees_on_env_push_same (s := s) (T := T)
+          (v := __smtx_model_eval N v) h)
+      refine ⟨hRest.globals, ?_⟩
+      intro s' T' hMem
+      apply hRest.vars_eq s' T'
+      simp only [SmtBindings.keys, List.cons_append, List.mem_cons, List.mem_append] at hMem ⊢
+      tauto
 
 theorem native_model_lookup_eq_of_env
     {vars : List SmtVarKey} {M N : SmtModel}
@@ -287,6 +317,8 @@ by
       exact ⟨h.1, h.2.1, by simpa [← hBody v] using h.2.2⟩
   rw [hPredEq]
 
+mutual
+
 /-- SMT term closedness relative to a stack of bound variables. -/
 def SmtTermClosedIn (vars : List SmtVarKey) : SmtTerm -> Prop
   | SmtTerm.None => True
@@ -303,8 +335,8 @@ def SmtTermClosedIn (vars : List SmtVarKey) : SmtTerm -> Prop
   | SmtTerm.exists s T body => SmtTermClosedIn ((s, T) :: vars) body
   | SmtTerm.forall s T body => SmtTermClosedIn ((s, T) :: vars) body
   | SmtTerm.choice s T body => SmtTermClosedIn ((s, T) :: vars) body
-  | SmtTerm.bind s T x1 x2 =>
-      SmtTermClosedIn vars x1 ∧ SmtTermClosedIn ((s, T) :: vars) x2
+  | SmtTerm.bind bs x =>
+      SmtBindingsClosedIn vars bs ∧ SmtTermClosedIn (SmtBindings.keys bs ++ vars) x
   | SmtTerm.map_diff x y => SmtTermClosedIn vars x ∧ SmtTermClosedIn vars y
   | SmtTerm.seq_diff x y => SmtTermClosedIn vars x ∧ SmtTermClosedIn vars y
   | SmtTerm.DtCons _ _ _ => True
@@ -454,6 +486,53 @@ def SmtTermClosedIn (vars : List SmtVarKey) : SmtTerm -> Prop
   | SmtTerm.ubv_to_int x => SmtTermClosedIn vars x
   | SmtTerm.sbv_to_int x => SmtTermClosedIn vars x
 
+/-- Closedness of every term a `let` binds, relative to the variables bound
+around the `let`: its bindings are parallel, so none sees another. -/
+def SmtBindingsClosedIn (vars : List SmtVarKey) : SmtBindings -> Prop
+  | SmtBindings.nil => True
+  | SmtBindings.cons _ _ v bs => SmtTermClosedIn vars v ∧ SmtBindingsClosedIn vars bs
+
+end
+
+theorem SmtBindingsClosedIn.iff_mem {vars : List SmtVarKey} :
+    ∀ (bs : SmtBindings),
+      SmtBindingsClosedIn vars bs ↔
+        ∀ s T v, SmtBindings.Mem bs s T v -> SmtTermClosedIn vars v
+  | SmtBindings.nil => by
+      simp only [SmtBindingsClosedIn, true_iff]
+      intro s T v hm
+      cases hm
+  | SmtBindings.cons s T v bs => by
+      simp only [SmtBindingsClosedIn]
+      rw [SmtBindingsClosedIn.iff_mem bs]
+      constructor
+      · rintro ⟨hv, hbs⟩ s' T' v' hm
+        cases hm with
+        | head => exact hv
+        | tail _ _ _ hm' => exact hbs s' T' v' hm'
+      · intro h
+        exact ⟨h s T v (SmtBindings.Mem.head s T v bs),
+          fun s' T' v' hm => h s' T' v' (SmtBindings.Mem.tail s T v hm)⟩
+
+theorem SmtBindings.mem_keys_iff :
+    ∀ (bs : SmtBindings) (k : SmtVarKey),
+      k ∈ SmtBindings.keys bs ↔ ∃ v, SmtBindings.Mem bs k.1 k.2 v
+  | SmtBindings.nil, k => by
+      simp only [SmtBindings.keys, List.not_mem_nil, false_iff]
+      rintro ⟨v, hm⟩
+      cases hm
+  | SmtBindings.cons s T v bs, k => by
+      simp only [SmtBindings.keys, List.mem_cons]
+      rw [SmtBindings.mem_keys_iff bs k]
+      constructor
+      · rintro (rfl | ⟨v', hm⟩)
+        · exact ⟨v, SmtBindings.Mem.head _ _ v bs⟩
+        · exact ⟨v', SmtBindings.Mem.tail s T v hm⟩
+      · rintro ⟨v', hm⟩
+        cases hm with
+        | head => exact Or.inl rfl
+        | tail _ _ _ hm' => exact Or.inr ⟨v', hm'⟩
+
 theorem SmtTermClosedIn.mono
     {t : SmtTerm} {vars vars' : List SmtVarKey}
     (hSub : ∀ s T, (s, T) ∈ vars -> (s, T) ∈ vars')
@@ -486,17 +565,46 @@ by
         cases hMem with
         | head => exact List.Mem.head _
         | tail _ hTail => exact List.Mem.tail _ (hSub s' T' hTail)) hClosed
-    case bind s T x1 x2 =>
-      refine ⟨go x1 hSub hClosed.1, go x2 (by
+    case bind bs x =>
+      have hb := (SmtBindingsClosedIn.iff_mem bs).1 hClosed.1
+      refine ⟨(SmtBindingsClosedIn.iff_mem bs).2 (fun s T v hm =>
+        have _hlt : sizeOf v < sizeOf (SmtTerm.bind bs x) :=
+          SmtBindings.Mem.sizeOf_lt_bind x hm
+        go v hSub (hb s T v hm)), go x (by
         intro s' T' hMem
-        cases hMem with
-        | head => exact List.Mem.head _
-        | tail _ hTail => exact List.Mem.tail _ (hSub s' T' hTail)) hClosed.2⟩
+        rcases List.mem_append.mp hMem with h | h
+        · exact List.mem_append_left _ h
+        · exact List.mem_append_right _ (hSub s' T' h)) hClosed.2⟩
     all_goals try exact go _ hSub hClosed
     all_goals try exact ⟨go _ hSub hClosed.1, go _ hSub hClosed.2⟩
     all_goals try exact ⟨go _ hSub hClosed.1, go _ hSub hClosed.2.1,
       go _ hSub hClosed.2.2⟩
   exact go t hSub hClosed
+
+theorem SmtBindingsClosedIn.mono
+    {bs : SmtBindings} {vars vars' : List SmtVarKey}
+    (hSub : ∀ s T, (s, T) ∈ vars -> (s, T) ∈ vars')
+    (hClosed : SmtBindingsClosedIn vars bs) :
+  SmtBindingsClosedIn vars' bs :=
+by
+  rw [SmtBindingsClosedIn.iff_mem] at hClosed ⊢
+  exact fun s T v hm => SmtTermClosedIn.mono hSub (hClosed s T v hm)
+
+/-- Bound terms that are each closed in some environment are all closed in one. -/
+theorem SmtBindingsClosedIn.exists_env :
+    ∀ (bs : SmtBindings),
+      (∀ s T v, SmtBindings.Mem bs s T v -> ∃ vars : List SmtVarKey, SmtTermClosedIn vars v) ->
+      ∃ vars : List SmtVarKey, SmtBindingsClosedIn vars bs
+  | SmtBindings.nil, _ => ⟨[], trivial⟩
+  | SmtBindings.cons s T v bs, h => by
+      rcases h s T v (SmtBindings.Mem.head s T v bs) with ⟨varsV, hV⟩
+      rcases SmtBindingsClosedIn.exists_env bs
+          (fun s' T' v' hm => h s' T' v' (SmtBindings.Mem.tail s T v hm)) with ⟨varsB, hB⟩
+      refine ⟨varsV ++ varsB, ?_, ?_⟩
+      · exact SmtTermClosedIn.mono
+          (by intro s' T' hMem; exact List.mem_append_left _ hMem) hV
+      · exact SmtBindingsClosedIn.mono
+          (by intro s' T' hMem; exact List.mem_append_right _ hMem) hB
 
 theorem SmtTermClosedIn.weaken_cons
     {t : SmtTerm} {vars : List SmtVarKey} {s : native_String} {T : SmtType}
@@ -525,17 +633,20 @@ theorem SmtTermClosedIn.exists_env
     case choice s T body =>
       rcases go body with ⟨vars, hClosed⟩
       exact ⟨vars, SmtTermClosedIn.weaken_cons hClosed⟩
-    case bind s T x1 x2 =>
-      rcases go x1 with ⟨varsX, hX⟩
-      rcases go x2 with ⟨varsY, hY⟩
+    case bind bs x =>
+      rcases SmtBindingsClosedIn.exists_env bs (fun s T v hm =>
+        have _hlt : sizeOf v < sizeOf (SmtTerm.bind bs x) :=
+          SmtBindings.Mem.sizeOf_lt_bind x hm
+        go v) with ⟨varsX, hX⟩
+      rcases go x with ⟨varsY, hY⟩
       refine ⟨varsX ++ varsY, ?_, ?_⟩
-      · exact SmtTermClosedIn.mono
+      · exact SmtBindingsClosedIn.mono
           (vars := varsX) (vars' := varsX ++ varsY)
           (by intro s T hMem; exact List.mem_append_left _ hMem) hX
       · exact SmtTermClosedIn.mono
-          (vars := varsY) (vars' := (s, T) :: (varsX ++ varsY))
+          (vars := varsY) (vars' := SmtBindings.keys bs ++ (varsX ++ varsY))
           (by intro s' T' hMem;
-              exact List.Mem.tail _ (List.mem_append_right _ hMem)) hY
+              exact List.mem_append_right _ (List.mem_append_right _ hMem)) hY
     all_goals try
       first
       | exact ⟨[], trivial⟩
@@ -1915,12 +2026,12 @@ theorem smtTermClosedIn_eo_to_smt_quantifiers_skolemize :
               | succ n' =>
                   show SmtTermClosedIn vars
                     (__eo_to_smt_quantifiers_skolemize x
-                      (SmtTerm.bind s (__eo_to_smt_type T)
+                      (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
                         (SmtTerm.choice s (__eo_to_smt_type T)
-                          (__eo_to_smt_exists x G)) G) n')
+                          (__eo_to_smt_exists x G)) SmtBindings.nil) G) n')
                   apply smtTermClosedIn_eo_to_smt_quantifiers_skolemize (vs := x)
                   intro bv2 hbv2
-                  refine ⟨?_, ?_⟩
+                  refine ⟨⟨?_, trivial⟩, ?_⟩
                   · show SmtTermClosedIn
                       ((s, __eo_to_smt_type T) :: (bv2.reverse ++ vars))
                       (__eo_to_smt_exists x G)
@@ -1933,7 +2044,9 @@ theorem smtTermClosedIn_eo_to_smt_quantifiers_skolemize :
                     simp only [List.mem_append, List.mem_cons,
                       List.mem_reverse] at hMem ⊢
                     rcases hMem with h | h | h <;> simp [h]
-                  · have h := hEnv (EoSmtVarEnv.cons hbv2)
+                  · show SmtTermClosedIn
+                      ((s, __eo_to_smt_type T) :: (bv2.reverse ++ vars)) G
+                    have h := hEnv (EoSmtVarEnv.cons hbv2)
                     refine SmtTermClosedIn.mono ?_ (by
                       simpa [List.reverse_cons, List.append_assoc] using h)
                     intro a b hMem
@@ -7215,13 +7328,21 @@ by
   exact hBody
 
 theorem smtTermClosedIn_smt_bind
+    {vars : List SmtVarKey} {bs : SmtBindings} {x : SmtTerm}
+    (hbs : SmtBindingsClosedIn vars bs)
+    (hx : SmtTermClosedIn (SmtBindings.keys bs ++ vars) x) :
+  SmtTermClosedIn vars (SmtTerm.bind bs x) :=
+by
+  exact ⟨hbs, hx⟩
+
+theorem smtTermClosedIn_smt_bind_single
     {vars : List SmtVarKey} {s : native_String} {T : SmtType}
     {x1 x2 : SmtTerm}
     (hx1 : SmtTermClosedIn vars x1)
     (hx2 : SmtTermClosedIn ((s, T) :: vars) x2) :
-  SmtTermClosedIn vars (SmtTerm.bind s T x1 x2) :=
+  SmtTermClosedIn vars (SmtTerm.bind (SmtBindings.cons s T x1 SmtBindings.nil) x2) :=
 by
-  exact ⟨hx1, hx2⟩
+  exact ⟨⟨hx1, trivial⟩, hx2⟩
 
 theorem smtx_model_eval_var_eq_of_env
     {vars : List SmtVarKey} {M N : SmtModel}
@@ -7567,14 +7688,14 @@ by
           (fun v =>
             hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
-      case bind s T x1 x2 =>
-        rw [smtx_model_eval_bind_eq M s T x1 x2,
-          smtx_model_eval_bind_eq N s T x1 x2]
-        have hx1 : __smtx_model_eval M x1 = __smtx_model_eval N x1 :=
-          hRec (by simp <;> omega) hClosed.1 hAgree
-        rw [hx1]
+      case bind bs x =>
+        rw [smtx_model_eval_bind_eq M bs x, smtx_model_eval_bind_eq N bs x]
+        have hb := (SmtBindingsClosedIn.iff_mem bs).1 hClosed.1
+        have hv : ∀ s T v, SmtBindings.Mem bs s T v ->
+            __smtx_model_eval M v = __smtx_model_eval N v :=
+          fun s T v hm => hRec (SmtBindings.Mem.sizeOf_lt_bind x hm) (hb s T v hm) hAgree
         exact hRec (by simp) hClosed.2
-          (model_agrees_on_env_push_same hAgree)
+          (model_agrees_on_env_push_bindings bs hv hAgree)
       case not x =>
         simp [__smtx_model_eval,
           hRec (by simp) hClosed hAgree]

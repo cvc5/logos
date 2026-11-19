@@ -626,13 +626,10 @@ private theorem tp_smt_term_result_seq_components_wf_of_non_none
         smtx_typeof_guard_wf_wf_of_non_none T T hGuardNN
       rw [choice_term_typeof_of_non_none hxNN]
       exact tp_result_seq_components_wf_of_type_wf hWf
-    case bind s T x1 x2 =>
-      have hTyEq : __smtx_typeof (SmtTerm.bind s T x1 x2) = __smtx_typeof x2 :=
+    case bind bs x2 =>
+      have hTyEq : __smtx_typeof (SmtTerm.bind bs x2) = __smtx_typeof x2 :=
         bind_term_typeof_of_non_none hxNN
-      have hx2NN : term_has_non_none_type x2 := by
-        unfold term_has_non_none_type at hxNN ⊢
-        rw [hTyEq] at hxNN
-        exact hxNN
+      have hx2NN : term_has_non_none_type x2 := bind_body_non_none_of_non_none hxNN
       rw [hTyEq]
       exact go x2 hx2NN
     case DtCons s d i =>
@@ -1070,19 +1067,22 @@ private theorem supported_type_preservation
       exact typeof_value_model_eval_forall M s T body ht
   | choice s T body hChoice =>
       exact typeof_value_model_eval_choice M hM s T body ht
-  | bind s T x1 x2 hbt hs1 hs2 =>
-      have ht1 : term_has_non_none_type x1 := bind_arg1_non_none_of_non_none ht
-      have ht2 : term_has_non_none_type x2 := bind_arg2_non_none_of_non_none ht
-      have hTx1 : __smtx_typeof x1 = T := bind_arg1_type_of_non_none ht
-      have hWf : __smtx_type_wf T = true := bind_binder_type_wf_of_non_none ht
-      have hx1ty : __smtx_typeof_value (__smtx_model_eval M x1) = __smtx_typeof x1 :=
-        supported_type_preservation M hM x1 ht1 hs1
-      have hx1canon : value_canonical M.usortDom (__smtx_model_eval M x1) :=
-        canonical_of_supported M hM x1 ht1 hs1
-      have hM' : model_wf (native_model_push M s T (__smtx_model_eval M x1)) :=
-        model_total_typed_push hM s T (__smtx_model_eval M x1) hWf (hx1ty.trans hTx1) hx1canon
-      exact typeof_value_model_eval_bind M s T x1 x2 ht
-        (supported_type_preservation _ hM' x2 ht2 hs2)
+  | bind bs x hbt hbs hs =>
+      have hVals : ∀ s T v, SmtBindings.Mem bs s T v ->
+          __smtx_type_wf T = true ∧
+            __smtx_typeof_value (__smtx_model_eval M v) = T ∧
+            value_canonical M.usortDom (__smtx_model_eval M v) := by
+        intro s T v hm
+        have _hlt : sizeOf v < sizeOf (SmtTerm.bind bs x) := SmtBindings.Mem.sizeOf_lt_bind x hm
+        have hvNN : term_has_non_none_type v := bind_binding_non_none_of_non_none ht hm
+        exact ⟨bind_binding_type_wf_of_non_none ht hm,
+          (supported_type_preservation M hM v hvNN (hbs s T v hm)).trans
+            (bind_binding_type_of_non_none ht hm),
+          canonical_of_supported M hM v hvNN (hbs s T v hm)⟩
+      have hM' : model_wf (__smtx_model_push_bindings M M bs) :=
+        model_total_typed_push_bindings M bs M hM rfl hVals
+      exact typeof_value_model_eval_bind M bs x ht
+        (supported_type_preservation _ hM' x (bind_body_non_none_of_non_none ht) hs)
   | «not» ht1 hs1 =>
       exact typeof_value_model_eval_not M _ ht
         (supported_type_preservation M hM _ ht1 hs1)
@@ -1538,6 +1538,13 @@ private theorem supported_type_preservation
         (supported_type_preservation M hM f htf hsf)
         (supported_type_preservation M hM x htx hsx)
 
+termination_by sizeOf t
+decreasing_by
+  all_goals first
+    | decreasing_tactic
+    | (simp_wf; omega)
+    | (simp_wf; simp; omega)
+
 /-- Canonicity preservation: evaluating a supported, well-typed SMT term in a
 total typed model yields a canonical value.  Mutually recursive with
 `supported_type_preservation` (the `bind` case of each needs the other for the
@@ -1550,19 +1557,24 @@ private theorem canonical_of_supported
     (hs : supported_preservation_term t) :
     value_canonical M.usortDom (__smtx_model_eval M t) := by
   cases hs
-  case bind s T x1 x2 hbt hs1 hs2 =>
-      have ht1 : term_has_non_none_type x1 := bind_arg1_non_none_of_non_none ht
-      have ht2 : term_has_non_none_type x2 := bind_arg2_non_none_of_non_none ht
-      have hTx1 : __smtx_typeof x1 = T := bind_arg1_type_of_non_none ht
-      have hWf : __smtx_type_wf T = true := bind_binder_type_wf_of_non_none ht
-      have hx1ty : __smtx_typeof_value (__smtx_model_eval M x1) = __smtx_typeof x1 :=
-        supported_type_preservation M hM x1 ht1 hs1
-      have hx1canon : value_canonical M.usortDom (__smtx_model_eval M x1) :=
-        canonical_of_supported M hM x1 ht1 hs1
-      have hM' : model_wf (native_model_push M s T (__smtx_model_eval M x1)) :=
-        model_total_typed_push hM s T (__smtx_model_eval M x1) hWf (hx1ty.trans hTx1) hx1canon
-      rw [smtx_model_eval_bind_eq]
-      exact canonical_of_supported _ hM' x2 ht2 hs2
+  case bind bs x hbt hbs hs =>
+      have hVals : ∀ s T v, SmtBindings.Mem bs s T v ->
+          __smtx_type_wf T = true ∧
+            __smtx_typeof_value (__smtx_model_eval M v) = T ∧
+            value_canonical M.usortDom (__smtx_model_eval M v) := by
+        intro s T v hm
+        have _hlt : sizeOf v < sizeOf (SmtTerm.bind bs x) := SmtBindings.Mem.sizeOf_lt_bind x hm
+        have hvNN : term_has_non_none_type v := bind_binding_non_none_of_non_none ht hm
+        exact ⟨bind_binding_type_wf_of_non_none ht hm,
+          (supported_type_preservation M hM v hvNN (hbs s T v hm)).trans
+            (bind_binding_type_of_non_none ht hm),
+          canonical_of_supported M hM v hvNN (hbs s T v hm)⟩
+      have hM' : model_wf (__smtx_model_push_bindings M M bs) :=
+        model_total_typed_push_bindings M bs M hM rfl hVals
+      have hDom : (__smtx_model_push_bindings M M bs).usortDom = M.usortDom :=
+        model_push_bindings_usortDom M M bs
+      rw [smtx_model_eval_bind_eq, ← hDom]
+      exact canonical_of_supported _ hM' x (bind_body_non_none_of_non_none ht) hs
   case boolean b =>
       simpa [__smtx_model_eval] using value_canonical_boolean b
   case numeral n =>
@@ -2229,6 +2241,13 @@ private theorem canonical_of_supported
           (hFunWF := hFunWF)
           (hxTy := hxTy)
           hf hx
+
+termination_by sizeOf t
+decreasing_by
+  all_goals first
+    | decreasing_tactic
+    | (simp_wf; omega)
+    | (simp_wf; simp; omega)
 
 end
 
@@ -4195,8 +4214,8 @@ theorem term_type_has_no_none_components_of_non_none :
         exact forall_type_has_no_none_components_of_non_none ht
     | SmtTerm.choice _ _ _ =>
         exact choice_type_has_no_none_components_of_non_none ht
-    | SmtTerm.bind s T x1 x2 =>
-        have hTyEq : __smtx_typeof (SmtTerm.bind s T x1 x2) = __smtx_typeof x2 :=
+    | SmtTerm.bind bs x2 =>
+        have hTyEq : __smtx_typeof (SmtTerm.bind bs x2) = __smtx_typeof x2 :=
           bind_term_typeof_of_non_none ht
         have hx2NN : term_has_non_none_type x2 := by
           unfold term_has_non_none_type at ht ⊢
@@ -4752,10 +4771,13 @@ theorem supported_preservation_term_of_non_none :
         exact supported_preservation_term.forall s T body
     | SmtTerm.choice _ _ _ =>
         exact supported_choice_of_non_none ht
-    | SmtTerm.bind s T x1 x2 =>
+    | SmtTerm.bind bs x =>
         exact supported_bind_of_non_none ht
-          (go x1 (bind_arg1_non_none_of_non_none ht))
-          (go x2 (bind_arg2_non_none_of_non_none ht))
+          (fun s T v hm =>
+            have _hlt : sizeOf v < sizeOf (SmtTerm.bind bs x) :=
+              SmtBindings.Mem.sizeOf_lt_bind x hm
+            go v (bind_binding_non_none_of_non_none ht hm))
+          (go x (bind_body_non_none_of_non_none ht))
     | SmtTerm.DtCons s d i =>
         exact supported_preservation_term.dt_cons s d i
     | SmtTerm.DtSel _ _ _ _ =>
