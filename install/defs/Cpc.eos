@@ -983,22 +983,17 @@
 )
 
 ; -- lambda
+; Its fallback is a case of $eo_to_smt tried after the case of every symbol:
+; an application whose head is an application, that no symbol of the
+; signature matched. Only such a head can be a lambda, possibly already
+; applied to some arguments, so an application whose head is not an
+; application stays the generic one. The binders of the fallback are names
+; $eo_to_smt declares, see plugins/model_smt/model_smt.eo in ethos.
 (define-symbol lambda ((! vs :raw) body)
-  :term (bind smt.bindings_nil ($eo_to_smt_lambda_curry vs body)))
-
-; A case of $eo_to_smt itself rather than of a symbol, which comes after the
-; case of every symbol: an application whose head is an application, that no
-; symbol of the signature matched. Only such a head can be a lambda, possibly
-; already applied to some arguments, so an application whose head is not an
-; application stays the generic one. Its parameters are ones $eo_to_smt
-; declares, see plugins/model_smt/model_smt.eo in ethos.
-(program $eo_to_smt
-  ((T Type) (U Type) (T1 Type) (f (-> U T)) (y U) (x1 T1))
-  :signature (T) SmtTerm
-  (
-  (($eo_to_smt (_ (f x1) y)) ($eo_to_smt_apply (f x1) y))
-  )
-)
+  :term (bind smt.bindings_nil ($eo_to_smt_lambda_curry vs body))
+  :term-fallback ((T Type) (U Type) (T1 Type) (f (-> U T)) (y U) (x1 T1))
+    (_ (f x1) y)
+    ($eo_to_smt_apply (f x1) y))
 
 (define-rule beta-reduce :exclude)
 
