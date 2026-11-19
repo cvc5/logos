@@ -121,7 +121,7 @@ private theorem eq_rhs_stuck_not_bool (lhs : Term) :
       lhs Term.Stuck h
   have hNone : __smtx_typeof (__eo_to_smt lhs) = SmtType.None := by
     rw [hTypes.1]
-    native_decide
+    decide +kernel
   exact hTypes.2 hNone
 
 private theorem eo_len_stuck_of_list_find_is_neg_bool

@@ -391,11 +391,11 @@ theorem native_qeq_mul_congr_left {c a b : native_Real} :
 
 private theorem native_to_real_zero :
     native_to_real 0 = native_mk_rational 0 1 := by
-  native_decide
+  decide +kernel
 
 private theorem native_to_real_one :
     native_to_real 1 = native_mk_rational 1 1 := by
-  native_decide
+  decide +kernel
 
 theorem arith_rel_op_has_bool_type_of_translation
     (r a b : Term) :
@@ -2120,7 +2120,7 @@ private theorem MultListEval.is_list
     __eo_is_list multOp xs = Term.Boolean true := by
   induction h with
   | nil =>
-      native_decide
+      decide +kernel
   | cons _ _ _ ih =>
       unfold __eo_is_list __eo_is_ok
       have hne := get_nil_ne_of_is_list_true _ _ ih
@@ -2506,8 +2506,8 @@ private theorem MultListProduct.is_list
     (h : MultListProduct M xs v) :
     __eo_is_list multOp xs = Term.Boolean true := by
   induction h with
-  | nilInt => native_decide
-  | nilReal => native_decide
+  | nilInt => decide +kernel
+  | nilReal => decide +kernel
   | cons _ _ _ ih =>
       unfold __eo_is_list __eo_is_ok
       have hne := get_nil_ne_of_is_list_true _ _ ih
@@ -2822,8 +2822,8 @@ private theorem MultListFactors.is_list
     (h : MultListFactors M xs k vs) :
     __eo_is_list multOp xs = Term.Boolean true := by
   induction h with
-  | nilInt => native_decide
-  | nilReal => native_decide
+  | nilInt => decide +kernel
+  | nilReal => decide +kernel
   | cons _ _ _ ih =>
       unfold __eo_is_list __eo_is_ok
       have hne := get_nil_ne_of_is_list_true _ _ ih

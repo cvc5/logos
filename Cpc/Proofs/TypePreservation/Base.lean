@@ -793,7 +793,7 @@ theorem bind_arg1_non_none_of_non_none
   intro hNone
   have hWf := bind_binder_type_wf_of_non_none ht
   rw [hNone] at hWf
-  exact absurd hWf (by native_decide)
+  exact absurd hWf (by decide +kernel)
 
 /-- The body of a well-typed `bind` has non-`None` type. -/
 theorem bind_arg2_non_none_of_non_none

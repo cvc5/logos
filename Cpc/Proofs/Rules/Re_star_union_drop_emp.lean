@@ -56,7 +56,7 @@ private theorem smtx_typeof_epsilon :
   change __smtx_typeof (SmtTerm.str_to_re (SmtTerm.String [])) =
     SmtType.RegLan
   rw [typeof_str_to_re_eq]
-  native_decide
+  decide +kernel
 
 private theorem smtx_model_eval_epsilon (M : SmtModel) :
     __smtx_model_eval M (__eo_to_smt epsilon) =

@@ -79,21 +79,21 @@ private theorem typeof_args_of_prog_bool_not_ite_elim_bool (c1 x1 y1 : Term) :
   · subst c1
     change __eo_typeof Term.Stuck = Term.Bool at hTy
     have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-      native_decide
+      decide +kernel
     exact False.elim (hStuckTy hTy)
   · by_cases hX1 : x1 = Term.Stuck
     · subst x1
       cases c1 <;> simp [__eo_prog_bool_not_ite_elim] at hC1 hTy
       all_goals
         have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-          native_decide
+          decide +kernel
         exact False.elim (hStuckTy hTy)
     · by_cases hY1 : y1 = Term.Stuck
       · subst y1
         cases c1 <;> cases x1 <;> simp [__eo_prog_bool_not_ite_elim] at hC1 hX1 hTy
         all_goals
           have hStuckTy : __eo_typeof Term.Stuck ≠ Term.Bool := by
-            native_decide
+            decide +kernel
           exact False.elim (hStuckTy hTy)
       · rw [prog_bool_not_ite_elim_eq_of_ne_stuck c1 x1 y1 hC1 hX1 hY1] at hTy
         change __eo_typeof_eq

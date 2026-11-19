@@ -237,11 +237,11 @@ private inductive arith_poly_wf : Term -> Prop where
 
 theorem native_mk_rational_zero :
     native_mk_rational 0 1 = (0 : Rat) := by
-  native_decide
+  decide +kernel
 
 theorem native_mk_rational_one :
     native_mk_rational 1 1 = (1 : Rat) := by
-  native_decide
+  decide +kernel
 
 private theorem rat_mkRat_one_eq_intCast
     (n : native_Int) :
@@ -2164,7 +2164,7 @@ private theorem arith_poly_denote_real_of_rational
     have hGet :
         __get_arith_poly_norm (Term.Rational (native_mk_rational 0 1)) =
           Term.UOp UserOp._at__at_poly_zero := by
-      native_decide
+      decide +kernel
     rw [hGet]
     simp [arith_poly_denote_real]
   · have hZero' : ¬ native_mk_rational 0 1 = q := by
@@ -2811,7 +2811,7 @@ private theorem arith_poly_rational_of_get_arith_poly_norm_rational
     have hGet :
         __get_arith_poly_norm (Term.Rational (native_mk_rational 0 1)) =
           Term.UOp UserOp._at__at_poly_zero := by
-      native_decide
+      decide +kernel
     rw [hGet]
     exact arith_poly_rational.zero (M := M)
   · have hZero' : ¬ native_mk_rational 0 1 = q := by
@@ -3181,7 +3181,7 @@ private theorem arith_poly_norm_atom_denote_real_of_qdiv_numeral
   have hN0 : n ≠ 0 := by
     intro h
     subst h
-    exact hZero (by native_decide)
+    exact hZero (by decide +kernel)
   rw [hAtom1]
   unfold arith_poly_norm_atom_denote_real
   rw [eo_to_smt_qdiv_eq]

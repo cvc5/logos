@@ -1798,6 +1798,8 @@ private def parserRules : List (String × CRule) := [
   ("sets-union-member", .sets_union_member),
   ("sets-choose-singleton", .sets_choose_singleton),
   ("sets-minus-self", .sets_minus_self),
+  ("sets-union-self", .sets_union_self),
+  ("sets-inter-self", .sets_inter_self),
   ("sets-is-empty-elim", .sets_is_empty_elim),
   ("sets-is-singleton-elim", .sets_is_singleton_elim),
   ("str-eq-ctn-false", .str_eq_ctn_false),

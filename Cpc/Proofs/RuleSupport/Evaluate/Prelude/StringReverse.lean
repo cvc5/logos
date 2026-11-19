@@ -315,7 +315,15 @@ theorem EvaluateProofInternal.eo_is_str_false_of_not_string
       native_not] at hNotString ⊢
 
 theorem EvaluateProofInternal.str_rev_result_string
-    {s : native_String} :
+    {s : native_String}
+    (hNe :
+      __eo_ite (__eo_is_str (Term.String s))
+          (__str_nary_elim
+            (__str_collect
+              (__eo_list_rev (Term.UOp UserOp.str_concat)
+                (__str_flatten (__str_nary_intro (Term.String s))))))
+          (__eo_mk_apply (Term.UOp UserOp.str_rev) (Term.String s)) ≠
+        Term.Stuck) :
     __eo_ite (__eo_is_str (Term.String s))
         (__str_nary_elim
           (__str_collect
@@ -326,8 +334,15 @@ theorem EvaluateProofInternal.str_rev_result_string
   have hIsStr :
       __eo_is_str (Term.String s) = Term.Boolean true := by
     rfl
+  have hLen : s.length < 4294967296 :=
+    RuleProofs.str_flatten_nary_intro_string_len_lt s (by
+      intro hFlat
+      apply hNe
+      rw [hIsStr, eo_ite_true, hFlat]
+      simp [__eo_list_rev, __eo_is_list, __eo_requires, __str_collect,
+        __eo_list_singleton_elim, native_ite, native_teq])
   rw [hIsStr, eo_ite_true]
-  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain]
+  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen]
   exact EvaluateProofInternal.str_rev_string_char_chain s
 
 theorem EvaluateProofInternal.str_rev_result_non_string
@@ -348,7 +363,18 @@ theorem EvaluateProofInternal.str_rev_result_non_string
 theorem EvaluateProofInternal.str_leq_result_strings
     {s t : native_String}
     (hs : native_string_valid s = true)
-    (ht : native_string_valid t = true) :
+    (ht : native_string_valid t = true)
+    (hNe :
+      __eo_ite
+          (__eo_and (__eo_is_str (Term.String s))
+            (__eo_is_str (Term.String t)))
+          (__str_leq_eval_rec
+            (__str_flatten (__str_nary_intro (Term.String s)))
+            (__str_flatten (__str_nary_intro (Term.String t))))
+          (__eo_mk_apply
+            (__eo_mk_apply (Term.UOp UserOp.str_leq) (Term.String s))
+            (Term.String t)) ≠
+        Term.Stuck) :
     __eo_ite
         (__eo_and (__eo_is_str (Term.String s))
           (__eo_is_str (Term.String t)))
@@ -365,9 +391,22 @@ theorem EvaluateProofInternal.str_leq_result_strings
         Term.Boolean true := by
     simp [__eo_is_str, __eo_is_str_internal, __eo_and, native_teq,
       native_and, native_not]
-  rw [hGuard, eo_ite_true]
-  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s]
-  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain t]
+  rw [hGuard, eo_ite_true] at hNe ⊢
+  have hsLen : s.length < 4294967296 :=
+    RuleProofs.str_flatten_nary_intro_string_len_lt s (by
+      intro hFlat
+      apply hNe
+      rw [hFlat]
+      simp [__str_leq_eval_rec])
+  have htLen : t.length < 4294967296 :=
+    RuleProofs.str_flatten_nary_intro_string_len_lt t (by
+      intro hFlat
+      apply hNe
+      rw [hFlat]
+      generalize __str_flatten (__str_nary_intro (Term.String s)) = x
+      cases x <;> simp [__str_leq_eval_rec])
+  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hsLen]
+  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain t htLen]
   exact EvaluateProofInternal.str_leq_eval_rec_strCharChain s t hs ht
 
 theorem EvaluateProofInternal.str_leq_result_non_strings
@@ -408,7 +447,11 @@ theorem EvaluateProofInternal.eo_str_rev_result_arg_typeof_seq
   intro h
   cases t
   case String s =>
-    rw [EvaluateProofInternal.str_rev_result_string] at h
+    have hNe := h
+    rw [EvaluateProofInternal.str_rev_result_string (by
+      intro hStuck
+      rw [hStuck] at hNe
+      simp [__eo_typeof] at hNe)] at h
     exact h
   all_goals
     apply EvaluateProofInternal.eo_typeof_apply_str_rev_eq_seq_arg
@@ -418,7 +461,13 @@ theorem EvaluateProofInternal.eo_str_rev_result_arg_typeof_seq
 
 theorem EvaluateProofInternal.str_to_lower_result_string
     {s : native_String}
-    (hValid : native_string_valid s = true) :
+    (hValid : native_string_valid s = true)
+    (hNe :
+      __eo_ite (__eo_is_str (Term.String s))
+          (__str_case_conv_rec (__str_flatten (__str_nary_intro (Term.String s)))
+            (Term.Boolean true))
+          (__eo_mk_apply (Term.UOp UserOp.str_to_lower) (Term.String s)) ≠
+        Term.Stuck) :
     __eo_ite (__eo_is_str (Term.String s))
         (__str_case_conv_rec (__str_flatten (__str_nary_intro (Term.String s)))
           (Term.Boolean true))
@@ -428,13 +477,25 @@ theorem EvaluateProofInternal.str_to_lower_result_string
       __eo_is_str (Term.String s) = Term.Boolean true := by
     simp [__eo_is_str, __eo_is_str_internal, native_teq, native_and,
       native_not]
-  rw [hIsStr, eo_ite_true]
-  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain]
+  rw [hIsStr, eo_ite_true] at hNe ⊢
+  have hLen : s.length < 4294967296 :=
+    RuleProofs.str_flatten_nary_intro_string_len_lt s (by
+      intro hFlat
+      apply hNe
+      rw [hFlat]
+      simp [__str_case_conv_rec])
+  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen]
   exact EvaluateProofInternal.str_case_conv_rec_lower_char_chain s hValid
 
 theorem EvaluateProofInternal.str_to_upper_result_string
     {s : native_String}
-    (hValid : native_string_valid s = true) :
+    (hValid : native_string_valid s = true)
+    (hNe :
+      __eo_ite (__eo_is_str (Term.String s))
+          (__str_case_conv_rec (__str_flatten (__str_nary_intro (Term.String s)))
+            (Term.Boolean false))
+          (__eo_mk_apply (Term.UOp UserOp.str_to_upper) (Term.String s)) ≠
+        Term.Stuck) :
     __eo_ite (__eo_is_str (Term.String s))
         (__str_case_conv_rec (__str_flatten (__str_nary_intro (Term.String s)))
           (Term.Boolean false))
@@ -444,8 +505,14 @@ theorem EvaluateProofInternal.str_to_upper_result_string
       __eo_is_str (Term.String s) = Term.Boolean true := by
     simp [__eo_is_str, __eo_is_str_internal, native_teq, native_and,
       native_not]
-  rw [hIsStr, eo_ite_true]
-  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain]
+  rw [hIsStr, eo_ite_true] at hNe ⊢
+  have hLen : s.length < 4294967296 :=
+    RuleProofs.str_flatten_nary_intro_string_len_lt s (by
+      intro hFlat
+      apply hNe
+      rw [hFlat]
+      simp [__str_case_conv_rec])
+  rw [EvaluateProofInternal.str_flatten_nary_intro_string_char_chain s hLen]
   exact EvaluateProofInternal.str_case_conv_rec_upper_char_chain s hValid
 
 theorem EvaluateProofInternal.str_to_lower_result_non_string

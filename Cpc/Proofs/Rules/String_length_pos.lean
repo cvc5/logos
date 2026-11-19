@@ -86,7 +86,7 @@ private theorem typeof_mk_or_right_bool (A B : Term) :
   all_goals
     first
     | exact typeof_or_right_bool _ _ h
-    | have hNo : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+    | have hNo : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
       exact False.elim (hNo h)
 
 private theorem prog_string_length_pos_arg_seq
@@ -96,7 +96,7 @@ private theorem prog_string_length_pos_arg_seq
   intro hTy
   by_cases hx : x = Term.Stuck
   · subst hx
-    have hNo : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+    have hNo : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
     exact False.elim (hNo hTy)
   · unfold __eo_prog_string_length_pos at hTy
     simp at hTy

@@ -590,29 +590,33 @@ theorem EvaluateProofInternal.eo_zero_extend_literal_arg_binary_of_typeof_bitvec
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
     change
       __eo_typeof
-          (native_ite (native_zleq (native_zplus wx i) 4294967296)
+          (native_ite
+            (native_and (native_zleq 0 (native_zplus wx i))
+              (native_zlt (native_zplus wx i) 4294967296))
             (__eo_mk_binary (native_zplus wx i) nx) Term.Stuck) =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
-    cases hLeMax : native_zleq (native_zplus wx i) 4294967296
-    · simp [hLeMax, native_ite] at h
+    cases hOk :
+        native_and (native_zleq 0 (native_zplus wx i))
+          (native_zlt (native_zplus wx i) 4294967296)
+    · simp [hOk, native_ite] at h
       change Term.Stuck =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
       cases h
-    · simp [hLeMax, native_ite, __eo_mk_binary] at h
-      cases hNonneg : native_zleq 0 (native_zplus wx i)
-      · simp [hNonneg] at h
-        change Term.Stuck =
-          Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral w) at h
-        cases h
-      · simp [hNonneg] at h
-        cases h
-        refine ⟨wx, nx, rfl, rfl, ?_⟩
-        change
-          __eo_to_bin (Term.Numeral (native_zplus wx i))
-              (Term.Numeral nx) =
-            Term.Binary (native_zplus wx i)
-              (native_mod_total nx (native_int_pow2 (native_zplus wx i)))
-        simp [__eo_to_bin, __eo_mk_binary, hLeMax, hNonneg, native_ite]
+    · have hNonneg : native_zleq 0 (native_zplus wx i) = true := by
+        cases hZ : native_zleq 0 (native_zplus wx i) <;>
+          simp_all [native_and]
+      have hLt : native_zlt (native_zplus wx i) 4294967296 = true := by
+        cases hZ : native_zlt (native_zplus wx i) 4294967296 <;>
+          simp_all [native_and]
+      simp [hLt, hNonneg, native_and, native_ite, __eo_mk_binary] at h
+      cases h
+      refine ⟨wx, nx, rfl, rfl, ?_⟩
+      change
+        __eo_to_bin (Term.Numeral (native_zplus wx i))
+            (Term.Numeral nx) =
+          Term.Binary (native_zplus wx i)
+            (native_mod_total nx (native_int_pow2 (native_zplus wx i)))
+      simp [__eo_to_bin, __eo_mk_binary, hLt, hNonneg, native_and, native_ite]
   all_goals
     simp [__eo_to_bin, __eo_add, __bv_bitwidth, __eo_to_z] at h
     change Term.Stuck =

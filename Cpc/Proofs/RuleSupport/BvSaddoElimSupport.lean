@@ -568,7 +568,7 @@ theorem eval_bvSaddoRhs
 private theorem bvSaddoFormula_eq_sign_circuit (sx sy ss : Bool) :
     bvSaddoFormula sx sy ss =
       ((sx == sy) && !((ss == sx))) := by
-  cases sx <;> cases sy <;> cases ss <;> native_decide
+  cases sx <;> cases sy <;> cases ss <;> decide +kernel
 
 theorem bitvec_msb_of_canonical
     (W A : Nat) (hA : A < 2 ^ W) :
@@ -826,7 +826,7 @@ theorem bv_saddo_program_eq_term_of_type_bool (x y nm : Term) :
         native_ite, native_teq, native_not, SmtEval.native_not,
         native_and, SmtEval.native_and, hXNe, hNmNe, hNil']
     rw [hProgStuck] at hTy
-    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+    have hBad : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
     exact hBad hTy
   exact bv_saddo_program_eq_term_of_ne_stuck_and_nil x y nm
     hXNe hYNe hNmNe hNilNe

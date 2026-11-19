@@ -153,7 +153,7 @@ private theorem typeof_args_of_prog_bool
     intro hElim
     rw [prog_str_to_upper_concat_stuck_of_elim_stuck s1 s2 s3 hS1 hS2 hS3 hElim]
       at hTy
-    have : __eo_typeof Term.Stuck ≠ Term.Bool := by native_decide
+    have : __eo_typeof Term.Stuck ≠ Term.Bool := by decide +kernel
     exact this hTy
   rw [prog_str_to_upper_concat_eq_of_ne_stuck s1 s2 s3 hS1 hS2 hS3 hElimNe] at hTy
   -- Decompose the eq typeof.

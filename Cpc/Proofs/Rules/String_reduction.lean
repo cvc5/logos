@@ -201,7 +201,7 @@ private theorem sr_native_pack_string_eq_iff
 
 private theorem sr_smt_type_wf_int :
     __smtx_type_wf SmtType.Int = true := by
-  native_decide
+  decide +kernel
 
 private theorem sr_not_decide_le_eq_decide_lt (a b : Int) :
     Bool.not (decide (a ≤ b)) = decide (b < a) := by
@@ -914,7 +914,7 @@ private theorem sr_native_str_substr_zero_nat
 private theorem sr_digitChar_toNat_sub (n : Nat) (h : n < 10) :
     Char.toNat (Nat.digitChar n) - 48 = n := by
   match n with
-  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 => native_decide
+  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 => decide +kernel
   | n + 10 => omega
 
 private theorem sr_decimal_append (xs : native_String) (c : native_Char) :
@@ -996,7 +996,7 @@ private theorem sr_digitChar_toNat_bounds (n : Nat)
       Char.toNat (Nat.digitChar n) ≤ 57 := by
   match n with
   | 0 => omega
-  | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 => native_decide
+  | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 => decide +kernel
   | n + 10 => omega
 
 private theorem sr_toDigits_head_nonzero (n : Nat) (hn : 0 < n) :
@@ -1085,7 +1085,7 @@ private theorem sr_native_str_from_int_head_pos (i : native_Int)
         by_cases hn : n = 0
         · subst n
           have hOne : (native_str_from_int (Int.ofNat 0)).length = 1 := by
-            native_decide
+            decide +kernel
           rw [hOne] at hLen
           omega
         · exact Nat.pos_of_ne_zero hn
@@ -1316,14 +1316,14 @@ private theorem sr_nondigit_prefix (c : native_Char) (cs : native_String)
     native_re_comp native_re_inter native_re_range native_string_lit
   rw [impl_native_re_prefix_match_len_go.eq_2]
   by_cases hd : 48 ≤ c ∧ c ≤ 57
-  · have h48 : native_char_valid 48 = true := by native_decide
-    have h57 : native_char_valid 57 = true := by native_decide
+  · have h48 : native_char_valid 48 = true := by decide +kernel
+    have h57 : native_char_valid 57 = true := by decide +kernel
     simp [native_re_nullable, native_re_deriv, native_re_mk_inter,
       native_re_mk_comp, native_re_elem_valid, impl_native_re_elem_le,
       native_re_inter, native_re_comp, hc, h48, h57, hd,
       impl_native_char_is_digit, sr_prefix_digit_dead]
-  · have h48 : native_char_valid 48 = true := by native_decide
-    have h57 : native_char_valid 57 = true := by native_decide
+  · have h48 : native_char_valid 48 = true := by decide +kernel
+    have h57 : native_char_valid 57 = true := by decide +kernel
     simp [native_re_nullable, native_re_deriv, native_re_mk_inter,
       native_re_mk_comp, native_re_elem_valid, impl_native_re_elem_le,
       native_re_inter, native_re_comp, hc, h48, h57, hd,
@@ -2093,10 +2093,10 @@ private theorem string_reduction_pred_true
         have hBadWitnessTy : __smtx_typeof badWitness = SmtType.Bool := by
           have hZeroValid :
               native_string_valid (native_string_lit "0") = true := by
-            native_decide
+            decide +kernel
           have hNineValid :
               native_string_valid (native_string_lit "9") = true := by
-            native_decide
+            decide +kernel
           simp [badWitness, badBounds, badDigit, nonDigit,
             nondigitRegex, sourceLen, tx, typeof_and_eq, typeof_or_eq,
             typeof_geq_eq, typeof_lt_eq, typeof_str_len_eq,
@@ -2122,11 +2122,11 @@ private theorem string_reduction_pred_true
         · unfold RuleProofs.eo_has_bool_type
           rw [hFormulaEq]
           have hEmptyValid : native_string_valid [] = true := by
-            native_decide
+            decide +kernel
           have hZeroValid : native_string_valid (native_string_lit "0") = true := by
-            native_decide
+            decide +kernel
           have hNineValid : native_string_valid (native_string_lit "9") = true := by
-            native_decide
+            decide +kernel
           simp [formula, failure, badWitness, badBounds, badDigit,
             nonDigit, nondigitRegex, success, forallPart, qBody,
             validClause, digitBounds, recurrence, digit, nextIdx, idx,
@@ -2568,7 +2568,7 @@ private theorem string_reduction_pred_true
         · unfold RuleProofs.eo_has_bool_type
           rw [hFormulaEq]
           have hEmptyValid : native_string_valid [] = true := by
-            native_decide
+            decide +kernel
           simp [formula, success, forallPart, qBody, validClause, digitBounds,
             recurrence, digitMin, leadingCond, nonneg, digit, nextIdx,
             idx, outputLen, output, prefixAt, tx, typeof_ite_eq,
@@ -6830,7 +6830,7 @@ private theorem string_reduction_pred_true
             have hEmptyMatchTy :
                 __smtx_typeof emptyMatch = SmtType.Bool := by
               have hEmptyValid : native_string_valid [] = true := by
-                native_decide
+                decide +kernel
               simp [emptyMatch, typeof_str_in_re_eq, hrTy,
                 __smtx_typeof_seq_op_2_ret, __smtx_typeof, hEmptyValid,
                 native_ite, native_Teq]
@@ -7005,7 +7005,7 @@ private theorem string_reduction_pred_true
                     let Mjk := native_model_push Mj lenName SmtType.Int
                       (SmtValue.Numeral k)
                     have hNames : idxName ≠ lenName := by
-                      native_decide
+                      decide +kernel
                     have hIdxEval :
                         native_model_var_lookup Mjk idxName SmtType.Int =
                           SmtValue.Numeral j := by

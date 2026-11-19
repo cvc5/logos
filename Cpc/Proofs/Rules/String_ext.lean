@@ -801,7 +801,7 @@ private theorem facts___eo_prog_string_ext_impl
       unfold term_has_non_none_type; rw [hSmtA]; simp
     have hSeqWf : __smtx_type_wf (SmtType.Seq (__eo_to_smt_type A)) = true :=
       Smtm.smt_term_seq_type_wf_of_non_none (__eo_to_smt a) hNN hSmtA
-    intro hR; rw [hR] at hSeqWf; exact absurd hSeqWf (by native_decide)
+    intro hR; rw [hR] at hSeqWf; exact absurd hSeqWf (by decide +kernel)
   -- typing facts of the conclusion's components (mirroring the typing lemma)
   have hKInt :
       __smtx_typeof

@@ -253,13 +253,13 @@ private theorem typed___eo_prog_re_in_cstring_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hA2NotStuck : a2 ≠ Term.Stuck := by
     intro hStuck
     rw [hStuck] at hA2Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hA2Ty
   have hProg :
       __eo_prog_re_in_cstring a1 a2 =
@@ -325,13 +325,13 @@ private theorem facts___eo_prog_re_in_cstring_impl
       intro hStuck
       rw [hStuck] at hA1Ty
       have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-        native_decide
+        decide +kernel
       exact hBad hA1Ty
     have hA2NotStuck : a2 ≠ Term.Stuck := by
       intro hStuck
       rw [hStuck] at hA2Ty
       have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-        native_decide
+        decide +kernel
       exact hBad hA2Ty
     have hProg :
         __eo_prog_re_in_cstring a1 a2 =
@@ -366,13 +366,13 @@ private theorem facts___eo_prog_re_in_cstring_impl
     intro hStuck
     rw [hStuck] at hA1Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hA1Ty
   have hA2NotStuck : a2 ≠ Term.Stuck := by
     intro hStuck
     rw [hStuck] at hA2Ty
     have hBad : __eo_typeof Term.Stuck ≠ Term.Apply Term.Seq Term.Char := by
-      native_decide
+      decide +kernel
     exact hBad hA2Ty
   have hProg :
       __eo_prog_re_in_cstring a1 a2 =

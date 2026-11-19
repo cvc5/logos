@@ -469,7 +469,7 @@ private theorem ctorSpineRoot_tuple_typeof_tuple
   | tuple =>
       exfalso
       apply hNN
-      native_decide
+      decide +kernel
   | app a hHead =>
       rcases ctorSpineRoot_tuple_apply_type_none_or_one_arg hHead with
         hNone | hOne
@@ -520,7 +520,7 @@ private theorem eo_to_smt_dtCons_eq
 
 private theorem eo_to_smt_stuck_eq_local :
     __eo_to_smt Term.Stuck = SmtTerm.None := by
-  native_decide
+  decide +kernel
 
 private theorem dtConsSpineRoot_apply_generic
     {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}
@@ -1902,7 +1902,7 @@ private theorem dt_collapse_tester_sound
                 have hTupleReserved :
                     __eo_to_smt_reserved_datatype_name (native_string_lit "@Tuple") =
                       true := by
-                  native_decide
+                  decide +kernel
                 rw [hTupleReserved] at hUnreserved
                 cases hUnreserved
     | _ =>

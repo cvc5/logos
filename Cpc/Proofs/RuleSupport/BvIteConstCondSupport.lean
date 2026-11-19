@@ -51,7 +51,7 @@ theorem typeof_branches_of_bvite_eq_bool (c t e r : Term) :
 
 theorem smt_typeof_bv_const1 (n : native_Int) (hn : n = 0 ∨ n = 1) :
     __smtx_typeof (__eo_to_smt (bvConst1 n)) = SmtType.BitVec 1 := by
-  rcases hn with rfl | rfl <;> native_decide
+  rcases hn with rfl | rfl <;> decide +kernel
 
 theorem smt_eval_bv_const1 (M : SmtModel) (n : native_Int) (hn : n = 0 ∨ n = 1) :
     __smtx_model_eval M (__eo_to_smt (bvConst1 n)) = SmtValue.Binary 1 n := by
@@ -60,9 +60,9 @@ theorem smt_eval_bv_const1 (M : SmtModel) (n : native_Int) (hn : n = 0 ∨ n = 1
     SmtValue.Binary 1 n
   rcases hn with rfl | rfl
   · simp [native_ite, SmtEval.native_zleq]
-    native_decide
+    decide +kernel
   · simp [native_ite, SmtEval.native_zleq]
-    native_decide
+    decide +kernel
 
 private theorem smt_eval_binary_one_one (M : SmtModel) :
     __smtx_model_eval M (SmtTerm.Binary 1 1) = SmtValue.Binary 1 1 := by

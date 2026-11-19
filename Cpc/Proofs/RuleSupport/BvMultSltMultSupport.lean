@@ -1303,7 +1303,7 @@ private theorem mult_nil_bvmul_bitvec
           (Term.Numeral (native_nat_to_int W))) =
       Term.Binary (native_nat_to_int W) ((1#W).toNat : Int) := by
   cases W with
-  | zero => native_decide
+  | zero => decide +kernel
   | succ w =>
       simpa [Nat.succ_eq_add_one] using
         nil_bvmul_bitvec_succ_of_ne_stuck w (by

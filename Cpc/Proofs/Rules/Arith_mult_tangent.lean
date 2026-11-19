@@ -637,7 +637,7 @@ private theorem eo_typeof_mk_eq_left_type_ne_stuck
     __eo_typeof L ≠ Term.Stuck := by
   have hDirect :=
     eo_typeof_mk_binary_eq_of_nonstuck_type UserOp.eq L R Term.Bool
-      (by native_decide) h
+      (by decide +kernel) h
   change __eo_typeof_eq (__eo_typeof L) (__eo_typeof R) = Term.Bool at hDirect
   exact (eo_typeof_eq_bool_operands_not_stuck_local _ _ hDirect).1
 
@@ -719,7 +719,7 @@ private theorem eo_typeof_mk_mult_int_args (A B : Term) :
   intro h
   have hDirect :=
     eo_typeof_mk_binary_eq_of_nonstuck_type UserOp.mult A B
-      (Term.UOp UserOp.Int) (by native_decide) h
+      (Term.UOp UserOp.Int) (by decide +kernel) h
   change __eo_typeof_plus (__eo_typeof A) (__eo_typeof B) =
     Term.UOp UserOp.Int at hDirect
   exact eo_typeof_plus_eq_int_args _ _ hDirect
@@ -731,7 +731,7 @@ private theorem eo_typeof_mk_mult_real_args (A B : Term) :
   intro h
   have hDirect :=
     eo_typeof_mk_binary_eq_of_nonstuck_type UserOp.mult A B
-      (Term.UOp UserOp.Real) (by native_decide) h
+      (Term.UOp UserOp.Real) (by decide +kernel) h
   change __eo_typeof_plus (__eo_typeof A) (__eo_typeof B) =
     Term.UOp UserOp.Real at hDirect
   exact eo_typeof_plus_eq_real_args _ _ hDirect
@@ -743,7 +743,7 @@ private theorem eo_typeof_mk_neg_int_args (A B : Term) :
   intro h
   have hDirect :=
     eo_typeof_mk_binary_eq_of_nonstuck_type UserOp.neg A B
-      (Term.UOp UserOp.Int) (by native_decide) h
+      (Term.UOp UserOp.Int) (by decide +kernel) h
   change __eo_typeof_plus (__eo_typeof A) (__eo_typeof B) =
     Term.UOp UserOp.Int at hDirect
   exact eo_typeof_plus_eq_int_args _ _ hDirect
@@ -755,7 +755,7 @@ private theorem eo_typeof_mk_neg_real_args (A B : Term) :
   intro h
   have hDirect :=
     eo_typeof_mk_binary_eq_of_nonstuck_type UserOp.neg A B
-      (Term.UOp UserOp.Real) (by native_decide) h
+      (Term.UOp UserOp.Real) (by decide +kernel) h
   change __eo_typeof_plus (__eo_typeof A) (__eo_typeof B) =
     Term.UOp UserOp.Real at hDirect
   exact eo_typeof_plus_eq_real_args _ _ hDirect
@@ -979,7 +979,7 @@ private theorem prog_eq_int_true
     change __eo_typeof_plus (__eo_typeof x) (__eo_typeof (Term.Numeral 1)) =
       Term.UOp UserOp.Int
     rw [hTx]
-    native_decide
+    decide +kernel
   have hv5Ty :
       __eo_typeof
         (Term.Apply (Term.Apply (Term.UOp UserOp.mult) b)
@@ -989,7 +989,7 @@ private theorem prog_eq_int_true
       (__eo_typeof (Term.Apply (Term.Apply (Term.UOp UserOp.mult) x) (Term.Numeral 1))) =
         Term.UOp UserOp.Int
     rw [hTb, hx1Ty]
-    native_decide
+    decide +kernel
   simp [mtTangentFormula, mtRel, mtMul, mtPlus, mtSub, mtAnd, mtOr,
     mtTangentMkFormula, mtTangentMkLeft, mtTangentMkRhs, mtMkRel, __eo_mk_apply,
     __eo_nil, __eo_nil_mult, __eo_nil_plus, __arith_mk_one, __arith_mk_zero,
@@ -1016,7 +1016,7 @@ private theorem prog_eq_int_false
     change __eo_typeof_plus (__eo_typeof x) (__eo_typeof (Term.Numeral 1)) =
       Term.UOp UserOp.Int
     rw [hTx]
-    native_decide
+    decide +kernel
   have hv5Ty :
       __eo_typeof
         (Term.Apply (Term.Apply (Term.UOp UserOp.mult) b)
@@ -1026,7 +1026,7 @@ private theorem prog_eq_int_false
       (__eo_typeof (Term.Apply (Term.Apply (Term.UOp UserOp.mult) x) (Term.Numeral 1))) =
         Term.UOp UserOp.Int
     rw [hTb, hx1Ty]
-    native_decide
+    decide +kernel
   simp [mtTangentFormula, mtRel, mtMul, mtPlus, mtSub, mtAnd, mtOr,
     mtTangentMkFormula, mtTangentMkLeft, mtTangentMkRhs, mtMkRel, __eo_mk_apply,
     __eo_nil, __eo_nil_mult, __eo_nil_plus, __arith_mk_one, __arith_mk_zero,
@@ -1056,7 +1056,7 @@ private theorem prog_eq_real_true
       (__eo_typeof (Term.Rational (native_mk_rational 1 1))) =
       Term.UOp UserOp.Real
     rw [hTx]
-    native_decide
+    decide +kernel
   have hv5Ty :
       __eo_typeof
         (Term.Apply (Term.Apply (Term.UOp UserOp.mult) b)
@@ -1068,7 +1068,7 @@ private theorem prog_eq_real_true
         (Term.Rational (native_mk_rational 1 1)))) =
         Term.UOp UserOp.Real
     rw [hTb, hx1Ty]
-    native_decide
+    decide +kernel
   simp [mtTangentFormula, mtRel, mtMul, mtPlus, mtSub, mtAnd, mtOr,
     mtTangentMkFormula, mtTangentMkLeft, mtTangentMkRhs, mtMkRel, __eo_mk_apply,
     __eo_nil, __eo_nil_mult, __eo_nil_plus, __arith_mk_one, __arith_mk_zero,
@@ -1098,7 +1098,7 @@ private theorem prog_eq_real_false
       (__eo_typeof (Term.Rational (native_mk_rational 1 1))) =
       Term.UOp UserOp.Real
     rw [hTx]
-    native_decide
+    decide +kernel
   have hv5Ty :
       __eo_typeof
         (Term.Apply (Term.Apply (Term.UOp UserOp.mult) b)
@@ -1110,7 +1110,7 @@ private theorem prog_eq_real_false
         (Term.Rational (native_mk_rational 1 1)))) =
         Term.UOp UserOp.Real
     rw [hTb, hx1Ty]
-    native_decide
+    decide +kernel
   simp [mtTangentFormula, mtRel, mtMul, mtPlus, mtSub, mtAnd, mtOr,
     mtTangentMkFormula, mtTangentMkLeft, mtTangentMkRhs, mtMkRel, __eo_mk_apply,
     __eo_nil, __eo_nil_mult, __eo_nil_plus, __arith_mk_one, __arith_mk_zero,
@@ -1139,7 +1139,7 @@ private theorem tangent_true_int_properties
           (Term.Numeral 1) (Term.Numeral 0) x y a b) := by
     exact mtTangent_true_has_bool_type_of_smt_type
       (Term.Numeral 1) (Term.Numeral 0) x y a b SmtType.Int
-      (by native_decide) (by native_decide) hXSmt hYSmt hASmt hBSmt (Or.inl rfl)
+      (by decide +kernel) (by decide +kernel) hXSmt hYSmt hASmt hBSmt (Or.inl rfl)
   have hEval := mtTangent_true_int_eval M hM x y a b hXSmt hYSmt hASmt hBSmt
   rw [hProg]
   refine ⟨?_, RuleProofs.eo_has_smt_translation_of_has_bool_type _ hBool⟩
@@ -1169,7 +1169,7 @@ private theorem tangent_false_int_properties
           (Term.Numeral 1) (Term.Numeral 0) x y a b) := by
     exact mtTangent_false_has_bool_type_of_smt_type
       (Term.Numeral 1) (Term.Numeral 0) x y a b SmtType.Int
-      (by native_decide) (by native_decide) hXSmt hYSmt hASmt hBSmt (Or.inl rfl)
+      (by decide +kernel) (by decide +kernel) hXSmt hYSmt hASmt hBSmt (Or.inl rfl)
   have hEval := mtTangent_false_int_eval M hM x y a b hXSmt hYSmt hASmt hBSmt
   rw [hProg]
   refine ⟨?_, RuleProofs.eo_has_smt_translation_of_has_bool_type _ hBool⟩
@@ -1201,7 +1201,7 @@ private theorem tangent_true_real_properties
     exact mtTangent_true_has_bool_type_of_smt_type
       (Term.Rational (native_mk_rational 1 1))
       (Term.Rational (native_mk_rational 0 1)) x y a b SmtType.Real
-      (by native_decide) (by native_decide) hXSmt hYSmt hASmt hBSmt (Or.inr rfl)
+      (by decide +kernel) (by decide +kernel) hXSmt hYSmt hASmt hBSmt (Or.inr rfl)
   have hEval := mtTangent_true_real_eval M hM x y a b hXSmt hYSmt hASmt hBSmt
   rw [hProg]
   refine ⟨?_, RuleProofs.eo_has_smt_translation_of_has_bool_type _ hBool⟩
@@ -1233,7 +1233,7 @@ private theorem tangent_false_real_properties
     exact mtTangent_false_has_bool_type_of_smt_type
       (Term.Rational (native_mk_rational 1 1))
       (Term.Rational (native_mk_rational 0 1)) x y a b SmtType.Real
-      (by native_decide) (by native_decide) hXSmt hYSmt hASmt hBSmt (Or.inr rfl)
+      (by decide +kernel) (by decide +kernel) hXSmt hYSmt hASmt hBSmt (Or.inr rfl)
   have hEval := mtTangent_false_real_eval M hM x y a b hXSmt hYSmt hASmt hBSmt
   rw [hProg]
   refine ⟨?_, RuleProofs.eo_has_smt_translation_of_has_bool_type _ hBool⟩

@@ -563,11 +563,11 @@ theorem rat_zero_div_one :
 
 theorem native_mk_rational_zero :
   native_mk_rational 0 1 = (0 : Rat) := by
-  native_decide
+  decide +kernel
 
 theorem native_mk_rational_one :
   native_mk_rational 1 1 = (1 : Rat) := by
-  native_decide
+  decide +kernel
 
 theorem intCast_lt_zero_iff
     (n : native_Int) :

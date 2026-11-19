@@ -670,7 +670,7 @@ theorem concat_clash_rev_list_concat_rec_right_type_ne_stuck
       have hRec : __eo_list_concat_rec a Term.Stuck = Term.Stuck := by
         cases a <;> rfl
       rw [hRec] at hTy
-      exact False.elim (hTy (by native_decide))
+      exact False.elim (hTy (by decide +kernel))
   | case3 g x y z hZ ih =>
       intro hTy
       have hg : g = Term.UOp UserOp.str_concat :=
