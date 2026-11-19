@@ -119,7 +119,7 @@ theorem model_agrees_on_env_push_bindings
     (∀ s T v, SmtBindings.Mem bs s T v -> __smtx_model_eval M v = __smtx_model_eval N v) ->
     model_agrees_on_env vars A B ->
     model_agrees_on_env (SmtBindings.keys bs ++ vars)
-      (__smtx_model_push_bindings M A bs) (__smtx_model_push_bindings N B bs)
+      (__smtx_model_eval.push_bindings M A bs) (__smtx_model_eval.push_bindings N B bs)
   | SmtBindings.nil, vars, A, B, _, h => by
       rw [model_push_bindings_nil, model_push_bindings_nil]
       exact h

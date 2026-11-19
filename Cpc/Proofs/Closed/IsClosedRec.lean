@@ -76,7 +76,9 @@ by
   all_goals
     have hNeg : native_zleq 0 (native_zneg 1) = false := by
       decide +kernel
-    dsimp only [__eo_to_smt]
+    try rw [TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
+      (TranslationProofs.not_isLamSpine_of_head (by simp [TranslationProofs.eoSpineHead]))]
+    try dsimp only [__eo_to_smt]
     simp [smtx_typeof_unfolded_eo_list_cons_eq_none, __smtx_typeof,
       __smtx_typeof_apply, __smtx_typeof_eq, __smtx_typeof_guard,
       __smtx_typeof_guard_wf, __smtx_typeof_ite, __smtx_typeof_bv_op_1,
@@ -5517,10 +5519,11 @@ theorem eo_is_closed_rec_apply_eq_of_not_quantifier
   __eo_is_closed_rec (Term.Apply f x) env =
     __eo_and (__eo_is_closed_rec f env) (__eo_is_closed_rec x env) :=
 by
-  cases hEnv <;> cases f <;> simp [__eo_is_closed_rec]
+  cases hEnv <;> cases f <;> try simp [__eo_is_closed_rec]
   all_goals
     rename_i g vs
-    cases g <;> simp [__eo_is_closed_rec]
+    cases g <;> try simp [__eo_is_closed_rec]
+  all_goals
     rename_i op
     cases op <;> simp_all [__eo_is_closed_rec]
 
@@ -6445,6 +6448,142 @@ by
   unfold eoHasSmtTranslation at hTrans
   rw [smtx_typeof_eo_list_cons_eq_none] at hTrans
   exact hTrans rfl
+
+
+/-- A beta redex that binds a raw EO list, or whose body is one, has no SMT
+translation. -/
+theorem false_of_lam_spine_raw_list
+    {P : Prop} {t us body : Term} {r : List Term}
+    (hs : TranslationProofs.LamSpine t us body r) (hr : r ≠ [])
+    (hTrans : eoHasSmtTranslation t) {v vs : Term}
+    (hMem :
+      Term.Apply (Term.Apply Term.__eo_List_cons v) vs ∈ r ∨
+        body = Term.Apply (Term.Apply Term.__eo_List_cons v) vs) :
+  P :=
+by
+  obtain ⟨_, hBody, hArgs⟩ := hs.parts_typed hr hTrans
+  rcases hMem with hMem | rfl
+  · exact False.elim (term_not_eo_list_cons_of_has_smt_translation (hArgs _ hMem) v vs rfl)
+  · exact False.elim (term_not_eo_list_cons_of_has_smt_translation hBody v vs rfl)
+
+/-- An application to a raw EO list is a beta redex (refuted by
+`false_of_lam_spine_raw_list`), or is handled by `hGeneric`. -/
+theorem false_of_raw_arg_generic_or_spine
+    {P : Prop} {f v vs : Term}
+    (hTrans :
+      eoHasSmtTranslation (Term.Apply f (Term.Apply (Term.Apply Term.__eo_List_cons v) vs)))
+    (hGeneric : ¬ TranslationProofs.IsLamSpine f -> P) :
+  P :=
+by
+  by_cases hSp : TranslationProofs.IsLamSpine f
+  · obtain ⟨_, _, _, hs⟩ := hSp
+    exact false_of_lam_spine_raw_list (TranslationProofs.LamSpine.app _ hs)
+      (List.cons_ne_nil _ _) hTrans (Or.inl List.mem_cons_self)
+  · exact hGeneric hSp
+
+
+/-- `__is_closed_rec` agrees with `__eo_is_closed_rec` on a beta redex whose
+body (under the variables of its lambda) and arguments it agrees on. -/
+theorem is_closed_rec_lam_spine_prefix_eq_and_bool
+    {env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnv env vars)
+    {us body : Term} {s : native_String} {T vs' : Term}
+    (hUs : us = Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs')
+    (hBody :
+      __is_closed_rec body (__eo_list_concat Term.__eo_List_cons us env) =
+          __eo_is_closed_rec body (__eo_list_concat Term.__eo_List_cons us env) ∧
+        ∃ b, __eo_is_closed_rec body (__eo_list_concat Term.__eo_List_cons us env) =
+          Term.Boolean b)
+    (hBodyNotList : ∀ v vs, body ≠ Term.Apply (Term.Apply Term.__eo_List_cons v) vs) :
+    ∀ {t : Term} {r : List Term}, TranslationProofs.LamSpine t us body r ->
+      (∀ a ∈ r,
+        (__is_closed_rec a env = __eo_is_closed_rec a env ∧
+          ∃ b, __eo_is_closed_rec a env = Term.Boolean b) ∧
+        ∀ v vs, a ≠ Term.Apply (Term.Apply Term.__eo_List_cons v) vs) ->
+      __is_closed_rec t env = __eo_is_closed_rec t env ∧
+        ∃ b, __eo_is_closed_rec t env = Term.Boolean b
+  | _, _, TranslationProofs.LamSpine.lam _ _, _ => by
+      subst hUs
+      rcases hBody with ⟨hBodyEq, b, hBodyBool⟩
+      refine ⟨?_, b, ?_⟩
+      · cases hEnv <;>
+          simpa [__is_closed_rec, __eo_is_closed_rec, hBodyEq]
+            using eo_and_true_left_eq_of_boolean hBodyBool
+      · cases hEnv <;> simpa [__eo_is_closed_rec] using hBodyBool
+  | _, _, TranslationProofs.LamSpine.app a hf, hArgs => by
+      obtain ⟨g, c, b, hfe⟩ := hf.shape
+      have hNotList :
+          ∀ q v vs, Term.Apply (Term.Apply g c) b ≠
+            Term.Apply q (Term.Apply (Term.Apply Term.__eo_List_cons v) vs) := by
+        intro q v vs hEq
+        cases hEq
+        cases hf with
+        | lam => exact hBodyNotList v vs rfl
+        | app _ _ => exact (hArgs _ (List.mem_cons_of_mem _ List.mem_cons_self)).2 v vs rfl
+      have hF := is_closed_rec_lam_spine_prefix_eq_and_bool hEnv hUs hBody hBodyNotList hf
+        (fun a' ha' => hArgs a' (List.mem_cons_of_mem _ ha'))
+      subst hfe
+      exact is_closed_rec_apply_generic_eq_and_bool_of_parts hEnv hNotList
+        (by intro vs h; cases h) (by intro vs h; cases h) hF
+        (hArgs a List.mem_cons_self).1
+
+/-- A beta redex with an SMT translation is handled by
+`is_closed_rec_lam_spine_prefix_eq_and_bool`. -/
+theorem is_closed_rec_lam_spine_eq_and_bool
+    {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
+    (hr : r ≠ []) {env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnv env vars)
+    (hTrans : eoHasSmtTranslation t)
+    (hRec :
+      ∀ {u env' : Term} {vars' : List SmtVarKey},
+        (u = body ∨ u ∈ r) ->
+          EoSmtVarEnv env' vars' ->
+            eoHasSmtTranslation u ->
+              __is_closed_rec u env' = __eo_is_closed_rec u env' ∧
+                ∃ b, __eo_is_closed_rec u env' = Term.Boolean b) :
+    __is_closed_rec t env = __eo_is_closed_rec t env ∧
+      ∃ b, __eo_is_closed_rec t env = Term.Boolean b := by
+  obtain ⟨hv, hBodyNN, hArgsNN⟩ := hs.parts_typed hr hTrans
+  have hLen : r.length = r.length - 1 + 1 := by
+    cases r with
+    | nil => exact absurd rfl hr
+    | cons _ _ => simp
+  rw [hLen] at hv
+  obtain ⟨s, T, vs', hUs, _⟩ := TranslationProofs.lambda_vars_succ_inv hv
+  rw [← hLen] at hv
+  have hUsEnv := eoSmtVarEnv_of_lambda_vars _ hv
+  exact is_closed_rec_lam_spine_prefix_eq_and_bool hEnv hUs
+    (hRec (Or.inl rfl) (EoSmtVarEnv.concat hUsEnv hEnv) hBodyNN)
+    (term_not_eo_list_cons_of_has_smt_translation hBodyNN) hs
+    (fun a ha => ⟨hRec (Or.inr ha) hEnv (hArgsNN a ha),
+      term_not_eo_list_cons_of_has_smt_translation (hArgsNN a ha)⟩)
+
+/-- A generic application is a beta redex, handled by
+`is_closed_rec_lam_spine_eq_and_bool`, or is handled by `hGeneric`. -/
+theorem is_closed_rec_apply_generic_or_spine
+    {f x env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnv env vars)
+    (hTrans : eoHasSmtTranslation (Term.Apply f x))
+    (hRec :
+      ∀ {u env' : Term} {vars' : List SmtVarKey},
+        sizeOf u < sizeOf (Term.Apply f x) ->
+          EoSmtVarEnv env' vars' ->
+            eoHasSmtTranslation u ->
+              __is_closed_rec u env' = __eo_is_closed_rec u env' ∧
+                ∃ b, __eo_is_closed_rec u env' = Term.Boolean b)
+    (hGeneric :
+      ¬ TranslationProofs.IsLamSpine f ->
+        __is_closed_rec (Term.Apply f x) env = __eo_is_closed_rec (Term.Apply f x) env ∧
+          ∃ b, __eo_is_closed_rec (Term.Apply f x) env = Term.Boolean b) :
+    __is_closed_rec (Term.Apply f x) env = __eo_is_closed_rec (Term.Apply f x) env ∧
+      ∃ b, __eo_is_closed_rec (Term.Apply f x) env = Term.Boolean b := by
+  by_cases hSp : TranslationProofs.IsLamSpine f
+  · obtain ⟨us, body, r, hs⟩ := hSp
+    have hs' := TranslationProofs.LamSpine.app x hs
+    obtain ⟨hBodyLt, hArgsLt⟩ := hs'.sizeOf_lt
+    exact is_closed_rec_lam_spine_eq_and_bool hs'
+      (List.cons_ne_nil _ _) hEnv hTrans (fun hu => hRec (by
+        rcases hu with rfl | hu
+        · exact hBodyLt
+        · exact hArgsLt _ hu))
+  · exact hGeneric hSp
 
 theorem is_closed_rec_typed_list_eq_and_bool_of_elem_type_non_none
     (root : Term)
@@ -13033,6 +13172,10 @@ theorem false_of_apply_apply_apply_uop_middle_raw_list_has_smt_translation
   P :=
 by
   cases op
+  case lambda =>
+    exact false_of_lam_spine_raw_list
+      (TranslationProofs.LamSpine.app z (TranslationProofs.LamSpine.lam x _))
+      (List.cons_ne_nil _ _) hTrans (Or.inr rfl)
   case ite =>
     exact
       false_of_apply_apply_apply_uop_smt_triop_middle_raw_list
@@ -13915,6 +14058,10 @@ theorem false_of_apply_apply_apply_uop_last_raw_list_has_smt_translation
   P :=
 by
   cases op
+  case lambda =>
+    exact false_of_lam_spine_raw_list
+      (TranslationProofs.LamSpine.app _ (TranslationProofs.LamSpine.lam x y))
+      (List.cons_ne_nil _ _) hTrans (Or.inl List.mem_cons_self)
   case ite =>
     exact
       false_of_apply_apply_apply_uop_smt_triop_last_raw_list
@@ -14069,6 +14216,11 @@ theorem false_of_apply_apply_apply_apply_uop_last_raw_list_has_smt_translation
   P :=
 by
   cases op
+  case lambda =>
+    exact false_of_lam_spine_raw_list
+      (TranslationProofs.LamSpine.app _
+        (TranslationProofs.LamSpine.app y (TranslationProofs.LamSpine.lam w z)))
+      (List.cons_ne_nil _ _) hTrans (Or.inl List.mem_cons_self)
   case _at_strings_replace_all_result =>
     exact False.elim
       (term_not_eo_list_cons_of_has_smt_translation
@@ -14219,9 +14371,9 @@ by
         false_of_apply_apply_apply_apply_uop_last_raw_list_has_smt_translation
           hTrans
     all_goals
-      exact
+      exact false_of_raw_arg_generic_or_spine hTrans (fun hSp =>
         false_of_apply_generic_raw_arg_has_smt_translation
-          (by rfl)
+          (TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hSp)
           (generic_apply_type_of_non_special_head_closed _ _
             (by
               intro s d i j h
@@ -14233,7 +14385,7 @@ by
               exact
                 TranslationProofs.eo_to_smt_apply_ne_dt_tester
                   _ _ s d i h))
-          hTrans
+          hTrans)
   all_goals
     exact
       false_of_apply_generic_raw_arg_has_smt_translation
@@ -14420,6 +14572,11 @@ theorem is_closed_rec_apply_apply_uop_any_eq_and_bool_of_has_smt_translation
         Term.Boolean b :=
 by
   cases op
+  case lambda =>
+    -- A bare lambda translates to no term.
+    exact absurd (by
+      change __smtx_typeof SmtTerm.None = SmtType.None
+      exact TranslationProofs.smtx_typeof_none) hTrans
   case or =>
     exact
       is_closed_rec_apply_apply_or_eq_and_bool_of_has_smt_translation
@@ -15456,6 +15613,15 @@ theorem is_closed_rec_apply_apply_apply_uop_any_eq_and_bool_of_has_smt_translati
         Term.Boolean b :=
 by
   cases op
+  case lambda =>
+    exact is_closed_rec_lam_spine_eq_and_bool
+      (TranslationProofs.LamSpine.app z (TranslationProofs.LamSpine.lam x y))
+      (List.cons_ne_nil _ _) hEnv hTrans
+      (fun hu => ih (by
+        rcases hu with rfl | hu
+        · exact hYLt
+        · rw [List.mem_singleton.1 hu]
+          exact hZLt))
   case ite =>
     exact
       is_closed_rec_apply_apply_apply_ite_eq_and_bool_of_has_smt_translation
@@ -16378,105 +16544,6 @@ by
       (by intro vs hEq; cases hEq)
       hHead
       (ih hXLt hEnv hXTrans)
-
-/-- `__is_closed_rec` agrees with `__eo_is_closed_rec` on a beta redex whose
-body (under the variables of its lambda) and arguments it agrees on. -/
-theorem is_closed_rec_lam_spine_prefix_eq_and_bool
-    {env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnv env vars)
-    {us body : Term} {s : native_String} {T vs' : Term}
-    (hUs : us = Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs')
-    (hBody :
-      __is_closed_rec body (__eo_list_concat Term.__eo_List_cons us env) =
-          __eo_is_closed_rec body (__eo_list_concat Term.__eo_List_cons us env) ∧
-        ∃ b, __eo_is_closed_rec body (__eo_list_concat Term.__eo_List_cons us env) =
-          Term.Boolean b)
-    (hBodyNotList : ∀ v vs, body ≠ Term.Apply (Term.Apply Term.__eo_List_cons v) vs) :
-    ∀ {t : Term} {r : List Term}, TranslationProofs.LamSpine t us body r ->
-      (∀ a ∈ r,
-        (__is_closed_rec a env = __eo_is_closed_rec a env ∧
-          ∃ b, __eo_is_closed_rec a env = Term.Boolean b) ∧
-        ∀ v vs, a ≠ Term.Apply (Term.Apply Term.__eo_List_cons v) vs) ->
-      __is_closed_rec t env = __eo_is_closed_rec t env ∧
-        ∃ b, __eo_is_closed_rec t env = Term.Boolean b
-  | _, _, TranslationProofs.LamSpine.lam _ _, _ => by
-      subst hUs
-      rcases hBody with ⟨hBodyEq, b, hBodyBool⟩
-      refine ⟨?_, b, ?_⟩
-      · cases hEnv <;>
-          simpa [__is_closed_rec, __eo_is_closed_rec, hBodyEq]
-            using eo_and_true_left_eq_of_boolean hBodyBool
-      · cases hEnv <;> simpa [__eo_is_closed_rec] using hBodyBool
-  | _, _, TranslationProofs.LamSpine.app a hf, hArgs => by
-      obtain ⟨g, c, b, hfe⟩ := hf.shape
-      have hNotList :
-          ∀ q v vs, Term.Apply (Term.Apply g c) b ≠
-            Term.Apply q (Term.Apply (Term.Apply Term.__eo_List_cons v) vs) := by
-        intro q v vs hEq
-        cases hEq
-        cases hf with
-        | lam => exact hBodyNotList v vs rfl
-        | app _ _ => exact (hArgs _ (List.mem_cons_of_mem _ List.mem_cons_self)).2 v vs rfl
-      have hF := is_closed_rec_lam_spine_prefix_eq_and_bool hEnv hUs hBody hBodyNotList hf
-        (fun a' ha' => hArgs a' (List.mem_cons_of_mem _ ha'))
-      subst hfe
-      exact is_closed_rec_apply_generic_eq_and_bool_of_parts hEnv hNotList
-        (by intro vs h; cases h) (by intro vs h; cases h) hF
-        (hArgs a List.mem_cons_self).1
-
-/-- A beta redex with an SMT translation is handled by
-`is_closed_rec_lam_spine_prefix_eq_and_bool`. -/
-theorem is_closed_rec_lam_spine_eq_and_bool
-    {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
-    (hr : r ≠ []) {env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnv env vars)
-    (hTrans : eoHasSmtTranslation t)
-    (hRec :
-      ∀ {u env' : Term} {vars' : List SmtVarKey},
-        sizeOf u < sizeOf t ->
-          EoSmtVarEnv env' vars' ->
-            eoHasSmtTranslation u ->
-              __is_closed_rec u env' = __eo_is_closed_rec u env' ∧
-                ∃ b, __eo_is_closed_rec u env' = Term.Boolean b) :
-    __is_closed_rec t env = __eo_is_closed_rec t env ∧
-      ∃ b, __eo_is_closed_rec t env = Term.Boolean b := by
-  obtain ⟨hv, hBodyNN, hArgsNN⟩ := hs.parts_typed hr hTrans
-  obtain ⟨hBodyLt, hArgsLt⟩ := hs.sizeOf_lt
-  have hLen : r.length = r.length - 1 + 1 := by
-    cases r with
-    | nil => exact absurd rfl hr
-    | cons _ _ => simp
-  rw [hLen] at hv
-  obtain ⟨s, T, vs', hUs, _⟩ := TranslationProofs.lambda_vars_succ_inv hv
-  rw [← hLen] at hv
-  have hUsEnv := eoSmtVarEnv_of_lambda_vars _ hv
-  exact is_closed_rec_lam_spine_prefix_eq_and_bool hEnv hUs
-    (hRec hBodyLt (EoSmtVarEnv.concat hUsEnv hEnv) hBodyNN)
-    (term_not_eo_list_cons_of_has_smt_translation hBodyNN) hs
-    (fun a ha => ⟨hRec (hArgsLt a ha) hEnv (hArgsNN a ha),
-      term_not_eo_list_cons_of_has_smt_translation (hArgsNN a ha)⟩)
-
-/-- A generic application is a beta redex, handled by
-`is_closed_rec_lam_spine_eq_and_bool`, or is handled by `hGeneric`. -/
-theorem is_closed_rec_apply_generic_or_spine
-    {f x env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnv env vars)
-    (hTrans : eoHasSmtTranslation (Term.Apply f x))
-    (hRec :
-      ∀ {u env' : Term} {vars' : List SmtVarKey},
-        sizeOf u < sizeOf (Term.Apply f x) ->
-          EoSmtVarEnv env' vars' ->
-            eoHasSmtTranslation u ->
-              __is_closed_rec u env' = __eo_is_closed_rec u env' ∧
-                ∃ b, __eo_is_closed_rec u env' = Term.Boolean b)
-    (hGeneric :
-      ¬ TranslationProofs.IsLamSpine f ->
-        __is_closed_rec (Term.Apply f x) env = __eo_is_closed_rec (Term.Apply f x) env ∧
-          ∃ b, __eo_is_closed_rec (Term.Apply f x) env = Term.Boolean b) :
-    __is_closed_rec (Term.Apply f x) env = __eo_is_closed_rec (Term.Apply f x) env ∧
-      ∃ b, __eo_is_closed_rec (Term.Apply f x) env = Term.Boolean b := by
-  by_cases hSp : TranslationProofs.IsLamSpine f
-  · obtain ⟨us, body, r, hs⟩ := hSp
-    exact is_closed_rec_lam_spine_eq_and_bool (TranslationProofs.LamSpine.app x hs)
-      (List.cons_ne_nil _ _) hEnv hTrans hRec
-  · exact hGeneric hSp
 
 theorem is_closed_rec_eq_and_bool_of_has_smt_translation_lt
     (n : Nat) {t env : Term} {vars : List SmtVarKey}

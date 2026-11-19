@@ -566,11 +566,24 @@ private theorem smtx_typeof_eo_to_smt_stuck_none :
     __smtx_typeof (__eo_to_smt Term.Stuck) = SmtType.None := by
   decide +kernel
 
+private theorem dtConsSpineRoot_head
+    {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}
+    (hSp : DtConsSpineRoot t s d i) :
+    TranslationProofs.eoSpineHead t = Term.DtCons s d i := by
+  induction hSp with
+  | root => rfl
+  | app x hSp ih => exact ih
+
 private theorem dtConsSpineRoot_apply_generic
     {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}
     (hSp : DtConsSpineRoot t s d i) (x : Term) :
     __eo_to_smt (Term.Apply t x) =
       SmtTerm.Apply (__eo_to_smt t) (__eo_to_smt x) := by
+  have hNS : ¬ TranslationProofs.IsLamSpine t :=
+    TranslationProofs.not_isLamSpine_of_head (by
+      rw [dtConsSpineRoot_head hSp]
+      intro h
+      cases h)
   induction hSp generalizing x with
   | root s d i =>
       rfl
@@ -583,7 +596,10 @@ private theorem dtConsSpineRoot_apply_generic
           | root s d i =>
               rfl
           | app x''' hSp'' =>
-              cases hSp'' <;> rfl
+              cases hSp'' <;>
+                first
+                  | rfl
+                  | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hNS
 
 private def mkDtSmtAppSpineRev (head : SmtTerm) : List SmtTerm -> SmtTerm
   | [] => head

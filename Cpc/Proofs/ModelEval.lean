@@ -50,19 +50,19 @@ theorem SmtBindings.Mem.sizeOf_lt_bind {bs : SmtBindings} {s : native_String} {T
   simp; omega
 
 theorem model_push_bindings_nil (M N : SmtModel) :
-    __smtx_model_push_bindings M N SmtBindings.nil = N := by
-  rw [__smtx_model_push_bindings.eq_def]
+    __smtx_model_eval.push_bindings M N SmtBindings.nil = N := by
+  rw [__smtx_model_eval.push_bindings.eq_def]
 
 theorem model_push_bindings_cons (M N : SmtModel) (s : native_String) (T : SmtType)
     (v : SmtTerm) (bs : SmtBindings) :
-    __smtx_model_push_bindings M N (SmtBindings.cons s T v bs) =
-      __smtx_model_push_bindings M (native_model_push N s T (__smtx_model_eval M v)) bs := by
-  rw [__smtx_model_push_bindings.eq_def]
+    __smtx_model_eval.push_bindings M N (SmtBindings.cons s T v bs) =
+      __smtx_model_eval.push_bindings M (native_model_push N s T (__smtx_model_eval M v)) bs := by
+  rw [__smtx_model_eval.push_bindings.eq_def]
 
 /-- Pushing bindings leaves the sort domains alone. -/
 theorem model_push_bindings_usortDom (M : SmtModel) :
     ∀ (N : SmtModel) (bs : SmtBindings),
-      (__smtx_model_push_bindings M N bs).usortDom = N.usortDom
+      (__smtx_model_eval.push_bindings M N bs).usortDom = N.usortDom
   | N, SmtBindings.nil => by rw [model_push_bindings_nil]
   | N, SmtBindings.cons s T v bs => by
       rw [model_push_bindings_cons, model_push_bindings_usortDom M _ bs]

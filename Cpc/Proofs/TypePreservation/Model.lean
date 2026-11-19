@@ -146,7 +146,7 @@ theorem model_total_typed_push_bindings
         __smtx_type_wf T = true ∧
           __smtx_typeof_value (__smtx_model_eval M v) = T ∧
           value_canonical M.usortDom (__smtx_model_eval M v)) ->
-      model_wf (__smtx_model_push_bindings M N bs)
+      model_wf (__smtx_model_eval.push_bindings M N bs)
   | SmtBindings.nil, N, hN, _, _ => by
       rw [model_push_bindings_nil]
       exact hN

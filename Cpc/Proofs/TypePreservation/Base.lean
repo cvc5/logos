@@ -27,7 +27,7 @@ by
 theorem smtx_model_eval_bind_eq
     (M : SmtModel) (bs : SmtBindings) (x : SmtTerm) :
   __smtx_model_eval M (SmtTerm.bind bs x) =
-    __smtx_model_eval (__smtx_model_push_bindings M M bs) x :=
+    __smtx_model_eval (__smtx_model_eval.push_bindings M M bs) x :=
 by
   rw [__smtx_model_eval.eq_def]
 
@@ -853,7 +853,7 @@ theorem typeof_value_model_eval_bind
     (x : SmtTerm)
     (ht : term_has_non_none_type (SmtTerm.bind bs x))
     (hx :
-      __smtx_typeof_value (__smtx_model_eval (__smtx_model_push_bindings M M bs) x) =
+      __smtx_typeof_value (__smtx_model_eval (__smtx_model_eval.push_bindings M M bs) x) =
         __smtx_typeof x) :
     __smtx_typeof_value (__smtx_model_eval M (SmtTerm.bind bs x)) =
       __smtx_typeof (SmtTerm.bind bs x) := by

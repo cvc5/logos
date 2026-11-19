@@ -1079,7 +1079,7 @@ private theorem supported_type_preservation
           (supported_type_preservation M hM v hvNN (hbs s T v hm)).trans
             (bind_binding_type_of_non_none ht hm),
           canonical_of_supported M hM v hvNN (hbs s T v hm)⟩
-      have hM' : model_wf (__smtx_model_push_bindings M M bs) :=
+      have hM' : model_wf (__smtx_model_eval.push_bindings M M bs) :=
         model_total_typed_push_bindings M bs M hM rfl hVals
       exact typeof_value_model_eval_bind M bs x ht
         (supported_type_preservation _ hM' x (bind_body_non_none_of_non_none ht) hs)
@@ -1569,9 +1569,9 @@ private theorem canonical_of_supported
           (supported_type_preservation M hM v hvNN (hbs s T v hm)).trans
             (bind_binding_type_of_non_none ht hm),
           canonical_of_supported M hM v hvNN (hbs s T v hm)⟩
-      have hM' : model_wf (__smtx_model_push_bindings M M bs) :=
+      have hM' : model_wf (__smtx_model_eval.push_bindings M M bs) :=
         model_total_typed_push_bindings M bs M hM rfl hVals
-      have hDom : (__smtx_model_push_bindings M M bs).usortDom = M.usortDom :=
+      have hDom : (__smtx_model_eval.push_bindings M M bs).usortDom = M.usortDom :=
         model_push_bindings_usortDom M M bs
       rw [smtx_model_eval_bind_eq, ← hDom]
       exact canonical_of_supported _ hM' x (bind_body_non_none_of_non_none ht) hs

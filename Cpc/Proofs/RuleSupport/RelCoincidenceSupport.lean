@@ -1820,10 +1820,10 @@ private theorem push_bindings_globals_vars (M N : SmtModel) :
       model_agrees_on_globals M' N' -> ModelVarRel M' N' ->
       (∀ s T v, SmtBindings.Mem bs s T v ->
         RuleProofs.smt_value_rel (__smtx_model_eval M v) (__smtx_model_eval N v)) ->
-      model_agrees_on_globals (__smtx_model_push_bindings M M' bs)
-          (__smtx_model_push_bindings N N' bs) ∧
-        ModelVarRel (__smtx_model_push_bindings M M' bs)
-          (__smtx_model_push_bindings N N' bs)
+      model_agrees_on_globals (__smtx_model_eval.push_bindings M M' bs)
+          (__smtx_model_eval.push_bindings N N' bs) ∧
+        ModelVarRel (__smtx_model_eval.push_bindings M M' bs)
+          (__smtx_model_eval.push_bindings N N' bs)
   | SmtBindings.nil, M', N', hG, hV, _ => by
       rw [model_push_bindings_nil, model_push_bindings_nil]
       exact ⟨hG, hV⟩

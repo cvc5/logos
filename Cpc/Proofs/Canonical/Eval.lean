@@ -595,9 +595,9 @@ theorem model_eval_canonical_of_supported
           (smt_model_eval_preserves_type_of_non_none M hM v hvNN).trans
             (bind_binding_type_of_non_none hTy hm),
           ihbs s T v hm M hM hvNN⟩
-      have hM' : model_wf (__smtx_model_push_bindings M M bs) :=
+      have hM' : model_wf (__smtx_model_eval.push_bindings M M bs) :=
         model_total_typed_push_bindings M bs M hM rfl hVals
-      have hDom : (__smtx_model_push_bindings M M bs).usortDom = M.usortDom :=
+      have hDom : (__smtx_model_eval.push_bindings M M bs).usortDom = M.usortDom :=
         model_push_bindings_usortDom M M bs
       rw [smtx_model_eval_bind_eq, ← hDom]
       exact ihs _ hM' (bind_body_non_none_of_non_none hTy)
