@@ -1209,6 +1209,15 @@ decreasing_by
   all_goals simp_wf
   all_goals omega")
 
+; The concatenation helper recurses into the rec helper on arguments that
+; rebuild one of its concatenations, so its offset exceeds the size of the
+; re.++ wrapper (4 per concatenation, scaled by 4).
+(define-method $str_re_includes_concat
+  :lean "termination_by a b c d => 4 * (sizeOf a + sizeOf b + sizeOf c + sizeOf d) + 17
+decreasing_by
+  all_goals simp_wf
+  all_goals omega")
+
 (define-method $str_re_includes_rec
   :lean "termination_by a b => 4 * (sizeOf a + sizeOf b)
 decreasing_by
