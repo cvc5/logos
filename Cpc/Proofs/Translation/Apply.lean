@@ -1079,11 +1079,11 @@ theorem eo_to_smt_apply_ne_dt_sel
     case Apply k z =>
       cases k <;> try cases h
       case UOp op =>
-        cases op <;> try cases h
+        cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case Apply g w =>
-        cases g <;> try cases h
+        cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case UOp op =>
-          cases op <;> cases h
+          cases op <;> first | cases h | eo_to_smt_generic_apply_cases h
 
 theorem eo_to_smt_apply_ne_dt_tester
     (f x : Term) (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
@@ -1133,11 +1133,11 @@ theorem eo_to_smt_apply_ne_dt_tester
     case Apply k z =>
       cases k <;> try cases h
       case UOp op =>
-        cases op <;> try cases h
+        cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case Apply g w =>
-        cases g <;> try cases h
+        cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case UOp op =>
-          cases op <;> cases h
+          cases op <;> first | cases h | eo_to_smt_generic_apply_cases h
 
 private theorem eo_to_smt_apply_ne_dt_cons
     (f x : Term) (s : native_String) (d : SmtDatatypeDecl) (i : native_Nat) :
@@ -1187,11 +1187,11 @@ private theorem eo_to_smt_apply_ne_dt_cons
     case Apply k z =>
       cases k <;> try cases h
       case UOp op =>
-        cases op <;> try cases h
+        cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case Apply g w =>
-        cases g <;> try cases h
+        cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case UOp op =>
-          cases op <;> cases h
+          cases op <;> first | cases h | eo_to_smt_generic_apply_cases h
 
 /-- Rewrites the typing equation for `bvnot`. -/
 private theorem typeof_bvnot_eq
@@ -4263,8 +4263,8 @@ theorem smtx_term_fun_like_arg_ne_reglan_of_non_none :
         exact smtx_type_fun_like_domains_no_reglan_of_type_wf hWf
     case choice s T body =>
         exact choice_nth_fun_like_domains_no_reglan_any s T body hNN
-    case bind s T x1 x2 =>
-        have hTy : __smtx_typeof (SmtTerm.bind s T x1 x2) = __smtx_typeof x2 :=
+    case bind bs x2 =>
+        have hTy : __smtx_typeof (SmtTerm.bind bs x2) = __smtx_typeof x2 :=
           Smtm.bind_term_typeof_of_non_none hNN
         have hx2NN : term_has_non_none_type x2 := by
           unfold term_has_non_none_type at hNN ⊢

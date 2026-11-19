@@ -2126,41 +2126,41 @@ theorem closed_eo_to_smt_exists_bool_of_quantifiers_skolemize_non_none :
                 have hNN' :
                     __smtx_typeof
                         (__eo_to_smt_quantifiers_skolemize a
-                          (SmtTerm.bind s (__eo_to_smt_type T)
+                          (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
                             (SmtTerm.choice s (__eo_to_smt_type T)
-                              (__eo_to_smt_exists a G)) G) n) ≠
+                              (__eo_to_smt_exists a G)) SmtBindings.nil) G) n) ≠
                       SmtType.None := hNN
                 have hExRestBool :
                     __smtx_typeof
                         (__eo_to_smt_exists a
-                          (SmtTerm.bind s (__eo_to_smt_type T)
+                          (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
                             (SmtTerm.choice s (__eo_to_smt_type T)
-                              (__eo_to_smt_exists a G)) G)) =
+                              (__eo_to_smt_exists a G)) SmtBindings.nil) G)) =
                       SmtType.Bool :=
                   ih a _ hNN'
                 have hG'Bool :
                     __smtx_typeof
-                        (SmtTerm.bind s (__eo_to_smt_type T)
+                        (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
                           (SmtTerm.choice s (__eo_to_smt_type T)
-                            (__eo_to_smt_exists a G)) G) =
+                            (__eo_to_smt_exists a G)) SmtBindings.nil) G) =
                       SmtType.Bool :=
                   closed_smtx_typeof_exists_body_bool a _ hExRestBool
                 have hBindNN :
                     term_has_non_none_type
-                      (SmtTerm.bind s (__eo_to_smt_type T)
+                      (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
                         (SmtTerm.choice s (__eo_to_smt_type T)
-                          (__eo_to_smt_exists a G)) G) := by
+                          (__eo_to_smt_exists a G)) SmtBindings.nil) G) := by
                   unfold term_has_non_none_type
                   rw [hG'Bool]
                   simp
                 have hWf : __smtx_type_wf (__eo_to_smt_type T) = true :=
-                  bind_binder_type_wf_of_non_none hBindNN
+                  bind_single_binder_type_wf_of_non_none hBindNN
                 have hcU :
                     __smtx_typeof
                         (SmtTerm.choice s (__eo_to_smt_type T)
                           (__eo_to_smt_exists a G)) =
                       __eo_to_smt_type T :=
-                  bind_arg1_type_of_non_none hBindNN
+                  bind_single_arg1_type_of_non_none hBindNN
                 have hcNN :
                     __smtx_typeof
                         (SmtTerm.choice s (__eo_to_smt_type T)

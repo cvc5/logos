@@ -2122,8 +2122,8 @@ private theorem eo_to_smt_quantifiers_skolemize_succ_cons
     __eo_to_smt_quantifiers_skolemize
         (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs) G n.succ =
       __eo_to_smt_quantifiers_skolemize vs
-        (SmtTerm.bind s (__eo_to_smt_type T)
-          (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists vs G)) G) n := by
+        (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+          (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists vs G)) SmtBindings.nil) G) n := by
   simp [__eo_to_smt_quantifiers_skolemize]
 
 /-- A true EO list check implies the underlying nil search is non-stuck. -/
@@ -2313,10 +2313,10 @@ private theorem smtx_typeof_eo_to_smt_exists_cons_bool_of_tail_bool
 /-- Typing equation for a `bind` node. -/
 private theorem typeof_bind_eq_full
     (s : native_String) (T : SmtType) (x1 x2 : SmtTerm) :
-    __smtx_typeof (SmtTerm.bind s T x1 x2) =
+    __smtx_typeof (SmtTerm.bind (SmtBindings.cons s T x1 SmtBindings.nil) x2) =
       native_ite (native_Teq (__smtx_typeof x1) T)
         (__smtx_typeof_guard_wf T (__smtx_typeof x2)) SmtType.None := by
-  rw [__smtx_typeof.eq_def] <;> simp only
+  rw [smtx_typeof_bind_eq, smtx_typeof_bindings_cons_eq, smtx_typeof_bindings_nil_eq]
 
 /-- Typing equation for an `exists` node. -/
 private theorem typeof_exists_eq_full
@@ -2436,8 +2436,8 @@ private theorem eo_to_smt_exists_bool_of_quantifiers_skolemize_non_none
                   rw [eo_to_smt_quantifiers_skolemize_succ_cons] at hNN
                   have hG'NoExists :
                       ∀ s' T' F',
-                        SmtTerm.bind s (__eo_to_smt_type T)
-                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) body ≠
+                        SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) SmtBindings.nil) body ≠
                           SmtTerm.exists s' T' F' := by
                     intro s' T' F' h
                     cases h
@@ -2445,8 +2445,8 @@ private theorem eo_to_smt_exists_bool_of_quantifiers_skolemize_non_none
                   have hG'Bool := eo_to_smt_exists_body_bool_of_bool a _ hTailG'
                   have hBindNN :
                       term_has_non_none_type
-                        (SmtTerm.bind s (__eo_to_smt_type T)
-                          (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) body) := by
+                        (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                          (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) SmtBindings.nil) body) := by
                     unfold term_has_non_none_type
                     rw [hG'Bool]
                     simp
@@ -2457,8 +2457,8 @@ private theorem eo_to_smt_exists_bool_of_quantifiers_skolemize_non_none
                     intro hNone
                     have hbn :
                         __smtx_typeof
-                          (SmtTerm.bind s (__eo_to_smt_type T)
-                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) body) =
+                          (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) SmtBindings.nil) body) =
                           SmtType.None := by
                       rw [typeof_bind_eq_full, hNone]
                       cases hcond :
@@ -2532,8 +2532,8 @@ private theorem eo_to_smt_quantifiers_skolemize_type_of_non_none
                   rw [eo_to_smt_quantifiers_skolemize_succ_cons] at hNN ⊢
                   have hG'NoExists :
                       ∀ s' T' F',
-                        SmtTerm.bind s (__eo_to_smt_type T)
-                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) body ≠
+                        SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) SmtBindings.nil) body ≠
                           SmtTerm.exists s' T' F' := by
                     intro s' T' F' h
                     cases h
@@ -2607,8 +2607,8 @@ private theorem eo_to_smt_quantifiers_skolemize_var_type_valid_of_non_none
                   rw [eo_to_smt_quantifiers_skolemize_succ_cons] at hNN
                   have hG'NoExists :
                       ∀ s' T' F',
-                        SmtTerm.bind s (__eo_to_smt_type T)
-                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) body ≠
+                        SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) SmtBindings.nil) body ≠
                           SmtTerm.exists s' T' F' := by
                     intro s' T' F' h
                     cases h

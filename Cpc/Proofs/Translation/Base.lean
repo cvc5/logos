@@ -498,4 +498,50 @@ theorem smtx_bv_sizeof_term_non_none
         rfl
       exact h hNone
 
+/-- The shapes a lambda-spine translation can take: the default `d`, no term,
+or a `let`. -/
+def EoToSmtApplyShape (r d : SmtTerm) : Prop :=
+  r = d ∨ r = SmtTerm.None ∨ ∃ bs b, r = SmtTerm.bind bs b
+
+theorem eo_to_smt_lambda_app_shape (vs : Term) :
+    ∀ (t : Term) (bs : SmtBindings) (n : native_Nat) (d : SmtTerm),
+      EoToSmtApplyShape (__eo_to_smt_lambda_app vs t bs n d) d
+  | t, bs, n, d => by
+      rw [__eo_to_smt_lambda_app.eq_def]
+      split
+      · rename_i us body
+        cases __eo_to_smt_lambda_vars us n
+        · exact Or.inr (Or.inl rfl)
+        · exact Or.inr (Or.inr ⟨_, _, rfl⟩)
+      · rename_i f a _
+        exact eo_to_smt_lambda_app_shape vs f _ _ d
+      · exact Or.inl rfl
+termination_by t => sizeOf t
+
+theorem eo_to_smt_apply_shape (arg app : SmtTerm) (f : Term) :
+    EoToSmtApplyShape (__eo_to_smt_apply arg app f) app := by
+  rw [__eo_to_smt_apply.eq_def]
+  split
+  · rename_i x1 x2
+    cases __eo_to_smt_lambda_vars x1 (native_nat_succ native_nat_zero)
+    · exact Or.inr (Or.inl rfl)
+    · exact Or.inr (Or.inr ⟨_, _, rfl⟩)
+  · exact eo_to_smt_lambda_app_shape _ _ _ _ _
+  · exact Or.inl rfl
+
+/-- A generic application translates to the SMT application, no term, or a
+`let` (when it is a beta redex). -/
+theorem eo_to_smt_apply_generic_cases {f y : Term} {r : SmtTerm}
+    (h : __eo_to_smt_apply (__eo_to_smt y) (SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y)) f = r) :
+    r = SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt y) ∨ r = SmtTerm.None ∨
+      ∃ bs b, r = SmtTerm.bind bs b := by
+  subst h
+  exact eo_to_smt_apply_shape _ _ _
+
+/-- Closes a goal from a hypothesis `h : __eo_to_smt (Term.Apply f y) = r`,
+where the application is translated generically, by the shapes of
+`eo_to_smt_apply_generic_cases` (each of which must refute `h`). -/
+macro "eo_to_smt_generic_apply_cases" h:ident : tactic =>
+  `(tactic| (refine (fun hc => ?_) (eo_to_smt_apply_generic_cases $h); rcases hc with hc | hc | ⟨_, _, hc⟩ <;> cases hc))
+
 end TranslationProofs

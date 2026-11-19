@@ -2967,11 +2967,11 @@ private theorem eo_to_smt_apply_ne_numeral
     case Apply g2 z =>
       cases g2 <;> try cases h
       case UOp op =>
-        cases op <;> try cases h
+        cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case Apply g3 w =>
-        cases g3 <;> try cases h
+        cases g3 <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case UOp op =>
-          cases op <;> cases h
+          cases op <;> first | cases h | eo_to_smt_generic_apply_cases h
 
 /-- The only EO terms that translate to SMT numerals are EO numerals. -/
 theorem eo_to_smt_eq_numeral

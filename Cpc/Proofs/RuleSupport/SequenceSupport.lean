@@ -628,8 +628,8 @@ theorem smt_term_result_seq_components_wf_of_non_none
         smtx_typeof_guard_wf_wf_of_non_none T T hGuardNN
       rw [choice_term_typeof_of_non_none hxNN]
       exact type_result_seq_components_wf_of_type_wf hWf
-    case bind s T x1 x2 =>
-      have hTyEq : __smtx_typeof (SmtTerm.bind s T x1 x2) = __smtx_typeof x2 :=
+    case bind bs x2 =>
+      have hTyEq : __smtx_typeof (SmtTerm.bind bs x2) = __smtx_typeof x2 :=
         bind_term_typeof_of_non_none hxNN
       have hx2NN : term_has_non_none_type x2 := by
         unfold term_has_non_none_type at hxNN ⊢
