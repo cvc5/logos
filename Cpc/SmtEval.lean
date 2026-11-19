@@ -15,11 +15,6 @@ set_option linter.unusedVariables false
 
 namespace SmtEval
 
-instance : Ord Rat where
-  compare a b :=
-    -- compare a.num / a.den vs b.num / b.den by cross-multiplication
-    compare (a.num * Int.ofNat b.den) (b.num * Int.ofNat a.den)
-
 -- The primitive operations every other module is written over.
 abbrev native_Bool := Bool
 
