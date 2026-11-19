@@ -484,7 +484,7 @@ private theorem eo_to_smt_apply_generic_of_appSpineRev_var
                     | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
                         (TranslationProofs.not_isLamSpine_of_head (fun h => by
                           rw [eoSpineHead_eq_appSpineRev] at h
-                          dsimp [appSpineRev] at h
+                          dsimp [appSpineRev] at h hHead
                           rw [hHead] at h
                           cases h))
           | Var name U =>
@@ -566,7 +566,7 @@ private theorem eo_to_smt_apply_generic_of_appSpineRev_uconst
                     | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
                         (TranslationProofs.not_isLamSpine_of_head (fun h => by
                           rw [eoSpineHead_eq_appSpineRev] at h
-                          dsimp [appSpineRev] at h
+                          dsimp [appSpineRev] at h hHead
                           rw [hHead] at h
                           cases h))
           | UConst i' U =>
@@ -633,7 +633,7 @@ private theorem eo_to_smt_apply_generic_of_appSpineRev_dtcons
                     | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
                         (TranslationProofs.not_isLamSpine_of_head (fun h => by
                           rw [eoSpineHead_eq_appSpineRev] at h
-                          dsimp [appSpineRev] at h
+                          dsimp [appSpineRev] at h hHead
                           rw [hHead] at h
                           cases h))
           | DtCons s' d' i' =>
@@ -699,7 +699,7 @@ private theorem eo_to_smt_apply_generic_of_appSpineRev_dt_sel
                     | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
                         (TranslationProofs.not_isLamSpine_of_head (fun h => by
                           rw [eoSpineHead_eq_appSpineRev] at h
-                          dsimp [appSpineRev] at h
+                          dsimp [appSpineRev] at h hHead
                           rw [hHead] at h
                           cases h))
           | DtSel s' d' i' j' =>
