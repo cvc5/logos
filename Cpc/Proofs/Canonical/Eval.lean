@@ -4,6 +4,8 @@ public import Cpc.Proofs.Canonical.Ops
 import all Cpc.Proofs.Canonical.Ops
 public import Cpc.Proofs.Canonical.BasicModel
 import all Cpc.Proofs.Canonical.BasicModel
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 public section
 

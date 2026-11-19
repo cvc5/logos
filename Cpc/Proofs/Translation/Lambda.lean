@@ -5,6 +5,8 @@ import all Cpc.Proofs.Translation.EoTypeofCore
 public import Cpc.Proofs.TypePreservation.Base
 import all Cpc.Proofs.TypePreservation.Base
 import all Cpc.Spec
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 /-!
 # Beta redexes

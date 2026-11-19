@@ -6,6 +6,8 @@ public import Cpc.Proofs.RuleSupport.CongSupport
 import all Cpc.Proofs.RuleSupport.CongSupport
 public import Cpc.Proofs.RuleSupport.InstantiateSupport
 import all Cpc.Proofs.RuleSupport.InstantiateSupport
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 public section
 

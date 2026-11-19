@@ -2,6 +2,8 @@ module
 
 public import Cpc.Proofs.TypePreservation.Common
 import all Cpc.Proofs.TypePreservation.Common
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 public section
 

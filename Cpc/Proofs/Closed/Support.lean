@@ -7,6 +7,8 @@ public import Cpc.Proofs.Assumptions
 import all Cpc.Proofs.Assumptions
 public import Cpc.Proofs.RuleSupport.Contract
 import all Cpc.Proofs.RuleSupport.Contract
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 public section
 

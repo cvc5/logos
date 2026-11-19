@@ -7,6 +7,8 @@ public import Cpc.Proofs.TypePreservation.Datatypes
 public import Cpc.Proofs.TypePreservation.Sets
 public import Cpc.Proofs.TypePreservation.SeqStringRegex
 import all Cpc.Proofs.TypePreservation.Common
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 public section
 
