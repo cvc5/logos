@@ -360,6 +360,43 @@ theorem lamBindings_mem (vs : Term) :
       · exact SmtBindings.Mem.tail _ _ _ hm
       · exact hm
 
+/-- A binding of `lamBindings` binds an argument, or comes from the accumulator. -/
+theorem lamBindings_mem_inv (vs : Term) :
+    ∀ (r : List Term) (bs : SmtBindings) {s : native_String} {T : SmtType} {v : SmtTerm},
+      SmtBindings.Mem (lamBindings vs r bs) s T v ->
+        SmtBindings.Mem bs s T v ∨ ∃ a ∈ r, v = __eo_to_smt a
+  | [], bs, s, T, v, hm => Or.inl hm
+  | a :: r, bs, s, T, v, hm => by
+      rcases lamBindings_mem_inv vs r _ hm with hm | ⟨a', ha', rfl⟩
+      · revert hm
+        unfold __eo_to_smt_lambda_binding
+        split
+        · intro hm
+          cases hm with
+          | head => exact Or.inr ⟨a, List.mem_cons_self, rfl⟩
+          | tail _ _ _ hm => exact Or.inl hm
+        · intro hm
+          exact Or.inl hm
+      · exact Or.inr ⟨a', List.mem_cons_of_mem a ha', rfl⟩
+
+/-- Every argument of a well-formed spine is bound to a variable. -/
+theorem lamBindings_mem_arg {us : Term} {m : Nat}
+    (hvars : __eo_to_smt_lambda_vars us m = true) :
+    ∀ (r : List Term) (bs : SmtBindings), r.length ≤ m ->
+      ∀ a ∈ r, ∃ s T, SmtBindings.Mem (lamBindings us r bs) s T (__eo_to_smt a)
+  | [], bs, _, a, ha => absurd ha List.not_mem_nil
+  | a :: r, bs, hlen, a', ha' => by
+      simp only [List.length_cons] at hlen
+      rcases List.mem_cons.1 ha' with rfl | ha'
+      · obtain ⟨s, T, hn, _⟩ := lambda_vars_split r.length hvars (by omega)
+        refine ⟨s, __eo_to_smt_type T, ?_⟩
+        change SmtBindings.Mem (lamBindings us r
+          (__eo_to_smt_lambda_binding (__eo_to_smt_lambda_nth us r.length) (__eo_to_smt a') bs))
+          _ _ _
+        rw [hn]
+        exact lamBindings_mem us r _ (SmtBindings.Mem.head _ _ _ _)
+      · exact lamBindings_mem_arg hvars r _ (by omega) a' ha'
+
 private theorem smtx_type_wf_none_false : __smtx_type_wf SmtType.None = false := by
   decide +kernel
 
@@ -428,6 +465,31 @@ theorem eo_to_smt_typeof_matches_translation_lam_spine
         get_lambda_type_nil hBStuck]
     rw [hTyT, bind_term_typeof_of_non_none hTyB]
     exact ⟨hBodyTy, hBodyValid⟩
+
+/-- A typed beta redex has well-formed variables, and its body and arguments
+are typed. -/
+theorem LamSpine.parts_typed {t us body : Term} {r : List Term} (h : LamSpine t us body r)
+    (hr : r ≠ []) (hNN : __smtx_typeof (__eo_to_smt t) ≠ SmtType.None) :
+    __eo_to_smt_lambda_vars us r.length = true ∧
+      __smtx_typeof (__eo_to_smt body) ≠ SmtType.None ∧
+      ∀ a ∈ r, __smtx_typeof (__eo_to_smt a) ≠ SmtType.None := by
+  rw [h.eo_to_smt hr] at hNN
+  cases hv : __eo_to_smt_lambda_vars us r.length
+  · rw [hv] at hNN
+    exact absurd smtx_typeof_none hNN
+  · rw [hv] at hNN
+    simp only [native_ite, ite_true] at hNN
+    have hTyB :
+        term_has_non_none_type
+          (SmtTerm.bind (lamBindings us r SmtBindings.nil) (__eo_to_smt body)) := hNN
+    refine ⟨rfl, bind_body_non_none_of_non_none hTyB, ?_⟩
+    intro a ha
+    obtain ⟨s, T, hm⟩ := lamBindings_mem_arg hv r SmtBindings.nil (Nat.le_refl _) a ha
+    rw [bind_binding_type_of_non_none hTyB hm]
+    intro hNone
+    have hWf := bind_binding_type_wf_of_non_none hTyB hm
+    rw [hNone, smtx_type_wf_none_false] at hWf
+    cases hWf
 
 /-- Typing of a generically translated application `(f y)`: a beta redex is
 typed by `eo_to_smt_typeof_matches_translation_lam_spine`, and any other
