@@ -1878,14 +1878,14 @@ private theorem smt_value_rel_of_equal_bv_poly_norm
     by_cases hB : native_nat_to_int w < 4294967296
     · simp [__bv_bitwidth, __eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_pow,
         __eo_ite, native_ite, native_teq, SmtEval.native_and, SmtEval.native_not,
-        SmtEval.native_zlt, native_int_pow2, native_zexp_total, hwNotNeg, m,
+        SmtEval.native_zlt_eq, native_int_pow2, native_zexp_total, hwNotNeg, m,
         SmtEval.native_zleq, hwNonneg, hB]
     · exfalso
       apply hModulusNe
       rw [hModulus, hEoTy]
       simp [__bv_bitwidth, __eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_pow,
         __eo_ite, native_ite, native_teq, SmtEval.native_and, SmtEval.native_not,
-        SmtEval.native_zlt, hwNotNeg, hB]
+        SmtEval.native_zlt_eq, hwNotNeg, hB]
   rw [hModulusEq] at hNormEq hNormNotStuck
   change __poly_mod_coeffs (__get_bv_poly_norm_rec a) (Term.Numeral m) =
       __poly_mod_coeffs (__get_bv_poly_norm_rec b) (Term.Numeral m) at hNormEq

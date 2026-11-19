@@ -901,10 +901,10 @@ private theorem bvZero_to_bin_eq_of_bound (w : Nat) :
       Term.Binary (native_nat_to_int w) 0 := by
   intro hBound
   have hBoundProp : native_nat_to_int w < 4294967296 := by
-    simpa [native_zlt] using hBound
+    simpa [native_zlt_eq] using hBound
   have hWidthNonneg : 0 <= native_nat_to_int w := by
     simp [native_nat_to_int]
-  simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq, native_zlt, native_and,
+  simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq, native_zlt_eq, native_and,
     hBoundProp, hWidthNonneg, native_mod_total]
 
 private theorem bvZero_to_bin_eq_of_ne_stuck (w : Nat) :
@@ -919,8 +919,8 @@ private theorem bvZero_to_bin_eq_of_ne_stuck (w : Nat) :
         __eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0) =
           Term.Stuck := by
       have hBoundFalse : ¬ native_nat_to_int w < 4294967296 := by
-        simpa [native_zlt] using hBound
-      simp [__eo_to_bin, hBoundFalse, native_ite, native_zleq, native_zlt, native_and]
+        simpa [native_zlt_eq] using hBound
+      simp [__eo_to_bin, hBoundFalse, native_ite, native_zleq, native_zlt_eq, native_and]
     exact False.elim (hNe hStuck)
 
 private theorem bvAllOnes_to_bin_eq_of_ne_stuck (w : Nat) :
@@ -977,7 +977,7 @@ private theorem bvAllOnes_to_bin_eq_of_ne_stuck (w : Nat) :
       have hNotNeg : native_zlt (native_nat_to_int w) 0 = false := by
         have hNonneg : ¬native_nat_to_int w < 0 :=
           Int.not_lt.mpr hWidthNonneg
-        simp [native_zlt, hNonneg]
+        simp [native_zlt_eq, hNonneg]
       rw [hPow]
       simp [__eo_ite, __eo_is_z, __eo_is_z_internal, __eo_is_neg,
         __eo_add, native_teq, native_ite,
@@ -991,11 +991,11 @@ private theorem bvAllOnes_to_bin_eq_of_ne_stuck (w : Nat) :
     rw [hGuard]
     simp [native_ite, __eo_mk_binary, hLe, native_pow2_minus_one_mod_self_nat]
   · have hBoundFalse : ¬ native_nat_to_int w < 4294967296 := by
-      simpa [native_zlt] using hBound
+      simpa [native_zlt_eq] using hBound
     have hStuck : ∀ x : Term,
         __eo_to_bin (Term.Numeral (native_nat_to_int w)) x = Term.Stuck := by
       intro x
-      cases x <;> simp [__eo_to_bin, hBoundFalse, native_ite, native_zlt, native_and]
+      cases x <;> simp [__eo_to_bin, hBoundFalse, native_ite, native_zlt_eq, native_and]
     exact False.elim (hNe (hStuck _))
 
 private theorem reUnion_smt_value_rel_left_all_eval
