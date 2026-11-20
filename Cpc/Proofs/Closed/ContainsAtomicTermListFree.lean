@@ -1590,6 +1590,314 @@ by
       (hFuncEval hFuncTrans hBound hFuncNoFree hAgree)
       (hArgEval hArgTrans hBound hArgNoFree hAgree)
 
+/-! ### Lambda spines -/
+
+private theorem cat_smtx_model_eval_lam_eq (M : SmtModel) (s : native_String) (T : SmtType)
+    (x : SmtTerm) :
+  __smtx_model_eval M (SmtTerm.lam s T x) = SmtValue.NotValue :=
+by
+  rw [__smtx_model_eval.eq_def]
+
+private theorem cat_smtx_model_eval_none_eq (M : SmtModel) :
+  __smtx_model_eval M SmtTerm.None = SmtValue.NotValue :=
+by
+  rw [__smtx_model_eval.eq_def]
+
+/-- The curried chain of a nonempty list is a bare `lam` or `None`, which do not
+evaluate to a value. -/
+private theorem smtx_model_eval_lambda_curry_ne_nil (M : SmtModel) {D : Term} (F : SmtTerm)
+    (hD : D ≠ Term.__eo_List_nil) :
+  __smtx_model_eval M (__eo_to_smt_lambda_curry D F) = SmtValue.NotValue :=
+by
+  unfold __eo_to_smt_lambda_curry
+  split
+  · exact absurd rfl hD
+  · exact cat_smtx_model_eval_lam_eq _ _ _ _
+  · exact cat_smtx_model_eval_none_eq _
+
+/-- Models that agree, extended with the same bindings whose terms evaluate
+alike, agree on the bound variables as well. -/
+theorem model_agrees_except_on_env_push_bindings
+    {M N : SmtModel} {E : List SmtVarKey} :
+  ∀ (bs : SmtBindings) {B : List SmtVarKey} {A A' : SmtModel},
+    (∀ s T v, SmtBindings.Mem bs s T v ->
+      __smtx_model_eval M v = __smtx_model_eval N v) ->
+    model_agrees_except_on_env E B A A' ->
+    model_agrees_except_on_env E (SmtBindings.keys bs ++ B)
+      (__smtx_model_eval.push_bindings M A bs)
+      (__smtx_model_eval.push_bindings N A' bs)
+  | SmtBindings.nil, B, A, A', _, h => by
+      rw [model_push_bindings_nil, model_push_bindings_nil]
+      exact h
+  | SmtBindings.cons s T v bs, B, A, A', hv, h => by
+      rw [model_push_bindings_cons, model_push_bindings_cons,
+        hv s T v (SmtBindings.Mem.head s T v bs)]
+      have hRest := model_agrees_except_on_env_push_bindings bs
+        (fun s' T' v' hm => hv s' T' v' (SmtBindings.Mem.tail s T v hm))
+        (model_agrees_except_on_env_push_same (s := s) (T := T)
+          (v := __smtx_model_eval N v) h)
+      refine model_agrees_except_on_env_shrink_bound ?_ hRest
+      intro key hKey
+      simp only [SmtBindings.keys, List.cons_append, List.mem_cons,
+        List.mem_append] at hKey ⊢
+      tauto
+
+/-- A spine whose arguments are all bound to variables of its lambda is a
+`let` of them around the curried chain of the variables left. -/
+theorem smt_model_eval_lam_spine_prefix_eq_of_parts
+    {E B : List SmtVarKey} {M N : SmtModel}
+    {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
+    (hp : TranslationProofs.lamVarsPrefix us r.length = true)
+    (hAgree : model_agrees_except_on_env E B M N)
+    (hArgs :
+      ∀ a ∈ r, __smtx_model_eval M (__eo_to_smt a) = __smtx_model_eval N (__eo_to_smt a))
+    (hBody :
+      ∀ {M' N' : SmtModel},
+        model_agrees_except_on_env E ((eoVarKeys us).reverse ++ B) M' N' ->
+          __smtx_model_eval M' (__eo_to_smt body) =
+            __smtx_model_eval N' (__eo_to_smt body)) :
+  __smtx_model_eval M (__eo_to_smt t) = __smtx_model_eval N (__eo_to_smt t) :=
+by
+  rw [hs.eo_to_smt_prefix.1 hp, smtx_model_eval_bind_eq, smtx_model_eval_bind_eq]
+  by_cases hD : TranslationProofs.eoListDrop r.length us = Term.__eo_List_nil
+  · rw [hD]
+    change
+      __smtx_model_eval _ (__eo_to_smt body) = __smtx_model_eval _ (__eo_to_smt body)
+    apply hBody
+    have hPush := model_agrees_except_on_env_push_bindings (M := M) (N := N)
+      (TranslationProofs.lamBindings us r SmtBindings.nil)
+      (fun s T v hm => by
+        rcases TranslationProofs.lamBindings_mem_inv us r SmtBindings.nil hm with
+          hm | ⟨a, ha, rfl⟩
+        · cases hm
+        · exact hArgs a ha)
+      hAgree
+    refine model_agrees_except_on_env_shrink_bound ?_ hPush
+    intro key hKey
+    rw [lamBindings_keys hp r SmtBindings.nil (Nat.le_refl _)]
+    have hsplit := eoVarKeys_drop r.length us hp
+    rw [hD] at hsplit
+    simp only [List.mem_append, List.mem_reverse] at hKey ⊢
+    rw [hsplit] at hKey
+    simp [eoVarKeys, SmtBindings.keys] at hKey ⊢
+    tauto
+  · rw [smtx_model_eval_lambda_curry_ne_nil _ _ hD, smtx_model_eval_lambda_curry_ne_nil _ _ hD]
+
+/-- Evaluation of a lambda spine depends only on its arguments and, under the
+variables of its lambda, its body. -/
+theorem smt_model_eval_lam_spine_eq_of_parts
+    {E B : List SmtVarKey} {M N : SmtModel} :
+  ∀ {t us body : Term} {r : List Term}, TranslationProofs.LamSpine t us body r ->
+    model_agrees_except_on_env E B M N ->
+    (∀ a ∈ r,
+      __smtx_model_eval M (__eo_to_smt a) = __smtx_model_eval N (__eo_to_smt a)) ->
+    (∀ {M' N' : SmtModel},
+      model_agrees_except_on_env E ((eoVarKeys us).reverse ++ B) M' N' ->
+        __smtx_model_eval M' (__eo_to_smt body) =
+          __smtx_model_eval N' (__eo_to_smt body)) ->
+    __smtx_model_eval M (__eo_to_smt t) = __smtx_model_eval N (__eo_to_smt t)
+  | _, _, _, _, TranslationProofs.LamSpine.lam us body, hAgree, hArgs, hBody =>
+      smt_model_eval_lam_spine_prefix_eq_of_parts (TranslationProofs.LamSpine.lam us body)
+        rfl hAgree hArgs hBody
+  | _, _, _, _, @TranslationProofs.LamSpine.app f us body r a hf, hAgree, hArgs, hBody => by
+      by_cases hp : TranslationProofs.lamVarsPrefix us (a :: r).length = true
+      · exact smt_model_eval_lam_spine_prefix_eq_of_parts
+          (TranslationProofs.LamSpine.app a hf) hp hAgree hArgs hBody
+      · have hnp : ¬ TranslationProofs.SmtPendingLam (__eo_to_smt f) := fun hpend =>
+          hp (TranslationProofs.lamVarsPrefix_of_pending_app a hf hpend)
+        rw [hf.eo_to_smt_app a, TranslationProofs.eo_to_smt_apply_of_not_pending _ hnp]
+        exact smtx_model_eval_apply_eq_of_env
+          (model_agrees_on_env_nil_of_globals hAgree.globals)
+          (smt_model_eval_lam_spine_eq_of_parts hf hAgree
+            (fun a' ha' => hArgs a' (List.mem_cons_of_mem _ ha')) hBody)
+          (hArgs a List.mem_cons_self)
+
+theorem eoVarEnv_of_lambda_vars :
+    ∀ (m : Nat) {us : Term}, TranslationProofs.lamVars us m = true ->
+      ∃ vars, EoVarEnv us vars ∧ vars.map EoVarKey.toSmt = eoVarKeys us
+  | 0, us, h => by
+      rw [TranslationProofs.lambda_vars_zero_inv h]
+      exact ⟨[], EoVarEnv.nil, rfl⟩
+  | m + 1, us, h => by
+      obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lambda_vars_succ_inv h
+      obtain ⟨vars, hEnv, hKeys⟩ := eoVarEnv_of_lambda_vars m hvs
+      refine ⟨(s, T) :: vars, EoVarEnv.cons hEnv, ?_⟩
+      change (s, __eo_to_smt_type T) :: vars.map EoVarKey.toSmt =
+        (s, __eo_to_smt_type T) :: eoVarKeys vs
+      rw [hKeys]
+
+/-- The lambda of a spine and its arguments inherit the `false` free-variable
+check of the spine. -/
+theorem contains_atomic_term_list_free_rec_lam_spine_false
+    {except bound : Term} {exceptVars boundVars : List EoVarKey}
+    (hExcept : EoVarEnvPerm except exceptVars)
+    (hBound : EoVarEnvPerm bound boundVars) :
+  ∀ {t us body : Term} {r : List Term}, TranslationProofs.LamSpine t us body r ->
+    (∀ v vs, body ≠ Term.Apply (Term.Apply Term.__eo_List_cons v) vs) ->
+    (∀ a ∈ r, ∀ v vs, a ≠ Term.Apply (Term.Apply Term.__eo_List_cons v) vs) ->
+    __contains_atomic_term_list_free_rec t except bound = Term.Boolean false ->
+    __contains_atomic_term_list_free_rec
+        (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body) except bound =
+        Term.Boolean false ∧
+      ∀ a ∈ r, __contains_atomic_term_list_free_rec a except bound = Term.Boolean false
+  | _, _, _, _, TranslationProofs.LamSpine.lam us body, _, _, hNoFree =>
+      ⟨hNoFree, by simp⟩
+  | _, _, _, _, @TranslationProofs.LamSpine.app f us body r a hf, hBodyNotList, hArgsNotList,
+      hNoFree => by
+      have hNotList :
+          ∀ q x ys, f ≠ Term.Apply q (Term.Apply (Term.Apply Term.__eo_List_cons x) ys) := by
+        intro q x ys hEq
+        cases hf with
+        | lam => cases hEq; exact hBodyNotList x ys rfl
+        | app a' hf' =>
+            cases hEq
+            exact hArgsNotList _ (List.mem_cons_of_mem _ List.mem_cons_self) x ys rfl
+      obtain ⟨hF, hA⟩ :=
+        contains_atomic_term_list_free_rec_apply_false_cases hExcept hBound hNotList hNoFree
+      obtain ⟨hLam, hArgs⟩ :=
+        contains_atomic_term_list_free_rec_lam_spine_false hExcept hBound hf hBodyNotList
+          (fun a' ha' => hArgsNotList a' (List.mem_cons_of_mem _ ha')) hF
+      refine ⟨hLam, ?_⟩
+      intro a' ha'
+      rcases List.mem_cons.1 ha' with rfl | ha'
+      · exact hA
+      · exact hArgs a' ha'
+
+/-- A lambda spine with an SMT translation evaluates alike in models that agree
+off its free variables, given that its body and arguments do. -/
+theorem smt_model_eval_lam_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped
+    {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
+    {except bound : Term} {exceptVars boundVars : List EoVarKey} {M N : SmtModel}
+    (hExcept : EoVarEnvPerm except exceptVars)
+    (hBound : EoVarEnvPerm bound boundVars)
+    (hTrans : eoHasSmtTranslation t)
+    (hNoFree :
+      __contains_atomic_term_list_free_rec t except bound = Term.Boolean false)
+    (hAgree :
+      model_agrees_except_on_env
+        (exceptVars.map EoVarKey.toSmt) (boundVars.map EoVarKey.toSmt) M N)
+    (hRec :
+      ∀ {u except' bound' : Term}
+        {exceptVars' boundVars' : List EoVarKey}
+        {M' N' : SmtModel},
+        (u = body ∨ u ∈ r) ->
+          EoVarEnvPerm except' exceptVars' ->
+          EoVarEnvPerm bound' boundVars' ->
+          eoHasSmtTranslation u ->
+          __contains_atomic_term_list_free_rec u except' bound' =
+            Term.Boolean false ->
+          model_agrees_except_on_env
+            (exceptVars'.map EoVarKey.toSmt)
+            (boundVars'.map EoVarKey.toSmt) M' N' ->
+          __smtx_model_eval M' (__eo_to_smt u) =
+            __smtx_model_eval N' (__eo_to_smt u)) :
+  __smtx_model_eval M (__eo_to_smt t) = __smtx_model_eval N (__eo_to_smt t) :=
+by
+  obtain ⟨⟨m, hv⟩, hBodyNN, hArgsNN⟩ := hs.parts_typed_any hTrans
+  obtain ⟨hLamNoFree, hArgsNoFree⟩ :=
+    contains_atomic_term_list_free_rec_lam_spine_false hExcept hBound hs
+      (term_not_eo_list_cons_of_has_smt_translation hBodyNN)
+      (fun a ha => term_not_eo_list_cons_of_has_smt_translation (hArgsNN a ha)) hNoFree
+  refine smt_model_eval_lam_spine_eq_of_parts hs hAgree ?_ ?_
+  · intro a ha
+    exact hRec (Or.inr ha) hExcept hBound (hArgsNN a ha) (hArgsNoFree a ha) hAgree
+  · intro M' N' hAgree'
+    obtain ⟨binderVars, hUsEnv, hKeys⟩ := eoVarEnv_of_lambda_vars m hv
+    cases hUsEnv with
+    | nil =>
+        have hBodyNoFree :=
+          (contains_atomic_term_list_free_rec_apply_false_cases hExcept hBound
+            (by intro q x ys hEq; cases hEq) hLamNoFree).2
+        exact hRec (Or.inl rfl) hExcept hBound hBodyNN hBodyNoFree
+          (by simpa [eoVarKeys] using hAgree')
+    | cons hTail =>
+        have hBodyNoFree :=
+          contains_atomic_term_list_free_rec_list_branch_false_body hLamNoFree
+        refine hRec (Or.inl rfl) hExcept
+          (EoVarEnvPerm.concat_rev (EoVarEnv.cons hTail) hBound) hBodyNN hBodyNoFree ?_
+        rw [List.map_append, List.map_reverse, hKeys]
+        exact hAgree'
+
+/-- `hs.sizeOf_lt` form of
+`smt_model_eval_lam_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped`. -/
+theorem smt_model_eval_lam_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped_lt
+    {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
+    {except bound : Term} {exceptVars boundVars : List EoVarKey} {M N : SmtModel}
+    (hExcept : EoVarEnvPerm except exceptVars)
+    (hBound : EoVarEnvPerm bound boundVars)
+    (hTrans : eoHasSmtTranslation t)
+    (hNoFree :
+      __contains_atomic_term_list_free_rec t except bound = Term.Boolean false)
+    (hAgree :
+      model_agrees_except_on_env
+        (exceptVars.map EoVarKey.toSmt) (boundVars.map EoVarKey.toSmt) M N)
+    (hRec :
+      ∀ {u except' bound' : Term}
+        {exceptVars' boundVars' : List EoVarKey}
+        {M' N' : SmtModel},
+        sizeOf u < sizeOf t ->
+          EoVarEnvPerm except' exceptVars' ->
+          EoVarEnvPerm bound' boundVars' ->
+          eoHasSmtTranslation u ->
+          __contains_atomic_term_list_free_rec u except' bound' =
+            Term.Boolean false ->
+          model_agrees_except_on_env
+            (exceptVars'.map EoVarKey.toSmt)
+            (boundVars'.map EoVarKey.toSmt) M' N' ->
+          __smtx_model_eval M' (__eo_to_smt u) =
+            __smtx_model_eval N' (__eo_to_smt u)) :
+  __smtx_model_eval M (__eo_to_smt t) = __smtx_model_eval N (__eo_to_smt t) :=
+by
+  obtain ⟨hBodyLt, hArgsLt⟩ := hs.sizeOf_lt
+  exact smt_model_eval_lam_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped
+    hs hExcept hBound hTrans hNoFree hAgree (fun hu => hRec (by
+      rcases hu with rfl | hu
+      · exact hBodyLt
+      · exact hArgsLt _ hu))
+
+/-- A generic application is a beta redex, handled by
+`smt_model_eval_lam_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped`,
+or is handled by `hGeneric`. -/
+theorem smt_model_eval_apply_generic_or_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped
+    {f x except bound : Term} {exceptVars boundVars : List EoVarKey} {M N : SmtModel}
+    (hExcept : EoVarEnvPerm except exceptVars)
+    (hBound : EoVarEnvPerm bound boundVars)
+    (hTrans : eoHasSmtTranslation (Term.Apply f x))
+    (hNoFree :
+      __contains_atomic_term_list_free_rec (Term.Apply f x) except bound =
+        Term.Boolean false)
+    (hAgree :
+      model_agrees_except_on_env
+        (exceptVars.map EoVarKey.toSmt) (boundVars.map EoVarKey.toSmt) M N)
+    (hRec :
+      ∀ {u except' bound' : Term}
+        {exceptVars' boundVars' : List EoVarKey}
+        {M' N' : SmtModel},
+        sizeOf u < sizeOf (Term.Apply f x) ->
+          EoVarEnvPerm except' exceptVars' ->
+          EoVarEnvPerm bound' boundVars' ->
+          eoHasSmtTranslation u ->
+          __contains_atomic_term_list_free_rec u except' bound' =
+            Term.Boolean false ->
+          model_agrees_except_on_env
+            (exceptVars'.map EoVarKey.toSmt)
+            (boundVars'.map EoVarKey.toSmt) M' N' ->
+          __smtx_model_eval M' (__eo_to_smt u) =
+            __smtx_model_eval N' (__eo_to_smt u))
+    (hGeneric :
+      ¬ TranslationProofs.IsLamSpine f ->
+        __smtx_model_eval M (__eo_to_smt (Term.Apply f x)) =
+          __smtx_model_eval N (__eo_to_smt (Term.Apply f x))) :
+  __smtx_model_eval M (__eo_to_smt (Term.Apply f x)) =
+    __smtx_model_eval N (__eo_to_smt (Term.Apply f x)) :=
+by
+  by_cases hSp : TranslationProofs.IsLamSpine f
+  · obtain ⟨us, body, r, hs⟩ := hSp
+    exact smt_model_eval_lam_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped_lt
+      (TranslationProofs.LamSpine.app x hs) hExcept hBound hTrans hNoFree hAgree hRec
+  · exact hGeneric hSp
+
+
 theorem smtx_model_eval_ite_eq_of_eval_eq
     {M N : SmtModel} {c x y : SmtTerm}
     (hc :
@@ -4587,6 +4895,15 @@ by
     · exact
         false_of_exists_non_list_has_smt_translation
           (by intro v vs hX; exact hCons ⟨v, vs, hX⟩) hTrans
+  case lambda =>
+    exact
+      smt_model_eval_lam_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped
+        (TranslationProofs.LamSpine.lam x y)
+        hExcept hBound hTrans hNoFree hAgree
+        (fun hu => by
+          rcases hu with rfl | hu
+          · exact ih hYLt
+          · cases hu)
   all_goals
     first
     | exact
@@ -4965,7 +5282,7 @@ by
             exact
               apply_apply_uop_arg_not_list_of_nonquantifier_has_smt_translation
                 (by decide) (by decide) hTrans v vs rfl)
-          (by rfl)
+          (by eo_to_smt_generic_rfl)
           (generic_apply_type_of_non_special_head_closed _ _
             (by
               intro s d i j hSel
@@ -5615,9 +5932,11 @@ by
         SmtTerm.Apply
           (__eo_to_smt (Term.Apply (Term.UOp1 op idx) x))
           (__eo_to_smt y) := by
-    cases op <;> try rfl
-    · exact False.elim (hUpdate rfl)
-    · exact False.elim (hTupleUpdate rfl)
+    cases op <;>
+      first
+      | eo_to_smt_generic_rfl
+      | exact False.elim (hUpdate rfl)
+      | exact False.elim (hTupleUpdate rfl)
   have hTy :
       __smtx_typeof
           (SmtTerm.Apply
@@ -5924,6 +6243,17 @@ by
     exact false_of_apply_apply_apply_forall_has_smt_translation hTrans
   case «exists» =>
     exact false_of_apply_apply_apply_exists_has_smt_translation hTrans
+  case lambda =>
+    exact
+      smt_model_eval_lam_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped
+        (TranslationProofs.LamSpine.app y (TranslationProofs.LamSpine.lam c x))
+        hExcept hBound hTrans hNoFree hAgree
+        (fun hu => by
+          rcases hu with rfl | hu
+          · exact ih hXLt
+          · rw [List.mem_singleton] at hu
+            subst hu
+            exact ih hYLt)
   all_goals
     exact
       smt_model_eval_apply_generic_eq_of_contains_atomic_term_list_free_rec_false_mapped
@@ -5934,7 +6264,7 @@ by
           exact
             false_of_apply_apply_apply_uop_middle_raw_list_has_smt_translation
               hTrans)
-        (by rfl)
+        (by eo_to_smt_generic_rfl)
         (generic_apply_type_of_non_special_head_closed _ _
           (by
             intro s d i j hSel
@@ -6137,6 +6467,9 @@ by
                         simp [__smtx_model_eval, hw, hz, hy, hx])
                       hRec
                 all_goals
+                      refine smt_model_eval_apply_generic_or_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped
+                        hExcept hBound hTrans hNoFree hAgree hRec ?_
+                      intro hSp
                       exact
                         smt_model_eval_apply_generic_eq_of_contains_atomic_term_list_free_rec_false_mapped
                           hExcept hBound
@@ -6148,7 +6481,7 @@ by
                                 hTrans with hForall | hExists
                             · cases hForall
                             · cases hExists)
-                          (by rfl)
+                          (TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hSp)
                           (generic_apply_type_of_non_special_head_closed _ _
                             (by
                               intro s d i j hSel
@@ -6172,6 +6505,9 @@ by
                               simp <;> omega) hExcept hBound'
                               hXTrans hXNoFree hAgree')
               all_goals
+                    refine smt_model_eval_apply_generic_or_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped
+                      hExcept hBound hTrans hNoFree hAgree hRec ?_
+                    intro hSp
                     exact
                       smt_model_eval_apply_generic_eq_of_contains_atomic_term_list_free_rec_false_mapped
                         hExcept hBound
@@ -6183,7 +6519,7 @@ by
                               hTrans with hForall | hExists
                           · cases hForall
                           · cases hExists)
-                        (by rfl)
+                        (TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hSp)
                         (generic_apply_type_of_non_special_head_closed _ _
                           (by
                             intro s d i j hSel
@@ -6207,6 +6543,9 @@ by
                             simp <;> omega) hExcept hBound'
                             hXTrans hXNoFree hAgree')
             all_goals
+              refine smt_model_eval_apply_generic_or_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped
+                hExcept hBound hTrans hNoFree hAgree hRec ?_
+              intro hSp
               exact
                 smt_model_eval_apply_generic_eq_of_contains_atomic_term_list_free_rec_false_mapped
                   hExcept hBound
@@ -6218,7 +6557,7 @@ by
                         hTrans with hForall | hExists
                     · cases hForall
                     · cases hExists)
-                  (by rfl)
+                  (TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hSp)
                   (generic_apply_type_of_non_special_head_closed _ _
                     (by
                       intro s d i j hSel
@@ -6242,6 +6581,9 @@ by
                       simp <;> omega) hExcept hBound'
                       hXTrans hXNoFree hAgree')
           all_goals
+            refine smt_model_eval_apply_generic_or_spine_eq_of_contains_atomic_term_list_free_rec_false_mapped
+              hExcept hBound hTrans hNoFree hAgree hRec ?_
+            intro hSp
             exact
               smt_model_eval_apply_generic_eq_of_contains_atomic_term_list_free_rec_false_mapped
                 hExcept hBound
@@ -6253,7 +6595,7 @@ by
                       hTrans with hForall | hExists
                   · cases hForall
                   · cases hExists)
-                (by rfl)
+                (TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hSp)
                 (generic_apply_type_of_non_special_head_closed _ _
                   (by
                     intro s d i j hSel
