@@ -995,7 +995,6 @@
     (_ (f x1) y)
     ($eo_to_smt_apply (f x1) y))
 
-(define-rule beta-reduce :exclude)
 
 ;-----------------------------------------------------------------------------
 (section "The type constructors")
