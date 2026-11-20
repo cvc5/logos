@@ -3487,7 +3487,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                       (hNonNone
                         (typeof_apply_apply_none_head_eq (__eo_to_smt y) (__eo_to_smt x)))
                   | exact eo_type_valid_of_nested_generic_apply_typeof_apply_eq_dtcapp_full
-                      (go _) (by rfl) hTermNN hTy
+                      (go _) (by eo_to_smt_generic_rfl) hTermNN hTy
                   | exact eo_type_valid_of_typeof_apply_eq_dtcapp_cases_full
                       (by intro T U h; cases h)
                       (by intro T U h; cases h)
@@ -3737,7 +3737,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                     (g := Term.UOp1 UserOp1.tuple_select z) (y := y) (x := x)
                     (A := a) (B := b)
                     (go (Term.Apply (Term.UOp1 UserOp1.tuple_select z) y))
-                    (by rfl) (by rfl) hTermNN (by
+                    (by first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp) (by rfl) hTermNN (by
                       change
                         __eo_typeof
                             (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_select z) y) x) =
@@ -3938,7 +3938,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                 exact eo_type_valid_of_nested_generic_apply_typeof_apply_eq_dtcapp_full
                   (g := Term.UOp2 op z w) (y := y) (x := x) (A := a) (B := b)
                   (go (Term.Apply (Term.UOp2 op z w) y))
-                  (by rfl) hTermNN hTy
+                  (by first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp) hTermNN hTy
               case UOp3 op z w v =>
                 exact eo_type_valid_of_nested_generic_apply_typeof_apply_eq_dtcapp_full
                   (g := Term.UOp3 op z w v) (y := y) (x := x) (A := a) (B := b)
