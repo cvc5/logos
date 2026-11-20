@@ -468,7 +468,8 @@ theorem lamVarsPrefix_succ_inv {us : Term} {k : Nat}
         lamVarsPrefix vs k = true := by
   unfold lamVarsPrefix at h
   split at h
-  · exact ⟨_, _, _, rfl, ((Bool.and_eq_true _ _).1 h).2⟩
+  · simp only [Bool.and_eq_true] at h
+    exact ⟨_, _, _, rfl, h.2⟩
   · cases h
 
 theorem lamVarsPrefix_succ_wf {s : native_String} {T vs : Term} {k : Nat}
@@ -483,7 +484,10 @@ theorem lamVarsPrefix_pred :
   | 0, us, _ => rfl
   | k + 1, us, h => by
       obtain ⟨s, T, vs, rfl, hvs⟩ := lamVarsPrefix_succ_inv h
-      exact lamVarsPrefix_pred k hvs
+      have hw := lamVarsPrefix_succ_wf h
+      show (lamVarWf T && lamVarsPrefix vs k) = true
+      rw [hw, lamVarsPrefix_pred k hvs]
+      rfl
 
 /-- Where the first `k + 1` elements of `us` are variables, the list without
 its first `k` begins with one. -/
@@ -513,13 +517,17 @@ theorem lamVarsPrefix_succ :
       change us = _ at hd
       subst hd
       refine ⟨?_, rfl, rfl⟩
-      simp [lamVarsPrefix, hwf]
+      show (lamVarWf T && lamVarsPrefix vs 0) = true
+      rw [hwf]
+      rfl
   | k + 1, us, s, T, vs, hp, hd, hwf => by
       obtain ⟨s', T', us', rfl, hp'⟩ := lamVarsPrefix_succ_inv hp
       have hw' := lamVarsPrefix_succ_wf hp
       obtain ⟨h1, h2, h3⟩ := lamVarsPrefix_succ k us' hp' hd hwf
       refine ⟨?_, h2, h3⟩
-      simp [lamVarsPrefix, hw', h1]
+      show (lamVarWf T' && lamVarsPrefix us' (k + 1)) = true
+      rw [hw', h1]
+      rfl
 
 /-- Where the list `us` has, after its first `k` elements, a variable a lambda
 may not bind, its first `k + 1` elements are not variables a lambda may bind. -/
@@ -553,7 +561,9 @@ theorem lamVars_of_prefix :
   | k + 1, us, hp, hd => by
       obtain ⟨s, T, vs, rfl, hvs⟩ := lamVarsPrefix_succ_inv hp
       have hw := lamVarsPrefix_succ_wf hp
-      simp [lamVars, hw, lamVars_of_prefix k vs hvs hd]
+      show (lamVarWf T && lamVars vs (k + 1 - 1)) = true
+      rw [hw, show k + 1 - 1 = k from rfl, lamVars_of_prefix k vs hvs hd]
+      rfl
 
 theorem lamVarsPrefix_of_lamVars :
     ∀ (m : Nat) {us : Term}, lamVars us m = true -> lamVarsPrefix us m = true
@@ -561,7 +571,9 @@ theorem lamVarsPrefix_of_lamVars :
   | m + 1, us, h => by
       obtain ⟨s, T, vs, rfl, hvs⟩ := lambda_vars_succ_inv h
       have hw := lambda_vars_succ_wf h
-      simp [lamVarsPrefix, hw, lamVarsPrefix_of_lamVars m hvs]
+      show (lamVarWf T && lamVarsPrefix vs m) = true
+      rw [hw, lamVarsPrefix_of_lamVars m hvs]
+      rfl
 
 /-! ## The curried chain of a lambda -/
 
@@ -693,7 +705,7 @@ theorem LamSpine.eo_to_smt_prefix {t us body : Term} {r : List Term}
               injection he with _ he
               cases he
             rw [eo_to_smt_apply_of_not_pending _ hnp]
-            exact ⟨fun h => by rw [hp1] at h; cases h, fun _ => not_smtPendingLam_apply _ _⟩
+            exact ⟨fun h => (by rw [hp1] at h; cases h), fun _ => not_smtPendingLam_apply _ _⟩
           obtain ⟨hp1, hd1, hn⟩ := lamVarsPrefix_succ r.length us hp hD hw
           refine ⟨fun _ => ?_, fun h => by rw [hp1] at h; cases h⟩
           rw [hD, curry_cons_of_wf _ _ _ _ hw, eo_to_smt_apply_pending, hd1]
