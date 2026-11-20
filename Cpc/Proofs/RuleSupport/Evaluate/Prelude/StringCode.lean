@@ -144,8 +144,11 @@ theorem EvaluateProofInternal.eo_typeof_apply_str_rev_eq_seq_arg
 theorem EvaluateProofInternal.native_char_valid_lt
     {c : native_Char} (hc : native_char_valid c = true) :
     c < 196608 := by
-  change decide (c < 196608) = true at hc
-  exact of_decide_eq_true hc
+  have h : (c : Int) ≤ native_z_max_code_point := by
+    unfold native_char_valid at hc
+    exact of_decide_eq_true hc
+  rw [Smtm.le_native_z_max_code_point_iff] at h
+  exact_mod_cast h
 
 theorem EvaluateProofInternal.native_str_to_code_singleton
     {c : native_Char}
@@ -195,17 +198,17 @@ theorem EvaluateProofInternal.eo_to_str_of_valid_nat
   have hNonneg : native_zleq 0 (c : Int) = true := by
     change decide ((0 : Int) ≤ (c : Int)) = true
     exact decide_eq_true (Int.natCast_nonneg c)
-  have hLt : native_zlt (c : Int) 196608 = true := by
-    rw [native_zlt_eq]
-    exact decide_eq_true hcLtInt
+  have hLt : native_zleq (c : Int) native_z_max_code_point = true := by
+    change decide ((c : Int) ≤ native_z_max_code_point) = true
+    exact decide_eq_true ((Smtm.le_native_z_max_code_point_iff _).mpr hcLtInt)
   have hCond : native_and (native_zleq 0 (c : Int))
-      (native_zlt (c : Int) 196608) = true := by
+      (native_zleq (c : Int) native_z_max_code_point) = true := by
     change (native_zleq 0 (c : Int) &&
-      native_zlt (c : Int) 196608) = true
+      native_zleq (c : Int) native_z_max_code_point) = true
     rw [hNonneg, hLt]
     rfl
   change (if native_and (native_zleq 0 (c : Int))
-      (native_zlt (c : Int) 196608) = true then
+      (native_zleq (c : Int) native_z_max_code_point) = true then
         Term.String (native_str_from_code (c : Int)) else Term.Stuck) =
       Term.String [c]
   rw [hCond]

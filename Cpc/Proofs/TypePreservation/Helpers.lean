@@ -1526,7 +1526,8 @@ theorem native_char_valid_to_lower
       simp at hRange
       exact hRange.2
     simp [impl_native_char_to_lower, hRange, native_char_valid]
-    exact Nat.lt_of_le_of_lt (Nat.add_le_add_right hle90 32) (by decide)
+    have hMax : native_z_max_code_point = 196607 := rfl
+    omega
 
 /-- Uppercasing a valid SMT character preserves validity. -/
 theorem native_char_valid_to_upper
@@ -1538,7 +1539,8 @@ theorem native_char_valid_to_upper
   cases hRange : (decide (97 ≤ c) && decide (c ≤ 122))
   · simp [impl_native_char_to_upper, hRange, native_char_valid, hcLt]
   · simp [impl_native_char_to_upper, hRange, native_char_valid]
-    exact Nat.lt_of_le_of_lt (Nat.sub_le c 32) hcLt
+    have hMax : native_z_max_code_point = 196607 := rfl
+    omega
 
 /-- Lowercasing a valid native string preserves validity. -/
 theorem native_str_to_lower_valid
