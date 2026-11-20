@@ -536,7 +536,9 @@ theorem smtx_typeof_mkSpine_congr (vs vs' : List (native_String × Term)) (B B' 
     (σ : Term -> Term)
     (hlen : vs'.length = vs.length)
     (hTys : vs'.map (fun p => __eo_to_smt_type p.2) = vs.map (fun p => __eo_to_smt_type p.2))
-    (hB : __smtx_typeof (__eo_to_smt B') = __smtx_typeof (__eo_to_smt B)) :
+    (hB : __smtx_typeof (__eo_to_smt B') = __smtx_typeof (__eo_to_smt B))
+    (hv : lamVars (LamSpineSupport.eoVarList vs) vs.length = true)
+    (hv' : lamVars (LamSpineSupport.eoVarList vs') vs.length = true) :
     ∀ r : List Term, vs.length ≤ r.length ->
       (∀ x ∈ r, __smtx_typeof (__eo_to_smt (σ x)) = __smtx_typeof (__eo_to_smt x)) ->
       __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine
@@ -544,9 +546,6 @@ theorem smtx_typeof_mkSpine_congr (vs vs' : List (native_String × Term)) (B B' 
         __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine
           (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) B) r))
   | r, hm, hArgs => by
-      have hv := LamSpineSupport.lamVars_eoVarList vs
-      have hv' : lamVars (LamSpineSupport.eoVarList vs') vs.length = true := by
-        rw [← hlen]; exact LamSpineSupport.lamVars_eoVarList vs'
       by_cases hmr : vs.length = r.length
       · rw [(LamSpineSupport.lamSpine_mkSpine _ B r).eo_to_smt_full (hmr ▸ hv),
           (LamSpineSupport.lamSpine_mkSpine _ B' (r.map σ)).eo_to_smt_full
@@ -569,7 +568,7 @@ theorem smtx_typeof_mkSpine_congr (vs vs' : List (native_String × Term)) (B B' 
               LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv' (σ a) (r.map σ)
                 (by simp; omega),
               LamSpineSupport.smtx_typeof_mkSpine_apply, LamSpineSupport.smtx_typeof_mkSpine_apply,
-              smtx_typeof_mkSpine_congr vs vs' B B' σ hlen hTys hB r (by omega)
+              smtx_typeof_mkSpine_congr vs vs' B B' σ hlen hTys hB hv hv' r (by omega)
                 (fun x hx => hArgs x (List.mem_cons_of_mem _ hx)),
               hArgs a List.mem_cons_self]
 termination_by r => r.length

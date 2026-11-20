@@ -85,7 +85,8 @@ theorem smtx_typeof_bindings_bindsApp_congr₂ (U : SmtType) :
 /-- The SMT type of a spine depends only on the types of its body and
 arguments. -/
 theorem smtx_typeof_mkSpine_congr₂ (vs : List (native_String × Term)) (B B' : Term)
-    (hB : __smtx_typeof (__eo_to_smt B') = __smtx_typeof (__eo_to_smt B)) :
+    (hB : __smtx_typeof (__eo_to_smt B') = __smtx_typeof (__eo_to_smt B))
+    (hv : TranslationProofs.lamVars (LamSpineSupport.eoVarList vs) vs.length = true) :
     ∀ (r r' : List Term),
       List.Forall₂ (fun a' a => __smtx_typeof (__eo_to_smt a') = __smtx_typeof (__eo_to_smt a))
         r' r ->
@@ -95,7 +96,6 @@ theorem smtx_typeof_mkSpine_congr₂ (vs : List (native_String × Term)) (B B' :
         __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine
           (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) B) r))
   | r, r', hR, hm => by
-      have hv := LamSpineSupport.lamVars_eoVarList vs
       have hlen := hR.length_eq
       by_cases hmr : vs.length = r.length
       · rw [(LamSpineSupport.lamSpine_mkSpine _ B r).eo_to_smt_full (hmr ▸ hv),
@@ -115,7 +115,7 @@ theorem smtx_typeof_mkSpine_congr₂ (vs : List (native_String × Term)) (B B' :
               LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv a' r'
                 (by rw [hR'.length_eq]; omega),
               LamSpineSupport.smtx_typeof_mkSpine_apply, LamSpineSupport.smtx_typeof_mkSpine_apply,
-              smtx_typeof_mkSpine_congr₂ vs B B' hB r r' hR' (by omega), ha]
+              smtx_typeof_mkSpine_congr₂ vs B B' hB hv r r' hR' (by omega), ha]
 termination_by r => r.length
 
 /-- A typed lambda spine and anything congruent to it have the same type. -/
@@ -143,7 +143,7 @@ theorem congTypeSpine_lam_spine_eq_has_bool_type (t rhs : Term)
       rcases h with rfl | h
       · rfl
       · exact (RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type _ _ h).1.symm)
-  have hSame := smtx_typeof_mkSpine_congr₂ vs body body' hTyB r r' hR' hm
+  have hSame := smtx_typeof_mkSpine_congr₂ vs body body' hTyB hv r r' hR' hm
   exact RuleProofs.eo_has_bool_type_eq_of_same_smt_type _ _ hSame.symm hNN
 
 theorem congTypeSpine_eq_has_bool_type (t rhs : Term) :

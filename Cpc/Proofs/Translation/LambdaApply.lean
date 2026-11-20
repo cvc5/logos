@@ -69,17 +69,53 @@ theorem lamVars_exists :
       ∃ vs : List (native_String × Term), vs.length = n ∧ us = eoVarList vs
   | Term.__eo_List_nil, 0, _ => ⟨[], rfl, rfl⟩
   | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) us, n + 1, h => by
-      obtain ⟨vs, hlen, rfl⟩ := lamVars_exists us n h
+      obtain ⟨vs, hlen, rfl⟩ := lamVars_exists us n (by
+        simp only [lamVars, Bool.and_eq_true] at h; exact h.2)
       exact ⟨(s, T) :: vs, by simp [hlen], rfl⟩
   | Term.__eo_List_nil, _ + 1, h => by cases h
   | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String _) _)) _, 0, h => by
       cases h
 
-theorem lamVars_eoVarList (vs : List (native_String × Term)) :
+theorem lamVars_eoVarList (vs : List (native_String × Term))
+    (hwf : ∀ p ∈ vs, lamVarWf p.2 = true) :
     lamVars (eoVarList vs) vs.length = true := by
   induction vs with
   | nil => rfl
-  | cons p vs ih => exact ih
+  | cons p vs ih =>
+      obtain ⟨s, T⟩ := p
+      simp only [List.length_cons]
+      change (lamVarWf T && lamVars (eoVarList vs) vs.length) = true
+      rw [hwf (s, T) List.mem_cons_self, ih (fun q hq => hwf q (List.mem_cons_of_mem _ hq))]
+      rfl
+
+/-- The variables of a list of variables a lambda may bind are ones it may
+bind. -/
+theorem lamVars_wf_of_eoVarList :
+    ∀ (vs : List (native_String × Term)) {n : Nat}, lamVars (eoVarList vs) n = true ->
+      ∀ p ∈ vs, lamVarWf p.2 = true
+  | [], _, _, p, hp => absurd hp List.not_mem_nil
+  | (s, T) :: vs, 0, h, _, _ => by cases h
+  | (s, T) :: vs, n + 1, h, p, hp => by
+      change (lamVarWf T && lamVars (eoVarList vs) n) = true at h
+      simp only [Bool.and_eq_true] at h
+      rcases List.mem_cons.1 hp with rfl | hp
+      · exact h.1
+      · exact lamVars_wf_of_eoVarList vs h.2 p hp
+
+/-- Two lists of variables of the same types are both ones a lambda may bind
+or neither is. -/
+theorem lamVars_eoVarList_of_types (vs vs' : List (native_String × Term))
+    (hTys : vs'.map Prod.snd = vs.map Prod.snd)
+    (h : lamVars (eoVarList vs) vs.length = true) :
+    lamVars (eoVarList vs') vs.length = true := by
+  have hlen : vs'.length = vs.length := by simpa using congrArg List.length hTys
+  rw [← hlen]
+  apply lamVars_eoVarList
+  intro p hp
+  have hmem : p.2 ∈ vs.map Prod.snd := hTys ▸ List.mem_map_of_mem hp
+  obtain ⟨q, hq, hqe⟩ := List.mem_map.1 hmem
+  rw [← hqe]
+  exact lamVars_wf_of_eoVarList vs h q hq
 
 theorem lamNth_eoVarList :
     ∀ (vs : List (native_String × Term)) (i : Nat) (h : i < vs.length),
@@ -94,8 +130,9 @@ theorem lamVarsPrefix_of_lamVars_le :
   | _, _, 0, _, _ => by simp [lamVarsPrefix]
   | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) us,
       m + 1, k + 1, h, hk => by
-      simp only [lamVarsPrefix]
-      exact lamVarsPrefix_of_lamVars_le us m k h (by omega)
+      simp only [lamVars, Bool.and_eq_true] at h
+      simp only [lamVarsPrefix, h.1, Bool.true_and]
+      exact lamVarsPrefix_of_lamVars_le us m k h.2 (by omega)
   | Term.__eo_List_nil, 0, _ + 1, _, hk => by omega
   | Term.__eo_List_nil, _ + 1, _ + 1, h, _ => by cases h
   | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String _) _)) _,
@@ -108,8 +145,9 @@ theorem lamVarsPrefix_false_of_lamVars_lt :
   | Term.__eo_List_nil, 0, k + 1, _, _ => by simp [lamVarsPrefix]
   | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) us,
       m + 1, k + 1, h, hk => by
-      simp only [lamVarsPrefix]
-      exact lamVarsPrefix_false_of_lamVars_lt us m k h (by omega)
+      simp only [lamVars, Bool.and_eq_true] at h
+      simp only [lamVarsPrefix, h.1, Bool.true_and]
+      exact lamVarsPrefix_false_of_lamVars_lt us m k h.2 (by omega)
   | _, _, 0, _, hk => by omega
   | Term.__eo_List_nil, _ + 1, _, h, _ => by cases h
   | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String _) _)) _,
@@ -125,8 +163,9 @@ theorem eoListDrop_cons_of_lamVars_lt :
       m + 1, 0, h, _ => ⟨s, T, us, rfl⟩
   | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) us,
       m + 1, k + 1, h, hk => by
+      simp only [lamVars, Bool.and_eq_true] at h
       simp only [eoListDrop]
-      exact eoListDrop_cons_of_lamVars_lt us m k h (by omega)
+      exact eoListDrop_cons_of_lamVars_lt us m k h.2 (by omega)
   | Term.__eo_List_nil, 0, _, _, hk => by omega
   | Term.__eo_List_nil, _ + 1, _, h, _ => by cases h
   | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String _) _)) _,
@@ -291,8 +330,12 @@ theorem spine_args_ge_vars {t us body : Term} {r : List Term} (h : LamSpine t us
   have hlt : r.length < m := by omega
   have hpre := lamVarsPrefix_of_lamVars_le us m r.length hv hlt.le
   obtain ⟨s, T, vs, hD⟩ := eoListDrop_cons_of_lamVars_lt us m r.length hv hlt
-  rw [h.eo_to_smt_prefix.1 hpre, hD, curry_cons] at hNN
-  exact hNN (smtx_typeof_pending ⟨_, _, _, _, rfl⟩)
+  rw [h.eo_to_smt_prefix.1 hpre, hD] at hNN
+  cases hw : lamVarWf T
+  · rw [curry_cons_of_not_wf _ _ _ _ hw] at hNN
+    exact hNN (by rw [smtx_typeof_bind_eq, smtx_typeof_none]; exact smtx_typeof_bindings_none _)
+  · rw [curry_cons_of_wf _ _ _ _ hw] at hNN
+    exact hNN (smtx_typeof_pending ⟨_, _, _, _, rfl⟩)
 
 theorem smtx_typeof_apply_result {F X A B : SmtType}
     (hF : F = SmtType.FunType A B ∨ F = SmtType.DtcAppType A B) (hX : X = A)

@@ -287,7 +287,7 @@ theorem substitute_simul_spine_preserves
           r (fun x hx => (hArgRes x hx).1)
       · unfold RuleProofs.eo_has_smt_translation
         rw [InstantiateRule.smtx_typeof_mkSpine_congr vs vs body _ _ rfl rfl
-          (hArgSmt hBodyNN hBodyRes.2 hBodyRes.1) r hm
+          (hArgSmt hBodyNN hBodyRes.2 hBodyRes.1) hv hv r hm
           (fun x hx => hArgSmt (hArgsNN x hx) (hArgRes x hx).2 (hArgRes x hx).1)]
         exact hFNN
   | true =>
@@ -336,7 +336,8 @@ theorem substitute_simul_spine_preserves
           (by
             have := congrArg (List.map __eo_to_smt_type) hTys
             simpa [List.map_map, Function.comp_def] using this)
-          (hArgSmt hBodyNN hBodyRes.2 hBodyRes.1) r hm
+          (hArgSmt hBodyNN hBodyRes.2 hBodyRes.1) hv
+          (LamSpineSupport.lamVars_eoVarList_of_types vs vs' hTys hv) r hm
           (fun x hx => hArgSmt (hArgsNN x hx) (hArgRes x hx).2 (hArgRes x hx).1)]
         exact hFNN
 
