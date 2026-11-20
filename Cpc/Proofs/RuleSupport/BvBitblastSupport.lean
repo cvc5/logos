@@ -7698,7 +7698,7 @@ private theorem shl_rec_eval {M : SmtModel}
                 _ < 4294967296 := hW32
             simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_pow,
               __eo_ite, native_teq, native_not, native_and,
-              native_zlt, native_zleq, native_ite, native_zexp_total, hs,
+              native_zlt_eq, native_zleq, native_ite, native_zexp_total, hs,
               hs32]]
           simp only [__eo_add, native_zplus]
           rw [show (s : Int) + 1 = ((s + 1 : Nat) : Int) by omega]
@@ -7812,7 +7812,7 @@ private theorem shr_rec_eval {M : SmtModel}
                 _ < 4294967296 := hW32
             simp [__eo_is_z, __eo_is_z_internal, __eo_is_neg, __eo_pow,
               __eo_ite, native_teq, native_not, native_and,
-              native_zlt, native_zleq, native_ite, native_zexp_total, hs,
+              native_zlt_eq, native_zleq, native_ite, native_zexp_total, hs,
               hs32]]
           simp only [__eo_add, native_zplus]
           rw [show (s : Int) + 1 = ((s + 1 : Nat) : Int) by omega]
