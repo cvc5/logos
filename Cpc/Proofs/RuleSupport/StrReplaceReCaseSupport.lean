@@ -689,19 +689,6 @@ private theorem extract_pack_string
   simp only [List.length_map, apply_ite, List.map_nil,
     List.map_take, List.map_drop]
   split <;> simp_all
-  -- v4.33 `simp_all` no longer pushes the `ite` through `List.map`, so the
-  -- guard has to be discharged explicitly before the two sides line up.
-  have hbadFalse :
-      ¬ (((i < 0 ∨ n ≤ 0) ∨ ((s.length : Int)) ≤ i)) := by
-    intro hbad
-    rcases ‹(0 ≤ i ∧ 0 < n) ∧ i < Int.ofNat s.length› with
-      ⟨⟨hi0, hn0⟩, hilt⟩
-    rcases hbad with (hi | hn) | hlen
-    · exact False.elim ((Int.not_lt_of_ge hi0) hi)
-    · exact False.elim ((Int.not_le_of_gt hn0) hn)
-    · exact False.elim ((Int.not_le_of_gt hilt) hlen)
-  rw [ite_eq_right hbadFalse]
-  simp [List.map_take, List.map_drop]
 
 private theorem unpack_extract_pack_string
     (s : native_String) (i n : native_Int) :
@@ -753,6 +740,7 @@ private theorem eo_is_closed_ternary_uop_args
     (op : UserOp) (x y z : Term)
     (hNotForall : op ≠ UserOp.forall)
     (hNotExists : op ≠ UserOp.exists)
+    (hNotLambda : op ≠ UserOp.lambda)
     (hXNe : x ≠ Term.Stuck) (hYNe : y ≠ Term.Stuck)
     (hZNe : z ≠ Term.Stuck)
     (hClosed :
@@ -763,7 +751,7 @@ private theorem eo_is_closed_ternary_uop_args
       __eo_is_closed y = Term.Boolean true ∧
         __eo_is_closed z = Term.Boolean true := by
   have hParentRec := eo_is_closed_eq_true_rec_nil hClosed
-  have hArgsRec := eo_is_closed_rec_ternary_uop_eq_true_cases
+  have hArgsRec := eo_is_closed_rec_ternary_uop_eq_true_cases (hNotLambda := hNotLambda)
     hNotForall hNotExists
     (hEnv := EoSmtVarEnvPerm.of_exact EoSmtVarEnv.nil) hParentRec
   exact ⟨eo_is_closed_of_rec_nil x hXNe hArgsRec.1,
@@ -823,6 +811,7 @@ theorem str_replace_re_reduction_pred_true
         __eo_is_closed y = Term.Boolean true ∧
           __eo_is_closed x = Term.Boolean true := by
     apply eo_is_closed_ternary_uop_args UserOp.str_replace_re z y x
+    · decide
     · decide
     · decide
     · exact hZTermNe

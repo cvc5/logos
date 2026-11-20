@@ -80,40 +80,11 @@ termination_by a b => sizeOf a + sizeOf b
   | [] => .atom 0
   | c :: cs => .pair (charKey c) (stringKey cs)
 
+-- An identifier a model chooses is a real number, see SmtReal, and is ordered
+-- as one.
+@[expose] def modelIdKey (r : ModelId) : Key := realKey r
+
 mutual
-
-@[expose] def typeKey : SmtType -> Key
-  | .None => node 0 []
-  | .Bool => node 1 []
-  | .Int => node 2 []
-  | .Real => node 3 []
-  | .RegLan => node 4 []
-  | .BitVec x1 => node 5 [natKey x1]
-  | .Map x1 x2 => node 6 [typeKey x1, typeKey x2]
-  | .Set x1 => node 7 [typeKey x1]
-  | .Seq x1 => node 8 [typeKey x1]
-  | .Char => node 9 []
-  | .Datatype x1 x2 => node 10 [stringKey x1, datatypeDeclKey x2]
-  | .TypeRef x1 => node 11 [stringKey x1]
-  | .USort x1 => node 12 [natKey x1]
-  | .FunType x1 x2 => node 13 [typeKey x1, typeKey x2]
-  | .DtcAppType x1 x2 => node 14 [typeKey x1, typeKey x2]
-
-@[expose] def valueKey : SmtValue -> Key
-  | .NotValue => node 0 []
-  | .Boolean x1 => node 1 [boolKey x1]
-  | .Numeral x1 => node 2 [intKey x1]
-  | .Real x1 => node 3 [realKey x1]
-  | .Binary x1 x2 => node 4 [intKey x1, intKey x2]
-  | .Map x1 => node 5 [mapKey x1]
-  | .Fun x1 x2 x3 => node 6 [realKey x1, typeKey x2, typeKey x3]
-  | .Set x1 => node 7 [mapKey x1]
-  | .Seq x1 => node 8 [seqKey x1]
-  | .Char x1 => node 9 [charKey x1]
-  | .UValue x1 x2 => node 10 [natKey x1, realKey x2]
-  | .RegLan x1 => node 11 [regLanKey x1]
-  | .DtCons x1 x2 x3 => node 12 [stringKey x1, datatypeDeclKey x2, natKey x3]
-  | .Apply x1 x2 => node 13 [valueKey x1, valueKey x2]
 
 @[expose] def datatypeKey : SmtDatatype -> Key
   | .null => node 0 []
@@ -146,6 +117,39 @@ mutual
 @[expose] def seqKey : SmtSeq -> Key
   | .cons x1 x2 => node 0 [valueKey x1, seqKey x2]
   | .empty x1 => node 1 [typeKey x1]
+
+@[expose] def typeKey : SmtType -> Key
+  | .None => node 0 []
+  | .Bool => node 1 []
+  | .Int => node 2 []
+  | .Real => node 3 []
+  | .RegLan => node 4 []
+  | .BitVec x1 => node 5 [natKey x1]
+  | .Map x1 x2 => node 6 [typeKey x1, typeKey x2]
+  | .Set x1 => node 7 [typeKey x1]
+  | .Seq x1 => node 8 [typeKey x1]
+  | .Char => node 9 []
+  | .Datatype x1 x2 => node 10 [stringKey x1, datatypeDeclKey x2]
+  | .TypeRef x1 => node 11 [stringKey x1]
+  | .USort x1 => node 12 [natKey x1]
+  | .FunType x1 x2 => node 13 [typeKey x1, typeKey x2]
+  | .DtcAppType x1 x2 => node 14 [typeKey x1, typeKey x2]
+
+@[expose] def valueKey : SmtValue -> Key
+  | .NotValue => node 0 []
+  | .Boolean x1 => node 1 [boolKey x1]
+  | .Numeral x1 => node 2 [intKey x1]
+  | .Real x1 => node 3 [realKey x1]
+  | .Binary x1 x2 => node 4 [intKey x1, intKey x2]
+  | .Map x1 => node 5 [mapKey x1]
+  | .Fun x1 x2 x3 => node 6 [modelIdKey x1, typeKey x2, typeKey x3]
+  | .Set x1 => node 7 [mapKey x1]
+  | .Seq x1 => node 8 [seqKey x1]
+  | .Char x1 => node 9 [charKey x1]
+  | .UValue x1 x2 => node 10 [natKey x1, modelIdKey x2]
+  | .RegLan x1 => node 11 [regLanKey x1]
+  | .DtCons x1 x2 x3 => node 12 [stringKey x1, datatypeDeclKey x2, natKey x3]
+  | .Apply x1 x2 => node 13 [valueKey x1, valueKey x2]
 
 
 end

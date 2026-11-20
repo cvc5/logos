@@ -12,6 +12,7 @@ public import Cpc.Proofs.Translation.EoTypeofCore
 import all Cpc.Proofs.Translation.EoTypeofCore
 public import Cpc.Proofs.Translation.Inversions
 import all Cpc.Proofs.Translation.Inversions
+public import Cpc.Proofs.RuleSupport.TupleSpineSupport
 
 open Eo
 open SmtEval
@@ -31,98 +32,53 @@ private theorem eo_eq_true_eq {x y : Term} :
 private theorem eq_args_of_prog_dt_inst_ne_stuck
     (a1 : Term) :
     __eo_prog_dt_inst a1 ≠ Term.Stuck ->
-    ∃ c x t,
+    ∃ prem x t,
       a1 =
-        Term.Apply
-          (Term.Apply (Term.UOp UserOp.eq)
-            (Term.Apply (Term.UOp1 UserOp1.is c) x))
+        Term.Apply (Term.Apply (Term.UOp UserOp.eq) prem)
           (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t) ∧
-      __mk_dt_inst (__eo_typeof x) c x = t ∧
+      __mk_dt_inst_prem prem x = t ∧
+      __mk_dt_inst_prem prem x ≠ Term.Stuck ∧
       __eo_prog_dt_inst a1 = a1 := by
   intro hProg
   cases a1 with
   | Apply f rhs =>
       cases f with
-      | Apply g lhs =>
+      | Apply g prem =>
           cases g with
           | UOp op =>
               cases op with
               | eq =>
-                  cases lhs with
-                  | Apply isHead x =>
-                      cases isHead with
-                      | UOp1 isOp c =>
-                          cases isOp with
-                          | is =>
-                              cases rhs with
-                              | Apply rhsF t =>
-                                  cases rhsF with
-                                  | Apply rhsG x2 =>
-                                      cases rhsG with
-                                      | UOp rhsOp =>
-                                          cases rhsOp with
-                                          | eq =>
-                                              let body :=
-                                                Term.Apply
-                                                  (Term.Apply (Term.UOp UserOp.eq)
-                                                    (Term.Apply (Term.UOp1 UserOp1.is c) x))
-                                                  (Term.Apply
-                                                    (Term.Apply (Term.UOp UserOp.eq) x) t)
-                                              let req :=
-                                                __eo_requires
-                                                  (__mk_dt_inst (__eo_typeof x) c x) t body
-                                              have hOuter :
-                                                  __eo_requires (__eo_eq x x2)
-                                                    (Term.Boolean true) req ≠
-                                                    Term.Stuck := by
-                                                simpa [__eo_prog_dt_inst, req, body] using hProg
-                                              have hReq : req ≠ Term.Stuck := by
-                                                exact eo_requires_result_ne_stuck_of_ne_stuck
-                                                  (__eo_eq x x2) (Term.Boolean true) req hOuter
-                                              have hXX : x = x2 := by
-                                                have hEqReq :
-                                                    __eo_eq x x2 = Term.Boolean true :=
-                                                  eo_requires_eq_of_ne_stuck
-                                                    (__eo_eq x x2) (Term.Boolean true) req
-                                                    hOuter
-                                                exact eo_eq_true_eq hEqReq
-                                              subst x2
-                                              have hMk : __mk_dt_inst (__eo_typeof x) c x = t :=
-                                                eo_requires_eq_of_ne_stuck
-                                                  (__mk_dt_inst (__eo_typeof x) c x) t body hReq
-                                              have hReqEq : req = body :=
-                                                eo_requires_eq_result_of_ne_stuck
-                                                  (__mk_dt_inst (__eo_typeof x) c x) t body hReq
-                                              have hProgEq :
-                                                  __eo_prog_dt_inst
-                                                    (Term.Apply
-                                                      (Term.Apply (Term.UOp UserOp.eq)
-                                                        (Term.Apply (Term.UOp1 UserOp1.is c) x))
-                                                      (Term.Apply
-                                                        (Term.Apply (Term.UOp UserOp.eq) x) t)) =
-                                                    Term.Apply
-                                                      (Term.Apply (Term.UOp UserOp.eq)
-                                                        (Term.Apply (Term.UOp1 UserOp1.is c) x))
-                                                      (Term.Apply
-                                                        (Term.Apply (Term.UOp UserOp.eq) x) t) := by
-                                                have hOuterEq :
-                                                    __eo_requires (__eo_eq x x)
-                                                      (Term.Boolean true) req = req :=
-                                                  eo_requires_eq_result_of_ne_stuck
-                                                    (__eo_eq x x) (Term.Boolean true) req
-                                                    (by simpa using hOuter)
-                                                simpa [__eo_prog_dt_inst, req, body, hReqEq]
-                                                  using hOuterEq.trans hReqEq
-                                              exact ⟨c, x, t, rfl, hMk, hProgEq⟩
-                                          | _ =>
-                                              change Term.Stuck ≠ Term.Stuck at hProg
-                                              exact False.elim (hProg rfl)
-                                      | _ =>
-                                          change Term.Stuck ≠ Term.Stuck at hProg
-                                          exact False.elim (hProg rfl)
-                                  | _ =>
-                                      change Term.Stuck ≠ Term.Stuck at hProg
-                                      exact False.elim (hProg rfl)
+                  cases rhs with
+                  | Apply rhsF t =>
+                      cases rhsF with
+                      | Apply rhsG x =>
+                          cases rhsG with
+                          | UOp rhsOp =>
+                              cases rhsOp with
+                              | eq =>
+                                  let body :=
+                                    Term.Apply
+                                      (Term.Apply (Term.UOp UserOp.eq) prem)
+                                      (Term.Apply
+                                        (Term.Apply (Term.UOp UserOp.eq) x) t)
+                                  have hReq :
+                                      __eo_requires (__mk_dt_inst_prem prem x) t
+                                          body ≠ Term.Stuck := by
+                                    simpa [__eo_prog_dt_inst, body] using hProg
+                                  have hMk : __mk_dt_inst_prem prem x = t :=
+                                    eo_requires_eq_of_ne_stuck _ _ _ hReq
+                                  have hMkNe :
+                                      __mk_dt_inst_prem prem x ≠ Term.Stuck := by
+                                    intro hStuck
+                                    apply hReq
+                                    simp [__eo_requires, hStuck, native_ite,
+                                      native_teq, native_not, SmtEval.native_not]
+                                  have hReqEq :
+                                      __eo_requires (__mk_dt_inst_prem prem x) t
+                                          body = body :=
+                                    eo_requires_eq_result_of_ne_stuck _ _ _ hReq
+                                  refine ⟨prem, x, t, rfl, hMk, hMkNe, ?_⟩
+                                  simpa [__eo_prog_dt_inst, body] using hReqEq
                               | _ =>
                                   change Term.Stuck ≠ Term.Stuck at hProg
                                   exact False.elim (hProg rfl)
@@ -148,6 +104,43 @@ private theorem eq_args_of_prog_dt_inst_ne_stuck
       change Term.Stuck ≠ Term.Stuck at hProg
       exact False.elim (hProg rfl)
 
+private theorem mk_dt_inst_prem_cases (prem x : Term) :
+    __mk_dt_inst_prem prem x ≠ Term.Stuck ->
+    x ≠ Term.Stuck ∧
+    ((prem = Term.Boolean true ∧
+        __mk_dt_inst_prem prem x = __mk_dt_inst_tuple (__eo_typeof x) x) ∨
+      (∃ c, prem = Term.Apply (Term.UOp1 UserOp1.is c) x ∧
+        __mk_dt_inst_prem prem x = __mk_dt_inst (__eo_typeof x) c x)) := by
+  intro hNe
+  have hx : x ≠ Term.Stuck := by
+    intro hStuck
+    subst hStuck
+    apply hNe
+    cases prem <;> rfl
+  refine ⟨hx, ?_⟩
+  have hNe' := hNe
+  unfold __mk_dt_inst_prem at hNe'
+  split at hNe'
+  · exact absurd rfl hNe'
+  · left
+    refine ⟨rfl, ?_⟩
+    rw [__mk_dt_inst_prem.eq_def]
+    split <;> simp_all
+  · right
+    rename_i c x' _
+    have hXX : x' = x :=
+      eo_eq_true_eq (eo_requires_eq_of_ne_stuck _ _ _ hNe')
+    subst hXX
+    refine ⟨c, rfl, ?_⟩
+    have hVal :
+        __mk_dt_inst_prem (Term.Apply (Term.UOp1 UserOp1.is c) x') x' =
+          __eo_requires (__eo_eq x' x') (Term.Boolean true)
+            (__mk_dt_inst (__eo_typeof x') c x') := by
+      cases x' <;> first | rfl | exact absurd rfl hx
+    rw [hVal]
+    exact eo_requires_eq_result_of_ne_stuck _ _ _ hNe'
+  · exact absurd rfl hNe'
+
 private theorem prog_dt_inst_eq_arg_of_typeof_bool
     (a1 : Term) :
     __eo_typeof (__eo_prog_dt_inst a1) = Term.Bool ->
@@ -156,7 +149,7 @@ private theorem prog_dt_inst_eq_arg_of_typeof_bool
   have hProg : __eo_prog_dt_inst a1 ≠ Term.Stuck :=
     term_ne_stuck_of_typeof_bool hTy
   rcases eq_args_of_prog_dt_inst_ne_stuck a1 hProg with
-    ⟨_c, _x, _t, _hEq, _hMk, hProgEq⟩
+    ⟨_prem, _x, _t, _hEq, _hMk, _hMkNe, hProgEq⟩
   exact hProgEq
 
 private theorem typed___eo_prog_dt_inst_impl
@@ -566,11 +559,24 @@ private theorem smtx_typeof_eo_to_smt_stuck_none :
     __smtx_typeof (__eo_to_smt Term.Stuck) = SmtType.None := by
   decide +kernel
 
+private theorem dtConsSpineRoot_head
+    {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}
+    (hSp : DtConsSpineRoot t s d i) :
+    TranslationProofs.eoSpineHead t = Term.DtCons s d i := by
+  induction hSp with
+  | root => rfl
+  | app x hSp ih => exact ih
+
 private theorem dtConsSpineRoot_apply_generic
     {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}
     (hSp : DtConsSpineRoot t s d i) (x : Term) :
     __eo_to_smt (Term.Apply t x) =
       SmtTerm.Apply (__eo_to_smt t) (__eo_to_smt x) := by
+  have hNS : ¬ TranslationProofs.IsLamSpine t :=
+    TranslationProofs.not_isLamSpine_of_head (by
+      rw [dtConsSpineRoot_head hSp]
+      intro h
+      cases h)
   induction hSp generalizing x with
   | root s d i =>
       rfl
@@ -583,7 +589,10 @@ private theorem dtConsSpineRoot_apply_generic
           | root s d i =>
               rfl
           | app x''' hSp'' =>
-              cases hSp'' <;> rfl
+              cases hSp'' <;>
+                first
+                  | rfl
+                  | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hNS
 
 private def mkDtSmtAppSpineRev (head : SmtTerm) : List SmtTerm -> SmtTerm
   | [] => head
@@ -1554,35 +1563,20 @@ private theorem dt_inst_tuple_unit_interprets
         simp [__smtx_apply_head_value]
       simp [hHead, hNe, native_veq, __smtx_model_eval_eq]
 
-private theorem facts___eo_prog_dt_inst_impl
-    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
-    RuleProofs.eo_has_smt_translation a1 ->
-    __eo_typeof (__eo_prog_dt_inst a1) = Term.Bool ->
-    eo_interprets M (__eo_prog_dt_inst a1) true := by
-  intro hA1Trans hResultTy
-  have hProg : __eo_prog_dt_inst a1 ≠ Term.Stuck :=
-    term_ne_stuck_of_typeof_bool hResultTy
-  rcases eq_args_of_prog_dt_inst_ne_stuck a1 hProg with
-    ⟨c, x, t, hA1Eq, hMk, hProgEq⟩
-  rw [hProgEq, hA1Eq]
-  have hFormulaTy :
-      __eo_typeof
-        (Term.Apply
-          (Term.Apply (Term.UOp UserOp.eq)
-            (Term.Apply (Term.UOp1 UserOp1.is c) x))
-          (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t)) =
-        Term.Bool := by
-    have hTy := hResultTy
-    rw [hProgEq, hA1Eq] at hTy
-    exact hTy
-  have hFormulaBool :
+private theorem dt_inst_tester_interprets
+    (M : SmtModel) (hM : model_wf M) (c x t : Term)
+    (hMk : __mk_dt_inst (__eo_typeof x) c x = t)
+    (hFormulaBool :
       RuleProofs.eo_has_bool_type
         (Term.Apply
           (Term.Apply (Term.UOp UserOp.eq)
             (Term.Apply (Term.UOp1 UserOp1.is c) x))
-          (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t)) :=
-    RuleProofs.eo_typeof_bool_implies_has_bool_type _
-      (by simpa [hA1Eq] using hA1Trans) hFormulaTy
+          (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t))) :
+    eo_interprets M
+      (Term.Apply
+        (Term.Apply (Term.UOp UserOp.eq)
+          (Term.Apply (Term.UOp1 UserOp1.is c) x))
+        (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t)) true := by
   let lhs := Term.Apply (Term.UOp1 UserOp1.is c) x
   let rhs := Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t
   have hTypes :=
@@ -1768,6 +1762,98 @@ private theorem facts___eo_prog_dt_inst_impl
     rw [hMkUnit]
     exact dt_inst_tuple_unit_interprets M hM x hXTy
       (by simpa [lhs, rhs, hMkUnit] using hFormulaBool)
+
+private theorem dt_inst_tuple_interprets
+    (M : SmtModel) (hM : model_wf M) (x t : Term)
+    (hx : x ≠ Term.Stuck)
+    (hMk : __mk_dt_inst_tuple (__eo_typeof x) x = t)
+    (hMkNe : __mk_dt_inst_tuple (__eo_typeof x) x ≠ Term.Stuck)
+    (hFormulaBool :
+      RuleProofs.eo_has_bool_type
+        (Term.Apply
+          (Term.Apply (Term.UOp UserOp.eq) (Term.Boolean true))
+          (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t))) :
+    eo_interprets M
+      (Term.Apply
+        (Term.Apply (Term.UOp UserOp.eq) (Term.Boolean true))
+        (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t)) true := by
+  rcases mk_dt_inst_tuple_spine x hx hMkNe with ⟨hs, hSp, hSel⟩
+  rw [hMk] at hSp
+  have hOuter :=
+    RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
+      (Term.Boolean true) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t)
+      hFormulaBool
+  have hInnerBool :
+      RuleProofs.eo_has_bool_type
+        (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t) := by
+    unfold RuleProofs.eo_has_bool_type
+    rw [← hOuter.1]
+    rfl
+  have hInner :=
+    RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type x t hInnerBool
+  have hTNN : __smtx_typeof (__eo_to_smt t) ≠ SmtType.None := by
+    rw [← hInner.1]
+    exact hInner.2
+  have hEvalEq :=
+    tuple_inst_eval_eq M hM x t hs hSp hSel hInner.1 hTNN
+  have hXEvalTy :
+      __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt x)) =
+        __smtx_typeof (__eo_to_smt x) :=
+    smt_model_eval_preserves_type_of_non_none M hM _ hInner.2
+  apply RuleProofs.eo_interprets_of_bool_eval M _ true hFormulaBool
+  change
+    __smtx_model_eval M
+        (SmtTerm.eq (SmtTerm.Boolean true)
+          (SmtTerm.eq (__eo_to_smt x) (__eo_to_smt t))) =
+      SmtValue.Boolean true
+  have hInnerEval :
+      __smtx_model_eval M (SmtTerm.eq (__eo_to_smt x) (__eo_to_smt t)) =
+        SmtValue.Boolean true := by
+    rw [smtx_eval_eq_term_eq, hEvalEq]
+    cases hV : __smtx_model_eval M (__eo_to_smt x) with
+    | RegLan r =>
+        exfalso
+        rw [hV] at hXEvalTy
+        rcases tupleSpine_eval_components M hM hSp hTNN with ⟨⟨c, hRTy⟩, _, _⟩
+        rw [hInner.1, hRTy] at hXEvalTy
+        simp [__smtx_typeof_value] at hXEvalTy
+    | _ => simp [__smtx_model_eval_eq, native_veq]
+  rw [smtx_eval_eq_term_eq, hInnerEval]
+  simp [__smtx_model_eval, __smtx_model_eval_eq, native_veq]
+
+private theorem facts___eo_prog_dt_inst_impl
+    (M : SmtModel) (hM : model_wf M) (a1 : Term) :
+    RuleProofs.eo_has_smt_translation a1 ->
+    __eo_typeof (__eo_prog_dt_inst a1) = Term.Bool ->
+    eo_interprets M (__eo_prog_dt_inst a1) true := by
+  intro hA1Trans hResultTy
+  have hProg : __eo_prog_dt_inst a1 ≠ Term.Stuck :=
+    term_ne_stuck_of_typeof_bool hResultTy
+  rcases eq_args_of_prog_dt_inst_ne_stuck a1 hProg with
+    ⟨prem, x, t, hA1Eq, hMk, hMkNe, hProgEq⟩
+  have hFormulaTy :
+      __eo_typeof
+        (Term.Apply (Term.Apply (Term.UOp UserOp.eq) prem)
+          (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t)) =
+        Term.Bool := by
+    have hTy := hResultTy
+    rw [hProgEq, hA1Eq] at hTy
+    exact hTy
+  have hFormulaBool :
+      RuleProofs.eo_has_bool_type
+        (Term.Apply (Term.Apply (Term.UOp UserOp.eq) prem)
+          (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) t)) :=
+    RuleProofs.eo_typeof_bool_implies_has_bool_type _
+      (by simpa [hA1Eq] using hA1Trans) hFormulaTy
+  rw [hProgEq, hA1Eq]
+  rcases mk_dt_inst_prem_cases prem x hMkNe with
+    ⟨hx, ⟨hPrem, hMkEq⟩ | ⟨c, hPrem, hMkEq⟩⟩
+  · subst hPrem
+    exact dt_inst_tuple_interprets M hM x t hx (hMkEq.symm.trans hMk)
+      (by rw [← hMkEq]; exact hMkNe) hFormulaBool
+  · subst hPrem
+    exact dt_inst_tester_interprets M hM c x t (hMkEq.symm.trans hMk)
+      hFormulaBool
 
 public theorem cmd_step_dt_inst_properties
     (M : SmtModel) (hM : model_wf M)

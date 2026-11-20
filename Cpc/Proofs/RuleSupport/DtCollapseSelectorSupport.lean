@@ -343,6 +343,12 @@ private theorem dtAppSpineRev_args_eq_reverse_appArgs :
   | Term.USort _ => rfl
   | Term.UConst _ _ => rfl
 
+private theorem eoSpineHead_eq_dtAppSpineRev (t : Term) :
+    TranslationProofs.eoSpineHead t = (dtAppSpineRev t).1 := by
+  cases t with
+  | Apply f a => exact eoSpineHead_eq_dtAppSpineRev f
+  | _ => rfl
+
 private theorem eo_to_smt_apply_generic_of_dtAppSpineRev_dtcons
     (s : native_String) (d : DatatypeDecl) (i : native_Nat) (t x : Term)
     (hHead : (dtAppSpineRev t).1 = Term.DtCons s d i) :
@@ -358,7 +364,15 @@ private theorem eo_to_smt_apply_generic_of_dtAppSpineRev_dtcons
           | Apply f'' y'' =>
               cases f'' with
               | UOp op => simp [dtAppSpineRev] at hHead
-              | _ => rfl
+              | _ =>
+                  first
+                    | rfl
+                    | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
+                        (TranslationProofs.not_isLamSpine_of_head (fun h => by
+                          rw [eoSpineHead_eq_dtAppSpineRev] at h
+                          dsimp [dtAppSpineRev] at h hHead
+                          rw [hHead] at h
+                          cases h))
           | DtCons s' d' i' =>
               simp [dtAppSpineRev] at hHead
               rcases hHead with ⟨rfl, rfl, rfl⟩

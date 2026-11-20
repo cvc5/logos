@@ -628,8 +628,8 @@ theorem smt_term_result_seq_components_wf_of_non_none
         smtx_typeof_guard_wf_wf_of_non_none T T hGuardNN
       rw [choice_term_typeof_of_non_none hxNN]
       exact type_result_seq_components_wf_of_type_wf hWf
-    case bind s T x1 x2 =>
-      have hTyEq : __smtx_typeof (SmtTerm.bind s T x1 x2) = __smtx_typeof x2 :=
+    case bind bs x2 =>
+      have hTyEq : __smtx_typeof (SmtTerm.bind bs x2) = __smtx_typeof x2 :=
         bind_term_typeof_of_non_none hxNN
       have hx2NN : term_has_non_none_type x2 := by
         unfold term_has_non_none_type at hxNN ⊢
@@ -816,7 +816,7 @@ theorem eval_seq_empty_of_type (M : SmtModel) (A : Term) (T : SmtType) :
       rw [hA]
       change __smtx_model_eval M (SmtTerm.seq_empty T) =
         SmtValue.Seq (SmtSeq.empty T)
-      rw [__smtx_model_eval.eq_79]
+      rw [__smtx_model_eval.eq_81]
 
 theorem eval_seq_empty_typeof (M : SmtModel) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
@@ -1107,7 +1107,7 @@ theorem smtx_model_eval_str_concat_term_eq (M : SmtModel) (x y : Term) :
   rw [show __eo_to_smt (mkConcat x y) =
       SmtTerm.str_concat (__eo_to_smt x) (__eo_to_smt y) by
     rfl]
-  rw [__smtx_model_eval.eq_81]
+  rw [__smtx_model_eval.eq_83]
 
 theorem str_concat_args_of_non_none (x y : Term) :
     __smtx_typeof (__eo_to_smt (mkConcat x y)) ≠ SmtType.None ->
@@ -3476,7 +3476,7 @@ theorem smt_value_rel_str_concat_nil_empty
               rw [hTyU] at hNilTy
               injection hNilTy
             subst T
-            rw [__smtx_model_eval.eq_79]
+            rw [__smtx_model_eval.eq_81]
             unfold RuleProofs.smt_value_rel
             simp [__smtx_model_eval_eq, native_veq]
         | _ =>

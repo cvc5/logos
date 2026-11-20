@@ -2,6 +2,8 @@ module
 
 public import Cpc.Proofs.TypePreservation.Support
 import all Cpc.Proofs.TypePreservation.Support
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 public section
 
@@ -133,6 +135,30 @@ theorem model_total_typed_push
       simpa [model_fun_wf, native_eval_fun_apply, model_fun_lookup,
         native_model_push]
         using model_total_typed_native_fun_typed hM fid A B i hFunWF hi
+
+/-- Describes how `model_wf` behaves under the (parallel) bindings of a `let`:
+every bound term is evaluated in `M`, and its value is of the well-formed type
+of its variable and canonical. -/
+theorem model_total_typed_push_bindings
+    (M : SmtModel) :
+    ∀ (bs : SmtBindings) (N : SmtModel),
+      model_wf N ->
+      N.usortDom = M.usortDom ->
+      (∀ s T v, SmtBindings.Mem bs s T v ->
+        __smtx_type_wf T = true ∧
+          __smtx_typeof_value (__smtx_model_eval M v) = T ∧
+          value_canonical M.usortDom (__smtx_model_eval M v)) ->
+      model_wf (__smtx_model_eval.push_bindings M N bs)
+  | SmtBindings.nil, N, hN, _, _ => by
+      rw [model_push_bindings_nil]
+      exact hN
+  | SmtBindings.cons s T v bs, N, hN, hDom, hVals => by
+      rw [model_push_bindings_cons]
+      obtain ⟨hWf, hTy, hCanon⟩ := hVals s T v (SmtBindings.Mem.head s T v bs)
+      have hN' : model_wf (native_model_push N s T (__smtx_model_eval M v)) :=
+        model_total_typed_push hN s T _ hWf hTy (by rw [hDom]; exact hCanon)
+      exact model_total_typed_push_bindings M bs _ hN' hDom
+        (fun s' T' v' hm => hVals s' T' v' (SmtBindings.Mem.tail s T v hm))
 
 /--
 Datatype-default canonicity for the generated model.

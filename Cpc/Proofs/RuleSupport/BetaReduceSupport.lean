@@ -1,0 +1,407 @@
+module
+
+public import Cpc.Proofs.RuleSupport.SkolemizeSupport
+import all Cpc.Proofs.RuleSupport.SkolemizeSupport
+public import Cpc.Proofs.Translation.LambdaApply
+import all Cpc.Proofs.Translation.LambdaApply
+
+/-!
+# Support for the `beta-reduce` rule
+
+`beta-reduce` proves `(= a b)` where `$beta_reduce a @list.nil` is `b`. The
+program walks down the application spine of `a`, collecting its arguments,
+until it reaches the head `(lambda us body)`, and returns the simultaneous
+substitution of the arguments for `us` in `body`.
+
+A lambda applied to exactly as many arguments as it binds translates to the
+parallel `let` of its body (`LamSpine.eo_to_smt_full`). The `let` evaluates
+its body in the model that pushes each variable's value; with distinct keys,
+that is the model `pushSubstModel` the substitution engine evaluates the body
+in (`substitute_simul_eval`), only pushed in the opposite order.
+
+Every other shape the program accepts gives a conclusion with no SMT
+translation, which the rule's hypotheses exclude:
+* fewer arguments than variables: the translation is a `let` around a `lam`,
+  which has no type (`spine_args_ge_vars`);
+* more arguments than variables: the translation's type is a proper part of
+  the body's, while the substitution's type is the body's
+  (`spine_over_applied`).
+-/
+
+public section
+
+open Eo
+open SmtEval
+open Smtm
+open TranslationProofs
+open SubstituteTranslatabilitySupport
+open SubstitutePreservationSupport
+open LamSpineSupport
+
+set_option linter.unusedVariables false
+set_option maxHeartbeats 10000000
+
+namespace BetaReduceRule
+
+theorem pushSubstModel_eoVarList (M : SmtModel) :
+    ∀ (vs : List (native_String × Term)) (args : List Term) (tail : Term),
+      vs.length = args.length ->
+      InstantiateRule.pushSubstModel M (eoVarList vs) (eoListApp args tail) =
+        pushL M (evalBinds M (vs.zip args)).reverse
+  | [], [], tail, _ => by
+      cases tail <;> rfl
+  | (s, T) :: vs, a :: args, tail, hlen => by
+      simp only [List.length_cons, Nat.add_right_cancel_iff] at hlen
+      change native_model_push
+          (InstantiateRule.pushSubstModel M (eoVarList vs) (eoListApp args tail)) s
+          (__eo_to_smt_type T) (__smtx_model_eval M (__eo_to_smt a)) = _
+      rw [pushSubstModel_eoVarList M vs args tail hlen]
+      simp [evalBinds, List.zip_cons_cons, List.map_cons, List.reverse_cons, pushL_append, pushL]
+  | [], _ :: _, _, h => by simp at h
+  | _ :: _, [], _, h => by simp at h
+
+/-- Pushing keyed values with distinct keys does not depend on their order. -/
+theorem pushL_reverse_of_distinct (N : SmtModel) :
+    ∀ (l : List (native_String × SmtType × SmtValue)),
+      SkolemizeRule.DistinctList (l.map keyOf) ->
+      pushL N l.reverse = pushL N l
+  | [], _ => rfl
+  | (s, T, v) :: l, h => by
+      cases h with
+      | cons hnot htail =>
+          rw [List.reverse_cons, pushL_append, pushL_reverse_of_distinct N l htail]
+          simp only [pushL]
+          rw [pushL_push_comm N s T v l
+            (fun q hq hk => hnot (List.mem_map.2 ⟨q, hq, hk⟩))]
+
+private theorem smtx_type_wf_none : __smtx_type_wf SmtType.None = false := by
+  decide +kernel
+
+theorem actuals_of_typed (tail : Term) :
+    ∀ (vs : List (native_String × Term)) (args : List Term),
+      vs.length = args.length ->
+      (∀ p ∈ vs.zip args, __smtx_typeof (__eo_to_smt p.2) = __eo_to_smt_type p.1.2 ∧
+        __smtx_type_wf (__eo_to_smt_type p.1.2) = true) ->
+      SubstActualsHaveSmtTypes (eoVarList vs) (eoListApp args tail)
+  | [], args, _, _ => SubstActualsHaveSmtTypes.nil _
+  | (s, T) :: vs, a :: args, hlen, h => by
+      simp only [List.length_cons, Nat.add_right_cancel_iff] at hlen
+      obtain ⟨hTy, hWf⟩ := h ((s, T), a) (by simp)
+      have hTrans : RuleProofs.eo_has_smt_translation a := by
+        unfold RuleProofs.eo_has_smt_translation
+        rw [hTy]
+        intro hNone
+        rw [hNone, smtx_type_wf_none] at hWf
+        cases hWf
+      exact SubstActualsHaveSmtTypes.cons hWf hTrans hTy
+        (actuals_of_typed tail vs args hlen (fun p hp => h p (by simp [hp])))
+  | _ :: _, [], h, _ => by simp at h
+
+theorem eoListApp_all_translations :
+    ∀ (args : List Term), (∀ a ∈ args, __smtx_typeof (__eo_to_smt a) ≠ SmtType.None) ->
+      EoListAllHaveSmtTranslation (eoListApp args Term.__eo_List_nil)
+  | [], _ => trivial
+  | a :: args, h =>
+      ⟨h a List.mem_cons_self,
+        eoListApp_all_translations args (fun a' ha' => h a' (List.mem_cons_of_mem _ ha'))⟩
+
+theorem distinctList_map {α β : Type} (g : α -> β) :
+    ∀ (l : List α), SkolemizeRule.DistinctList l ->
+      (∀ x ∈ l, ∀ y ∈ l, g x = g y -> x = y) ->
+      SkolemizeRule.DistinctList (l.map g)
+  | [], _, _ => SkolemizeRule.DistinctList.nil
+  | x :: l, SkolemizeRule.DistinctList.cons hx hl, hinj => by
+      refine SkolemizeRule.DistinctList.cons ?_ (distinctList_map g l hl
+        (fun a ha b hb => hinj a (List.mem_cons_of_mem _ ha) b (List.mem_cons_of_mem _ hb)))
+      intro hmem
+      obtain ⟨y, hy, hgy⟩ := List.mem_map.1 hmem
+      have := hinj y (List.mem_cons_of_mem _ hy) x List.mem_cons_self hgy
+      subst this
+      exact hx hy
+
+/-- Distinct EO variables of well-formed types have distinct model keys. -/
+theorem distinct_keys (M : SmtModel) (vs : List (native_String × Term)) (args : List Term)
+    (hlen : vs.length = args.length)
+    (hDistinct : SkolemizeRule.DistinctList vs)
+    (hWf : ∀ p ∈ vs, __smtx_type_wf (__eo_to_smt_type p.2) = true) :
+    SkolemizeRule.DistinctList ((evalBinds M (vs.zip args)).map keyOf) := by
+  have hkeys : (evalBinds M (vs.zip args)).map keyOf =
+      vs.map (fun p => ({ isVar := true, name := p.1, ty := __eo_to_smt_type p.2 } : SmtModelKey)) := by
+    have : (evalBinds M (vs.zip args)).map keyOf =
+        ((vs.zip args).map Prod.fst).map
+          (fun p => ({ isVar := true, name := p.1, ty := __eo_to_smt_type p.2 } : SmtModelKey)) := by
+      simp [evalBinds, keyOf, List.map_map, Function.comp_def]
+    rw [this, List.map_fst_zip (by omega)]
+  rw [hkeys]
+  refine distinctList_map _ vs hDistinct ?_
+  rintro ⟨s, T⟩ hx ⟨s', T'⟩ hy hk
+  simp only [SmtModelKey.mk.injEq, true_and] at hk
+  obtain ⟨rfl, hT⟩ := hk
+  have hTT : T = T' :=
+    TranslationProofs.eo_to_smt_type_injective_of_wf rfl hT.symm (hWf _ hx)
+  rw [hTT]
+
+/-! ## `__beta_reduce` along a spine -/
+
+theorem lamT_ne_lambda_apply (us body xs : Term) :
+    Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body ≠
+      Term.Apply (Term.UOp UserOp.lambda) xs := by
+  intro h
+  injection h with h1
+  cases h1
+
+/-- A spine is not the lambda symbol applied to its variable list alone. -/
+theorem spine_ne_lambda_apply {f us body : Term} {r : List Term} (h : LamSpine f us body r)
+    (xs : Term) : f ≠ Term.Apply (Term.UOp UserOp.lambda) xs := by
+  cases h with
+  | lam => exact lamT_ne_lambda_apply _ _ _
+  | app a hf =>
+      intro he
+      injection he with he
+      obtain ⟨g, c, b, rfl⟩ := hf.shape
+      cases he
+
+theorem beta_reduce_lam (us body ss : Term) (hss : ss ≠ Term.Stuck) :
+    __beta_reduce (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body) ss =
+      __eo_requires (__eo_eq (__eo_list_setof Term.__eo_List_cons us) us) (Term.Boolean true)
+        (__substitute_simul_rec (Term.Boolean false) body us ss Term.__eo_List_nil) :=
+  __beta_reduce.eq_3 _ _ _ hss
+
+theorem beta_reduce_app (f a acc : Term) (hacc : acc ≠ Term.Stuck)
+    (hnil : acc ≠ Term.__eo_List_nil)
+    (hf : ∀ xs, f ≠ Term.Apply (Term.UOp UserOp.lambda) xs) :
+    __beta_reduce (Term.Apply f a) acc =
+      __beta_reduce f (Term.Apply (Term.Apply Term.__eo_List_cons a) acc) :=
+  __beta_reduce.eq_4 acc f a hf hacc (fun _ _ _ h _ => hnil h)
+
+theorem beta_reduce_app_nil (f a : Term)
+    (hf : ∀ xs, f ≠ Term.Apply (Term.UOp UserOp.lambda) xs)
+    (hf1 : ∀ x xs t, f ≠ Term.Apply (Term.Apply (Term.UOp UserOp.lambda)
+      (Term.Apply (Term.Apply Term.__eo_List_cons x) xs)) t) :
+    __beta_reduce (Term.Apply f a) Term.__eo_List_nil =
+      __beta_reduce f (Term.Apply (Term.Apply Term.__eo_List_cons a) Term.__eo_List_nil) :=
+  __beta_reduce.eq_4 _ f a hf (by intro h; cases h) (fun x xs t _ h => hf1 x xs t h)
+
+theorem beta_reduce_app_lam1 (x body a : Term) :
+    __beta_reduce
+        (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.lambda)
+          (Term.Apply (Term.Apply Term.__eo_List_cons x) Term.__eo_List_nil)) body) a)
+        Term.__eo_List_nil =
+      __beta_reduce
+        (Term.Apply (Term.Apply (Term.UOp UserOp.lambda)
+          (Term.Apply (Term.Apply Term.__eo_List_cons x) Term.__eo_List_nil)) body)
+        (Term.Apply (Term.Apply Term.__eo_List_cons a) Term.__eo_List_nil) := by
+  rw [__beta_reduce.eq_2, beta_reduce_lam _ _ _ (by intro h; cases h)]
+  simp [__eo_ite, __eo_eq, native_ite, native_teq]
+
+theorem revAcc_ne_stuck (r : List Term) (acc : Term) (h : acc ≠ Term.Stuck) :
+    revAcc r acc ≠ Term.Stuck := by
+  rw [revAcc_eq]
+  cases r.reverse with
+  | nil => exact h
+  | cons a l => intro he; cases he
+
+/-- Along a spine, `__beta_reduce` collects the arguments. -/
+theorem spine_beta_reduce {t us body : Term} {r : List Term} (h : LamSpine t us body r) :
+    ∀ acc, acc ≠ Term.Stuck -> acc ≠ Term.__eo_List_nil ->
+      __beta_reduce t acc =
+        __beta_reduce (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body) (revAcc r acc) := by
+  induction h with
+  | lam => intros; rfl
+  | @app f us body r a hf ih =>
+      intro acc h1 h2
+      rw [beta_reduce_app f a acc h1 h2 (spine_ne_lambda_apply hf)]
+      exact ih _ (by intro h; cases h) (by intro h; cases h)
+
+/-- From the top, a spine that applies its lambda to at least as many arguments
+as it binds variables collects them all. -/
+theorem spine_beta_reduce_nil {t us body : Term} {r : List Term} (h : LamSpine t us body r)
+    {m : Nat} (hv : lamVars us m = true) (hm : m ≤ r.length) :
+    __beta_reduce t Term.__eo_List_nil =
+      __beta_reduce (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body)
+        (revAcc r Term.__eo_List_nil) := by
+  cases h with
+  | lam => rfl
+  | @app f _ _ r a hf =>
+      cases hf with
+      | lam =>
+          simp only [List.length_cons, List.length_nil] at hm
+          by_cases hcons : ∃ x xs, us = Term.Apply (Term.Apply Term.__eo_List_cons x) xs
+          · obtain ⟨x, xs, rfl⟩ := hcons
+            have hm1 : m = 1 := by
+              cases m with
+              | zero =>
+                  obtain ⟨vs, hl, he⟩ := lamVars_exists _ 0 hv
+                  rw [List.length_eq_zero_iff] at hl
+                  subst hl
+                  cases he
+              | succ m => omega
+            subst hm1
+            obtain ⟨vs, hlen, hvs⟩ := lamVars_exists _ 1 hv
+            match vs, hlen, hvs with
+            | [p], _, hvs =>
+                injection hvs with hvs hxs
+                injection hvs with _ hx
+                subst hx hxs
+                exact beta_reduce_app_lam1 _ body a
+          · rw [beta_reduce_app_nil _ a (fun xs => lamT_ne_lambda_apply _ _ xs)]
+            · rfl
+            · intro x xs t he
+              injection he with he
+              injection he with _ he
+              exact hcons ⟨x, xs, he⟩
+      | @app g _ _ r' b hg =>
+          rw [beta_reduce_app_nil _ a (spine_ne_lambda_apply (LamSpine.app b hg))]
+          · exact spine_beta_reduce (LamSpine.app b hg) _ (by intro h; cases h)
+              (by intro h; cases h)
+          · intro x xs t he
+            injection he with he
+            exact spine_ne_lambda_apply hg _ he
+
+/-- Only a spine is reduced. -/
+theorem spine_of_beta_reduce_ne_stuck :
+    ∀ (t acc : Term), __beta_reduce t acc ≠ Term.Stuck ->
+      ∃ us body r, LamSpine t us body r
+  | t, acc, h => by
+      by_cases hS : acc = Term.Stuck
+      · subst hS
+        exact absurd (__beta_reduce.eq_1 t) h
+      by_cases hLam : ∃ xs b, t = Term.Apply (Term.Apply (Term.UOp UserOp.lambda) xs) b
+      · obtain ⟨xs, b, rfl⟩ := hLam
+        exact ⟨_, _, _, LamSpine.lam _ _⟩
+      by_cases hLam1 : ∃ x xs b a, t = Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.lambda)
+          (Term.Apply (Term.Apply Term.__eo_List_cons x) xs)) b) a
+      · obtain ⟨x, xs, b, a, rfl⟩ := hLam1
+        exact ⟨_, _, _, LamSpine.app _ (LamSpine.lam _ _)⟩
+      by_cases hApp : ∃ f a, t = Term.Apply f a
+      · obtain ⟨f, a, rfl⟩ := hApp
+        have hf : ∀ xs, f ≠ Term.Apply (Term.UOp UserOp.lambda) xs := by
+          intro xs he
+          subst he
+          exact hLam ⟨xs, a, rfl⟩
+        rw [__beta_reduce.eq_4 acc f a hf hS (fun x xs b _ he => by
+          subst he; exact hLam1 ⟨x, xs, b, a, rfl⟩)] at h
+        obtain ⟨us, body, r, hs⟩ := spine_of_beta_reduce_ne_stuck f _ h
+        exact ⟨us, body, a :: r, LamSpine.app a hs⟩
+      · exfalso
+        apply h
+        exact __beta_reduce.eq_5 t acc (fun xs b he => hLam ⟨xs, b, he⟩)
+          (fun f a he => hApp ⟨f, a, he⟩) hS
+          (fun x xs b a he _ => hLam1 ⟨x, xs, b, a, he⟩)
+termination_by t => sizeOf t
+decreasing_by subst_vars; simp; omega
+
+/-! ## The rule -/
+
+theorem eq_operands_same_smt_type (x y : Term)
+    (hTrans : RuleProofs.eo_has_smt_translation
+      (Term.Apply (Term.Apply (Term.UOp UserOp.eq) x) y)) :
+    __smtx_typeof (__eo_to_smt x) = __smtx_typeof (__eo_to_smt y) ∧
+      __smtx_typeof (__eo_to_smt x) ≠ SmtType.None := by
+  have hEqNN : term_has_non_none_type (SmtTerm.eq (__eo_to_smt x) (__eo_to_smt y)) := by
+    unfold term_has_non_none_type
+    exact hTrans
+  have hEqTy :
+      __smtx_typeof (SmtTerm.eq (__eo_to_smt x) (__eo_to_smt y)) = SmtType.Bool :=
+    Smtm.eq_term_typeof_of_non_none hEqNN
+  rw [Smtm.typeof_eq_eq] at hEqTy
+  exact RuleProofs.smtx_typeof_eq_bool_iff
+    (__smtx_typeof (__eo_to_smt x)) (__smtx_typeof (__eo_to_smt y)) |>.mp hEqTy
+
+/-- The semantic content of `beta-reduce`: where `(= a b)` has a translation and
+`a` beta-reduces to `b`, the two evaluate alike. -/
+theorem beta_reduce_eval (M : SmtModel) (hM : model_wf M) (a b : Term)
+    (hEqTrans : RuleProofs.eo_has_smt_translation
+      (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b))
+    (hBeta : __beta_reduce a Term.__eo_List_nil = b) :
+    __smtx_model_eval M (__eo_to_smt a) = __smtx_model_eval M (__eo_to_smt b) := by
+  obtain ⟨hSame, hANN⟩ := eq_operands_same_smt_type a b hEqTrans
+  have hBNN : __smtx_typeof (__eo_to_smt b) ≠ SmtType.None := hSame ▸ hANN
+  have hbS : b ≠ Term.Stuck := by
+    intro hb
+    subst hb
+    exact hBNN rfl
+  obtain ⟨us, body, r, hs⟩ :=
+    spine_of_beta_reduce_ne_stuck a Term.__eo_List_nil (by rw [hBeta]; exact hbS)
+  obtain ⟨m, hv, hm⟩ := spine_args_ge_vars hs hANN
+  have hb := spine_beta_reduce_nil hs hv hm
+  rw [hBeta, beta_reduce_lam _ _ _ (revAcc_ne_stuck r _ (by intro h; cases h))] at hb
+  have hReq : __eo_requires (__eo_eq (__eo_list_setof Term.__eo_List_cons us) us)
+      (Term.Boolean true)
+      (__substitute_simul_rec (Term.Boolean false) body us (revAcc r Term.__eo_List_nil)
+        Term.__eo_List_nil) ≠ Term.Stuck := by
+    rw [← hb]; exact hbS
+  have hSet : __eo_list_setof Term.__eo_List_cons us = us :=
+    (support_eq_of_eo_eq_true _ _ (support_eo_requires_cond_eq_of_non_stuck hReq)).symm
+  have hbEq : b = __substitute_simul_rec (Term.Boolean false) body us
+      (revAcc r Term.__eo_List_nil) Term.__eo_List_nil := by
+    rw [hb]; exact instantiate_eo_requires_result_eq_of_ne_stuck hReq
+  obtain ⟨vs, hvlen, rfl⟩ := lamVars_exists us m hv
+  have hDistinct := SkolemizeRule.distinct_of_setof_guard (eoVarEnv_eoVarList vs) hSet
+  obtain ⟨-, hBodyNN, hArgsNN⟩ := hs.parts_typed_any hANN
+  obtain ⟨extra, rm, hr, hrmlen, htyped, hlt⟩ := spine_prefix_typed hs m hv hm hANN
+  rw [lamBindings_eoVarList vs rm SmtBindings.nil (by omega),
+    show vs.take rm.length = vs by rw [hrmlen, ← hvlen, List.take_length]] at htyped
+  have hzipLen : vs.length = rm.reverse.length := by simp [hrmlen, hvlen]
+  have hFacts : ∀ p ∈ vs.zip rm.reverse,
+      __smtx_typeof (__eo_to_smt p.2) = __eo_to_smt_type p.1.2 ∧
+        __smtx_type_wf (__eo_to_smt_type p.1.2) = true := fun p hp =>
+    ⟨bind_binding_type_of_non_none htyped (bindsApp_mem _ _ p hp),
+      bind_binding_type_wf_of_non_none htyped (bindsApp_mem _ _ p hp)⟩
+  have hVarsWf : ∀ p ∈ vs, __smtx_type_wf (__eo_to_smt_type p.2) = true := by
+    intro p hp
+    obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem hp
+    have hmem : (vs[i], rm.reverse[i]'(by omega)) ∈ vs.zip rm.reverse := by
+      rw [List.mem_iff_getElem]
+      exact ⟨i, by simp; omega, by simp⟩
+    exact (hFacts _ hmem).2
+  have hL : revAcc r Term.__eo_List_nil =
+      eoListApp rm.reverse (eoListApp extra.reverse Term.__eo_List_nil) := by
+    rw [revAcc_eq, hr, List.reverse_append, eoListApp_append]
+  have hActuals : SubstActualsHaveSmtTypes (eoVarList vs) (revAcc r Term.__eo_List_nil) := by
+    rw [hL]
+    exact actuals_of_typed _ vs rm.reverse hzipLen hFacts
+  have hTs : EoListAllHaveSmtTranslation (revAcc r Term.__eo_List_nil) := by
+    rw [revAcc_eq]
+    exact eoListApp_all_translations _ (fun x hx => hArgsNN x (List.mem_reverse.1 hx))
+  have hBodyTrans : RuleProofs.eo_has_smt_translation body := hBodyNN
+  have hbTrans : RuleProofs.eo_has_smt_translation
+      (__substitute_simul_rec (Term.Boolean false) body (eoVarList vs)
+        (revAcc r Term.__eo_List_nil) Term.__eo_List_nil) := by
+    rw [← hbEq]; exact hBNN
+  by_cases hmk : m < r.length
+  · -- More arguments than variables: the types cannot agree.
+    exfalso
+    have hbTyNe : __eo_typeof (substResult false body (eoVarList vs)
+        (revAcc r Term.__eo_List_nil) Term.__eo_List_nil) ≠ Term.Stuck :=
+      SubstituteSupport.eo_typeof_ne_stuck_of_has_smt_translation _ hbTrans
+    have hPres :=
+      substitute_simul_preserves_type_and_translation_of_typeof_ne_stuck body (eoVarList vs)
+        (revAcc r Term.__eo_List_nil) Term.__eo_List_nil
+        (EoVarEnvPerm.of_exact (eoVarEnv_eoVarList vs))
+        (EoVarEnvPerm.of_exact EoVarEnv.nil) hBodyTrans hTs hActuals hbTyNe
+    have hbTy : __smtx_typeof (__eo_to_smt b) = __smtx_typeof (__eo_to_smt body) := by
+      rw [TranslationProofs.eo_to_smt_typeof_matches_translation b hBNN,
+        TranslationProofs.eo_to_smt_typeof_matches_translation body hBodyNN, hbEq]
+      exact congrArg __eo_to_smt_type hPres.1
+    have := hlt hmk
+    rw [hSame, hbTy] at this
+    omega
+  · have hmeq : m = r.length := by omega
+    have hextra : extra = [] := by
+      have := congrArg List.length hr
+      simp at this
+      exact List.eq_nil_of_length_eq_zero (by omega)
+    subst hextra
+    simp only [List.nil_append] at hr
+    subst hr
+    have hfull := hs.eo_to_smt_full (hmeq ▸ hv)
+    rw [hfull, lamBindings_eoVarList vs r SmtBindings.nil (by omega),
+      show vs.take r.length = vs by rw [hrmlen, ← hvlen, List.take_length],
+      smtx_model_eval_bind_eq, push_bindings_bindsApp, model_push_bindings_nil,
+      ← pushL_reverse_of_distinct M _ (distinct_keys M vs r.reverse hzipLen hDistinct hVarsWf),
+      ← pushSubstModel_eoVarList M vs r.reverse Term.__eo_List_nil hzipLen, hbEq,
+      InstantiateRule.substitute_simul_eval M hM body (eoVarList vs)
+        (revAcc r Term.__eo_List_nil) hBodyTrans hTs hActuals hbTrans, revAcc_eq]
+
+end BetaReduceRule

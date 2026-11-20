@@ -421,7 +421,7 @@ private theorem smtx_model_eval_str_substr_term_eq
         (__smtx_model_eval M (__eo_to_smt s))
         (__smtx_model_eval M (__eo_to_smt i))
         (__smtx_model_eval M (__eo_to_smt n))
-  rw [__smtx_model_eval.eq_82]
+  rw [__smtx_model_eval.eq_84]
 
 private theorem smtx_model_eval_str_at_term_eq
     (M : SmtModel) (s i : Term) :
@@ -484,7 +484,7 @@ private theorem smtx_model_eval_raw_seq_empty_typeof
   rw [hA]
   change __smtx_model_eval M (SmtTerm.seq_empty T) =
     SmtValue.Seq (SmtSeq.empty T)
-  rw [__smtx_model_eval.eq_79]
+  rw [__smtx_model_eval.eq_81]
 
 private theorem smtx_model_eval_seq_empty_term_of_type
     (M : SmtModel) (A : Term) (T : SmtType)
@@ -5381,7 +5381,7 @@ private theorem smt_value_rel_str_rev_seq_unit_snoc
     (__smtx_model_eval M
       (SmtTerm.str_rev (__eo_to_smt (mkConcat head tail)))) =
       SmtValue.Boolean true
-  rw [__smtx_model_eval.eq_89, __smtx_model_eval.eq_89]
+  rw [__smtx_model_eval.eq_91, __smtx_model_eval.eq_91]
   rw [smtx_model_eval_str_concat_term_eq, hTailEval, hHeadEval]
   simp [__smtx_model_eval_str_rev, __smtx_model_eval_str_concat,
     native_seq_rev, native_seq_concat, hTailElem, hHeadElem, hHeadUnp,
@@ -5425,7 +5425,7 @@ private theorem smt_value_rel_str_rev_list_nil_empty_term
   change RuleProofs.smt_value_rel
     (__smtx_model_eval M (SmtTerm.str_rev (__eo_to_smt nil)))
     (SmtValue.Seq (SmtSeq.empty T))
-  rw [__smtx_model_eval.eq_89]
+  rw [__smtx_model_eval.eq_91]
   exact smt_value_rel_str_rev_list_nil_empty M nil T hNil hNilTy
 
 private theorem smt_value_rel_seq_nil_to_str_rev
@@ -5476,7 +5476,7 @@ private theorem smt_value_rel_seq_unit_to_str_rev
     (__smtx_model_eval M (__eo_to_smt head))
     (__smtx_model_eval M (SmtTerm.str_rev (__eo_to_smt head))) =
       SmtValue.Boolean true
-  rw [__smtx_model_eval.eq_89, hHeadEval]
+  rw [__smtx_model_eval.eq_91, hHeadEval]
   simp only [__smtx_model_eval_str_rev, native_seq_rev, hHeadElem]
   rw [hHeadUnp]
   simp [List.reverse_cons, List.reverse_nil]
@@ -8427,7 +8427,7 @@ private theorem seq_eval_smt_type_and_value_rel
                 __smtx_model_eval_str_prefixof
                   (__smtx_model_eval M (__eo_to_smt t))
                   (__smtx_model_eval M (__eo_to_smt s)) by
-              rw [__smtx_model_eval.eq_87])
+              rw [__smtx_model_eval.eq_89])
           try simp at hsimpa ⊢
           exact hsimpa
         rw [hEvalEq]
@@ -8690,7 +8690,7 @@ private theorem seq_eval_smt_type_and_value_rel
                 __smtx_model_eval_str_suffixof
                   (__smtx_model_eval M (__eo_to_smt t))
                   (__smtx_model_eval M (__eo_to_smt s)) by
-              rw [__smtx_model_eval.eq_88])
+              rw [__smtx_model_eval.eq_90])
           try simp at hsimpa ⊢
           exact hsimpa
         rw [hEvalEq]
@@ -8766,7 +8766,7 @@ private theorem seq_eval_smt_type_and_value_rel
               SmtValue.Seq
                 (native_pack_seq (__smtx_elem_typeof_seq_value st)
                   (native_seq_rev (native_unpack_seq st)))
-            rw [__smtx_model_eval.eq_89, hTEval]
+            rw [__smtx_model_eval.eq_91, hTEval]
             rfl
           have hRevSEval :
               __smtx_model_eval M
@@ -8778,7 +8778,7 @@ private theorem seq_eval_smt_type_and_value_rel
               SmtValue.Seq
                 (native_pack_seq (__smtx_elem_typeof_seq_value ss)
                   (native_seq_rev (native_unpack_seq ss)))
-            rw [__smtx_model_eval.eq_89, hSEval]
+            rw [__smtx_model_eval.eq_91, hSEval]
             rfl
           have hRTUnpack :
               native_unpack_seq sx =

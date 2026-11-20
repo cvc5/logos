@@ -29,7 +29,7 @@ private theorem nil_bvmul_succ_width_lt
         (__eo_mk_binary (native_nat_to_int (w + 1)) 1) Term.Stuck =
       Term.Stuck
   have hLt : native_zlt (native_nat_to_int (w + 1)) 4294967296 = false := by
-    simp only [native_zlt, decide_eq_false_iff_not]
+    simp only [native_zlt_eq, decide_eq_false_iff_not]
     exact hGe
   rw [hLt]
   simp [native_and, native_ite]
@@ -76,7 +76,7 @@ theorem umulo_indices_eq
         Term.Boolean false := by
     have hNonneg : ¬ (((w - 1 : Nat) : Int) < 0) :=
       Int.not_lt_of_ge (Int.natCast_nonneg (w - 1))
-    simp [__eo_is_neg, native_zlt, native_nat_to_int, hNonneg]
+    simp [__eo_is_neg, native_zlt_eq, native_nat_to_int, hNonneg]
   have hRepeat :
       __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
           (Term.Numeral 0)
@@ -97,7 +97,7 @@ theorem umulo_indices_eq
       have h0 : native_zleq 0 (native_nat_to_int (w - 1)) = true :=
         decide_eq_true (Int.natCast_nonneg (w - 1))
       have h1 : native_zlt (native_nat_to_int (w - 1)) 4294967296 = true := by
-        simp only [native_zlt, decide_eq_true_iff]
+        simp only [native_zlt_eq, decide_eq_true_iff]
         exact hwB
       rw [h0, h1]
       rfl

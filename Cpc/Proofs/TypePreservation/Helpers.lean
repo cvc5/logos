@@ -2075,7 +2075,7 @@ theorem to_real_arg_of_non_none
     (ht : term_has_non_none_type (SmtTerm.to_real t)) :
     __smtx_typeof t = SmtType.Int := by
   unfold term_has_non_none_type at ht
-  rw [__smtx_typeof.eq_21] at ht
+  rw [__smtx_typeof.eq_22] at ht
   cases h : __smtx_typeof t <;>
     simp [native_ite, native_Teq, h] at ht
   rfl
@@ -2102,7 +2102,7 @@ theorem abs_arg_of_non_none
     (ht : term_has_non_none_type (SmtTerm.abs t)) :
     __smtx_typeof t = SmtType.Int ∨ __smtx_typeof t = SmtType.Real := by
   unfold term_has_non_none_type at ht
-  rw [__smtx_typeof.eq_24] at ht
+  rw [__smtx_typeof.eq_25] at ht
   cases h : __smtx_typeof t <;>
     simp [__smtx_typeof_arith_overload_op_1, h] at ht
   · exact Or.inl rfl
@@ -2113,7 +2113,7 @@ theorem abs_int_arg_of_type_int
     {t : SmtTerm}
     (ht : __smtx_typeof (SmtTerm.abs t) = SmtType.Int) :
     __smtx_typeof t = SmtType.Int := by
-  rw [__smtx_typeof.eq_24] at ht
+  rw [__smtx_typeof.eq_25] at ht
   cases h : __smtx_typeof t <;>
     simp [__smtx_typeof_arith_overload_op_1, h] at ht
   rfl

@@ -259,16 +259,6 @@ private theorem sr_native_seq_extract_pack_string
   simp only [List.length_map, apply_ite, List.map_nil,
     List.map_take, List.map_drop]
   split <;> simp_all
-  -- the `ite` now survives into the goal instead of `simp` having turned it
-  -- into an implication, so discharge its condition here
-  rcases ‹(0 ≤ i ∧ 0 < n) ∧ i < Int.ofNat s.length› with
-    ⟨⟨hi0, hn0⟩, hilt⟩
-  rw [ite_eq_right (by
-    rintro ((hi | hn) | hlen)
-    · exact False.elim ((Int.not_lt_of_ge hi0) hi)
-    · exact False.elim ((Int.not_le_of_gt hn0) hn)
-    · exact False.elim ((Int.not_le_of_gt hilt) hlen))]
-  simp [List.map_take, List.map_drop]
 
 /-- The generated evaluator retains the packed sequence's inferred element
     type at extraction sites; for strings, that type is `Char`. -/
@@ -1706,11 +1696,12 @@ private theorem sr_eo_is_closed_binary_uop_args
     (hXNe : x ≠ Term.Stuck) (hYNe : y ≠ Term.Stuck)
     (hClosed :
       __eo_is_closed (Term.Apply (Term.Apply (Term.UOp op) x) y) =
-        Term.Boolean true) :
+        Term.Boolean true)
+    (hNotLambda : op ≠ UserOp.lambda := by decide) :
     __eo_is_closed x = Term.Boolean true ∧
       __eo_is_closed y = Term.Boolean true := by
   have hParentRec := eo_is_closed_eq_true_rec_nil hClosed
-  have hArgsRec := eo_is_closed_rec_binary_uop_eq_true_cases
+  have hArgsRec := eo_is_closed_rec_binary_uop_eq_true_cases (hNotLambda := hNotLambda)
     hNotForall hNotExists
     (hEnv := EoSmtVarEnvPerm.of_exact EoSmtVarEnv.nil) hParentRec
   exact ⟨sr_eo_is_closed_of_rec_nil x hXNe hArgsRec.1,
@@ -1721,6 +1712,7 @@ private theorem sr_eo_is_closed_ternary_uop_args
     (op : UserOp) (x y z : Term)
     (hNotForall : op ≠ UserOp.forall)
     (hNotExists : op ≠ UserOp.exists)
+    (hNotLambda : op ≠ UserOp.lambda)
     (hXNe : x ≠ Term.Stuck) (hYNe : y ≠ Term.Stuck)
     (hZNe : z ≠ Term.Stuck)
     (hClosed :
@@ -1731,7 +1723,7 @@ private theorem sr_eo_is_closed_ternary_uop_args
       __eo_is_closed y = Term.Boolean true ∧
         __eo_is_closed z = Term.Boolean true := by
   have hParentRec := eo_is_closed_eq_true_rec_nil hClosed
-  have hArgsRec := eo_is_closed_rec_ternary_uop_eq_true_cases
+  have hArgsRec := eo_is_closed_rec_ternary_uop_eq_true_cases (hNotLambda := hNotLambda)
     hNotForall hNotExists
     (hEnv := EoSmtVarEnvPerm.of_exact EoSmtVarEnv.nil) hParentRec
   exact ⟨sr_eo_is_closed_of_rec_nil x hXNe hArgsRec.1,
@@ -6702,6 +6694,7 @@ private theorem string_reduction_pred_true
                   __eo_is_closed y = Term.Boolean true ∧
                     __eo_is_closed x = Term.Boolean true := by
               apply sr_eo_is_closed_ternary_uop_args UserOp.str_indexof_re z y x
+              · decide
               · decide
               · decide
               · exact hSTermNe

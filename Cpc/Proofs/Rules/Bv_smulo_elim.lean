@@ -2791,7 +2791,7 @@ private theorem nil_bvxor_succ_width_lt
         (__eo_mk_binary (native_nat_to_int (w + 1)) 0) Term.Stuck =
       Term.Stuck
   have hLt : native_zlt (native_nat_to_int (w + 1)) 4294967296 = false := by
-    simp only [native_zlt, decide_eq_false_iff_not]
+    simp only [native_zlt_eq, decide_eq_false_iff_not]
     exact hGe
   rw [hLt]
   simp [native_and, native_ite]
@@ -2840,7 +2840,7 @@ private theorem smulo_indices_eq
         Term.Boolean false := by
     have hNonneg : ¬ (((W - 2 : Nat) : Int) < 0) :=
       Int.not_lt_of_ge (Int.natCast_nonneg (W - 2))
-    simp [__eo_is_neg, native_zlt, native_nat_to_int, hNonneg]
+    simp [__eo_is_neg, native_zlt_eq, native_nat_to_int, hNonneg]
   have hRepeat :
       __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
           (Term.Numeral 0)
@@ -2861,7 +2861,7 @@ private theorem smulo_indices_eq
       have h0 : native_zleq 0 (native_nat_to_int (W - 2)) = true :=
         decide_eq_true (Int.natCast_nonneg (W - 2))
       have h1 : native_zlt (native_nat_to_int (W - 2)) 4294967296 = true := by
-        simp only [native_zlt, decide_eq_true_iff]
+        simp only [native_zlt_eq, decide_eq_true_iff]
         exact hWB
       rw [h0, h1]
       rfl
@@ -2950,7 +2950,7 @@ private theorem smulo_indices_cases
             (native_int_to_nat (native_nat_to_int (W - 2))))
           Term.Stuck = Term.Stuck
       have hLt : native_zlt (native_nat_to_int (W - 2)) 4294967296 = false := by
-        simp only [native_zlt, decide_eq_false_iff_not]
+        simp only [native_zlt_eq, decide_eq_false_iff_not]
         exact hWB
       rw [hLt]
       simp [native_and, native_ite]

@@ -1358,7 +1358,7 @@ private theorem re_unbound_allchar_prefix_closed
         SmtValue.RegLan native_re_allchar := by
     change __smtx_model_eval M SmtTerm.re_allchar =
       SmtValue.RegLan native_re_allchar
-    rw [__smtx_model_eval.eq_104]
+    rw [__smtx_model_eval.eq_106]
   have hFullEval :
       __smtx_model_eval M
           (__eo_to_smt
@@ -1463,12 +1463,32 @@ private def ReIncludesCheckerSound
     checker sup sub = Term.Boolean true ->
       NativeIncludes rvSup rvSub
 
+private def ReIncludesConcatSound
+    (M : SmtModel) (_hM : model_wf M)
+    (r1 r2 r3 r4 : Term) : Prop :=
+  ∀ (rvSup rvSub : SmtRegLan),
+    __smtx_typeof (__eo_to_smt
+      (Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r1) r2)) =
+        SmtType.RegLan ->
+    __smtx_typeof (__eo_to_smt
+      (Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r3) r4)) =
+        SmtType.RegLan ->
+    __smtx_model_eval M (__eo_to_smt
+      (Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r1) r2)) =
+        SmtValue.RegLan rvSup ->
+    __smtx_model_eval M (__eo_to_smt
+      (Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r3) r4)) =
+        SmtValue.RegLan rvSub ->
+    __str_re_includes_concat r1 r2 r3 r4 = Term.Boolean true ->
+      NativeIncludes rvSup rvSub
+
 private theorem str_re_includes_sound_mutual
     (M : SmtModel) (hM : model_wf M) :
     (∀ sup sub,
       ReIncludesCheckerSound __str_re_includes_lhs_union M hM sup sub) ∧
     (∀ sup sub,
       ReIncludesCheckerSound __str_re_includes_rec M hM sup sub) ∧
+    (∀ r1 r2 r3 r4, ReIncludesConcatSound M hM r1 r2 r3 r4) ∧
     (∀ sup sub,
       ReIncludesCheckerSound __str_re_includes_base_rec M hM sup sub) ∧
     (∀ sup sub,
@@ -1478,12 +1498,13 @@ private theorem str_re_includes_sound_mutual
   refine __str_re_includes_lhs_union.mutual_induct
     (ReIncludesCheckerSound __str_re_includes_lhs_union M hM)
     (ReIncludesCheckerSound __str_re_includes_rec M hM)
+    (ReIncludesConcatSound M hM)
     (ReIncludesCheckerSound __str_re_includes_base_rec M hM)
     (ReIncludesCheckerSound __str_re_includes_lhs_star M hM)
     (ReIncludesCheckerSound __str_re_includes_rhs_inter M hM)
     ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
     ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
-    ?_ ?_ ?_ ?_
+    ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
   · intro x rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
     simp [__str_re_includes_lhs_union] at hSide
   · intro x _hNe rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
@@ -1609,7 +1630,63 @@ private theorem str_re_includes_sound_mutual
       · exact ihBase rv1 rvSub hSupArgs.1 hSubTy hR1Eval hSubEval
           hRec.2
     simpa [native_re_concat_right_empty] using hHead
-  · intro r1 r3 _hR1Ne _hR1NotEps ihBase
+  · intro r1 r2 r3 _hR2NotEps _v0 ihBase ihConcat
+    intro rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
+    let eps := Term.Apply (Term.UOp UserOp.str_to_re) (Term.String [])
+    have hSide' :
+        __eo_ite
+            (__eo_ite
+              (__eo_eq
+                (Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r1) r2)
+                r3)
+              (Term.Boolean true)
+              (__str_re_includes_base_rec
+                (Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r1) r2)
+                r3))
+            (Term.Boolean true)
+            (__str_re_includes_concat r1 r2 r3 eps) =
+          Term.Boolean true := by
+      unfold __str_re_includes_rec at hSide
+      simpa [eps] using hSide
+    rcases eo_ite_true_result
+        (__eo_ite
+          (__eo_eq
+            (Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r1) r2) r3)
+          (Term.Boolean true)
+          (__str_re_includes_base_rec
+            (Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r1) r2) r3))
+        (__str_re_includes_concat r1 r2 r3 eps) hSide' with
+      hFirst | hConcat
+    · have hSubArgs := re_concat_arg_types_of_reglan r3 eps hSubTy
+      rcases smt_model_eval_reglan_of_type M hM r3 hSubArgs.1 with
+        ⟨rv3, hR3Eval⟩
+      have hEpsEval :
+          __smtx_model_eval M (__eo_to_smt eps) =
+            SmtValue.RegLan (native_str_to_re []) := by
+        dsimp [eps]
+        exact smtx_model_eval_re_empty_string M
+      have hSubFull :=
+        eval_re_concat_reglan M r3 eps rv3 (native_str_to_re [])
+          hR3Eval hEpsEval
+      rw [hSubFull] at hSubEval
+      cases hSubEval
+      have hHead : NativeIncludes rvSup rv3 := by
+        rcases eo_ite_true_result
+            (__eo_eq
+              (Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r1) r2) r3)
+            (__str_re_includes_base_rec
+              (Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r1) r2) r3)
+            hFirst with hEq | hRec
+        · have hTerm := eq_of_eo_eq_true _ r3 hEq
+          subst r3
+          exact native_includes_of_same_term_eval M _ rvSup rv3
+            hSupEval hR3Eval
+        · exact ihBase rvSup rv3 hSupTy hSubArgs.1 hSupEval hR3Eval
+            hRec.2
+      simpa [native_re_concat_right_empty] using hHead
+    · exact ihConcat rvSup rvSub hSupTy hSubTy hSupEval hSubEval
+        hConcat.2
+  · intro r1 r3 _hR1Ne _hR1NotEps _hR1NotConcat ihBase
     intro rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
     have hSide' :
         __eo_ite (__eo_eq r1 r3) (Term.Boolean true)
@@ -1640,10 +1717,76 @@ private theorem str_re_includes_sound_mutual
       · exact ihBase rvSup rv3 hSupTy hSubArgs.1 hSupEval hR3Eval
           hRec.2
     simpa [native_re_concat_right_empty] using hHead
-  · intro r1 r2 r3 r4 _hNoBothEps _hR2Ne _hR4Ne
-      _v0 _v1 ihBase ihTail ihWild ihSigma
+  · intro r1 r2 r3 r4 _hNoBothEps _hR2Ne _hR4Ne ihConcat
+    intro rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
+    have hSide' : __str_re_includes_concat r1 r2 r3 r4 = Term.Boolean true := by
+      unfold __str_re_includes_rec at hSide
+      simpa using hSide
+    exact ihConcat rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide'
+  · intro r1 r2 _hR2Ne
     intro rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
     unfold __str_re_includes_rec at hSide
+    let eps := Term.Apply (Term.UOp UserOp.str_to_re) (Term.String [])
+    let sigma :=
+      Term.Apply (Term.UOp UserOp.re_mult)
+        (Term.Apply
+          (Term.Apply (Term.UOp UserOp.re_concat)
+            (Term.UOp UserOp.re_allchar))
+          eps)
+    have hSupArgs := re_concat_arg_types_of_reglan r1 r2 hSupTy
+    rcases smt_model_eval_reglan_of_type M hM r1 hSupArgs.1 with
+      ⟨rv1, hR1Eval⟩
+    rcases smt_model_eval_reglan_of_type M hM r2 hSupArgs.2 with
+      ⟨rv2, hR2Eval⟩
+    have hSupFull :=
+      eval_re_concat_reglan M r1 r2 rv1 rv2 hR1Eval hR2Eval
+    have hSubEps :
+        __smtx_model_eval M (__eo_to_smt eps) =
+          SmtValue.RegLan (native_str_to_re []) := by
+      dsimp [eps]
+      exact smtx_model_eval_re_empty_string M
+    rw [hSubEps] at hSubEval
+    rw [hSupFull] at hSupEval
+    cases hSubEval
+    cases hSupEval
+    rcases eo_and_eq_true (__eo_eq r1 sigma) (__eo_eq r2 eps) (by
+        simpa [sigma, eps] using hSide) with ⟨hEqSigma, hEqEps⟩
+    have hSigmaTerm := eq_of_eo_eq_true r1 sigma hEqSigma
+    have hEpsTerm := eq_of_eo_eq_true r2 eps hEqEps
+    have hR1All : rv1 = native_re_all := by
+      rw [← hSigmaTerm] at hR1Eval
+      dsimp [sigma, eps] at hR1Eval
+      rw [smtx_model_eval_sigma_star_concat_eps M] at hR1Eval
+      cases hR1Eval
+      rfl
+    have hR2Eps : rv2 = native_str_to_re [] := by
+      rw [← hEpsTerm] at hR2Eval
+      dsimp [eps] at hR2Eval
+      rw [smtx_model_eval_re_empty_string M] at hR2Eval
+      cases hR2Eval
+      rfl
+    subst rv1
+    subst rv2
+    simpa [native_re_concat_right_empty] using
+      native_includes_re_all (native_str_to_re [])
+  · intro r1 r3 _hR1Ne _hR3Ne _hNoBothEps _hNoLhsEps
+      _hNoConcatEps _hNoRhsEps _hNoConcat _hNoConcatEpsSub
+      rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
+    unfold __str_re_includes_rec at hSide
+    simp_all
+  · intro x y z rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
+    simp [__str_re_includes_concat] at hSide
+  · intro x y z _hNe rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
+    simp_all [__str_re_includes_concat]
+  · intro x y z _hNe1 _hNe2 rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
+    simp_all [__str_re_includes_concat]
+  · intro x y z _hNe1 _hNe2 _hNe3
+      rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
+    simp_all [__str_re_includes_concat]
+  · intro r1 r2 r3 r4 _hR1Ne _hR2Ne _hR3Ne _hR4Ne
+      _v0 _v1 ihBase ihTail ihWild ihSigma
+    intro rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
+    unfold __str_re_includes_concat at hSide
     let lhs :=
       Term.Apply (Term.Apply (Term.UOp UserOp.re_concat) r1) r2
     let rhs :=
@@ -1823,57 +1966,6 @@ private theorem str_re_includes_sound_mutual
               hSubTy hR2Eval hRhsEval hRec.2
         exact native_includes_trans (native_includes_all_concat_tail rv2)
           hTailIncl
-  · intro r1 r2 _hR2Ne
-    intro rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
-    unfold __str_re_includes_rec at hSide
-    let eps := Term.Apply (Term.UOp UserOp.str_to_re) (Term.String [])
-    let sigma :=
-      Term.Apply (Term.UOp UserOp.re_mult)
-        (Term.Apply
-          (Term.Apply (Term.UOp UserOp.re_concat)
-            (Term.UOp UserOp.re_allchar))
-          eps)
-    have hSupArgs := re_concat_arg_types_of_reglan r1 r2 hSupTy
-    rcases smt_model_eval_reglan_of_type M hM r1 hSupArgs.1 with
-      ⟨rv1, hR1Eval⟩
-    rcases smt_model_eval_reglan_of_type M hM r2 hSupArgs.2 with
-      ⟨rv2, hR2Eval⟩
-    have hSupFull :=
-      eval_re_concat_reglan M r1 r2 rv1 rv2 hR1Eval hR2Eval
-    have hSubEps :
-        __smtx_model_eval M (__eo_to_smt eps) =
-          SmtValue.RegLan (native_str_to_re []) := by
-      dsimp [eps]
-      exact smtx_model_eval_re_empty_string M
-    rw [hSubEps] at hSubEval
-    rw [hSupFull] at hSupEval
-    cases hSubEval
-    cases hSupEval
-    rcases eo_and_eq_true (__eo_eq r1 sigma) (__eo_eq r2 eps) (by
-        simpa [sigma, eps] using hSide) with ⟨hEqSigma, hEqEps⟩
-    have hSigmaTerm := eq_of_eo_eq_true r1 sigma hEqSigma
-    have hEpsTerm := eq_of_eo_eq_true r2 eps hEqEps
-    have hR1All : rv1 = native_re_all := by
-      rw [← hSigmaTerm] at hR1Eval
-      dsimp [sigma, eps] at hR1Eval
-      rw [smtx_model_eval_sigma_star_concat_eps M] at hR1Eval
-      cases hR1Eval
-      rfl
-    have hR2Eps : rv2 = native_str_to_re [] := by
-      rw [← hEpsTerm] at hR2Eval
-      dsimp [eps] at hR2Eval
-      rw [smtx_model_eval_re_empty_string M] at hR2Eval
-      cases hR2Eval
-      rfl
-    subst rv1
-    subst rv2
-    simpa [native_re_concat_right_empty] using
-      native_includes_re_all (native_str_to_re [])
-  · intro r1 r3 _hR1Ne _hR3Ne _hNoBothEps _hNoLhsEps
-      _hNoRhsEps _hNoConcat _hNoConcatEps
-      rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
-    unfold __str_re_includes_rec at hSide
-    simp_all
   · intro x rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
     simp [__str_re_includes_base_rec] at hSide
   · intro x _hNe rvSup rvSub hSupTy hSubTy hSupEval hSubEval hSide
@@ -2386,7 +2478,7 @@ private theorem reIncl_eo_list_repeat_zero_eq (n : Nat) (hn : n < 4294967296) :
         (Term.Numeral 0) (Term.Numeral (Int.ofNat n)) =
       reIncl_zeroIntListTerm n := by
   have hnot : ¬ 4294967296 ≤ n := by omega
-  simp [__eo_list_repeat, native_ite, native_and, native_zleq, native_zlt,
+  simp [__eo_list_repeat, native_ite, native_and, native_zleq, native_zlt_eq,
     native_int_to_nat, hnot, reIncl_eo_list_repeat_rec_zero_eq]
 
 private theorem reIncl_intRangeTerm_ne_stuck :
@@ -2552,7 +2644,7 @@ theorem str_flatten_concat_string_stuck_local
         have hLe : ¬ ((cs.length : Int) + 1 < 4294967296) := by
           simp only [List.length_cons] at hLen
           omega
-        simp [__eo_list_repeat, native_ite, native_and, native_zlt, hLe]
+        simp [__eo_list_repeat, native_ite, native_and, native_zlt_eq, hLe]
       have hWordRec : ∀ t,
           __str_flatten_word_rec Term.Stuck t = Term.Stuck := by
         intro t

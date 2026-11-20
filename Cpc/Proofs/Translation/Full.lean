@@ -1884,7 +1884,8 @@ private theorem eo_to_smt_apply_apply_apply_uop_generic_full
     (hStrReplaceReAll : op ≠ UserOp.str_replace_re_all)
     (hStrIndexofRe : op ≠ UserOp.str_indexof_re)
     (hStringsOccurIndex : op ≠ UserOp._at_strings_occur_index)
-    (hStringsOccurIndexRe : op ≠ UserOp._at_strings_occur_index_re) :
+    (hStringsOccurIndexRe : op ≠ UserOp._at_strings_occur_index_re)
+    (hNP : ¬ SmtPendingLam (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp op) z) y))) :
       __eo_to_smt
           (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) z) y) x) =
         SmtTerm.Apply
@@ -1906,6 +1907,7 @@ private theorem eo_to_smt_apply_apply_apply_uop_generic_full
       | exact False.elim (hStrIndexofRe rfl)
       | exact False.elim (hStringsOccurIndex rfl)
       | exact False.elim (hStringsOccurIndexRe rfl)
+      | exact eo_to_smt_apply_eq_of_not_pending rfl hNP
 
 private theorem eo_typeof_apply_apply_apply_uop_generic_full
     (op : UserOp) (z y x : Term)
@@ -2122,8 +2124,8 @@ private theorem eo_to_smt_quantifiers_skolemize_succ_cons
     __eo_to_smt_quantifiers_skolemize
         (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs) G n.succ =
       __eo_to_smt_quantifiers_skolemize vs
-        (SmtTerm.bind s (__eo_to_smt_type T)
-          (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists vs G)) G) n := by
+        (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+          (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists vs G)) SmtBindings.nil) G) n := by
   simp [__eo_to_smt_quantifiers_skolemize]
 
 /-- A true EO list check implies the underlying nil search is non-stuck. -/
@@ -2313,10 +2315,10 @@ private theorem smtx_typeof_eo_to_smt_exists_cons_bool_of_tail_bool
 /-- Typing equation for a `bind` node. -/
 private theorem typeof_bind_eq_full
     (s : native_String) (T : SmtType) (x1 x2 : SmtTerm) :
-    __smtx_typeof (SmtTerm.bind s T x1 x2) =
+    __smtx_typeof (SmtTerm.bind (SmtBindings.cons s T x1 SmtBindings.nil) x2) =
       native_ite (native_Teq (__smtx_typeof x1) T)
         (__smtx_typeof_guard_wf T (__smtx_typeof x2)) SmtType.None := by
-  rw [__smtx_typeof.eq_def] <;> simp only
+  rw [smtx_typeof_bind_eq, smtx_typeof_bindings_cons_eq, smtx_typeof_bindings_nil_eq]
 
 /-- Typing equation for an `exists` node. -/
 private theorem typeof_exists_eq_full
@@ -2436,8 +2438,8 @@ private theorem eo_to_smt_exists_bool_of_quantifiers_skolemize_non_none
                   rw [eo_to_smt_quantifiers_skolemize_succ_cons] at hNN
                   have hG'NoExists :
                       ∀ s' T' F',
-                        SmtTerm.bind s (__eo_to_smt_type T)
-                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) body ≠
+                        SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) SmtBindings.nil) body ≠
                           SmtTerm.exists s' T' F' := by
                     intro s' T' F' h
                     cases h
@@ -2445,8 +2447,8 @@ private theorem eo_to_smt_exists_bool_of_quantifiers_skolemize_non_none
                   have hG'Bool := eo_to_smt_exists_body_bool_of_bool a _ hTailG'
                   have hBindNN :
                       term_has_non_none_type
-                        (SmtTerm.bind s (__eo_to_smt_type T)
-                          (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) body) := by
+                        (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                          (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) SmtBindings.nil) body) := by
                     unfold term_has_non_none_type
                     rw [hG'Bool]
                     simp
@@ -2457,8 +2459,8 @@ private theorem eo_to_smt_exists_bool_of_quantifiers_skolemize_non_none
                     intro hNone
                     have hbn :
                         __smtx_typeof
-                          (SmtTerm.bind s (__eo_to_smt_type T)
-                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) body) =
+                          (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) SmtBindings.nil) body) =
                           SmtType.None := by
                       rw [typeof_bind_eq_full, hNone]
                       cases hcond :
@@ -2532,8 +2534,8 @@ private theorem eo_to_smt_quantifiers_skolemize_type_of_non_none
                   rw [eo_to_smt_quantifiers_skolemize_succ_cons] at hNN ⊢
                   have hG'NoExists :
                       ∀ s' T' F',
-                        SmtTerm.bind s (__eo_to_smt_type T)
-                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) body ≠
+                        SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) SmtBindings.nil) body ≠
                           SmtTerm.exists s' T' F' := by
                     intro s' T' F' h
                     cases h
@@ -2607,8 +2609,8 @@ private theorem eo_to_smt_quantifiers_skolemize_var_type_valid_of_non_none
                   rw [eo_to_smt_quantifiers_skolemize_succ_cons] at hNN
                   have hG'NoExists :
                       ∀ s' T' F',
-                        SmtTerm.bind s (__eo_to_smt_type T)
-                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) body ≠
+                        SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                            (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists a body)) SmtBindings.nil) body ≠
                           SmtTerm.exists s' T' F' := by
                     intro s' T' F' h
                     cases h
@@ -2877,6 +2879,11 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
               (fun term _ hNN => go term hNN)
               hNotDistinct hNonNone
           refine ⟨hEq, ?_⟩
+          by_cases hSp : SmtPendingLam (__eo_to_smt f)
+          · obtain ⟨us, body, r, hs⟩ := eo_to_smt_pending_spine f hSp
+            exact (eo_to_smt_typeof_matches_translation_lam_spine (LamSpine.app x hs)
+              (lamVars_of_pending_app x hs hSp hNonNone)
+              (fun u hu hNN => go u hNN) hNonNone).2
           have hTermNN :
               term_has_non_none_type (__eo_to_smt (Term.Apply f x)) := by
             unfold term_has_non_none_type
@@ -3399,6 +3406,13 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                 cases hTy
               case UOp op =>
                 cases op <;> dsimp [__eo_typeof] at hTy hTypeNN
+                case lambda =>
+                  have hv := (eo_to_smt_typeof_matches_translation_lambda y x
+                    (fun u _ hNN => go u hNN) hNonNone).2
+                  have hTy' : __eo_typeof
+                      (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) y) x) = Term.DtcAppType a b := hTy
+                  rw [hTy'] at hv
+                  exact hv
                 case select =>
                   exact eo_type_valid_of_select_eq_dtcapp_full
                     (go y) (go x) hTermNN hTy
@@ -3483,7 +3497,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                       (hNonNone
                         (typeof_apply_apply_none_head_eq (__eo_to_smt y) (__eo_to_smt x)))
                   | exact eo_type_valid_of_nested_generic_apply_typeof_apply_eq_dtcapp_full
-                      (go _) (by rfl) hTermNN hTy
+                      (go _) (by eo_to_smt_generic_rfl) hTermNN hTy
                   | exact eo_type_valid_of_typeof_apply_eq_dtcapp_cases_full
                       (by intro T U h; cases h)
                       (by intro T U h; cases h)
@@ -3742,7 +3756,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                     (g := Term.UOp1 UserOp1.tuple_select z) (y := y) (x := x)
                     (A := a) (B := b)
                     (go (Term.Apply (Term.UOp1 UserOp1.tuple_select z) y))
-                    (by rfl) (by rfl) hTermNN (by
+                    (by first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp) (by rfl) hTermNN (by
                       change
                         __eo_typeof
                             (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_select z) y) x) =
@@ -3943,7 +3957,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                 exact eo_type_valid_of_nested_generic_apply_typeof_apply_eq_dtcapp_full
                   (g := Term.UOp2 op z w) (y := y) (x := x) (A := a) (B := b)
                   (go (Term.Apply (Term.UOp2 op z w) y))
-                  (by rfl) hTermNN hTy
+                  (by first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp) hTermNN hTy
               case UOp3 op z w v =>
                 exact eo_type_valid_of_nested_generic_apply_typeof_apply_eq_dtcapp_full
                   (g := Term.UOp3 op z w v) (y := y) (x := x) (A := a) (B := b)
@@ -4100,6 +4114,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                               (__eo_typeof y) (__eo_typeof x) =
                             Term.DtcAppType a b
                         exact hTy))
+                  have hLambda := hSp
                   exact eo_type_valid_of_nested_generic_apply_eq_dtcapp_full
                     (g := Term.Apply (Term.UOp op) z) (y := y) (x := x)
                     (A := a) (B := b)
@@ -4108,7 +4123,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                       hIte hStore hBvite hStrSubstr hStrReplace hStrIndexof
                       hStrUpdate hStrReplaceAll hStrReplaceRe hStrReplaceReAll
                       hStrIndexofRe hStringsOccurIndex
-                      hStringsOccurIndexRe)
+                      hStringsOccurIndexRe hLambda)
                     (eo_typeof_apply_apply_apply_uop_generic_full op z y x
                       hIte hStore hBvite hStrSubstr hStrReplace hStrIndexof
                       hStrUpdate hStrReplaceAll hStrReplaceRe hStrReplaceReAll
@@ -4120,13 +4135,13 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                     (g := Term.Apply g0 z) (y := y) (x := x) (A := a) (B := b)
                     (go (Term.Apply (Term.Apply g0 z) y))
                     (by
-                      cases g0 <;> try rfl
+                      cases g0 <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp
                       case UOp op =>
                         exact False.elim (hG0UOp ⟨op, rfl⟩)
                       case Apply g1 w =>
-                        cases g1 <;> try rfl
+                        cases g1 <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp
                         case UOp op =>
-                          cases op <;> try rfl
+                          cases op <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp
                           case _at_strings_replace_all_result =>
                             exact False.elim
                               (false_of_typeof_strings_replace_all_result_eq_dtcapp_full

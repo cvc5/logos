@@ -7,6 +7,8 @@ public import Cpc.Proofs.Assumptions
 import all Cpc.Proofs.Assumptions
 public import Cpc.Proofs.RuleSupport.Contract
 import all Cpc.Proofs.RuleSupport.Contract
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 public section
 
@@ -20,6 +22,11 @@ set_option linter.unusedVariables false
 set_option maxHeartbeats 10000000
 
 abbrev SmtVarKey : Type := native_String × SmtType
+
+/-- The variables a `let` binds, in the order of its bindings. -/
+def SmtBindings.keys : SmtBindings -> List SmtVarKey
+  | SmtBindings.nil => []
+  | SmtBindings.cons s T _ bs => (s, T) :: SmtBindings.keys bs
 
 /-- Agreement on the currently bound SMT variables. -/
 def model_agrees_on_vars (vars : List SmtVarKey) (M N : SmtModel) : Prop :=
@@ -105,6 +112,31 @@ by
         simp [native_model_var_lookup, native_model_push]
       · simpa [native_model_var_lookup, native_model_push, hKey]
           using hAgree.vars_eq s' T' hTail
+
+/-- Models that agree on `vars`, extended with the same bindings whose terms
+evaluate alike, agree on the bound variables as well. -/
+theorem model_agrees_on_env_push_bindings
+    {M N : SmtModel} :
+  ∀ (bs : SmtBindings) {vars : List SmtVarKey} {A B : SmtModel},
+    (∀ s T v, SmtBindings.Mem bs s T v -> __smtx_model_eval M v = __smtx_model_eval N v) ->
+    model_agrees_on_env vars A B ->
+    model_agrees_on_env (SmtBindings.keys bs ++ vars)
+      (__smtx_model_eval.push_bindings M A bs) (__smtx_model_eval.push_bindings N B bs)
+  | SmtBindings.nil, vars, A, B, _, h => by
+      rw [model_push_bindings_nil, model_push_bindings_nil]
+      exact h
+  | SmtBindings.cons s T v bs, vars, A, B, hv, h => by
+      rw [model_push_bindings_cons, model_push_bindings_cons,
+        hv s T v (SmtBindings.Mem.head s T v bs)]
+      have hRest := model_agrees_on_env_push_bindings bs
+        (fun s' T' v' hm => hv s' T' v' (SmtBindings.Mem.tail s T v hm))
+        (model_agrees_on_env_push_same (s := s) (T := T)
+          (v := __smtx_model_eval N v) h)
+      refine ⟨hRest.globals, ?_⟩
+      intro s' T' hMem
+      apply hRest.vars_eq s' T'
+      simp only [SmtBindings.keys, List.cons_append, List.mem_cons, List.mem_append] at hMem ⊢
+      tauto
 
 theorem native_model_lookup_eq_of_env
     {vars : List SmtVarKey} {M N : SmtModel}
@@ -287,6 +319,8 @@ by
       exact ⟨h.1, h.2.1, by simpa [← hBody v] using h.2.2⟩
   rw [hPredEq]
 
+mutual
+
 /-- SMT term closedness relative to a stack of bound variables. -/
 def SmtTermClosedIn (vars : List SmtVarKey) : SmtTerm -> Prop
   | SmtTerm.None => True
@@ -303,8 +337,9 @@ def SmtTermClosedIn (vars : List SmtVarKey) : SmtTerm -> Prop
   | SmtTerm.exists s T body => SmtTermClosedIn ((s, T) :: vars) body
   | SmtTerm.forall s T body => SmtTermClosedIn ((s, T) :: vars) body
   | SmtTerm.choice s T body => SmtTermClosedIn ((s, T) :: vars) body
-  | SmtTerm.bind s T x1 x2 =>
-      SmtTermClosedIn vars x1 ∧ SmtTermClosedIn ((s, T) :: vars) x2
+  | SmtTerm.lam s T body => SmtTermClosedIn ((s, T) :: vars) body
+  | SmtTerm.bind bs x =>
+      SmtBindingsClosedIn vars bs ∧ SmtTermClosedIn (SmtBindings.keys bs ++ vars) x
   | SmtTerm.map_diff x y => SmtTermClosedIn vars x ∧ SmtTermClosedIn vars y
   | SmtTerm.seq_diff x y => SmtTermClosedIn vars x ∧ SmtTermClosedIn vars y
   | SmtTerm.DtCons _ _ _ => True
@@ -454,6 +489,53 @@ def SmtTermClosedIn (vars : List SmtVarKey) : SmtTerm -> Prop
   | SmtTerm.ubv_to_int x => SmtTermClosedIn vars x
   | SmtTerm.sbv_to_int x => SmtTermClosedIn vars x
 
+/-- Closedness of every term a `let` binds, relative to the variables bound
+around the `let`: its bindings are parallel, so none sees another. -/
+def SmtBindingsClosedIn (vars : List SmtVarKey) : SmtBindings -> Prop
+  | SmtBindings.nil => True
+  | SmtBindings.cons _ _ v bs => SmtTermClosedIn vars v ∧ SmtBindingsClosedIn vars bs
+
+end
+
+theorem SmtBindingsClosedIn.iff_mem {vars : List SmtVarKey} :
+    ∀ (bs : SmtBindings),
+      SmtBindingsClosedIn vars bs ↔
+        ∀ s T v, SmtBindings.Mem bs s T v -> SmtTermClosedIn vars v
+  | SmtBindings.nil => by
+      simp only [SmtBindingsClosedIn, true_iff]
+      intro s T v hm
+      cases hm
+  | SmtBindings.cons s T v bs => by
+      simp only [SmtBindingsClosedIn]
+      rw [SmtBindingsClosedIn.iff_mem bs]
+      constructor
+      · rintro ⟨hv, hbs⟩ s' T' v' hm
+        cases hm with
+        | head => exact hv
+        | tail _ _ _ hm' => exact hbs s' T' v' hm'
+      · intro h
+        exact ⟨h s T v (SmtBindings.Mem.head s T v bs),
+          fun s' T' v' hm => h s' T' v' (SmtBindings.Mem.tail s T v hm)⟩
+
+theorem SmtBindings.mem_keys_iff :
+    ∀ (bs : SmtBindings) (k : SmtVarKey),
+      k ∈ SmtBindings.keys bs ↔ ∃ v, SmtBindings.Mem bs k.1 k.2 v
+  | SmtBindings.nil, k => by
+      simp only [SmtBindings.keys, List.not_mem_nil, false_iff]
+      rintro ⟨v, hm⟩
+      cases hm
+  | SmtBindings.cons s T v bs, k => by
+      simp only [SmtBindings.keys, List.mem_cons]
+      rw [SmtBindings.mem_keys_iff bs k]
+      constructor
+      · rintro (rfl | ⟨v', hm⟩)
+        · exact ⟨v, SmtBindings.Mem.head _ _ v bs⟩
+        · exact ⟨v', SmtBindings.Mem.tail s T v hm⟩
+      · rintro ⟨v', hm⟩
+        cases hm with
+        | head => exact Or.inl rfl
+        | tail _ _ _ hm' => exact Or.inr ⟨v', hm'⟩
+
 theorem SmtTermClosedIn.mono
     {t : SmtTerm} {vars vars' : List SmtVarKey}
     (hSub : ∀ s T, (s, T) ∈ vars -> (s, T) ∈ vars')
@@ -486,17 +568,52 @@ by
         cases hMem with
         | head => exact List.Mem.head _
         | tail _ hTail => exact List.Mem.tail _ (hSub s' T' hTail)) hClosed
-    case bind s T x1 x2 =>
-      refine ⟨go x1 hSub hClosed.1, go x2 (by
+    case lam s T body =>
+      exact go body (by
         intro s' T' hMem
         cases hMem with
         | head => exact List.Mem.head _
-        | tail _ hTail => exact List.Mem.tail _ (hSub s' T' hTail)) hClosed.2⟩
+        | tail _ hTail => exact List.Mem.tail _ (hSub s' T' hTail)) hClosed
+    case bind bs x =>
+      have hb := (SmtBindingsClosedIn.iff_mem bs).1 hClosed.1
+      refine ⟨(SmtBindingsClosedIn.iff_mem bs).2 (fun s T v hm =>
+        have _hlt : sizeOf v < sizeOf (SmtTerm.bind bs x) :=
+          SmtBindings.Mem.sizeOf_lt_bind x hm
+        go v hSub (hb s T v hm)), go x (by
+        intro s' T' hMem
+        rcases List.mem_append.mp hMem with h | h
+        · exact List.mem_append_left _ h
+        · exact List.mem_append_right _ (hSub s' T' h)) hClosed.2⟩
     all_goals try exact go _ hSub hClosed
     all_goals try exact ⟨go _ hSub hClosed.1, go _ hSub hClosed.2⟩
     all_goals try exact ⟨go _ hSub hClosed.1, go _ hSub hClosed.2.1,
       go _ hSub hClosed.2.2⟩
   exact go t hSub hClosed
+
+theorem SmtBindingsClosedIn.mono
+    {bs : SmtBindings} {vars vars' : List SmtVarKey}
+    (hSub : ∀ s T, (s, T) ∈ vars -> (s, T) ∈ vars')
+    (hClosed : SmtBindingsClosedIn vars bs) :
+  SmtBindingsClosedIn vars' bs :=
+by
+  rw [SmtBindingsClosedIn.iff_mem] at hClosed ⊢
+  exact fun s T v hm => SmtTermClosedIn.mono hSub (hClosed s T v hm)
+
+/-- Bound terms that are each closed in some environment are all closed in one. -/
+theorem SmtBindingsClosedIn.exists_env :
+    ∀ (bs : SmtBindings),
+      (∀ s T v, SmtBindings.Mem bs s T v -> ∃ vars : List SmtVarKey, SmtTermClosedIn vars v) ->
+      ∃ vars : List SmtVarKey, SmtBindingsClosedIn vars bs
+  | SmtBindings.nil, _ => ⟨[], trivial⟩
+  | SmtBindings.cons s T v bs, h => by
+      rcases h s T v (SmtBindings.Mem.head s T v bs) with ⟨varsV, hV⟩
+      rcases SmtBindingsClosedIn.exists_env bs
+          (fun s' T' v' hm => h s' T' v' (SmtBindings.Mem.tail s T v hm)) with ⟨varsB, hB⟩
+      refine ⟨varsV ++ varsB, ?_, ?_⟩
+      · exact SmtTermClosedIn.mono
+          (by intro s' T' hMem; exact List.mem_append_left _ hMem) hV
+      · exact SmtBindingsClosedIn.mono
+          (by intro s' T' hMem; exact List.mem_append_right _ hMem) hB
 
 theorem SmtTermClosedIn.weaken_cons
     {t : SmtTerm} {vars : List SmtVarKey} {s : native_String} {T : SmtType}
@@ -525,17 +642,23 @@ theorem SmtTermClosedIn.exists_env
     case choice s T body =>
       rcases go body with ⟨vars, hClosed⟩
       exact ⟨vars, SmtTermClosedIn.weaken_cons hClosed⟩
-    case bind s T x1 x2 =>
-      rcases go x1 with ⟨varsX, hX⟩
-      rcases go x2 with ⟨varsY, hY⟩
+    case lam s T body =>
+      rcases go body with ⟨vars, hClosed⟩
+      exact ⟨vars, SmtTermClosedIn.weaken_cons hClosed⟩
+    case bind bs x =>
+      rcases SmtBindingsClosedIn.exists_env bs (fun s T v hm =>
+        have _hlt : sizeOf v < sizeOf (SmtTerm.bind bs x) :=
+          SmtBindings.Mem.sizeOf_lt_bind x hm
+        go v) with ⟨varsX, hX⟩
+      rcases go x with ⟨varsY, hY⟩
       refine ⟨varsX ++ varsY, ?_, ?_⟩
-      · exact SmtTermClosedIn.mono
+      · exact SmtBindingsClosedIn.mono
           (vars := varsX) (vars' := varsX ++ varsY)
           (by intro s T hMem; exact List.mem_append_left _ hMem) hX
       · exact SmtTermClosedIn.mono
-          (vars := varsY) (vars' := (s, T) :: (varsX ++ varsY))
+          (vars := varsY) (vars' := SmtBindings.keys bs ++ (varsX ++ varsY))
           (by intro s' T' hMem;
-              exact List.Mem.tail _ (List.mem_append_right _ hMem)) hY
+              exact List.mem_append_right _ (List.mem_append_right _ hMem)) hY
     all_goals try
       first
       | exact ⟨[], trivial⟩
@@ -825,7 +948,9 @@ theorem eo_is_closed_rec_apply_eq_true_cases_of_not_quantifier
     (hEnv : EoSmtVarEnvPerm env vars)
     (hClosed :
       __eo_is_closed_rec (Term.Apply f x) env =
-        Term.Boolean true) :
+        Term.Boolean true)
+    (hNotLambda : ∀ vs, f ≠ Term.Apply (Term.UOp UserOp.lambda) vs := by
+      intro vs h; cases h) :
   __eo_is_closed_rec f env = Term.Boolean true ∧
     __eo_is_closed_rec x env = Term.Boolean true :=
 by
@@ -843,6 +968,9 @@ by
           case «exists» =>
             exfalso
             exact hNotExists y rfl
+          case lambda =>
+            exfalso
+            exact hNotLambda y rfl
           all_goals
             exact eo_and_eq_true_cases
               (by simpa [__eo_is_closed_rec] using hClosed)
@@ -864,6 +992,9 @@ by
           case «exists» =>
             exfalso
             exact hNotExists y rfl
+          case lambda =>
+            exfalso
+            exact hNotLambda y rfl
           all_goals
             exact eo_and_eq_true_cases
               (by simpa [__eo_is_closed_rec] using hClosed)
@@ -882,7 +1013,8 @@ theorem eo_is_closed_rec_binary_uop_eq_true_cases
     (hClosed :
       __eo_is_closed_rec
         (Term.Apply (Term.Apply (Term.UOp op) x) y) env =
-        Term.Boolean true) :
+        Term.Boolean true)
+    (hNotLambda : op ≠ UserOp.lambda := by decide) :
   __eo_is_closed_rec x env = Term.Boolean true ∧
     __eo_is_closed_rec y env = Term.Boolean true :=
 by
@@ -893,14 +1025,14 @@ by
         ⟨_, EoSmtVarEnv.nil, hEquiv⟩
       have hOuter := eo_and_eq_true_cases
         (by
-          simpa [__eo_is_closed_rec, hNotForall, hNotExists]
+          simpa [__eo_is_closed_rec, hNotForall, hNotExists, hNotLambda]
             using hClosed)
       have hInner := eo_and_eq_true_cases hOuter.1
       exact ⟨hInner.2, hOuter.2⟩
   | cons hTail =>
       have hOuter := eo_and_eq_true_cases
         (by
-          simpa [__eo_is_closed_rec, hNotForall, hNotExists]
+          simpa [__eo_is_closed_rec, hNotForall, hNotExists, hNotLambda]
             using hClosed)
       have hInner := eo_and_eq_true_cases hOuter.1
       exact ⟨hInner.2, hOuter.2⟩
@@ -913,7 +1045,8 @@ theorem eo_is_closed_rec_ternary_uop_eq_true_cases
     (hClosed :
       __eo_is_closed_rec
         (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) x) y) z) env =
-        Term.Boolean true) :
+        Term.Boolean true)
+    (hNotLambda : op ≠ UserOp.lambda := by decide) :
   __eo_is_closed_rec x env = Term.Boolean true ∧
     __eo_is_closed_rec y env = Term.Boolean true ∧
       __eo_is_closed_rec z env = Term.Boolean true :=
@@ -924,14 +1057,14 @@ by
       have hOuter := eo_and_eq_true_cases
         (by simpa [__eo_is_closed_rec] using hClosed)
       have hInner :=
-        eo_is_closed_rec_binary_uop_eq_true_cases hNotForall hNotExists
+        eo_is_closed_rec_binary_uop_eq_true_cases (hNotLambda := hNotLambda) hNotForall hNotExists
           ⟨_, EoSmtVarEnv.nil, hEquiv⟩ hOuter.1
       exact ⟨hInner.1, hInner.2, hOuter.2⟩
   | cons hTail =>
       have hOuter := eo_and_eq_true_cases
         (by simpa [__eo_is_closed_rec] using hClosed)
       have hInner :=
-        eo_is_closed_rec_binary_uop_eq_true_cases hNotForall hNotExists
+        eo_is_closed_rec_binary_uop_eq_true_cases (hNotLambda := hNotLambda) hNotForall hNotExists
           ⟨_, EoSmtVarEnv.cons hTail, hEquiv⟩ hOuter.1
       exact ⟨hInner.1, hInner.2, hOuter.2⟩
 
@@ -944,7 +1077,8 @@ theorem eo_is_closed_rec_quaternary_uop_eq_true_cases
       __eo_is_closed_rec
         (Term.Apply
           (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) w) x) y) z)
-        env = Term.Boolean true) :
+        env = Term.Boolean true)
+    (hNotLambda : op ≠ UserOp.lambda := by decide) :
   __eo_is_closed_rec w env = Term.Boolean true ∧
     __eo_is_closed_rec x env = Term.Boolean true ∧
       __eo_is_closed_rec y env = Term.Boolean true ∧
@@ -958,7 +1092,7 @@ by
       (by intro vs h; cases h)
       hEnv hClosed
   have hInner :=
-    eo_is_closed_rec_ternary_uop_eq_true_cases
+    eo_is_closed_rec_ternary_uop_eq_true_cases (hNotLambda := hNotLambda)
       hNotForall hNotExists hEnv hOuter.1
   exact ⟨hInner.1, hInner.2.1, hInner.2.2, hOuter.2⟩
 
@@ -1916,12 +2050,12 @@ theorem smtTermClosedIn_eo_to_smt_quantifiers_skolemize :
               | succ n' =>
                   show SmtTermClosedIn vars
                     (__eo_to_smt_quantifiers_skolemize x
-                      (SmtTerm.bind s (__eo_to_smt_type T)
+                      (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
                         (SmtTerm.choice s (__eo_to_smt_type T)
-                          (__eo_to_smt_exists x G)) G) n')
+                          (__eo_to_smt_exists x G)) SmtBindings.nil) G) n')
                   apply smtTermClosedIn_eo_to_smt_quantifiers_skolemize (vs := x)
                   intro bv2 hbv2
-                  refine ⟨?_, ?_⟩
+                  refine ⟨⟨?_, trivial⟩, ?_⟩
                   · show SmtTermClosedIn
                       ((s, __eo_to_smt_type T) :: (bv2.reverse ++ vars))
                       (__eo_to_smt_exists x G)
@@ -1934,7 +2068,9 @@ theorem smtTermClosedIn_eo_to_smt_quantifiers_skolemize :
                     simp only [List.mem_append, List.mem_cons,
                       List.mem_reverse] at hMem ⊢
                     rcases hMem with h | h | h <;> simp [h]
-                  · have h := hEnv (EoSmtVarEnv.cons hbv2)
+                  · show SmtTermClosedIn
+                      ((s, __eo_to_smt_type T) :: (bv2.reverse ++ vars)) G
+                    have h := hEnv (EoSmtVarEnv.cons hbv2)
                     refine SmtTermClosedIn.mono ?_ (by
                       simpa [List.reverse_cons, List.append_assoc] using h)
                     intro a b hMem
@@ -3351,6 +3487,210 @@ by
     (hRec hEnv
       (eo_is_closed_rec_apply_uop_arg_eq_true hEnv hClosed))
 
+/-! ### Lambdas and their applications -/
+
+/-- The SMT variables of a list of EO variables, in order, up to the first
+element that is not one. -/
+@[expose] def eoVarKeys : Term -> List SmtVarKey
+  | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs =>
+      (s, __eo_to_smt_type T) :: eoVarKeys vs
+  | _ => []
+
+theorem eoSmtVarEnv_of_lambda_vars :
+    ∀ (m : Nat) {us : Term}, TranslationProofs.lamVars us m = true ->
+      EoSmtVarEnv us (eoVarKeys us)
+  | 0, us, h => by
+      rw [TranslationProofs.lambda_vars_zero_inv h]
+      exact EoSmtVarEnv.nil
+  | m + 1, us, h => by
+      obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lambda_vars_succ_inv h
+      exact EoSmtVarEnv.cons (eoSmtVarEnv_of_lambda_vars m hvs)
+
+theorem lamVarsPrefix_nth :
+    ∀ (k : Nat) {us : Term} {m : Nat},
+      TranslationProofs.lamVarsPrefix us m = true -> k < m ->
+      ∃ s T, TranslationProofs.lamNth us k = Term.Var (Term.String s) T
+  | k, us, 0, _, hk => absurd hk (Nat.not_lt_zero _)
+  | 0, us, m + 1, h, _ => by
+      obtain ⟨s, T, vs, rfl, _⟩ := TranslationProofs.lamVarsPrefix_succ_inv h
+      exact ⟨s, T, rfl⟩
+  | k + 1, us, m + 1, h, hk => by
+      obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lamVarsPrefix_succ_inv h
+      exact lamVarsPrefix_nth k hvs (by omega)
+
+theorem eoVarKeys_getElem? :
+    ∀ (p : Nat) {us : Term} {m : Nat} {s : native_String} {T : Term},
+      TranslationProofs.lamVarsPrefix us m = true -> p < m ->
+      TranslationProofs.lamNth us p = Term.Var (Term.String s) T ->
+      (eoVarKeys us)[p]? = some (s, __eo_to_smt_type T)
+  | p, us, 0, s, T, _, hp, _ => absurd hp (Nat.not_lt_zero _)
+  | 0, us, m + 1, s, T, h, _, hn => by
+      obtain ⟨s', T', vs, rfl, _⟩ := TranslationProofs.lamVarsPrefix_succ_inv h
+      change Term.Var (Term.String s') T' = Term.Var (Term.String s) T at hn
+      cases hn
+      rfl
+  | p + 1, us, m + 1, s, T, h, hp, hn => by
+      obtain ⟨s', T', vs, rfl, hvs⟩ := TranslationProofs.lamVarsPrefix_succ_inv h
+      exact eoVarKeys_getElem? p hvs (by omega) hn
+
+/-- The variables the arguments of a spine are bound to are the first ones of
+its lambda. -/
+theorem lamBindings_keys {us : Term} {m : Nat}
+    (hvars : TranslationProofs.lamVarsPrefix us m = true) :
+    ∀ (r : List Term) (bs : SmtBindings), r.length ≤ m ->
+      SmtBindings.keys (TranslationProofs.lamBindings us r bs) =
+        (eoVarKeys us).take r.length ++ SmtBindings.keys bs
+  | [], bs, _ => by
+      simp [TranslationProofs.lamBindings]
+  | a :: r, bs, hlen => by
+      simp only [List.length_cons] at hlen
+      obtain ⟨s, T, hn⟩ := lamVarsPrefix_nth r.length hvars (by omega)
+      change SmtBindings.keys (TranslationProofs.lamBindings us r
+          (TranslationProofs.lamBinding (TranslationProofs.lamNth us r.length)
+            (__eo_to_smt a) bs)) = _
+      rw [hn]
+      change SmtBindings.keys (TranslationProofs.lamBindings us r
+          (SmtBindings.cons s (__eo_to_smt_type T) (__eo_to_smt a) bs)) = _
+      rw [lamBindings_keys hvars r _ (by omega)]
+      have hget := eoVarKeys_getElem? r.length hvars (by omega) hn
+      simp only [List.length_cons, List.take_add_one, hget, Option.toList_some,
+        List.append_assoc, List.singleton_append]
+      rfl
+
+/-- The variables of a list that begins with `k` of them are its first `k`,
+followed by those of the rest. -/
+theorem eoVarKeys_drop :
+    ∀ (k : Nat) (us : Term), TranslationProofs.lamVarsPrefix us k = true ->
+      eoVarKeys us = (eoVarKeys us).take k ++ eoVarKeys (TranslationProofs.eoListDrop k us)
+  | 0, us, _ => by simp [TranslationProofs.eoListDrop]
+  | k + 1, us, h => by
+      obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lamVarsPrefix_succ_inv h
+      change (s, __eo_to_smt_type T) :: eoVarKeys vs =
+        ((s, __eo_to_smt_type T) :: eoVarKeys vs).take (k + 1) ++
+          eoVarKeys (TranslationProofs.eoListDrop k vs)
+      rw [List.take_succ_cons, List.cons_append, ← eoVarKeys_drop k vs hvs]
+
+/-- A list that begins with `k` variables, and whose rest is a list of `m`
+variables, is a list of `k + m` variables. -/
+theorem lamVars_of_prefix_drop :
+    ∀ (k : Nat) {m : Nat} (us : Term), TranslationProofs.lamVarsPrefix us k = true ->
+      TranslationProofs.lamVars (TranslationProofs.eoListDrop k us) m = true ->
+      TranslationProofs.lamVars us (k + m) = true
+  | 0, m, us, _, h => by simpa [TranslationProofs.eoListDrop] using h
+  | k + 1, m, us, hp, h => by
+      obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lamVarsPrefix_succ_inv hp
+      rw [Nat.add_right_comm]
+      exact lamVars_of_prefix_drop k vs hvs h
+
+/-- The curried chain of a lambda's variables is closed when its body is, under
+those variables. -/
+theorem smtTermClosedIn_curry (D : Term) (B : SmtTerm) (V : List SmtVarKey)
+    (h : SmtTermClosedIn ((eoVarKeys D).reverse ++ V) B) :
+    SmtTermClosedIn V (__eo_to_smt_lambda_curry D B) := by
+  fun_induction __eo_to_smt_lambda_curry D B generalizing V with
+  | case1 => simpa [eoVarKeys] using h
+  | case2 s T vs F ih =>
+    change SmtTermClosedIn ((s, __eo_to_smt_type T) :: V)
+      (__eo_to_smt_lambda_curry vs F)
+    apply ih
+    simpa [eoVarKeys, List.reverse_cons, List.append_assoc] using h
+  | case3 => trivial
+
+/-- The curried chain of a list that is not one of variables is closed. -/
+theorem smtTermClosedIn_curry_of_not_vars (D : Term)
+    (hD : ∀ m, TranslationProofs.lamVars D m ≠ true) (B : SmtTerm) (V : List SmtVarKey) :
+    SmtTermClosedIn V (__eo_to_smt_lambda_curry D B) := by
+  fun_induction __eo_to_smt_lambda_curry D B generalizing V with
+  | case1 => exact absurd rfl (hD 0)
+  | case2 s T vs F ih =>
+    change SmtTermClosedIn ((s, __eo_to_smt_type T) :: V)
+      (__eo_to_smt_lambda_curry vs F)
+    first
+      | exact ih (fun m hm => hD (m + 1) hm) _
+      | exact ih _ (fun m hm => hD (m + 1) hm)
+  | case3 => trivial
+
+/-- The pieces of an EO-closed lambda spine are EO-closed: its body under the
+variables of its lambda, and its arguments. -/
+theorem eo_is_closed_rec_lam_spine_parts
+    {env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnvPerm env vars) :
+    ∀ {t us body : Term} {r : List Term}, TranslationProofs.LamSpine t us body r ->
+      __eo_is_closed_rec t env = Term.Boolean true ->
+      __eo_is_closed_rec body (__eo_list_concat Term.__eo_List_cons us env) =
+          Term.Boolean true ∧
+        ∀ a ∈ r, __eo_is_closed_rec a env = Term.Boolean true
+  | _, _, _, _, TranslationProofs.LamSpine.lam us body, hClosed => by
+      refine ⟨?_, by simp⟩
+      rcases hEnv with ⟨_, hExact, _⟩
+      cases hExact <;> simpa [__eo_is_closed_rec] using hClosed
+  | _, _, _, _, TranslationProofs.LamSpine.app a hf, hClosed => by
+      obtain ⟨g, c, b, hfe⟩ := hf.shape
+      have hCases :=
+        eo_is_closed_rec_apply_eq_true_cases_of_not_quantifier
+          (by subst hfe; intro vs h; cases h) (by subst hfe; intro vs h; cases h)
+          hEnv hClosed (by subst hfe; intro vs h; cases h)
+      obtain ⟨hBody, hArgs⟩ := eo_is_closed_rec_lam_spine_parts hEnv hf hCases.1
+      refine ⟨hBody, ?_⟩
+      intro a' ha'
+      rcases List.mem_cons.1 ha' with rfl | ha'
+      · exact hCases.2
+      · exact hArgs a' ha'
+
+/-- The translation of an EO-closed lambda spine whose arguments are all bound
+to variables of its lambda is closed. -/
+theorem smtTermClosedIn_eo_to_smt_lam_spine
+    {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
+    (hp : TranslationProofs.lamVarsPrefix us r.length = true)
+    {env : Term} {vars : List SmtVarKey}
+    (hEnv : EoSmtVarEnvPerm env vars)
+    (hRec :
+      ∀ {u env' : Term} {vars' : List SmtVarKey},
+        sizeOf u < sizeOf t ->
+          EoSmtVarEnvPerm env' vars' ->
+            __eo_is_closed_rec u env' = Term.Boolean true ->
+              SmtTermClosedIn vars' (__eo_to_smt u))
+    (hClosed : __eo_is_closed_rec t env = Term.Boolean true) :
+  SmtTermClosedIn vars (__eo_to_smt t) :=
+by
+  rw [hs.eo_to_smt_prefix.1 hp]
+  obtain ⟨hBodyLt, hArgsLt⟩ := hs.sizeOf_lt
+  obtain ⟨hBodyClosed, hArgsClosed⟩ := eo_is_closed_rec_lam_spine_parts hEnv hs hClosed
+  refine ⟨?_, ?_⟩
+  · refine (SmtBindingsClosedIn.iff_mem _).2 ?_
+    intro s T v hm
+    rcases TranslationProofs.lamBindings_mem_inv us r SmtBindings.nil hm with hm | ⟨a, ha, rfl⟩
+    · cases hm
+    · exact hRec (hArgsLt a ha) hEnv (hArgsClosed a ha)
+  · by_cases hvl : ∃ m, TranslationProofs.lamVars (TranslationProofs.eoListDrop r.length us) m = true
+    · obtain ⟨m, hm⟩ := hvl
+      have hv := lamVars_of_prefix_drop r.length us hp hm
+      have hBody := hRec hBodyLt
+        (EoSmtVarEnvPerm.concat_rev (eoSmtVarEnv_of_lambda_vars _ hv) hEnv) hBodyClosed
+      apply smtTermClosedIn_curry
+      refine SmtTermClosedIn.mono ?_ hBody
+      intro s T hm'
+      rw [lamBindings_keys hp r SmtBindings.nil (Nat.le_refl _)]
+      have hsplit := eoVarKeys_drop r.length us hp
+      simp only [List.mem_append, List.mem_reverse] at hm' ⊢
+      rw [hsplit] at hm'
+      simp only [List.mem_append] at hm'
+      simp only [SmtBindings.keys]
+      tauto
+    · exact smtTermClosedIn_curry_of_not_vars _ (fun m h => hvl ⟨m, h⟩) _ _
+
+/-- Proves the translation equation a generic application lemma takes, in
+either its `__eo_to_smt_apply` or its `SmtTerm.Apply` form, for an application
+whose head is not a lambda spine. -/
+macro "closed_generic_rfl" : tactic =>
+  `(tactic| first
+    | rfl
+    | eo_to_smt_generic_rfl
+    | (rw [TranslationProofs.eo_to_smt_apply_of_not_pending]
+       · rfl
+       · exact fun hp => TranslationProofs.not_isLamSpine_of_head
+           (by simp [TranslationProofs.eoSpineHead])
+           (TranslationProofs.eo_to_smt_pending_spine _ hp)))
+
 theorem smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
     {f x env : Term} {vars : List SmtVarKey}
     (hSmt :
@@ -3373,14 +3713,55 @@ theorem smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
             SmtTermClosedIn vars' (__eo_to_smt x))
     (hClosed :
       __eo_is_closed_rec (Term.Apply f x) env =
-        Term.Boolean true) :
+        Term.Boolean true)
+    (hNotLambda : ∀ vs, f ≠ Term.Apply (Term.UOp UserOp.lambda) vs := by
+      intro vs h; cases h) :
   SmtTermClosedIn vars (__eo_to_smt (Term.Apply f x)) :=
 by
   have hCases :=
     eo_is_closed_rec_apply_eq_true_cases_of_not_quantifier
-      hNotForall hNotExists hEnv hClosed
+      hNotForall hNotExists hEnv hClosed hNotLambda
   rw [hSmt]
   exact ⟨hRecF hEnv hCases.1, hRecX hEnv hCases.2⟩
+
+theorem smtTermClosedIn_eo_to_smt_apply_generic_below
+    {f x env : Term} {vars : List SmtVarKey}
+    (hgen :
+      __eo_to_smt (Term.Apply f x) =
+        __eo_to_smt_apply (__eo_to_smt f) (__eo_to_smt x))
+    (hNotForall :
+      ∀ vs, f ≠ Term.Apply (Term.UOp UserOp.forall) vs)
+    (hNotExists :
+      ∀ vs, f ≠ Term.Apply (Term.UOp UserOp.exists) vs)
+    (hEnv : EoSmtVarEnvPerm env vars)
+    (hRec :
+      ∀ {t env' : Term} {vars' : List SmtVarKey},
+        sizeOf t < sizeOf (Term.Apply f x) ->
+          EoSmtVarEnvPerm env' vars' ->
+            __eo_is_closed_rec t env' = Term.Boolean true ->
+              SmtTermClosedIn vars' (__eo_to_smt t))
+    (hClosed :
+      __eo_is_closed_rec (Term.Apply f x) env = Term.Boolean true)
+    (hNotLambda : ∀ vs, f ≠ Term.Apply (Term.UOp UserOp.lambda) vs := by
+      intro vs h; cases h) :
+  SmtTermClosedIn vars (__eo_to_smt (Term.Apply f x)) :=
+by
+  by_cases hp : TranslationProofs.SmtPendingLam (__eo_to_smt f)
+  · obtain ⟨us, body, r, hs⟩ := TranslationProofs.eo_to_smt_pending_spine f hp
+    exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.app x hs)
+      (TranslationProofs.lamVarsPrefix_of_pending_app x hs hp) hEnv hRec hClosed
+  have hFLt : sizeOf f < sizeOf (Term.Apply f x) := by
+    simp
+    omega
+  have hXLt : sizeOf x < sizeOf (Term.Apply f x) := by
+    simp
+  exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
+    (TranslationProofs.eo_to_smt_apply_eq_of_not_pending hgen hp)
+    hNotForall hNotExists hEnv
+    (fun hEnv' hClosed' => hRec hFLt hEnv' hClosed')
+    (fun hEnv' hClosed' => hRec hXLt hEnv' hClosed')
+    hClosed hNotLambda
+
 
 theorem smtTermClosedIn_eo_to_smt_unary_uop_of_closed_rec_using
     {op : UserOp} {x env : Term} {vars : List SmtVarKey}
@@ -3424,12 +3805,13 @@ theorem smtTermClosedIn_eo_to_smt_binary_uop_of_closed_rec_using
     (hClosed :
       __eo_is_closed_rec
         (Term.Apply (Term.Apply (Term.UOp op) x) y) env =
-        Term.Boolean true) :
+        Term.Boolean true)
+    (hNotLambda : op ≠ UserOp.lambda := by decide) :
   SmtTermClosedIn vars
     (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp op) x) y)) :=
 by
   have hCases :=
-    eo_is_closed_rec_binary_uop_eq_true_cases
+    eo_is_closed_rec_binary_uop_eq_true_cases (hNotLambda := hNotLambda)
       hNotForall hNotExists hEnv hClosed
   exact hBuilder (hRecX hEnv hCases.1) (hRecY hEnv hCases.2)
 
@@ -3463,13 +3845,14 @@ theorem smtTermClosedIn_eo_to_smt_ternary_uop_of_closed_rec_using
     (hClosed :
       __eo_is_closed_rec
         (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) x) y) z) env =
-        Term.Boolean true) :
+        Term.Boolean true)
+    (hNotLambda : op ≠ UserOp.lambda := by decide) :
   SmtTermClosedIn vars
     (__eo_to_smt
       (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) x) y) z)) :=
 by
   have hCases :=
-    eo_is_closed_rec_ternary_uop_eq_true_cases
+    eo_is_closed_rec_ternary_uop_eq_true_cases (hNotLambda := hNotLambda)
       hNotForall hNotExists hEnv hClosed
   exact hBuilder
     (hRecX hEnv hCases.1)
@@ -3515,14 +3898,15 @@ theorem smtTermClosedIn_eo_to_smt_quaternary_uop_of_closed_rec_using
       __eo_is_closed_rec
         (Term.Apply
           (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) w) x) y) z)
-        env = Term.Boolean true) :
+        env = Term.Boolean true)
+    (hNotLambda : op ≠ UserOp.lambda := by decide) :
   SmtTermClosedIn vars
     (__eo_to_smt
       (Term.Apply
         (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) w) x) y) z)) :=
 by
   have hCases :=
-    eo_is_closed_rec_quaternary_uop_eq_true_cases
+    eo_is_closed_rec_quaternary_uop_eq_true_cases (hNotLambda := hNotLambda)
       hNotForall hNotExists hEnv hClosed
   exact hBuilder
     (hRecW hEnv hCases.1)
@@ -5086,13 +5470,12 @@ by
       (fun hx => smtTermClosedIn_eo_to_smt_sbv_to_int hx)
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   all_goals
-    exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-      (by rfl)
+    exact smtTermClosedIn_eo_to_smt_apply_generic_below
+      (by closed_generic_rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
+      (fun _ hEnv' hClosed' => hRec hEnv' hClosed')
       hClosed
 
 theorem eo_is_closed_rec_uop4_eq_true_cases
@@ -5337,13 +5720,12 @@ by
   case _at_is_root =>
     exact smtTermClosedIn_eo_to_smt_is_root hEnv (fun _ => hRec) hClosed
   all_goals
-    exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-      (by rfl)
+    exact smtTermClosedIn_eo_to_smt_apply_generic_below
+      (by closed_generic_rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
+      (fun _ hEnv' hClosed' => hRec hEnv' hClosed')
       hClosed
 
 theorem smtTermClosedIn_eo_to_smt_apply_uop2_any_of_closed_rec_using
@@ -5371,13 +5753,12 @@ by
       (fun hEnv' hClosed' => hRec hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   all_goals
-    exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-      (by rfl)
+    exact smtTermClosedIn_eo_to_smt_apply_generic_below
+      (by closed_generic_rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
+      (fun _ hEnv' hClosed' => hRec hEnv' hClosed')
       hClosed
 
 theorem smtTermClosedIn_eo_to_smt_apply_apply_uop1_any_of_closed_rec_using
@@ -5409,13 +5790,12 @@ by
   case _at_sgn_inv =>
     exact smtTermClosedIn_eo_to_smt_sgn_inv hEnv (fun _ => hRec) hClosed
   all_goals
-    exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-      (by rfl)
+    exact smtTermClosedIn_eo_to_smt_apply_generic_below
+      (by closed_generic_rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
+      (fun _ hEnv' hClosed' => hRec hEnv' hClosed')
       hClosed
 
 theorem smtTermClosedIn_eo_to_smt_apply_apply_apply_uop_any_of_closed_rec_using
@@ -5527,13 +5907,12 @@ by
       (fun hEnv' hClosed' => hRec hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   all_goals
-    exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-      (by rfl)
+    exact smtTermClosedIn_eo_to_smt_apply_generic_below
+      (by closed_generic_rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
+      (fun _ hEnv' hClosed' => hRec hEnv' hClosed')
       hClosed
 
 theorem smtTermClosedIn_eo_to_smt_apply_not_binary_uop_of_closed_rec_using
@@ -5607,49 +5986,44 @@ by
                 (fun hEnv' hClosed' => hRec hEnv' hClosed')
                 hClosed
           all_goals
-            exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-              (by rfl)
+            exact smtTermClosedIn_eo_to_smt_apply_generic_below
+              (by closed_generic_rfl)
               (fun vs hEq => hNotBinary UserOp.forall vs hEq)
               (fun vs hEq => hNotBinary UserOp.exists vs hEq)
               hEnv
-              (fun hEnv' hClosed' => hRec hEnv' hClosed')
-              (fun hEnv' hClosed' => hRec hEnv' hClosed')
+              (fun _ hEnv' hClosed' => hRec hEnv' hClosed')
               hClosed
         all_goals
-          exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-            (by rfl)
+          exact smtTermClosedIn_eo_to_smt_apply_generic_below
+            (by closed_generic_rfl)
             (fun vs hEq => hNotBinary UserOp.forall vs hEq)
             (fun vs hEq => hNotBinary UserOp.exists vs hEq)
             hEnv
-            (fun hEnv' hClosed' => hRec hEnv' hClosed')
-            (fun hEnv' hClosed' => hRec hEnv' hClosed')
+            (fun _ hEnv' hClosed' => hRec hEnv' hClosed')
             hClosed
       all_goals
-        exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-          (by rfl)
+        exact smtTermClosedIn_eo_to_smt_apply_generic_below
+          (by closed_generic_rfl)
           (fun vs hEq => hNotBinary UserOp.forall vs hEq)
           (fun vs hEq => hNotBinary UserOp.exists vs hEq)
           hEnv
-          (fun hEnv' hClosed' => hRec hEnv' hClosed')
-          (fun hEnv' hClosed' => hRec hEnv' hClosed')
+          (fun _ hEnv' hClosed' => hRec hEnv' hClosed')
           hClosed
     all_goals
-      exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-        (by rfl)
+      exact smtTermClosedIn_eo_to_smt_apply_generic_below
+        (by closed_generic_rfl)
         (fun vs hEq => hNotBinary UserOp.forall vs hEq)
         (fun vs hEq => hNotBinary UserOp.exists vs hEq)
         hEnv
-        (fun hEnv' hClosed' => hRec hEnv' hClosed')
-        (fun hEnv' hClosed' => hRec hEnv' hClosed')
+        (fun _ hEnv' hClosed' => hRec hEnv' hClosed')
         hClosed
   all_goals
-    exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-      (by rfl)
+    exact smtTermClosedIn_eo_to_smt_apply_generic_below
+      (by closed_generic_rfl)
       (fun vs hEq => hNotBinary UserOp.forall vs hEq)
       (fun vs hEq => hNotBinary UserOp.exists vs hEq)
       hEnv
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
-      (fun hEnv' hClosed' => hRec hEnv' hClosed')
+      (fun _ hEnv' hClosed' => hRec hEnv' hClosed')
       hClosed
 
 theorem smtTermClosedIn_of_eo_is_closed_rec_perm_non_apply
@@ -5929,6 +6303,7 @@ by
   let binary
       (hNotForall : op ≠ UserOp.forall)
       (hNotExists : op ≠ UserOp.exists)
+      (hNotLambda : op ≠ UserOp.lambda)
       (hBuilder :
         SmtTermClosedIn vars (__eo_to_smt x) ->
           SmtTermClosedIn vars (__eo_to_smt y) ->
@@ -5941,222 +6316,222 @@ by
       (op := op) hNotForall hNotExists hBuilder hEnv
       (fun hEnv' hClosed' => hRec hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hEnv' hClosed')
-      hClosed
+      hClosed hNotLambda
   cases op
   case «or» =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_or hx hy)
   case «and» =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_and hx hy)
   case imp =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_imp hx hy)
   case xor =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_xor hx hy)
   case eq =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_eq hx hy)
   case plus =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_plus hx hy)
   case neg =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_neg hx hy)
   case mult =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_mult hx hy)
   case lt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_lt hx hy)
   case leq =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_leq hx hy)
   case gt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_gt hx hy)
   case geq =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_geq hx hy)
   case div =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_div hx hy)
   case mod =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_mod hx hy)
   case divisible =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_divisible hx hy)
   case div_total =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_div_total hx hy)
   case mod_total =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_mod_total hx hy)
   case select =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_select hx hy)
   case concat =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_concat hx hy)
   case bvand =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvand hx hy)
   case bvor =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvor hx hy)
   case bvnand =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvnand hx hy)
   case bvnor =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvnor hx hy)
   case bvxor =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvxor hx hy)
   case bvxnor =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvxnor hx hy)
   case bvcomp =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvcomp hx hy)
   case bvadd =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvadd hx hy)
   case bvmul =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvmul hx hy)
   case bvudiv =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvudiv hx hy)
   case bvurem =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvurem hx hy)
   case bvsub =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsub hx hy)
   case bvsdiv =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsdiv hx hy)
   case bvsrem =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsrem hx hy)
   case bvsmod =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsmod hx hy)
   case bvult =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvult hx hy)
   case bvule =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvule hx hy)
   case bvugt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvugt hx hy)
   case bvuge =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvuge hx hy)
   case bvslt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvslt hx hy)
   case bvsle =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsle hx hy)
   case bvsgt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsgt hx hy)
   case bvsge =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsge hx hy)
   case bvshl =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvshl hx hy)
   case bvlshr =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvlshr hx hy)
   case bvashr =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvashr hx hy)
   case bvuaddo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvuaddo hx hy)
   case bvsaddo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsaddo hx hy)
   case bvumulo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvumulo hx hy)
   case bvsmulo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsmulo hx hy)
   case bvusubo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvusubo hx hy)
   case bvssubo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvssubo hx hy)
   case bvsdivo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsdivo hx hy)
   case bvultbv =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvultbv hx hy)
   case bvsltbv =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsltbv hx hy)
   case _at_from_bools =>
     exact smtTermClosedIn_eo_to_smt_from_bools_of_closed_rec_using
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   case str_concat =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_concat hx hy)
   case str_contains =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_contains hx hy)
   case str_at =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_at hx hy)
   case str_prefixof =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_prefixof hx hy)
   case str_suffixof =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_suffixof hx hy)
   case str_lt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_lt hx hy)
   case str_leq =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_leq hx hy)
   case re_range =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_re_range hx hy)
   case re_concat =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_re_concat hx hy)
   case re_inter =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_re_inter hx hy)
   case re_union =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_re_union hx hy)
   case re_diff =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_re_diff hx hy)
   case str_in_re =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_in_re hx hy)
   case seq_nth =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_seq_nth hx hy)
   case _at_strings_num_occur =>
     exact smtTermClosedIn_eo_to_smt_strings_num_occur_of_closed_rec_using
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   case _at_strings_num_occur_re =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy =>
         smtTermClosedIn_eo_to_smt_strings_num_occur_re hx hy)
   case _at_array_deq_diff =>
@@ -6184,29 +6559,32 @@ by
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   case set_union =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_set_union hx hy)
   case set_inter =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_set_inter hx hy)
   case set_minus =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_set_minus hx hy)
   case set_member =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_set_member hx hy)
   case set_subset =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_set_subset hx hy)
   case set_insert =>
     exact smtTermClosedIn_eo_to_smt_set_insert_of_closed_rec_using
       hEnv hRec hClosed
   case qdiv =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_qdiv hx hy)
   case qdiv_total =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_qdiv_total hx hy)
+  case lambda =>
+    exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.lam x y) rfl hEnv
+      (fun _ hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   case «forall» =>
     exact smtTermClosedIn_eo_to_smt_forall_of_closed_rec_using
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
@@ -6215,7 +6593,7 @@ by
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-      (by rfl)
+      (by closed_generic_rfl)
       (fun vs hEq => by cases hEq)
       (fun vs hEq => by cases hEq)
       hEnv
@@ -6225,37 +6603,6 @@ by
           hClosed')
       (fun hEnv' hClosed' => hRec hEnv' hClosed')
       hClosed
-
-theorem smtTermClosedIn_eo_to_smt_apply_generic_below
-    {f x env : Term} {vars : List SmtVarKey}
-    (hSmt :
-      __eo_to_smt (Term.Apply f x) =
-        SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt x))
-    (hNotForall :
-      ∀ vs, f ≠ Term.Apply (Term.UOp UserOp.forall) vs)
-    (hNotExists :
-      ∀ vs, f ≠ Term.Apply (Term.UOp UserOp.exists) vs)
-    (hEnv : EoSmtVarEnvPerm env vars)
-    (hRec :
-      ∀ {t env' : Term} {vars' : List SmtVarKey},
-        sizeOf t < sizeOf (Term.Apply f x) ->
-          EoSmtVarEnvPerm env' vars' ->
-            __eo_is_closed_rec t env' = Term.Boolean true ->
-              SmtTermClosedIn vars' (__eo_to_smt t))
-    (hClosed :
-      __eo_is_closed_rec (Term.Apply f x) env = Term.Boolean true) :
-  SmtTermClosedIn vars (__eo_to_smt (Term.Apply f x)) :=
-by
-  have hFLt : sizeOf f < sizeOf (Term.Apply f x) := by
-    simp
-    omega
-  have hXLt : sizeOf x < sizeOf (Term.Apply f x) := by
-    simp
-  exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-    hSmt hNotForall hNotExists hEnv
-    (fun hEnv' hClosed' => hRec hFLt hEnv' hClosed')
-    (fun hEnv' hClosed' => hRec hXLt hEnv' hClosed')
-    hClosed
 
 theorem smtTermClosedIn_eo_to_smt_uop1_any_below
     {op : UserOp1} {x env : Term} {vars : List SmtVarKey}
@@ -6615,7 +6962,7 @@ by
       hEnv recX hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by rfl)
+      (by closed_generic_rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv hRec hClosed
@@ -6683,7 +7030,7 @@ by
     exact smtTermClosedIn_eo_to_smt_is_root hEnv hRec hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by rfl)
+      (by closed_generic_rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv hRec hClosed
@@ -6721,7 +7068,7 @@ by
       (fun hEnv' hClosed' => hRec hZLt hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by rfl)
+      (by closed_generic_rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv hRec hClosed
@@ -6769,7 +7116,7 @@ by
     exact smtTermClosedIn_eo_to_smt_sgn_inv hEnv hRec hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by rfl)
+      (by closed_generic_rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv hRec hClosed
@@ -6898,7 +7245,7 @@ by
       (fun hEnv' hClosed' => hRec hZLt hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by rfl)
+      (by closed_generic_rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv hRec hClosed
@@ -6962,6 +7309,7 @@ by
   let binary
       (hNotForall : op ≠ UserOp.forall)
       (hNotExists : op ≠ UserOp.exists)
+      (hNotLambda : op ≠ UserOp.lambda)
       (hBuilder :
         SmtTermClosedIn vars (__eo_to_smt x) ->
           SmtTermClosedIn vars (__eo_to_smt y) ->
@@ -6972,220 +7320,220 @@ by
       (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp op) x) y)) :=
     smtTermClosedIn_eo_to_smt_binary_uop_of_closed_rec_using
       (op := op) hNotForall hNotExists hBuilder hEnv
-      recX recY hClosed
+      recX recY hClosed hNotLambda
   cases op
   case «or» =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_or hx hy)
   case «and» =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_and hx hy)
   case imp =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_imp hx hy)
   case xor =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_xor hx hy)
   case eq =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_eq hx hy)
   case plus =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_plus hx hy)
   case neg =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_neg hx hy)
   case mult =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_mult hx hy)
   case lt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_lt hx hy)
   case leq =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_leq hx hy)
   case gt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_gt hx hy)
   case geq =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_geq hx hy)
   case div =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_div hx hy)
   case mod =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_mod hx hy)
   case divisible =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_divisible hx hy)
   case div_total =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_div_total hx hy)
   case mod_total =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_mod_total hx hy)
   case select =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_select hx hy)
   case concat =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_concat hx hy)
   case bvand =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvand hx hy)
   case bvor =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvor hx hy)
   case bvnand =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvnand hx hy)
   case bvnor =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvnor hx hy)
   case bvxor =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvxor hx hy)
   case bvxnor =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvxnor hx hy)
   case bvcomp =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvcomp hx hy)
   case bvadd =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvadd hx hy)
   case bvmul =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvmul hx hy)
   case bvudiv =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvudiv hx hy)
   case bvurem =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvurem hx hy)
   case bvsub =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsub hx hy)
   case bvsdiv =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsdiv hx hy)
   case bvsrem =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsrem hx hy)
   case bvsmod =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsmod hx hy)
   case bvult =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvult hx hy)
   case bvule =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvule hx hy)
   case bvugt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvugt hx hy)
   case bvuge =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvuge hx hy)
   case bvslt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvslt hx hy)
   case bvsle =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsle hx hy)
   case bvsgt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsgt hx hy)
   case bvsge =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsge hx hy)
   case bvshl =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvshl hx hy)
   case bvlshr =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvlshr hx hy)
   case bvashr =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvashr hx hy)
   case bvuaddo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvuaddo hx hy)
   case bvsaddo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsaddo hx hy)
   case bvumulo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvumulo hx hy)
   case bvsmulo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsmulo hx hy)
   case bvusubo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvusubo hx hy)
   case bvssubo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvssubo hx hy)
   case bvsdivo =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsdivo hx hy)
   case bvultbv =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvultbv hx hy)
   case bvsltbv =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_bvsltbv hx hy)
   case _at_from_bools =>
     exact smtTermClosedIn_eo_to_smt_from_bools_of_closed_rec_using
       hEnv recX recY hClosed
   case str_concat =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_concat hx hy)
   case str_contains =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_contains hx hy)
   case str_at =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_at hx hy)
   case str_prefixof =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_prefixof hx hy)
   case str_suffixof =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_suffixof hx hy)
   case str_lt =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_lt hx hy)
   case str_leq =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_leq hx hy)
   case re_range =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_re_range hx hy)
   case re_concat =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_re_concat hx hy)
   case re_inter =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_re_inter hx hy)
   case re_union =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_re_union hx hy)
   case re_diff =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_re_diff hx hy)
   case str_in_re =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_str_in_re hx hy)
   case seq_nth =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_seq_nth hx hy)
   case _at_strings_num_occur =>
     exact smtTermClosedIn_eo_to_smt_strings_num_occur_of_closed_rec_using
       hEnv recX recY hClosed
   case _at_strings_num_occur_re =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy =>
         smtTermClosedIn_eo_to_smt_strings_num_occur_re hx hy)
   case _at_array_deq_diff =>
@@ -7207,29 +7555,32 @@ by
     exact smtTermClosedIn_eo_to_smt_tuple_of_closed_rec_using
       hEnv recX recY hClosed
   case set_union =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_set_union hx hy)
   case set_inter =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_set_inter hx hy)
   case set_minus =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_set_minus hx hy)
   case set_member =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_set_member hx hy)
   case set_subset =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_set_subset hx hy)
   case set_insert =>
     exact smtTermClosedIn_eo_to_smt_set_insert_below
       hEnv hRec hClosed
   case qdiv =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_qdiv hx hy)
   case qdiv_total =>
-    exact binary (by decide) (by decide)
+    exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_qdiv_total hx hy)
+  case lambda =>
+    exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.lam x y) rfl hEnv
+      hRec hClosed
   case «forall» =>
     exact smtTermClosedIn_eo_to_smt_forall_of_closed_rec_using
       hEnv recY hClosed
@@ -7238,7 +7589,7 @@ by
       hEnv recY hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by rfl)
+      (by closed_generic_rfl)
       (fun vs hEq => by cases hEq)
       (fun vs hEq => by cases hEq)
       hEnv hRec hClosed
@@ -7324,31 +7675,31 @@ by
                 hClosed
           all_goals
             exact smtTermClosedIn_eo_to_smt_apply_generic_below
-              (by rfl)
+              (by closed_generic_rfl)
               (fun vs hEq => hNotBinary UserOp.forall vs hEq)
               (fun vs hEq => hNotBinary UserOp.exists vs hEq)
               hEnv hRec hClosed
         all_goals
           exact smtTermClosedIn_eo_to_smt_apply_generic_below
-            (by rfl)
+            (by closed_generic_rfl)
             (fun vs hEq => hNotBinary UserOp.forall vs hEq)
             (fun vs hEq => hNotBinary UserOp.exists vs hEq)
             hEnv hRec hClosed
       all_goals
         exact smtTermClosedIn_eo_to_smt_apply_generic_below
-          (by rfl)
+          (by closed_generic_rfl)
           (fun vs hEq => hNotBinary UserOp.forall vs hEq)
           (fun vs hEq => hNotBinary UserOp.exists vs hEq)
           hEnv hRec hClosed
     all_goals
       exact smtTermClosedIn_eo_to_smt_apply_generic_below
-        (by rfl)
+        (by closed_generic_rfl)
         (fun vs hEq => hNotBinary UserOp.forall vs hEq)
         (fun vs hEq => hNotBinary UserOp.exists vs hEq)
         hEnv hRec hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by rfl)
+      (by closed_generic_rfl)
       (fun vs hEq => hNotBinary UserOp.forall vs hEq)
       (fun vs hEq => hNotBinary UserOp.exists vs hEq)
       hEnv hRec hClosed
@@ -7417,13 +7768,21 @@ by
   exact hBody
 
 theorem smtTermClosedIn_smt_bind
+    {vars : List SmtVarKey} {bs : SmtBindings} {x : SmtTerm}
+    (hbs : SmtBindingsClosedIn vars bs)
+    (hx : SmtTermClosedIn (SmtBindings.keys bs ++ vars) x) :
+  SmtTermClosedIn vars (SmtTerm.bind bs x) :=
+by
+  exact ⟨hbs, hx⟩
+
+theorem smtTermClosedIn_smt_bind_single
     {vars : List SmtVarKey} {s : native_String} {T : SmtType}
     {x1 x2 : SmtTerm}
     (hx1 : SmtTermClosedIn vars x1)
     (hx2 : SmtTermClosedIn ((s, T) :: vars) x2) :
-  SmtTermClosedIn vars (SmtTerm.bind s T x1 x2) :=
+  SmtTermClosedIn vars (SmtTerm.bind (SmtBindings.cons s T x1 SmtBindings.nil) x2) :=
 by
-  exact ⟨hx1, hx2⟩
+  exact ⟨⟨hx1, trivial⟩, hx2⟩
 
 theorem smtx_model_eval_var_eq_of_env
     {vars : List SmtVarKey} {M N : SmtModel}
@@ -7772,14 +8131,14 @@ by
           (fun v =>
             hRec (by simp) hClosed
               (model_agrees_on_env_push_same hAgree))
-      case bind s T x1 x2 =>
-        rw [smtx_model_eval_bind_eq M s T x1 x2,
-          smtx_model_eval_bind_eq N s T x1 x2]
-        have hx1 : __smtx_model_eval M x1 = __smtx_model_eval N x1 :=
-          hRec (by simp <;> omega) hClosed.1 hAgree
-        rw [hx1]
+      case bind bs x =>
+        rw [smtx_model_eval_bind_eq M bs x, smtx_model_eval_bind_eq N bs x]
+        have hb := (SmtBindingsClosedIn.iff_mem bs).1 hClosed.1
+        have hv : ∀ s T v, SmtBindings.Mem bs s T v ->
+            __smtx_model_eval M v = __smtx_model_eval N v :=
+          fun s T v hm => hRec (SmtBindings.Mem.sizeOf_lt_bind x hm) (hb s T v hm) hAgree
         exact hRec (by simp) hClosed.2
-          (model_agrees_on_env_push_same hAgree)
+          (model_agrees_on_env_push_bindings bs hv hAgree)
       case not x =>
         simp [__smtx_model_eval,
           hRec (by simp) hClosed hAgree]

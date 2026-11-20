@@ -1825,7 +1825,7 @@ theorem typeof_value_model_eval_re_exp
       SmtType.RegLan by
     rw [typeof_re_exp_eq]
     simp [__smtx_typeof_re_exp, hArg, hn, native_ite]]
-  rw [__smtx_model_eval.eq_110, __smtx_model_eval.eq_2]
+  rw [__smtx_model_eval.eq_112, __smtx_model_eval.eq_2]
   change __smtx_typeof_value (__smtx_model_eval_re_exp (SmtValue.Numeral n) (__smtx_model_eval M t)) =
     SmtType.RegLan
   rcases reglan_value_canonical (by simpa [hArg] using hpres) with ⟨r, hr⟩
@@ -2019,7 +2019,7 @@ theorem typeof_value_model_eval_re_loop
       (SmtTerm.re_loop (SmtTerm.Numeral n1) (SmtTerm.Numeral n2) t) = SmtType.RegLan by
     rw [typeof_re_loop_eq]
     simp [__smtx_typeof_re_loop, hArg, hn1, hn2, native_ite]]
-  rw [__smtx_model_eval.eq_118, __smtx_model_eval.eq_2, __smtx_model_eval.eq_2]
+  rw [__smtx_model_eval.eq_120, __smtx_model_eval.eq_2, __smtx_model_eval.eq_2]
   change __smtx_typeof_value
       (__smtx_model_eval_re_loop (SmtValue.Numeral n1) (SmtValue.Numeral n2)
         (__smtx_model_eval M t)) = SmtType.RegLan

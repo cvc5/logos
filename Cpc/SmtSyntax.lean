@@ -42,7 +42,7 @@ inductive SmtType : Type where
   | FunType : SmtType -> SmtType -> SmtType
   | DtcAppType : SmtType -> SmtType -> SmtType
 
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 SMT-LIB terms.
@@ -67,6 +67,8 @@ inductive SmtTerm : Type where
   | imp : SmtTerm -> SmtTerm -> SmtTerm
   | xor : SmtTerm -> SmtTerm -> SmtTerm
   | eq : SmtTerm -> SmtTerm -> SmtTerm
+  | lam : native_String -> SmtType -> SmtTerm -> SmtTerm
+  | bind : SmtBindings -> SmtTerm -> SmtTerm
   | _at_purify : SmtTerm -> SmtTerm
   | plus : SmtTerm -> SmtTerm -> SmtTerm
   | neg : SmtTerm -> SmtTerm -> SmtTerm
@@ -192,11 +194,18 @@ inductive SmtTerm : Type where
   | qdiv_total : SmtTerm -> SmtTerm -> SmtTerm
   | forall : native_String -> SmtType -> SmtTerm -> SmtTerm
   | exists : native_String -> SmtType -> SmtTerm -> SmtTerm
-  | bind : native_String -> SmtType -> SmtTerm -> SmtTerm -> SmtTerm
   | int_to_bv : SmtTerm -> SmtTerm -> SmtTerm
   | ubv_to_int : SmtTerm -> SmtTerm
   | sbv_to_int : SmtTerm -> SmtTerm
 
+deriving Repr, DecidableEq, Inhabited
+
+/-
+The SmtBindings of the embedding.
+-/
+inductive SmtBindings : Type where
+  | nil : SmtBindings
+  | cons : native_String -> SmtType -> SmtTerm -> SmtBindings -> SmtBindings
 deriving Repr, DecidableEq, Inhabited
 
 /-
@@ -205,7 +214,7 @@ The SmtDatatype of the embedding.
 inductive SmtDatatype : Type where
   | null : SmtDatatype
   | sum : SmtDatatypeCons -> SmtDatatype -> SmtDatatype
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 The SmtDatatypeCons of the embedding.
@@ -213,7 +222,7 @@ The SmtDatatypeCons of the embedding.
 inductive SmtDatatypeCons : Type where
   | unit : SmtDatatypeCons
   | cons : SmtType -> SmtDatatypeCons -> SmtDatatypeCons
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 /-
 The SmtDatatypeDecl of the embedding.
@@ -221,7 +230,7 @@ The SmtDatatypeDecl of the embedding.
 inductive SmtDatatypeDecl : Type where
   | nil : SmtDatatypeDecl
   | cons : native_String -> SmtDatatype -> SmtDatatypeDecl -> SmtDatatypeDecl
-deriving Repr, DecidableEq, Inhabited, Ord
+deriving Repr, DecidableEq, Inhabited
 
 
 

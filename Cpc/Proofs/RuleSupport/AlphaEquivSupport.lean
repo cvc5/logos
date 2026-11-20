@@ -1395,6 +1395,237 @@ private theorem contains_false_of_isNonbinderSubterm
   termination_by sizeOf root
   exact go root hSubterm hNoFree
 
+/-! ### Lambda spines in rename mode -/
+
+theorem eoVarList_of_eoVarEnv {env : Term} {vars : List EoVarKey} (h : EoVarEnv env vars) :
+    env = LamSpineSupport.eoVarList vars := by
+  induction h with
+  | nil => rfl
+  | cons _ ih => rw [ih]; rfl
+
+theorem BinderRenaming.types_eq
+    {vs ts : Term} {pairs : List (EoVarKey × EoVarKey)}
+    {source target : Term} {binderPairs : List (EoVarKey × EoVarKey)}
+    (h : BinderRenaming vs ts pairs source target binderPairs) :
+    (binderPairs.map Prod.snd).map Prod.snd = (binderPairs.map Prod.fst).map Prod.snd := by
+  induction h with
+  | nil => rfl
+  | mapped _ _ ih => simp [ih]
+  | unmapped _ _ _ ih => simp [ih]
+
+/-- Pushing the same values for a binder list on one side and its renaming on
+the other keeps the renaming relation. -/
+theorem alphaRel_pushL_binderRenaming
+    {vs ts : Term} {pairs : List (EoVarKey × EoVarKey)}
+    (hLists : RenamingLists vs ts pairs)
+    (hSourceDistinct : SkolemizeRule.DistinctList (sourceKeys pairs))
+    (hTargetDistinct : SkolemizeRule.DistinctList (targetKeys pairs))
+    {source target : Term} {binderPairs : List (EoVarKey × EoVarKey)}
+    (hBinders : BinderRenaming vs ts pairs source target binderPairs) :
+    (∀ key, key ∈ binderPairs.map Prod.fst →
+      __smtx_type_wf (__eo_to_smt_type key.2) = true) →
+    ∀ (vals : List SmtValue) {M N : SmtModel},
+      binderPairs.length = vals.length →
+      AlphaRel M N vs ts →
+      AlphaRel (LamSpineSupport.pushL M (LamSpineSupport.keyVals (binderPairs.map Prod.snd) vals))
+        (LamSpineSupport.pushL N (LamSpineSupport.keyVals (binderPairs.map Prod.fst) vals)) vs ts := by
+  induction hBinders with
+  | nil =>
+      intro _ vals M N _ hRel
+      exact hRel
+  | @mapped s t T sourceTail targetTail binderPairs hPair hTail ih =>
+      intro hWf vals M N hlen hRel
+      cases vals with
+      | nil => simp at hlen
+      | cons v vals =>
+          simp only [List.map_cons, LamSpineSupport.keyVals, LamSpineSupport.pushL]
+          exact ih (fun key hMem => hWf key (List.Mem.tail _ hMem)) vals (by simpa using hlen)
+            (alphaRel_push_mapped hLists hSourceDistinct hTargetDistinct hRel s t T v hPair)
+  | @unmapped s T sourceTail targetTail binderPairs hSourceNot hTargetNot hTail ih =>
+      intro hWf vals M N hlen hRel
+      cases vals with
+      | nil => simp at hlen
+      | cons v vals =>
+          simp only [List.map_cons, LamSpineSupport.keyVals, LamSpineSupport.pushL]
+          exact ih (fun key hMem => hWf key (List.Mem.tail _ hMem)) vals (by simpa using hlen)
+            (alphaRel_push_unmapped hLists hSourceDistinct hRel s T v
+              (hWf (s, T) (List.Mem.head _))
+              (hLists.envs.1.find_neg_true_of_not_mem hSourceNot)
+              (hLists.envs.2.find_neg_true_of_not_mem hTargetNot))
+
+/-- The bound variables under a lambda over `bvars`, as the free-variable
+walker extends them. -/
+@[expose] def lamBound (bvars : List EoVarKey) (bound : Term) : Term :=
+  match bvars with
+  | [] => bound
+  | _ :: _ => __eo_list_concat Term.__eo_List_cons (LamSpineSupport.eoVarList bvars) bound
+
+theorem lamBound_env (bvars : List EoVarKey) {bound : Term} {boundVars : List EoVarKey}
+    (hBound : EoVarEnvPerm bound boundVars) :
+    EoVarEnvPerm (lamBound bvars bound) (bvars.reverse ++ boundVars) := by
+  cases bvars with
+  | nil => simpa [lamBound] using hBound
+  | cons p ps =>
+      exact EoVarEnvPerm.concat_rev (LamSpineSupport.eoVarEnv_eoVarList _) hBound
+
+theorem lam_body_contains_false (bvars : List EoVarKey) {body X bound : Term}
+    {Xvars boundVars : List EoVarKey}
+    (hX : EoVarEnvPerm X Xvars) (hBound : EoVarEnvPerm bound boundVars)
+    (h : __contains_atomic_term_list_free_rec
+      (LamSpineSupport.lamT (LamSpineSupport.eoVarList bvars) body) X bound = Term.Boolean false) :
+    __contains_atomic_term_list_free_rec body X (lamBound bvars bound) = Term.Boolean false := by
+  cases bvars with
+  | nil =>
+      exact (contains_atomic_term_list_free_rec_apply_false_cases hX hBound
+        (by intro q x ys hEq; injection hEq with _ hEq; cases hEq) h).2
+  | cons p ps =>
+      exact contains_atomic_term_list_free_rec_list_branch_false_body h
+
+/-- The lambda-spine case of the renaming evaluation induction: the lambda's
+variables are renamed, both `let`s push the same values, and the body IH applies
+under the renaming relation extended by the pushes. -/
+theorem alpha_eval_spine
+    (f a vs ts bound : Term)
+    {pairs : List (EoVarKey × EoVarKey)}
+    {boundVars : List EoVarKey} {M N : SmtModel}
+    (hLists : RenamingLists vs ts pairs)
+    (hSourceDistinct : SkolemizeRule.DistinctList (sourceKeys pairs))
+    (hTargetDistinct : SkolemizeRule.DistinctList (targetKeys pairs))
+    (hBoundEnv : EoVarEnvPerm bound boundVars)
+    (hBoundDisjoint : ∀ key, key ∈ boundVars → key ∉ targetKeys pairs)
+    (hTsTrans : EoListAllHaveSmtTranslation ts)
+    (hSpine : TranslationProofs.IsLamSpine (Term.Apply f a))
+    (hFTrans : eoHasSmtTranslation (Term.Apply f a))
+    (hSubstTrans : eoHasSmtTranslation
+      (__substitute_simul_rec (Term.Boolean true) (Term.Apply f a) vs ts Term.__eo_List_nil))
+    (hNoSource :
+      __contains_atomic_term_list_free_rec (Term.Apply f a) vs bound = Term.Boolean false)
+    (hNoTarget :
+      __contains_atomic_term_list_free_rec (Term.Apply f a) ts bound = Term.Boolean false)
+    (hM : model_wf M) (hN : model_wf N)
+    (hRel : AlphaRel M N vs ts)
+    (hRec :
+      ∀ {G bound' : Term} {boundVars' : List EoVarKey} {M' N' : SmtModel},
+        sizeOf G < sizeOf (Term.Apply f a) →
+        EoVarEnvPerm bound' boundVars' →
+        (∀ key, key ∈ boundVars' → key ∉ targetKeys pairs) →
+        eoHasSmtTranslation G →
+        eoHasSmtTranslation
+          (__substitute_simul_rec (Term.Boolean true) G vs ts Term.__eo_List_nil) →
+        __contains_atomic_term_list_free_rec G vs bound' = Term.Boolean false →
+        __contains_atomic_term_list_free_rec G ts bound' = Term.Boolean false →
+        model_wf M' → model_wf N' → AlphaRel M' N' vs ts →
+        __smtx_model_eval M'
+            (__eo_to_smt (__substitute_simul_rec (Term.Boolean true) G vs ts Term.__eo_List_nil)) =
+          __smtx_model_eval N' (__eo_to_smt G)) :
+    __smtx_model_eval M
+        (__eo_to_smt (__substitute_simul_rec (Term.Boolean true) (Term.Apply f a) vs ts
+          Term.__eo_List_nil)) =
+      __smtx_model_eval N (__eo_to_smt (Term.Apply f a)) := by
+  have hvs : vs ≠ Term.Stuck := hLists.envs.1.ne_stuck
+  have hts : ts ≠ Term.Stuck := eoListAllHaveSmtTranslation_ne_stuck hTsTrans
+  obtain ⟨us, body, r, hs⟩ := hSpine
+  have hSize := hs.sizeOf_lt
+  have hFNN : __smtx_typeof (__eo_to_smt (Term.Apply f a)) ≠ SmtType.None := hFTrans
+  obtain ⟨-, hBodyNN, hArgsNN⟩ := hs.parts_typed_any hFNN
+  obtain ⟨m, hv, hm⟩ := LamSpineSupport.spine_args_ge_vars hs hFNN
+  obtain ⟨bvars, hblen, rfl⟩ := LamSpineSupport.lamVars_exists us m hv
+  subst hblen
+  have hEqF := LamSpineSupport.LamSpine.eq_mkSpine hs
+  have hSubNe := RuleProofs.term_ne_stuck_of_has_smt_translation _ hSubstTrans
+  rw [hEqF] at hFNN hSubNe hSubstTrans hNoSource hNoTarget ⊢
+  obtain ⟨hCap, hSubEq⟩ := InstantiateRule.substitute_simul_rec_spine_rename vs ts
+    Term.__eo_List_nil (EoVarEnvPerm.of_exact EoVarEnv.nil) hvs hts bvars body hBodyNN r
+    hArgsNN hSubNe
+  -- free variables of the parts
+  have hNotListBody : ∀ v w, body ≠ Term.Apply (Term.Apply Term.__eo_List_cons v) w :=
+    fun v w h => InstantiateRule.eo_list_cons_no_smt_translation v w (h ▸ hBodyNN)
+  have hNotListArgs : ∀ x ∈ r, ∀ v w, x ≠ Term.Apply (Term.Apply Term.__eo_List_cons v) w :=
+    fun x hx v w h => InstantiateRule.eo_list_cons_no_smt_translation v w (h ▸ hArgsNN x hx)
+  obtain ⟨hLamNoS, hArgsNoS⟩ := contains_atomic_term_list_free_rec_lam_spine_false
+    (EoVarEnvPerm.of_exact hLists.envs.1) hBoundEnv (LamSpineSupport.lamSpine_mkSpine _ _ r)
+    hNotListBody hNotListArgs hNoSource
+  obtain ⟨hLamNoT, hArgsNoT⟩ := contains_atomic_term_list_free_rec_lam_spine_false
+    (EoVarEnvPerm.of_exact hLists.envs.2) hBoundEnv (LamSpineSupport.lamSpine_mkSpine _ _ r)
+    hNotListBody hNotListArgs hNoTarget
+  -- the renaming of the lambda's variables
+  have hDisjoint : ∀ key, key ∈ bvars → key ∉ targetKeys pairs := by
+    cases bvars with
+    | nil => intro key h; cases h
+    | cons p ps =>
+        have hT := contains_var_env_false_disjoint hLists.envs.2
+          (LamSpineSupport.eoVarEnv_eoVarList (p :: ps)) (hCap (by simp))
+        exact fun key hMem hTgt => hT key hTgt hMem
+  obtain ⟨target, bps, hRen, hTgtEq⟩ := binderRenaming_of_substitute hLists hSourceDistinct
+    hTsTrans (LamSpineSupport.eoVarEnv_eoVarList bvars) hDisjoint
+  have hFst : bps.map Prod.fst = bvars :=
+    EoVarEnv.vars_eq_of_same_env hRen.envs.1 (LamSpineSupport.eoVarEnv_eoVarList bvars)
+  have hTarget : target = LamSpineSupport.eoVarList (bps.map Prod.snd) :=
+    eoVarList_of_eoVarEnv hRen.envs.2
+  have hLenB : (bps.map Prod.snd).length = bvars.length := by
+    rw [← hFst]; simp
+  rw [hTgtEq, hTarget] at hSubEq
+  rw [hSubEq] at hSubstTrans ⊢
+  have hF'NN := hSubstTrans
+  obtain ⟨-, hBody'NN, hArgs'NN⟩ :=
+    (LamSpineSupport.lamSpine_mkSpine _ _ _).parts_typed_any hF'NN
+  have hv' : TranslationProofs.lamVars (LamSpineSupport.eoVarList (bps.map Prod.snd))
+      bvars.length = true := by
+    rw [← hLenB]; exact LamSpineSupport.lamVars_eoVarList _
+  have hArgsEq : ∀ x ∈ r,
+      __smtx_model_eval M
+          (__eo_to_smt (__substitute_simul_rec (Term.Boolean true) x vs ts Term.__eo_List_nil)) =
+        __smtx_model_eval N (__eo_to_smt x) := fun x hx =>
+    hRec (hSize.2 x hx) hBoundEnv hBoundDisjoint (hArgsNN x hx)
+      (hArgs'NN _ (List.mem_map_of_mem hx)) (hArgsNoS x hx) (hArgsNoT x hx) hM hN hRel
+  have hFullEnv := lamBound_env bvars hBoundEnv
+  have hFullDisjoint : ∀ key, key ∈ bvars.reverse ++ boundVars → key ∉ targetKeys pairs := by
+    intro key hMem
+    rcases List.mem_append.1 hMem with h | h
+    · exact hDisjoint key (List.mem_reverse.1 h)
+    · exact hBoundDisjoint key h
+  exact InstantiateRule.substFalse_eval_spine_apps hRel.globals
+    (LamSpineSupport.eoVarList bvars) (LamSpineSupport.eoVarList (bps.map Prod.snd)) body
+    (__substitute_simul_rec (Term.Boolean true) body vs ts Term.__eo_List_nil) bvars.length hv hv'
+    (fun x => __substitute_simul_rec (Term.Boolean true) x vs ts Term.__eo_List_nil)
+    (fun rm hrm hArgsRm hTy hTy' => by
+      have hWfM := InstantiateRule.model_wf_push_bindings_of_typed M hM hTy'
+      have hWfN := InstantiateRule.model_wf_push_bindings_of_typed N hN hTy
+      have hVals :
+          (rm.map (fun x => __substitute_simul_rec (Term.Boolean true) x vs ts
+              Term.__eo_List_nil)).reverse.map (fun x => __smtx_model_eval M (__eo_to_smt x)) =
+            rm.reverse.map (fun x => __smtx_model_eval N (__eo_to_smt x)) := by
+        rw [List.map_reverse, List.map_reverse, List.map_map]
+        congr 1
+        exact List.map_congr_left (fun x hx => hArgsRm x hx)
+      have hlen' : (rm.map (fun x => __substitute_simul_rec (Term.Boolean true) x vs ts
+          Term.__eo_List_nil)).length = (bps.map Prod.snd).length := by simp [hrm, hLenB]
+      rw [LamSpineSupport.push_bindings_lamBindings_eoVarList M _ _ hlen', hVals] at hWfM
+      rw [LamSpineSupport.push_bindings_lamBindings_eoVarList N bvars rm hrm] at hWfN
+      have hBinderWf : ∀ key, key ∈ bps.map Prod.fst →
+          __smtx_type_wf (__eo_to_smt_type key.2) = true := by
+        intro key hMem
+        rw [hFst] at hMem
+        rw [LamSpineSupport.lamBindings_eoVarList bvars rm SmtBindings.nil (by omega),
+          show bvars.take rm.length = bvars by rw [hrm, List.take_length]] at hTy
+        obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem hMem
+        have hmem : (bvars[i], rm.reverse[i]'(by simp; omega)) ∈ bvars.zip rm.reverse := by
+          rw [List.mem_iff_getElem]
+          exact ⟨i, by simp; omega, by simp⟩
+        exact bind_binding_type_wf_of_non_none hTy (LamSpineSupport.bindsApp_mem _ _ _ hmem)
+      rw [smtx_model_eval_bind_eq, smtx_model_eval_bind_eq,
+        LamSpineSupport.push_bindings_lamBindings_eoVarList M _ _ hlen', hVals,
+        LamSpineSupport.push_bindings_lamBindings_eoVarList N bvars rm hrm]
+      have hRel' := alphaRel_pushL_binderRenaming hLists hSourceDistinct hTargetDistinct hRen
+        hBinderWf (rm.reverse.map (fun x => __smtx_model_eval N (__eo_to_smt x)))
+        (by simp [← hFst, hrm]) hRel
+      rw [hFst] at hRel'
+      exact hRec hSize.1 hFullEnv hFullDisjoint hBodyNN hBody'NN
+        (lam_body_contains_false bvars (EoVarEnvPerm.of_exact hLists.envs.1) hBoundEnv hLamNoS)
+        (lam_body_contains_false bvars (EoVarEnvPerm.of_exact hLists.envs.2) hBoundEnv hLamNoT)
+        hWfM hWfN hRel')
+    r hm hArgsEq hFNN hF'NN
+
 /-- Size-recursive semantic core for true-mode simultaneous renaming.  The
 non-binder application dispatcher is shared with substitution; only variables
 and quantifier binder pushes are alpha-specific. -/
@@ -1680,10 +1911,18 @@ theorem alpha_eval_gen_lt
               hGSubterm hNoTarget
             exact hRec hGLt hBoundEnv hBoundDisjoint hGTrans hGSubstTrans
               hGNoSource hGNoTarget hM hN hRel
+          by_cases hSpine : TranslationProofs.IsLamSpine (Term.Apply f a)
+          · exact alpha_eval_spine f a vs ts bound hLists hSourceDistinct hTargetDistinct
+              hBoundEnv hBoundDisjoint hTsTrans hSpine hFTrans hSubstTrans hNoSource hNoTarget
+              hM hN hRel
+              (fun {G bound' boundVars' M' N'} hGLt hBoundEnv' hDisjoint' hGTrans hGSubstTrans
+                  hGNoSource hGNoTarget hM' hN' hRel' =>
+                hRec hGLt hBoundEnv' hDisjoint' hGTrans hGSubstTrans hGNoSource hGNoTarget
+                  hM' hN' hRel')
           exact InstantiateRule.substitute_simul_eval_nonbinder
             f a vs ts Term.__eo_List_nil
             (EoVarEnvPerm.of_exact hLists.envs.1)
-            (EoVarEnvPerm.of_exact EoVarEnv.nil) hTsTrans hBinder
+            (EoVarEnvPerm.of_exact EoVarEnv.nil) hTsTrans hBinder hSpine
             hFTrans hSubstTrans hM hN hRel.globals hRecArg
       case Var name T =>
         by_cases hString : ∃ s, name = Term.String s

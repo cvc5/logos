@@ -4909,7 +4909,7 @@ private theorem bvand_args_of_has_smt_translation (y x : Term) :
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y))
           (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_40]) hNN
+        rw [__smtx_typeof.eq_41]) hNN
 
 private theorem bvAnd_args_of_bitvec_type (y x : Term) (w : native_Nat) :
     __smtx_typeof (__eo_to_smt (mkBvAnd y x)) = SmtType.BitVec w ->
@@ -4933,7 +4933,7 @@ private theorem bvAnd_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_40]) hNN with
+        rw [__smtx_typeof.eq_41]) hNN with
     ⟨w', hyTy, hxTy⟩
   have hWidth : w' = w := by
     have hResult :
@@ -4943,7 +4943,7 @@ private theorem bvAnd_args_of_bitvec_type (y x : Term) (w : native_Nat) :
             __smtx_typeof_bv_op_2
               (__smtx_typeof (__eo_to_smt y))
               (__smtx_typeof (__eo_to_smt x)) by
-          rw [__smtx_typeof.eq_40]] at hTy'
+          rw [__smtx_typeof.eq_41]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
         SmtEval.native_nateq] using hTy'
     cases hResult
@@ -4969,7 +4969,7 @@ private theorem bvor_args_of_has_smt_translation (y x : Term) :
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y))
           (__smtx_typeof (__eo_to_smt x)) by
-      rw [__smtx_typeof.eq_41]) hNN
+      rw [__smtx_typeof.eq_42]) hNN
 
 private theorem bvOr_args_of_bitvec_type (y x : Term) (w : native_Nat) :
     __smtx_typeof (__eo_to_smt (mkBvOr y x)) = SmtType.BitVec w ->
@@ -4993,7 +4993,7 @@ private theorem bvOr_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_41]) hNN with
+        rw [__smtx_typeof.eq_42]) hNN with
     ⟨w', hyTy, hxTy⟩
   have hWidth : w' = w := by
     have hResult :
@@ -5003,7 +5003,7 @@ private theorem bvOr_args_of_bitvec_type (y x : Term) (w : native_Nat) :
             __smtx_typeof_bv_op_2
               (__smtx_typeof (__eo_to_smt y))
               (__smtx_typeof (__eo_to_smt x)) by
-          rw [__smtx_typeof.eq_41]] at hTy'
+          rw [__smtx_typeof.eq_42]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
         SmtEval.native_nateq] using hTy'
     cases hResult
@@ -5029,7 +5029,7 @@ private theorem bvxor_args_of_has_smt_translation (y x : Term) :
         __smtx_typeof_bv_op_2
           (__smtx_typeof (__eo_to_smt y))
           (__smtx_typeof (__eo_to_smt x)) by
-      rw [__smtx_typeof.eq_44]) hNN
+      rw [__smtx_typeof.eq_45]) hNN
 
 private theorem bvXor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
     __smtx_typeof (__eo_to_smt (mkBvXor y x)) = SmtType.BitVec w ->
@@ -5053,7 +5053,7 @@ private theorem bvXor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_44]) hNN with
+        rw [__smtx_typeof.eq_45]) hNN with
     ⟨w', hyTy, hxTy⟩
   have hWidth : w' = w := by
     have hResult :
@@ -5063,7 +5063,7 @@ private theorem bvXor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
             __smtx_typeof_bv_op_2
               (__smtx_typeof (__eo_to_smt y))
               (__smtx_typeof (__eo_to_smt x)) by
-          rw [__smtx_typeof.eq_44]] at hTy'
+          rw [__smtx_typeof.eq_45]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
         SmtEval.native_nateq] using hTy'
     cases hResult
@@ -5082,7 +5082,7 @@ private theorem bvand_result_type_of_has_smt_translation (y x : Term) :
   change __smtx_typeof
       (SmtTerm.bvand (__eo_to_smt y) (__eo_to_smt x)) =
     SmtType.BitVec w
-  rw [__smtx_typeof.eq_40]
+  rw [__smtx_typeof.eq_41]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
     SmtEval.native_nateq]
 
@@ -5097,7 +5097,7 @@ private theorem bvor_result_type_of_has_smt_translation (y x : Term) :
   change __smtx_typeof
       (SmtTerm.bvor (__eo_to_smt y) (__eo_to_smt x)) =
     SmtType.BitVec w
-  rw [__smtx_typeof.eq_41]
+  rw [__smtx_typeof.eq_42]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
     SmtEval.native_nateq]
 
@@ -5158,7 +5158,7 @@ private theorem bvxor_result_type_of_has_smt_translation (y x : Term) :
   change __smtx_typeof
       (SmtTerm.bvxor (__eo_to_smt y) (__eo_to_smt x)) =
     SmtType.BitVec w
-  rw [__smtx_typeof.eq_44]
+  rw [__smtx_typeof.eq_45]
   simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
     SmtEval.native_nateq]
 
@@ -8643,10 +8643,10 @@ private theorem bvZero_to_bin_eq_of_bound (w : Nat) :
       Term.Binary (native_nat_to_int w) 0 := by
   intro hBound
   have hBoundProp : native_nat_to_int w < 4294967296 := by
-    simpa [native_zlt] using hBound
+    simpa [native_zlt_eq] using hBound
   have hWidthNonneg : 0 <= native_nat_to_int w := by
     simp [native_nat_to_int]
-  simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq, native_zlt, native_and,
+  simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq, native_zlt_eq, native_and,
     hBoundProp, hWidthNonneg, native_mod_total]
 
 private theorem bvOr_zero_is_list_nil (w : Nat) :
@@ -8687,9 +8687,9 @@ private theorem bvOr_nil_eq_zero_of_type
               (Term.Numeral (native_nat_to_int w))) =
           Term.Stuck := by
       have hBoundFalse : ¬ native_nat_to_int w < 4294967296 := by
-        simpa [native_zlt] using hBound
+        simpa [native_zlt_eq] using hBound
       simp [__eo_nil, __eo_nil_bvor, __eo_to_bin, hBoundFalse,
-        native_ite, native_zleq, native_zlt, native_and]
+        native_ite, native_zleq, native_zlt_eq, native_and]
     exact False.elim (hNe hStuck)
 
 private theorem bvXor_nil_eq_zero_of_type
@@ -8716,9 +8716,9 @@ private theorem bvXor_nil_eq_zero_of_type
               (Term.Numeral (native_nat_to_int w))) =
           Term.Stuck := by
       have hBoundFalse : ¬ native_nat_to_int w < 4294967296 := by
-        simpa [native_zlt] using hBound
+        simpa [native_zlt_eq] using hBound
       simp [__eo_nil, __eo_nil_bvxor, __eo_to_bin, hBoundFalse,
-        native_ite, native_zleq, native_zlt, native_and]
+        native_ite, native_zleq, native_zlt_eq, native_and]
     exact False.elim (hNe hStuck)
 
 private theorem bvXor_smt_value_rel_right_zero_eval
@@ -10643,7 +10643,7 @@ private theorem bvXor_get_a_norm_eval_canonical
     dsimp [t, mkBvXor]
     change __smtx_typeof (SmtTerm.bvxor (__eo_to_smt y) (__eo_to_smt x)) =
       SmtType.BitVec w
-    rw [__smtx_typeof.eq_44]
+    rw [__smtx_typeof.eq_45]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
       SmtEval.native_nateq]
   have hTypeMatch :=
@@ -10711,7 +10711,7 @@ private theorem smt_value_rel_get_a_norm_bvxor
     dsimp [t, mkBvXor]
     change __smtx_typeof (SmtTerm.bvxor (__eo_to_smt y) (__eo_to_smt x)) =
       SmtType.BitVec w
-    rw [__smtx_typeof.eq_44]
+    rw [__smtx_typeof.eq_45]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
       SmtEval.native_nateq]
   have hTypeMatch :=
@@ -12964,7 +12964,7 @@ private theorem smt_value_rel_get_ai_norm_bvor
     dsimp [t, mkBvOr]
     change __smtx_typeof (SmtTerm.bvor (__eo_to_smt y) (__eo_to_smt x)) =
       SmtType.BitVec w
-    rw [__smtx_typeof.eq_41]
+    rw [__smtx_typeof.eq_42]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
       SmtEval.native_nateq]
   have hTypeMatch :=
@@ -13148,7 +13148,7 @@ private theorem smt_value_rel_get_ai_norm_bvand
     dsimp [t, mkBvAnd]
     change __smtx_typeof (SmtTerm.bvand (__eo_to_smt y) (__eo_to_smt x)) =
       SmtType.BitVec w
-    rw [__smtx_typeof.eq_40]
+    rw [__smtx_typeof.eq_41]
     simp [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
       SmtEval.native_nateq]
   have hTypeMatch :=
@@ -16117,7 +16117,7 @@ private theorem reUnion_nil_eval_none_of_is_list_nil_true
   cases nil <;> simp [__eo_is_list_nil] at hNilTrue ⊢
   case UOp op =>
     cases op <;> simp  at hNilTrue ⊢
-    rw [__smtx_model_eval.eq_105]
+    rw [__smtx_model_eval.eq_107]
 
 private theorem reUnion_list_concat_rec_rel_eval
     (M : SmtModel) :
@@ -17840,7 +17840,7 @@ private theorem reInter_nil_eval_all_of_is_list_nil_true
   cases nil <;> simp [__eo_is_list_nil] at hNilTrue ⊢
   case UOp op =>
     cases op <;> simp  at hNilTrue ⊢
-    rw [__smtx_model_eval.eq_106]
+    rw [__smtx_model_eval.eq_108]
 
 private theorem reInter_list_concat_rec_rel_eval
     (M : SmtModel) :
