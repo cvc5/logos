@@ -119,7 +119,7 @@ private theorem facts___eo_prog_arith_int_div_total_over_mod_impl
     change __smtx_model_eval M (SmtTerm.div_total
       (SmtTerm.mod_total (__eo_to_smt t) (__eo_to_smt s)) (__eo_to_smt s)) =
         SmtValue.Numeral 0
-    rw [__smtx_model_eval.eq_31, __smtx_model_eval.eq_32, hEvalT, hEvalS]
+    rw [__smtx_model_eval.eq_33, __smtx_model_eval.eq_34, hEvalT, hEvalS]
     change SmtValue.Numeral (native_div_total (native_mod_total a b) b) =
       SmtValue.Numeral 0
     simp only [SmtEval.native_div_total, SmtEval.native_mod_total, int_emod_ediv_self]

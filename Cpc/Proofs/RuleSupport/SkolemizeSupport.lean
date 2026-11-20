@@ -104,8 +104,8 @@ def qskolTerm : List EoVarKey -> SmtTerm -> Nat -> SmtTerm
       SmtTerm.choice s (__eo_to_smt_type T) (smtExistsList vs B)
   | (s, T) :: vs, B, Nat.succ n =>
       qskolTerm vs
-        (SmtTerm.bind s (__eo_to_smt_type T)
-          (SmtTerm.choice s (__eo_to_smt_type T) (smtExistsList vs B)) B)
+        (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+          (SmtTerm.choice s (__eo_to_smt_type T) (smtExistsList vs B)) SmtBindings.nil) B)
         n
   | [], _B, _n => SmtTerm.None
 
@@ -158,9 +158,10 @@ private theorem typeof_choice_eq (s : native_String) (T : SmtType) (b : SmtTerm)
         (__smtx_typeof_guard_wf T T) SmtType.None := rfl
 
 private theorem typeof_bind_eq (s : native_String) (T : SmtType) (v b : SmtTerm) :
-    __smtx_typeof (SmtTerm.bind s T v b) =
+    __smtx_typeof (SmtTerm.bind (SmtBindings.cons s T v SmtBindings.nil) b) =
       native_ite (native_Teq (__smtx_typeof v) T)
-        (__smtx_typeof_guard_wf T (__smtx_typeof b)) SmtType.None := rfl
+        (__smtx_typeof_guard_wf T (__smtx_typeof b)) SmtType.None := by
+  rw [smtx_typeof_bind_eq, smtx_typeof_bindings_cons_eq, smtx_typeof_bindings_nil_eq]
 
 private theorem guard_wf_eq_of_wf {T : SmtType} (U : SmtType)
     (hWf : __smtx_type_wf T = true) :
@@ -208,8 +209,8 @@ theorem eo_to_smt_qskol_eq_qskolTerm
           rfl
       | succ n =>
           show __eo_to_smt_quantifiers_skolemize env
-              (SmtTerm.bind s (__eo_to_smt_type T)
-                (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists env B)) B)
+              (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                (SmtTerm.choice s (__eo_to_smt_type T) (__eo_to_smt_exists env B)) SmtBindings.nil) B)
               n = _
           rw [eo_to_smt_exists_eq_smtExistsList hTail B, ih]
           rfl
@@ -599,16 +600,16 @@ theorem qskolTerm_typeof :
             fun q hq => hWf q (List.Mem.tail _ hq)
           have hBindBool :
               __smtx_typeof
-                  (SmtTerm.bind s (__eo_to_smt_type T)
-                    (SmtTerm.choice s (__eo_to_smt_type T) (smtExistsList vs B))
+                  (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                    (SmtTerm.choice s (__eo_to_smt_type T) (smtExistsList vs B)) SmtBindings.nil)
                     B) = SmtType.Bool := by
             rw [typeof_bind_eq, typeof_choice_head s T vs B hWfHead hWfTail hB, hB]
             simp [native_Teq, native_ite, guard_wf_eq_of_wf _ hWfHead]
           have hLt : n < vs.length := by
             simpa using Nat.lt_of_succ_lt_succ hn
           show __smtx_typeof (qskolTerm vs
-              (SmtTerm.bind s (__eo_to_smt_type T)
-                (SmtTerm.choice s (__eo_to_smt_type T) (smtExistsList vs B)) B)
+              (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+                (SmtTerm.choice s (__eo_to_smt_type T) (smtExistsList vs B)) SmtBindings.nil) B)
               n) = _
           rw [ih vs _ hLt hWfTail hBindBool]
           simp
@@ -697,8 +698,9 @@ private theorem eval_choice_eq (M : SmtModel) (s : native_String) (T : SmtType)
 
 private theorem eval_bind_eq (M : SmtModel) (s : native_String) (T : SmtType)
     (v b : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.bind s T v b) =
-      __smtx_model_eval (native_model_push M s T (__smtx_model_eval M v)) b := rfl
+    __smtx_model_eval M (SmtTerm.bind (SmtBindings.cons s T v SmtBindings.nil) b) =
+      __smtx_model_eval (native_model_push M s T (__smtx_model_eval M v)) b :=
+  smtx_model_eval_bind_single_eq M s T v b
 
 private theorem canonical_of_canonical_bool {v : SmtValue}
     (h : __smtx_value_canonical uc v = true) : value_canonical uc v := by
@@ -1304,9 +1306,9 @@ theorem qskol_eval_eq_chainValue (M : SmtModel) (H : SmtTerm) :
                     native_eval_choice L s (__eo_to_smt_type T)
                       (smtExistsList vs H)) :: pins) ->
               __smtx_model_eval P
-                  (SmtTerm.bind s (__eo_to_smt_type T)
+                  (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
                     (SmtTerm.choice s (__eo_to_smt_type T)
-                      (smtExistsList vs B)) B) =
+                      (smtExistsList vs B)) SmtBindings.nil) B) =
                 __smtx_model_eval Q H := by
             intro P Q hP hQ hMP hMQ hAgreeVs hPinsQ'
             have hPinsQ : pinsHold Q pins :=
@@ -1350,17 +1352,17 @@ theorem qskol_eval_eq_chainValue (M : SmtModel) (H : SmtTerm) :
             simpa using Nat.lt_of_succ_lt_succ hn
           show __smtx_model_eval K
               (qskolTerm vs
-                (SmtTerm.bind s (__eo_to_smt_type T)
+                (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
                   (SmtTerm.choice s (__eo_to_smt_type T)
-                    (smtExistsList vs B)) B) n) =
+                    (smtExistsList vs B)) SmtBindings.nil) B) n) =
             chainValue H
               (native_model_push L s (__eo_to_smt_type T)
                 (native_eval_choice L s (__eo_to_smt_type T)
                   (smtExistsList vs H)))
               vs n
           exact ih vs
-            (SmtTerm.bind s (__eo_to_smt_type T)
-              (SmtTerm.choice s (__eo_to_smt_type T) (smtExistsList vs B)) B)
+            (SmtTerm.bind (SmtBindings.cons s (__eo_to_smt_type T)
+              (SmtTerm.choice s (__eo_to_smt_type T) (smtExistsList vs B)) SmtBindings.nil) B)
             K
             (native_model_push L s (__eo_to_smt_type T)
               (native_eval_choice L s (__eo_to_smt_type T)

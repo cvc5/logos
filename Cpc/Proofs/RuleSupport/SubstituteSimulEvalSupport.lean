@@ -10,6 +10,8 @@ public import Cpc.Proofs.Closed.ContainsAtomicTermListFree
 import all Cpc.Proofs.Closed.ContainsAtomicTermListFree
 public import Cpc.Proofs.Closed.Substitute
 import all Cpc.Proofs.Closed.Substitute
+public import Cpc.Proofs.Translation.LambdaApply
+import all Cpc.Proofs.Translation.LambdaApply
 
 public section
 
@@ -2135,6 +2137,116 @@ theorem substFalse_eval_set_insert
       (SmtTerm.set_union (SmtTerm.set_singleton (__eo_to_smt tl)) (__eo_to_smt base))
   simp only [__smtx_model_eval, hTlEval, hBaseEval]
 
+/-- A `lambda` that substitution does not treat as a binder: with a
+translation its variable list is empty, so it is the `let` of no bindings
+around its body, and substitution goes into the body. -/
+theorem substFalse_eval_lambda_nonbinder
+    (x1 a xs ss bvs : Term) {M N : SmtModel}
+    (hisr : (Term.Boolean isRename : Term) ≠ Term.Stuck)
+    (hxs : xs ≠ Term.Stuck) (hss : ss ≠ Term.Stuck) (hbvs : bvs ≠ Term.Stuck)
+    (hNotBinderOuter :
+      ∀ q v vs,
+        Term.Apply (Term.UOp UserOp.lambda) x1 ≠
+          Term.Apply q (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))
+    (hFTrans :
+      eoHasSmtTranslation
+        (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) x1) a))
+    (hSubstTrans :
+      eoHasSmtTranslation
+        (__substitute_simul_rec (Term.Boolean isRename)
+          (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) x1) a)
+          xs ss bvs))
+    (hHeadSub :
+      __substitute_simul_rec (Term.Boolean isRename)
+          (Term.UOp UserOp.lambda) xs ss bvs =
+        Term.UOp UserOp.lambda)
+    (hRecArg :
+      ∀ {b : Term},
+        IsNonbinderSubterm b
+          (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) x1) a) ->
+        sizeOf b <
+          sizeOf (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) x1) a) ->
+        eoHasSmtTranslation b ->
+        eoHasSmtTranslation
+          (__substitute_simul_rec (Term.Boolean isRename) b xs ss bvs) ->
+        __smtx_model_eval M
+            (__eo_to_smt
+              (__substitute_simul_rec (Term.Boolean isRename) b xs ss bvs)) =
+          __smtx_model_eval N (__eo_to_smt b)) :
+    __smtx_model_eval M
+        (__eo_to_smt
+          (__substitute_simul_rec (Term.Boolean isRename)
+            (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) x1) a)
+            xs ss bvs)) =
+      __smtx_model_eval N
+        (__eo_to_smt
+          (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) x1) a)) := by
+  have hTyF : term_has_non_none_type
+      (SmtTerm.bind SmtBindings.nil
+        (__eo_to_smt_lambda_curry x1 (__eo_to_smt a))) := hFTrans
+  have hBody := bind_body_non_none_of_non_none hTyF
+  have hx1 : x1 = Term.__eo_List_nil := TranslationProofs.curry_typed_nil hBody
+  subst hx1
+  have hATrans : eoHasSmtTranslation a := hBody
+  let aSub := __substitute_simul_rec (Term.Boolean isRename) a xs ss bvs
+  have hNilSub :
+      __substitute_simul_rec (Term.Boolean isRename) Term.__eo_List_nil xs ss bvs =
+        Term.__eo_List_nil := by
+    rw [SubstituteSupport.substitute_simul_rec_atom _ _ _ _ _ hisr hxs hss hbvs
+      (by intro f a h; cases h) (by intro s S h; cases h) (by intro h; cases h)]
+    rfl
+  have hSubstHead :
+      __substitute_simul_rec (Term.Boolean isRename)
+          (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) xs ss bvs =
+        Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil := by
+    rw [SubstituteSupport.substitute_simul_rec_apply (Term.Boolean isRename)
+        (Term.UOp UserOp.lambda) Term.__eo_List_nil xs ss bvs hisr hxs hss hbvs
+        (by intro q v vs hEq; cases hEq), hHeadSub, hNilSub]
+    rfl
+  have hSubstEq :
+      __substitute_simul_rec (Term.Boolean isRename)
+          (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) a)
+          xs ss bvs =
+        __eo_mk_apply (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) aSub := by
+    rw [SubstituteSupport.substitute_simul_rec_apply (Term.Boolean isRename)
+        (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) a xs ss bvs
+        hisr hxs hss hbvs hNotBinderOuter, hSubstHead]
+  have hOuterNeStuck :
+      __eo_mk_apply (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) aSub ≠
+        Term.Stuck := by
+    rw [← hSubstEq]
+    exact RuleProofs.term_ne_stuck_of_has_smt_translation _ hSubstTrans
+  have hResultEq :
+      __substitute_simul_rec (Term.Boolean isRename)
+          (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) a)
+          xs ss bvs =
+        Term.Apply (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) aSub := by
+    rw [hSubstEq, instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hOuterNeStuck]
+  have hSubTy : term_has_non_none_type
+      (SmtTerm.bind SmtBindings.nil
+        (__eo_to_smt_lambda_curry Term.__eo_List_nil (__eo_to_smt aSub))) := by
+    have h := hSubstTrans
+    rw [hResultEq] at h
+    exact h
+  have hASubTrans : eoHasSmtTranslation aSub := bind_body_non_none_of_non_none hSubTy
+  have hOuterNonbinder :
+      ¬ IsBinderHead (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) := by
+    rintro ⟨q, v, vs, hEq⟩
+    exact hNotBinderOuter q v vs hEq
+  have hASubterm : IsNonbinderSubterm a
+      (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) a) := by
+    simp [IsNonbinderSubterm, hOuterNonbinder]
+  have hAEval : __smtx_model_eval M (__eo_to_smt aSub) =
+      __smtx_model_eval N (__eo_to_smt a) :=
+    hRecArg hASubterm (by simp <;> omega) hATrans hASubTrans
+  rw [hResultEq]
+  change __smtx_model_eval M
+      (SmtTerm.bind SmtBindings.nil (__eo_to_smt aSub)) =
+    __smtx_model_eval N (SmtTerm.bind SmtBindings.nil (__eo_to_smt a))
+  rw [smtx_model_eval_bind_eq, smtx_model_eval_bind_eq, model_push_bindings_nil,
+    model_push_bindings_nil]
+  exact hAEval
+
 theorem substFalse_eval_unary_uop1
     (op : UserOp1) (idx a xs ss bvs : Term) {M N : SmtModel}
     (hisr : (Term.Boolean isRename : Term) ≠ Term.Stuck)
@@ -4096,10 +4208,11 @@ theorem eo_to_smt_apply_apply_uop_generic_of_not_smt_binop
     (hTuple : op ≠ UserOp.tuple)
     (hSetInsert : op ≠ UserOp.set_insert)
     (hForall : op ≠ UserOp.forall)
-    (hExists : op ≠ UserOp.exists) :
+    (hExists : op ≠ UserOp.exists)
+    (hLambda : op ≠ UserOp.lambda) :
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp op) x) y) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply (Term.UOp op) x)) (__eo_to_smt y) := by
-  cases op <;> try rfl
+  cases op <;> try closed_generic_rfl
   all_goals
     exfalso
     first
@@ -4190,6 +4303,7 @@ theorem eo_to_smt_apply_apply_uop_generic_of_not_smt_binop
     | exact hSetInsert rfl
     | exact hForall rfl
     | exact hExists rfl
+    | exact hLambda rfl
 
 theorem substFalse_eval_binary_uop_generic_apply
     (op : UserOp) (x1 a xs ss bvs : Term) {M N : SmtModel}
@@ -4413,12 +4527,13 @@ theorem eo_to_smt_apply_apply_apply_uop_generic_of_not_smt_triop
     (hStrReplaceReAll : op ≠ UserOp.str_replace_re_all)
     (hStrIndexofRe : op ≠ UserOp.str_indexof_re)
     (hStringsOccurIndex : op ≠ UserOp._at_strings_occur_index)
-    (hStringsOccurIndexRe : op ≠ UserOp._at_strings_occur_index_re) :
+    (hStringsOccurIndexRe : op ≠ UserOp._at_strings_occur_index_re)
+    (hLambda : op ≠ UserOp.lambda) :
     __eo_to_smt (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) x) y) z) =
       SmtTerm.Apply
         (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp op) x) y))
         (__eo_to_smt z) := by
-  cases op <;> try rfl
+  cases op <;> try (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done))
   case ite => exact False.elim (hIte rfl)
   case store => exact False.elim (hStore rfl)
   case bvite => exact False.elim (hBvite rfl)
@@ -4434,6 +4549,7 @@ theorem eo_to_smt_apply_apply_apply_uop_generic_of_not_smt_triop
     exact False.elim (hStringsOccurIndex rfl)
   case _at_strings_occur_index_re =>
     exact False.elim (hStringsOccurIndexRe rfl)
+  case lambda => exact False.elim (hLambda rfl)
 
 theorem substFalse_eval_ternary_uop_generic_apply
     (op : UserOp) (x1 x2 a xs ss bvs : Term) {M N : SmtModel}
@@ -5163,7 +5279,7 @@ theorem eo_to_smt_apply_apply_uop1_generic_of_not_update_tuple_update
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp1 op idx) x) y) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply (Term.UOp1 op idx) x))
         (__eo_to_smt y) := by
-  cases op <;> try rfl
+  cases op <;> try closed_generic_rfl
   · exact False.elim (hUpdate rfl)
   · exact False.elim (hTupleUpdate rfl)
 
@@ -5376,10 +5492,174 @@ theorem eo_to_smt_apply_apply_atom_head_generic
     (hNotApply : ∀ f a, g ≠ Term.Apply f a) :
     __eo_to_smt (Term.Apply (Term.Apply g x) y) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply g x)) (__eo_to_smt y) := by
-  cases g <;> try rfl
+  cases g <;> try closed_generic_rfl
   · exact False.elim (hNotUOp _ rfl)
   · exact False.elim (hNotUOp1 _ _ rfl)
   · exact False.elim (hNotApply _ _ rfl)
+
+/-- An application whose head does not translate to a lambda waiting for an
+argument, and is not the lambda symbol applied to its list, does not translate
+to one either. -/
+theorem not_pending_apply_of_not_pending (h x : Term)
+    (hnp : ¬ TranslationProofs.SmtPendingLam (__eo_to_smt h))
+    (hnl : ∀ us, h ≠ Term.Apply (Term.UOp UserOp.lambda) us) :
+    ¬ TranslationProofs.SmtPendingLam (__eo_to_smt (Term.Apply h x)) := by
+  intro hp
+  obtain ⟨us, body, r, hs⟩ := TranslationProofs.eo_to_smt_pending_spine _ hp
+  cases hs with
+  | lam => exact hnl _ rfl
+  | app a hg =>
+      rw [hg.eo_to_smt_app, TranslationProofs.eo_to_smt_apply_of_not_pending _ hnp] at hp
+      exact TranslationProofs.not_smtPendingLam_apply _ _ hp
+
+theorem not_pending_of_has_smt_translation {t : Term} (h : eoHasSmtTranslation t) :
+    ¬ TranslationProofs.SmtPendingLam (__eo_to_smt t) :=
+  fun hp => h (TranslationProofs.smtx_typeof_pending hp)
+
+theorem ne_lambda_apply_of_has_smt_translation {t : Term} (h : eoHasSmtTranslation t) :
+    ∀ us, t ≠ Term.Apply (Term.UOp UserOp.lambda) us := by
+  intro us he
+  subst he
+  exact h (TranslationProofs.typeof_apply_none_eq _)
+
+theorem ne_lambda_of_has_smt_translation {t : Term} (h : eoHasSmtTranslation t) :
+    t ≠ Term.UOp UserOp.lambda := by
+  intro he
+  subst he
+  exact h TranslationProofs.smtx_typeof_none
+
+/-- What a head needs for its applications to translate generically: it does
+not translate to a lambda waiting for an argument, and it is neither the lambda
+symbol nor the lambda symbol applied to its variable list alone. -/
+def NotLamHeadSmt (u : Term) : Prop :=
+  ¬ TranslationProofs.SmtPendingLam (__eo_to_smt u) ∧
+    (∀ us, u ≠ Term.Apply (Term.UOp UserOp.lambda) us) ∧
+    u ≠ Term.UOp UserOp.lambda
+
+theorem notLamHeadSmt_apply {h : Term} (x : Term) (hh : NotLamHeadSmt h) :
+    NotLamHeadSmt (Term.Apply h x) :=
+  ⟨not_pending_apply_of_not_pending h x hh.1 hh.2.1,
+    fun us he => by injection he with he; exact hh.2.2 he,
+    fun he => by cases he⟩
+
+theorem notLamHeadSmt_of_has_smt_translation {t : Term} (h : eoHasSmtTranslation t) :
+    NotLamHeadSmt t :=
+  ⟨not_pending_of_has_smt_translation h, ne_lambda_apply_of_has_smt_translation h,
+    ne_lambda_of_has_smt_translation h⟩
+
+theorem notLamHeadSmt_of_spineHead {t : Term}
+    (h : TranslationProofs.eoSpineHead t ≠ Term.UOp UserOp.lambda) : NotLamHeadSmt t :=
+  ⟨fun hp => TranslationProofs.not_isLamSpine_of_head h
+      (TranslationProofs.eo_to_smt_pending_spine _ hp),
+    fun us he => by subst he; exact h rfl,
+    fun he => by subst he; exact h rfl⟩
+
+/-- An application of at least two arguments whose spine head is the lambda
+symbol is a lambda spine. -/
+theorem isLamSpine_of_head_apply2 :
+    ∀ (g c b : Term),
+      TranslationProofs.eoSpineHead g = Term.UOp UserOp.lambda ->
+      TranslationProofs.IsLamSpine (Term.Apply (Term.Apply g c) b)
+  | g, c, b, h => by
+      cases g with
+      | Apply g1 g2 =>
+          exact TranslationProofs.isLamSpine_apply
+            (isLamSpine_of_head_apply2 g1 g2 c (by simpa [TranslationProofs.eoSpineHead] using h)) b
+      | UOp op =>
+          have : op = UserOp.lambda := by
+            simpa [TranslationProofs.eoSpineHead] using h
+          subst this
+          exact ⟨c, b, [], TranslationProofs.LamSpine.lam c b⟩
+      | _ => simp [TranslationProofs.eoSpineHead] at h
+termination_by g => sizeOf g
+
+theorem spineHead_ne_lambda_of_atom {g : Term}
+    (hNotUOp : ∀ op, g ≠ Term.UOp op) (hNotApply : ∀ f a, g ≠ Term.Apply f a) :
+    TranslationProofs.eoSpineHead g ≠ Term.UOp UserOp.lambda := by
+  cases g with
+  | Apply f a => exact absurd rfl (hNotApply f a)
+  | UOp op => exact absurd rfl (hNotUOp op)
+  | _ => simp [TranslationProofs.eoSpineHead]
+
+theorem eo_ite_cases (c a b : Term) :
+    __eo_ite c a b = a ∨ __eo_ite c a b = b ∨ __eo_ite c a b = Term.Stuck := by
+  unfold __eo_ite
+  cases h1 : native_teq c (Term.Boolean true) <;>
+    cases h2 : native_teq c (Term.Boolean false) <;> simp [native_ite]
+
+/-- Substitution never turns an application chain whose head is not the lambda
+symbol into a lambda waiting for an argument: heads are kept, binders keep
+their quantifier, and a variable is replaced by a translatable entry. -/
+theorem substitute_simul_rec_notLamHeadSmt {isRename : Bool}
+    (xs ss bvs : Term)
+    (hisr : (Term.Boolean isRename : Term) ≠ Term.Stuck)
+    (hxs : xs ≠ Term.Stuck) (hss : ss ≠ Term.Stuck) (hbvs : bvs ≠ Term.Stuck)
+    (hSsTrans : EoListAllHaveSmtTranslation ss) :
+    ∀ (t : Term), TranslationProofs.eoSpineHead t ≠ Term.UOp UserOp.lambda ->
+      __substitute_simul_rec (Term.Boolean isRename) t xs ss bvs ≠ Term.Stuck ->
+      NotLamHeadSmt (__substitute_simul_rec (Term.Boolean isRename) t xs ss bvs)
+  | t, hHead, hNe => by
+      by_cases hApp : ∃ f a, t = Term.Apply f a
+      · obtain ⟨f, a, rfl⟩ := hApp
+        have hHeadF : TranslationProofs.eoSpineHead f ≠ Term.UOp UserOp.lambda := by
+          simpa [TranslationProofs.eoSpineHead] using hHead
+        by_cases hB : ∃ q v vs,
+            f = Term.Apply q (Term.Apply (Term.Apply Term.__eo_List_cons v) vs)
+        · obtain ⟨q, v, vs, rfl⟩ := hB
+          have hHeadQ : TranslationProofs.eoSpineHead q ≠ Term.UOp UserOp.lambda := by
+            simpa [TranslationProofs.eoSpineHead] using hHeadF
+          cases isRename
+          · rw [SubstituteSupport.substFalse_quant _ _ _ _ _ _ _ hxs hss hbvs] at hNe ⊢
+            have hReqEq :=
+              SubstituteTranslatabilitySupport.instantiate_eo_requires_result_eq_of_ne_stuck hNe
+            rw [hReqEq] at hNe ⊢
+            rw [instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hNe]
+            exact notLamHeadSmt_of_spineHead (by simpa [TranslationProofs.eoSpineHead] using hHeadQ)
+          · rw [SubstituteSupport.substTrue_quant _ _ _ _ _ _ _ hxs hss hbvs] at hNe ⊢
+            have hReqEq :=
+              SubstituteTranslatabilitySupport.instantiate_eo_requires_result_eq_of_ne_stuck hNe
+            rw [hReqEq] at hNe ⊢
+            have hInner := instantiate_eo_mk_apply_fun_ne_stuck_of_ne_stuck hNe
+            rw [instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hNe,
+              instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hInner]
+            exact notLamHeadSmt_of_spineHead (by simpa [TranslationProofs.eoSpineHead] using hHeadQ)
+        · rw [SubstituteSupport.substitute_simul_rec_apply _ f a xs ss bvs hisr hxs hss hbvs
+            (fun q v vs he => hB ⟨q, v, vs, he⟩)] at hNe ⊢
+          have hfNe := instantiate_eo_mk_apply_fun_ne_stuck_of_ne_stuck hNe
+          rw [instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hNe]
+          exact notLamHeadSmt_apply _
+            (substitute_simul_rec_notLamHeadSmt xs ss bvs hisr hxs hss hbvs hSsTrans f hHeadF hfNe)
+      by_cases hVar : ∃ s S, t = Term.Var s S
+      · obtain ⟨s, S, rfl⟩ := hVar
+        rw [SubstituteSupport.substitute_simul_rec_var _ s S xs ss bvs hisr hxs hss hbvs] at hNe ⊢
+        rcases eo_ite_cases (__eo_is_neg (__eo_list_find Term.__eo_List_cons bvs (Term.Var s S)))
+            (__eo_ite (__eo_is_neg (__eo_list_find Term.__eo_List_cons xs (Term.Var s S)))
+              (Term.Var s S)
+              (__assoc_nil_nth Term.__eo_List_cons ss
+                (__eo_list_find Term.__eo_List_cons xs (Term.Var s S))))
+            (Term.Var s S) with h1 | h1 | h1 <;> rw [h1] at hNe ⊢
+        · rcases eo_ite_cases (__eo_is_neg (__eo_list_find Term.__eo_List_cons xs (Term.Var s S)))
+              (Term.Var s S)
+              (__assoc_nil_nth Term.__eo_List_cons ss
+                (__eo_list_find Term.__eo_List_cons xs (Term.Var s S))) with h2 | h2 | h2 <;>
+            rw [h2] at hNe ⊢
+          · exact notLamHeadSmt_of_spineHead (by simp [TranslationProofs.eoSpineHead])
+          · exact notLamHeadSmt_of_has_smt_translation
+              (SubstituteSupport.assoc_nil_nth_has_smt_translation_of_list_all_and_ne_stuck
+                ss _ hSsTrans hNe)
+          · exact absurd rfl hNe
+        · exact notLamHeadSmt_of_spineHead (by simp [TranslationProofs.eoSpineHead])
+        · exact absurd rfl hNe
+      by_cases hSt : t = Term.Stuck
+      · subst hSt
+        exact absurd (by simp [__substitute_simul_rec]) hNe
+      have hAtom := SubstituteSupport.substitute_simul_rec_atom _ t xs ss bvs hisr hxs hss hbvs
+        (fun f a he => hApp ⟨f, a, he⟩) (fun s S he => hVar ⟨s, S, he⟩) hSt
+      rw [hAtom] at hNe ⊢
+      rw [SubstituteTranslatabilitySupport.instantiate_eo_requires_result_eq_of_ne_stuck hNe]
+      exact notLamHeadSmt_of_spineHead hHead
+termination_by t => sizeOf t
+decreasing_by subst_vars; simp; omega
 
 theorem eo_to_smt_apply_apply_generic_of_head_has_smt_translation
     (g x y : Term)
@@ -5387,25 +5667,25 @@ theorem eo_to_smt_apply_apply_generic_of_head_has_smt_translation
     __eo_to_smt (Term.Apply (Term.Apply g x) y) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply g x)) (__eo_to_smt y) := by
   unfold eoHasSmtTranslation at hG
-  cases g <;> try rfl
+  cases g <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
   case UOp op =>
-    cases op <;> try rfl
+    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
     all_goals
       exfalso
       apply hG
       change __smtx_typeof SmtTerm.None = SmtType.None
       exact TranslationProofs.smtx_typeof_none
   case UOp1 op idx =>
-    cases op <;> try rfl
+    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
     all_goals
       exfalso
       apply hG
       change __smtx_typeof SmtTerm.None = SmtType.None
       exact TranslationProofs.smtx_typeof_none
   case Apply f a =>
-    cases f <;> try rfl
+    cases f <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
     case UOp op =>
-      cases op <;> try rfl
+      cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
       all_goals
         exfalso
         apply hG
@@ -5413,9 +5693,9 @@ theorem eo_to_smt_apply_apply_generic_of_head_has_smt_translation
           SmtType.None
         simp [__smtx_typeof, __smtx_typeof_apply]
     case Apply h b =>
-      cases h <;> try rfl
+      cases h <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
       case UOp op =>
-        cases op <;> try rfl
+        cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
         all_goals
           exfalso
           apply hG
@@ -5431,18 +5711,18 @@ theorem eo_to_smt_apply_apply_apply_generic_of_head_has_smt_translation
         (__eo_to_smt (Term.Apply (Term.Apply g x) y))
         (__eo_to_smt z) := by
   unfold eoHasSmtTranslation at hG
-  cases g <;> try rfl
+  cases g <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)) (fun us he => by injection he with he; exact ne_lambda_of_has_smt_translation hG he)))
   case UOp op =>
-    cases op <;> try rfl
+    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)) (fun us he => by injection he with he; exact ne_lambda_of_has_smt_translation hG he)))
     all_goals
       exfalso
       apply hG
       change __smtx_typeof SmtTerm.None = SmtType.None
       exact TranslationProofs.smtx_typeof_none
   case Apply f a =>
-    cases f <;> try rfl
+    cases f <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)) (fun us he => by injection he with he; exact ne_lambda_of_has_smt_translation hG he)))
     case UOp op =>
-      cases op <;> try rfl
+      cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)) (fun us he => by injection he with he; exact ne_lambda_of_has_smt_translation hG he)))
       all_goals
         exfalso
         apply hG
@@ -5451,15 +5731,16 @@ theorem eo_to_smt_apply_apply_apply_generic_of_head_has_smt_translation
 theorem eo_to_smt_apply_apply_apply_non_uop_head_generic
     {g x y z : Term}
     (hNotUOp : ∀ op, g ≠ Term.UOp op)
-    (hNotApplyUOp : ∀ op a, g ≠ Term.Apply (Term.UOp op) a) :
+    (hNotApplyUOp : ∀ op a, g ≠ Term.Apply (Term.UOp op) a)
+    (hNoLam : TranslationProofs.eoSpineHead g ≠ Term.UOp UserOp.lambda) :
     __eo_to_smt (Term.Apply (Term.Apply (Term.Apply g x) y) z) =
       SmtTerm.Apply
         (__eo_to_smt (Term.Apply (Term.Apply g x) y))
         (__eo_to_smt z) := by
-  cases g <;> try rfl
+  cases g <;> try (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); first | (simp [TranslationProofs.eoSpineHead]; done) | simpa [TranslationProofs.eoSpineHead] using hNoLam))
   case UOp op => exact False.elim (hNotUOp op rfl)
   case Apply f a =>
-    cases f <;> try rfl
+    cases f <;> try (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); first | (simp [TranslationProofs.eoSpineHead]; done) | simpa [TranslationProofs.eoSpineHead] using hNoLam))
     case UOp op => exact False.elim (hNotApplyUOp op a rfl)
 
 theorem eo_to_smt_apply_apply_apply_apply_head_generic
@@ -5467,14 +5748,16 @@ theorem eo_to_smt_apply_apply_apply_apply_head_generic
     (hStringsReplaceAllResult :
       g ≠ Term.UOp UserOp._at_strings_replace_all_result)
     (hStringsReplaceReAllResult :
-      g ≠ Term.UOp UserOp._at_strings_replace_re_all_result) :
+      g ≠ Term.UOp UserOp._at_strings_replace_re_all_result)
+    (hNoPend : ¬ TranslationProofs.SmtPendingLam
+      (__eo_to_smt (Term.Apply (Term.Apply (Term.Apply g x) y) z))) :
     __eo_to_smt (Term.Apply (Term.Apply (Term.Apply (Term.Apply g x) y) z) w) =
       SmtTerm.Apply
         (__eo_to_smt (Term.Apply (Term.Apply (Term.Apply g x) y) z))
         (__eo_to_smt w) := by
-  cases g <;> try rfl
+  cases g <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
   case UOp op =>
-    cases op <;> try rfl
+    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
     all_goals
       exfalso
       first
@@ -6785,6 +7068,7 @@ theorem substFalse_eval_ternary_uop1_head_generic_apply
     eo_to_smt_apply_apply_apply_non_uop_head_generic
       (by intro op' hEq; cases hEq)
       (by intro op' a' hEq; cases hEq)
+      (by simp [TranslationProofs.eoSpineHead])
   have hOrigTy :
       generic_apply_type
         (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp1 op idx) x) y))
@@ -6938,6 +7222,7 @@ theorem substFalse_eval_ternary_uop1_head_generic_apply
       eo_to_smt_apply_apply_apply_non_uop_head_generic
         (by intro op' hEq; cases hEq)
         (by intro op' a' hEq; cases hEq)
+        (by simp [TranslationProofs.eoSpineHead])
   have hSubstTy :
       generic_apply_type
         (__eo_to_smt
@@ -7186,6 +7471,7 @@ theorem substFalse_eval_ternary_atom_head_generic_apply
           (__eo_to_smt z) :=
     eo_to_smt_apply_apply_apply_non_uop_head_generic hNotUOp
       (fun op a => hNotApply (Term.UOp op) a)
+      (spineHead_ne_lambda_of_atom hNotUOp hNotApply)
   have hOrigTy :
       generic_apply_type (__eo_to_smt (Term.Apply (Term.Apply g x) y))
         (__eo_to_smt z) :=
@@ -7380,6 +7666,7 @@ theorem substFalse_eval_ternary_atom_head_generic_apply
     exact
       eo_to_smt_apply_apply_apply_non_uop_head_generic hNotUOp
         (fun op a => hNotApply (Term.UOp op) a)
+        (spineHead_ne_lambda_of_atom hNotUOp hNotApply)
   have hSubstTy :
       generic_apply_type
         (__eo_to_smt
@@ -7443,6 +7730,7 @@ theorem substFalse_eval_quaternary_apply_head_generic_apply
       g ≠ Term.UOp UserOp._at_strings_replace_all_result)
     (hStringsReplaceReAllResult :
       g ≠ Term.UOp UserOp._at_strings_replace_re_all_result)
+    (hNoLam : TranslationProofs.eoSpineHead g ≠ Term.UOp UserOp.lambda)
     (hNotBinderOuter :
       ∀ q v vs,
         Term.Apply (Term.Apply (Term.Apply g y) x0) x1 ≠
@@ -7516,6 +7804,7 @@ theorem substFalse_eval_quaternary_apply_head_generic_apply
           (__eo_to_smt a) :=
     eo_to_smt_apply_apply_apply_apply_head_generic g y x0 x1 a
       hStringsReplaceAllResult hStringsReplaceReAllResult
+      (notLamHeadSmt_of_spineHead (by simpa [TranslationProofs.eoSpineHead] using hNoLam)).1
   have hOrigTy :
       generic_apply_type
         (__eo_to_smt (Term.Apply (Term.Apply (Term.Apply g y) x0) x1))
@@ -7617,6 +7906,10 @@ theorem substFalse_eval_quaternary_apply_head_generic_apply
       eo_to_smt_apply_apply_apply_apply_head_generic
         gSub ySub x0Sub x1Sub aSub
         hGSubStringsReplaceAllResult hGSubStringsReplaceReAllResult
+        (by
+          rw [← hHeadShape]
+          exact (substitute_simul_rec_notLamHeadSmt xs ss bvs hisr hxs hss hbvs hSsTrans _
+            (by simpa [TranslationProofs.eoSpineHead] using hNoLam) hHeadSubNe).1)
   have hSubstTy :
       generic_apply_type
         (__eo_to_smt
@@ -7844,6 +8137,7 @@ theorem substitute_simul_eval_nonbinder
     (hBvsEnv : EoVarEnvPerm bvs bvsVars)
     (hSsTrans : EoListAllHaveSmtTranslation ss)
     (hBinder : ¬ IsBinderHead f)
+    (hNoSpine : ¬ TranslationProofs.IsLamSpine (Term.Apply f a))
     (hFTrans : RuleProofs.eo_has_smt_translation (Term.Apply f a))
     (hSubstTrans : RuleProofs.eo_has_smt_translation
       (__substitute_simul_rec (Term.Boolean isRename)
@@ -10185,53 +10479,60 @@ theorem substitute_simul_eval_nonbinder
                                                                                                                                                                                                                                                                                 (substitute_simul_rec_uop_eq_self UserOp.set_insert xs ss bvs
                                                                                                                                                                                                                                                                                   hXsEnv hBvsEnv hSsTrans)
                                                                                                                                                                                                                                                                                 hRecArg
-                                                                                                                                                                                                                                                                            · exact substFalse_eval_binary_uop_generic_apply op x1 a xs ss bvs
-                                                                                                                                                                                                                                                                                hisr hxs hss hbvs
-                                                                                                                                                                                                                                                                                (fun q v vs hEq => hBinder ⟨q, v, vs, hEq⟩)
-                                                                                                                                                                                                                                                                                (eo_to_smt_apply_apply_uop_generic_of_not_smt_binop
-                                                                                                                                                                                                                                                                                  h_and h_or h_imp h_xor h_eq h_plus h_neg h_mult
-                                                                                                                                                                                                                                                                                  h_lt h_leq h_gt h_geq h_div h_mod h_select
-                                                                                                                                                                                                                                                                                  h_divisible h_div_total h_mod_total h_qdiv_total h_qdiv h_concat
-                                                                                                                                                                                                                                                                                  h_bvand h_bvor h_bvnand h_bvnor h_bvxor h_bvxnor
-                                                                                                                                                                                                                                                                                  h_bvcomp h_bvadd h_bvmul h_bvudiv h_bvurem h_bvsub
-                                                                                                                                                                                                                                                                                  h_bvsdiv h_bvsrem h_bvsmod h_bvshl h_bvlshr
-                                                                                                                                                                                                                                                                                  h_bvashr h_bvult h_bvule h_bvugt h_bvuge h_bvslt
-                                                                                                                                                                                                                                                                                  h_bvsle h_bvsgt h_bvsge h_bvuaddo h_bvsaddo
-                                                                                                                                                                                                                                                                                  h_bvumulo h_bvsmulo h_bvusubo h_bvssubo h_bvsdivo
-                                                                                                                                                                                                                                                                                  h_bvultbv h_bvsltbv h_from_bools h_strings_deq_diff
-                                                                                                                                                                                                                                                                                  h_strings_stoi_result h_str_concat h_str_contains h_str_at
-                                                                                                                                                                                                                                                                                  h_str_prefixof h_str_suffixof h_str_lt h_str_leq
-                                                                                                                                                                                                                                                                                  h_re_range h_re_concat h_re_inter h_re_union h_re_diff
-                                                                                                                                                                                                                                                                                  h_str_in_re h_seq_nth h_set_union h_set_inter
-                                                                                                                                                                                                                                                                                  h_set_minus h_set_member h_set_subset h_strings_itos_result
-                                                                                                                                                                                                                                                                                  h_strings_num_occur h_strings_num_occur_re
-                                                                                                                                                                                                                                                                                  h_array_deq_diff h_sets_deq_diff
-                                                                                                                                                                                                                                                                                  h_tuple h_set_insert h_forall h_exists)
-                                                                                                                                                                                                                                                                                (eo_to_smt_apply_apply_uop_generic_of_not_smt_binop
-                                                                                                                                                                                                                                                                                  h_and h_or h_imp h_xor h_eq h_plus h_neg h_mult
-                                                                                                                                                                                                                                                                                  h_lt h_leq h_gt h_geq h_div h_mod h_select
-                                                                                                                                                                                                                                                                                  h_divisible h_div_total h_mod_total h_qdiv_total h_qdiv h_concat
-                                                                                                                                                                                                                                                                                  h_bvand h_bvor h_bvnand h_bvnor h_bvxor h_bvxnor
-                                                                                                                                                                                                                                                                                  h_bvcomp h_bvadd h_bvmul h_bvudiv h_bvurem h_bvsub
-                                                                                                                                                                                                                                                                                  h_bvsdiv h_bvsrem h_bvsmod h_bvshl h_bvlshr
-                                                                                                                                                                                                                                                                                  h_bvashr h_bvult h_bvule h_bvugt h_bvuge h_bvslt
-                                                                                                                                                                                                                                                                                  h_bvsle h_bvsgt h_bvsge h_bvuaddo h_bvsaddo
-                                                                                                                                                                                                                                                                                  h_bvumulo h_bvsmulo h_bvusubo h_bvssubo h_bvsdivo
-                                                                                                                                                                                                                                                                                  h_bvultbv h_bvsltbv h_from_bools h_strings_deq_diff
-                                                                                                                                                                                                                                                                                  h_strings_stoi_result h_str_concat h_str_contains h_str_at
-                                                                                                                                                                                                                                                                                  h_str_prefixof h_str_suffixof h_str_lt h_str_leq
-                                                                                                                                                                                                                                                                                  h_re_range h_re_concat h_re_inter h_re_union h_re_diff
-                                                                                                                                                                                                                                                                                  h_str_in_re h_seq_nth h_set_union h_set_inter
-                                                                                                                                                                                                                                                                                  h_set_minus h_set_member h_set_subset h_strings_itos_result
-                                                                                                                                                                                                                                                                                  h_strings_num_occur h_strings_num_occur_re
-                                                                                                                                                                                                                                                                                  h_array_deq_diff h_sets_deq_diff
-                                                                                                                                                                                                                                                                                  h_tuple h_set_insert h_forall h_exists)
-                                                                                                                                                                                                                                                                                hFTrans hSubstTrans
-                                                                                                                                                                                                                                                                                (substitute_simul_rec_uop_eq_self op xs ss bvs
-                                                                                                                                                                                                                                                                                  hXsEnv hBvsEnv hSsTrans)
-                                                                                                                                                                                                                                                                                hGlobals
-                                                                                                                                                                                                                                                                                (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
-                                                                                                                                                                                                                                                                                (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
+                                                                                                                                                                                                                                                                            · by_cases h_lambda : op = UserOp.lambda
+                                                                                                                                                                                                                                                                              · subst op
+                                                                                                                                                                                                                                                                                exact substFalse_eval_lambda_nonbinder x1 a xs ss bvs hisr hxs hss hbvs
+                                                                                                                                                                                                                                                                                  (fun q v vs hEq => hBinder ⟨q, v, vs, hEq⟩) hFTrans hSubstTrans
+                                                                                                                                                                                                                                                                                  (substitute_simul_rec_uop_eq_self UserOp.lambda xs ss bvs
+                                                                                                                                                                                                                                                                                    hXsEnv hBvsEnv hSsTrans)
+                                                                                                                                                                                                                                                                                  hRecArg
+                                                                                                                                                                                                                                                                              · exact substFalse_eval_binary_uop_generic_apply op x1 a xs ss bvs
+                                                                                                                                                                                                                                                                                  hisr hxs hss hbvs
+                                                                                                                                                                                                                                                                                  (fun q v vs hEq => hBinder ⟨q, v, vs, hEq⟩)
+                                                                                                                                                                                                                                                                                  (eo_to_smt_apply_apply_uop_generic_of_not_smt_binop
+                                                                                                                                                                                                                                                                                    h_and h_or h_imp h_xor h_eq h_plus h_neg h_mult
+                                                                                                                                                                                                                                                                                    h_lt h_leq h_gt h_geq h_div h_mod h_select
+                                                                                                                                                                                                                                                                                    h_divisible h_div_total h_mod_total h_qdiv_total h_qdiv h_concat
+                                                                                                                                                                                                                                                                                    h_bvand h_bvor h_bvnand h_bvnor h_bvxor h_bvxnor
+                                                                                                                                                                                                                                                                                    h_bvcomp h_bvadd h_bvmul h_bvudiv h_bvurem h_bvsub
+                                                                                                                                                                                                                                                                                    h_bvsdiv h_bvsrem h_bvsmod h_bvshl h_bvlshr
+                                                                                                                                                                                                                                                                                    h_bvashr h_bvult h_bvule h_bvugt h_bvuge h_bvslt
+                                                                                                                                                                                                                                                                                    h_bvsle h_bvsgt h_bvsge h_bvuaddo h_bvsaddo
+                                                                                                                                                                                                                                                                                    h_bvumulo h_bvsmulo h_bvusubo h_bvssubo h_bvsdivo
+                                                                                                                                                                                                                                                                                    h_bvultbv h_bvsltbv h_from_bools h_strings_deq_diff
+                                                                                                                                                                                                                                                                                    h_strings_stoi_result h_str_concat h_str_contains h_str_at
+                                                                                                                                                                                                                                                                                    h_str_prefixof h_str_suffixof h_str_lt h_str_leq
+                                                                                                                                                                                                                                                                                    h_re_range h_re_concat h_re_inter h_re_union h_re_diff
+                                                                                                                                                                                                                                                                                    h_str_in_re h_seq_nth h_set_union h_set_inter
+                                                                                                                                                                                                                                                                                    h_set_minus h_set_member h_set_subset h_strings_itos_result
+                                                                                                                                                                                                                                                                                    h_strings_num_occur h_strings_num_occur_re
+                                                                                                                                                                                                                                                                                    h_array_deq_diff h_sets_deq_diff
+                                                                                                                                                                                                                                                                                    h_tuple h_set_insert h_forall h_exists h_lambda)
+                                                                                                                                                                                                                                                                                  (eo_to_smt_apply_apply_uop_generic_of_not_smt_binop
+                                                                                                                                                                                                                                                                                    h_and h_or h_imp h_xor h_eq h_plus h_neg h_mult
+                                                                                                                                                                                                                                                                                    h_lt h_leq h_gt h_geq h_div h_mod h_select
+                                                                                                                                                                                                                                                                                    h_divisible h_div_total h_mod_total h_qdiv_total h_qdiv h_concat
+                                                                                                                                                                                                                                                                                    h_bvand h_bvor h_bvnand h_bvnor h_bvxor h_bvxnor
+                                                                                                                                                                                                                                                                                    h_bvcomp h_bvadd h_bvmul h_bvudiv h_bvurem h_bvsub
+                                                                                                                                                                                                                                                                                    h_bvsdiv h_bvsrem h_bvsmod h_bvshl h_bvlshr
+                                                                                                                                                                                                                                                                                    h_bvashr h_bvult h_bvule h_bvugt h_bvuge h_bvslt
+                                                                                                                                                                                                                                                                                    h_bvsle h_bvsgt h_bvsge h_bvuaddo h_bvsaddo
+                                                                                                                                                                                                                                                                                    h_bvumulo h_bvsmulo h_bvusubo h_bvssubo h_bvsdivo
+                                                                                                                                                                                                                                                                                    h_bvultbv h_bvsltbv h_from_bools h_strings_deq_diff
+                                                                                                                                                                                                                                                                                    h_strings_stoi_result h_str_concat h_str_contains h_str_at
+                                                                                                                                                                                                                                                                                    h_str_prefixof h_str_suffixof h_str_lt h_str_leq
+                                                                                                                                                                                                                                                                                    h_re_range h_re_concat h_re_inter h_re_union h_re_diff
+                                                                                                                                                                                                                                                                                    h_str_in_re h_seq_nth h_set_union h_set_inter
+                                                                                                                                                                                                                                                                                    h_set_minus h_set_member h_set_subset h_strings_itos_result
+                                                                                                                                                                                                                                                                                    h_strings_num_occur h_strings_num_occur_re
+                                                                                                                                                                                                                                                                                    h_array_deq_diff h_sets_deq_diff
+                                                                                                                                                                                                                                                                                    h_tuple h_set_insert h_forall h_exists h_lambda)
+                                                                                                                                                                                                                                                                                  hFTrans hSubstTrans
+                                                                                                                                                                                                                                                                                  (substitute_simul_rec_uop_eq_self op xs ss bvs
+                                                                                                                                                                                                                                                                                    hXsEnv hBvsEnv hSsTrans)
+                                                                                                                                                                                                                                                                                  hGlobals
+                                                                                                                                                                                                                                                                                  (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
+                                                                                                                                                                                                                                                                                  (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
                                                                                         | Apply h x0 =>
                                                                                             cases h with
                                                                                             | UOp op =>
@@ -10521,13 +10822,15 @@ theorem substitute_simul_eval_nonbinder
                                                                                                                               h_str_update h_str_replace h_str_replace_all
                                                                                                                               h_str_replace_re h_str_replace_re_all h_str_indexof_re
                                                                                                                               h_strings_occur_index
-                                                                                                                              h_strings_occur_index_re)
+                                                                                                                              h_strings_occur_index_re
+                (fun h => hNoSpine (by subst h; exact ⟨_, _, _, TranslationProofs.LamSpine.app _ (TranslationProofs.LamSpine.lam _ _)⟩)))
                                                                                                                             (eo_to_smt_apply_apply_apply_uop_generic_of_not_smt_triop
                                                                                                                               h_ite h_store h_bvite h_str_substr h_str_indexof
                                                                                                                               h_str_update h_str_replace h_str_replace_all
                                                                                                                               h_str_replace_re h_str_replace_re_all h_str_indexof_re
                                                                                                                               h_strings_occur_index
-                                                                                                                              h_strings_occur_index_re)
+                                                                                                                              h_strings_occur_index_re
+                (fun h => hNoSpine (by subst h; exact ⟨_, _, _, TranslationProofs.LamSpine.app _ (TranslationProofs.LamSpine.lam _ _)⟩)))
                                                                                                                             hFTrans hSubstTrans
                                                                                                                             (substitute_simul_rec_uop_eq_self op xs ss bvs
                                                                                                                               hXsEnv hBvsEnv hSsTrans)
@@ -10694,6 +10997,7 @@ theorem substitute_simul_eval_nonbinder
                                                                                                         hisr hxs hss hbvs
                                                                                                         h_strings_replace_all_result
                                                                                                         h_strings_replace_re_all_result
+                                                                                                        (fun h => hNoSpine (isLamSpine_of_head_apply2 _ _ _ (by simpa [TranslationProofs.eoSpineHead] using h)))
                                                                                                         (fun q v vs hEq => hBinder ⟨q, v, vs, hEq⟩)
                                                                                                         hFTrans hSubstTrans
                                                                                                         hGlobals
@@ -10895,6 +11199,307 @@ theorem substitute_simul_eval_nonbinder
                                                                                           hFTrans hSubstTrans
                                                                                           hGlobals
                                                                                           (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
+
+/-! ### Lambda spines
+
+A lambda applied to arguments is not a binder for substitution at its
+applications, only at the lambda itself: substitution goes into the body under
+the lambda's variables, and into each argument. Its translation is the `let`
+of the arguments around the body (or, applied to more arguments than it binds,
+the SMT application of that `let`), so evaluation reduces to the argument IHs
+and to the body IH in the models the `let` pushes. -/
+
+/-- Pushing values for a lambda's variables keeps the substitution relation,
+with the variables added to the bound ones. -/
+theorem substFalseRel_pushL
+    (xs ss : Term) {xsVars : List EoVarKey}
+    (hXsEnv : EoVarEnvPerm xs xsVars)
+    (vsFull : List (native_String × Term))
+    (hNoFree : vsFull ≠ [] ->
+      __contains_atomic_term_list_free_rec ss (LamSpineSupport.eoVarList vsFull)
+        Term.__eo_List_nil = Term.Boolean false)
+    (hSsTrans : EoListAllHaveSmtTranslation ss)
+    (hEntryTrans :
+      ∀ (s : native_String) (T : Term),
+        __eo_is_neg (__eo_list_find Term.__eo_List_cons xs
+          (Term.Var (Term.String s) T)) = Term.Boolean false ->
+        eoHasSmtTranslation
+          (__assoc_nil_nth Term.__eo_List_cons ss
+            (__eo_list_find Term.__eo_List_cons xs
+              (Term.Var (Term.String s) T))))
+    (hMappedWf :
+      ∀ (s : native_String) (T : Term),
+        __eo_is_neg (__eo_list_find Term.__eo_List_cons xs
+          (Term.Var (Term.String s) T)) = Term.Boolean false ->
+        __smtx_type_wf (__eo_to_smt_type T) = true) :
+    ∀ (vs : List (native_String × Term)) (vals : List SmtValue) (bvs : Term)
+      {bvsVars : List EoVarKey} {M N : SmtModel},
+      vs.length = vals.length ->
+      (∀ p ∈ vs, p ∈ vsFull) ->
+      EoVarEnvPerm bvs bvsVars ->
+      SubstituteSupport.SubstFalseRel M N xs ss bvs ->
+      ∀ bvsFull, EoVarEnvPerm bvsFull (vs.reverse ++ bvsVars) ->
+      SubstituteSupport.SubstFalseRel
+        (LamSpineSupport.pushL M (LamSpineSupport.keyVals vs vals))
+        (LamSpineSupport.pushL N (LamSpineSupport.keyVals vs vals)) xs ss bvsFull
+  | [], vals, bvs, bvsVars, M, N, _, _, hBvsEnv, hRel, bvsFull, hFull => by
+      simp only [LamSpineSupport.keyVals, LamSpineSupport.pushL]
+      exact substFalseRel_of_bvs_perm hBvsEnv (by simpa using hFull) hRel
+  | (s, T) :: vs, [], bvs, bvsVars, M, N, hlen, _, _, _, _, _ => by
+      simp at hlen
+  | (s, T) :: vs, v :: vals, bvs, bvsVars, M, N, hlen, hSub, hBvsEnv, hRel, bvsFull, hFull => by
+      have hMemExcept : (s, T) ∈ vsFull := hSub (s, T) List.mem_cons_self
+      have hBvsConsEnv :
+          EoVarEnvPerm
+            (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) bvs)
+            ((s, T) :: bvsVars) :=
+        EoVarEnvPerm.cons hBvsEnv
+      have hRelPush :
+          SubstituteSupport.SubstFalseRel
+            (native_model_push M s (__eo_to_smt_type T) v)
+            (native_model_push N s (__eo_to_smt_type T) v) xs ss
+            (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) bvs) :=
+        SubstituteSupport.substFalseRel_push M N xs ss bvs (LamSpineSupport.eoVarList vsFull)
+          s T v hBvsEnv (EoVarEnvPerm.of_exact (LamSpineSupport.eoVarEnv_eoVarList vsFull))
+          hMemExcept (hNoFree (List.ne_nil_of_mem hMemExcept)) hSsTrans
+          (fun s' T' _hFree hMapped => hEntryTrans s' T' hMapped)
+          (fun s' T' hFree hMapped hKey => by
+            have hNotMem : (s', T') ∉ (s, T) :: bvsVars :=
+              EoVarEnvPerm.not_mem_of_find_neg_true hBvsConsEnv hFree
+            apply hNotMem
+            apply EoVarKey.mem_of_toSmt_mem_map_of_type_wf (hMappedWf s' T' hMapped)
+            have hPair : (s', __eo_to_smt_type T') = (s, __eo_to_smt_type T) := by
+              injection hKey with _ hName hTy
+              exact Prod.ext hName hTy
+            rw [hPair]
+            exact List.mem_map.2 ⟨(s, T), List.Mem.head _, rfl⟩)
+          hRel
+      simp only [LamSpineSupport.keyVals, LamSpineSupport.pushL]
+      exact substFalseRel_pushL xs ss hXsEnv vsFull hNoFree hSsTrans hEntryTrans hMappedWf
+        vs vals _ (by simpa using hlen) (fun p hp => hSub p (List.mem_cons_of_mem _ hp))
+        hBvsConsEnv hRelPush
+        bvsFull (by simpa [List.reverse_cons, List.append_assoc] using hFull)
+
+/-- The model a typed `let` pushes is well formed. -/
+theorem model_wf_push_bindings_of_typed (M : SmtModel) (hM : model_wf M)
+    {bs : SmtBindings} {x : SmtTerm}
+    (ht : term_has_non_none_type (SmtTerm.bind bs x)) :
+    model_wf (__smtx_model_eval.push_bindings M M bs) := by
+  have hVals : ∀ s T v, SmtBindings.Mem bs s T v ->
+      __smtx_type_wf T = true ∧
+        __smtx_typeof_value (__smtx_model_eval M v) = T ∧
+        value_canonical M.usortDom (__smtx_model_eval M v) := by
+    intro s T v hm
+    have hvNN : term_has_non_none_type v := bind_binding_non_none_of_non_none ht hm
+    exact ⟨bind_binding_type_wf_of_non_none ht hm,
+      (smt_model_eval_preserves_type_of_non_none M hM v hvNN).trans
+        (bind_binding_type_of_non_none ht hm),
+      Smtm.model_eval_canonical M hM v hvNN⟩
+  exact model_total_typed_push_bindings M bs M hM rfl hVals
+
+/-- A lambda applied to as many arguments as it binds variables, against its
+substitution: both `let`s push the same values, so the body IH applies. -/
+theorem substFalse_eval_spine_full
+    (xs ss : Term) {M N : SmtModel}
+    (vs : List (native_String × Term)) (r : List Term) (σ : Term -> Term)
+    (body body' bvsFull : Term)
+    (hlen : r.length = vs.length)
+    (hM : model_wf M) (hN : model_wf N)
+    (hTy : term_has_non_none_type
+      (SmtTerm.bind (TranslationProofs.lamBindings (LamSpineSupport.eoVarList vs) r SmtBindings.nil)
+        (__eo_to_smt body)))
+    (hTy' : term_has_non_none_type
+      (SmtTerm.bind (TranslationProofs.lamBindings (LamSpineSupport.eoVarList vs) (r.map σ) SmtBindings.nil)
+        (__eo_to_smt body')))
+    (hArgs : ∀ x ∈ r,
+      __smtx_model_eval M (__eo_to_smt (σ x)) = __smtx_model_eval N (__eo_to_smt x))
+    (hRelPushed : ∀ vals : List SmtValue, vs.length = vals.length ->
+      SubstituteSupport.SubstFalseRel
+        (LamSpineSupport.pushL M (LamSpineSupport.keyVals vs vals))
+        (LamSpineSupport.pushL N (LamSpineSupport.keyVals vs vals)) xs ss bvsFull)
+    (hBody : ∀ {M' N' : SmtModel}, model_wf M' -> model_wf N' ->
+      SubstituteSupport.SubstFalseRel M' N' xs ss bvsFull ->
+      __smtx_model_eval M' (__eo_to_smt body') = __smtx_model_eval N' (__eo_to_smt body)) :
+    __smtx_model_eval M
+        (SmtTerm.bind (TranslationProofs.lamBindings (LamSpineSupport.eoVarList vs) (r.map σ) SmtBindings.nil)
+          (__eo_to_smt body')) =
+      __smtx_model_eval N
+        (SmtTerm.bind (TranslationProofs.lamBindings (LamSpineSupport.eoVarList vs) r SmtBindings.nil)
+          (__eo_to_smt body)) := by
+  have hWfM := model_wf_push_bindings_of_typed M hM hTy'
+  have hWfN := model_wf_push_bindings_of_typed N hN hTy
+  have hVals :
+      (r.map σ).reverse.map (fun x => __smtx_model_eval M (__eo_to_smt x)) =
+        r.reverse.map (fun x => __smtx_model_eval N (__eo_to_smt x)) := by
+    rw [List.map_reverse, List.map_reverse, List.map_map]
+    congr 1
+    exact List.map_congr_left (fun x hx => hArgs x hx)
+  rw [LamSpineSupport.push_bindings_lamBindings_eoVarList M vs (r.map σ) (by simp [hlen]),
+    hVals] at hWfM
+  rw [LamSpineSupport.push_bindings_lamBindings_eoVarList N vs r hlen] at hWfN
+  rw [smtx_model_eval_bind_eq, smtx_model_eval_bind_eq,
+    LamSpineSupport.push_bindings_lamBindings_eoVarList M vs (r.map σ) (by simp [hlen]),
+    hVals, LamSpineSupport.push_bindings_lamBindings_eoVarList N vs r hlen]
+  exact hBody hWfM hWfN (hRelPushed _ (by simp [hlen]))
+
+theorem generic_apply_eval_mkSpine {us body : Term} (a : Term) (r : List Term) :
+    generic_apply_eval
+      (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r))
+      (__eo_to_smt a) := by
+  rcases (LamSpineSupport.lamSpine_mkSpine us body r).eo_to_smt_bind_or_apply with
+    ⟨bs, b, hg⟩ | ⟨g, x, hg⟩ <;> rw [hg] <;>
+    exact generic_apply_eval_of_non_datatype_head
+      (by intro s d i j h; cases h) (by intro s d i h; cases h)
+
+/-- A spine against its substitution, applied to at least as many arguments as
+the lambda binds: beyond the `let`, each application is the SMT application of
+the shorter spine. -/
+theorem substFalse_eval_spine_apps
+    {M N : SmtModel} (hGlobals : model_agrees_on_globals M N)
+    (us us' body body' : Term) (m : Nat) (hv : TranslationProofs.lamVars us m = true)
+    (hv' : TranslationProofs.lamVars us' m = true) (σ : Term -> Term)
+    (hFull : ∀ rm : List Term, rm.length = m ->
+      (∀ x ∈ rm,
+        __smtx_model_eval M (__eo_to_smt (σ x)) = __smtx_model_eval N (__eo_to_smt x)) ->
+      term_has_non_none_type
+        (SmtTerm.bind (TranslationProofs.lamBindings us rm SmtBindings.nil) (__eo_to_smt body)) ->
+      term_has_non_none_type
+        (SmtTerm.bind (TranslationProofs.lamBindings us' (rm.map σ) SmtBindings.nil) (__eo_to_smt body')) ->
+      __smtx_model_eval M
+          (SmtTerm.bind (TranslationProofs.lamBindings us' (rm.map σ) SmtBindings.nil) (__eo_to_smt body')) =
+        __smtx_model_eval N
+          (SmtTerm.bind (TranslationProofs.lamBindings us rm SmtBindings.nil) (__eo_to_smt body))) :
+    ∀ r : List Term, m ≤ r.length ->
+      (∀ x ∈ r,
+        __smtx_model_eval M (__eo_to_smt (σ x)) = __smtx_model_eval N (__eo_to_smt x)) ->
+      __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r)) ≠
+        SmtType.None ->
+      __smtx_typeof (__eo_to_smt
+          (LamSpineSupport.mkSpine (LamSpineSupport.lamT us' body') (r.map σ))) ≠
+        SmtType.None ->
+      __smtx_model_eval M
+          (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us' body') (r.map σ))) =
+        __smtx_model_eval N
+          (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r))
+  | r, hm, hArgs, hTy, hTy' => by
+      by_cases hmr : m = r.length
+      · subst hmr
+        have hv'' : TranslationProofs.lamVars us' (r.map σ).length = true := by simpa using hv'
+        rw [(LamSpineSupport.lamSpine_mkSpine us body r).eo_to_smt_full hv] at hTy ⊢
+        rw [(LamSpineSupport.lamSpine_mkSpine us' body' (r.map σ)).eo_to_smt_full hv''] at hTy' ⊢
+        exact hFull r rfl hArgs hTy hTy'
+      · cases r with
+        | nil => simp at hm hmr; omega
+        | cons a r =>
+            simp only [List.length_cons] at hm hmr
+            have hlt : m < r.length + 1 := by omega
+            have hlt' : m < (r.map σ).length + 1 := by simpa using hlt
+            change __smtx_model_eval M (__eo_to_smt
+                (LamSpineSupport.mkSpine (LamSpineSupport.lamT us' body') (σ a :: r.map σ))) = _
+            change __smtx_typeof (__eo_to_smt
+                (LamSpineSupport.mkSpine (LamSpineSupport.lamT us' body') (σ a :: r.map σ))) ≠ _
+              at hTy'
+            rw [LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv a r hlt] at hTy ⊢
+            rw [LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv' (σ a) (r.map σ) hlt'] at hTy' ⊢
+            rw [LamSpineSupport.smtx_typeof_mkSpine_apply] at hTy hTy'
+            obtain ⟨A, B, hF, hX, hA, _⟩ := typeof_apply_non_none_cases hTy
+            obtain ⟨A', B', hF', hX', hA', _⟩ := typeof_apply_non_none_cases hTy'
+            have hFNN : __smtx_typeof (__eo_to_smt
+                (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r)) ≠ SmtType.None := by
+              rcases hF with hF | hF <;> rw [hF] <;> simp
+            have hF'NN : __smtx_typeof (__eo_to_smt
+                (LamSpineSupport.mkSpine (LamSpineSupport.lamT us' body') (r.map σ))) ≠
+                  SmtType.None := by
+              rcases hF' with hF' | hF' <;> rw [hF'] <;> simp
+            have ih := substFalse_eval_spine_apps hGlobals us us' body body' m hv hv' σ hFull r
+              (by omega) (fun x hx => hArgs x (List.mem_cons_of_mem _ hx)) hFNN hF'NN
+            exact smtx_model_eval_apply_cross_eq_of_eval_eq hGlobals
+              (generic_apply_eval_mkSpine (σ a) (r.map σ)) (generic_apply_eval_mkSpine a r)
+              ih (hArgs a List.mem_cons_self)
+termination_by r => r.length
+
+/-- The lambda-spine case of the substitution evaluation induction. -/
+theorem substFalse_eval_spine
+    (f a xs ss bvs : Term)
+    {xsVars bvsVars : List EoVarKey}
+    {M N : SmtModel}
+    (hXsEnv : EoVarEnvPerm xs xsVars)
+    (hBvsEnv : EoVarEnvPerm bvs bvsVars)
+    (hSsTrans : EoListAllHaveSmtTranslation ss)
+    (hEntryTrans :
+      ∀ (s : native_String) (T : Term),
+        __eo_is_neg (__eo_list_find Term.__eo_List_cons xs
+          (Term.Var (Term.String s) T)) = Term.Boolean false ->
+        eoHasSmtTranslation
+          (__assoc_nil_nth Term.__eo_List_cons ss
+            (__eo_list_find Term.__eo_List_cons xs
+              (Term.Var (Term.String s) T))))
+    (hMappedWf :
+      ∀ (s : native_String) (T : Term),
+        __eo_is_neg (__eo_list_find Term.__eo_List_cons xs
+          (Term.Var (Term.String s) T)) = Term.Boolean false ->
+        __smtx_type_wf (__eo_to_smt_type T) = true)
+    (hSpine : TranslationProofs.IsLamSpine (Term.Apply f a))
+    (hBinder : ¬ IsBinderHead f)
+    (hFTrans : RuleProofs.eo_has_smt_translation (Term.Apply f a))
+    (hSubstTrans : RuleProofs.eo_has_smt_translation
+      (__substitute_simul_rec (Term.Boolean false) (Term.Apply f a) xs ss bvs))
+    (hM : model_wf M)
+    (hN : model_wf N)
+    (hRel : SubstituteSupport.SubstFalseRel M N xs ss bvs)
+    (hRec :
+      ∀ {G bvs' : Term} {bvsVars' : List EoVarKey} {M' N' : SmtModel},
+        sizeOf G < sizeOf (Term.Apply f a) ->
+        EoVarEnvPerm bvs' bvsVars' ->
+        RuleProofs.eo_has_smt_translation G ->
+        RuleProofs.eo_has_smt_translation
+          (__substitute_simul_rec (Term.Boolean false) G xs ss bvs') ->
+        model_wf M' ->
+        model_wf N' ->
+        SubstituteSupport.SubstFalseRel M' N' xs ss bvs' ->
+        __smtx_model_eval M'
+            (__eo_to_smt
+              (__substitute_simul_rec (Term.Boolean false) G xs ss bvs')) =
+          __smtx_model_eval N' (__eo_to_smt G)) :
+    __smtx_model_eval M
+        (__eo_to_smt (__substitute_simul_rec (Term.Boolean false) (Term.Apply f a) xs ss bvs)) =
+      __smtx_model_eval N (__eo_to_smt (Term.Apply f a)) := by
+  have hxs : xs ≠ Term.Stuck := hXsEnv.ne_stuck
+  have hss : ss ≠ Term.Stuck := eoListAllHaveSmtTranslation_ne_stuck hSsTrans
+  obtain ⟨us, body, r, hs⟩ := hSpine
+  have hSize := hs.sizeOf_lt
+  have hFNN : __smtx_typeof (__eo_to_smt (Term.Apply f a)) ≠ SmtType.None := hFTrans
+  obtain ⟨-, hBodyNN, hArgsNN⟩ := hs.parts_typed_any hFNN
+  obtain ⟨m, hv, hm⟩ := LamSpineSupport.spine_args_ge_vars hs hFNN
+  obtain ⟨vs, hvlen, rfl⟩ := LamSpineSupport.lamVars_exists us m hv
+  have hEqF := LamSpineSupport.LamSpine.eq_mkSpine hs
+  have hSubNe := RuleProofs.term_ne_stuck_of_has_smt_translation _ hSubstTrans
+  rw [hEqF] at hFNN hSubNe hSubstTrans ⊢
+  obtain ⟨bvsFull, hFullEnv, hNoFree, hSubEq⟩ :=
+    substitute_simul_rec_spine xs ss bvs hBvsEnv hxs hss vs body hBodyNN r hArgsNN hSubNe
+  rw [hSubEq] at hSubstTrans ⊢
+  have hF'NN := hSubstTrans
+  obtain ⟨-, hBody'NN, hArgs'NN⟩ :=
+    (LamSpineSupport.lamSpine_mkSpine _ _ _).parts_typed_any hF'NN
+  have hArgsEq : ∀ x ∈ r,
+      __smtx_model_eval M
+          (__eo_to_smt (__substitute_simul_rec (Term.Boolean false) x xs ss bvs)) =
+        __smtx_model_eval N (__eo_to_smt x) := fun x hx =>
+    hRec (hSize.2 x hx) hBvsEnv (hArgsNN x hx)
+      (hArgs'NN _ (List.mem_map_of_mem hx)) hM hN hRel
+  exact substFalse_eval_spine_apps hRel.globals (LamSpineSupport.eoVarList vs)
+    (LamSpineSupport.eoVarList vs) body
+    (__substitute_simul_rec (Term.Boolean false) body xs ss bvsFull) m hv hv
+    (fun x => __substitute_simul_rec (Term.Boolean false) x xs ss bvs)
+    (fun rm hrm hArgsRm hTy hTy' =>
+      substFalse_eval_spine_full xs ss vs rm _ body _ bvsFull (by omega) hM hN hTy hTy'
+        hArgsRm
+        (fun vals hl =>
+          substFalseRel_pushL xs ss hXsEnv vs hNoFree hSsTrans hEntryTrans hMappedWf
+            vs vals bvs hl (fun p hp => hp) hBvsEnv hRel bvsFull hFullEnv)
+        (fun hM' hN' hRel' => hRec hSize.1 hFullEnv hBodyNN hBody'NN hM' hN' hRel'))
+    r hm hArgsEq hFNN hF'NN
+
 
 /--
 General substitution–evaluation induction (substitution mode, `isr = false`),
@@ -11148,9 +11753,15 @@ theorem substFalse_eval_gen_lt
                     __smtx_model_eval N (__eo_to_smt b) :=
               fun {b} _hSubterm hb ht hst =>
                 hRec hb hBvsEnv ht hst hM hN hRel
-            exact substitute_simul_eval_nonbinder f a xs ss bvs
-              hXsEnv hBvsEnv hSsTrans hBinder hFTrans hSubstTrans
-              hM hN hRel.globals hRecArg
+            by_cases hSpine : TranslationProofs.IsLamSpine (Term.Apply f a)
+            · exact substFalse_eval_spine f a xs ss bvs
+                hXsEnv hBvsEnv hSsTrans hEntryTrans hMappedWf hSpine hBinder
+                hFTrans hSubstTrans hM hN hRel
+                (fun {G bvs' bvsVars' M' N'} hGLt hBvsEnv' hGTrans hGSubstTrans hM' hN' hRel' =>
+                  hRec hGLt hBvsEnv' hGTrans hGSubstTrans hM' hN' hRel')
+            · exact substitute_simul_eval_nonbinder f a xs ss bvs
+                hXsEnv hBvsEnv hSsTrans hBinder hSpine hFTrans hSubstTrans
+                hM hN hRel.globals hRecArg
       case Var name S =>
           by_cases hString : ∃ s, name = Term.String s
           · rcases hString with ⟨s, rfl⟩

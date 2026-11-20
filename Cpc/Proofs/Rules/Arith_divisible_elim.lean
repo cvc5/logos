@@ -44,14 +44,14 @@ private theorem smtx_eval_divisible_term_eq
     __smtx_model_eval M (SmtTerm.divisible n t) =
       __smtx_model_eval_divisible
         (__smtx_model_eval M n) (__smtx_model_eval M t) := by
-  rw [__smtx_model_eval.eq_28]
+  rw [__smtx_model_eval.eq_30]
 
 private theorem smtx_eval_mod_total_term_eq
     (M : SmtModel) (t n : SmtTerm) :
     __smtx_model_eval M (SmtTerm.mod_total t n) =
       __smtx_model_eval_mod_total
         (__smtx_model_eval M t) (__smtx_model_eval M n) := by
-  rw [__smtx_model_eval.eq_32]
+  rw [__smtx_model_eval.eq_34]
 
 private theorem smtx_typeof_of_eo_int
     (a : Term)

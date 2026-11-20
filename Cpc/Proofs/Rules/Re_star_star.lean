@@ -114,7 +114,7 @@ private theorem facts___eo_prog_re_star_star_impl
           (__eo_to_smt (Term.Apply Term.re_mult (Term.Apply Term.re_mult a1))) =
         __smtx_model_eval M (__eo_to_smt (Term.Apply Term.re_mult a1)) := by
     rw [hOuterTranslate, hInnerTranslate]
-    rw [__smtx_model_eval.eq_108, __smtx_model_eval.eq_108]
+    rw [__smtx_model_eval.eq_110, __smtx_model_eval.eq_110]
     exact smtx_model_eval_re_star_star (__smtx_model_eval M (__eo_to_smt a1))
   rw [hProg]
   exact RuleProofs.eo_interprets_eq_of_rel M

@@ -1084,7 +1084,7 @@ private theorem str_replace_re_all_eval_valid_properties
         (native_pack_string
           (native_str_replace_re_all (native_unpack_string src) rv
             (native_unpack_string repl)))
-    rw [__smtx_model_eval.eq_102, hSEval, hREval, hTEval]
+    rw [__smtx_model_eval.eq_104, hSEval, hREval, hTEval]
     simp only [__smtx_model_eval_str_replace_re_all]
     have hSrcElem : __smtx_elem_typeof_seq_value src = SmtType.Char :=
       elem_typeof_seq_value_of_typeof_seq_value hSrcTy

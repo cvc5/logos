@@ -2326,13 +2326,43 @@ decreasing_by
   :typeof ("ite" ("Teq" ($smtx_typeof F) Bool) ($smtx_typeof_guard_wf T T) none)
   :value ("eval_choice" M s T F))
 
-; bind s:T := t in F evaluates F in the model extended with s bound to the
-; value of t. Together with choice, this is used to express (skolemized)
-; nested quantifiers. It has the type of F, provided t has type T and T is
-; well-formed.
-(define-symbol bind ((s <string>) (T SmtType) (t SmtTerm) (F SmtTerm))
-  :typeof ("ite" ("Teq" ($smtx_typeof t) T) ($smtx_typeof_guard_wf T ($smtx_typeof F)) none)
-  :value ("eval_bind" M s T t F))
+; A lambda still waiting for the argument it binds to s:T: lam s:T. F. It is
+; what a lambda of the input transforms into until it is applied, see
+; $eo_to_smt_apply in Cpc.eos, and has no type and no value of its own, so a
+; lambda applied to too few arguments has none either.
+(define-symbol lam ((s <string>) (T SmtType) (F SmtTerm))
+  :typeof none
+  :value smt.not_value)
+
+; The bindings of a let: each binds a name, at the type it is declared with,
+; to a term.
+(declare-constructor nil () :builds SmtBindings)
+
+(declare-constructor cons ((s <string>) (T SmtType) (t SmtTerm) (bs SmtBindings))
+  :builds SmtBindings)
+
+; The type of a let whose body is of type U: each bound term is of the type its
+; variable is declared with, which is well formed.
+(program $smtx_typeof_bindings
+  ((s <string>) (T SmtType) (t SmtTerm) (bs SmtBindings) (U SmtType))
+  :signature (SmtBindings SmtType) SmtType
+  (
+  (($smtx_typeof_bindings $sbd_nil U) U)
+  (($smtx_typeof_bindings ($sbd_cons s T t bs) U)
+    ("ite" ("Teq" ($smtx_typeof t) T) ($smtx_typeof_guard_wf T ($smtx_typeof_bindings bs U)) none))
+  )
+)
+
+; bind bs in F is a let: it evaluates F in the model extended with the
+; bindings bs, in parallel: every bound term is evaluated in M, the model the
+; let is evaluated in, so none sees another binding of the same let, and a
+; later binding of a name shadows an earlier one. Together with choice, this
+; is used to express (skolemized) nested quantifiers, and with lam it is what
+; a lambda of the input transforms into. It has the type of F, provided each
+; bound term has the type its variable is declared with.
+(define-symbol bind ((bs SmtBindings) (F SmtTerm))
+  :typeof ($smtx_typeof_bindings bs ($smtx_typeof F))
+  :value ("eval_bind" M bs F))
 
 ;-----------------------------------------------------------------------------
 (section "The methods of the embedding")

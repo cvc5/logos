@@ -357,6 +357,7 @@ private theorem eo_is_closed_ternary_uop_args
     (op : UserOp) (x y z : Term)
     (hNotForall : op ≠ UserOp.forall)
     (hNotExists : op ≠ UserOp.exists)
+    (hNotLambda : op ≠ UserOp.lambda)
     (hXNe : x ≠ Term.Stuck) (hYNe : y ≠ Term.Stuck)
     (hZNe : z ≠ Term.Stuck)
     (hClosed :
@@ -367,7 +368,7 @@ private theorem eo_is_closed_ternary_uop_args
       __eo_is_closed y = Term.Boolean true ∧
         __eo_is_closed z = Term.Boolean true := by
   have hParentRec := eo_is_closed_eq_true_rec_nil hClosed
-  have hArgsRec := eo_is_closed_rec_ternary_uop_eq_true_cases
+  have hArgsRec := eo_is_closed_rec_ternary_uop_eq_true_cases (hNotLambda := hNotLambda)
     hNotForall hNotExists
     (hEnv := EoSmtVarEnvPerm.of_exact EoSmtVarEnv.nil) hParentRec
   exact ⟨eo_is_closed_of_rec_nil x hXNe hArgsRec.1,
@@ -647,6 +648,7 @@ theorem str_replace_re_all_reduction_pred_true
         __eo_is_closed y = Term.Boolean true ∧
           __eo_is_closed x = Term.Boolean true := by
     apply eo_is_closed_ternary_uop_args UserOp.str_replace_re_all z y x
+    · decide
     · decide
     · decide
     · exact hZTermNe

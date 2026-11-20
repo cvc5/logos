@@ -2,6 +2,8 @@ module
 
 public import Cpc.Proofs.TypePreservation.Common
 import all Cpc.Proofs.TypePreservation.Common
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 public section
 
@@ -139,11 +141,11 @@ inductive supported_preservation_term : SmtTerm -> Prop
   | choice (s : native_String) (T : SmtType) (body : SmtTerm)
       (ht : term_has_non_none_type (SmtTerm.choice s T body)) :
       supported_preservation_term (SmtTerm.choice s T body)
-  | bind (s : native_String) (T : SmtType) (x1 x2 : SmtTerm)
-      (ht : term_has_non_none_type (SmtTerm.bind s T x1 x2))
-      (hs1 : supported_preservation_term x1)
-      (hs2 : supported_preservation_term x2) :
-      supported_preservation_term (SmtTerm.bind s T x1 x2)
+  | bind (bs : SmtBindings) (x : SmtTerm)
+      (ht : term_has_non_none_type (SmtTerm.bind bs x))
+      (hbs : ∀ s T v, SmtBindings.Mem bs s T v -> supported_preservation_term v)
+      (hs : supported_preservation_term x) :
+      supported_preservation_term (SmtTerm.bind bs x)
   | not {t : SmtTerm}
       (ht : term_has_non_none_type t)
       (hs : supported_preservation_term t) :
@@ -906,14 +908,13 @@ theorem supported_choice_of_non_none
 
 /-- Builds support for `bind` directly from a non-`None` typing judgment. -/
 theorem supported_bind_of_non_none
-    {s : native_String}
-    {T : SmtType}
-    {x1 x2 : SmtTerm}
-    (ht : term_has_non_none_type (SmtTerm.bind s T x1 x2))
-    (hs1 : supported_preservation_term x1)
-    (hs2 : supported_preservation_term x2) :
-    supported_preservation_term (SmtTerm.bind s T x1 x2) :=
-  supported_preservation_term.bind s T x1 x2 ht hs1 hs2
+    {bs : SmtBindings}
+    {x : SmtTerm}
+    (ht : term_has_non_none_type (SmtTerm.bind bs x))
+    (hbs : ∀ s T v, SmtBindings.Mem bs s T v -> supported_preservation_term v)
+    (hs : supported_preservation_term x) :
+    supported_preservation_term (SmtTerm.bind bs x) :=
+  supported_preservation_term.bind bs x ht hbs hs
 
 /-- Computes generic application typing for application heads that are not datatype selectors or testers. -/
 theorem generic_apply_type_of_non_datatype_head
