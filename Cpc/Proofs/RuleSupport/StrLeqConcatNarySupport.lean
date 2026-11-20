@@ -73,9 +73,9 @@ theorem native_str_leq_bool_append_common
       native_str_leq_bool s t := by
   induction pre with
   | nil => rfl
-  | cons c pre ih =>
-      simpa [native_str_leq_bool, native_str_lt,
-        List.cons_lt_cons_iff] using ih
+  | cons c pre _ =>
+      simp [native_str_leq_bool, native_str_lt,
+        List.cons_lt_cons_iff]
 
 theorem native_str_leq_bool_append_both_of_same_len_ne
     (s t sTail tTail : native_String)

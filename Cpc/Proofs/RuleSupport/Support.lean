@@ -17,6 +17,21 @@ open Eo
 open SmtEval
 open Smtm
 
+/-- `native_zlt` as an equation with a proof term, for use in `simp` sets in
+place of `native_zlt` itself.
+
+Since Lean v4.35, letting `simp` unfold `native_zlt` definitionally leaves the
+kernel to re-check `native_zlt x y ≡ decide (x < y)`, and it does so by
+evaluating `Int.decLt`. Against a symbolic `x` and the literal bound
+`4294967296` that evaluation recurses once per unit of the literal, and fails
+with "(kernel) deep recursion detected". Rewriting with this lemma instead
+records the step explicitly, so the kernel never has to reduce the comparison.
+The non-`rfl` proof is deliberate: an `rfl` proof would make `simp` treat this
+as a definitional unfolding again. -/
+theorem SmtEval.native_zlt_eq (x y : native_Int) :
+    native_zlt x y = decide (x < y) :=
+  (native_zlt.eq_1 x y).trans rfl
+
 /-- The checker-facing and rule-proof-facing translation predicates are the
 same property; expose that fact to `simp` at their interface boundary. -/
 @[simp] theorem eoHasSmtTranslation_iff_ruleProofs (t : Term) :
@@ -768,9 +783,9 @@ theorem smtx_eval_choice_term_eq
 /-- Stable rewrite for evaluating SMT let-bindings. -/
 theorem smtx_eval_bind_term_eq
     (M : SmtModel) (s : native_String) (T : SmtType) (x1 x2 : SmtTerm) :
-    __smtx_model_eval M (SmtTerm.bind s T x1 x2) =
-      __smtx_model_eval (native_model_push M s T (__smtx_model_eval M x1)) x2 := by
-  rw [__smtx_model_eval.eq_def] <;> simp only
+    __smtx_model_eval M (SmtTerm.bind (SmtBindings.cons s T x1 SmtBindings.nil) x2) =
+      __smtx_model_eval (native_model_push M s T (__smtx_model_eval M x1)) x2 :=
+  smtx_model_eval_bind_single_eq M s T x1 x2
 
 /-- Stable rewrite for evaluating SMT variables. -/
 theorem smtx_eval_var_term_eq
@@ -790,10 +805,10 @@ theorem smtx_typeof_choice_term_eq
 /-- Stable rewrite for typing SMT let-bindings. -/
 theorem smtx_typeof_bind_term_eq
     (s : native_String) (T : SmtType) (x1 x2 : SmtTerm) :
-    __smtx_typeof (SmtTerm.bind s T x1 x2) =
+    __smtx_typeof (SmtTerm.bind (SmtBindings.cons s T x1 SmtBindings.nil) x2) =
       native_ite (native_Teq (__smtx_typeof x1) T)
         (__smtx_typeof_guard_wf T (__smtx_typeof x2)) SmtType.None := by
-  rw [__smtx_typeof.eq_def] <;> simp only
+  rw [smtx_typeof_bind_eq, smtx_typeof_bindings_cons_eq, smtx_typeof_bindings_nil_eq]
 
 /-- Stable rewrite for typing SMT existential terms. -/
 theorem smtx_typeof_exists_term_eq

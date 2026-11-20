@@ -52,6 +52,11 @@
 (define-macro smt.cons_field (T c)        ($dtc_cons T c))
 (define-macro smt.cons_unit ()            $dtc_unit)
 
+; -- the bindings of a let
+; A let binds a list of names, each at a type, to terms, in parallel.
+(define-macro smt.bindings_cons (s T t bs) ($sbd_cons s T t bs))
+(define-macro smt.bindings_nil ()          $sbd_nil)
+
 ;-----------------------------------------------------------------------------
 (section "The core symbols")
 ;-----------------------------------------------------------------------------
@@ -872,11 +877,11 @@
   :term ($eo_to_smt_tuple_update (smt.typeof t) n t u))
 
 ;-----------------------------------------------------------------------------
-(section "Quantifiers, skolems, and the binder left out")
+(section "Quantifiers, skolems, and lambda")
 ;-----------------------------------------------------------------------------
 
-; Quantifiers, the constants the desugar stage introduces, and the binder the
-; compilation has no place for.
+; Quantifiers, the constants the desugar stage introduces, and the proof-level
+; binder lambda.
 
 ; -- $eo_to_smt_exists
 (program $eo_to_smt_exists
@@ -909,7 +914,7 @@
     (choice s T ($eo_to_smt_exists vs G)))
   (($eo_to_smt_quantifiers_skolemize (eo.list_cons (eo.var (eo.string s) T) vs) G ("n_succ" n))
     ($eo_to_smt_quantifiers_skolemize vs
-      (bind s T (choice s T ($eo_to_smt_exists vs G)) G) n))
+      (bind (smt.bindings_cons s T (choice s T ($eo_to_smt_exists vs G)) smt.bindings_nil) G) n))
   (($eo_to_smt_quantifiers_skolemize vs G t) none)
   )
 )
@@ -920,28 +925,76 @@
 (define-symbol @const ((! i :raw) (! u :type))
   :term ("ite" ($eo_to_smt_nat_is_valid i) (UConst ("const_id" ($eo_to_smt_nat i)) u) none))
 
-; The proof-level binder of CPC, together with the methods and the rule that
-; reduce an application of one. SMT-LIB gives these no meaning at all, so
-; instead of a model each says it is left out of the compilation altogether:
-; the desugar stage drops what an exclusion names, and what never reaches the
-; model-smt stage needs no case at all. See Desugar::echo for what it does with
-; them and Pipeline.defs_excludes in tools/eoc/driver.py for how they are taken
-; from the generated file.
-;
-; No dependency closure is computed, so what dropping the binder would leave
-; behind says so for itself: a method of the signature is written out with
-; define-method and a proof rule with define-rule, and each is left out on the
-; same terms as the symbol.
-(define-symbol lambda ()
-  :exclude)
+; The proof-level binder of CPC. SMT-LIB has no lambda, so a lambda transforms
+; into a let still waiting for its arguments: (lambda (x1 ... xn) t) becomes
+; bind nil (lam x1 T1 ... (lam xn Tn t)), the let of no bindings around the
+; curried chain of the variables it binds. Each application of it, see
+; $eo_to_smt_apply, takes the first lam off the chain and binds its variable
+; to the argument, in the let, after the bindings already made. So a lambda
+; applied to exactly as many arguments as it binds is the parallel let of its
+; body, and one applied to fewer is a let around a lam, which has no type.
+; Since each application is transformed from what its function and its argument
+; transform into, an application of what a saturated lambda returns, or of a
+; term substituted for a variable, is transformed as any other application.
 
-(define-method $get_lambda_type :exclude)
+; The curried chain of the variables of vs around F, the body. A list that is
+; not one of variables is no term.
+; -- $eo_to_smt_lambda_curry
+(program $eo_to_smt_lambda_curry
+  ((s <string>) (T $eo_Term) (vs $eo_List) (F SmtTerm))
+  :signature ($eo_List SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_lambda_curry eo.list_nil F) F)
+  (($eo_to_smt_lambda_curry (eo.list_cons (eo.var (eo.string s) T) vs) F)
+    (lam s T ($eo_to_smt_lambda_curry vs F)))
+  (($eo_to_smt_lambda_curry vs F) none)
+  )
+)
 
-(define-method $beta_reduce_type :exclude)
+; The bindings bs followed by the binding of s:T to t.
+; -- $eo_to_smt_bindings_snoc
+(program $eo_to_smt_bindings_snoc
+  ((s <string>) (T SmtType) (t SmtTerm) (bs SmtBindings)
+   (s2 <string>) (T2 SmtType) (t2 SmtTerm))
+  :signature (SmtBindings <string> SmtType SmtTerm) SmtBindings
+  (
+  (($eo_to_smt_bindings_snoc smt.bindings_nil s2 T2 t2)
+    (smt.bindings_cons s2 T2 t2 smt.bindings_nil))
+  (($eo_to_smt_bindings_snoc (smt.bindings_cons s T t bs) s2 T2 t2)
+    (smt.bindings_cons s T t ($eo_to_smt_bindings_snoc bs s2 T2 t2)))
+  )
+)
 
-(define-method $beta_reduce :exclude)
+; The application of g to y, both transformed: if g is a lambda still waiting
+; for an argument, the argument is bound to its next variable, and otherwise
+; it is the application in the embedding. The new binding goes after the ones
+; already made, in the same let rather than in one nested inside it, so that y
+; is evaluated where the application is, and not under the bindings of the
+; earlier arguments.
+; -- $eo_to_smt_apply
+(program $eo_to_smt_apply
+  ((c SmtBindings) (s <string>) (T SmtType) (F SmtTerm) (g SmtTerm) (y SmtTerm))
+  :signature (SmtTerm SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_apply (bind c (lam s T F)) y)
+    (bind ($eo_to_smt_bindings_snoc c s T y) F))
+  (($eo_to_smt_apply g y) (apply g y))
+  )
+)
 
-(define-rule beta-reduce :exclude)
+; -- lambda
+; Its fallback is a case of $eo_to_smt tried after the case of every symbol:
+; an application whose head is an application, that no symbol of the
+; signature matched. Only such a head can be a lambda, possibly already
+; applied to some arguments, so an application whose head is not an
+; application stays the generic one. The binders of the fallback are names
+; $eo_to_smt declares, see plugins/model_smt/model_smt.eo in ethos.
+(define-symbol lambda ((! vs :raw) body)
+  :term (bind smt.bindings_nil ($eo_to_smt_lambda_curry vs body))
+  :term-fallback ((T Type) (U Type) (T1 Type) (f (-> U T)) (y U) (x1 T1))
+    (_ (f x1) y)
+    ($eo_to_smt_apply (f x1) y))
+
 
 ;-----------------------------------------------------------------------------
 (section "The type constructors")

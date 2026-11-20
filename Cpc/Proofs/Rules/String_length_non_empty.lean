@@ -180,7 +180,7 @@ private theorem empty_term_smt_info
                           rw [hSeqTy]
                           change __smtx_model_eval M (SmtTerm.seq_empty (__eo_to_smt_type U)) =
                             SmtValue.Seq (SmtSeq.empty (__eo_to_smt_type U))
-                          rw [__smtx_model_eval.eq_79]
+                          rw [__smtx_model_eval.eq_81]
                   | _ =>
                       simp [__str_is_empty] at hEmpty
               | _ =>

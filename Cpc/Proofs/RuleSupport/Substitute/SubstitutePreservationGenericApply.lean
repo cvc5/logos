@@ -2317,6 +2317,7 @@ theorem substitute_simul_apply_apply_branch_residual_preserves_type_and_translat
     (hApplyUOp : ApplyApplyApplyUOpBranchExclusions g)
     (hApplyApplyUOp : ApplyApplyApplyApplyUOpBranchExclusions g)
     (hNotUOpTop : ∀ op, g ≠ Term.UOp op)
+    (hNoPend : ¬ TranslationProofs.SmtPendingLam (__eo_to_smt (Term.Apply g x)))
     (hFTrans :
       RuleProofs.eo_has_smt_translation (Term.Apply (Term.Apply g x) a))
     (hRecHead :
@@ -2358,6 +2359,7 @@ theorem substitute_simul_apply_apply_branch_residual_preserves_type_and_translat
     eo_to_smt_apply_apply_generic_of_branch_exclusions
       (g := g) (x := x) (a := a)
       hUOp hNoUpdate hNoTupleUpdate hApplyUOp hApplyApplyUOp
+      (fun h => hNotUOpTop _ h) hNoPend
   have hHeadSubTy :
       __eo_typeof
           (__substitute_simul_rec (Term.Boolean isRename)

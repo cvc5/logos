@@ -231,7 +231,7 @@ theorem EvaluateProofInternal.eo_str_from_int_digit_term_nat (n : Nat) :
   -- component facts instead (which also keeps the `196608` literal from being
   -- evaluated unarily)
   rw [ite_eq_left (by
-    simp [native_and, native_zleq, native_zlt]
+    simp [native_and, native_zleq, native_zlt_eq]
     exact ⟨hCodeNonnegRaw, hCodeLtRaw⟩)]
   rw [ite_eq_left (by
     try simp [native_and, native_zleq]

@@ -338,13 +338,13 @@ private theorem bvAnd_nil_eq_allOnes_of_type
       simpa [native_binary_not, native_zplus, native_zneg, native_int_pow2, native_mod_total, native_nat_to_int, native_pow2_minus_one_mod_self_nat] using
         native_pow2_minus_one_mod_self_nat w
     have hBoundProp : native_nat_to_int w < 4294967296 := by
-      simpa [native_zlt] using hBound
+      simpa [native_zlt_eq] using hBound
     have hWidthNonneg : 0 <= native_nat_to_int w := by
       simp [native_nat_to_int]
     have hToBin :
         __eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0) =
           Term.Binary (native_nat_to_int w) 0 := by
-      simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq, native_and, native_zlt,
+      simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq, native_and, native_zlt_eq,
         hBoundProp, hWidthNonneg, native_mod_total]
     change __eo_not
         (__eo_to_bin (Term.Numeral (native_nat_to_int w)) (Term.Numeral 0)) =
@@ -372,10 +372,10 @@ private theorem bvZero_to_bin_eq_of_bound (w : Nat) :
       Term.Binary (native_nat_to_int w) 0 := by
   intro hBound
   have hBoundProp : native_nat_to_int w < 4294967296 := by
-    simpa [native_zlt] using hBound
+    simpa [native_zlt_eq] using hBound
   have hWidthNonneg : 0 <= native_nat_to_int w := by
     simp [native_nat_to_int]
-  simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq, native_and, native_zlt,
+  simp [__eo_to_bin, __eo_mk_binary, native_ite, native_zleq, native_and, native_zlt_eq,
     hBoundProp, hWidthNonneg, native_mod_total]
 
 private theorem bvOr_nil_eq_zero_of_type
@@ -402,9 +402,9 @@ private theorem bvOr_nil_eq_zero_of_type
               (Term.Numeral (native_nat_to_int w))) =
           Term.Stuck := by
       have hBoundFalse : ¬ native_nat_to_int w < 4294967296 := by
-        simpa [native_zlt] using hBound
+        simpa [native_zlt_eq] using hBound
       simp [__eo_nil, __eo_nil_bvor, __eo_to_bin, hBoundFalse,
-        native_ite, native_zleq, native_and, native_zlt]
+        native_ite, native_zleq, native_and, native_zlt_eq]
     exact False.elim (hNe hStuck)
 
 private theorem bvXor_nil_eq_zero_of_type
@@ -431,9 +431,9 @@ private theorem bvXor_nil_eq_zero_of_type
               (Term.Numeral (native_nat_to_int w))) =
           Term.Stuck := by
       have hBoundFalse : ¬ native_nat_to_int w < 4294967296 := by
-        simpa [native_zlt] using hBound
+        simpa [native_zlt_eq] using hBound
       simp [__eo_nil, __eo_nil_bvxor, __eo_to_bin, hBoundFalse,
-        native_ite, native_zleq, native_and, native_zlt]
+        native_ite, native_zleq, native_and, native_zlt_eq]
     exact False.elim (hNe hStuck)
 
 private theorem smt_typeof_binary_allOnes (w : Nat) :

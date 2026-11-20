@@ -196,7 +196,7 @@ theorem EvaluateProofInternal.eo_to_str_of_valid_nat
     change decide ((0 : Int) ≤ (c : Int)) = true
     exact decide_eq_true (Int.natCast_nonneg c)
   have hLt : native_zlt (c : Int) 196608 = true := by
-    change decide ((c : Int) < (196608 : Int)) = true
+    rw [native_zlt_eq]
     exact decide_eq_true hcLtInt
   have hCond : native_and (native_zleq 0 (c : Int))
       (native_zlt (c : Int) 196608) = true := by

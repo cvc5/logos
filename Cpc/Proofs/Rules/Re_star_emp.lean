@@ -50,7 +50,7 @@ private theorem facts___eo_prog_re_star_emp (M : SmtModel) :
       change __smtx_model_eval M
           (SmtTerm.re_mult (SmtTerm.str_to_re (SmtTerm.String (native_string_lit "")))) =
         __smtx_model_eval M (SmtTerm.str_to_re (SmtTerm.String (native_string_lit "")))
-      rw [__smtx_model_eval.eq_108, __smtx_model_eval.eq_107, __smtx_model_eval.eq_4]
+      rw [__smtx_model_eval.eq_110, __smtx_model_eval.eq_109, __smtx_model_eval.eq_4]
       rfl
     rw [hEvalEq]
     exact RuleProofs.smt_value_rel_refl

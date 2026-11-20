@@ -40,6 +40,7 @@ inductive UserOp : Type where
   | imp : UserOp
   | xor : UserOp
   | eq : UserOp
+  | lambda : UserOp
   | distinct : UserOp
   | _at_purify : UserOp
   | plus : UserOp

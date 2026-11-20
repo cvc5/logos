@@ -725,7 +725,7 @@ private def bvOpAnd : BvOpSpec where
   heval := eval_bvand
   htypeof := fun X Y => by
     rw [show __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvand) X) Y)
-          = SmtTerm.bvand (__eo_to_smt X) (__eo_to_smt Y) from rfl, __smtx_typeof.eq_40]
+          = SmtTerm.bvand (__eo_to_smt X) (__eo_to_smt Y) from rfl, __smtx_typeof.eq_41]
   hvalN := bvand_valN
   hnilterm := nil_term_bvand
   hnilbound := nil_bound_bvand
@@ -747,7 +747,7 @@ private def bvOpOr : BvOpSpec where
   heval := eval_bvor
   htypeof := fun X Y => by
     rw [show __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvor) X) Y)
-          = SmtTerm.bvor (__eo_to_smt X) (__eo_to_smt Y) from rfl, __smtx_typeof.eq_41]
+          = SmtTerm.bvor (__eo_to_smt X) (__eo_to_smt Y) from rfl, __smtx_typeof.eq_42]
   hvalN := bvor_valN
   hnilterm := nil_term_bvor
   hnilbound := nil_bound_bvor
@@ -769,7 +769,7 @@ private def bvOpXor : BvOpSpec where
   heval := eval_bvxor
   htypeof := fun X Y => by
     rw [show __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.bvxor) X) Y)
-          = SmtTerm.bvxor (__eo_to_smt X) (__eo_to_smt Y) from rfl, __smtx_typeof.eq_44]
+          = SmtTerm.bvxor (__eo_to_smt X) (__eo_to_smt Y) from rfl, __smtx_typeof.eq_45]
   hvalN := bvxor_valN
   hnilterm := nil_term_bvxor
   hnilbound := nil_bound_bvxor
@@ -1191,7 +1191,7 @@ private theorem bitlist_FB (W : Nat) (cn : Int) (hW : (W : Int) < 4294967296) :
       (Term.Numeral ↑W)
       = __eo_list_repeat_rec (Term.UOp UserOp._at__at_TypedList_cons) (Term.Numeral 0) W := by
     have hg : native_and (native_zleq 0 (↑W : Int)) (native_zlt (↑W : Int) 4294967296) = true := by
-      simp [native_and, native_zleq, native_zlt, hW]
+      simp [native_and, native_zleq, native_zlt_eq, hW]
     show native_ite (native_and (native_zleq 0 (↑W : Int)) (native_zlt (↑W : Int) 4294967296))
         (__eo_list_repeat_rec (Term.UOp UserOp._at__at_TypedList_cons) (Term.Numeral 0)
           (native_int_to_nat ↑W)) Term.Stuck = _
@@ -1201,7 +1201,7 @@ private theorem bitlist_FB (W : Nat) (cn : Int) (hW : (W : Int) < 4294967296) :
   have hneg : __eo_is_neg (Term.Numeral ↑W) = Term.Boolean false := by
     show Term.Boolean (native_zlt (↑W) 0) = Term.Boolean false
     rw [show native_zlt (↑W) 0 = false from by
-      unfold native_zlt; exact decide_eq_false (show ¬((↑W:Int) < 0) by omega)]
+      rw [native_zlt_eq]; exact decide_eq_false (show ¬((↑W:Int) < 0) by omega)]
   rw [hneg, requires_refl _ _ (by intro h; cases h)]
   have hcbl := const_to_bitlist_FB ↑W cn _ W (iota_repeat_IL W 0)
   show FB (__eo_requires (__eo_is_list (Term.UOp UserOp._at_from_bools) _) (Term.Boolean true)
@@ -2280,7 +2280,7 @@ private theorem bv_bitwise_slicing_eval_rel_op (op : BvOpSpec)
     by_contra hW
     apply hBsNe
     simp [bs, hcEq, hWidth, __eo_list_repeat, native_ite, native_and, native_zleq,
-      native_zlt, hW, __iota_rec, __eo_requires, __eo_is_neg, __bv_const_to_bitlist_rec,
+      native_zlt_eq, hW, __iota_rec, __eo_requires, __eo_is_neg, __bv_const_to_bitlist_rec,
       __eo_list_rev, __eo_is_list, native_teq, native_not, SmtEval.native_not]
   have hBsFB : FB bs W := by
     simpa [bs, hcEq, hWidth] using bitlist_FB W cn hW32

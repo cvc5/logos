@@ -138,7 +138,7 @@ private theorem facts
         SmtValue.RegLan native_re_none := by
     change __smtx_model_eval M SmtTerm.re_none =
       SmtValue.RegLan native_re_none
-    rw [__smtx_model_eval.eq_105]
+    rw [__smtx_model_eval.eq_107]
   have hSub : RuleProofs.NativeIncludes rv2 rv1 :=
     RuleProofs.re_inclusion_side_native_includes M hM r2 r1 flat2 flat1 side
       rv2 rv1 hR2Ty hArgs.1 hR2Eval hR1Eval hFlat2 hFlat1 hSide hSideTrue

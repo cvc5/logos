@@ -242,7 +242,7 @@ theorem int_tight_ub_interprets_numeral
     rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_lt_eq] at hPremTrue
     cases hPremTrue with
     | intro_true _ hEval =>
-        rw [__smtx_model_eval.eq_17, hEvalA, eo_to_smt_numeral_eq n,
+        rw [__smtx_model_eval.eq_19, hEvalA, eo_to_smt_numeral_eq n,
           __smtx_model_eval.eq_2] at hEval
         simp [__smtx_model_eval_lt] at hEval
         exact hEval
@@ -271,7 +271,7 @@ theorem int_tight_ub_interprets_numeral
         __eo_ite, __eo_mk_apply, native_ite, native_teq,
         native_to_real, SmtEval.native_to_real, native_mk_rational,
         SmtEval.native_mk_rational]
-    rw [hTight, eo_to_smt_leq_eq, eo_to_smt_numeral_eq, __smtx_model_eval.eq_18,
+    rw [hTight, eo_to_smt_leq_eq, eo_to_smt_numeral_eq, __smtx_model_eval.eq_20,
       hEvalA, __smtx_model_eval.eq_2]
     simp [__smtx_model_eval_leq, native_zleq, SmtEval.native_zleq, hLe]
 
@@ -342,7 +342,7 @@ theorem int_tight_lb_interprets_numeral
     rw [RuleProofs.eo_interprets_iff_smt_interprets, eo_to_smt_gt_eq] at hPremTrue
     cases hPremTrue with
     | intro_true _ hEval =>
-        rw [__smtx_model_eval.eq_19, hEvalA, eo_to_smt_numeral_eq n,
+        rw [__smtx_model_eval.eq_21, hEvalA, eo_to_smt_numeral_eq n,
           __smtx_model_eval.eq_2] at hEval
         simp [__smtx_model_eval_gt, __smtx_model_eval_lt] at hEval
         exact hEval
@@ -365,7 +365,7 @@ theorem int_tight_lb_interprets_numeral
           Term.Apply (Term.Apply (Term.UOp UserOp.geq) a)
             (Term.Numeral (native_zplus (1 : native_Int) n)) := by
       simp [__least_int_gt, __eo_to_z, __eo_add, __eo_mk_apply]
-    rw [hTight, eo_to_smt_geq_eq, eo_to_smt_numeral_eq, __smtx_model_eval.eq_20,
+    rw [hTight, eo_to_smt_geq_eq, eo_to_smt_numeral_eq, __smtx_model_eval.eq_22,
       hEvalA, __smtx_model_eval.eq_2]
     simp [__smtx_model_eval_geq, __smtx_model_eval_leq, native_zleq,
       SmtEval.native_zleq, hLe]

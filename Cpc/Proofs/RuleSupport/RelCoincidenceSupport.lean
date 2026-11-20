@@ -6,6 +6,8 @@ public import Cpc.Proofs.RuleSupport.CongSupport
 import all Cpc.Proofs.RuleSupport.CongSupport
 public import Cpc.Proofs.RuleSupport.InstantiateSupport
 import all Cpc.Proofs.RuleSupport.InstantiateSupport
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 public section
 
@@ -234,6 +236,16 @@ private theorem cleanOrNone_typeof_guard_wf {T U : SmtType}
 private theorem cleanOrNone_typeof_guard_wf_self (T : SmtType) :
     cleanOrNone (__smtx_typeof_guard_wf T T) :=
   cleanOrNone_typeof_guard_wf (fun hw => Or.inr (cleanType_of_wf hw))
+
+private theorem cleanOrNone_typeof_bindings {U : SmtType} (hU : cleanOrNone U) :
+    ∀ bs : SmtBindings, cleanOrNone (__smtx_typeof_bindings bs U)
+  | SmtBindings.nil => by
+      rw [smtx_typeof_bindings_nil_eq]
+      exact hU
+  | SmtBindings.cons _ _ _ bs => by
+      rw [smtx_typeof_bindings_cons_eq]
+      exact cleanOrNone_guard'
+        (cleanOrNone_typeof_guard_wf (fun _ => cleanOrNone_typeof_bindings hU bs))
 
 /-! ## Typing extraction helpers -/
 
@@ -593,21 +605,6 @@ private theorem choice_types {A T : SmtType}
     simpa [native_ite] using h
   unfold __smtx_typeof_guard_wf at h2
   exact ⟨teq_eq h1, ite_cond_true_of_ne_none h2⟩
-
-private theorem bind_types {A B : SmtType} {T : SmtType}
-    (h : native_ite (native_Teq A T)
-        (__smtx_typeof_guard_wf T B) SmtType.None ≠ SmtType.None) :
-    A = T ∧ __smtx_type_wf T = true ∧ B ≠ SmtType.None := by
-  have h1 := ite_cond_true_of_ne_none h
-  have h2 : __smtx_typeof_guard_wf T B ≠ SmtType.None := by
-    rw [h1] at h
-    simpa [native_ite] using h
-  unfold __smtx_typeof_guard_wf at h2
-  have hw := ite_cond_true_of_ne_none h2
-  refine ⟨teq_eq h1, hw, ?_⟩
-  intro hEq
-  rw [hw, hEq] at h2
-  simp [native_ite] at h2
 
 private theorem guard_wf_self_types {T : SmtType}
     (h : __smtx_typeof_guard_wf T T ≠ SmtType.None) :
@@ -1108,8 +1105,8 @@ private theorem typeof_cleanOrNone :
       cleanOrNone_apply _ (typeof_cleanOrNone (SmtTerm.forall s T b))
   | SmtTerm.Apply (SmtTerm.choice s T b) x1 =>
       cleanOrNone_apply _ (typeof_cleanOrNone (SmtTerm.choice s T b))
-  | SmtTerm.Apply (SmtTerm.bind s T a b) x1 =>
-      cleanOrNone_apply _ (typeof_cleanOrNone (SmtTerm.bind s T a b))
+  | SmtTerm.Apply (SmtTerm.bind bs b) x1 =>
+      cleanOrNone_apply _ (typeof_cleanOrNone (SmtTerm.bind bs b))
   | SmtTerm.Apply (SmtTerm.map_diff a b) x1 =>
       cleanOrNone_apply _ (typeof_cleanOrNone (SmtTerm.map_diff a b))
   | SmtTerm.Apply (SmtTerm.seq_diff a b) x1 =>
@@ -1389,9 +1386,9 @@ private theorem typeof_cleanOrNone :
         (cleanOrNone_typeof_guard_wf (fun _ => Or.inr True.intro))
   | SmtTerm.choice s T b =>
       cleanOrNone_guard' (cleanOrNone_typeof_guard_wf_self T)
-  | SmtTerm.bind s T a b =>
-      cleanOrNone_guard'
-        (cleanOrNone_typeof_guard_wf (fun _ => typeof_cleanOrNone b))
+  | SmtTerm.bind bs b => by
+      rw [smtx_typeof_bind_eq]
+      exact cleanOrNone_typeof_bindings (typeof_cleanOrNone b) bs
   | SmtTerm.map_diff a b => cleanOrNone_map_diff _ (typeof_cleanOrNone a)
   | SmtTerm.seq_diff a b => cleanOrNone_seq_diff _ _
   | SmtTerm.DtCons s d i =>
@@ -1817,6 +1814,26 @@ private theorem apply_rel {M N : SmtModel}
       simp only [__smtx_model_eval]
       exact CongSupport.smt_value_rel_model_eval_apply_of_rel_across_models
         M N hM hN hGlobals _ _ _ _ hTy rfl rfl (hF hFN) (hX hXN)
+
+/-- Pushing the (parallel) bindings of a `let`, whose terms evaluate to related
+values, keeps the globals agreeing and the variables related. -/
+private theorem push_bindings_globals_vars (M N : SmtModel) :
+    ∀ (bs : SmtBindings) (M' N' : SmtModel),
+      model_agrees_on_globals M' N' -> ModelVarRel M' N' ->
+      (∀ s T v, SmtBindings.Mem bs s T v ->
+        RuleProofs.smt_value_rel (__smtx_model_eval M v) (__smtx_model_eval N v)) ->
+      model_agrees_on_globals (__smtx_model_eval.push_bindings M M' bs)
+          (__smtx_model_eval.push_bindings N N' bs) ∧
+        ModelVarRel (__smtx_model_eval.push_bindings M M' bs)
+          (__smtx_model_eval.push_bindings N N' bs)
+  | SmtBindings.nil, M', N', hG, hV, _ => by
+      rw [model_push_bindings_nil, model_push_bindings_nil]
+      exact ⟨hG, hV⟩
+  | SmtBindings.cons s T v bs, M', N', hG, hV, hR => by
+      rw [model_push_bindings_cons, model_push_bindings_cons]
+      exact push_bindings_globals_vars M N bs _ _ (globals_push_push hG s T _ _)
+        (modelVarRel_push_rel hV s T (hR s T v (SmtBindings.Mem.head s T v bs)))
+        (fun s' T' v' hm => hR s' T' v' (SmtBindings.Mem.tail s T v hm))
 
 /-! ## The master rel-coincidence walk -/
 
@@ -2864,23 +2881,32 @@ theorem smt_model_eval_rel_of_var_rel_lt
           (hRec (by simp <;> omega) hPM hPN (globals_push_push hGlobals s0 T0 v v)
             (modelVarRel_push_same hVars s0 T0 v) hBtnn)
           hBtnn (by rw [hBTy]; simp)
-      case bind s0 T0 x1 x2 =>
-        obtain ⟨hX1Ty, hTWf, hX2Ne⟩ := bind_types hTy
-        have hX1tnn : term_has_non_none_type x1 :=
-          tnn_of_typeof_eq hX1Ty (ne_none_of_wf hTWf)
-        have hRelX1 := ih x1 (by simp <;> omega) hX1tnn
-        have hVM : __smtx_typeof_value (__smtx_model_eval M x1) = T0 := by
-          rw [smt_model_eval_preserves_type_of_non_none M hM x1 hX1tnn, hX1Ty]
-        have hVN : __smtx_typeof_value (__smtx_model_eval N x1) = T0 := by
-          rw [smt_model_eval_preserves_type_of_non_none N hN x1 hX1tnn, hX1Ty]
-        have hPM := model_total_typed_push hM s0 T0 (__smtx_model_eval M x1)
-          hTWf hVM (Smtm.model_eval_canonical M hM x1 hX1tnn)
-        have hPN := model_total_typed_push hN s0 T0 (__smtx_model_eval N x1)
-          hTWf hVN (Smtm.model_eval_canonical N hN x1 hX1tnn)
-        simp only [__smtx_model_eval]
-        exact hRec (by simp <;> omega) hPM hPN
-          (globals_push_push hGlobals s0 T0 _ _)
-          (modelVarRel_push_rel hVars s0 T0 hRelX1) hX2Ne
+      case bind bs x2 =>
+        have hTyB : term_has_non_none_type (SmtTerm.bind bs x2) := hTy
+        have hX2Ne : term_has_non_none_type x2 :=
+          bind_body_non_none_of_non_none hTyB
+        have hvtnn : ∀ s T v, SmtBindings.Mem bs s T v -> term_has_non_none_type v :=
+          fun s T v hm =>
+            tnn_of_typeof_eq (bind_binding_type_of_non_none hTyB hm)
+              (ne_none_of_wf (bind_binding_type_wf_of_non_none hTyB hm))
+        have hPM := model_total_typed_push_bindings M bs M hM rfl
+          (fun s T v hm =>
+            ⟨bind_binding_type_wf_of_non_none hTyB hm,
+             by rw [smt_model_eval_preserves_type_of_non_none M hM v (hvtnn s T v hm),
+               bind_binding_type_of_non_none hTyB hm],
+             Smtm.model_eval_canonical M hM v (hvtnn s T v hm)⟩)
+        have hPN := model_total_typed_push_bindings N bs N hN rfl
+          (fun s T v hm =>
+            ⟨bind_binding_type_wf_of_non_none hTyB hm,
+             by rw [smt_model_eval_preserves_type_of_non_none N hN v (hvtnn s T v hm),
+               bind_binding_type_of_non_none hTyB hm],
+             Smtm.model_eval_canonical N hN v (hvtnn s T v hm)⟩)
+        obtain ⟨hG', hV'⟩ := push_bindings_globals_vars M N bs M N hGlobals hVars
+          (fun s T v hm =>
+            ih v (by have := SmtBindings.Mem.sizeOf_lt_bind x2 hm; omega)
+              (hvtnn s T v hm))
+        rw [smtx_model_eval_bind_eq, smtx_model_eval_bind_eq]
+        exact hRec (by simp <;> omega) hPM hPN hG' hV' hX2Ne
 termination_by n
 decreasing_by
   all_goals omega

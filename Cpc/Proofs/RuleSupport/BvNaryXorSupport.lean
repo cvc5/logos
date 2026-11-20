@@ -58,7 +58,7 @@ private theorem bvxor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
           __smtx_typeof_bv_op_2
             (__smtx_typeof (__eo_to_smt y))
             (__smtx_typeof (__eo_to_smt x)) by
-        rw [__smtx_typeof.eq_44]) hNN with
+        rw [__smtx_typeof.eq_45]) hNN with
     ⟨w', hyTy, hxTy⟩
   have hWidth : w' = w := by
     have hResult : SmtType.BitVec w' = SmtType.BitVec w := by
@@ -67,7 +67,7 @@ private theorem bvxor_args_of_bitvec_type (y x : Term) (w : native_Nat) :
             __smtx_typeof_bv_op_2
               (__smtx_typeof (__eo_to_smt y))
               (__smtx_typeof (__eo_to_smt x)) by
-          rw [__smtx_typeof.eq_44]] at hTy'
+          rw [__smtx_typeof.eq_45]] at hTy'
       simpa [__smtx_typeof_bv_op_2, hyTy, hxTy, native_ite, native_nateq,
         SmtEval.native_nateq] using hTy'
     cases hResult
@@ -458,7 +458,7 @@ theorem listConcatRecSmtType
           (SmtTerm.bvxor (__eo_to_smt x)
             (__eo_to_smt (__eo_list_concat_rec xs z))) =
         SmtType.BitVec w
-      rw [__smtx_typeof.eq_44]
+      rw [__smtx_typeof.eq_45]
       simp [__smtx_typeof_bv_op_2, hArgs.1, hTailTy,
         native_nateq, native_ite]
   | case4 nil z hNil hZNe hNot =>
@@ -703,7 +703,7 @@ theorem binarySmtType
   intro hX hY
   change __smtx_typeof
       (SmtTerm.bvxor (__eo_to_smt x) (__eo_to_smt y)) = _
-  rw [__smtx_typeof.eq_44]
+  rw [__smtx_typeof.eq_45]
   simp [__smtx_typeof_bv_op_2, hX, hY, native_nateq, native_ite]
 
 theorem evalAssoc
