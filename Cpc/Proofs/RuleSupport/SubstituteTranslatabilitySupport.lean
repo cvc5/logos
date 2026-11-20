@@ -1432,32 +1432,32 @@ theorem instantiate_eo_to_smt_apply_generic_of_has_smt_translation
     __eo_to_smt (Term.Apply f x) =
       SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt x) := by
   unfold RuleProofs.eo_has_smt_translation at hTransF
-  cases f <;> try rfl
+  cases f <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
   case UOp op =>
-    cases op <;> try rfl
+    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
     all_goals
       exfalso
       apply hTransF
       change __smtx_typeof SmtTerm.None = SmtType.None
       exact TranslationProofs.smtx_typeof_none
   case UOp1 op i =>
-    cases op <;> try rfl
+    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
     all_goals
       exfalso
       apply hTransF
       change __smtx_typeof SmtTerm.None = SmtType.None
       exact TranslationProofs.smtx_typeof_none
   case UOp2 op i j =>
-    cases op <;> try rfl
+    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
     all_goals
       exfalso
       apply hTransF
       change __smtx_typeof SmtTerm.None = SmtType.None
       exact TranslationProofs.smtx_typeof_none
   case Apply f a =>
-    cases f <;> try rfl
+    cases f <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
     case UOp op =>
-      cases op <;> try rfl
+      cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
       all_goals
         exfalso
         apply hTransF
@@ -1465,7 +1465,7 @@ theorem instantiate_eo_to_smt_apply_generic_of_has_smt_translation
           SmtType.None
         simp [__smtx_typeof, __smtx_typeof_apply]
     case UOp1 op i =>
-      cases op <;> try rfl
+      cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
       all_goals
         exfalso
         apply hTransF
@@ -1473,9 +1473,9 @@ theorem instantiate_eo_to_smt_apply_generic_of_has_smt_translation
           SmtType.None
         simp [__smtx_typeof, __smtx_typeof_apply]
     case Apply f' b =>
-      cases f' <;> try rfl
+      cases f' <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
       case UOp op =>
-        cases op <;> try rfl
+        cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
         all_goals
           exfalso
           apply hTransF
@@ -1485,9 +1485,9 @@ theorem instantiate_eo_to_smt_apply_generic_of_has_smt_translation
                 (__eo_to_smt a)) = SmtType.None
           simp [__smtx_typeof, __smtx_typeof_apply]
       case Apply f'' c =>
-        cases f'' <;> try rfl
+        cases f'' <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
         case UOp op =>
-          cases op <;> try rfl
+          cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hTransF (TranslationProofs.smtx_typeof_pending hp)))
           all_goals
             exfalso
             apply hTransF
