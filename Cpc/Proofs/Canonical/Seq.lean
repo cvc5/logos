@@ -329,7 +329,7 @@ theorem native_unpack_string_valid_of_seq_canonical
   cases v <;>
     simp [impl_native_ssm_char_of_value, native_char_valid,
       value_canonical, __smtx_value_canonical] at hvCan ⊢
-  exact decide_eq_true hvCan
+  exact hvCan
 
 /-- Packing a valid native string gives a canonical sequence. -/
 theorem seq_canonical_pack_string
