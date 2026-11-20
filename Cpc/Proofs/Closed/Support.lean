@@ -3574,35 +3574,57 @@ theorem lamVars_of_prefix_drop :
   | k + 1, m, us, hp, h => by
       obtain ⟨s, T, vs, rfl, hvs⟩ := TranslationProofs.lamVarsPrefix_succ_inv hp
       rw [Nat.add_right_comm]
-      exact lamVars_of_prefix_drop k vs hvs h
+      show (TranslationProofs.lamVarWf T && TranslationProofs.lamVars vs (k + m)) = true
+      rw [TranslationProofs.lamVarsPrefix_succ_wf hp, lamVars_of_prefix_drop k vs hvs h]
+      rfl
 
 /-- The curried chain of a lambda's variables is closed when its body is, under
 those variables. -/
 theorem smtTermClosedIn_curry (D : Term) (B : SmtTerm) (V : List SmtVarKey)
     (h : SmtTermClosedIn ((eoVarKeys D).reverse ++ V) B) :
     SmtTermClosedIn V (__eo_to_smt_lambda_curry D B) := by
-  fun_induction __eo_to_smt_lambda_curry D B generalizing V with
-  | case1 => simpa [eoVarKeys] using h
-  | case2 s T vs F ih =>
-    change SmtTermClosedIn ((s, __eo_to_smt_type T) :: V)
-      (__eo_to_smt_lambda_curry vs F)
-    apply ih
-    simpa [eoVarKeys, List.reverse_cons, List.append_assoc] using h
-  | case3 => trivial
+  by_cases hNil : D = Term.__eo_List_nil
+  · subst hNil
+    show SmtTermClosedIn V B
+    simpa [eoVarKeys] using h
+  by_cases hCons : ∃ s T vs,
+      D = Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs
+  · obtain ⟨s, T, vs, rfl⟩ := hCons
+    cases hw : TranslationProofs.lamVarWf T
+    · rw [TranslationProofs.curry_cons_of_not_wf _ _ _ _ hw]
+      trivial
+    · rw [TranslationProofs.curry_cons_of_wf _ _ _ _ hw]
+      change SmtTermClosedIn ((s, __eo_to_smt_type T) :: V) (__eo_to_smt_lambda_curry vs B)
+      exact smtTermClosedIn_curry vs B _
+        (by simpa [eoVarKeys, List.reverse_cons, List.append_assoc] using h)
+  · rw [__eo_to_smt_lambda_curry.eq_3 D B hNil (fun s T vs he => hCons ⟨s, T, vs, he⟩)]
+    trivial
+termination_by sizeOf D
+decreasing_by all_goals (subst_vars; first | (simp; done) | (simp; omega))
 
 /-- The curried chain of a list that is not one of variables is closed. -/
 theorem smtTermClosedIn_curry_of_not_vars (D : Term)
     (hD : ∀ m, TranslationProofs.lamVars D m ≠ true) (B : SmtTerm) (V : List SmtVarKey) :
     SmtTermClosedIn V (__eo_to_smt_lambda_curry D B) := by
-  fun_induction __eo_to_smt_lambda_curry D B generalizing V with
-  | case1 => exact absurd rfl (hD 0)
-  | case2 s T vs F ih =>
-    change SmtTermClosedIn ((s, __eo_to_smt_type T) :: V)
-      (__eo_to_smt_lambda_curry vs F)
-    first
-      | exact ih (fun m hm => hD (m + 1) hm) _
-      | exact ih _ (fun m hm => hD (m + 1) hm)
-  | case3 => trivial
+  by_cases hNil : D = Term.__eo_List_nil
+  · subst hNil
+    exact absurd rfl (hD 0)
+  by_cases hCons : ∃ s T vs,
+      D = Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs
+  · obtain ⟨s, T, vs, rfl⟩ := hCons
+    cases hw : TranslationProofs.lamVarWf T
+    · rw [TranslationProofs.curry_cons_of_not_wf _ _ _ _ hw]
+      trivial
+    · rw [TranslationProofs.curry_cons_of_wf _ _ _ _ hw]
+      change SmtTermClosedIn ((s, __eo_to_smt_type T) :: V) (__eo_to_smt_lambda_curry vs B)
+      exact smtTermClosedIn_curry_of_not_vars vs
+        (fun m hm => hD (m + 1) (by
+          show (TranslationProofs.lamVarWf T && TranslationProofs.lamVars vs m) = true
+          rw [hw, hm]; rfl)) B _
+  · rw [__eo_to_smt_lambda_curry.eq_3 D B hNil (fun s T vs he => hCons ⟨s, T, vs, he⟩)]
+    trivial
+termination_by sizeOf D
+decreasing_by all_goals (subst_vars; first | (simp; done) | (simp; omega))
 
 /-- The pieces of an EO-closed lambda spine are EO-closed: its body under the
 variables of its lambda, and its arguments. -/

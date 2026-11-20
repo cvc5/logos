@@ -2708,7 +2708,9 @@ translation is handled specially.
 def eo_to_smt_lambda_curry : Term -> SmtTerm -> SmtTerm
   | Term.__eo_List_nil, F => F
   | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs), F =>
-      (SmtTerm.lam s (eo_to_smt_type T) (eo_to_smt_lambda_curry vs F))
+      if smt_type_wf_component (eo_to_smt_type T) then
+        (SmtTerm.lam s (eo_to_smt_type T) (eo_to_smt_lambda_curry vs F))
+      else SmtTerm.None
   | vs, F => SmtTerm.None
 
 def eo_to_smt_bindings_snoc : SmtBindings -> String -> SmtType -> SmtTerm -> SmtBindings
@@ -2766,6 +2768,14 @@ of a lambda to $k$ arguments, this gives three cases.
   of the first $n$ arguments to the remaining ones, which is typed when the
   body \code{t} has a function type.
 \end{itemize}
+Each variable of a lambda is required to have a type that a function can take,
+i.e. one satisfying \code{smt_type_wf_component}, as the arguments of a
+well-formed function type are required to
+(Section~\ref{sec:type-wf}); otherwise the curried chain is \code{None}, and so
+is the translation of any application of the lambda.
+In particular, a lambda cannot bind a variable of sort \code{RegLan} or of a
+function sort, just as an uninterpreted function cannot take an argument of
+such a sort.
 A lambda that binds no variables, \code{(lambda () t)}, translates to
 \code{(bind nil [t])}, which means what \code{t} does.
 In particular, a beta redex, i.e. a lambda applied to as many arguments as it
