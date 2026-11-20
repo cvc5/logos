@@ -145,7 +145,9 @@ def __eo_to_smt_datatype_decl : DatatypeDecl -> SmtDatatypeDecl
 
 def __eo_to_smt_lambda_curry : Term -> SmtTerm -> SmtTerm
   | Term.__eo_List_nil, F => F
-  | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs), F => (SmtTerm.lam s (__eo_to_smt_type T) (__eo_to_smt_lambda_curry vs F))
+  | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs), F =>
+    let _v0 := (__eo_to_smt_type T)
+    (native_ite (__smtx_type_wf_component _v0) (SmtTerm.lam s _v0 (__eo_to_smt_lambda_curry vs F)) SmtTerm.None)
   | vs, F => SmtTerm.None
 
 

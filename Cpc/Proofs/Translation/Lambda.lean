@@ -219,20 +219,25 @@ inductive LamSpine : Term -> Term -> Term -> List Term -> Prop
   | k + 1, Term.Apply (Term.Apply Term.__eo_List_cons _) vs => eoListDrop k vs
   | _ + 1, _ => Term.Stuck
 
-/-- Whether `vs` is a list of exactly `n` variables. -/
+/-- Whether a lambda may bind a variable of type `T`: its translation is a type
+a function can take (`__eo_to_smt_lambda_curry` checks the same). -/
+@[expose] def lamVarWf (T : Term) : Bool :=
+  __smtx_type_wf_component (__eo_to_smt_type T)
+
+/-- Whether `vs` is a list of exactly `n` variables a lambda may bind. -/
 @[expose] def lamVars : Term -> Nat -> Bool
   | Term.__eo_List_nil, 0 => true
-  | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String _) _)) vs, n + 1 =>
-      lamVars vs n
+  | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String _) T)) vs, n + 1 =>
+      lamVarWf T && lamVars vs n
   | _, _ => false
 
-/-- Whether `vs` begins with `n` variables. -/
+/-- Whether `vs` begins with `n` variables a lambda may bind. -/
 @[expose] def lamVarsPrefix : Term -> Nat -> Bool
   | _, 0 => true
   | us, n + 1 =>
       match us with
-      | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String _) _)) vs =>
-          lamVarsPrefix vs n
+      | Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String _) T)) vs =>
+          lamVarWf T && lamVarsPrefix vs n
       | _ => false
 termination_by structural _ n => n
 
@@ -421,8 +426,15 @@ theorem lambda_vars_succ_inv {us : Term} {n : Nat}
       subst h1
       have hn := Nat.succ.inj h2
       subst hn
-      exact h⟩)] at h
+      simp only [lamVars, Bool.and_eq_true] at h
+      exact h.2⟩)] at h
   cases h
+
+theorem lambda_vars_succ_wf {s : native_String} {T vs : Term} {n : Nat}
+    (h : lamVars (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs)
+      (n + 1) = true) : lamVarWf T = true := by
+  simp only [lamVars, Bool.and_eq_true] at h
+  exact h.1
 
 theorem lambda_vars_split :
     ∀ (k : Nat) {us : Term} {m : Nat},
@@ -456,15 +468,26 @@ theorem lamVarsPrefix_succ_inv {us : Term} {k : Nat}
         lamVarsPrefix vs k = true := by
   unfold lamVarsPrefix at h
   split at h
-  · exact ⟨_, _, _, rfl, h⟩
+  · simp only [Bool.and_eq_true] at h
+    exact ⟨_, _, _, rfl, h.2⟩
   · cases h
+
+theorem lamVarsPrefix_succ_wf {s : native_String} {T vs : Term} {k : Nat}
+    (h : lamVarsPrefix
+      (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs) (k + 1) =
+        true) : lamVarWf T = true := by
+  simp only [lamVarsPrefix, Bool.and_eq_true] at h
+  exact h.1
 
 theorem lamVarsPrefix_pred :
     ∀ (k : Nat) {us : Term}, lamVarsPrefix us (k + 1) = true -> lamVarsPrefix us k = true
   | 0, us, _ => rfl
   | k + 1, us, h => by
       obtain ⟨s, T, vs, rfl, hvs⟩ := lamVarsPrefix_succ_inv h
-      exact lamVarsPrefix_pred k hvs
+      have hw := lamVarsPrefix_succ_wf h
+      show (lamVarWf T && lamVarsPrefix vs k) = true
+      rw [hw, lamVarsPrefix_pred k hvs]
+      rfl
 
 /-- Where the first `k + 1` elements of `us` are variables, the list without
 its first `k` begins with one. -/
@@ -487,15 +510,44 @@ theorem lamVarsPrefix_succ :
       lamVarsPrefix us k = true ->
       eoListDrop k us =
         Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs ->
+      lamVarWf T = true ->
       lamVarsPrefix us (k + 1) = true ∧ eoListDrop (k + 1) us = vs ∧
         lamNth us k = Term.Var (Term.String s) T
-  | 0, us, s, T, vs, _, hd => by
+  | 0, us, s, T, vs, _, hd, hwf => by
       change us = _ at hd
       subst hd
-      exact ⟨rfl, rfl, rfl⟩
-  | k + 1, us, s, T, vs, hp, hd => by
+      refine ⟨?_, rfl, rfl⟩
+      show (lamVarWf T && lamVarsPrefix vs 0) = true
+      rw [hwf]
+      rfl
+  | k + 1, us, s, T, vs, hp, hd, hwf => by
       obtain ⟨s', T', us', rfl, hp'⟩ := lamVarsPrefix_succ_inv hp
-      exact lamVarsPrefix_succ k us' hp' hd
+      have hw' := lamVarsPrefix_succ_wf hp
+      obtain ⟨h1, h2, h3⟩ := lamVarsPrefix_succ k us' hp' hd hwf
+      refine ⟨?_, h2, h3⟩
+      show (lamVarWf T' && lamVarsPrefix us' (k + 1)) = true
+      rw [hw', h1]
+      rfl
+
+/-- Where the list `us` has, after its first `k` elements, a variable a lambda
+may not bind, its first `k + 1` elements are not variables a lambda may bind. -/
+theorem lamVarsPrefix_succ_false_of_not_wf :
+    ∀ (k : Nat) (us : Term) {s : native_String} {T vs : Term},
+      eoListDrop k us =
+        Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs ->
+      lamVarWf T = false ->
+      lamVarsPrefix us (k + 1) = false
+  | 0, us, s, T, vs, hd, hwf => by
+      change us = _ at hd
+      subst hd
+      simp [lamVarsPrefix, hwf]
+  | k + 1, us, s, T, vs, hd, hwf => by
+      unfold lamVarsPrefix
+      split
+      · rename_i s' T' us'
+        simp only [Bool.and_eq_false_iff]
+        exact Or.inr (lamVarsPrefix_succ_false_of_not_wf k us' hd hwf)
+      · rfl
 
 /-- A list that begins with `k` variables and has nothing after them is a list
 of exactly `k` variables. -/
@@ -508,21 +560,44 @@ theorem lamVars_of_prefix :
       rfl
   | k + 1, us, hp, hd => by
       obtain ⟨s, T, vs, rfl, hvs⟩ := lamVarsPrefix_succ_inv hp
-      exact lamVars_of_prefix k vs hvs hd
+      have hw := lamVarsPrefix_succ_wf hp
+      show (lamVarWf T && lamVars vs (k + 1 - 1)) = true
+      rw [hw, show k + 1 - 1 = k from rfl, lamVars_of_prefix k vs hvs hd]
+      rfl
 
 theorem lamVarsPrefix_of_lamVars :
     ∀ (m : Nat) {us : Term}, lamVars us m = true -> lamVarsPrefix us m = true
   | 0, us, _ => rfl
   | m + 1, us, h => by
       obtain ⟨s, T, vs, rfl, hvs⟩ := lambda_vars_succ_inv h
-      exact lamVarsPrefix_of_lamVars m hvs
+      have hw := lambda_vars_succ_wf h
+      show (lamVarWf T && lamVarsPrefix vs m) = true
+      rw [hw, lamVarsPrefix_of_lamVars m hvs]
+      rfl
 
 /-! ## The curried chain of a lambda -/
 
 theorem curry_cons (s : native_String) (T vs : Term) (F : SmtTerm) :
     __eo_to_smt_lambda_curry
         (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs) F =
-      SmtTerm.lam s (__eo_to_smt_type T) (__eo_to_smt_lambda_curry vs F) := rfl
+      native_ite (lamVarWf T)
+        (SmtTerm.lam s (__eo_to_smt_type T) (__eo_to_smt_lambda_curry vs F)) SmtTerm.None := rfl
+
+theorem curry_cons_of_wf (s : native_String) (T vs : Term) (F : SmtTerm)
+    (h : lamVarWf T = true) :
+    __eo_to_smt_lambda_curry
+        (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs) F =
+      SmtTerm.lam s (__eo_to_smt_type T) (__eo_to_smt_lambda_curry vs F) := by
+  rw [curry_cons, h]
+  rfl
+
+theorem curry_cons_of_not_wf (s : native_String) (T vs : Term) (F : SmtTerm)
+    (h : lamVarWf T = false) :
+    __eo_to_smt_lambda_curry
+        (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs) F =
+      SmtTerm.None := by
+  rw [curry_cons, h]
+  rfl
 
 /-- The chain of a list that does not begin with a variable is not a `lam`
 unless the list is empty and `F` is one. -/
@@ -536,6 +611,17 @@ theorem curry_lam_inv {F : SmtTerm} {vs : Term} {s : native_String} {T : SmtType
   · exact absurd h (hF _ _ _)
   · exact ⟨_, _, _, rfl⟩
   · cases h
+
+/-- The variable a chain that is a `lam` binds first is one a lambda may bind. -/
+theorem curry_lam_wf {F : SmtTerm} {s' : native_String} {T' vs : Term}
+    {s : native_String} {T : SmtType} {G : SmtTerm}
+    (h : __eo_to_smt_lambda_curry
+      (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s') T')) vs) F =
+        SmtTerm.lam s T G) : lamVarWf T' = true := by
+  cases hw : lamVarWf T'
+  · rw [curry_cons_of_not_wf _ _ _ _ hw] at h
+    cases h
+  · rfl
 
 theorem curry_ne_lam {vs : Term} {F : SmtTerm}
     (hvs : ∀ s T vs', vs ≠
@@ -554,7 +640,11 @@ theorem curry_typed_nil {vs : Term} {F : SmtTerm}
   unfold __eo_to_smt_lambda_curry at h
   split at h
   · rfl
-  · exact absurd (smtx_typeof_lam _ _ _) h
+  · rename_i s T vs'
+    change __smtx_typeof (native_ite (lamVarWf T) _ SmtTerm.None) ≠ SmtType.None at h
+    cases hw : lamVarWf T <;> rw [hw] at h
+    · exact absurd smtx_typeof_none h
+    · exact absurd (smtx_typeof_lam _ _ _) h
   · exact absurd smtx_typeof_none h
 
 /-! ## The translation of a spine -/
@@ -606,9 +696,19 @@ theorem LamSpine.eo_to_smt_prefix {t us body : Term} {r : List Term}
         by_cases hD : ∃ s T vs, eoListDrop r.length us =
             Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs
         · obtain ⟨s, T, vs, hD⟩ := hD
-          obtain ⟨hp1, hd1, hn⟩ := lamVarsPrefix_succ r.length us hp hD
+          cases hw : lamVarWf T
+          · have hp1 := lamVarsPrefix_succ_false_of_not_wf r.length us hD hw
+            have hnp : ¬ SmtPendingLam (SmtTerm.bind (lamBindings us r SmtBindings.nil)
+                (__eo_to_smt_lambda_curry (eoListDrop r.length us) (__eo_to_smt body))) := by
+              rw [hD, curry_cons_of_not_wf _ _ _ _ hw]
+              rintro ⟨c, s, T, G, he⟩
+              injection he with _ he
+              cases he
+            rw [eo_to_smt_apply_of_not_pending _ hnp]
+            exact ⟨fun h => (by rw [hp1] at h; cases h), fun _ => not_smtPendingLam_apply _ _⟩
+          obtain ⟨hp1, hd1, hn⟩ := lamVarsPrefix_succ r.length us hp hD hw
           refine ⟨fun _ => ?_, fun h => by rw [hp1] at h; cases h⟩
-          rw [hD, curry_cons, eo_to_smt_apply_pending, hd1]
+          rw [hD, curry_cons_of_wf _ _ _ _ hw, eo_to_smt_apply_pending, hd1]
           congr 1
           change _ = lamBindings us r
             (lamBinding (lamNth us r.length) (__eo_to_smt a) SmtBindings.nil)
@@ -646,7 +746,8 @@ theorem lamVarsPrefix_of_pending_app {f us body : Term} {r : List Term} (y : Ter
   rw [hs.eo_to_smt_prefix.1 hpre] at hpe
   injection hpe with _ hcur
   obtain ⟨s', T', vs, hD⟩ := curry_lam_inv (F := __eo_to_smt body) hcur (eo_to_smt_ne_lam body)
-  exact (lamVarsPrefix_succ _ _ hpre hD).1
+  have hw : lamVarWf T' = true := by rw [hD] at hcur; exact curry_lam_wf hcur
+  exact (lamVarsPrefix_succ _ _ hpre hD hw).1
 
 /-- A typed application of a lambda waiting for an argument applies the lambda
 to as many arguments as it binds variables. -/
@@ -662,7 +763,8 @@ theorem lamVars_of_pending_app {f us body : Term} {r : List Term} (y : Term)
   rw [hs.eo_to_smt_prefix.1 hpre] at hpe
   injection hpe with _ hcur
   obtain ⟨s', T', vs, hD⟩ := curry_lam_inv (F := __eo_to_smt body) hcur (eo_to_smt_ne_lam body)
-  obtain ⟨hp1, -, -⟩ := lamVarsPrefix_succ _ _ hpre hD
+  have hw : lamVarWf T' = true := by rw [hD] at hcur; exact curry_lam_wf hcur
+  obtain ⟨hp1, -, -⟩ := lamVarsPrefix_succ _ _ hpre hD hw
   have hte := (LamSpine.app y hs).eo_to_smt_prefix.1 hp1
   rw [hte] at hNN
   exact lamVars_of_prefix _ _ hp1 (curry_typed_nil (bind_body_non_none_of_non_none hNN))

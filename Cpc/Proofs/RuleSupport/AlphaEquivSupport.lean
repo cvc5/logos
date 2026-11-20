@@ -1571,7 +1571,8 @@ theorem alpha_eval_spine
     (LamSpineSupport.lamSpine_mkSpine _ _ _).parts_typed_any hF'NN
   have hv' : TranslationProofs.lamVars (LamSpineSupport.eoVarList (bps.map Prod.snd))
       bvars.length = true := by
-    rw [← hLenB]; exact LamSpineSupport.lamVars_eoVarList _
+    exact LamSpineSupport.lamVars_eoVarList_of_types bvars (bps.map Prod.snd)
+      (by rw [hRen.types_eq, hFst]) hv
   have hArgsEq : ∀ x ∈ r,
       __smtx_model_eval M
           (__eo_to_smt (__substitute_simul_rec (Term.Boolean true) x vs ts Term.__eo_List_nil)) =
