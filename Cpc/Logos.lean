@@ -266,7 +266,7 @@ def __eo_to_bin : Term -> Term -> Term
 
 
 def __eo_to_str : Term -> Term
-  | (Term.Numeral n1) => (native_ite (native_and (native_zleq 0 n1) (native_zlt n1 196608)) (Term.String (native_str_from_code n1)) Term.Stuck)
+  | (Term.Numeral n1) => (native_ite (native_and (native_zleq 0 n1) (native_zleq n1 native_z_max_code_point)) (Term.String (native_str_from_code n1)) Term.Stuck)
   | (Term.String s1) => (Term.String s1)
   | _ => Term.Stuck
 
@@ -2730,10 +2730,10 @@ def __str_reduction_pred : Term -> Term
 def __mk_str_eager_reduction : Term -> Term
   | (Term.Apply (Term.UOp UserOp.str_from_code) n) =>
     let _v0 := (Term.Apply (Term.UOp UserOp._at_purify) (Term.Apply (Term.UOp UserOp.str_from_code) n))
-    (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.ite) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.leq) (Term.Numeral 0)) n)) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.lt) n) (Term.Numeral 196608))) (Term.Boolean true)))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) n) (Term.Apply (Term.UOp UserOp.str_to_code) _v0))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) _v0) (Term.String [])))
+    (__eo_mk_apply (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.ite) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.leq) (Term.Numeral 0)) n)) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.and) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.lt) n) (__eo_add (Term.Numeral native_z_max_code_point) (Term.Numeral 1)))) (Term.Boolean true)))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) n) (Term.Apply (Term.UOp UserOp.str_to_code) _v0))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) _v0) (Term.String [])))
   | (Term.Apply (Term.UOp UserOp.str_to_code) s) =>
     let _v0 := (Term.Apply (Term.UOp UserOp.str_to_code) s)
-    (Term.Apply (Term.Apply (Term.Apply (Term.UOp UserOp.ite) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) s)) (Term.Numeral 1))) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.geq) _v0) (Term.Numeral 0))) (Term.Apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.lt) _v0) (Term.Numeral 196608))) (Term.Boolean true)))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) _v0) (Term.Numeral (-1 : native_Int))))
+    (__eo_mk_apply (__eo_mk_apply (Term.Apply (Term.UOp UserOp.ite) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) (Term.Apply (Term.UOp UserOp.str_len) s)) (Term.Numeral 1))) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.and) (Term.Apply (Term.Apply (Term.UOp UserOp.geq) _v0) (Term.Numeral 0))) (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.and) (__eo_mk_apply (Term.Apply (Term.UOp UserOp.lt) _v0) (__eo_add (Term.Numeral native_z_max_code_point) (Term.Numeral 1)))) (Term.Boolean true)))) (Term.Apply (Term.Apply (Term.UOp UserOp.eq) _v0) (Term.Numeral (-1 : native_Int))))
   | (Term.Apply (Term.UOp UserOp.str_to_int) s) => (Term.Apply (Term.Apply (Term.UOp UserOp.geq) (Term.Apply (Term.UOp UserOp.str_to_int) s)) (Term.Numeral (-1 : native_Int)))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.str_contains) x) y) =>
     let _v0 := (Term.Apply (Term.UOp UserOp.eq) x)
@@ -8202,7 +8202,7 @@ def __run_evaluate : Term -> Term
   | (Term.Apply (Term.UOp UserOp.str_from_code) n) =>
     let _v0 := (__run_evaluate n)
     let _v1 := (__eo_is_z _v0)
-    (__eo_ite _v1 (__eo_ite (__eo_ite _v1 (__eo_ite (__eo_ite (__eo_eq (Term.Numeral 196607) _v0) (Term.Boolean true) (__eo_gt (Term.Numeral 196607) _v0)) (__eo_not (__eo_is_neg _v0)) (Term.Boolean false)) (Term.Boolean false)) (__eo_to_str n) (Term.String [])) (Term.Apply (Term.UOp UserOp.str_from_code) n))
+    (__eo_ite _v1 (__eo_ite (__eo_ite _v1 (__eo_ite (__eo_ite (__eo_eq (Term.Numeral native_z_max_code_point) _v0) (Term.Boolean true) (__eo_gt (Term.Numeral native_z_max_code_point) _v0)) (__eo_not (__eo_is_neg _v0)) (Term.Boolean false)) (Term.Boolean false)) (__eo_to_str n) (Term.String [])) (Term.Apply (Term.UOp UserOp.str_from_code) n))
   | (Term.Apply (Term.UOp UserOp.str_to_int) ssx) =>
     let _v0 := (__run_evaluate ssx)
     (__eo_ite (__eo_is_str _v0) (__eo_ite (__eo_eq _v0 (Term.String [])) (Term.Numeral (-1 : native_Int)) (__str_to_int_eval_rec (__eo_list_rev (Term.UOp UserOp.str_concat) (__str_flatten (__eo_list_singleton_intro (Term.UOp UserOp.str_concat) _v0))) (Term.Numeral 1) (Term.Numeral 0))) (__eo_mk_apply (Term.UOp UserOp.str_to_int) _v0))
