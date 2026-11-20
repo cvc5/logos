@@ -4511,7 +4511,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
         have hsimpa := hRunDivEoBv
         dsimp [runDiv, runBTerm, maxTerm, widthTerm] at hsimpa
         rw [hRunB] at hsimpa
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, SmtEval.native_nat_to_int] at hsimpa
+        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt_eq, SmtEval.native_nat_to_int] at hsimpa
         by_contra hGe
         have hwNN : ¬ ((w : Int) < 0) := by omega
         simp [decide_eq_false hGe, hwNN, native_and, native_not, __eo_add,
@@ -4527,7 +4527,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
         dsimp [runDiv, runBTerm, maxTerm, widthTerm] at hRunDivEoBv
         rw [hRunB] at hRunDivEoBv
         have hsimpa := hRunDivEoBv
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, SmtEval.native_nat_to_int, hwLt, native_and, native_not, SmtEval.native_zleq] at hsimpa ⊢
+        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt_eq, SmtEval.native_nat_to_int, hwLt, native_and, native_not, SmtEval.native_zleq] at hsimpa ⊢
         exact hsimpa
       have hRunDivEq :
           runDiv =
@@ -4541,7 +4541,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_bvudiv_core
         dsimp [runDiv, runBTerm, maxTerm, widthTerm]
         rw [hRunB]
         have hsimpa := hToBin
-        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt, SmtEval.native_nat_to_int, hwLt, native_and, native_not, SmtEval.native_zleq] at hsimpa ⊢
+        try simp [hAEoBv, __bv_bitwidth, __eo_to_z, __eo_eq, __eo_ite, __eo_add, __eo_pow, __eo_is_z, __eo_is_z_internal, __eo_is_neg, native_binary_max, native_teq, native_ite, SmtEval.native_zlt_eq, SmtEval.native_nat_to_int, hwLt, native_and, native_not, SmtEval.native_zleq] at hsimpa ⊢
         exact hsimpa
       rw [hRunDivEq]
       constructor

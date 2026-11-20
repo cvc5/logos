@@ -17,6 +17,21 @@ open Eo
 open SmtEval
 open Smtm
 
+/-- `native_zlt` as an equation with a proof term, for use in `simp` sets in
+place of `native_zlt` itself.
+
+Since Lean v4.35, letting `simp` unfold `native_zlt` definitionally leaves the
+kernel to re-check `native_zlt x y ≡ decide (x < y)`, and it does so by
+evaluating `Int.decLt`. Against a symbolic `x` and the literal bound
+`4294967296` that evaluation recurses once per unit of the literal, and fails
+with "(kernel) deep recursion detected". Rewriting with this lemma instead
+records the step explicitly, so the kernel never has to reduce the comparison.
+The non-`rfl` proof is deliberate: an `rfl` proof would make `simp` treat this
+as a definitional unfolding again. -/
+theorem SmtEval.native_zlt_eq (x y : native_Int) :
+    native_zlt x y = decide (x < y) :=
+  (native_zlt.eq_1 x y).trans rfl
+
 /-- The checker-facing and rule-proof-facing translation predicates are the
 same property; expose that fact to `simp` at their interface boundary. -/
 @[simp] theorem eoHasSmtTranslation_iff_ruleProofs (t : Term) :

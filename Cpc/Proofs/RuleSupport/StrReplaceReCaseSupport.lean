@@ -689,19 +689,6 @@ private theorem extract_pack_string
   simp only [List.length_map, apply_ite, List.map_nil,
     List.map_take, List.map_drop]
   split <;> simp_all
-  -- v4.33 `simp_all` no longer pushes the `ite` through `List.map`, so the
-  -- guard has to be discharged explicitly before the two sides line up.
-  have hbadFalse :
-      ¬ (((i < 0 ∨ n ≤ 0) ∨ ((s.length : Int)) ≤ i)) := by
-    intro hbad
-    rcases ‹(0 ≤ i ∧ 0 < n) ∧ i < Int.ofNat s.length› with
-      ⟨⟨hi0, hn0⟩, hilt⟩
-    rcases hbad with (hi | hn) | hlen
-    · exact False.elim ((Int.not_lt_of_ge hi0) hi)
-    · exact False.elim ((Int.not_le_of_gt hn0) hn)
-    · exact False.elim ((Int.not_le_of_gt hilt) hlen)
-  rw [ite_eq_right hbadFalse]
-  simp [List.map_take, List.map_drop]
 
 private theorem unpack_extract_pack_string
     (s : native_String) (i n : native_Int) :

@@ -35,7 +35,7 @@ theorem EvaluateProofInternal.str_case_lower_guard_singleton
     · have hNat : c < 91 := Nat.lt_succ_of_le h
       have hInt : (c : Int) < (91 : Int) := Int.ofNat_lt.mpr hNat
       rw [show native_zlt (c : Int) 91 = true by
-        change decide ((c : Int) < (91 : Int)) = true
+        rw [native_zlt_eq]
         exact decide_eq_true hInt]
       rw [show decide (c ≤ 90) = true by exact decide_eq_true h]
     · have hInt : ¬ (c : Int) < (91 : Int) := by
@@ -43,7 +43,7 @@ theorem EvaluateProofInternal.str_case_lower_guard_singleton
         have hNat : c < 91 := Int.ofNat_lt.mp hInt
         exact h (Nat.le_of_lt_succ hNat)
       rw [show native_zlt (c : Int) 91 = false by
-        change decide ((c : Int) < (91 : Int)) = false
+        rw [native_zlt_eq]
         exact decide_eq_false hInt]
       rw [show decide (c ≤ 90) = false by exact decide_eq_false h]
   have hLower : native_zlt 64 (c : Int) = decide (65 ≤ c) := by
@@ -51,7 +51,7 @@ theorem EvaluateProofInternal.str_case_lower_guard_singleton
     · have hNat : 64 < c := Nat.lt_of_lt_of_le (by decide : 64 < 65) h
       have hInt : (64 : Int) < (c : Int) := Int.ofNat_lt.mpr hNat
       rw [show native_zlt 64 (c : Int) = true by
-        change decide ((64 : Int) < (c : Int)) = true
+        rw [native_zlt_eq]
         exact decide_eq_true hInt]
       rw [show decide (65 ≤ c) = true by exact decide_eq_true h]
     · have hInt : ¬ (64 : Int) < (c : Int) := by
@@ -59,7 +59,7 @@ theorem EvaluateProofInternal.str_case_lower_guard_singleton
         have hNat : 64 < c := Int.ofNat_lt.mp hInt
         exact h (Nat.succ_le_of_lt hNat)
       rw [show native_zlt 64 (c : Int) = false by
-        change decide ((64 : Int) < (c : Int)) = false
+        rw [native_zlt_eq]
         exact decide_eq_false hInt]
       rw [show decide (65 ≤ c) = false by exact decide_eq_false h]
   change Term.Boolean (native_and (native_zlt (c : Int) 91)
@@ -78,7 +78,7 @@ theorem EvaluateProofInternal.str_case_upper_guard_singleton
     · have hNat : c < 123 := Nat.lt_succ_of_le h
       have hInt : (c : Int) < (123 : Int) := Int.ofNat_lt.mpr hNat
       rw [show native_zlt (c : Int) 123 = true by
-        change decide ((c : Int) < (123 : Int)) = true
+        rw [native_zlt_eq]
         exact decide_eq_true hInt]
       rw [show decide (c ≤ 122) = true by exact decide_eq_true h]
     · have hInt : ¬ (c : Int) < (123 : Int) := by
@@ -86,7 +86,7 @@ theorem EvaluateProofInternal.str_case_upper_guard_singleton
         have hNat : c < 123 := Int.ofNat_lt.mp hInt
         exact h (Nat.le_of_lt_succ hNat)
       rw [show native_zlt (c : Int) 123 = false by
-        change decide ((c : Int) < (123 : Int)) = false
+        rw [native_zlt_eq]
         exact decide_eq_false hInt]
       rw [show decide (c ≤ 122) = false by exact decide_eq_false h]
   have hLower : native_zlt 96 (c : Int) = decide (97 ≤ c) := by
@@ -94,7 +94,7 @@ theorem EvaluateProofInternal.str_case_upper_guard_singleton
     · have hNat : 96 < c := Nat.lt_of_lt_of_le (by decide : 96 < 97) h
       have hInt : (96 : Int) < (c : Int) := Int.ofNat_lt.mpr hNat
       rw [show native_zlt 96 (c : Int) = true by
-        change decide ((96 : Int) < (c : Int)) = true
+        rw [native_zlt_eq]
         exact decide_eq_true hInt]
       rw [show decide (97 ≤ c) = true by exact decide_eq_true h]
     · have hInt : ¬ (96 : Int) < (c : Int) := by
@@ -102,7 +102,7 @@ theorem EvaluateProofInternal.str_case_upper_guard_singleton
         have hNat : 96 < c := Int.ofNat_lt.mp hInt
         exact h (Nat.succ_le_of_lt hNat)
       rw [show native_zlt 96 (c : Int) = false by
-        change decide ((96 : Int) < (c : Int)) = false
+        rw [native_zlt_eq]
         exact decide_eq_false hInt]
       rw [show decide (97 ≤ c) = false by exact decide_eq_false h]
   change Term.Boolean (native_and (native_zlt (c : Int) 123)

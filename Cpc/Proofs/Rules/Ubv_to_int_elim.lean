@@ -156,7 +156,7 @@ private theorem ubv_list_repeat_zero_eq (len : Nat)
   have hLen' : ¬ 4294967296 ≤ len := by
     have hLenInt : (len : Int) < 4294967296 := hLen
     omega
-  simp [__eo_list_repeat, native_zlt, native_zleq, native_and,
+  simp [__eo_list_repeat, native_zlt_eq, native_zleq, native_and,
     native_int_to_nat, native_nat_to_int, native_ite, hLen']
 
 private theorem ubv_mul_pow_two (start : Nat) :
@@ -589,7 +589,7 @@ private theorem ubv_expansion_stuck_of_large_width
   have hRepeat :
       __eo_list_repeat (Term.UOp UserOp._at__at_TypedList_cons)
           (Term.Numeral 0) (Term.Numeral (native_nat_to_int w)) = Term.Stuck := by
-    simp [__eo_list_repeat, native_ite, native_and, native_zlt, hw]
+    simp [__eo_list_repeat, native_ite, native_and, native_zlt_eq, hw]
   have hAbconv :
       __abconv_ubv_to_int_elim b Term.Stuck (Term.Numeral 1) = Term.Stuck := by
     cases b <;> simp [__abconv_ubv_to_int_elim]
