@@ -175,6 +175,12 @@ private theorem smtHeadBL_seq_empty (T) : smtHeadBL (__eo_to_smt_seq_empty T) = 
 private theorem smtHeadBL_set_empty (T) : smtHeadBL (__eo_to_smt_set_empty T) = false := by
   unfold __eo_to_smt_set_empty; split <;> rfl
 
+private theorem smtHeadBL_ran (q l h s : Term) : smtHeadBL (__eo_to_smt_ran q l h s) = false := by
+  unfold __eo_to_smt_ran
+  split
+  · simp only [smtHeadBL_ite]; cases __eo_to_smt_is_literal_list _ <;> rfl
+  · rfl
+
 /-- Only a lambda, or a generic application whose head is an application,
 translates to a term headed by `bind` or `lam`. -/
 theorem eo_to_smt_headBL_cases (t : Term) (h : smtHeadBL (__eo_to_smt t) = true) :
@@ -191,7 +197,8 @@ theorem eo_to_smt_headBL_cases (t : Term) (h : smtHeadBL (__eo_to_smt t) = true)
        try simp only [smtHeadBL_ite, smtHeadBL_re_unfold, smtHeadBL_skolemize,
          smtHeadBL_updater, smtHeadBL_tuple_prepend, smtHeadBL_tuple_select,
          smtHeadBL_tuple_update, smtHeadBL_distinct, smtHeadBL_array_deq_diff,
-         smtHeadBL_sets_deq_diff, smtHeadBL_seq_empty, smtHeadBL_set_empty]
+         smtHeadBL_sets_deq_diff, smtHeadBL_seq_empty, smtHeadBL_set_empty,
+         smtHeadBL_ran]
        simp [smtHeadBL, native_ite]; done)
     | (exfalso; rename_i hne; rw [smtHeadBL_exists _ _ hne] at h; cases h)
 
