@@ -401,11 +401,12 @@ theorem eo_to_smt_apply_apply_uop_generic_of_not_smt_binop
     (hTuple : op ≠ UserOp.tuple)
     (hSetInsert : op ≠ UserOp.set_insert)
     (hForall : op ≠ UserOp.forall)
-    (hExists : op ≠ UserOp.exists) :
+    (hExists : op ≠ UserOp.exists)
+    (hLambda : op ≠ UserOp.lambda) :
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp op) x) y) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply (Term.UOp op) x))
         (__eo_to_smt y) := by
-  cases op <;> try rfl
+  cases op <;> try closed_generic_rfl
   all_goals
     exfalso
     first
@@ -496,6 +497,7 @@ theorem eo_to_smt_apply_apply_uop_generic_of_not_smt_binop
     | exact hSetInsert rfl
     | exact hForall rfl
     | exact hExists rfl
+    | exact hLambda rfl
 
 def substitute_uopHasUnarySmtTranslation : UserOp -> Bool
   | UserOp.not

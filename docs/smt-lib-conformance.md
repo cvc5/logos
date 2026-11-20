@@ -15,7 +15,9 @@ SMT-LIB in five ways, and they are different kinds of thing:
 - **Higher-order input is out of scope.** Function values are names, and
   equality on them is intensional, deliberately. On a formula that compares
   functions or quantifies over them, the semantics and SMT-LIB 2.7 can disagree
-  in either direction.
+  in either direction. CPC's `lambda` is not affected: a lambda applied to all
+  of its arguments means the `let` of its body, and one applied to fewer has no
+  translation.
 - **Lenient typing.** A few terms SMT-LIB rejects as ill-sorted are given a
   meaning here. No term SMT-LIB accepts changes meaning.
 
@@ -198,6 +200,28 @@ of several arguments: `(declare-fun lt (Real Real) Bool)` can be `<`, with a
 different identifier for each `(lt x)`. A function has at most as many partial
 applications as it has first arguments, and every sort here has at most as many
 values as there are reals, so there are always enough identifiers.
+
+### Lambdas
+
+CPC has a proof-level binder `lambda`, which SMT-LIB does not. It does not make
+functions first-class: there is no lambda value. A lambda is given a meaning only
+once it is applied to an argument for each of its variables, and then it means the
+parallel `let` of its body, binding each variable to its argument
+(`$eo_to_smt_lambda_curry` and `$eo_to_smt_apply` in `install/defs/Cpc.eos`;
+`SmtTerm.lam` and `SmtTerm.bind` in `Cpc/SmtSyntax.lean`). So
+
+```smt2
+(_ (_ (lambda ((x Int) (y Int)) (+ x y)) 1) 2)
+```
+
+means `(let ((x 1) (y 2)) (+ x y))`, which is 3. Each argument is evaluated
+where the application is, not under the bindings of the earlier ones, as in
+SMT-LIB's `let`. A lambda applied to more arguments than it binds is the SMT
+application of that `let` to the rest, which is typed when the body has a
+function type. A lambda applied to fewer, or not applied at all, has no
+translation: as for any other term without one, a proof whose assumptions
+contain one is reported `incomplete`, and no step can conclude a formula that
+contains one.
 
 ## Lenient typing
 

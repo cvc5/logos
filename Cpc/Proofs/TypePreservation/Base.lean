@@ -4,6 +4,8 @@ import Lean
 public import Cpc.Proofs.TypePreservation.Model
 import all Cpc.Proofs.ModelEval
 import all Cpc.Proofs.TypePreservation.Common
+public import Cpc.Proofs.ModelEvalBindings
+import all Cpc.Proofs.ModelEvalBindings
 
 public section
 
@@ -25,11 +27,19 @@ by
   rw [__smtx_model_eval.eq_def]
 
 theorem smtx_model_eval_bind_eq
-    (M : SmtModel) (s : native_String) (T : SmtType) (x1 x2 : SmtTerm) :
-  __smtx_model_eval M (SmtTerm.bind s T x1 x2) =
-    __smtx_model_eval (native_model_push M s T (__smtx_model_eval M x1)) x2 :=
+    (M : SmtModel) (bs : SmtBindings) (x : SmtTerm) :
+  __smtx_model_eval M (SmtTerm.bind bs x) =
+    __smtx_model_eval (__smtx_model_eval.push_bindings M M bs) x :=
 by
   rw [__smtx_model_eval.eq_def]
+
+/-- Evaluating a `let` of one binding. -/
+theorem smtx_model_eval_bind_single_eq
+    (M : SmtModel) (s : native_String) (T : SmtType) (x1 x2 : SmtTerm) :
+  __smtx_model_eval M (SmtTerm.bind (SmtBindings.cons s T x1 SmtBindings.nil) x2) =
+    __smtx_model_eval (native_model_push M s T (__smtx_model_eval M x1)) x2 :=
+by
+  rw [smtx_model_eval_bind_eq, model_push_bindings_cons, model_push_bindings_nil]
 
 /-- Shows that evaluating `boolean` terms produces values of the expected type. -/
 theorem typeof_value_model_eval_boolean
@@ -726,104 +736,131 @@ theorem choice_term_inhabited_of_non_none
   refine ⟨__smtx_model_eval Mw (SmtTerm.choice s T body), ?_⟩
   simpa using typeof_value_model_eval_choice Mw hMw s T body ht
 
-/-- Type of a `bind` term equals the (guarded) type of its body when well-typed. -/
+theorem smtx_typeof_bind_eq (bs : SmtBindings) (x : SmtTerm) :
+    __smtx_typeof (SmtTerm.bind bs x) = __smtx_typeof_bindings bs (__smtx_typeof x) := by
+  rw [__smtx_typeof.eq_def]
+
+theorem smtx_typeof_bindings_nil_eq (U : SmtType) :
+    __smtx_typeof_bindings SmtBindings.nil U = U := by
+  rw [__smtx_typeof_bindings.eq_def]
+
+theorem smtx_typeof_bindings_cons_eq (s : native_String) (T : SmtType) (v : SmtTerm)
+    (bs : SmtBindings) (U : SmtType) :
+    __smtx_typeof_bindings (SmtBindings.cons s T v bs) U =
+      native_ite (native_Teq (__smtx_typeof v) T)
+        (__smtx_typeof_guard_wf T (__smtx_typeof_bindings bs U)) SmtType.None := by
+  rw [__smtx_typeof_bindings.eq_def]
+
+/-- Well-typed bindings leave the type of the body alone, and bind each term to a
+variable of its own, well-formed, type. -/
+theorem smtx_typeof_bindings_of_non_none :
+    ∀ (bs : SmtBindings) (U : SmtType),
+      __smtx_typeof_bindings bs U ≠ SmtType.None ->
+        __smtx_typeof_bindings bs U = U ∧
+          ∀ s T v, SmtBindings.Mem bs s T v ->
+            __smtx_typeof v = T ∧ __smtx_type_wf T = true
+  | SmtBindings.nil, U, _ => by
+      refine ⟨smtx_typeof_bindings_nil_eq U, ?_⟩
+      intro s T v hm
+      cases hm
+  | SmtBindings.cons s T v bs, U, h => by
+      rw [smtx_typeof_bindings_cons_eq] at h ⊢
+      have hEq : native_Teq (__smtx_typeof v) T = true := by
+        cases hTest : native_Teq (__smtx_typeof v) T
+        · simp [hTest, native_ite] at h
+        · rfl
+      simp only [hEq, native_ite, ite_true] at h ⊢
+      have hWf := smtx_typeof_guard_wf_wf_of_non_none T _ h
+      have hG := smtx_typeof_guard_wf_of_non_none T _ h
+      rw [hG] at h ⊢
+      obtain ⟨hU, hMem⟩ := smtx_typeof_bindings_of_non_none bs U h
+      refine ⟨hU, ?_⟩
+      intro s' T' v' hm
+      cases hm with
+      | head => exact ⟨of_decide_eq_true (by simpa [native_Teq] using hEq), hWf⟩
+      | tail _ _ _ hm' => exact hMem s' T' v' hm'
+
+/-- Type of a `bind` term equals the type of its body when well-typed. -/
 theorem bind_term_typeof_of_non_none
-    {s : native_String}
-    {T : SmtType}
-    {x1 x2 : SmtTerm}
-    (ht : term_has_non_none_type (SmtTerm.bind s T x1 x2)) :
-    __smtx_typeof (SmtTerm.bind s T x1 x2) = __smtx_typeof x2 := by
+    {bs : SmtBindings} {x : SmtTerm}
+    (ht : term_has_non_none_type (SmtTerm.bind bs x)) :
+    __smtx_typeof (SmtTerm.bind bs x) = __smtx_typeof x := by
   unfold term_has_non_none_type at ht
-  have hEq : native_Teq (__smtx_typeof x1) T = true := by
-    by_cases hEq : native_Teq (__smtx_typeof x1) T = true
-    · exact hEq
-    · exfalso
-      have hEqFalse : native_Teq (__smtx_typeof x1) T = false := by
-        cases hTest : native_Teq (__smtx_typeof x1) T <;> simp [hTest] at hEq ⊢
-      apply ht
-      unfold __smtx_typeof
-      simp [hEqFalse, native_ite]
-  have hGuardNN : __smtx_typeof_guard_wf T (__smtx_typeof x2) ≠ SmtType.None := by
-    unfold __smtx_typeof at ht
-    simpa [hEq, native_ite] using ht
-  have hGuard : __smtx_typeof_guard_wf T (__smtx_typeof x2) = __smtx_typeof x2 :=
-    smtx_typeof_guard_wf_of_non_none T (__smtx_typeof x2) hGuardNN
-  have hLHS : __smtx_typeof (SmtTerm.bind s T x1 x2)
-      = __smtx_typeof_guard_wf T (__smtx_typeof x2) := by
-    rw [__smtx_typeof.eq_def]
-    simp [hEq, native_ite]
-  rw [hLHS]
-  exact hGuard
+  rw [smtx_typeof_bind_eq] at ht ⊢
+  exact (smtx_typeof_bindings_of_non_none bs _ ht).1
 
-/-- The bound value of a well-typed `bind` has the binder type. -/
-theorem bind_arg1_type_of_non_none
-    {s : native_String} {T : SmtType} {x1 x2 : SmtTerm}
-    (ht : term_has_non_none_type (SmtTerm.bind s T x1 x2)) :
-    __smtx_typeof x1 = T := by
+/-- A bound term of a well-typed `bind` has the type of its variable. -/
+theorem bind_binding_type_of_non_none
+    {bs : SmtBindings} {x : SmtTerm} {s : native_String} {T : SmtType} {v : SmtTerm}
+    (ht : term_has_non_none_type (SmtTerm.bind bs x)) (hm : SmtBindings.Mem bs s T v) :
+    __smtx_typeof v = T := by
   unfold term_has_non_none_type at ht
-  by_cases hEq : native_Teq (__smtx_typeof x1) T = true
-  · exact of_decide_eq_true (by simpa [native_Teq] using hEq)
-  · exfalso
-    have hEqFalse : native_Teq (__smtx_typeof x1) T = false := by
-      cases hTest : native_Teq (__smtx_typeof x1) T <;> simp [hTest] at hEq ⊢
-    apply ht
-    unfold __smtx_typeof
-    simp [hEqFalse, native_ite]
+  rw [smtx_typeof_bind_eq] at ht
+  exact ((smtx_typeof_bindings_of_non_none bs _ ht).2 s T v hm).1
 
-/-- The binder type of a well-typed `bind` is well formed. -/
-theorem bind_binder_type_wf_of_non_none
-    {s : native_String} {T : SmtType} {x1 x2 : SmtTerm}
-    (ht : term_has_non_none_type (SmtTerm.bind s T x1 x2)) :
+/-- The type of a variable of a well-typed `bind` is well formed. -/
+theorem bind_binding_type_wf_of_non_none
+    {bs : SmtBindings} {x : SmtTerm} {s : native_String} {T : SmtType} {v : SmtTerm}
+    (ht : term_has_non_none_type (SmtTerm.bind bs x)) (hm : SmtBindings.Mem bs s T v) :
     __smtx_type_wf T = true := by
-  have hEq : native_Teq (__smtx_typeof x1) T = true := by
-    simp [native_Teq, bind_arg1_type_of_non_none ht]
   unfold term_has_non_none_type at ht
-  have hGuardNN : __smtx_typeof_guard_wf T (__smtx_typeof x2) ≠ SmtType.None := by
-    unfold __smtx_typeof at ht
-    simpa [hEq, native_ite] using ht
-  exact smtx_typeof_guard_wf_wf_of_non_none T (__smtx_typeof x2) hGuardNN
+  rw [smtx_typeof_bind_eq] at ht
+  exact ((smtx_typeof_bindings_of_non_none bs _ ht).2 s T v hm).2
 
-/-- The bound value of a well-typed `bind` has non-`None` type. -/
-theorem bind_arg1_non_none_of_non_none
-    {s : native_String} {T : SmtType} {x1 x2 : SmtTerm}
-    (ht : term_has_non_none_type (SmtTerm.bind s T x1 x2)) :
-    term_has_non_none_type x1 := by
+/-- A bound term of a well-typed `bind` has non-`None` type. -/
+theorem bind_binding_non_none_of_non_none
+    {bs : SmtBindings} {x : SmtTerm} {s : native_String} {T : SmtType} {v : SmtTerm}
+    (ht : term_has_non_none_type (SmtTerm.bind bs x)) (hm : SmtBindings.Mem bs s T v) :
+    term_has_non_none_type v := by
   unfold term_has_non_none_type
-  rw [bind_arg1_type_of_non_none ht]
+  rw [bind_binding_type_of_non_none ht hm]
   intro hNone
-  have hWf := bind_binder_type_wf_of_non_none ht
+  have hWf := bind_binding_type_wf_of_non_none ht hm
   rw [hNone] at hWf
   exact absurd hWf (by decide +kernel)
 
 /-- The body of a well-typed `bind` has non-`None` type. -/
-theorem bind_arg2_non_none_of_non_none
-    {s : native_String} {T : SmtType} {x1 x2 : SmtTerm}
-    (ht : term_has_non_none_type (SmtTerm.bind s T x1 x2)) :
-    term_has_non_none_type x2 := by
+theorem bind_body_non_none_of_non_none
+    {bs : SmtBindings} {x : SmtTerm}
+    (ht : term_has_non_none_type (SmtTerm.bind bs x)) :
+    term_has_non_none_type x := by
   have hEq := bind_term_typeof_of_non_none ht
   unfold term_has_non_none_type at ht ⊢
   rw [hEq] at ht
   exact ht
 
+/-! One-binding forms, for the `let` a skolem is written with. -/
+
+theorem bind_single_arg1_type_of_non_none
+    {s : native_String} {T : SmtType} {x1 x2 : SmtTerm}
+    (ht : term_has_non_none_type (SmtTerm.bind (SmtBindings.cons s T x1 SmtBindings.nil) x2)) :
+    __smtx_typeof x1 = T :=
+  bind_binding_type_of_non_none ht (SmtBindings.Mem.head s T x1 SmtBindings.nil)
+
+theorem bind_single_binder_type_wf_of_non_none
+    {s : native_String} {T : SmtType} {x1 x2 : SmtTerm}
+    (ht : term_has_non_none_type (SmtTerm.bind (SmtBindings.cons s T x1 SmtBindings.nil) x2)) :
+    __smtx_type_wf T = true :=
+  bind_binding_type_wf_of_non_none ht (SmtBindings.Mem.head s T x1 SmtBindings.nil)
+
 /-- Shows that evaluating a `bind` (let) term produces a value of the expected
-type, given type preservation for the body `x2` under the pushed model.  The
-caller supplies `hx2` (via canonicity preservation of `x1` so that the pushed
-model stays `model_wf`); `bind` is the only construct whose result type
-is the body's type under a pushed binding, so it needs this extra input. -/
+type, given type preservation for the body `x` under the model extended with
+the bindings. The caller supplies `hx` (via type and canonicity preservation of
+the bound terms, so that the extended model stays `model_wf`); `bind` is the
+only construct whose result type is the body's type under pushed bindings, so
+it needs this extra input. -/
 theorem typeof_value_model_eval_bind
     (M : SmtModel)
-    (s : native_String)
-    (T : SmtType)
-    (x1 x2 : SmtTerm)
-    (ht : term_has_non_none_type (SmtTerm.bind s T x1 x2))
-    (hx2 :
-      __smtx_typeof_value
-          (__smtx_model_eval (native_model_push M s T (__smtx_model_eval M x1)) x2) =
-        __smtx_typeof x2) :
-    __smtx_typeof_value (__smtx_model_eval M (SmtTerm.bind s T x1 x2)) =
-      __smtx_typeof (SmtTerm.bind s T x1 x2) := by
+    (bs : SmtBindings)
+    (x : SmtTerm)
+    (ht : term_has_non_none_type (SmtTerm.bind bs x))
+    (hx :
+      __smtx_typeof_value (__smtx_model_eval (__smtx_model_eval.push_bindings M M bs) x) =
+        __smtx_typeof x) :
+    __smtx_typeof_value (__smtx_model_eval M (SmtTerm.bind bs x)) =
+      __smtx_typeof (SmtTerm.bind bs x) := by
   rw [smtx_model_eval_bind_eq, bind_term_typeof_of_non_none ht]
-  exact hx2
+  exact hx
 
 
 end Smtm

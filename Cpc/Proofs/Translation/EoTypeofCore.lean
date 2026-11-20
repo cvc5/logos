@@ -2729,13 +2729,13 @@ private theorem eo_to_smt_quantifier_term_ne_numeral
     __eo_to_smt (Term.UOp2 UserOp2._at_quantifiers_skolemize x y) ≠
       SmtTerm.Numeral n := by
   intro h
-  cases x <;> try cases h
+  cases x <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f body =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case Apply g vars =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
-        cases op <;> try cases h
+        cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case «forall» =>
           change native_ite (__eo_to_smt_nat_is_valid y)
               (__eo_to_smt_quantifiers_skolemize
@@ -2753,13 +2753,13 @@ private theorem eo_to_smt_distinct_ne_numeral
     (xs : Term) (n : native_Int) :
     __eo_to_smt_distinct xs ≠ SmtTerm.Numeral n := by
   intro h
-  cases xs <;> try cases h
+  cases xs <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply f a =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case UOp op =>
       cases op <;> cases h
     case Apply g x =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
         cases op <;> cases h
 
@@ -2780,7 +2780,7 @@ private theorem eo_to_smt_updater_ne_numeral
     (sel t u : SmtTerm) (n : native_Int) :
     __eo_to_smt_updater sel t u ≠ SmtTerm.Numeral n := by
   intro h
-  cases sel <;> try cases h
+  cases sel <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case DtSel s d i j =>
     cases hIdx : native_zlt (native_nat_to_int j)
         (native_nat_to_int (__smtx_dt_num_sels (__smtx_dd_lookup s d) i)) <;>
@@ -2868,15 +2868,15 @@ private theorem eo_to_smt_exists_ne_numeral_of_not_nil
     (hxs : xs ≠ Term.__eo_List_nil) :
     __eo_to_smt_exists xs body ≠ SmtTerm.Numeral n := by
   intro h
-  cases xs <;> try cases h
+  cases xs <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case __eo_List_nil =>
     exact False.elim (hxs rfl)
   case Apply f a =>
-    cases f <;> try cases h
+    cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case Apply g x =>
-      cases g <;> try cases h
+      cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case __eo_List_cons =>
-        cases x <;> try cases h
+        cases x <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case Var name T =>
           cases name <;> cases h
 
@@ -2909,9 +2909,9 @@ private theorem eo_to_smt_apply_ne_numeral
     (f x : Term) (n : native_Int) :
     __eo_to_smt (Term.Apply f x) ≠ SmtTerm.Numeral n := by
   intro h
-  cases f <;> try cases h
+  cases f <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case UOp op =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case distinct =>
       change native_ite
           (native_Teq (__eo_to_smt_typed_list_elem_type x) SmtType.None)
@@ -2930,16 +2930,16 @@ private theorem eo_to_smt_apply_ne_numeral
       cases hw : native_zleq 0 (__eo_to_smt_bv_size (__smtx_typeof (__eo_to_smt x))) <;>
         simp [native_ite, hw] at h
   case UOp1 op idx =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case tuple_select =>
       exact False.elim (eo_to_smt_tuple_select_ne_numeral
       (__smtx_typeof (__eo_to_smt x)) (__eo_to_smt idx) (__eo_to_smt x) n h)
   case UOp2 op idx1 idx2 =>
-    cases op <;> try cases h
+    cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply g y =>
-    cases g <;> try cases h
+    cases g <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case UOp op =>
-      cases op <;> try cases h
+      cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case «forall» =>
         exact False.elim (eo_to_smt_apply_forall_ne_numeral y x n h)
       case «exists» =>
@@ -2956,7 +2956,7 @@ private theorem eo_to_smt_apply_ne_numeral
           (eo_to_smt_sets_deq_diff_ne_numeral
             (__eo_to_smt y) (__eo_to_smt x) n h)
     case UOp1 op idx =>
-      cases op <;> try cases h
+      cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case update =>
         exact False.elim (eo_to_smt_updater_ne_numeral
           (__eo_to_smt idx) (__eo_to_smt y) (__eo_to_smt x) n h)
@@ -2965,13 +2965,13 @@ private theorem eo_to_smt_apply_ne_numeral
           (__smtx_typeof (__eo_to_smt y)) (__eo_to_smt idx)
           (__eo_to_smt y) (__eo_to_smt x) n h)
     case Apply g2 z =>
-      cases g2 <;> try cases h
+      cases g2 <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case UOp op =>
-        cases op <;> try cases h
+        cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case Apply g3 w =>
-        cases g3 <;> try cases h
+        cases g3 <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
         case UOp op =>
-          cases op <;> cases h
+          cases op <;> first | cases h | eo_to_smt_generic_apply_cases h
 
 /-- The only EO terms that translate to SMT numerals are EO numerals. -/
 theorem eo_to_smt_eq_numeral
@@ -2985,11 +2985,11 @@ theorem eo_to_smt_eq_numeral
       rfl
   | UOp op => cases op <;> cases h
   | UOp1 op x =>
-      cases op <;> try cases h
+      cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       · exact False.elim (eo_to_smt_seq_empty_ne_numeral (__eo_to_smt_type x) n h)
       · exact False.elim (eo_to_smt_set_empty_ne_numeral (__eo_to_smt_type x) n h)
   | UOp2 op x y =>
-      cases op <;> try cases h
+      cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
       case _at_quantifiers_skolemize =>
         exact False.elim (eo_to_smt_quantifier_term_ne_numeral x y n h)
       case _at_const =>

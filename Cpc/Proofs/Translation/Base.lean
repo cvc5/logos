@@ -498,4 +498,31 @@ theorem smtx_bv_sizeof_term_non_none
         rfl
       exact h hNone
 
+/-- The shapes a generically translated application can take: the SMT
+application `d`, no term, or a `let`. -/
+def EoToSmtApplyShape (r d : SmtTerm) : Prop :=
+  r = d ∨ r = SmtTerm.None ∨ ∃ bs b, r = SmtTerm.bind bs b
+
+theorem eo_to_smt_apply_shape (g y : SmtTerm) :
+    EoToSmtApplyShape (__eo_to_smt_apply g y) (SmtTerm.Apply g y) := by
+  unfold __eo_to_smt_apply
+  split
+  · exact Or.inr (Or.inr ⟨_, _, rfl⟩)
+  · exact Or.inl rfl
+
+/-- A generic application translates to the SMT application, or to a `let`
+(when its head is a lambda still waiting for an argument). -/
+theorem eo_to_smt_apply_generic_cases {g y r : SmtTerm}
+    (h : __eo_to_smt_apply g y = r) :
+    r = SmtTerm.Apply g y ∨ r = SmtTerm.None ∨
+      ∃ bs b, r = SmtTerm.bind bs b := by
+  subst h
+  exact eo_to_smt_apply_shape _ _
+
+/-- Closes a goal from a hypothesis `h : __eo_to_smt (Term.Apply f y) = r`,
+where the application is translated generically, by the shapes of
+`eo_to_smt_apply_generic_cases` (each of which must refute `h`). -/
+macro "eo_to_smt_generic_apply_cases" h:ident : tactic =>
+  `(tactic| (refine (fun hc => ?_) (eo_to_smt_apply_generic_cases $h); rcases hc with hc | hc | ⟨_, _, hc⟩ <;> cases hc))
+
 end TranslationProofs

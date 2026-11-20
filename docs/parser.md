@@ -136,8 +136,8 @@ that denotes `(forall (@list x y) F)`, where each variable is `(@var "x" Int)`, 
 term wherever its name and type are, and is bound in the rest of the application; a
 first argument that is not a variable list is an ordinary term.  The configuration
 supplies the list constructor (`OpDecl.binder`) and the variables (`Config.mkVar`).
-`lambda` is a binder in CPC too, but Logos has no representation for it, so a term
-using it is not read.
+`lambda` is a binder in CPC too and is read the same way; an application of one is
+written `(_ (lambda ((x Int)) t) a)`.
 A name may be declared more than once, as SMT-LIB allows, and a proof's own symbol may
 carry the name of one of the signature's operators; every declaration of a name is kept,
 and a use of it means the reading the calculus gives a type to (`Config.wellTyped`, which

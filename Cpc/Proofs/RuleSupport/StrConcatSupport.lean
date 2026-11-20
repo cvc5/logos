@@ -404,7 +404,7 @@ theorem smt_value_rel_str_concat_list_nil_right_empty_eval
       cases hA : __eo_to_smt_type A <;>
         simp [__eo_to_smt_seq_empty, hA] at hNilEval ⊢
       case Seq U =>
-        rw [__smtx_model_eval.eq_79] at hNilEval ⊢
+        rw [__smtx_model_eval.eq_81] at hNilEval ⊢
         simp [__smtx_model_eval_str_concat, native_seq_concat]
         rw [native_unpack_seq, List.append_nil]
         change RuleProofs.smt_seq_rel

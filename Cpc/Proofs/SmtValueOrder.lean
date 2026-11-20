@@ -293,7 +293,7 @@ theorem typeOfKey_typeKey (t : SmtType) : typeOfKey (typeKey t) = some t := by
     typeOfKey_typeKey, datatypeDeclOfKey_datatypeDeclKey]
 
 theorem valueOfKey_valueKey (v : SmtValue) : valueOfKey (valueKey v) = some v := by
-  cases v <;> simp [valueKey, valueOfKey, node, fields, natKey, boolKey, charKey,
+  cases v <;> simp [valueKey, modelIdKey, valueOfKey, node, fields, natKey, boolKey, charKey,
     intOfKey_intKey, realOfKey_realKey, stringOfKey_stringKey, regLanOfKey_regLanKey,
     typeOfKey_typeKey, valueOfKey_valueKey, mapOfKey_mapKey, seqOfKey_seqKey,
     datatypeDeclOfKey_datatypeDeclKey]
