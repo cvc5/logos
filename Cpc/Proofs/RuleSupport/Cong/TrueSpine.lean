@@ -4,6 +4,8 @@ public import Cpc.Proofs.RuleSupport.Cong.TypeSpine
 import all Cpc.Proofs.RuleSupport.Cong.TypeSpine
 public import Cpc.Proofs.RuleSupport.Cong.HoCong
 import all Cpc.Proofs.RuleSupport.Cong.HoCong
+public import Cpc.Proofs.Canonical
+import all Cpc.Proofs.Canonical
 
 public section
 
@@ -46,6 +48,12 @@ private theorem agrees_on_globals_pushL (M : SmtModel) :
           have := agrees_on_globals_pushL (native_model_push M s T v) l
           exact this)
 
+theorem lam_forall₂_refl_interp (M : SmtModel) (r : List Term) :
+    List.Forall₂ (fun a' a => a' = a ∨ eo_interprets M (mkEq a a') true) r r := by
+  induction r with
+  | nil => exact List.Forall₂.nil
+  | cons a r ih => exact List.Forall₂.cons (Or.inl rfl) ih
+
 /-- What a lambda spine is congruent to, in a model. -/
 theorem congTrueSpine_lam_spine_shape (M : SmtModel) (us body : Term)
     (hUs : ¬ RuleProofs.eo_has_smt_translation us) :
@@ -69,11 +77,7 @@ theorem congTrueSpine_lam_spine_shape (M : SmtModel) (us body : Term)
         (Term.Apply (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r) a) rhs at hC
       cases hC with
       | refl =>
-          refine ⟨body, a :: r, rfl, Or.inl rfl, ?_⟩
-          clear hUs
-          induction (a :: r) with
-          | nil => exact List.Forall₂.nil
-          | cons b l ih => exact List.Forall₂.cons (Or.inl rfl) ih
+          exact ⟨body, a :: r, rfl, Or.inl rfl, lam_forall₂_refl_interp M _⟩
       | @app _ g _ y hFn hArg _ =>
           obtain ⟨body', r', rfl, hB, hR⟩ := congTrueSpine_lam_spine_shape M us body hUs r g hFn
           exact ⟨body', y :: r', rfl, hB, List.Forall₂.cons (Or.inr hArg) hR⟩
@@ -92,10 +96,11 @@ theorem lam_spine_args_not_reglan (M : SmtModel) (hM : model_wf M)
   rw [LamSpineSupport.lamBindings_eoVarList vs r SmtBindings.nil (by omega),
     show vs.take r.length = vs by rw [hlen, List.take_length]] at hTy
   obtain ⟨i, hi, hai⟩ := List.getElem_of_mem (List.mem_reverse.2 ha)
-  have hmem : (vs[i]'(by simp at hi; omega), r.reverse[i]) ∈ vs.zip r.reverse := by
+  have hi' : i < vs.length := by simp at hi; omega
+  have hmem : (vs[i], r.reverse[i]) ∈ vs.zip r.reverse := by
     rw [List.mem_iff_getElem]
-    exact ⟨i, by simp at hi ⊢; omega, by simp⟩
-  have hBind := LamSpineSupport.bindsApp_mem _ _ _ hmem
+    exact ⟨i, by simp; omega, by simp⟩
+  have hBind := LamSpineSupport.bindsApp_mem (vs.zip r.reverse) SmtBindings.nil _ hmem
   have hTyA := bind_binding_type_of_non_none hTy hBind
   have hWf := LamSpineSupport.lamVars_wf_of_eoVarList vs hv _ (List.getElem_mem _)
   simp only [hai] at hTyA
@@ -128,7 +133,7 @@ theorem lam_args_eval_eq (M : SmtModel) :
       rcases ha with rfl | ha
       · rfl
       · have hRel := RuleProofs.eo_interprets_eq_rel M a a' ha
-        exact ((smtx_model_eval_eq_true_iff_of_not_reglan_pair
+        exact ((RuleProofs.smtx_model_eval_eq_true_iff_of_not_reglan_pair
           (by rintro ⟨r1, r2, h1, _⟩; exact hNotReg a List.mem_cons_self r1 h1)).1 hRel).symm
 
 theorem lam_eo_interprets_eq_self (M : SmtModel) (a : Term)
@@ -2229,6 +2234,8 @@ theorem congTrueSpine_eq_true
                                       _ z x ?_
                                       ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
                                         _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
+                            case lambda =>
+                              exact absurd ⟨_, _, _, TranslationProofs.LamSpine.lam _ _⟩ hLS
                             case eq =>
                               exact congTrueSpine_eq_eq_true M hM
                                 z x (Term.Apply g y) hEqBool hApp
