@@ -11356,16 +11356,17 @@ the lambda binds: beyond the `let`, each application is the SMT application of
 the shorter spine. -/
 theorem substFalse_eval_spine_apps
     {M N : SmtModel} (hGlobals : model_agrees_on_globals M N)
-    (us body body' : Term) (m : Nat) (hv : TranslationProofs.lamVars us m = true) (σ : Term -> Term)
+    (us us' body body' : Term) (m : Nat) (hv : TranslationProofs.lamVars us m = true)
+    (hv' : TranslationProofs.lamVars us' m = true) (σ : Term -> Term)
     (hFull : ∀ rm : List Term, rm.length = m ->
       (∀ x ∈ rm,
         __smtx_model_eval M (__eo_to_smt (σ x)) = __smtx_model_eval N (__eo_to_smt x)) ->
       term_has_non_none_type
         (SmtTerm.bind (TranslationProofs.lamBindings us rm SmtBindings.nil) (__eo_to_smt body)) ->
       term_has_non_none_type
-        (SmtTerm.bind (TranslationProofs.lamBindings us (rm.map σ) SmtBindings.nil) (__eo_to_smt body')) ->
+        (SmtTerm.bind (TranslationProofs.lamBindings us' (rm.map σ) SmtBindings.nil) (__eo_to_smt body')) ->
       __smtx_model_eval M
-          (SmtTerm.bind (TranslationProofs.lamBindings us (rm.map σ) SmtBindings.nil) (__eo_to_smt body')) =
+          (SmtTerm.bind (TranslationProofs.lamBindings us' (rm.map σ) SmtBindings.nil) (__eo_to_smt body')) =
         __smtx_model_eval N
           (SmtTerm.bind (TranslationProofs.lamBindings us rm SmtBindings.nil) (__eo_to_smt body))) :
     ∀ r : List Term, m ≤ r.length ->
@@ -11374,18 +11375,18 @@ theorem substFalse_eval_spine_apps
       __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r)) ≠
         SmtType.None ->
       __smtx_typeof (__eo_to_smt
-          (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body') (r.map σ))) ≠
+          (LamSpineSupport.mkSpine (LamSpineSupport.lamT us' body') (r.map σ))) ≠
         SmtType.None ->
       __smtx_model_eval M
-          (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body') (r.map σ))) =
+          (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us' body') (r.map σ))) =
         __smtx_model_eval N
           (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r))
   | r, hm, hArgs, hTy, hTy' => by
       by_cases hmr : m = r.length
       · subst hmr
-        have hv' : TranslationProofs.lamVars us (r.map σ).length = true := by simpa using hv
+        have hv'' : TranslationProofs.lamVars us' (r.map σ).length = true := by simpa using hv'
         rw [(LamSpineSupport.lamSpine_mkSpine us body r).eo_to_smt_full hv] at hTy ⊢
-        rw [(LamSpineSupport.lamSpine_mkSpine us body' (r.map σ)).eo_to_smt_full hv'] at hTy' ⊢
+        rw [(LamSpineSupport.lamSpine_mkSpine us' body' (r.map σ)).eo_to_smt_full hv''] at hTy' ⊢
         exact hFull r rfl hArgs hTy hTy'
       · cases r with
         | nil => simp at hm hmr; omega
@@ -11394,12 +11395,12 @@ theorem substFalse_eval_spine_apps
             have hlt : m < r.length + 1 := by omega
             have hlt' : m < (r.map σ).length + 1 := by simpa using hlt
             change __smtx_model_eval M (__eo_to_smt
-                (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body') (σ a :: r.map σ))) = _
+                (LamSpineSupport.mkSpine (LamSpineSupport.lamT us' body') (σ a :: r.map σ))) = _
             change __smtx_typeof (__eo_to_smt
-                (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body') (σ a :: r.map σ))) ≠ _
+                (LamSpineSupport.mkSpine (LamSpineSupport.lamT us' body') (σ a :: r.map σ))) ≠ _
               at hTy'
             rw [LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv a r hlt] at hTy ⊢
-            rw [LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv (σ a) (r.map σ) hlt'] at hTy' ⊢
+            rw [LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv' (σ a) (r.map σ) hlt'] at hTy' ⊢
             rw [LamSpineSupport.smtx_typeof_mkSpine_apply] at hTy hTy'
             obtain ⟨A, B, hF, hX, hA, _⟩ := typeof_apply_non_none_cases hTy
             obtain ⟨A', B', hF', hX', hA', _⟩ := typeof_apply_non_none_cases hTy'
@@ -11407,10 +11408,10 @@ theorem substFalse_eval_spine_apps
                 (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r)) ≠ SmtType.None := by
               rcases hF with hF | hF <;> rw [hF] <;> simp
             have hF'NN : __smtx_typeof (__eo_to_smt
-                (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body') (r.map σ))) ≠
+                (LamSpineSupport.mkSpine (LamSpineSupport.lamT us' body') (r.map σ))) ≠
                   SmtType.None := by
               rcases hF' with hF' | hF' <;> rw [hF'] <;> simp
-            have ih := substFalse_eval_spine_apps hGlobals us body body' m hv σ hFull r
+            have ih := substFalse_eval_spine_apps hGlobals us us' body body' m hv hv' σ hFull r
               (by omega) (fun x hx => hArgs x (List.mem_cons_of_mem _ hx)) hFNN hF'NN
             exact smtx_model_eval_apply_cross_eq_of_eval_eq hGlobals
               (generic_apply_eval_mkSpine (σ a) (r.map σ)) (generic_apply_eval_mkSpine a r)
@@ -11486,8 +11487,9 @@ theorem substFalse_eval_spine
         __smtx_model_eval N (__eo_to_smt x) := fun x hx =>
     hRec (hSize.2 x hx) hBvsEnv (hArgsNN x hx)
       (hArgs'NN _ (List.mem_map_of_mem hx)) hM hN hRel
-  exact substFalse_eval_spine_apps hRel.globals (LamSpineSupport.eoVarList vs) body
-    (__substitute_simul_rec (Term.Boolean false) body xs ss bvsFull) m hv
+  exact substFalse_eval_spine_apps hRel.globals (LamSpineSupport.eoVarList vs)
+    (LamSpineSupport.eoVarList vs) body
+    (__substitute_simul_rec (Term.Boolean false) body xs ss bvsFull) m hv hv
     (fun x => __substitute_simul_rec (Term.Boolean false) x xs ss bvs)
     (fun rm hrm hArgsRm hTy hTy' =>
       substFalse_eval_spine_full xs ss vs rm _ body _ bvsFull (by omega) hM hN hTy hTy'

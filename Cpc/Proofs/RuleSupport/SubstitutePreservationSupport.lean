@@ -291,8 +291,8 @@ theorem substitute_simul_spine_preserves
           (fun x hx => hArgSmt (hArgsNN x hx) (hArgRes x hx).2 (hArgRes x hx).1)]
         exact hFNN
   | true =>
-      have hSubEq := InstantiateRule.substitute_simul_rec_spine_rename xs ts bvs hBvsEnv hxs hss vs
-        body hBodyNN r hArgsNN hSubNe
+      have hSubEq := (InstantiateRule.substitute_simul_rec_spine_rename xs ts bvs hBvsEnv hxs hss vs
+        body hBodyNN r hArgsNN hSubNe).2
       rw [hSubEq] at hTy ⊢
       obtain ⟨hLamNe, hArgsNe⟩ := InstantiateRule.eo_typeof_mkSpine_ne_stuck _ _ _ hTy
       have hBodySubNe : __eo_typeof (substResult true body xs ts bvs) ≠ Term.Stuck := by

@@ -181,6 +181,9 @@ theorem substitute_simul_rec_spine_rename
           (LamSpineSupport.mkSpine
             (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r) xs ss bvs ≠
         Term.Stuck ->
+      (vs ≠ [] ->
+        __contains_atomic_term_list_free_rec ss (LamSpineSupport.eoVarList vs)
+          Term.__eo_List_nil = Term.Boolean false) ∧
       __substitute_simul_rec (Term.Boolean true)
           (LamSpineSupport.mkSpine
             (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r) xs ss bvs =
@@ -194,6 +197,7 @@ theorem substitute_simul_rec_spine_rename
       have hisr : (Term.Boolean true : Term) ≠ Term.Stuck := by decide
       cases vs with
       | nil =>
+          refine ⟨fun h => absurd rfl h, ?_⟩
           change __substitute_simul_rec (Term.Boolean true)
               (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) body)
               xs ss bvs ≠ _ at hNe
@@ -219,11 +223,14 @@ theorem substitute_simul_rec_spine_rename
               (Term.Apply (Term.Apply (Term.UOp UserOp.lambda)
                 (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T))
                   (LamSpineSupport.eoVarList vs))) body) xs ss bvs ≠ _ at hNe
+          rw [SubstituteSupport.substTrue_quant _ _ _ _ _ _ _ hxs hss hbvs] at hNe
+          have hCap := support_eo_requires_cond_eq_of_non_stuck hNe
+          refine ⟨fun _ => hCap, ?_⟩
           change __substitute_simul_rec (Term.Boolean true)
               (Term.Apply (Term.Apply (Term.UOp UserOp.lambda)
                 (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T))
                   (LamSpineSupport.eoVarList vs))) body) xs ss bvs = _
-          rw [SubstituteSupport.substTrue_quant _ _ _ _ _ _ _ hxs hss hbvs] at hNe ⊢
+          rw [SubstituteSupport.substTrue_quant _ _ _ _ _ _ _ hxs hss hbvs]
           have hReqEq := instantiate_eo_requires_result_eq_of_ne_stuck hNe
           rw [hReqEq] at hNe ⊢
           have hInner := instantiate_eo_mk_apply_fun_ne_stuck_of_ne_stuck hNe
@@ -241,8 +248,9 @@ theorem substitute_simul_rec_spine_rename
       rw [SubstituteSupport.substitute_simul_rec_apply _ _ _ xs ss bvs hisr hxs hss hbvs
           (fun q v vs' hEq => hNB ⟨q, v, vs', hEq⟩)] at hNe
       have hfNe := instantiate_eo_mk_apply_fun_ne_stuck_of_ne_stuck hNe
-      have hEq := substitute_simul_rec_spine_rename xs ss bvs hBvsEnv hxs hss vs body hBody r
-        (fun x hx => hArgs x (List.mem_cons_of_mem _ hx)) hfNe
+      obtain ⟨hCap, hEq⟩ := substitute_simul_rec_spine_rename xs ss bvs hBvsEnv hxs hss vs body
+        hBody r (fun x hx => hArgs x (List.mem_cons_of_mem _ hx)) hfNe
+      refine ⟨hCap, ?_⟩
       change __substitute_simul_rec (Term.Boolean true)
           (Term.Apply (LamSpineSupport.mkSpine
             (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r) a) xs ss bvs = _
