@@ -58,7 +58,7 @@ by
                     Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b := by
                 change __eo_requires (__beta_reduce a Term.__eo_List_nil) b
                   (Term.Apply (Term.Apply (Term.UOp UserOp.eq) a) b) = _
-                exact instantiate_eo_requires_result_eq_of_ne_stuck hProg
+                exact SubstituteTranslatabilitySupport.instantiate_eo_requires_result_eq_of_ne_stuck hProg
               obtain ⟨hSame, hANN⟩ := BetaReduceRule.eq_operands_same_smt_type a b hETrans
               have hEqBool :
                   RuleProofs.eo_has_bool_type
