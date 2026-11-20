@@ -368,4 +368,31 @@ theorem spine_prefix_typed {t us body : Term} {r : List Term} (h : LamSpine t us
         rw [hTy, hRes]
         omega
 
+/-- The translation of an application of a spine whose lambda does not wait
+for an argument is the SMT application. -/
+theorem eo_to_smt_mkSpine_apply_of_lamVars_lt {us body : Term} {m : Nat}
+    (hv : lamVars us m = true) (a : Term) (r : List Term) (hlt : m < r.length + 1) :
+    __eo_to_smt (mkSpine (lamT us body) (a :: r)) =
+      SmtTerm.Apply (__eo_to_smt (mkSpine (lamT us body) r))
+        (__eo_to_smt a) := by
+  have hs := lamSpine_mkSpine us body r
+  have hnp : ¬ TranslationProofs.SmtPendingLam
+      (__eo_to_smt (mkSpine (lamT us body) r)) := by
+    intro hp
+    have hpre := lamVarsPrefix_of_pending_app a hs hp
+    rw [lamVarsPrefix_false_of_lamVars_lt us m _ hv (by simpa using hlt)] at hpre
+    cases hpre
+  change __eo_to_smt (Term.Apply (mkSpine (lamT us body) r) a) = _
+  rw [hs.eo_to_smt_app a, TranslationProofs.eo_to_smt_apply_of_not_pending _ hnp]
+
+theorem smtx_typeof_mkSpine_apply {us body : Term} (a : Term) (r : List Term) :
+    __smtx_typeof (SmtTerm.Apply
+        (__eo_to_smt (mkSpine (lamT us body) r))
+        (__eo_to_smt a)) =
+      __smtx_typeof_apply
+        (__smtx_typeof (__eo_to_smt (mkSpine (lamT us body) r)))
+        (__smtx_typeof (__eo_to_smt a)) := by
+  rcases (lamSpine_mkSpine us body r).eo_to_smt_bind_or_apply with
+    ⟨bs, b, hg⟩ | ⟨g, x, hg⟩ <;> rw [hg] <;> rfl
+
 end LamSpineSupport

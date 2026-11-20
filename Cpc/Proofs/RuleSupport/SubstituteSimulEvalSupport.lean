@@ -11200,12 +11200,6 @@ theorem substitute_simul_eval_nonbinder
                                                                                           hGlobals
                                                                                           (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
 
-theorem LamSpineSupport.eoVarEnv_eoVarList (vs : List (native_String × Term)) :
-    EoVarEnv (LamSpineSupport.eoVarList vs) vs := by
-  induction vs with
-  | nil => exact EoVarEnv.nil
-  | cons p vs ih => exact EoVarEnv.cons ih
-
 /-! ### Lambda spines
 
 A lambda applied to arguments is not a binder for substitution at its
@@ -11214,134 +11208,6 @@ the lambda's variables, and into each argument. Its translation is the `let`
 of the arguments around the body (or, applied to more arguments than it binds,
 the SMT application of that `let`), so evaluation reduces to the argument IHs
 and to the body IH in the models the `let` pushes. -/
-
-theorem eo_list_cons_no_smt_translation (v vs : Term) :
-    ¬ eoHasSmtTranslation (Term.Apply (Term.Apply Term.__eo_List_cons v) vs) := by
-  intro h
-  apply h
-  change __smtx_typeof (SmtTerm.Apply (SmtTerm.Apply SmtTerm.None (__eo_to_smt v))
-    (__eo_to_smt vs)) = SmtType.None
-  exact TranslationProofs.typeof_apply_apply_none_head_eq _ _
-
-/-- A spine whose arguments and body have translations is not a binder head. -/
-theorem mkSpine_not_binderHead (us body : Term) :
-    ∀ (r : List Term), eoHasSmtTranslation body ->
-      (∀ x ∈ r, eoHasSmtTranslation x) ->
-      ¬ IsBinderHead (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r)
-  | [], hBody, _, ⟨q, v, vs, he⟩ => by
-      injection he with _ he
-      subst he
-      exact eo_list_cons_no_smt_translation v vs hBody
-  | b :: r, _, hArgs, ⟨q, v, vs, he⟩ => by
-      injection he with _ he
-      subst he
-      exact eo_list_cons_no_smt_translation v vs (hArgs _ List.mem_cons_self)
-
-/-- Substitution into a spine: the spine of the lambda whose body is
-substituted under its variables, applied to the substituted arguments. -/
-theorem substitute_simul_rec_spine
-    (xs ss bvs : Term) {bvsVars : List EoVarKey}
-    (hBvsEnv : EoVarEnvPerm bvs bvsVars)
-    (hxs : xs ≠ Term.Stuck) (hss : ss ≠ Term.Stuck)
-    (vs : List (native_String × Term)) (body : Term)
-    (hBody : eoHasSmtTranslation body) :
-    ∀ (r : List Term), (∀ x ∈ r, eoHasSmtTranslation x) ->
-      __substitute_simul_rec (Term.Boolean false)
-          (LamSpineSupport.mkSpine
-            (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r) xs ss bvs ≠
-        Term.Stuck ->
-      ∃ bvsFull,
-        EoVarEnvPerm bvsFull (vs.reverse ++ bvsVars) ∧
-        (vs ≠ [] ->
-          __contains_atomic_term_list_free_rec ss (LamSpineSupport.eoVarList vs)
-            Term.__eo_List_nil = Term.Boolean false) ∧
-        __substitute_simul_rec (Term.Boolean false)
-            (LamSpineSupport.mkSpine
-              (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r) xs ss bvs =
-          LamSpineSupport.mkSpine
-            (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs)
-              (__substitute_simul_rec (Term.Boolean false) body xs ss bvsFull))
-            (r.map (fun x => __substitute_simul_rec (Term.Boolean false) x xs ss bvs))
-  | [], _, hNe => by
-      have hbvs : bvs ≠ Term.Stuck := hBvsEnv.ne_stuck
-      have hisr : (Term.Boolean false : Term) ≠ Term.Stuck := by decide
-      cases vs with
-      | nil =>
-          refine ⟨bvs, by simpa using hBvsEnv, fun h => absurd rfl h, ?_⟩
-          change __substitute_simul_rec (Term.Boolean false)
-              (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) body)
-              xs ss bvs = _
-          change __substitute_simul_rec (Term.Boolean false)
-              (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) body)
-              xs ss bvs ≠ _ at hNe
-          have hNilSub :
-              __substitute_simul_rec (Term.Boolean false) Term.__eo_List_nil xs ss bvs =
-                Term.__eo_List_nil := by
-            rw [SubstituteSupport.substitute_simul_rec_atom _ _ _ _ _ hisr hxs hss hbvs
-              (by intro f a h; cases h) (by intro s S h; cases h) (by intro h; cases h)]
-            rfl
-          have hLamSub :
-              __substitute_simul_rec (Term.Boolean false) (Term.UOp UserOp.lambda) xs ss bvs =
-                Term.UOp UserOp.lambda := by
-            rw [SubstituteSupport.substitute_simul_rec_atom _ _ _ _ _ hisr hxs hss hbvs
-              (by intro f a h; cases h) (by intro s S h; cases h) (by intro h; cases h)]
-            rfl
-          have hHead :
-              __substitute_simul_rec (Term.Boolean false)
-                  (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) xs ss bvs =
-                Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil := by
-            rw [SubstituteSupport.substitute_simul_rec_apply _ _ _ xs ss bvs hisr hxs hss hbvs
-                (by intro q v vs hEq; cases hEq), hLamSub, hNilSub]
-            rfl
-          rw [SubstituteSupport.substitute_simul_rec_apply _ _ _ xs ss bvs hisr hxs hss hbvs
-              (by intro q v vs hEq; injection hEq with _ hEq; cases hEq), hHead] at hNe ⊢
-          exact instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hNe
-      | cons p vs =>
-          obtain ⟨s, T⟩ := p
-          refine ⟨__eo_list_concat Term.__eo_List_cons
-              (LamSpineSupport.eoVarList ((s, T) :: vs)) bvs,
-            EoVarEnvPerm.concat_rev (LamSpineSupport.eoVarEnv_eoVarList _) hBvsEnv, ?_, ?_⟩
-          · intro _
-            change __substitute_simul_rec (Term.Boolean false)
-                (Term.Apply (Term.Apply (Term.UOp UserOp.lambda)
-                  (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T))
-                    (LamSpineSupport.eoVarList vs))) body) xs ss bvs ≠ _ at hNe
-            rw [SubstituteSupport.substFalse_quant _ _ _ _ _ _ _ hxs hss hbvs] at hNe
-            exact support_eo_requires_cond_eq_of_non_stuck hNe
-          · change __substitute_simul_rec (Term.Boolean false)
-                (Term.Apply (Term.Apply (Term.UOp UserOp.lambda)
-                  (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T))
-                    (LamSpineSupport.eoVarList vs))) body) xs ss bvs ≠ _ at hNe
-            change __substitute_simul_rec (Term.Boolean false)
-                (Term.Apply (Term.Apply (Term.UOp UserOp.lambda)
-                  (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T))
-                    (LamSpineSupport.eoVarList vs))) body) xs ss bvs = _
-            rw [SubstituteSupport.substFalse_quant _ _ _ _ _ _ _ hxs hss hbvs] at hNe ⊢
-            rw [SubstituteTranslatabilitySupport.instantiate_eo_requires_result_eq_of_ne_stuck hNe]
-              at hNe ⊢
-            exact instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hNe
-  | a :: r, hArgs, hNe => by
-      have hbvs : bvs ≠ Term.Stuck := hBvsEnv.ne_stuck
-      have hisr : (Term.Boolean false : Term) ≠ Term.Stuck := by decide
-      have hNB := mkSpine_not_binderHead (LamSpineSupport.eoVarList vs) body r hBody
-        (fun x hx => hArgs x (List.mem_cons_of_mem _ hx))
-      change __substitute_simul_rec (Term.Boolean false)
-          (Term.Apply (LamSpineSupport.mkSpine
-            (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r) a) xs ss bvs ≠ _ at hNe
-      rw [SubstituteSupport.substitute_simul_rec_apply _ _ _ xs ss bvs hisr hxs hss hbvs
-          (fun q v vs' hEq => hNB ⟨q, v, vs', hEq⟩)] at hNe
-      have hfNe := instantiate_eo_mk_apply_fun_ne_stuck_of_ne_stuck hNe
-      obtain ⟨bvsFull, hEnv, hNoFree, hEq⟩ :=
-        substitute_simul_rec_spine xs ss bvs hBvsEnv hxs hss vs body hBody r
-          (fun x hx => hArgs x (List.mem_cons_of_mem _ hx)) hfNe
-      refine ⟨bvsFull, hEnv, hNoFree, ?_⟩
-      change __substitute_simul_rec (Term.Boolean false)
-          (Term.Apply (LamSpineSupport.mkSpine
-            (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r) a) xs ss bvs = _
-      rw [SubstituteSupport.substitute_simul_rec_apply _ _ _ xs ss bvs hisr hxs hss hbvs
-          (fun q v vs' hEq => hNB ⟨q, v, vs', hEq⟩)]
-      rw [instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hNe, hEq]
-      rfl
 
 /-- Pushing values for a lambda's variables keeps the substitution relation,
 with the variables added to the bound ones. -/
@@ -11440,10 +11306,10 @@ theorem substFalse_eval_spine_full
     (hlen : r.length = vs.length)
     (hM : model_wf M) (hN : model_wf N)
     (hTy : term_has_non_none_type
-      (SmtTerm.bind (lamBindings (LamSpineSupport.eoVarList vs) r SmtBindings.nil)
+      (SmtTerm.bind (TranslationProofs.lamBindings (LamSpineSupport.eoVarList vs) r SmtBindings.nil)
         (__eo_to_smt body)))
     (hTy' : term_has_non_none_type
-      (SmtTerm.bind (lamBindings (LamSpineSupport.eoVarList vs) (r.map σ) SmtBindings.nil)
+      (SmtTerm.bind (TranslationProofs.lamBindings (LamSpineSupport.eoVarList vs) (r.map σ) SmtBindings.nil)
         (__eo_to_smt body')))
     (hArgs : ∀ x ∈ r,
       __smtx_model_eval M (__eo_to_smt (σ x)) = __smtx_model_eval N (__eo_to_smt x))
@@ -11455,10 +11321,10 @@ theorem substFalse_eval_spine_full
       SubstituteSupport.SubstFalseRel M' N' xs ss bvsFull ->
       __smtx_model_eval M' (__eo_to_smt body') = __smtx_model_eval N' (__eo_to_smt body)) :
     __smtx_model_eval M
-        (SmtTerm.bind (lamBindings (LamSpineSupport.eoVarList vs) (r.map σ) SmtBindings.nil)
+        (SmtTerm.bind (TranslationProofs.lamBindings (LamSpineSupport.eoVarList vs) (r.map σ) SmtBindings.nil)
           (__eo_to_smt body')) =
       __smtx_model_eval N
-        (SmtTerm.bind (lamBindings (LamSpineSupport.eoVarList vs) r SmtBindings.nil)
+        (SmtTerm.bind (TranslationProofs.lamBindings (LamSpineSupport.eoVarList vs) r SmtBindings.nil)
           (__eo_to_smt body)) := by
   have hWfM := model_wf_push_bindings_of_typed M hM hTy'
   have hWfN := model_wf_push_bindings_of_typed N hN hTy
@@ -11476,33 +11342,6 @@ theorem substFalse_eval_spine_full
     hVals, LamSpineSupport.push_bindings_lamBindings_eoVarList N vs r hlen]
   exact hBody hWfM hWfN (hRelPushed _ (by simp [hlen]))
 
-/-- The translation of an application of a spine whose lambda does not wait
-for an argument is the SMT application. -/
-theorem eo_to_smt_mkSpine_apply_of_lamVars_lt {us body : Term} {m : Nat}
-    (hv : lamVars us m = true) (a : Term) (r : List Term) (hlt : m < r.length + 1) :
-    __eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) (a :: r)) =
-      SmtTerm.Apply (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r))
-        (__eo_to_smt a) := by
-  have hs := LamSpineSupport.lamSpine_mkSpine us body r
-  have hnp : ¬ TranslationProofs.SmtPendingLam
-      (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r)) := by
-    intro hp
-    have hpre := TranslationProofs.lamVarsPrefix_of_pending_app a hs hp
-    rw [LamSpineSupport.lamVarsPrefix_false_of_lamVars_lt us m _ hv (by simpa using hlt)] at hpre
-    cases hpre
-  change __eo_to_smt (Term.Apply (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r) a) = _
-  rw [hs.eo_to_smt_app a, TranslationProofs.eo_to_smt_apply_of_not_pending _ hnp]
-
-theorem smtx_typeof_mkSpine_apply {us body : Term} (a : Term) (r : List Term) :
-    __smtx_typeof (SmtTerm.Apply
-        (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r))
-        (__eo_to_smt a)) =
-      __smtx_typeof_apply
-        (__smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r)))
-        (__smtx_typeof (__eo_to_smt a)) := by
-  rcases (LamSpineSupport.lamSpine_mkSpine us body r).eo_to_smt_bind_or_apply with
-    ⟨bs, b, hg⟩ | ⟨g, x, hg⟩ <;> rw [hg] <;> rfl
-
 theorem generic_apply_eval_mkSpine {us body : Term} (a : Term) (r : List Term) :
     generic_apply_eval
       (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r))
@@ -11517,18 +11356,18 @@ the lambda binds: beyond the `let`, each application is the SMT application of
 the shorter spine. -/
 theorem substFalse_eval_spine_apps
     {M N : SmtModel} (hGlobals : model_agrees_on_globals M N)
-    (us body body' : Term) (m : Nat) (hv : lamVars us m = true) (σ : Term -> Term)
+    (us body body' : Term) (m : Nat) (hv : TranslationProofs.lamVars us m = true) (σ : Term -> Term)
     (hFull : ∀ rm : List Term, rm.length = m ->
       (∀ x ∈ rm,
         __smtx_model_eval M (__eo_to_smt (σ x)) = __smtx_model_eval N (__eo_to_smt x)) ->
       term_has_non_none_type
-        (SmtTerm.bind (lamBindings us rm SmtBindings.nil) (__eo_to_smt body)) ->
+        (SmtTerm.bind (TranslationProofs.lamBindings us rm SmtBindings.nil) (__eo_to_smt body)) ->
       term_has_non_none_type
-        (SmtTerm.bind (lamBindings us (rm.map σ) SmtBindings.nil) (__eo_to_smt body')) ->
+        (SmtTerm.bind (TranslationProofs.lamBindings us (rm.map σ) SmtBindings.nil) (__eo_to_smt body')) ->
       __smtx_model_eval M
-          (SmtTerm.bind (lamBindings us (rm.map σ) SmtBindings.nil) (__eo_to_smt body')) =
+          (SmtTerm.bind (TranslationProofs.lamBindings us (rm.map σ) SmtBindings.nil) (__eo_to_smt body')) =
         __smtx_model_eval N
-          (SmtTerm.bind (lamBindings us rm SmtBindings.nil) (__eo_to_smt body))) :
+          (SmtTerm.bind (TranslationProofs.lamBindings us rm SmtBindings.nil) (__eo_to_smt body))) :
     ∀ r : List Term, m ≤ r.length ->
       (∀ x ∈ r,
         __smtx_model_eval M (__eo_to_smt (σ x)) = __smtx_model_eval N (__eo_to_smt x)) ->
@@ -11544,14 +11383,14 @@ theorem substFalse_eval_spine_apps
   | r, hm, hArgs, hTy, hTy' => by
       by_cases hmr : m = r.length
       · subst hmr
-        have hv' : lamVars us (r.map σ).length = true := by simpa using hv
+        have hv' : TranslationProofs.lamVars us (r.map σ).length = true := by simpa using hv
         rw [(LamSpineSupport.lamSpine_mkSpine us body r).eo_to_smt_full hv] at hTy ⊢
         rw [(LamSpineSupport.lamSpine_mkSpine us body' (r.map σ)).eo_to_smt_full hv'] at hTy' ⊢
         exact hFull r rfl hArgs hTy hTy'
       · cases r with
-        | nil => simp at hm; omega
+        | nil => simp at hm hmr; omega
         | cons a r =>
-            simp only [List.length_cons] at hm
+            simp only [List.length_cons] at hm hmr
             have hlt : m < r.length + 1 := by omega
             have hlt' : m < (r.map σ).length + 1 := by simpa using hlt
             change __smtx_model_eval M (__eo_to_smt
@@ -11559,9 +11398,9 @@ theorem substFalse_eval_spine_apps
             change __smtx_typeof (__eo_to_smt
                 (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body') (σ a :: r.map σ))) ≠ _
               at hTy'
-            rw [eo_to_smt_mkSpine_apply_of_lamVars_lt hv a r hlt] at hTy ⊢
-            rw [eo_to_smt_mkSpine_apply_of_lamVars_lt hv (σ a) (r.map σ) hlt'] at hTy' ⊢
-            rw [smtx_typeof_mkSpine_apply] at hTy hTy'
+            rw [LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv a r hlt] at hTy ⊢
+            rw [LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv (σ a) (r.map σ) hlt'] at hTy' ⊢
+            rw [LamSpineSupport.smtx_typeof_mkSpine_apply] at hTy hTy'
             obtain ⟨A, B, hF, hX, hA, _⟩ := typeof_apply_non_none_cases hTy
             obtain ⟨A', B', hF', hX', hA', _⟩ := typeof_apply_non_none_cases hTy'
             have hFNN : __smtx_typeof (__eo_to_smt
@@ -11632,7 +11471,7 @@ theorem substFalse_eval_spine
   obtain ⟨-, hBodyNN, hArgsNN⟩ := hs.parts_typed_any hFNN
   obtain ⟨m, hv, hm⟩ := LamSpineSupport.spine_args_ge_vars hs hFNN
   obtain ⟨vs, hvlen, rfl⟩ := LamSpineSupport.lamVars_exists us m hv
-  have hEqF := hs.eq_mkSpine
+  have hEqF := LamSpineSupport.LamSpine.eq_mkSpine hs
   have hSubNe := RuleProofs.term_ne_stuck_of_has_smt_translation _ hSubstTrans
   rw [hEqF] at hFNN hSubNe hSubstTrans ⊢
   obtain ⟨bvsFull, hFullEnv, hNoFree, hSubEq⟩ :=

@@ -15,6 +15,8 @@ public import Cpc.Proofs.RuleSupport.Substitute.SubstitutePreservationIndexedOps
 public import Cpc.Proofs.RuleSupport.Substitute.SubstitutePreservationUOp1
 public import Cpc.Proofs.RuleSupport.Substitute.SubstitutePreservationTupleOps
 public import Cpc.Proofs.RuleSupport.TypedListSubstitutionSupport
+public import Cpc.Proofs.RuleSupport.Substitute.SubstituteSpine
+import all Cpc.Proofs.RuleSupport.Substitute.SubstituteSpine
 import all Cpc.Logos
 import all Cpc.Proofs.RuleSupport.SubstituteTypeSupport
 
@@ -231,6 +233,25 @@ it implies the exact EO entry type facts consumed by the older type-preservation
 theorem and also carries the SMT-translation/type facts consumed by the older
 translatability theorem.
 -/
+set_option warningAsError false in -- TEMPORARY
+/-- The lambda-spine case of substitution preservation. -/
+theorem substitute_simul_spine_preserves
+    {isRename : Bool}
+    (f a xs ts bvs : Term)
+    {xsVars bvsVars : List EoVarKey}
+    (hXsEnv : EoVarEnvPerm xs xsVars)
+    (hBvsEnv : EoVarEnvPerm bvs bvsVars)
+    (hFTrans : RuleProofs.eo_has_smt_translation (Term.Apply f a))
+    (hTs : EoListAllHaveSmtTranslation ts)
+    (hActuals : SubstActualsHaveSmtTypes xs ts)
+    (hTy : __eo_typeof (substResult isRename (Term.Apply f a) xs ts bvs) ≠ Term.Stuck)
+    (hSpine : TranslationProofs.IsLamSpine (Term.Apply f a))
+    (hBinder : ¬ ∃ q v vs,
+      f = Term.Apply q (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))
+    (hRec : SubstitutionPreservationRec isRename (Term.Apply f a) xs ts) :
+    SubstitutionPreservationResult isRename (Term.Apply f a) xs ts bvs := by
+  sorry
+
 theorem substitute_simul_preserves_type_and_translation_with_binder_lt
     {isRename : Bool}
     (n : Nat) (F xs ts bvs : Term)
@@ -267,7 +288,10 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
           exact
             hBinderCase q v vs a bvs
               hXsEnv hBvsEnv hFTrans hTs hActuals hTy hRec
-        · by_cases hHeadVar : ∃ name T, f = Term.Var name T
+        · by_cases hSpine : TranslationProofs.IsLamSpine (Term.Apply f a)
+          · exact substitute_simul_spine_preserves f a xs ts bvs
+              hXsEnv hBvsEnv hFTrans hTs hActuals hTy hSpine hBinder hRec
+          by_cases hHeadVar : ∃ name T, f = Term.Var name T
           · rcases hHeadVar with ⟨name, T, rfl⟩
             let aSub :=
               __substitute_simul_rec (Term.Boolean isRename) a xs ts bvs
@@ -4136,7 +4160,9 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                           (eo_to_smt_apply_apply_generic_of_branch_exclusions
                                                                                                                                                                                                                                             (g := Term.UOp op) (x := x1) (a := a)
                                                                                                                                                                                                                                             hUOp hHeadUpdate hHeadTupleUpdate hApplyUOp
-                                                                                                                                                                                                                                            hApplyApplyUOp)
+                                                                                                                                                                                                                                            hApplyApplyUOp
+                                                                                                                                                                                                                                            (fun h => by injection h with h; subst h; exact hSpine ⟨_, _, _, TranslationProofs.LamSpine.lam _ _⟩)
+                                                                                                                                                                                                                                            (fun hp => hSpine (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                                                                                                                                                                                                                                           hFTrans
                                                                                                                                                                                                                                           (fun hHeadTrans hHeadTy =>
                                                                                                                                                                                                                                             hRec
@@ -4158,6 +4184,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                                                                                                           hUOp hHeadUpdate hHeadTupleUpdate hApplyUOp
                                                                                                                                                                                                                                           hApplyApplyUOp
                                                                                                                                                                                                                                           (fun op hEq => hGUOp ⟨op, hEq⟩)
+                                                                                                                                                                                                                                          (fun hp => hSpine (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _))
                                                                                                                                                                                                                                           hFTrans
                                                                                                                                                                                                                                           (fun hHeadTrans hHeadTy =>
                                                                                                                                                                                                                                             hRec

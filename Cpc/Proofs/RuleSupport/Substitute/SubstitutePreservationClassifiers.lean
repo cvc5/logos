@@ -251,7 +251,6 @@ structure ApplyApplyApplyApplyUOpBranchExclusions (g : Term) : Prop where
           (Term.Apply
             (Term.UOp UserOp._at_strings_replace_re_all_result) s) p
 
-set_option warningAsError false in -- TEMPORARY
 theorem eo_to_smt_apply_apply_generic_of_not_special
     {g x a : Term}
     (hNoUOp :
@@ -267,10 +266,41 @@ theorem eo_to_smt_apply_apply_generic_of_not_special
     (hNoApplyApplyUOp :
       ∀ op w z,
         applyApplyApplyApplyUOpNeedsSpecialTranslation op ->
-          g ≠ Term.Apply (Term.Apply (Term.UOp op) w) z) :
+          g ≠ Term.Apply (Term.Apply (Term.UOp op) w) z)
+    (hNotLam : g ≠ Term.UOp UserOp.lambda)
+    (hNoPend : ¬ TranslationProofs.SmtPendingLam (__eo_to_smt (Term.Apply g x))) :
     __eo_to_smt (Term.Apply (Term.Apply g x) a) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply g x)) (__eo_to_smt a) := by
-  sorry -- TEMPORARY (beta-reduce validation): false for lambda-spine heads
+  cases g <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+  · rename_i op
+    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+    all_goals
+      first
+      | exact False.elim (hNotLam rfl)
+      | exact False.elim
+          (hNoUOp _ (by simp [applyApplyUOpNeedsSpecialTranslation]) rfl)
+  · rename_i op idx
+    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+    · exact False.elim (hNoUpdate idx rfl)
+    · exact False.elim (hNoTupleUpdate idx rfl)
+  · rename_i head y
+    cases head <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+    · rename_i op
+      cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+      all_goals
+        exact False.elim
+          (hNoApplyUOp _ y
+            (by simp [applyApplyApplyUOpNeedsSpecialTranslation]) rfl)
+    · rename_i head' z
+      cases head' <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+      · rename_i op
+        cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+        all_goals
+          exact False.elim
+            (hNoApplyApplyUOp _ z y
+              (by
+                simp [applyApplyApplyApplyUOpNeedsSpecialTranslation])
+              rfl)
 
 theorem eo_to_smt_apply_apply_generic_of_branch_exclusions
     {g x a : Term}
@@ -279,7 +309,9 @@ theorem eo_to_smt_apply_apply_generic_of_branch_exclusions
     (hNoTupleUpdate :
       ¬ ∃ idx, g = Term.UOp1 UserOp1.tuple_update idx)
     (hApplyUOp : ApplyApplyApplyUOpBranchExclusions g)
-    (hApplyApplyUOp : ApplyApplyApplyApplyUOpBranchExclusions g) :
+    (hApplyApplyUOp : ApplyApplyApplyApplyUOpBranchExclusions g)
+    (hNotLam : g ≠ Term.UOp UserOp.lambda)
+    (hNoPend : ¬ TranslationProofs.SmtPendingLam (__eo_to_smt (Term.Apply g x))) :
     __eo_to_smt (Term.Apply (Term.Apply g x) a) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply g x)) (__eo_to_smt a) := by
   exact
@@ -341,5 +373,6 @@ theorem eo_to_smt_apply_apply_generic_of_branch_exclusions
           | exact
               hApplyApplyUOp.notStringsReplaceReAllResult ⟨w, z, rfl⟩
           | contradiction)
+      hNotLam hNoPend
 
 end SubstitutePreservationSupport
