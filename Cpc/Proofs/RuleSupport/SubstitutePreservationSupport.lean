@@ -224,15 +224,6 @@ private theorem false_of_exhausted_unary_uop_apply_has_smt_translation
     | cases hUnary
 
 
-/--
-Size-recursive form of combined substitution preservation under an arbitrary
-bound-variable accumulator.
-
-`SubstActualsHaveSmtTypes` is the stronger, instantiate-facing side condition:
-it implies the exact EO entry type facts consumed by the older type-preservation
-theorem and also carries the SMT-translation/type facts consumed by the older
-translatability theorem.
--/
 /-- The lambda-spine case of substitution preservation: substitution keeps the
 spine's shape, so its EO and SMT types follow from those of its body and
 arguments, which the IH preserves. -/
@@ -265,7 +256,7 @@ theorem substitute_simul_spine_preserves
   have hEqF := LamSpineSupport.LamSpine.eq_mkSpine hs
   have hSubNe : substResult isRename (Term.Apply f a) xs ts bvs ≠ Term.Stuck := by
     intro h; apply hTy; rw [h]; rfl
-  simp only [substResult] at hTy hSubNe ⊢
+  simp only [SubstitutionPreservationResult, substResult] at hTy hSubNe ⊢
   rw [hEqF] at hTy hSubNe hFNN ⊢
   have hArgSmt : ∀ {x : Term}, RuleProofs.eo_has_smt_translation x ->
       ∀ {y : Term}, RuleProofs.eo_has_smt_translation y -> __eo_typeof y = __eo_typeof x ->
@@ -349,6 +340,15 @@ theorem substitute_simul_spine_preserves
           (fun x hx => hArgSmt (hArgsNN x hx) (hArgRes x hx).2 (hArgRes x hx).1)]
         exact hFNN
 
+/--
+Size-recursive form of combined substitution preservation under an arbitrary
+bound-variable accumulator.
+
+`SubstActualsHaveSmtTypes` is the stronger, instantiate-facing side condition:
+it implies the exact EO entry type facts consumed by the older type-preservation
+theorem and also carries the SMT-translation/type facts consumed by the older
+translatability theorem.
+-/
 theorem substitute_simul_preserves_type_and_translation_with_binder_lt
     {isRename : Bool}
     (n : Nat) (F xs ts bvs : Term)
