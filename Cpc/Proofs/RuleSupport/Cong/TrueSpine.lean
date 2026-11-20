@@ -2,6 +2,10 @@ module
 
 public import Cpc.Proofs.RuleSupport.Cong.TypeSpine
 import all Cpc.Proofs.RuleSupport.Cong.TypeSpine
+public import Cpc.Proofs.RuleSupport.Cong.HoCong
+import all Cpc.Proofs.RuleSupport.Cong.HoCong
+public import Cpc.Proofs.Canonical
+import all Cpc.Proofs.Canonical
 
 public section
 
@@ -16,6 +20,275 @@ namespace CongSupport
 
 attribute [local simp] native_streq native_and native_ite
 
+/-! ### Lambda spines -/
+
+private theorem lam_model_wf_push_bindings_of_typed (M : SmtModel) (hM : model_wf M)
+    {bs : SmtBindings} {x : SmtTerm}
+    (ht : term_has_non_none_type (SmtTerm.bind bs x)) :
+    model_wf (__smtx_model_eval.push_bindings M M bs) := by
+  have hVals : ∀ s T v, SmtBindings.Mem bs s T v ->
+      __smtx_type_wf T = true ∧
+        __smtx_typeof_value (__smtx_model_eval M v) = T ∧
+        value_canonical M.usortDom (__smtx_model_eval M v) := by
+    intro s T v hm
+    have hvNN : term_has_non_none_type v := bind_binding_non_none_of_non_none ht hm
+    exact ⟨bind_binding_type_wf_of_non_none ht hm,
+      (smt_model_eval_preserves_type_of_non_none M hM v hvNN).trans
+        (bind_binding_type_of_non_none ht hm),
+      Smtm.model_eval_canonical M hM v hvNN⟩
+  exact model_total_typed_push_bindings M bs M hM rfl hVals
+
+private theorem agrees_on_globals_pushL (M : SmtModel) :
+    ∀ l : List (native_String × SmtType × SmtValue),
+      model_agrees_on_globals M (LamSpineSupport.pushL M l)
+  | [] => model_agrees_on_globals_refl M
+  | (s, T, v) :: l =>
+      model_agrees_on_globals_trans (model_agrees_on_globals_push M s T v)
+        (by
+          have := agrees_on_globals_pushL (native_model_push M s T v) l
+          exact this)
+
+theorem lam_forall₂_refl_interp (M : SmtModel) (r : List Term) :
+    List.Forall₂ (fun a' a => a' = a ∨ eo_interprets M (mkEq a a') true) r r := by
+  induction r with
+  | nil => exact List.Forall₂.nil
+  | cons a r ih => exact List.Forall₂.cons (Or.inl rfl) ih
+
+/-- What a lambda spine is congruent to, in a model. -/
+theorem congTrueSpine_lam_spine_shape (M : SmtModel) (us body : Term)
+    (hUs : ¬ RuleProofs.eo_has_smt_translation us) :
+    ∀ (r : List Term) (rhs : Term),
+      CongTrueSpine M (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r) rhs ->
+      ∃ body' r', rhs = LamSpineSupport.mkSpine (LamSpineSupport.lamT us body') r' ∧
+        (body' = body ∨ StableInAnyVarModel M (mkEq body body')) ∧
+        List.Forall₂ (fun a' a => a' = a ∨ eo_interprets M (mkEq a a') true) r' r
+  | [], rhs, hC => by
+      change CongTrueSpine M
+        (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body) rhs at hC
+      cases hC with
+      | refl => exact ⟨body, [], rfl, Or.inl rfl, List.Forall₂.nil⟩
+      | @app _ g _ y hFn hArg hStable =>
+          cases hFn with
+          | refl => exact ⟨y, [], rfl, Or.inr hStable, List.Forall₂.nil⟩
+          | app hFn2 hArg2 _ =>
+              exact absurd (RuleProofs.eo_eq_operands_same_smt_type M _ _ hArg2).2 hUs
+  | a :: r, rhs, hC => by
+      change CongTrueSpine M
+        (Term.Apply (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r) a) rhs at hC
+      cases hC with
+      | refl =>
+          exact ⟨body, a :: r, rfl, Or.inl rfl, lam_forall₂_refl_interp M _⟩
+      | @app _ g _ y hFn hArg _ =>
+          obtain ⟨body', r', rfl, hB, hR⟩ := congTrueSpine_lam_spine_shape M us body hUs r g hFn
+          exact ⟨body', y :: r', rfl, hB, List.Forall₂.cons (Or.inr hArg) hR⟩
+
+/-- The arguments of a typed lambda spine applied to all of its variables
+evaluate to values that are not regular languages. -/
+theorem lam_spine_args_not_reglan (M : SmtModel) (hM : model_wf M)
+    (vs : List (native_String × Term)) (body : Term) (r : List Term)
+    (hlen : r.length = vs.length)
+    (hv : TranslationProofs.lamVars (LamSpineSupport.eoVarList vs) vs.length = true)
+    (hTy : term_has_non_none_type
+      (SmtTerm.bind (TranslationProofs.lamBindings (LamSpineSupport.eoVarList vs) r
+        SmtBindings.nil) (__eo_to_smt body))) :
+    ∀ a ∈ r, ∀ rl, __smtx_model_eval M (__eo_to_smt a) ≠ SmtValue.RegLan rl := by
+  intro a ha rl hEq
+  rw [LamSpineSupport.lamBindings_eoVarList vs r SmtBindings.nil (by omega),
+    show vs.take r.length = vs by rw [hlen, List.take_length]] at hTy
+  obtain ⟨i, hi, hai⟩ := List.getElem_of_mem (List.mem_reverse.2 ha)
+  have hi' : i < vs.length := by simp at hi; omega
+  have hmem : (vs[i], r.reverse[i]) ∈ vs.zip r.reverse := by
+    rw [List.mem_iff_getElem]
+    exact ⟨i, by simp; omega, by simp⟩
+  have hBind := LamSpineSupport.bindsApp_mem (vs.zip r.reverse) SmtBindings.nil _ hmem
+  have hTyA := bind_binding_type_of_non_none hTy hBind
+  have hWf := LamSpineSupport.lamVars_wf_of_eoVarList vs hv _ (List.getElem_mem hi')
+  simp only [hai] at hTyA
+  have hNN : term_has_non_none_type (__eo_to_smt a) := by
+    unfold term_has_non_none_type
+    rw [hTyA]
+    intro hNone
+    unfold TranslationProofs.lamVarWf at hWf
+    rw [hNone] at hWf
+    exact absurd hWf (by decide +kernel)
+  have hVal := smt_model_eval_preserves_type_of_non_none M hM _ hNN
+  rw [hEq, hTyA] at hVal
+  unfold TranslationProofs.lamVarWf at hWf
+  rw [← hVal] at hWf
+  have hRegT : __smtx_typeof_value (SmtValue.RegLan rl) = SmtType.RegLan := by
+    simp [__smtx_typeof_value]
+  rw [hRegT] at hWf
+  exact absurd hWf (by decide +kernel)
+
+/-- Arguments that are pairwise equal in a model, and none of which is a
+regular language, evaluate to the same values. -/
+theorem lam_args_eval_eq (M : SmtModel) :
+    ∀ (l l' : List Term),
+      List.Forall₂ (fun a' a => a' = a ∨ eo_interprets M (mkEq a a') true) l' l ->
+      (∀ a ∈ l, ∀ rl, __smtx_model_eval M (__eo_to_smt a) ≠ SmtValue.RegLan rl) ->
+      l'.map (fun x => __smtx_model_eval M (__eo_to_smt x)) =
+        l.map (fun x => __smtx_model_eval M (__eo_to_smt x))
+  | [], [], _, _ => rfl
+  | a :: l, a' :: l', List.Forall₂.cons ha hl, hNotReg => by
+      simp only [List.map_cons]
+      rw [lam_args_eval_eq M l l' hl (fun x hx => hNotReg x (List.mem_cons_of_mem _ hx))]
+      congr 1
+      rcases ha with rfl | ha
+      · rfl
+      · have hRel := RuleProofs.eo_interprets_eq_rel M a a' ha
+        exact ((RuleProofs.smtx_model_eval_eq_true_iff_of_not_reglan_pair
+          (by rintro ⟨r1, r2, h1, _⟩; exact hNotReg a List.mem_cons_self r1 h1)).1 hRel).symm
+
+theorem lam_eo_interprets_eq_self (M : SmtModel) (a : Term)
+    (h : RuleProofs.eo_has_smt_translation a) : eo_interprets M (mkEq a a) true :=
+  RuleProofs.eo_interprets_eq_of_rel M a a
+    (RuleProofs.eo_has_bool_type_eq_of_same_smt_type a a rfl h)
+    (RuleProofs.smt_value_rel_refl _)
+
+theorem lam_body_types_eq (M : SmtModel) (hM : model_wf M) {body body' : Term}
+    (hB : body' = body ∨ StableInAnyVarModel M (mkEq body body')) :
+    __smtx_typeof (__eo_to_smt body') = __smtx_typeof (__eo_to_smt body) := by
+  rcases hB with rfl | hB
+  · rfl
+  · exact (RuleProofs.eo_eq_operands_same_smt_type M _ _
+      (hB M hM (model_agrees_on_globals_refl M))).1.symm
+
+theorem lam_args_types_eq (M : SmtModel) {r r' : List Term}
+    (hR : List.Forall₂ (fun a' a => a' = a ∨ eo_interprets M (mkEq a a') true) r' r) :
+    List.Forall₂
+      (fun a' a => __smtx_typeof (__eo_to_smt a') = __smtx_typeof (__eo_to_smt a)) r' r :=
+  hR.imp (fun a' a h => by
+    rcases h with rfl | h
+    · rfl
+    · exact (RuleProofs.eo_eq_operands_same_smt_type M _ _ h).1.symm)
+
+theorem generic_apply_eval_of_bind_or_apply {F X : SmtTerm}
+    (h : (∃ bs b, F = SmtTerm.bind bs b) ∨ ∃ g x, F = SmtTerm.Apply g x) :
+    generic_apply_eval F X := by
+  rcases h with ⟨bs, b, rfl⟩ | ⟨g, x, rfl⟩ <;>
+    exact generic_apply_eval_of_non_datatype_head
+      (by intro s d i j h; cases h) (by intro s d i h; cases h)
+
+/-- A lambda applied to all of its variables, against a congruent one. -/
+theorem congTrueSpine_lam_full_eq_true (M : SmtModel) (hM : model_wf M)
+    (vs : List (native_String × Term)) (body body' : Term) (r r' : List Term)
+    (hv : TranslationProofs.lamVars (LamSpineSupport.eoVarList vs) vs.length = true)
+    (hlen : r.length = vs.length)
+    (hR : List.Forall₂ (fun a' a => a' = a ∨ eo_interprets M (mkEq a a') true) r' r)
+    (hB : body' = body ∨ StableInAnyVarModel M (mkEq body body'))
+    (hEqBool : RuleProofs.eo_has_bool_type
+      (mkEq (LamSpineSupport.mkSpine (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r)
+        (LamSpineSupport.mkSpine (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body') r'))) :
+    eo_interprets M
+      (mkEq (LamSpineSupport.mkSpine (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r)
+        (LamSpineSupport.mkSpine (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body') r'))
+      true := by
+  have hlen' : r'.length = vs.length := hR.length_eq.trans hlen
+  have hTypes := RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type _ _ hEqBool
+  have hFullL := (LamSpineSupport.lamSpine_mkSpine (LamSpineSupport.eoVarList vs) body r).eo_to_smt_full
+    (hlen ▸ hv)
+  have hTyL : term_has_non_none_type
+      (SmtTerm.bind (TranslationProofs.lamBindings (LamSpineSupport.eoVarList vs) r SmtBindings.nil)
+        (__eo_to_smt body)) := by
+    have h := hTypes.2; rw [hFullL] at h; exact h
+  apply RuleProofs.eo_interprets_eq_of_rel M _ _ hEqBool
+  rw [hFullL, (LamSpineSupport.lamSpine_mkSpine (LamSpineSupport.eoVarList vs) body' r').eo_to_smt_full
+      (hlen' ▸ hv),
+    smtx_model_eval_bind_eq, smtx_model_eval_bind_eq,
+    LamSpineSupport.push_bindings_lamBindings_eoVarList M vs r hlen,
+    LamSpineSupport.push_bindings_lamBindings_eoVarList M vs r' hlen']
+  have hNotReg := lam_spine_args_not_reglan M hM vs body r hlen hv hTyL
+  have hVals : r'.reverse.map (fun x => __smtx_model_eval M (__eo_to_smt x)) =
+      r.reverse.map (fun x => __smtx_model_eval M (__eo_to_smt x)) := by
+    rw [List.map_reverse, List.map_reverse, lam_args_eval_eq M r r' hR hNotReg]
+  rw [hVals]
+  rcases hB with rfl | hStab
+  · exact RuleProofs.smt_value_rel_refl _
+  · have hWf := lam_model_wf_push_bindings_of_typed M hM hTyL
+    rw [LamSpineSupport.push_bindings_lamBindings_eoVarList M vs r hlen] at hWf
+    exact RuleProofs.eo_interprets_eq_rel _ body body'
+      (hStab _ hWf (agrees_on_globals_pushL M _))
+
+/-- Congruence of lambda spines, over the spine's arguments. -/
+theorem congTrueSpine_lam_spine_args_eq_true (M : SmtModel) (hM : model_wf M)
+    (vs : List (native_String × Term)) (body body' : Term)
+    (hv : TranslationProofs.lamVars (LamSpineSupport.eoVarList vs) vs.length = true)
+    (hB : body' = body ∨ StableInAnyVarModel M (mkEq body body')) :
+    ∀ (r r' : List Term),
+      List.Forall₂ (fun a' a => a' = a ∨ eo_interprets M (mkEq a a') true) r' r ->
+      vs.length ≤ r.length ->
+      RuleProofs.eo_has_bool_type
+        (mkEq (LamSpineSupport.mkSpine (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r)
+          (LamSpineSupport.mkSpine (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body') r')) ->
+      eo_interprets M
+        (mkEq (LamSpineSupport.mkSpine (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r)
+          (LamSpineSupport.mkSpine (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body') r'))
+        true
+  | r, r', hR, hm, hEqBool => by
+      by_cases hmr : vs.length = r.length
+      · exact congTrueSpine_lam_full_eq_true M hM vs body body' r r' hv hmr.symm hR hB hEqBool
+      · cases hR with
+        | nil => exact absurd (Nat.le_zero.1 hm) hmr
+        | @cons a' a r' r ha hR' =>
+            simp only [List.length_cons] at hm hmr
+            have hlt : vs.length < r.length + 1 := by omega
+            have hlt' : vs.length < r'.length + 1 := by rw [hR'.length_eq]; omega
+            have hTypes := RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type _ _ hEqBool
+            have hToL := LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt (body := body)
+              hv a r hlt
+            have hToR := LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt (body := body')
+              hv a' r' hlt'
+            have hLNN := hTypes.2
+            change __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine
+              (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) (a :: r))) ≠ _ at hLNN
+            rw [hToL, LamSpineSupport.smtx_typeof_mkSpine_apply] at hLNN
+            obtain ⟨A, B, hF, hX, hA, _⟩ := typeof_apply_non_none_cases hLNN
+            have hFNN : __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine
+                (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r)) ≠ SmtType.None := by
+              rcases hF with hF | hF <;> rw [hF] <;> simp
+            have hHeadSame := smtx_typeof_mkSpine_congr₂ vs body body'
+              (lam_body_types_eq M hM hB) hv r r' (lam_args_types_eq M hR') (by omega)
+            have hHeadBool : RuleProofs.eo_has_bool_type
+                (mkEq (LamSpineSupport.mkSpine
+                    (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body) r)
+                  (LamSpineSupport.mkSpine
+                    (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) body') r')) :=
+              RuleProofs.eo_has_bool_type_eq_of_same_smt_type _ _ hHeadSame.symm hFNN
+            have ih := congTrueSpine_lam_spine_args_eq_true M hM vs body body' hv hB r r' hR'
+              (by omega) hHeadBool
+            have hATrans : RuleProofs.eo_has_smt_translation a := by
+              unfold RuleProofs.eo_has_smt_translation
+              rw [hX]; exact hA
+            have hArg : eo_interprets M (mkEq a a') true := by
+              rcases ha with h | ha
+              · rw [h]; exact lam_eo_interprets_eq_self M a hATrans
+              · exact ha
+            exact congTrueSpine_generic_apply_eq_true M hM _ _ a a' hEqBool hToL hToR
+              (LamSpineSupport.smtx_typeof_mkSpine_apply a r)
+              (generic_apply_eval_of_bind_or_apply
+                (LamSpineSupport.lamSpine_mkSpine _ body r).eo_to_smt_bind_or_apply)
+              (generic_apply_eval_of_bind_or_apply
+                (LamSpineSupport.lamSpine_mkSpine _ body' r').eo_to_smt_bind_or_apply)
+              ih hArg
+termination_by r => r.length
+
+/-- Congruence of lambda spines. -/
+theorem congTrueSpine_lam_spine_eq_true (M : SmtModel) (hM : model_wf M) (t rhs : Term)
+    (hSpine : TranslationProofs.IsLamSpine t)
+    (hEqBool : RuleProofs.eo_has_bool_type (mkEq t rhs))
+    (hC : CongTrueSpine M t rhs) :
+    eo_interprets M (mkEq t rhs) true := by
+  obtain ⟨us, body, r, hs⟩ := hSpine
+  have hTypes := RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type _ _ hEqBool
+  obtain ⟨m, hv, hm⟩ := LamSpineSupport.spine_args_ge_vars hs hTypes.2
+  obtain ⟨vs, hvlen, rfl⟩ := LamSpineSupport.lamVars_exists us m hv
+  subst hvlen
+  have hEq := LamSpineSupport.LamSpine.eq_mkSpine hs
+  subst hEq
+  obtain ⟨body', r', rfl, hB, hR⟩ :=
+    congTrueSpine_lam_spine_shape M _ body (eoVarList_no_smt_translation vs) r rhs hC
+  exact congTrueSpine_lam_spine_args_eq_true M hM vs body body' hv hB r r' hR hm hEqBool
+
 theorem congTrueSpine_eq_true
     (M : SmtModel) (hM : model_wf M) (t rhs : Term) :
     NotTopLevelQuantifier t ->
@@ -23,6 +296,8 @@ theorem congTrueSpine_eq_true
     CongTrueSpine M t rhs ->
     eo_interprets M (mkEq t rhs) true := by
   intro hNotQuant hEqBool hSpine
+  by_cases hLS : TranslationProofs.IsLamSpine t
+  · exact congTrueSpine_lam_spine_eq_true M hM t rhs hLS hEqBool hSpine
   match t with
   | Term.Apply (Term.UOp UserOp.not) x =>
       exact congTrueSpine_not_eq_true M hM x rhs hEqBool hSpine
@@ -1956,12 +2231,14 @@ theorem congTrueSpine_eq_true
                         | Term.UOp op =>
                             cases op <;>
                               try
-                                exact False.elim
+                                refine False.elim
                                   (hHeadTrans
                                     (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                      _ z x (by rfl)
+                                      _ z x ?_
                                       ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                        _ _ hEqBool).2)))
+                                        _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
+                            case lambda =>
+                              exact absurd ⟨_, _, _, TranslationProofs.LamSpine.lam _ _⟩ hLS
                             case eq =>
                               exact congTrueSpine_eq_eq_true M hM
                                 z x (Term.Apply g y) hEqBool hApp
@@ -2584,12 +2861,12 @@ theorem congTrueSpine_eq_true
                         | Term.UOp1 op i =>
                             cases op <;>
                               try
-                                exact False.elim
+                                refine False.elim
                                   (hHeadTrans
                                     (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                      _ z x (by rfl)
+                                      _ z x ?_
                                       ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                        _ _ hEqBool).2)))
+                                        _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                             case update =>
                               exact
                                 congTrueSpine_non_reg_indexed_binary_uop1_eq_true
@@ -2610,114 +2887,114 @@ theorem congTrueSpine_eq_true
                               exact congTrueSpine_tuple_update_eq_true M hM
                                 i z x (Term.Apply g y) hEqBool hApp
                         | Term.UOp2 op i j =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.UOp2 op i j) z x (by rfl)
+                                  (Term.UOp2 op i j) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.UOp3 op i j k =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.UOp3 op i j k) z x (by rfl)
+                                  (Term.UOp3 op i j k) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.__eo_List =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  Term.__eo_List z x (by rfl)
+                                  Term.__eo_List z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.__eo_List_nil =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  Term.__eo_List_nil z x (by rfl)
+                                  Term.__eo_List_nil z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.__eo_List_cons =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  Term.__eo_List_cons z x (by rfl)
+                                  Term.__eo_List_cons z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.Bool =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  Term.Bool z x (by rfl)
+                                  Term.Bool z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.Boolean b =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.Boolean b) z x (by rfl)
+                                  (Term.Boolean b) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.Numeral n =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.Numeral n) z x (by rfl)
+                                  (Term.Numeral n) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.Rational r =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.Rational r) z x (by rfl)
+                                  (Term.Rational r) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.String s =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.String s) z x (by rfl)
+                                  (Term.String s) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.Binary w n =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.Binary w n) z x (by rfl)
+                                  (Term.Binary w n) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.Type =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  Term.Type z x (by rfl)
+                                  Term.Type z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.Stuck =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  Term.Stuck z x (by rfl)
+                                  Term.Stuck z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.Apply f0 a =>
                             cases f0 <;>
                               try
-                                exact False.elim
+                                refine False.elim
                                   (hHeadTrans
                                     (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                      _ z x (by rfl)
+                                      _ z x ?_
                                       ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                        _ _ hEqBool).2)))
+                                        _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                             case UOp op =>
                               cases op <;>
                                 try
-                                  exact False.elim
+                                  refine False.elim
                                     (hHeadTrans
                                       (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                        _ z x (by rfl)
+                                        _ z x ?_
                                         ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                          _ _ hEqBool).2)))
+                                          _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                               case ite =>
                                 exact congTrueSpine_ite_eq_true M hM
                                   a z x (Term.Apply g y) hEqBool hApp
@@ -2802,21 +3079,21 @@ theorem congTrueSpine_eq_true
                             case Apply f1 b =>
                               cases f1 <;>
                                 try
-                                  exact False.elim
+                                  refine False.elim
                                     (hHeadTrans
                                       (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                        _ z x (by rfl)
+                                        _ z x ?_
                                         ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                          _ _ hEqBool).2)))
+                                          _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                               case UOp op =>
                                 cases op <;>
                                   try
-                                    exact False.elim
+                                    refine False.elim
                                       (hHeadTrans
                                         (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                          _ z x (by rfl)
+                                          _ z x ?_
                                           ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                            _ _ hEqBool).2)))
+                                            _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                                 case _at_strings_replace_all_result =>
                                   exact
                                     congTrueSpine_strings_replace_all_result_eq_true
@@ -2828,68 +3105,68 @@ theorem congTrueSpine_eq_true
                                       M hM b a z x (Term.Apply g y) hEqBool
                                       hApp
                         | Term.FunType =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  Term.FunType z x (by rfl)
+                                  Term.FunType z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.Var name T =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.Var name T) z x (by rfl)
+                                  (Term.Var name T) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.DatatypeType s d =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.DatatypeType s d) z x (by rfl)
+                                  (Term.DatatypeType s d) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.DatatypeTypeRef s =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.DatatypeTypeRef s) z x (by rfl)
+                                  (Term.DatatypeTypeRef s) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.DtcAppType T U =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.DtcAppType T U) z x (by rfl)
+                                  (Term.DtcAppType T U) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.DtCons s d i =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.DtCons s d i) z x (by rfl)
+                                  (Term.DtCons s d i) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.DtSel s d i j =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.DtSel s d i j) z x (by rfl)
+                                  (Term.DtSel s d i j) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.USort u =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.USort u) z x (by rfl)
+                                  (Term.USort u) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
                         | Term.UConst u T =>
-                            exact False.elim
+                            refine False.elim
                               (hHeadTrans
                                 (eo_apply_apply_head_has_translation_of_generic_apply_translation
-                                  (Term.UConst u T) z x (by rfl)
+                                  (Term.UConst u T) z x ?_
                                   ((RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
-                                    _ _ hEqBool).2)))
+                                    _ _ hEqBool).2))) <;> (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done) | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (fun hp => hLS (TranslationProofs.isLamSpine_apply (TranslationProofs.eo_to_smt_pending_spine _ hp) _)))
 
 
 end CongSupport

@@ -1646,15 +1646,25 @@ private inductive DtConsSpineRoot :
       DtConsSpineRoot t s d i ->
       DtConsSpineRoot (Term.Apply t x) s d i
 
+
+private theorem dtConsSpineRoot_head_ne_lambda
+    {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}
+    (hSp : DtConsSpineRoot t s d i) :
+    TranslationProofs.eoSpineHead t ≠ Term.UOp UserOp.lambda := by
+  induction hSp with
+  | app x _ ih => exact ih
+  | root => intro h; cases h
+
 private theorem dtConsSpineRoot_apply_generic
     {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}
     (hSp : DtConsSpineRoot t s d i) (x : Term) :
     __eo_to_smt (Term.Apply t x) =
       SmtTerm.Apply (__eo_to_smt t) (__eo_to_smt x) := by
-  induction hSp generalizing x with
+  have hH := dtConsSpineRoot_head_ne_lambda hSp
+  cases hSp with
   | root s d i =>
       rfl
-  | app x' hSp ih =>
+  | app x' hSp =>
       cases hSp with
       | root s d i =>
           rfl
@@ -1663,7 +1673,7 @@ private theorem dtConsSpineRoot_apply_generic
           | root s d i =>
               rfl
           | app x''' hSp'' =>
-              cases hSp'' <;> rfl
+              cases hSp'' <;> (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head hH))
 
 private inductive CtorSpineRoot : Term -> Term -> Prop where
   | tuple :
@@ -1675,6 +1685,13 @@ private inductive CtorSpineRoot : Term -> Term -> Prop where
   | app {t root : Term} (x : Term) :
       CtorSpineRoot t root ->
       CtorSpineRoot (Term.Apply t x) root
+
+
+private theorem ctorSpineRoot_head_ne_lambda {t root : Term} (hSp : CtorSpineRoot t root) :
+    TranslationProofs.eoSpineHead t ≠ Term.UOp UserOp.lambda := by
+  induction hSp with
+  | app x _ ih => exact ih
+  | _ => intro h; cases h
 
 private inductive CtorSpineEq : Term -> Term -> Term -> Prop where
   | tuple :
@@ -1696,6 +1713,7 @@ private theorem ctorSpineRoot_apply_generic_of_not_tuple_one_arg
     (hNotTupleOne : ∀ x, f ≠ Term.Apply (Term.UOp UserOp.tuple) x) :
     __eo_to_smt (Term.Apply f a) =
       SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt a) := by
+  have hH := ctorSpineRoot_head_ne_lambda hSp
   cases hSp with
   | tuple =>
       rfl
@@ -1712,9 +1730,9 @@ private theorem ctorSpineRoot_apply_generic_of_not_tuple_one_arg
       | dtCons s d i =>
           rfl
       | app y hPrev' =>
-          cases hPrev' <;> try rfl
+          cases hPrev' <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head hH))
           case app z hPrev'' =>
-            cases hPrev'' <;> rfl
+            cases hPrev'' <;> (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head hH))
 
 private theorem ctorSpineRoot_to_smt_ne_dt_sel
     {f root : Term}
@@ -2602,6 +2620,8 @@ theorem tuple_full_apply_type_none
             (Term.Apply (Term.Apply (Term.UOp UserOp.tuple) head) tail)
             arg)) =
       SmtType.None := by
+  rw [TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
+    (TranslationProofs.not_isLamSpine_of_head (by intro h; cases h))]
   change
     __smtx_typeof
         (SmtTerm.Apply

@@ -287,7 +287,7 @@ theorem substitute_simul_spine_preserves
           r (fun x hx => (hArgRes x hx).1)
       · unfold RuleProofs.eo_has_smt_translation
         rw [InstantiateRule.smtx_typeof_mkSpine_congr vs vs body _ _ rfl rfl
-          (hArgSmt hBodyNN hBodyRes.2 hBodyRes.1) r hm
+          (hArgSmt hBodyNN hBodyRes.2 hBodyRes.1) hv hv r hm
           (fun x hx => hArgSmt (hArgsNN x hx) (hArgRes x hx).2 (hArgRes x hx).1)]
         exact hFNN
   | true =>
@@ -326,8 +326,8 @@ theorem substitute_simul_spine_preserves
       refine ⟨?_, ?_⟩
       · refine InstantiateRule.eo_typeof_mkSpine_congr _ _ _ _ _ ?_ r (fun x hx => (hArgRes x hx).1)
         rw [InstantiateRule.eo_typeof_lamT, InstantiateRule.eo_typeof_lamT, hBodyRes.1,
-          TranslationProofs.eo_typeof_lambda_vars _ (LamSpineSupport.lamVars_eoVarList vs'),
-          TranslationProofs.eo_typeof_lambda_vars _ (LamSpineSupport.lamVars_eoVarList vs),
+          TranslationProofs.eo_typeof_lambda_vars _ (LamSpineSupport.lamVars_eoVarList_of_types vs vs' hTys hv),
+          TranslationProofs.eo_typeof_lambda_vars _ hv,
           __eo_typeof_lambda.eq_3 _ _ (by cases vs' <;> intro h <;> cases h) hBodyTyNe,
           __eo_typeof_lambda.eq_3 _ _ (by cases vs <;> intro h <;> cases h) hBodyTyNe,
           InstantiateRule.get_lambda_type_eoVarList_congr _ hBodyTyNe vs vs' hTys]
@@ -336,7 +336,8 @@ theorem substitute_simul_spine_preserves
           (by
             have := congrArg (List.map __eo_to_smt_type) hTys
             simpa [List.map_map, Function.comp_def] using this)
-          (hArgSmt hBodyNN hBodyRes.2 hBodyRes.1) r hm
+          (hArgSmt hBodyNN hBodyRes.2 hBodyRes.1) hv
+          (LamSpineSupport.lamVars_eoVarList_of_types vs vs' hTys hv) r hm
           (fun x hx => hArgSmt (hArgsNN x hx) (hArgRes x hx).2 (hArgRes x hx).1)]
         exact hFNN
 
