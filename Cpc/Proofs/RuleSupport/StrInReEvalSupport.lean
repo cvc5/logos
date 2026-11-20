@@ -771,7 +771,7 @@ private theorem eo_list_repeat_zero_eq (n : Nat) (hn : n < 4294967296) :
         (Term.Numeral 0) (Term.Numeral (Int.ofNat n)) =
       zeroIntListTerm n := by
   have hnot : ¬ 4294967296 ≤ n := by omega
-  simp [__eo_list_repeat, native_ite, native_and, native_zleq, native_zlt,
+  simp [__eo_list_repeat, native_ite, native_and, native_zleq, native_zlt_eq,
     native_int_to_nat, hnot, eo_list_repeat_rec_zero_eq]
 
 private theorem intRangeTerm_ne_stuck :
@@ -1017,7 +1017,7 @@ theorem str_flatten_nary_intro_cons_stuck
     have hLe : ¬ ((cs.length : Int) + 1 < 4294967296) := by
       simp only [List.length_cons] at hLen
       omega
-    simp [__eo_list_repeat, native_ite, native_and, native_zlt, hLe]
+    simp [__eo_list_repeat, native_ite, native_and, native_zlt_eq, hLe]
   have hWordRec : ∀ t,
       __str_flatten_word_rec Term.Stuck t = Term.Stuck := by
     intro t

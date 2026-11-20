@@ -259,16 +259,6 @@ private theorem sr_native_seq_extract_pack_string
   simp only [List.length_map, apply_ite, List.map_nil,
     List.map_take, List.map_drop]
   split <;> simp_all
-  -- the `ite` now survives into the goal instead of `simp` having turned it
-  -- into an implication, so discharge its condition here
-  rcases ‹(0 ≤ i ∧ 0 < n) ∧ i < Int.ofNat s.length› with
-    ⟨⟨hi0, hn0⟩, hilt⟩
-  rw [ite_eq_right (by
-    rintro ((hi | hn) | hlen)
-    · exact False.elim ((Int.not_lt_of_ge hi0) hi)
-    · exact False.elim ((Int.not_le_of_gt hn0) hn)
-    · exact False.elim ((Int.not_le_of_gt hilt) hlen))]
-  simp [List.map_take, List.map_drop]
 
 /-- The generated evaluator retains the packed sequence's inferred element
     type at extraction sites; for strings, that type is `Char`. -/
