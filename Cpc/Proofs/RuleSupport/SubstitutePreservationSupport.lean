@@ -326,8 +326,8 @@ theorem substitute_simul_spine_preserves
       refine ⟨?_, ?_⟩
       · refine InstantiateRule.eo_typeof_mkSpine_congr _ _ _ _ _ ?_ r (fun x hx => (hArgRes x hx).1)
         rw [InstantiateRule.eo_typeof_lamT, InstantiateRule.eo_typeof_lamT, hBodyRes.1,
-          TranslationProofs.eo_typeof_lambda_vars _ (LamSpineSupport.lamVars_eoVarList vs'),
-          TranslationProofs.eo_typeof_lambda_vars _ (LamSpineSupport.lamVars_eoVarList vs),
+          TranslationProofs.eo_typeof_lambda_vars _ (LamSpineSupport.lamVars_eoVarList_of_types vs vs' hTys hv),
+          TranslationProofs.eo_typeof_lambda_vars _ hv,
           __eo_typeof_lambda.eq_3 _ _ (by cases vs' <;> intro h <;> cases h) hBodyTyNe,
           __eo_typeof_lambda.eq_3 _ _ (by cases vs <;> intro h <;> cases h) hBodyTyNe,
           InstantiateRule.get_lambda_type_eoVarList_congr _ hBodyTyNe vs vs' hTys]
