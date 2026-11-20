@@ -4,6 +4,7 @@ public import Cpc.Proofs.RuleSupport.SubstituteTranslatabilitySupport
 import all Cpc.Proofs.RuleSupport.SubstituteTranslatabilitySupport
 public import Cpc.Proofs.Translation.LambdaApply
 import all Cpc.Proofs.Translation.LambdaApply
+import all Cpc.Logos
 
 /-!
 # Substitution into lambda spines
@@ -207,12 +208,10 @@ theorem substitute_simul_rec_spine_rename
             rfl
           rw [SubstituteSupport.substitute_simul_rec_apply _ _ _ xs ss bvs hisr hxs hss hbvs
               (by intro q v vs hEq; injection hEq with _ hEq; cases hEq)] at hNe ⊢
-          have hHeadNe := instantiate_eo_mk_apply_fun_ne_stuck_of_ne_stuck hNe
           rw [SubstituteSupport.substitute_simul_rec_apply _ _ _ xs ss bvs hisr hxs hss hbvs
-              (by intro q v vs hEq; cases hEq)] at hHeadNe ⊢
-          rw [hLamSub] at hHeadNe ⊢
-          rw [instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hHeadNe]
-          rw [hLamSub, instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hHeadNe] at hNe
+              (by intro q v vs hEq; cases hEq), hLamSub] at hNe ⊢
+          have hHeadNe := instantiate_eo_mk_apply_fun_ne_stuck_of_ne_stuck hNe
+          rw [instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hHeadNe] at hNe ⊢
           exact instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hNe
       | cons p vs =>
           obtain ⟨s, T⟩ := p
@@ -252,18 +251,98 @@ theorem substitute_simul_rec_spine_rename
       rw [instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hNe, hEq]
       rfl
 
+theorem eo_typeof_apply_stuck_left (Y : Term) : __eo_typeof_apply Term.Stuck Y = Term.Stuck := by
+  cases Y <;> rfl
+
+theorem eo_typeof_lambda_stuck_body (X L : Term) :
+    __eo_typeof_lambda X L Term.Stuck = Term.Stuck := by
+  cases L <;> rfl
+
+/-! ## Peeling function types -/
+
+/-- The type a function of type `G` returns, applied to one argument. -/
+@[expose] def eoPeel1 : Term -> Term
+  | Term.Apply (Term.Apply Term.FunType _) U => U
+  | Term.DtcAppType _ U => U
+  | _ => Term.Stuck
+
+/-- The type a function of type `G` returns, applied to `n` arguments. -/
+@[expose] def eoPeel (G : Term) : Nat -> Term
+  | 0 => G
+  | n + 1 => eoPeel1 (eoPeel G n)
+
+theorem eoPeel_stuck : ∀ n, eoPeel Term.Stuck n = Term.Stuck
+  | 0 => rfl
+  | n + 1 => by simp [eoPeel, eoPeel_stuck n, eoPeel1]
+
+theorem eoPeel_add (G : Term) (j : Nat) : ∀ d, eoPeel G (j + d) = eoPeel (eoPeel G j) d
+  | 0 => rfl
+  | d + 1 => by simp [eoPeel, eoPeel_add G j d]
+
+theorem eoPeel_succ' (G : Term) : ∀ n, eoPeel G (n + 1) = eoPeel (eoPeel1 G) n := by
+  intro n
+  rw [Nat.add_comm, eoPeel_add G 1 n]
+  rfl
+
+theorem eoPeel_ne_stuck_of_le {G : Term} {j k : Nat} (hjk : j ≤ k)
+    (h : eoPeel G k ≠ Term.Stuck) : eoPeel G j ≠ Term.Stuck := by
+  intro hj
+  apply h
+  obtain ⟨d, rfl⟩ := Nat.exists_eq_add_of_le hjk
+  rw [eoPeel_add, hj, eoPeel_stuck]
+
+theorem eo_typeof_apply_eq_peel1 {P V : Term} (h : __eo_typeof_apply P V ≠ Term.Stuck) :
+    __eo_typeof_apply P V = eoPeel1 P := by
+  revert h
+  unfold __eo_typeof_apply
+  split <;> intro h
+  · exact absurd rfl h
+  · exact instantiate_eo_requires_result_eq_of_ne_stuck h
+  · exact instantiate_eo_requires_result_eq_of_ne_stuck h
+  · exact absurd rfl h
+
+/-- The type of an application spine is its lambda's type with an arrow peeled
+off per argument. -/
+theorem eo_typeof_mkSpine_eq_peel (us B : Term) :
+    ∀ r : List Term,
+      __eo_typeof (LamSpineSupport.mkSpine (LamSpineSupport.lamT us B) r) ≠ Term.Stuck ->
+      __eo_typeof (LamSpineSupport.mkSpine (LamSpineSupport.lamT us B) r) =
+        eoPeel (__eo_typeof (LamSpineSupport.lamT us B)) r.length
+  | [], _ => rfl
+  | a :: r, h => by
+      change __eo_typeof (Term.Apply (LamSpineSupport.mkSpine (LamSpineSupport.lamT us B) r) a) ≠
+        Term.Stuck at h
+      change __eo_typeof (Term.Apply (LamSpineSupport.mkSpine (LamSpineSupport.lamT us B) r) a) = _
+      rw [(LamSpineSupport.lamSpine_mkSpine us B r).eo_typeof_apply a] at h ⊢
+      have hHead : __eo_typeof (LamSpineSupport.mkSpine (LamSpineSupport.lamT us B) r) ≠
+          Term.Stuck := by
+        intro hs; rw [hs, eo_typeof_apply_stuck_left] at h; exact h rfl
+      rw [eo_typeof_apply_eq_peel1 h, eo_typeof_mkSpine_eq_peel us B r hHead]
+      rfl
+
+theorem eo_typeof_lambda_eq_of_ne_stuck {X L B : Term}
+    (h : __eo_typeof_lambda X L B ≠ Term.Stuck) :
+    __eo_typeof_lambda X L B = __get_lambda_type L B := by
+  revert h
+  unfold __eo_typeof_lambda
+  split <;> intro h
+  · exact absurd rfl h
+  · exact absurd rfl h
+  · rfl
+  · exact absurd rfl h
+
 /-- Renaming a list of variables whose lambda has a type gives a list of
 variables of the same types. -/
 theorem substitute_simul_rec_rename_vars
     (xs ss bvs : Term) {xsVars bvsVars : List EoVarKey}
     (hXsEnv : EoVarEnvPerm xs xsVars) (hBvsEnv : EoVarEnvPerm bvs bvsVars)
-    (hss : ss ≠ Term.Stuck)
+    (hss : ss ≠ Term.Stuck) (hSsTrans : EoListAllHaveSmtTranslation ss)
     (hEntryTypes : SubstituteSupport.SubstEntryPreservesTypes xs ss) (B : Term)
     (hB : B ≠ Term.Stuck) :
     ∀ (vs : List (native_String × Term)),
-      __get_lambda_type
+      eoPeel (__get_lambda_type
           (__substitute_simul_rec (Term.Boolean true) (LamSpineSupport.eoVarList vs) xs ss bvs)
-          B ≠ Term.Stuck ->
+          B) vs.length ≠ Term.Stuck ->
       ∃ vs' : List (native_String × Term),
         __substitute_simul_rec (Term.Boolean true) (LamSpineSupport.eoVarList vs) xs ss bvs =
           LamSpineSupport.eoVarList vs' ∧
@@ -307,7 +386,9 @@ theorem substitute_simul_rec_rename_vars
             (__substitute_simul_rec (Term.Boolean true) (Term.Var (Term.String s) T) xs ss bvs))
           (__substitute_simul_rec (Term.Boolean true) (LamSpineSupport.eoVarList vs)
             xs ss bvs) ≠ Term.Stuck := by
-        intro h; rw [h] at hNe; exact hNe (by cases B <;> rfl)
+        intro h; rw [h] at hNe; exact hNe (by
+          rw [show __get_lambda_type Term.Stuck B = Term.Stuck by cases B <;> rfl]
+          exact eoPeel_stuck _)
       have hInnerNe := instantiate_eo_mk_apply_fun_ne_stuck_of_ne_stuck hOuterNe
       rw [instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hOuterNe,
         instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hInnerNe] at hNe ⊢
@@ -323,8 +404,14 @@ theorem substitute_simul_rec_rename_vars
             rw [SubstituteSupport.substitute_simul_rec_var_mapped _ _ _ xs ss bvs hisr hxs hss
               hbvs hFree hFind] at hNe ⊢
             have hTy := hEntryTypes s T hFind
+            have hETrans := SubstituteSupport.assoc_nil_nth_has_smt_translation_of_list_all_and_ne_stuck
+              ss (__eo_list_find Term.__eo_List_cons xs (Term.Var (Term.String s) T)) hSsTrans
+              (by
+                intro h; rw [h] at hNe; exact hNe (by
+                  rw [show __get_lambda_type _ B = Term.Stuck by cases B <;> rfl]
+                  exact eoPeel_stuck _))
             generalize __assoc_nil_nth Term.__eo_List_cons ss
-              (__eo_list_find Term.__eo_List_cons xs (Term.Var (Term.String s) T)) = e at hNe hTy ⊢
+              (__eo_list_find Term.__eo_List_cons xs (Term.Var (Term.String s) T)) = e at hNe hTy hETrans ⊢
             cases e with
             | Var nm T' =>
                 cases nm with
@@ -332,35 +419,32 @@ theorem substitute_simul_rec_rename_vars
                     have : T' = T := by simpa [__eo_typeof] using hTy
                     subst this
                     exact ⟨s', rfl⟩
-                | _ => exact absurd (by simp [__get_lambda_type]) hNe
-            | _ => exact absurd (by cases B <;> simp [__get_lambda_type]) hNe
+                | _ =>
+                    exact false_of_non_string_var_has_smt_translation
+                      (by intro s h; cases h) hETrans
+            | _ =>
+                exact absurd (by
+                  rw [show __get_lambda_type _ B = Term.Stuck by cases B <;> rfl]
+                  exact eoPeel_stuck _) hNe
           · exact ⟨s, SubstituteSupport.substitute_simul_rec_var_unmapped _ _ _ xs ss bvs hisr hxs
               hss hbvs hFree (hXsEnv.find_neg_true_of_not_mem hMapped)⟩
       obtain ⟨s', hs'⟩ := hVar
       rw [hs'] at hNe ⊢
-      rw [__get_lambda_type.eq_2 B _ _ _ hB] at hNe
-      have hRestNe : __get_lambda_type
-          (__substitute_simul_rec (Term.Boolean true) (LamSpineSupport.eoVarList vs) xs ss bvs)
-          B ≠ Term.Stuck := by
-        intro h; rw [h] at hNe; exact hNe rfl
+      rw [__get_lambda_type.eq_2 B _ _ _ hB, List.length_cons, eoPeel_succ'] at hNe
+      have hRestNe := hNe
       obtain ⟨vs', hEq, hTys⟩ :=
-        substitute_simul_rec_rename_vars xs ss bvs hXsEnv hBvsEnv hss hEntryTypes B hB vs hRestNe
+        substitute_simul_rec_rename_vars xs ss bvs hXsEnv hBvsEnv hss hSsTrans hEntryTypes B hB vs hRestNe
       refine ⟨(s', T) :: vs', ?_, by simp [hTys]⟩
       rw [hEq]
       rfl
 
 /-! ## Types of spines -/
 
-theorem eo_typeof_apply_stuck_left (Y : Term) : __eo_typeof_apply Term.Stuck Y = Term.Stuck := by
-  cases Y <;> rfl
-
-theorem eo_typeof_lambda_stuck_body (X L : Term) :
-    __eo_typeof_lambda X L Term.Stuck = Term.Stuck := by
-  cases L <;> rfl
-
 theorem eo_typeof_lamT (us B : Term) :
     __eo_typeof (LamSpineSupport.lamT us B) =
-      __eo_typeof_lambda (__eo_typeof us) us (__eo_typeof B) := rfl
+      __eo_typeof_lambda (__eo_typeof us) us (__eo_typeof B) := by
+  change __eo_typeof_lambda (__eo_typeof us) us (__eo_typeof B) = _
+  rfl
 
 /-- A spine with a type has a body and arguments with types. -/
 theorem eo_typeof_mkSpine_ne_stuck (us B : Term) :
@@ -464,11 +548,11 @@ theorem smtx_typeof_mkSpine_congr (vs vs' : List (native_String × Term)) (B B' 
           LamSpineSupport.lamBindings_eoVarList vs' (r.map σ) SmtBindings.nil (by simp; omega),
           show vs.take r.length = vs by rw [← hmr, List.take_length],
           show vs'.take (r.map σ).length = vs' by rw [List.length_map, ← hmr, ← hlen, List.take_length],
-          List.map_reverse, hB]
+          ← List.map_reverse, hB]
         exact smtx_typeof_bindings_bindsApp_congr _ vs vs' r.reverse σ hTys
           (fun x hx => hArgs x (List.mem_reverse.1 hx))
       · cases r with
-        | nil => simp at hm hmr; omega
+        | nil => exact absurd (Nat.le_zero.1 hm) hmr
         | cons a r =>
             simp only [List.length_cons] at hm hmr
             change __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine

@@ -233,8 +233,9 @@ it implies the exact EO entry type facts consumed by the older type-preservation
 theorem and also carries the SMT-translation/type facts consumed by the older
 translatability theorem.
 -/
-set_option warningAsError false in -- TEMPORARY
-/-- The lambda-spine case of substitution preservation. -/
+/-- The lambda-spine case of substitution preservation: substitution keeps the
+spine's shape, so its EO and SMT types follow from those of its body and
+arguments, which the IH preserves. -/
 theorem substitute_simul_spine_preserves
     {isRename : Bool}
     (f a xs ts bvs : Term)
@@ -250,7 +251,103 @@ theorem substitute_simul_spine_preserves
       f = Term.Apply q (Term.Apply (Term.Apply Term.__eo_List_cons v) vs))
     (hRec : SubstitutionPreservationRec isRename (Term.Apply f a) xs ts) :
     SubstitutionPreservationResult isRename (Term.Apply f a) xs ts bvs := by
-  sorry
+  have hxs : xs ≠ Term.Stuck := hXsEnv.ne_stuck
+  have hss : ts ≠ Term.Stuck := eoListAllHaveSmtTranslation_ne_stuck hTs
+  have hEntryTypes : SubstituteSupport.SubstEntryPreservesTypes xs ts :=
+    SubstActualsHaveSmtTypes.entry_eo_type_eq hActuals
+  obtain ⟨us, body, r, hs⟩ := hSpine
+  have hSize := hs.sizeOf_lt
+  have hFNN : __smtx_typeof (__eo_to_smt (Term.Apply f a)) ≠ SmtType.None := hFTrans
+  obtain ⟨-, hBodyNN, hArgsNN⟩ := hs.parts_typed_any hFNN
+  obtain ⟨m, hv, hm⟩ := LamSpineSupport.spine_args_ge_vars hs hFNN
+  obtain ⟨vs, hvlen, rfl⟩ := LamSpineSupport.lamVars_exists us m hv
+  subst hvlen
+  have hEqF := LamSpineSupport.LamSpine.eq_mkSpine hs
+  have hSubNe : substResult isRename (Term.Apply f a) xs ts bvs ≠ Term.Stuck := by
+    intro h; apply hTy; rw [h]; rfl
+  simp only [substResult] at hTy hSubNe ⊢
+  rw [hEqF] at hTy hSubNe hFNN ⊢
+  have hArgSmt : ∀ {x : Term}, RuleProofs.eo_has_smt_translation x ->
+      ∀ {y : Term}, RuleProofs.eo_has_smt_translation y -> __eo_typeof y = __eo_typeof x ->
+      __smtx_typeof (__eo_to_smt y) = __smtx_typeof (__eo_to_smt x) := by
+    intro x hx y hy hxy
+    rw [TranslationProofs.eo_to_smt_typeof_matches_translation y hy,
+      TranslationProofs.eo_to_smt_typeof_matches_translation x hx, hxy]
+  cases isRename with
+  | false =>
+      obtain ⟨bvsFull, hFullEnv, _, hSubEq⟩ :=
+        InstantiateRule.substitute_simul_rec_spine xs ts bvs hBvsEnv hxs hss vs body hBodyNN r
+          hArgsNN hSubNe
+      rw [hSubEq] at hTy ⊢
+      obtain ⟨hLamNe, hArgsNe⟩ := InstantiateRule.eo_typeof_mkSpine_ne_stuck _ _ _ hTy
+      have hBodySubNe : __eo_typeof (substResult false body xs ts bvsFull) ≠ Term.Stuck := by
+        intro h; apply hLamNe
+        rw [InstantiateRule.eo_typeof_lamT]
+        simp only [substResult] at h
+        rw [h, InstantiateRule.eo_typeof_lambda_stuck_body]
+      have hBodyRes := hRec (G := body) (bvs' := bvsFull) hSize.1 hXsEnv hFullEnv hBodyNN hTs
+        hActuals hBodySubNe
+      have hArgRes : ∀ x ∈ r, SubstitutionPreservationResult false x xs ts bvs := fun x hx =>
+        hRec (hSize.2 x hx) hXsEnv hBvsEnv (hArgsNN x hx) hTs hActuals
+          (hArgsNe _ (List.mem_map_of_mem hx))
+      refine ⟨?_, ?_⟩
+      · exact InstantiateRule.eo_typeof_mkSpine_congr _ _ _ _ _
+          (by rw [InstantiateRule.eo_typeof_lamT, InstantiateRule.eo_typeof_lamT, hBodyRes.1])
+          r (fun x hx => (hArgRes x hx).1)
+      · unfold RuleProofs.eo_has_smt_translation
+        rw [InstantiateRule.smtx_typeof_mkSpine_congr vs vs body _ _ rfl rfl
+          (hArgSmt hBodyNN hBodyRes.2 hBodyRes.1) r hm
+          (fun x hx => hArgSmt (hArgsNN x hx) (hArgRes x hx).2 (hArgRes x hx).1)]
+        exact hFNN
+  | true =>
+      have hSubEq := InstantiateRule.substitute_simul_rec_spine_rename xs ts bvs hBvsEnv hxs hss vs
+        body hBodyNN r hArgsNN hSubNe
+      rw [hSubEq] at hTy ⊢
+      obtain ⟨hLamNe, hArgsNe⟩ := InstantiateRule.eo_typeof_mkSpine_ne_stuck _ _ _ hTy
+      have hBodySubNe : __eo_typeof (substResult true body xs ts bvs) ≠ Term.Stuck := by
+        intro h; apply hLamNe
+        rw [InstantiateRule.eo_typeof_lamT]
+        simp only [substResult] at h
+        rw [h, InstantiateRule.eo_typeof_lambda_stuck_body]
+      have hPeel : InstantiateRule.eoPeel
+          (__eo_typeof (LamSpineSupport.lamT
+            (__substitute_simul_rec (Term.Boolean true) (LamSpineSupport.eoVarList vs) xs ts bvs)
+            (__substitute_simul_rec (Term.Boolean true) body xs ts bvs))) vs.length ≠
+          Term.Stuck := by
+        have h := hTy
+        rw [InstantiateRule.eo_typeof_mkSpine_eq_peel _ _ _ hTy] at h
+        exact InstantiateRule.eoPeel_ne_stuck_of_le (by simpa using hm) h
+      rw [InstantiateRule.eo_typeof_lamT,
+        InstantiateRule.eo_typeof_lambda_eq_of_ne_stuck (by
+          rw [← InstantiateRule.eo_typeof_lamT]; exact hLamNe)] at hPeel
+      obtain ⟨vs', hL, hTys⟩ := InstantiateRule.substitute_simul_rec_rename_vars xs ts bvs hXsEnv
+        hBvsEnv hss hTs hEntryTypes _ hBodySubNe vs hPeel
+      rw [hL] at hTy ⊢
+      have hBodyRes := hRec (G := body) (bvs' := bvs) hSize.1 hXsEnv hBvsEnv hBodyNN hTs
+        hActuals hBodySubNe
+      have hArgRes : ∀ x ∈ r, SubstitutionPreservationResult true x xs ts bvs := fun x hx =>
+        hRec (hSize.2 x hx) hXsEnv hBvsEnv (hArgsNN x hx) hTs hActuals
+          (hArgsNe _ (List.mem_map_of_mem hx))
+      have hlen : vs'.length = vs.length := by
+        simpa using congrArg List.length hTys
+      have hBodyTyNe : __eo_typeof body ≠ Term.Stuck := by
+        rw [← hBodyRes.1]; exact hBodySubNe
+      refine ⟨?_, ?_⟩
+      · refine InstantiateRule.eo_typeof_mkSpine_congr _ _ _ _ _ ?_ r (fun x hx => (hArgRes x hx).1)
+        rw [InstantiateRule.eo_typeof_lamT, InstantiateRule.eo_typeof_lamT, hBodyRes.1,
+          TranslationProofs.eo_typeof_lambda_vars _ (LamSpineSupport.lamVars_eoVarList vs'),
+          TranslationProofs.eo_typeof_lambda_vars _ (LamSpineSupport.lamVars_eoVarList vs),
+          __eo_typeof_lambda.eq_3 _ _ (by cases vs' <;> intro h <;> cases h) hBodyTyNe,
+          __eo_typeof_lambda.eq_3 _ _ (by cases vs <;> intro h <;> cases h) hBodyTyNe,
+          InstantiateRule.get_lambda_type_eoVarList_congr _ hBodyTyNe vs vs' hTys]
+      · unfold RuleProofs.eo_has_smt_translation
+        rw [InstantiateRule.smtx_typeof_mkSpine_congr vs vs' body _ _ hlen
+          (by
+            have := congrArg (List.map __eo_to_smt_type) hTys
+            simpa [List.map_map, Function.comp_def] using this)
+          (hArgSmt hBodyNN hBodyRes.2 hBodyRes.1) r hm
+          (fun x hx => hArgSmt (hArgsNN x hx) (hArgRes x hx).2 (hArgRes x hx).1)]
+        exact hFNN
 
 theorem substitute_simul_preserves_type_and_translation_with_binder_lt
     {isRename : Bool}
