@@ -102,7 +102,7 @@ theorem lam_spine_args_not_reglan (M : SmtModel) (hM : model_wf M)
     exact ⟨i, by simp; omega, by simp⟩
   have hBind := LamSpineSupport.bindsApp_mem (vs.zip r.reverse) SmtBindings.nil _ hmem
   have hTyA := bind_binding_type_of_non_none hTy hBind
-  have hWf := LamSpineSupport.lamVars_wf_of_eoVarList vs hv _ (List.getElem_mem _)
+  have hWf := LamSpineSupport.lamVars_wf_of_eoVarList vs hv _ (List.getElem_mem hi')
   simp only [hai] at hTyA
   have hNN : term_has_non_none_type (__eo_to_smt a) := by
     unfold term_has_non_none_type
@@ -115,6 +115,9 @@ theorem lam_spine_args_not_reglan (M : SmtModel) (hM : model_wf M)
   rw [hEq, hTyA] at hVal
   unfold TranslationProofs.lamVarWf at hWf
   rw [← hVal] at hWf
+  have hRegT : __smtx_typeof_value (SmtValue.RegLan rl) = SmtType.RegLan := by
+    simp [__smtx_typeof_value]
+  rw [hRegT] at hWf
   exact absurd hWf (by decide +kernel)
 
 /-- Arguments that are pairwise equal in a model, and none of which is a
@@ -257,8 +260,8 @@ theorem congTrueSpine_lam_spine_args_eq_true (M : SmtModel) (hM : model_wf M)
               unfold RuleProofs.eo_has_smt_translation
               rw [hX]; exact hA
             have hArg : eo_interprets M (mkEq a a') true := by
-              rcases ha with rfl | ha
-              · exact lam_eo_interprets_eq_self M a hATrans
+              rcases ha with h | ha
+              · rw [h]; exact lam_eo_interprets_eq_self M a hATrans
               · exact ha
             exact congTrueSpine_generic_apply_eq_true M hM _ _ a a' hEqBool hToL hToR
               (LamSpineSupport.smtx_typeof_mkSpine_apply a r)
