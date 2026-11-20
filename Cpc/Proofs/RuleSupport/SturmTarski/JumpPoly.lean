@@ -72,7 +72,7 @@ lemma jumpVal_mod (p q : Polynomial ℝ) (x : ℝ) : jumpVal p q x = jumpVal p (
          simp only [pow_one]
          have hbound := rootMultiplicity_le_iff hf.2 x n
          simp only [H, Std.le_refl, true_iff] at hbound
-         by_contra!
+         intro this
          have ⟨f, hf⟩ := exists_eq_mul_left_of_dvd this
          rw [hf, mul_comm, mul_assoc, mul_comm, ← pow_succ'] at hq'
          have hcontra : (X - C x)^(n + 1) ∣ q := by
@@ -87,7 +87,7 @@ lemma jumpVal_mod (p q : Polynomial ℝ) (x : ℝ) : jumpVal p q x = jumpVal p (
           simp only [pow_one]
           have hbound := rootMultiplicity_le_iff hf.1 x n
           simp only [H, Std.le_refl, true_iff] at hbound
-          by_contra!
+          intro this
           have ⟨f, hf⟩ := exists_eq_mul_left_of_dvd this
           rw [hf, mul_comm, mul_assoc, mul_comm, ← pow_succ'] at hp'
           have hcontra : (X - C x)^(n + 1) ∣ p := by
@@ -118,7 +118,7 @@ lemma jumpVal_mod (p q : Polynomial ℝ) (x : ℝ) : jumpVal p q x = jumpVal p (
               simp only [pow_one] at hq_mod_ndvd hq_ndvd
               have : q' % p' ≠ 0 := by
                 simp only [ne_eq, EuclideanDomain.mod_eq_zero]
-                by_contra!
+                intro this
                 exact hq_ndvd (dvd_trans hp_dvd this)
               constructor
               · apply Nat.le_zero.mp; apply (rootMultiplicity_le_iff this x 0).mpr

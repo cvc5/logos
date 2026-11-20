@@ -54,7 +54,7 @@ lemma rootsInInterval_mul {p q : Polynomial ℝ} (a b : ℝ) (hpq : p * q ≠ 0)
 /-! ### Algebraic facts -/
 
 /-- A nonzero polynomial with a root has nonzero derivative. -/
-theorem derivative_ne_zero_of_isRoot {R : Type*} [CommRing R] [IsAddTorsionFree R] {p : R[X]}
+theorem derivative_ne_zero_of_isRoot {R : Type*} [CommRing R] [HasUniqueDiv R] {p : R[X]}
     {x : R} (hp : p ≠ 0)
     (h : p.IsRoot x) : derivative p ≠ 0 :=
   derivative_ne_zero.mpr (natDegree_pos_iff_degree_pos.mpr (degree_pos_of_root hp h)).ne'
@@ -131,11 +131,11 @@ lemma eventually_sign_eq_atTop {p : Polynomial ℝ} (hp : p ≠ 0) :
     simp [signPosInf]
   · have hdeg' : 0 < p.degree := natDegree_pos_iff_degree_pos.mp (Nat.pos_of_ne_zero hdeg)
     rcases lt_or_gt_of_ne (leadingCoeff_ne_zero.mpr hp) with hlc | hlc
-    · filter_upwards [(tendsto_atBot_of_leadingCoeff_nonpos p hdeg'
+    · filter_upwards [(tendsto_atBot_of_leadingCoeff_nonpos hdeg'
         (le_of_lt hlc)).eventually_lt_atBot 0]
         with x hx
       rw [signPosInf, sign_neg hx, sign_neg hlc]
-    · filter_upwards [(tendsto_atTop_of_leadingCoeff_nonneg p hdeg'
+    · filter_upwards [(tendsto_atTop_of_leadingCoeff_nonneg hdeg'
         (le_of_lt hlc)).eventually_gt_atTop 0]
         with x hx
       rw [signPosInf, sign_pos hx, sign_pos hlc]
