@@ -1941,9 +1941,15 @@ inductive SmtTerm : Type where
   | DtTester : String -> SmtDatatypeDecl -> Nat -> SmtTerm
   | exists : String -> SmtType -> SmtTerm -> SmtTerm
   | forall : String -> SmtType -> SmtTerm -> SmtTerm
+  | lam : String -> SmtType -> SmtTerm -> SmtTerm
+  | bind : SmtBindings -> SmtTerm -> SmtTerm
   | Var : String -> SmtType -> SmtTerm
   | UConst : String -> SmtType -> SmtTerm
 deriving Repr, DecidableEq, Inhabited
+
+inductive SmtBindings : Type where
+  | nil : SmtBindings
+  | cons : String -> SmtType -> SmtTerm -> SmtBindings -> SmtBindings
 \end{lstlisting}
 \caption{A representative template of SMT term constructors.}
 \label{fig:smt-terms}
@@ -2002,12 +2008,13 @@ arguments as \code{DtCons},
 denoting the SMT-LIB discriminator (tester) for the constructor with the
 given index.
 Beyond the constructors shown in Figure~\ref{fig:smt-terms},
-the embedding contains further binder-like constructors,
-notably \code{choice} (Hilbert choice, discussed below) and
-\code{bind} (a let-style binder used only internally by the translation from
-Eunoia terms), as well as the internal operators
+the embedding contains a further binder-like constructor
+\code{choice} (Hilbert choice, discussed below),
+as well as the internal operators
 \code{map_diff} and \code{seq_diff} used to witness disequalities
 of arrays, sets and sequences.
+The binders \code{lam} and \code{bind}, which are shown in the figure,
+are discussed below.
 
 The next two constructors (\code{forall} and \code{exists}) denote the SMT-LIB
 standard universal and existential binders.
@@ -2041,8 +2048,28 @@ For the latter, our semantics of quantified formulas will be bottom-up,
 where inner quantified formulas essentially override the interpretation of
 variables, so that \code{(Var "x" Int)} is effectively bound
 by the innermost binder, in this case, it is extentionally bound.
-Note that we do not include a constructor for \code{lambda},
-as our formulation does not consider higher-order constructs.
+The constructor \code{bind} denotes a (parallel) \code{let}:
+\code{(bind bs F)} binds each variable listed in the bindings \code{bs}
+(an identifier, a type and a term) to its term, in the body \code{F}.
+The bindings are parallel, as in SMT-LIB's \code{let}:
+every bound term is evaluated in the model the \code{let} itself is evaluated in,
+so no bound term sees another binding of the same \code{let},
+and a later binding of an identifier shadows an earlier one.
+Besides expressing SMT-LIB's \code{let}, \code{bind} is used by the translation
+from Eunoia terms in two places: to express (skolemized) nested quantifiers,
+together with \code{choice},
+and to give a meaning to the lambdas of the CPC calculus
+(Section~\ref{sec:lambda-translation}).
+The constructor \code{lam} denotes a lambda \emph{still waiting for an argument}:
+\code{(lam s T F)} binds the identifier \code{s} of type \code{T} in \code{F}.
+It is not a first-class function: it has no type and no value of its own.
+It occurs only as the body of a \code{bind} that a lambda of the input
+translates to until it has been applied to an argument for each of its
+variables, so a lambda applied to too few arguments has no type either.
+Thus, the embedding still does not consider higher-order constructs:
+there are no function values other than those denoted by uninterpreted
+functions, and a lambda is given a meaning only once it is applied to all
+of its arguments, as the \code{let} of its body.
 CPC will define one further binder for a variant of Hilbert's choice operator.
 This operator however is specific to the implementation of the CPC calculus,
 so we omit it from discussion here.
@@ -2148,6 +2175,20 @@ This prevents quantified formulas over types that are not well-formed,
 which would have an unintuitive semantics based on our model evaluation for
 \code{exists} as defined earlier.
 
+A \code{let} \code{(bind bs F)} has the type of its body \code{F}, provided
+that each bound term has the type its variable is declared with,
+and that this type is well-formed:
+\begin{examplecode}
+def smt_typeof_bindings : SmtBindings -> SmtType -> SmtType
+  | SmtBindings.nil, U => U
+  | (SmtBindings.cons s T t bs), U =>
+      if smt_typeof t = T then smt_typeof_guard_wf T (smt_typeof_bindings bs U)
+      else SmtType.None
+\end{examplecode}
+with \code{(smt_typeof (bind bs F)) = (smt_typeof_bindings bs (smt_typeof F))}.
+A pending lambda \code{(lam s T F)} has no type, i.e. its type is \code{None},
+and so does any \code{let} around one.
+
 The type of arithmetic operators like \code{plus} handle overloading Int and Real,
 i.e. plus is well-typed if both of its arguments are Int, or if both arguments are Real.
 Array select (\code{select})
@@ -2210,6 +2251,8 @@ noncomputable def smt_model_eval (M : SmtModel) : SmtTerm -> SmtValue
   | (SmtTerm.not x1) => (smt_model_eval_not (smt_model_eval M x1))
   | (SmtTerm.eq x1 x2) => (smt_model_eval_eq (smt_model_eval M x1) (smt_model_eval M x2))
   | (SmtTerm.exists s T x1) => (eval_texists M s T x1)
+  | (SmtTerm.lam s T x1) => SmtValue.NotValue
+  | (SmtTerm.bind bs x1) => (smt_model_eval (push_bindings M M bs) x1)
   | (SmtTerm.DtCons s dd i) => (SmtValue.DtCons s dd i)
   | (SmtTerm.Apply f x1) =>
       (smt_model_eval_apply M (smt_model_eval M f) (smt_model_eval M x1))
@@ -2293,6 +2336,24 @@ Note that this definition has the advantage that we do not need to
 define a substitution function on terms, nor do we need have SMT-LIB terms
 depend on SMT-LIB values (the two datatypes do not depend on one another).
 The case for universal quantification \code{forall} (not given) is similar.
+
+The \code{let} \code{(bind bs F)} evaluates its body in the model
+\code{(push_bindings M M bs)}, which pushes each binding of \code{bs} in turn,
+first to last:
+\begin{examplecode}
+def push_bindings (M : SmtModel) (N : SmtModel) : SmtBindings -> SmtModel
+  | SmtBindings.nil => N
+  | (SmtBindings.cons s T t bs) =>
+      push_bindings M (model_push N s T (smt_model_eval M t)) bs
+\end{examplecode}
+Each bound term is evaluated in the model \code{M} of the \code{let},
+not in the model being extended, which makes the bindings parallel;
+and since a later push of the same identifier and type overrides an earlier
+one, a later binding shadows an earlier one.
+As for quantifiers, no substitution on terms is needed to give the semantics.
+A pending lambda \code{lam} evaluates to the error value \code{NotValue};
+this case is unreachable from a well-typed term, since such a term has no
+\code{lam} outside of a \code{bind} that is itself well-typed.
 
 The next two cases handle datatype constructors and applications
 of datatype constructors and functions.
@@ -2638,6 +2699,79 @@ Each of these cases is guarded so that datatype names beginning with the
 reserved prefix "@" fail to translate;
 such names are reserved for internal datatypes (e.g. tuples) whose
 translation is handled specially.
+
+\subsubsection{Lambdas and Beta Redexes}
+\label{sec:lambda-translation}
+
+\begin{figure}
+\begin{lstlisting}
+def eo_to_smt_lambda_curry : Term -> SmtTerm -> SmtTerm
+  | Term.__eo_List_nil, F => F
+  | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs), F =>
+      (SmtTerm.lam s (eo_to_smt_type T) (eo_to_smt_lambda_curry vs F))
+  | vs, F => SmtTerm.None
+
+def eo_to_smt_bindings_snoc : SmtBindings -> String -> SmtType -> SmtTerm -> SmtBindings
+  | SmtBindings.nil, s2, T2, t2 => (SmtBindings.cons s2 T2 t2 SmtBindings.nil)
+  | (SmtBindings.cons s T t bs), s2, T2, t2 =>
+      (SmtBindings.cons s T t (eo_to_smt_bindings_snoc bs s2 T2 t2))
+
+def eo_to_smt_apply : SmtTerm -> SmtTerm -> SmtTerm
+  | (SmtTerm.bind c (SmtTerm.lam s T F)), y => (SmtTerm.bind (eo_to_smt_bindings_snoc c s T y) F)
+  | g, y => (SmtTerm.Apply g y)
+
+def eo_to_smt : Term -> SmtTerm
+  ...
+  | (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) x1) x2) =>
+      (SmtTerm.bind SmtBindings.nil (eo_to_smt_lambda_curry x1 (eo_to_smt x2)))
+  ...
+  | (Term.Apply (Term.Apply f x1) y) =>
+      (eo_to_smt_apply (eo_to_smt (Term.Apply f x1)) (eo_to_smt y))
+  | (Term.Apply f y) => (SmtTerm.Apply (eo_to_smt f) (eo_to_smt y))
+  ...
+\end{lstlisting}
+\caption{The translation of lambdas and of their applications.}
+\label{fig:eo-to-smt-lambda}
+\end{figure}
+
+CPC has a proof-level binder \code{lambda}, which SMT-LIB does not.
+A lambda \code{(lambda (x1 ... xn) t)} is translated to the \code{let}
+of no bindings around the curried chain of its variables,
+\code{(bind nil (lam x1 T1 ... (lam xn Tn [t])))},
+where \code{[t]} is the translation of \code{t}
+(Figure~\ref{fig:eo-to-smt-lambda}).
+An application whose function is itself an application, that no case for an
+operator of the signature matched, is translated by \code{eo_to_smt_apply}
+from what its function and its argument translate to:
+if the function translates to a lambda still waiting for an argument,
+i.e. a \code{bind} whose body is a \code{lam},
+the argument is bound to the lambda's next variable, after the bindings already
+made, in the same \code{let};
+otherwise it is the SMT application.
+Since each application is translated from the translations of its parts,
+an application of what a lambda returns, or of a term substituted for a
+variable, is translated as any other application.
+For the application \code{(_ (_ (lambda (x1 ... xn) t) a1) ... ak)}
+of a lambda to $k$ arguments, this gives three cases.
+\begin{itemize}
+\item If $k = n$, the translation is the parallel \code{let}
+  \code{(bind ((x1 T1 [a1]) ... (xn Tn [an])) [t])},
+  whose type is that of \code{[t]} when each \code{[ai]} has type \code{Ti}.
+  Since the bindings are added after the ones already made, rather than in
+  a \code{let} nested inside them, every argument is evaluated where the
+  application is, and not under the bindings of the earlier arguments.
+\item If $k < n$, the translation is a \code{let} around a \code{lam}, which
+  has no type: a partially applied lambda has no translation.
+\item If $k > n$, the translation is the SMT application of the \code{let}
+  of the first $n$ arguments to the remaining ones, which is typed when the
+  body \code{t} has a function type.
+\end{itemize}
+A lambda that binds no variables, \code{(lambda () t)}, translates to
+\code{(bind nil [t])}, which means what \code{t} does.
+In particular, a beta redex, i.e. a lambda applied to as many arguments as it
+has variables, means the \code{let} of its body, with the semantics of
+\code{bind} given earlier; no substitution on terms is needed to give it its
+meaning.
 
 \subsection{Satisfiability for Eunoia terms}
 
