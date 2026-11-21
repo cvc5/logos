@@ -1107,6 +1107,8 @@ private theorem typeof_cleanOrNone :
       cleanOrNone_apply _ (typeof_cleanOrNone (SmtTerm.choice s T b))
   | SmtTerm.Apply (SmtTerm.bind bs b) x1 =>
       cleanOrNone_apply _ (typeof_cleanOrNone (SmtTerm.bind bs b))
+  | SmtTerm.Apply (SmtTerm.lam s T b) x1 =>
+      cleanOrNone_apply _ (typeof_cleanOrNone (SmtTerm.lam s T b))
   | SmtTerm.Apply (SmtTerm.map_diff a b) x1 =>
       cleanOrNone_apply _ (typeof_cleanOrNone (SmtTerm.map_diff a b))
   | SmtTerm.Apply (SmtTerm.seq_diff a b) x1 =>
@@ -1389,6 +1391,7 @@ private theorem typeof_cleanOrNone :
   | SmtTerm.bind bs b => by
       rw [smtx_typeof_bind_eq]
       exact cleanOrNone_typeof_bindings (typeof_cleanOrNone b) bs
+  | SmtTerm.lam _ _ _ => Or.inl rfl
   | SmtTerm.map_diff a b => cleanOrNone_map_diff _ (typeof_cleanOrNone a)
   | SmtTerm.seq_diff a b => cleanOrNone_seq_diff _ _
   | SmtTerm.DtCons s d i =>
@@ -1894,6 +1897,9 @@ theorem smt_model_eval_rel_of_var_rel_lt
         exact RuleProofs.smt_value_rel_refl _
       case DtTester s0 d0 i0 =>
         exact RuleProofs.smt_value_rel_refl _
+      case lam s0 T0 b0 =>
+        -- A bare `lam` has no SMT type.
+        exact False.elim (hTy rfl)
       case re_allchar =>
         exact RuleProofs.smt_value_rel_refl _
       case re_none =>
