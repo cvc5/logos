@@ -269,7 +269,7 @@ def __eo_typeof : Term -> Term
   | (Term.Var (Term.String s) T) => T
   | (Term.DatatypeType s dd) => Term.Type
   | (Term.DtCons s dd i) => (__eo_typeof_dt_cons_rec (Term.DatatypeType s dd) (__eo_dd_resolve s dd) i)
-  | (Term.DtSel s dd i j) => (Term.Apply (Term.Apply Term.FunType (Term.DatatypeType s dd)) (__eo_typeof_dt_sel_return (__eo_dd_resolve s dd) i j))
+  | (Term.DtSel s dd i j) => (__eo_mk_apply (__eo_mk_apply Term.FunType (Term.DatatypeType s dd)) (__eo_typeof_dt_sel_return (__eo_dd_resolve s dd) i j))
   | (Term.USort i) => Term.Type
   | (Term.UConst i T) => T
   | Term.Type => Term.Type

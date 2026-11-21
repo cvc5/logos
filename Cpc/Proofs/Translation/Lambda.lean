@@ -799,8 +799,30 @@ theorem get_lambda_type_nil {B : Term} (hB : B ≠ Term.Stuck) :
 theorem get_lambda_type_cons {s T vs B : Term} (hB : B ≠ Term.Stuck) :
     __get_lambda_type
         (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var s T)) vs) B =
-      Term.Apply (Term.Apply Term.FunType T) (__get_lambda_type vs B) :=
+      __eo_mk_apply (__eo_mk_apply Term.FunType T) (__get_lambda_type vs B) :=
   __get_lambda_type.eq_2 B s T vs hB
+
+/-- The function type `__get_lambda_type` builds with `__eo_mk_apply` is the
+plain one when neither component is stuck. -/
+theorem eo_mk_apply_fun_type_eq {T U : Term} (hT : T ≠ Term.Stuck)
+    (hU : U ≠ Term.Stuck) :
+    __eo_mk_apply (__eo_mk_apply Term.FunType T) U =
+      Term.Apply (Term.Apply Term.FunType T) U := by
+  have hInner : __eo_mk_apply Term.FunType T = Term.Apply Term.FunType T := by
+    cases T <;> first | rfl | exact absurd rfl hT
+  rw [hInner]
+  cases U <;> first | rfl | exact absurd rfl hU
+
+theorem eo_typeof_apply_mk_fun_self {T U : Term} (hT : T ≠ Term.Stuck) :
+    __eo_typeof_apply (__eo_mk_apply (__eo_mk_apply Term.FunType T) U) T = U := by
+  by_cases hU : U = Term.Stuck
+  · subst hU
+    have hS : __eo_mk_apply (__eo_mk_apply Term.FunType T) Term.Stuck = Term.Stuck := by
+      cases __eo_mk_apply Term.FunType T <;> rfl
+    rw [hS]
+    cases T <;> first | rfl | exact absurd rfl hT
+  · rw [eo_mk_apply_fun_type_eq hT hU]
+    exact eo_typeof_apply_fun_self hT
 
 theorem LamSpine.eo_typeof_eq {t us body : Term} {r : List Term} (h : LamSpine t us body r)
     {m : Nat} (hvars : lamVars us m = true) (hlen : r.length ≤ m)
@@ -826,7 +848,7 @@ theorem LamSpine.eo_typeof_eq {t us body : Term} {r : List Term} (h : LamSpine t
       rw [hf.eo_typeof_apply a, ih hvars (by omega) hB hRest]
       obtain ⟨s, T, hn, hd⟩ := lambda_vars_split rf.length hvars (by omega)
       obtain ⟨haT, hT⟩ := hHead s T hn
-      rw [hd, get_lambda_type_cons hB, haT, eo_typeof_apply_fun_self hT]
+      rw [hd, get_lambda_type_cons hB, haT, eo_typeof_apply_mk_fun_self hT]
       rfl
 
 theorem lamBindings_mem (vs : Term) :
