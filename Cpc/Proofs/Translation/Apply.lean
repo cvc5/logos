@@ -4732,8 +4732,11 @@ private theorem eo_to_smt_type_typeof_apply_dt_sel_of_smt_datatype_from_ih
       __eo_typeof_apply (__eo_typeof (Term.DtSel s d i j)) (__eo_typeof x) =
         __eo_typeof_dt_sel_return (__eo_dd_resolve s d) i j
     rw [hxType]
-    simp [__eo_typeof, __eo_typeof_apply, __eo_requires,
-      native_teq, native_ite, native_not]
+    -- The selector's EO type is built with `__eo_mk_apply`, so a stuck return
+    -- type makes the whole function type stuck.
+    cases hR : __eo_typeof_dt_sel_return (__eo_dd_resolve s d) i j <;>
+      simp [__eo_typeof, __eo_typeof_apply, __eo_requires, __eo_mk_apply, hR,
+        native_teq, native_ite, native_not]
   rw [hEo, eo_to_smt_typeof_dt_sel_return]
   unfold __smtx_ret_typeof_sel
   rw [eo_to_smt_dd_resolve_of_no_none s d
@@ -7580,7 +7583,8 @@ private theorem eo_to_smt_type_typeof_apply_purify_of_dt_sel_translation
     have hHeadEq :
         __eo_typeof (Term._at_purify (Term.DtSel s d0 i j)) =
           __eo_typeof (Term.DtSel s d0 i j) := by
-      rfl
+      change __eo_typeof__at_purify (__eo_typeof (Term.DtSel s d0 i j)) = _
+      cases __eo_typeof (Term.DtSel s d0 i j) <;> rfl
     have hApplyEq :
         __eo_typeof (Term.Apply (Term._at_purify (Term.DtSel s d0 i j)) x) =
           __eo_typeof (Term.Apply (Term.DtSel s d0 i j) x) := by
@@ -13525,15 +13529,49 @@ private theorem eo_to_smt_typeof_matches_translation_apply_apply_apply_update
         rw [← h]
         exact hXNN)
     have hzNonStuck : __eo_typeof z ≠ Term.Stuck := by
+      -- The updated value has the selector's return type, so that type is
+      -- not `None`, and hence the selector's EO return type is not stuck.
+      have hXArgTy : __smtx_typeof (__eo_to_smt x) = __smtx_ret_typeof_sel s d i j :=
+        eo_to_smt_updater_rec_update_arg_type_of_non_none
+          s d i j (__smtx_dt_num_sels (__smtx_dd_lookup s d) i)
+          (__eo_to_smt y) (__eo_to_smt x) hIdx
+          (by
+            rw [hThen]
+            exact _hT)
+      have hSelNN : __smtx_ret_typeof_sel s d i j ≠ SmtType.None := by
+        rw [← hXArgTy]
+        exact hXNN
       rcases eo_to_smt_eq_dt_sel_cases z s d i j hz with
         ⟨d0, hd, hzEq, _hReserved⟩ | ⟨z0, hzEq, _hz0⟩
       · subst z
+        subst hd
         intro hStuck
-        change
-          Term.Apply (Term.Apply Term.FunType (Term.DatatypeType s d0))
-              (__eo_typeof_dt_sel_return (__eo_dd_resolve s d0) i j) =
-            Term.Stuck at hStuck
-        cases hStuck
+        apply hSelNN
+        let dd := __eo_to_smt_datatype_decl d0
+        have hBaseWf : __smtx_type_wf (SmtType.Datatype s dd) = true :=
+          Smtm.smt_datatype_wf_of_non_none_type (__eo_to_smt y) s dd
+            (by simpa [dd] using hYTy)
+        have hRecWf : __smtx_type_wf_rec (SmtType.Datatype s dd) = true :=
+          smtx_type_wf_rec_of_type_wf (by simp) (by intro A B h; cases h)
+            (by intro A B h; cases h) hBaseWf
+        have hTypeNoNone : noNoneTy (SmtType.Datatype s dd) = true :=
+          noNoneTy_of_wf _ hRecWf
+        have hLookupWf : __smtx_dt_wf_rec dd (__smtx_dd_lookup s dd) = true :=
+          Smtm.datatype_wf_rec_of_type_wf hBaseWf
+        have hLookupNoNone : noNoneDt (__smtx_dd_lookup s dd) = true :=
+          noNoneDt_of_wf dd (__smtx_dd_lookup s dd) hLookupWf
+        have hDeclNoNone : noNoneDecl dd = true := by
+          simpa [noNoneTy] using hTypeNoNone
+        have hR : __eo_typeof_dt_sel_return (__eo_dd_resolve s d0) i j = Term.Stuck := by
+          cases hRet : __eo_typeof_dt_sel_return (__eo_dd_resolve s d0) i j with
+          | Stuck => rfl
+          | _ => simp [__eo_typeof, __eo_mk_apply, hRet] at hStuck
+        have hRet := eo_to_smt_typeof_dt_sel_return (__eo_dd_resolve s d0) i j
+        rw [hR, eo_to_smt_dd_resolve_of_no_none s d0
+          (by simpa [dd] using hLookupNoNone) (by simpa [dd] using hDeclNoNone)] at hRet
+        unfold __smtx_ret_typeof_sel
+        rw [← hRet]
+        rfl
       · subst z
         change SmtTerm._at_purify (__eo_to_smt z0) = SmtTerm.DtSel s d i j at hz
         cases hz
