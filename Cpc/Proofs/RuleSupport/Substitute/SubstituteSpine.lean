@@ -292,6 +292,19 @@ theorem eoPeel_succ' (G : Term) : ∀ n, eoPeel G (n + 1) = eoPeel (eoPeel1 G) n
   rw [Nat.add_comm, eoPeel_add G 1 n]
   rfl
 
+/-- Peeling the function type `__get_lambda_type` builds with `__eo_mk_apply`
+gives its codomain when the domain is not stuck. -/
+theorem eoPeel1_mk_fun_type {T U : Term} (hT : T ≠ Term.Stuck) :
+    eoPeel1 (__eo_mk_apply (__eo_mk_apply Term.FunType T) U) = U := by
+  by_cases hU : U = Term.Stuck
+  · subst hU
+    have hInner : __eo_mk_apply Term.FunType T = Term.Apply Term.FunType T := by
+      cases T <;> first | rfl | exact absurd rfl hT
+    rw [hInner]
+    rfl
+  · rw [eo_mk_apply_fun_type_eq hT hU]
+    rfl
+
 theorem eoPeel_ne_stuck_of_le {G : Term} {j k : Nat} (hjk : j ≤ k)
     (h : eoPeel G k ≠ Term.Stuck) : eoPeel G j ≠ Term.Stuck := by
   intro hj
@@ -439,6 +452,12 @@ theorem substitute_simul_rec_rename_vars
       obtain ⟨s', hs'⟩ := hVar
       rw [hs'] at hNe ⊢
       rw [__get_lambda_type.eq_2 B _ _ _ hB, List.length_cons, eoPeel_succ'] at hNe
+      have hT : T ≠ Term.Stuck := by
+        intro hT
+        subst hT
+        apply hNe
+        exact eoPeel_stuck _
+      rw [eoPeel1_mk_fun_type hT] at hNe
       have hRestNe := hNe
       obtain ⟨vs', hEq, hTys⟩ :=
         substitute_simul_rec_rename_vars xs ss bvs hXsEnv hBvsEnv hss hSsTrans hEntryTypes B hB vs hRestNe
