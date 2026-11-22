@@ -642,7 +642,7 @@ def __is_var_list : Term -> Term
 
 def __get_lambda_type : Term -> Term -> Term
   | _ , Term.Stuck  => Term.Stuck
-  | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var s T)) xs), B => (Term.Apply (Term.Apply Term.FunType T) (__get_lambda_type xs B))
+  | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var s T)) xs), B => (__eo_mk_apply (__eo_mk_apply Term.FunType T) (__get_lambda_type xs B))
   | Term.__eo_List_nil, B => B
   | _, _ => Term.Stuck
 
@@ -9294,7 +9294,7 @@ def __eo_typeof : Term -> Term
   | (Term.Var (Term.String s) T) => T
   | (Term.DatatypeType s dd) => Term.Type
   | (Term.DtCons s dd i) => (__eo_typeof_dt_cons_rec (Term.DatatypeType s dd) (__eo_dd_resolve s dd) i)
-  | (Term.DtSel s dd i j) => (Term.Apply (Term.Apply Term.FunType (Term.DatatypeType s dd)) (__eo_typeof_dt_sel_return (__eo_dd_resolve s dd) i j))
+  | (Term.DtSel s dd i j) => (__eo_mk_apply (__eo_mk_apply Term.FunType (Term.DatatypeType s dd)) (__eo_typeof_dt_sel_return (__eo_dd_resolve s dd) i j))
   | (Term.USort i) => Term.Type
   | (Term.UConst i T) => T
   | Term.Type => Term.Type

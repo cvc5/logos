@@ -4480,7 +4480,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                   change
                     __eo_to_smt_type
                       (__eo_typeof_apply
-                        ((Term.FunType.Apply (Term.DatatypeType s d)).Apply
+                        (__eo_mk_apply (__eo_mk_apply Term.FunType (Term.DatatypeType s d))
                           (__eo_typeof_dt_sel_return (__eo_dd_resolve s d) i j))
                         (__eo_typeof x)) =
                       __eo_to_smt_type (Term.DtcAppType a b)
@@ -4491,7 +4491,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                   change
                     __eo_to_smt_type
                       (__eo_typeof_apply
-                        ((Term.FunType.Apply (Term.DatatypeType s d)).Apply
+                        (__eo_mk_apply (__eo_mk_apply Term.FunType (Term.DatatypeType s d))
                           (__eo_typeof_dt_sel_return (__eo_dd_resolve s d) i j))
                         (__eo_typeof x)) =
                       SmtType.None

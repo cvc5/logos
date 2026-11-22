@@ -3089,8 +3089,18 @@ theorem eo_to_smt_type_typeof_apply_dt_sel_of_exact_eo_datatype
     (hx : __eo_typeof x = Term.DatatypeType s dd) :
     __eo_to_smt_type (__eo_typeof (Term.Apply (Term.DtSel s dd i j) x)) =
       __smtx_ret_typeof_sel s (__eo_to_smt_datatype_decl dd) i j := by
-  simp [__eo_typeof, __eo_typeof_apply, __eo_requires, hx,
-    __smtx_ret_typeof_sel, eo_to_smt_datatype_decl_resolve,
-    eo_to_smt_type_typeof_dt_sel_return, native_ite, native_teq, native_not]
+  have hRet := eo_to_smt_type_typeof_dt_sel_return (__eo_dd_resolve s dd) i j
+  rw [eo_to_smt_datatype_decl_resolve] at hRet
+  -- The selector's EO type is built with `__eo_mk_apply`, so a stuck return
+  -- type makes the whole function type stuck.
+  cases hR : __eo_typeof_dt_sel_return (__eo_dd_resolve s dd) i j with
+  | Stuck =>
+      rw [hR] at hRet
+      simp [__eo_typeof, __eo_typeof_apply, hx, hR, __eo_mk_apply,
+        __smtx_ret_typeof_sel, ← hRet]
+  | _ =>
+      rw [hR] at hRet
+      simp [__eo_typeof, __eo_typeof_apply, __eo_requires, hx, hR, __eo_mk_apply,
+        __smtx_ret_typeof_sel, ← hRet, native_ite, native_teq, native_not]
 
 end TranslationProofs
