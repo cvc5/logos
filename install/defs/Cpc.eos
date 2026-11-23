@@ -938,7 +938,10 @@
 ; term substituted for a variable, is transformed as any other application.
 
 ; The curried chain of the variables of vs around F, the body. A list that is
-; not one of variables is no term.
+; not one of variables is no term, and neither is one with a variable whose
+; type a function cannot take (see $smtx_type_wf): the type of a lambda over a
+; variable of a regular language or function sort is not well formed, as the
+; sort of an uninterpreted function taking one is not.
 ; -- $eo_to_smt_lambda_curry
 (program $eo_to_smt_lambda_curry
   ((s <string>) (T $eo_Term) (vs $eo_List) (F SmtTerm))
@@ -946,7 +949,7 @@
   (
   (($eo_to_smt_lambda_curry eo.list_nil F) F)
   (($eo_to_smt_lambda_curry (eo.list_cons (eo.var (eo.string s) T) vs) F)
-    (lam s T ($eo_to_smt_lambda_curry vs F)))
+    ("ite" (smt.type_wf_component T) (lam s T ($eo_to_smt_lambda_curry vs F)) none))
   (($eo_to_smt_lambda_curry vs F) none)
   )
 )

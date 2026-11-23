@@ -870,6 +870,36 @@ private theorem occur_index_re_translation_type_none_of_last_none
   rw [hTy, hn]
   simp [native_ite, native_Teq]
 
+theorem eo_to_smt_bindings_snoc_mem (s : native_String) (T : SmtType) (y : SmtTerm) :
+    ∀ c : SmtBindings, SmtBindings.Mem (__eo_to_smt_bindings_snoc c s T y) s T y
+  | SmtBindings.nil => SmtBindings.Mem.head _ _ _ _
+  | SmtBindings.cons _ _ _ c => SmtBindings.Mem.tail _ _ _ (eo_to_smt_bindings_snoc_mem s T y c)
+
+/-- An application translated through `__eo_to_smt_apply` has no type when its
+argument has none: either it is the SMT application, or it binds the argument
+to a variable of a lambda, which needs the argument to be typed. -/
+theorem eo_apply_apply_fallback_type_none_of_arg_none
+    (f z x : Term)
+    (hGen :
+      __eo_to_smt (Term.Apply (Term.Apply f z) x) =
+        __eo_to_smt_apply (__eo_to_smt (Term.Apply f z)) (__eo_to_smt x))
+    (hx : __smtx_typeof (__eo_to_smt x) = SmtType.None) :
+    __smtx_typeof (__eo_to_smt (Term.Apply (Term.Apply f z) x)) = SmtType.None := by
+  by_cases hp : TranslationProofs.SmtPendingLam (__eo_to_smt (Term.Apply f z))
+  · obtain ⟨c, s, T, G, he⟩ := hp
+    rw [hGen, he, TranslationProofs.eo_to_smt_apply_pending]
+    by_contra hNN
+    have ht : term_has_non_none_type
+        (SmtTerm.bind (__eo_to_smt_bindings_snoc c s T (__eo_to_smt x)) G) := hNN
+    have hm := eo_to_smt_bindings_snoc_mem s T (__eo_to_smt x) c
+    have hTy := bind_binding_type_of_non_none ht hm
+    have hWf := bind_binding_type_wf_of_non_none ht hm
+    rw [hx] at hTy
+    subst hTy
+    exact absurd hWf (by decide +kernel)
+  · exact eo_apply_apply_generic_type_none_of_arg_none f z x
+      (by rw [hGen, TranslationProofs.eo_to_smt_apply_of_not_pending _ hp]) hx
+
 theorem eo_apply_apply_arg_has_translation_of_has_translation
     (f z x : Term) :
     RuleProofs.eo_has_smt_translation (Term.Apply (Term.Apply f z) x) ->
@@ -1348,9 +1378,21 @@ theorem eo_apply_apply_arg_has_translation_of_has_translation
           (eo_to_smt_exists_type_none_of_body_none
             (Term.Apply (Term.Apply Term.__eo_List_cons head) tail)
             (__eo_to_smt x) hx)
+      case lambda =>
+        apply hTrans
+        by_contra hNN
+        have hc : __smtx_typeof (__eo_to_smt_lambda_curry z (__eo_to_smt x)) ≠
+            SmtType.None := by
+          intro h; apply hNN
+          change __smtx_typeof_bindings SmtBindings.nil
+            (__smtx_typeof (__eo_to_smt_lambda_curry z (__eo_to_smt x))) = SmtType.None
+          exact h
+        have hz := TranslationProofs.curry_typed_nil hc
+        subst hz
+        exact hc hx
       all_goals
         exact hTrans
-          (eo_apply_apply_generic_type_none_of_arg_none _ _ _ (by rfl) hx)
+          (eo_apply_apply_fallback_type_none_of_arg_none _ _ _ rfl hx)
   | UOp1 op idx =>
       cases op
       case update =>
@@ -1388,7 +1430,7 @@ theorem eo_apply_apply_arg_has_translation_of_has_translation
         exact hBNN hxB.symm
       all_goals
         exact hTrans
-          (eo_apply_apply_generic_type_none_of_arg_none _ _ _ (by rfl) hx)
+          (eo_apply_apply_fallback_type_none_of_arg_none _ _ _ rfl hx)
   | Apply g y =>
       cases g with
       | UOp op =>
@@ -1458,7 +1500,7 @@ theorem eo_apply_apply_arg_has_translation_of_has_translation
                 _ _ _ hx)
           all_goals
             exact hTrans
-              (eo_apply_apply_generic_type_none_of_arg_none _ _ _ (by rfl) hx)
+              (eo_apply_apply_fallback_type_none_of_arg_none _ _ _ rfl hx)
       | Apply g' y' =>
           cases g' with
           | UOp op =>
@@ -1500,18 +1542,18 @@ theorem eo_apply_apply_arg_has_translation_of_has_translation
                     simp [__smtx_typeof_str_substr, native_ite, native_Teq])
               all_goals
                 exact hTrans
-                  (eo_apply_apply_generic_type_none_of_arg_none _ _ _
-                    (by rfl) hx)
+                  (eo_apply_apply_fallback_type_none_of_arg_none _ _ _
+                    rfl hx)
           | _ =>
               exact hTrans
-                (eo_apply_apply_generic_type_none_of_arg_none _ _ _
-                  (by rfl) hx)
+                (eo_apply_apply_fallback_type_none_of_arg_none _ _ _
+                  rfl hx)
       | _ =>
           exact hTrans
-            (eo_apply_apply_generic_type_none_of_arg_none _ _ _ (by rfl) hx)
+            (eo_apply_apply_fallback_type_none_of_arg_none _ _ _ rfl hx)
   | _ =>
       exact hTrans
-        (eo_apply_apply_generic_type_none_of_arg_none _ _ _ (by rfl) hx)
+        (eo_apply_apply_fallback_type_none_of_arg_none _ _ _ rfl hx)
 
 private theorem eo_apply_generic_type_none_of_arg_none
     (f x : Term)

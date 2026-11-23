@@ -69,7 +69,15 @@ theorem smtx_typeof_lambda_curry_eo_list_cons (v vs : Term) (F : SmtTerm) :
     SmtType.None :=
 by
   cases v
-  case Var n T => cases n <;> rfl
+  case Var n T =>
+    cases n
+    case String s =>
+      cases hw : TranslationProofs.lamVarWf T
+      · rw [TranslationProofs.curry_cons_of_not_wf _ _ _ _ hw]
+        exact TranslationProofs.smtx_typeof_none
+      · rw [TranslationProofs.curry_cons_of_wf _ _ _ _ hw]
+        exact TranslationProofs.smtx_typeof_lam _ _ _
+    all_goals rfl
   all_goals rfl
 
 /-- Datatype constructors with a `None` field are not well-formed. -/

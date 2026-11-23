@@ -1612,7 +1612,10 @@ by
   unfold __eo_to_smt_lambda_curry
   split
   · exact absurd rfl hD
-  · exact cat_smtx_model_eval_lam_eq _ _ _ _
+  · rename_i s T vs
+    cases hw : __smtx_type_wf_component (__eo_to_smt_type T)
+    · simp [native_ite, hw, cat_smtx_model_eval_none_eq]
+    · simp [native_ite, hw, cat_smtx_model_eval_lam_eq]
   · exact cat_smtx_model_eval_none_eq _
 
 /-- Models that agree, extended with the same bindings whose terms evaluate

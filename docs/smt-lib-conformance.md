@@ -208,7 +208,10 @@ functions first-class: there is no lambda value. A lambda is given a meaning onl
 once it is applied to an argument for each of its variables, and then it means the
 parallel `let` of its body, binding each variable to its argument
 (`$eo_to_smt_lambda_curry` and `$eo_to_smt_apply` in `install/defs/Cpc.eos`;
-`SmtTerm.lam` and `SmtTerm.bind` in `Cpc/SmtSyntax.lean`). So
+`SmtTerm.lam` and `SmtTerm.bind` in `Cpc/SmtSyntax.lean`). Its variables must be
+of sorts a function can take: a lambda over a variable of sort `RegLan` or of a
+function sort has no translation, as an uninterpreted function of such a sort has
+none (see "Sorts that are refused" below). So
 
 ```smt2
 (_ (_ (lambda ((x Int) (y Int)) (+ x y)) 1) 2)

@@ -292,6 +292,19 @@ theorem eoPeel_succ' (G : Term) : ∀ n, eoPeel G (n + 1) = eoPeel (eoPeel1 G) n
   rw [Nat.add_comm, eoPeel_add G 1 n]
   rfl
 
+/-- Peeling the function type `__get_lambda_type` builds with `__eo_mk_apply`
+gives its codomain when the domain is not stuck. -/
+theorem eoPeel1_mk_fun_type {T U : Term} (hT : T ≠ Term.Stuck) :
+    eoPeel1 (__eo_mk_apply (__eo_mk_apply Term.FunType T) U) = U := by
+  by_cases hU : U = Term.Stuck
+  · subst hU
+    have hInner : __eo_mk_apply Term.FunType T = Term.Apply Term.FunType T := by
+      cases T <;> first | rfl | exact absurd rfl hT
+    rw [hInner]
+    rfl
+  · rw [eo_mk_apply_fun_type_eq hT hU]
+    rfl
+
 theorem eoPeel_ne_stuck_of_le {G : Term} {j k : Nat} (hjk : j ≤ k)
     (h : eoPeel G k ≠ Term.Stuck) : eoPeel G j ≠ Term.Stuck := by
   intro hj
@@ -439,6 +452,12 @@ theorem substitute_simul_rec_rename_vars
       obtain ⟨s', hs'⟩ := hVar
       rw [hs'] at hNe ⊢
       rw [__get_lambda_type.eq_2 B _ _ _ hB, List.length_cons, eoPeel_succ'] at hNe
+      have hT : T ≠ Term.Stuck := by
+        intro hT
+        subst hT
+        apply hNe
+        exact eoPeel_stuck _
+      rw [eoPeel1_mk_fun_type hT] at hNe
       have hRestNe := hNe
       obtain ⟨vs', hEq, hTys⟩ :=
         substitute_simul_rec_rename_vars xs ss bvs hXsEnv hBvsEnv hss hSsTrans hEntryTypes B hB vs hRestNe
@@ -536,7 +555,9 @@ theorem smtx_typeof_mkSpine_congr (vs vs' : List (native_String × Term)) (B B' 
     (σ : Term -> Term)
     (hlen : vs'.length = vs.length)
     (hTys : vs'.map (fun p => __eo_to_smt_type p.2) = vs.map (fun p => __eo_to_smt_type p.2))
-    (hB : __smtx_typeof (__eo_to_smt B') = __smtx_typeof (__eo_to_smt B)) :
+    (hB : __smtx_typeof (__eo_to_smt B') = __smtx_typeof (__eo_to_smt B))
+    (hv : lamVars (LamSpineSupport.eoVarList vs) vs.length = true)
+    (hv' : lamVars (LamSpineSupport.eoVarList vs') vs.length = true) :
     ∀ r : List Term, vs.length ≤ r.length ->
       (∀ x ∈ r, __smtx_typeof (__eo_to_smt (σ x)) = __smtx_typeof (__eo_to_smt x)) ->
       __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine
@@ -544,9 +565,6 @@ theorem smtx_typeof_mkSpine_congr (vs vs' : List (native_String × Term)) (B B' 
         __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine
           (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) B) r))
   | r, hm, hArgs => by
-      have hv := LamSpineSupport.lamVars_eoVarList vs
-      have hv' : lamVars (LamSpineSupport.eoVarList vs') vs.length = true := by
-        rw [← hlen]; exact LamSpineSupport.lamVars_eoVarList vs'
       by_cases hmr : vs.length = r.length
       · rw [(LamSpineSupport.lamSpine_mkSpine _ B r).eo_to_smt_full (hmr ▸ hv),
           (LamSpineSupport.lamSpine_mkSpine _ B' (r.map σ)).eo_to_smt_full
@@ -569,7 +587,7 @@ theorem smtx_typeof_mkSpine_congr (vs vs' : List (native_String × Term)) (B B' 
               LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv' (σ a) (r.map σ)
                 (by simp; omega),
               LamSpineSupport.smtx_typeof_mkSpine_apply, LamSpineSupport.smtx_typeof_mkSpine_apply,
-              smtx_typeof_mkSpine_congr vs vs' B B' σ hlen hTys hB r (by omega)
+              smtx_typeof_mkSpine_congr vs vs' B B' σ hlen hTys hB hv hv' r (by omega)
                 (fun x hx => hArgs x (List.mem_cons_of_mem _ hx)),
               hArgs a List.mem_cons_self]
 termination_by r => r.length
