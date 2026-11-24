@@ -464,6 +464,41 @@ private theorem smt_typeof_raw_seq_empty_typeof
   exact TranslationProofs.smtx_typeof_seq_empty_of_non_none T (by
     simp [__smtx_typeof, __smtx_typeof_guard_wf, hSeqWF, native_ite])
 
+/-- The type of a term whose translation is a sequence is not stuck. -/
+private theorem typeof_ne_stuck_of_seq (x : Term) (T : SmtType)
+    (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
+    __eo_typeof x ≠ Term.Stuck := by
+  intro h
+  have hTrans : __smtx_typeof (__eo_to_smt x) ≠ SmtType.None := by
+    rw [hxTy]
+    exact seq_ne_none T
+  have hTypeMatch :=
+    TranslationProofs.eo_to_smt_typeof_matches_translation x hTrans
+  have hA : __eo_to_smt_type (__eo_typeof x) = SmtType.Seq T := by
+    rw [← hTypeMatch, hxTy]
+  rw [h] at hA
+  simp [__eo_to_smt_type] at hA
+
+/-- logos builds the empty sequence of a type strictly (`__eo_mk_uop1`); of
+the type of a term whose translation is a sequence, that is the plain
+operator. -/
+private theorem mk_seq_empty_typeof (x : Term) (T : SmtType)
+    (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
+    __eo_mk_uop1 UserOp1.seq_empty (__eo_typeof x) =
+      Term.UOp1 UserOp1.seq_empty (__eo_typeof x) := by
+  have hne := typeof_ne_stuck_of_seq x T hxTy
+  unfold __eo_mk_uop1
+  split <;> simp_all
+
+private theorem smt_typeof_mk_seq_empty_typeof
+    (x : Term) (T : SmtType)
+    (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
+    __smtx_typeof
+        (__eo_to_smt (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof x))) =
+      SmtType.Seq T := by
+  rw [mk_seq_empty_typeof x T hxTy]
+  exact smt_typeof_raw_seq_empty_typeof x T hxTy
+
 private theorem smtx_model_eval_raw_seq_empty_typeof
     (M : SmtModel) (x : Term) (T : SmtType)
     (hxTy : __smtx_typeof (__eo_to_smt x) = SmtType.Seq T) :
@@ -740,10 +775,11 @@ private theorem smt_value_rel_raw_empty_str_substr_of_end_neg
     (hEnd : i + n < 0) :
     RuleProofs.smt_value_rel
       (__smtx_model_eval M
-        (__eo_to_smt (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))))
+        (__eo_to_smt (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a))))
       (__smtx_model_eval_str_substr
         (__smtx_model_eval M (__eo_to_smt a))
         (SmtValue.Numeral i) (SmtValue.Numeral n)) := by
+  rw [mk_seq_empty_typeof a T hATy]
   rcases seq_eval_of_seq_type M hM a T hATy with ⟨sa, hAEval⟩
   have hSaTy : __smtx_typeof_seq_value sa = SmtType.Seq T :=
     smt_typeof_seq_value_of_eval_seq M hM a T sa hATy hAEval
@@ -1070,7 +1106,7 @@ private theorem smt_typeof_seq_subsequence_rec_of_seq :
       simpa [__seq_subsequence_rec] using hTy
   | case5 l t hl ht hNotEmpty =>
       intro T hTy _hNe
-      simpa [__seq_subsequence_rec] using
+      simpa [__seq_subsequence_rec, mk_seq_empty_typeof t T hTy] using
         smt_typeof_raw_seq_empty_typeof t T hTy
   | case6 u e ts hu hUNeZero ih =>
       intro T hTy hNe
@@ -1158,7 +1194,7 @@ private theorem is_seq_const_rec_seq_subsequence_rec_true_of_seq :
       simp [__seq_subsequence_rec, __is_seq_const_rec]
   | case5 l t hl ht hNotEmpty =>
       intro T hTy _hNe
-      simpa [__seq_subsequence_rec] using
+      simpa [__seq_subsequence_rec, mk_seq_empty_typeof t T hTy] using
         is_seq_const_rec_raw_seq_empty_typeof_of_seq t T hTy
   | case6 u e ts hu hUNeZero ih =>
       intro T hTy hNe
@@ -1211,14 +1247,15 @@ private theorem smt_typeof_seq_substr_body_of_seq
     (hATy : __smtx_typeof (__eo_to_smt a) = SmtType.Seq T)
     (hBodyNe :
       __eo_ite (__eo_is_neg u)
-          (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))
+          (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a))
           (__seq_subsequence_rec n u a) ≠ Term.Stuck) :
     __smtx_typeof
         (__eo_to_smt
           (__eo_ite (__eo_is_neg u)
-            (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))
+            (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a))
             (__seq_subsequence_rec n u a))) =
       SmtType.Seq T := by
+  rw [mk_seq_empty_typeof a T hATy] at hBodyNe ⊢
   rcases eo_ite_cases_of_ne_stuck (__eo_is_neg u)
       (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))
       (__seq_subsequence_rec n u a) hBodyNe with hCond | hCond
@@ -1627,7 +1664,7 @@ private theorem smt_value_rel_seq_subsequence_rec_str_substr_of_numerals
       have hSubseqEq :
           __seq_subsequence_rec l (Term.Numeral 0) t =
             Term.UOp1 UserOp1.seq_empty (__eo_typeof t) := by
-        simp [__seq_subsequence_rec]
+        simp [__seq_subsequence_rec, mk_seq_empty_typeof t T hATy]
       rw [hSubseqEq, hEmptyEval, hAEval]
       unfold RuleProofs.smt_value_rel
       have hExtract :
@@ -6461,7 +6498,7 @@ private theorem seq_eval_smt_type_and_value_rel
         let u := __eo_add n m
         let body :=
           __eo_ite (__eo_is_neg u)
-            (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))
+            (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a))
             (__seq_subsequence_rec n u a)
         let out := __str_nary_elim body
         have hOutNe : out ≠ Term.Stuck := by
@@ -6560,7 +6597,7 @@ private theorem seq_eval_smt_type_and_value_rel
                   (__smtx_model_eval M (__eo_to_smt n))
                   (__smtx_model_eval M (__eo_to_smt m))) := by
             rcases eo_ite_cases_of_ne_stuck (__eo_is_neg u)
-                (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))
+                (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a))
                 (__seq_subsequence_rec n u a)
                 (by simpa [body] using hBodyNe) with hCond | hCond
             · have hAddNe : u ≠ Term.Stuck := by
@@ -6579,13 +6616,13 @@ private theorem seq_eval_smt_type_and_value_rel
                 try simp [native_zlt, SmtEval.native_zlt, native_zplus] at hsimpa ⊢
                 exact of_decide_eq_true hsimpa
               have hBodyEq :
-                  body = Term.UOp1 UserOp1.seq_empty (__eo_typeof a) := by
+                  body = __eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a) := by
                 simp [body, u, hUEq, __eo_is_neg, hNegBool, eo_ite_true]
               rw [hBodyEq]
               change RuleProofs.smt_value_rel
                 (__smtx_model_eval M
                   (__eo_to_smt
-                    (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))))
+                    (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a))))
                 (__smtx_model_eval_str_substr
                   (__smtx_model_eval M (__eo_to_smt a))
                   (__smtx_model_eval M (SmtTerm.Numeral i))
@@ -6852,7 +6889,7 @@ private theorem seq_eval_smt_type_and_value_rel
       let len := __str_value_len t
       let b := __str_nary_intro s
       let find := __seq_find a b (Term.Numeral 0)
-      let empty := Term.UOp1 UserOp1.seq_empty (__eo_typeof a)
+      let empty := __eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a)
       let isneg := __eo_is_neg find
       let left :=
         __eo_ite isneg empty
@@ -7791,7 +7828,7 @@ private theorem seq_eval_smt_type_and_value_rel
       let len := __str_value_len t
       let substr :=
         __eo_ite (__eo_is_neg len)
-          (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))
+          (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a))
           (__seq_subsequence_rec n len a)
       let b := __str_nary_intro s
       let find := __seq_find substr b n
@@ -8812,7 +8849,7 @@ private theorem seq_eval_smt_type_and_value_rel
       let u := __eo_add n (Term.Numeral 1)
       let body :=
         __eo_ite (__eo_is_neg u)
-          (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))
+          (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a))
           (__seq_subsequence_rec n u a)
       let out := __str_nary_elim body
       have hOutNe : out ≠ Term.Stuck := by
@@ -8903,7 +8940,7 @@ private theorem seq_eval_smt_type_and_value_rel
                 (__smtx_model_eval M (__eo_to_smt n))) := by
           unfold __smtx_model_eval_str_at
           rcases eo_ite_cases_of_ne_stuck (__eo_is_neg u)
-              (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))
+              (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a))
               (__seq_subsequence_rec n u a)
               (by simpa [body] using hBodyNe) with hCond | hCond
           · have hAddNe : u ≠ Term.Stuck := by
@@ -8931,13 +8968,13 @@ private theorem seq_eval_smt_type_and_value_rel
               try simp [native_zlt, SmtEval.native_zlt, native_zplus] at hsimpa ⊢
               exact of_decide_eq_true hsimpa
             have hBodyEq :
-                body = Term.UOp1 UserOp1.seq_empty (__eo_typeof a) := by
+                body = __eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a) := by
               simp [body, u, hUEq, __eo_is_neg, hNegBool, eo_ite_true]
             rw [hBodyEq]
             change RuleProofs.smt_value_rel
               (__smtx_model_eval M
                 (__eo_to_smt
-                  (Term.UOp1 UserOp1.seq_empty (__eo_typeof a))))
+                  (__eo_mk_uop1 UserOp1.seq_empty (__eo_typeof a))))
               (__smtx_model_eval_str_substr
                 (__smtx_model_eval M (__eo_to_smt a))
                 (__smtx_model_eval M (SmtTerm.Numeral i))

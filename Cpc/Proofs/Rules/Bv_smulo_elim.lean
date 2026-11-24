@@ -43,8 +43,8 @@ private def bvSmuloExpanded (a b : Term) : Term :=
         (__eo_add (Term.Numeral (-1 : native_Int)) nm2))
       (Term.Numeral (-1 : native_Int))
   let topIdx := __eo_add wTerm (Term.Numeral (-1 : native_Int))
-  let topExtract := Term.UOp2 UserOp2.extract topIdx topIdx
-  let signExtendTop := Term.UOp1 UserOp1.sign_extend topIdx
+  let topExtract := __eo_mk_uop2 UserOp2.extract topIdx topIdx
+  let signExtendTop := __eo_mk_uop1 UserOp1.sign_extend topIdx
   let xb :=
     __eo_mk_apply (Term.Apply (Term.UOp UserOp.bvxor) b)
       (__eo_mk_apply
@@ -59,7 +59,7 @@ private def bvSmuloExpanded (a b : Term) : Term :=
         (__eo_mk_apply (Term.UOp UserOp.bvxor)
           (__eo_mk_apply signExtendTop (__eo_mk_apply topExtract a)))
         (__eo_nil (Term.UOp UserOp.bvxor) (__eo_typeof a)))
-  let xaTop := __eo_mk_apply (Term.UOp2 UserOp2.extract nm2 nm2) xa
+  let xaTop := __eo_mk_apply (__eo_mk_uop2 UserOp2.extract nm2 nm2) xa
   let scan :=
     __bv_smulo_elim_rec xa xb xaTop
       (__eo_mk_apply
@@ -81,7 +81,7 @@ private def bvSmuloExpanded (a b : Term) : Term :=
         (Term.Apply (Term.UOp UserOp.bvmul)
           (Term.Apply signExtendOne b))
         (__eo_nil (Term.UOp UserOp.bvmul) (__eo_typeof aExt)))
-  let prodBitW := __eo_mk_apply (Term.UOp2 UserOp2.extract wTerm wTerm) product
+  let prodBitW := __eo_mk_apply (__eo_mk_uop2 UserOp2.extract wTerm wTerm) product
   let prodTopDiff :=
     __eo_mk_apply
       (__eo_mk_apply (Term.UOp UserOp.bvxor) prodBitW)
@@ -590,8 +590,8 @@ private theorem eval_sign_extend_term
 
 private def smuloSignedMagTerm (t : Term) (W : Nat) : Term :=
   let topIdx := Term.Numeral (native_nat_to_int W)
-  let topExtract := Term.UOp2 UserOp2.extract topIdx topIdx
-  let signExtendTop := Term.UOp1 UserOp1.sign_extend topIdx
+  let topExtract := __eo_mk_uop2 UserOp2.extract topIdx topIdx
+  let signExtendTop := __eo_mk_uop1 UserOp1.sign_extend topIdx
   __eo_mk_apply (Term.Apply (Term.UOp UserOp.bvxor) t)
     (__eo_mk_apply
       (__eo_mk_apply (Term.UOp UserOp.bvxor)
@@ -866,8 +866,8 @@ private theorem eval_smuloSignedMagTerm
     __smtx_model_eval M (__eo_to_smt (smuloSignedMagTerm t W)) =
       SmtValue.Binary (native_nat_to_int (W + 1)) (signedMag W A : Int) := by
   let topIdx := Term.Numeral (native_nat_to_int W)
-  let topExtract := Term.UOp2 UserOp2.extract topIdx topIdx
-  let signExtendTop := Term.UOp1 UserOp1.sign_extend topIdx
+  let topExtract := __eo_mk_uop2 UserOp2.extract topIdx topIdx
+  let signExtendTop := __eo_mk_uop1 UserOp1.sign_extend topIdx
   let topBit := Term.Apply topExtract t
   have htNe : t ≠ Term.Stuck :=
     term_ne_stuck_of_eval_binary M t (native_nat_to_int (W + 1)) (A : Int) hEval
@@ -878,13 +878,13 @@ private theorem eval_smuloSignedMagTerm
   have hTopEval :
       __smtx_model_eval M (__eo_to_smt topBit) =
         bv1 (A.testBit W) := by
-    simpa [topBit, topExtract, topIdx] using
+    simpa [__eo_mk_uop2, topBit, topExtract, topIdx] using
       eval_extract_bit_term M t (native_nat_to_int (W + 1)) (A : Int)
         W hEval (Int.natCast_nonneg A)
   have hTopTy :
       __eo_typeof topBit =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1) := by
-    simpa [topBit, topExtract, topIdx] using
+    simpa [__eo_mk_uop2, topBit, topExtract, topIdx] using
       typeof_extract_bit_of_bv t (W + 1) W hTy (by omega)
   have hTopNe : topBit ≠ Term.Stuck :=
     term_ne_stuck_of_eval_bv1 M topBit (A.testBit W) hTopEval
@@ -904,7 +904,7 @@ private theorem eval_smuloSignedMagTerm
   have hSignEval :
       __smtx_model_eval M (__eo_to_smt signExt) =
         SmtValue.Binary (native_nat_to_int (W + 1)) (mask : Int) := by
-    dsimp [signExt, signExtendTop, topIdx]
+    dsimp [signExt, signExtendTop, topIdx, __eo_mk_uop1]
     have h := eval_sign_extend_term M topIdx topBit
       (SmtValue.Numeral (native_nat_to_int W)) (bv1 (A.testBit W))
       (eval_numeral_term M (native_nat_to_int W)) hTopEval
@@ -978,8 +978,8 @@ private theorem typeof_smuloSignedMagTerm
       Term.Apply (Term.UOp UserOp.BitVec)
         (Term.Numeral (native_nat_to_int (W + 1))) := by
   let topIdx := Term.Numeral (native_nat_to_int W)
-  let topExtract := Term.UOp2 UserOp2.extract topIdx topIdx
-  let signExtendTop := Term.UOp1 UserOp1.sign_extend topIdx
+  let topExtract := __eo_mk_uop2 UserOp2.extract topIdx topIdx
+  let signExtendTop := __eo_mk_uop1 UserOp1.sign_extend topIdx
   let topBit := Term.Apply topExtract t
   have htNe : t ≠ Term.Stuck := term_ne_stuck_of_typeof_bitvec hTy
   have hTopMkEq : __eo_mk_apply topExtract t = topBit := by
@@ -989,7 +989,7 @@ private theorem typeof_smuloSignedMagTerm
   have hTopTy :
       __eo_typeof topBit =
         Term.Apply (Term.UOp UserOp.BitVec) (Term.Numeral 1) := by
-    simpa [topBit, topExtract, topIdx] using
+    simpa [__eo_mk_uop2, topBit, topExtract, topIdx] using
       typeof_extract_bit_of_bv t (W + 1) W hTy (by omega)
   have hTopNe : topBit ≠ Term.Stuck :=
     term_ne_stuck_of_typeof_bitvec (w := 1)
@@ -1005,7 +1005,7 @@ private theorem typeof_smuloSignedMagTerm
       __eo_typeof signExt =
         Term.Apply (Term.UOp UserOp.BitVec)
           (Term.Numeral (native_nat_to_int (W + 1))) := by
-    simpa [signExt, signExtendTop, topIdx] using
+    simpa [__eo_mk_uop1, signExt, signExtendTop, topIdx] using
       typeof_sign_extend_bit_to_succ topBit W hTopTy
   have hSignNe : signExt ≠ Term.Stuck :=
     term_ne_stuck_of_typeof_bitvec hSignTy
@@ -2210,13 +2210,13 @@ private theorem smulo_rec_cons_eq
       (Term.Apply
         (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) i) ns) nm2 =
       (let _v0 := __eo_add i (Term.Numeral 1)
-       let _v1 := __eo_mk_apply (Term.UOp2 UserOp2.extract _v0 _v0) xb
+       let _v1 := __eo_mk_apply (__eo_mk_uop2 UserOp2.extract _v0 _v0) xb
        let _v2 := __eo_add nm2 (__eo_neg i)
        let _v3 :=
         __eo_mk_apply (Term.Apply (Term.UOp UserOp.bvor) ppc)
           (__eo_mk_apply
             (__eo_mk_apply (Term.UOp UserOp.bvor)
-              (__eo_mk_apply (Term.UOp2 UserOp2.extract _v2 _v2) xa))
+              (__eo_mk_apply (__eo_mk_uop2 UserOp2.extract _v2 _v2) xa))
             (Term.Binary 1 0))
        __bv_smulo_elim_rec xa xb _v3
         (__eo_mk_apply (Term.Apply (Term.UOp UserOp.bvor) res)
@@ -2520,7 +2520,7 @@ private theorem smulo_rec_eval
           __smtx_model_eval M (__eo_to_smt tail) =
             bv1 (smScanRec W X Y (start + 1) len newPpcB newResB) := by
         simpa [tail] using hTailEval
-      simpa [smScanRec, xbIdx, xaIdx, v1Raw, xaBitRaw, xaOrHead, xaOrZero,
+      simpa [__eo_mk_uop2, smScanRec, xbIdx, xaIdx, v1Raw, xaBitRaw, xaOrHead, xaOrZero,
         newPpc, newPpcB, nilAnd, ppcAndHead, ppcAndNil, v1AndHead,
         headAnd, headAndB, headOrHead, headOrZero, newRes, newResB, tail]
         using hTailEval'
@@ -2771,7 +2771,7 @@ private theorem smulo_rec_type
         __bv_smulo_elim_rec xa xb newPpc newRes
           (intRangeList (start + 1) len)
           (Term.Numeral (native_nat_to_int (W - 1)))
-      simpa [tail, xbIdx, xaIdx, v1Raw, xaBitRaw, xaOrHead, xaOrZero,
+      simpa [__eo_mk_uop2, tail, xbIdx, xaIdx, v1Raw, xaBitRaw, xaOrHead, xaOrZero,
         newPpc, nilAnd, ppcAndHead, ppcAndNil, v1AndHead, headAnd,
         headOrHead, headOrZero, newRes] using hTailTy
 
@@ -3533,7 +3533,7 @@ private theorem eval_bv_smulo_expanded_width_succ
       dsimp [bvSmuloExpanded]
       rw [hWidth, hTop, hCond1, hCond2]
       simp [__eo_ite, native_ite, native_teq]
-      simpa [smuloProdTopDiffBranch, smuloProdTopDiffTerm,
+      simpa [__eo_mk_uop2, __eo_mk_uop1, smuloProdTopDiffBranch, smuloProdTopDiffTerm,
         smuloProductTerm, smuloSignExtendOneTerm, native_nat_to_int] using
         eval_smuloProdTopDiffBranch_width_one M a b A B
           (by simpa [native_nat_to_int] using haTy)
@@ -3600,7 +3600,7 @@ private theorem eval_bv_smulo_expanded_width_succ
       rw [hWidth, hNm2, hTop, hCond1, hCond2]
       rw [hIndices]
       simp [__eo_ite, native_ite, native_teq]
-      simpa [smuloGeneralBranch, smuloScanTerm, smuloSignedMagTerm,
+      simpa [__eo_mk_uop2, __eo_mk_uop1, smuloGeneralBranch, smuloScanTerm, smuloSignedMagTerm,
         smuloProdTopDiffTerm, smuloProductTerm, smuloSignExtendOneTerm,
         native_nat_to_int] using
         eval_smuloGeneralBranch M a b W A B hWge2 haTy hbTy haEval hbEval

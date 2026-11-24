@@ -66,6 +66,11 @@ private theorem choose_member_properties
     simp
   have hMatch : __eo_to_smt_type (__eo_typeof a) = SmtType.Set A :=
     (TranslationProofs.eo_to_smt_typeof_matches_translation a haTrans).symm.trans hSetTy
+  -- logos builds the empty set of `a`'s type strictly (__eo_mk_uop1), which
+  -- is the plain operator as that type is not stuck (simp's discharger uses
+  -- this fact)
+  have hTyNS : __eo_typeof a ≠ Term.Stuck := by
+    intro h; rw [h] at hMatch; simp [__eo_to_smt_type] at hMatch
   let P := __eo_prog_sets_choose_member (Term.Apply (Term.UOp UserOp.set_choose) a)
   have hP : __eo_to_smt P =
       SmtTerm.or (SmtTerm.eq (__eo_to_smt a) (SmtTerm.set_empty A))
@@ -73,7 +78,7 @@ private theorem choose_member_properties
           (SmtTerm.set_member
             (SmtTerm.map_diff (__eo_to_smt a) (SmtTerm.set_empty A)) (__eo_to_smt a))
           (SmtTerm.Boolean false)) := by
-    simp [P, __eo_prog_sets_choose_member, __eo_mk_apply,
+    simp [P, __eo_prog_sets_choose_member, __eo_mk_apply, __eo_mk_uop1,
       __eo_to_smt, hMatch, __eo_to_smt_set_empty, hSetTy, __eo_to_smt_set_elem_type]
   have hBool : RuleProofs.eo_has_bool_type P := by
     unfold RuleProofs.eo_has_bool_type

@@ -118,7 +118,7 @@ def mulHighBitTerm (a b : Term) : Term :=
   let wTerm := __bv_bitwidth (__eo_typeof a)
   let aExt := zeroExtendOneTerm a
   let bExt := zeroExtendOneTerm b
-  __eo_mk_apply (Term.UOp2 UserOp2.extract wTerm wTerm)
+  __eo_mk_apply (__eo_mk_uop2 UserOp2.extract wTerm wTerm)
     (__eo_mk_apply (Term.Apply (Term.UOp UserOp.bvmul) aExt)
       (__eo_mk_apply (Term.Apply (Term.UOp UserOp.bvmul) bExt)
         (__eo_nil (Term.UOp UserOp.bvmul) (__eo_typeof aExt))))
@@ -359,7 +359,7 @@ theorem mulHighBitTerm_stuck_of_nil_bvmul_stuck
     mulHighBitTerm a b = Term.Stuck := by
   dsimp [mulHighBitTerm]
   rw [haTy]
-  simp [__bv_bitwidth, hNil, __eo_mk_apply]
+  simp [__bv_bitwidth, hNil, __eo_mk_apply, __eo_mk_uop2]
 
 theorem mulHighOrTerm_stuck_of_high_stuck
     (a b : Term) (hHi : mulHighBitTerm a b = Term.Stuck) :
@@ -437,7 +437,7 @@ def bvUmuloExpanded (a b : Term) : Term :=
     (__eo_mk_apply
       (__eo_mk_apply (Term.UOp UserOp.eq)
         (__bv_umulo_elim_rec a b
-          (__eo_mk_apply (Term.UOp2 UserOp2.extract topIdx topIdx) a)
+          (__eo_mk_apply (__eo_mk_uop2 UserOp2.extract topIdx topIdx) a)
           (mulHighOrTerm a b)
           (__eo_requires (__eo_is_neg len) (Term.Boolean false)
             (__iota_rec
@@ -468,7 +468,7 @@ theorem umulo_rec_cons_eq
         (Term.Apply (Term.UOp UserOp._at__at_TypedList_cons) i) ns) n =
       (let _v0 := (__eo_add (__eo_add n (Term.Numeral (-1 : native_Int)))
           (__eo_neg i))
-       let _v1 := (__eo_mk_apply (Term.UOp2 UserOp2.extract _v0 _v0) a)
+       let _v1 := (__eo_mk_apply (__eo_mk_uop2 UserOp2.extract _v0 _v0) a)
        let _v2 := (Term.Apply (Term.UOp2 UserOp2.extract i i) b)
        (__eo_mk_apply
           (__eo_mk_apply (Term.UOp UserOp.bvor)
@@ -583,8 +583,12 @@ theorem umulo_rec_eval
       let v1 := Term.Apply (Term.UOp2 UserOp2.extract hiTerm hiTerm) a
       let v2 := Term.Apply (Term.UOp2 UserOp2.extract iTerm iTerm) b
       have hv1MkEq :
-          __eo_mk_apply (Term.UOp2 UserOp2.extract hiTerm hiTerm) a = v1 := by
+          __eo_mk_apply (__eo_mk_uop2 UserOp2.extract hiTerm hiTerm) a = v1 := by
+        -- the indices are numerals, so the strict builder is the operator
+        have hUop : __eo_mk_uop2 UserOp2.extract hiTerm hiTerm =
+            Term.UOp2 UserOp2.extract hiTerm hiTerm := rfl
         dsimp [v1]
+        rw [hUop]
         exact eo_mk_apply_of_ne_stuck (by intro h; cases h) haNe
       have hv1Eval :
           __smtx_model_eval M (__eo_to_smt v1) =
