@@ -158,6 +158,21 @@ private theorem smtHeadBL_tuple_update (T a b c) :
   · simp only [smtHeadBL_ite, smtHeadBL_updater]; cases native_and _ _ <;> rfl
   · rfl
 
+private theorem smtHeadBL_tuple_project_rec (is T t) :
+    smtHeadBL (__eo_to_smt_tuple_project_rec is T t) = false := by
+  unfold __eo_to_smt_tuple_project_rec
+  split
+  · rfl
+  · exact smtHeadBL_tuple_prepend _ _ _
+  · rfl
+
+private theorem smtHeadBL_tuple_project (is T t) :
+    smtHeadBL (__eo_to_smt_tuple_project is T t) = false := by
+  unfold __eo_to_smt_tuple_project
+  split
+  · simp only [smtHeadBL_ite]; cases native_Teq _ _ <;> rfl
+  · exact smtHeadBL_tuple_project_rec _ _ _
+
 private theorem smtHeadBL_distinct (t) : smtHeadBL (__eo_to_smt_distinct t) = false := by
   unfold __eo_to_smt_distinct; split <;> rfl
 
@@ -190,7 +205,8 @@ theorem eo_to_smt_headBL_cases (t : Term) (h : smtHeadBL (__eo_to_smt t) = true)
     | (exfalso; revert h
        try simp only [smtHeadBL_ite, smtHeadBL_re_unfold, smtHeadBL_skolemize,
          smtHeadBL_updater, smtHeadBL_tuple_prepend, smtHeadBL_tuple_select,
-         smtHeadBL_tuple_update, smtHeadBL_distinct, smtHeadBL_array_deq_diff,
+         smtHeadBL_tuple_update, smtHeadBL_tuple_project, smtHeadBL_distinct,
+         smtHeadBL_array_deq_diff,
          smtHeadBL_sets_deq_diff, smtHeadBL_seq_empty, smtHeadBL_set_empty]
        simp [smtHeadBL, native_ite]; done)
     | (exfalso; rename_i hne; rw [smtHeadBL_exists _ _ hne] at h; cases h)

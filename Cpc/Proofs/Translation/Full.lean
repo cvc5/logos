@@ -1326,6 +1326,46 @@ private theorem false_of_typeof_str_at_eq_dtcapp_full
         case UOp op' =>
           cases op' <;> cases hTy
 
+/-- The type of a `tuple.project` is `Stuck`, `UnitTuple` or a `Tuple`
+application, so neither a function type nor a constructor type. -/
+private theorem typeof_tuple_project_ne_fun_full {A y T P Q : Term}
+    (h : __eo_typeof_tuple_project A y T = Term.Apply (Term.Apply Term.FunType P) Q) :
+    False := by
+  unfold __eo_typeof_tuple_project at h
+  split at h
+  all_goals try cases h
+  unfold __tuple_project_type at h
+  split at h
+  all_goals try cases h
+  unfold __eo_mk_apply at h
+  split at h
+  all_goals first
+    | cases h
+    | (injection h with h1 h2
+       try unfold __eo_mk_apply at h1
+       split at h1 <;> first | cases h1 | (injection h1 with h3 h4; cases h3))
+
+private theorem typeof_tuple_project_ne_dtcapp_full {A y T P Q : Term}
+    (h : __eo_typeof_tuple_project A y T = Term.DtcAppType P Q) : False := by
+  unfold __eo_typeof_tuple_project at h
+  split at h
+  all_goals try cases h
+  unfold __tuple_project_type at h
+  split at h
+  all_goals try cases h
+  unfold __eo_mk_apply at h
+  split at h <;> cases h
+
+private theorem false_of_typeof_apply_tuple_project_eq_dtcapp_full {A y T V a b : Term}
+    (hTy : __eo_typeof_apply (__eo_typeof_tuple_project A y T) V = Term.DtcAppType a b) :
+    False := by
+  unfold __eo_typeof_apply at hTy
+  split at hTy
+  all_goals first
+    | cases hTy
+    | exact typeof_tuple_project_ne_fun_full (by assumption)
+    | exact typeof_tuple_project_ne_dtcapp_full (by assumption)
+
 private theorem false_of_typeof_is_eq_dtcapp_full
     {y x A B : Term}
     (hTy : __eo_typeof_is (__eo_typeof y) (__eo_typeof x) = Term.DtcAppType A B) :
@@ -3204,6 +3244,8 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
               case tuple_select =>
                 exact eo_type_valid_of_tuple_select_eq_dtcapp_full
                   (go x) hTermNN hTy
+              case tuple_project =>
+                exact False.elim (typeof_tuple_project_ne_dtcapp_full hTy)
               case set_empty =>
                 exact False.elim (hNonNone (by
                   change
@@ -3569,6 +3611,8 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                      all_goals cases hTy)
               case UOp1 op z =>
                 cases op <;> dsimp [__eo_typeof] at hTy hTypeNN
+                case tuple_project =>
+                  exact False.elim (false_of_typeof_apply_tuple_project_eq_dtcapp_full hTy)
                 case «repeat» =>
                   exact eo_type_valid_of_nested_generic_apply_eq_dtcapp_full
                     (g := Term.UOp1 UserOp1.repeat z) (y := y) (x := x)

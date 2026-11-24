@@ -2386,6 +2386,48 @@ by
   exact smtTermClosedIn_eo_to_smt_tuple_prepend_of_type
     (__smtx_typeof tail) hT hHead hTail
 
+/-- A projection is closed when its argument is: what else it is built from
+is numerals and `tuple.unit`. By induction on a bound on the size of the
+indices, since `Term` is mutually inductive. -/
+theorem smtTermClosedIn_eo_to_smt_tuple_project_rec_bounded
+    {vars : List SmtVarKey} (T : SmtType) {t : SmtTerm}
+    (ht : SmtTermClosedIn vars t) :
+    (k : Nat) → (is : Term) → sizeOf is < k →
+      SmtTermClosedIn vars (__eo_to_smt_tuple_project_rec is T t)
+  | 0, _, h => absurd h (Nat.not_lt_zero _)
+  | k + 1, is, h => by
+      by_cases hc : ∃ n is', is =
+          Term.Apply (Term.Apply Term.__eo_List_cons (Term.Numeral n)) is'
+      · obtain ⟨n, is', rfl⟩ := hc
+        change SmtTermClosedIn vars
+          (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t)
+            (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t))
+            (__eo_to_smt_tuple_project_rec is' T t))
+        exact smtTermClosedIn_eo_to_smt_tuple_prepend _
+          (smtTermClosedIn_eo_to_smt_tuple_select_smt T trivial ht)
+          (smtTermClosedIn_eo_to_smt_tuple_project_rec_bounded T ht k is'
+            (by simp at h; omega))
+      · unfold __eo_to_smt_tuple_project_rec
+        split
+        · trivial
+        · exact (hc ⟨_, _, rfl⟩).elim
+        · trivial
+
+theorem smtTermClosedIn_eo_to_smt_tuple_project
+    {vars : List SmtVarKey} {x y : Term}
+    (hy : SmtTermClosedIn vars (__eo_to_smt y)) :
+  SmtTermClosedIn vars
+    (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.tuple_project x) y)) :=
+by
+  change SmtTermClosedIn vars
+    (__eo_to_smt_tuple_project x (__smtx_typeof (__eo_to_smt y)) (__eo_to_smt y))
+  unfold __eo_to_smt_tuple_project
+  split
+  · unfold native_ite
+    split <;> trivial
+  · exact smtTermClosedIn_eo_to_smt_tuple_project_rec_bounded _ hy _ _
+      (Nat.lt_succ_self _)
+
 theorem smtTermClosedIn_eo_to_smt_tuple
     {vars : List SmtVarKey} {x y : Term}
     (hx : SmtTermClosedIn vars (__eo_to_smt x))
@@ -4595,6 +4637,30 @@ by
     (fun hx hy => smtTermClosedIn_eo_to_smt_tuple_select hx hy)
     hEnv hRecX hRecY hClosed
 
+theorem smtTermClosedIn_eo_to_smt_tuple_project_of_closed_rec_using
+    {x y env : Term} {vars : List SmtVarKey}
+    (hEnv : EoSmtVarEnvPerm env vars)
+    (hRecX :
+      ∀ {env' : Term} {vars' : List SmtVarKey},
+        EoSmtVarEnvPerm env' vars' ->
+          __eo_is_closed_rec x env' = Term.Boolean true ->
+            SmtTermClosedIn vars' (__eo_to_smt x))
+    (hRecY :
+      ∀ {env' : Term} {vars' : List SmtVarKey},
+        EoSmtVarEnvPerm env' vars' ->
+          __eo_is_closed_rec y env' = Term.Boolean true ->
+            SmtTermClosedIn vars' (__eo_to_smt y))
+    (hClosed :
+      __eo_is_closed_rec (Term.Apply (Term.UOp1 UserOp1.tuple_project x) y)
+        env = Term.Boolean true) :
+  SmtTermClosedIn vars
+    (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.tuple_project x) y)) :=
+by
+  exact smtTermClosedIn_eo_to_smt_apply_uop1_of_closed_rec_using
+    (op := UserOp1.tuple_project)
+    (fun _ hy => smtTermClosedIn_eo_to_smt_tuple_project hy)
+    hEnv hRecX hRecY hClosed
+
 theorem smtTermClosedIn_eo_to_smt_update_of_closed_rec_using
     {x y z env : Term} {vars : List SmtVarKey}
     (hEnv : EoSmtVarEnvPerm env vars)
@@ -5542,6 +5608,10 @@ by
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   case tuple_select =>
     exact smtTermClosedIn_eo_to_smt_tuple_select_of_closed_rec_using
+      hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed')
+      (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
+  case tuple_project =>
+    exact smtTermClosedIn_eo_to_smt_tuple_project_of_closed_rec_using
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   case int_to_bv =>
@@ -6844,6 +6914,10 @@ by
       (fun hEnv' hClosed' => hRec hYLt hEnv' hClosed') hClosed
   case tuple_select =>
     exact smtTermClosedIn_eo_to_smt_tuple_select_of_closed_rec_using
+      hEnv (fun hEnv' hClosed' => hRec hXLt hEnv' hClosed')
+      (fun hEnv' hClosed' => hRec hYLt hEnv' hClosed') hClosed
+  case tuple_project =>
+    exact smtTermClosedIn_eo_to_smt_tuple_project_of_closed_rec_using
       hEnv (fun hEnv' hClosed' => hRec hXLt hEnv' hClosed')
       (fun hEnv' hClosed' => hRec hYLt hEnv' hClosed') hClosed
   case int_to_bv =>

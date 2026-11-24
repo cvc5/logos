@@ -2351,6 +2351,9 @@ private theorem uop1_apply_typeof_none_of_arg_none
           (__eo_to_smt idx) (__eo_to_smt x)) = SmtType.None
     rw [hx]
     simp [__eo_to_smt_tuple_select]
+  case tuple_project =>
+    exact Classical.byContradiction fun h =>
+      TranslationProofs.eo_to_smt_tuple_project_arg_non_none idx x h hx
   case int_to_bv =>
     change __smtx_typeof (SmtTerm.int_to_bv (__eo_to_smt idx) (__eo_to_smt x)) =
       SmtType.None

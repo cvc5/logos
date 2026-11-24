@@ -1020,6 +1020,9 @@ theorem congTrueSpine_eq_true
   | Term.Apply (Term.UOp1 UserOp1.tuple_select idx) x =>
       exact congTrueSpine_tuple_select_eq_true M hM
         idx x rhs hEqBool hSpine
+  | Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x =>
+      exact congTrueSpine_tuple_project_eq_true M hM
+        idx x rhs hEqBool hSpine
   | Term.Apply (Term.Apply (Term.UOp UserOp.bvand) x₁) x₂ =>
       exact congTrueSpine_bv_binop_eq_true M hM UserOp.bvand SmtTerm.bvand
         __smtx_model_eval_bvand
@@ -1958,6 +1961,9 @@ theorem congTrueSpine_eq_true
                     x₁ x (Term.Apply g y) hEqBool hApp
               | Term.UOp1 UserOp1.tuple_select idx =>
                   exact congTrueSpine_tuple_select_eq_true M hM
+                    idx x (Term.Apply g y) hEqBool hApp
+              | Term.UOp1 UserOp1.tuple_project idx =>
+                  exact congTrueSpine_tuple_project_eq_true M hM
                     idx x (Term.Apply g y) hEqBool hApp
               | Term.UOp2 UserOp2.extract i j =>
                   exact congTrueSpine_non_reg_indexed2_unop_eq_true M hM

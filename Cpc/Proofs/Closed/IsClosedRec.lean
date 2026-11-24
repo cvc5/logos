@@ -5363,6 +5363,115 @@ by
       (eo_is_closed_rec_eq_true_of_nat_is_valid hEnv hIdxValid)
       (ihX hXTrans)
 
+/-- `is` is a list of numerals, within `f` cons cells. -/
+def eoNumeralListFuel : Nat → Term → Prop
+  | _, Term.__eo_List_nil => True
+  | f + 1, Term.Apply (Term.Apply Term.__eo_List_cons (Term.Numeral _)) is =>
+      eoNumeralListFuel f is
+  | _, _ => False
+
+theorem eo_is_closed_rec_eq_true_of_numeral_list
+    {env : Term} {vars : List SmtVarKey} (hEnv : EoSmtVarEnv env vars) :
+    (f : Nat) → (is : Term) → eoNumeralListFuel f is →
+      __eo_is_closed_rec is env = Term.Boolean true
+  | 0, is, h => by
+      by_cases hn : is = Term.__eo_List_nil
+      · subst hn
+        cases hEnv <;> simp [__eo_is_closed_rec]
+      · exfalso
+        unfold eoNumeralListFuel at h
+        split at h <;> simp_all
+  | f + 1, is, h => by
+      by_cases hn : is = Term.__eo_List_nil
+      · subst hn
+        cases hEnv <;> simp [__eo_is_closed_rec]
+      · by_cases hc : ∃ n is', is =
+            Term.Apply (Term.Apply Term.__eo_List_cons (Term.Numeral n)) is'
+        · obtain ⟨n, is', rfl⟩ := hc
+          have hf : eoNumeralListFuel f is' := by simpa [eoNumeralListFuel] using h
+          have ih := eo_is_closed_rec_eq_true_of_numeral_list hEnv f is' hf
+          cases hEnv <;> simp_all [__eo_is_closed_rec, __eo_and, native_and]
+        · exfalso
+          unfold eoNumeralListFuel at h
+          split at h <;> simp_all
+
+/-- The indices of a projection whose translation is typed are numerals. -/
+theorem numeral_list_of_tuple_project_rec_non_none (T : SmtType) (t : SmtTerm) :
+    (k : Nat) → (is : Term) → sizeOf is < k →
+      __smtx_typeof (__eo_to_smt_tuple_project_rec is T t) ≠ SmtType.None →
+      ∃ f, eoNumeralListFuel f is
+  | 0, _, h, _ => absurd h (Nat.not_lt_zero _)
+  | k + 1, is, h, hNN => by
+      by_cases hc : ∃ n is', is =
+          Term.Apply (Term.Apply Term.__eo_List_cons (Term.Numeral n)) is'
+      · obtain ⟨n, is', rfl⟩ := hc
+        have hPre :
+            __smtx_typeof
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t)
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t))
+                (__eo_to_smt_tuple_project_rec is' T t)) ≠ SmtType.None := hNN
+        rcases TranslationProofs.smtx_tuple_prepend_tail_type_of_non_none _ _ _ hPre with
+          ⟨c, hTailTy⟩
+        have hTailNN :
+            __smtx_typeof (__eo_to_smt_tuple_project_rec is' T t) ≠ SmtType.None := by
+          rw [hTailTy]; simp
+        obtain ⟨f, hf⟩ :=
+          numeral_list_of_tuple_project_rec_non_none T t k is' (by simp at h; omega) hTailNN
+        exact ⟨f + 1, by simpa [eoNumeralListFuel] using hf⟩
+      · by_cases hn : is = Term.__eo_List_nil
+        · subst hn
+          exact ⟨0, by simp [eoNumeralListFuel]⟩
+        · exfalso
+          apply hNN
+          unfold __eo_to_smt_tuple_project_rec
+          split
+          · exact (hn rfl).elim
+          · exact (hc ⟨_, _, rfl⟩).elim
+          · simp
+
+theorem tuple_project_index_closed_of_has_smt_translation
+    {idx x env : Term} {vars : List SmtVarKey}
+    (hEnv : EoSmtVarEnv env vars)
+    (hTrans :
+      eoHasSmtTranslation
+        (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x)) :
+  __eo_is_closed_rec idx env = Term.Boolean true :=
+by
+  have hNN :
+      __smtx_typeof (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt x))
+        (__eo_to_smt x)) ≠ SmtType.None := hTrans
+  rcases TranslationProofs.tuple_project_indices_of_non_none idx _ _ hNN with
+    rfl | ⟨n, is', rfl⟩
+  · cases hEnv <;> simp [__eo_is_closed_rec]
+  · obtain ⟨f, hf⟩ :=
+      numeral_list_of_tuple_project_rec_non_none _ _ _ _ (Nat.lt_succ_self _) hNN
+    exact eo_is_closed_rec_eq_true_of_numeral_list hEnv f _ hf
+
+theorem is_closed_rec_apply_tuple_project_eq_and_bool_of_has_smt_translation
+    {idx x env : Term} {vars : List SmtVarKey}
+    (hEnv : EoSmtVarEnv env vars)
+    (hTrans :
+      eoHasSmtTranslation
+        (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x))
+    (ihX :
+      eoHasSmtTranslation x ->
+        __is_closed_rec x env = __eo_is_closed_rec x env ∧
+          ∃ b, __eo_is_closed_rec x env = Term.Boolean b) :
+  __is_closed_rec
+      (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x) env =
+    __eo_is_closed_rec
+      (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x) env ∧
+    ∃ b,
+      __eo_is_closed_rec
+          (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x) env =
+        Term.Boolean b :=
+by
+  exact
+    is_closed_rec_apply_uop1_eq_and_bool_of_index_true_and_arg
+      hEnv
+      (tuple_project_index_closed_of_has_smt_translation hEnv hTrans)
+      (ihX (TranslationProofs.eo_to_smt_tuple_project_arg_non_none idx x hTrans))
+
 theorem is_closed_rec_apply_tuple_select_eq_and_bool_of_has_smt_translation
     {idx x env : Term} {vars : List SmtVarKey}
     (hEnv : EoSmtVarEnv env vars)
@@ -7138,6 +7247,8 @@ by
     exact (is_index_cons_and_arg_has_smt_translation hTrans).2
   case tuple_select =>
     exact (tuple_select_index_nat_valid_and_arg_has_smt_translation hTrans).2
+  case tuple_project =>
+    exact TranslationProofs.eo_to_smt_tuple_project_arg_non_none idx x hTrans
   case int_to_bv =>
     exact (int_to_bv_index_nat_valid_and_arg_has_smt_translation hTrans).2
   case seq_empty =>
@@ -7183,6 +7294,8 @@ by
     cases op <;> try rfl
     · exact False.elim (hUpdate rfl)
     · exact False.elim (hTupleUpdate rfl)
+    · exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
+        (TranslationProofs.not_isLamSpine_of_head (by simp [TranslationProofs.eoSpineHead]))
   have hTy :
       __smtx_typeof
           (SmtTerm.Apply
@@ -7436,6 +7549,10 @@ by
   case tuple_select =>
     exact
       is_closed_rec_apply_tuple_select_eq_and_bool_of_has_smt_translation
+        hEnv hTrans (fun hx => ih hLt hEnv hx)
+  case tuple_project =>
+    exact
+      is_closed_rec_apply_tuple_project_eq_and_bool_of_has_smt_translation
         hEnv hTrans (fun hx => ih hLt hEnv hx)
   case int_to_bv =>
     exact

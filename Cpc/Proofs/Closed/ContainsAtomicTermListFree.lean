@@ -5446,6 +5446,72 @@ by
     ⟨_hHeadNoFree, hArgNoFree⟩
   exact hArgNoFree
 
+private theorem smt_model_eval_tuple_select_numeral_eq_of_eval_eq
+    {M N : SmtModel} (hGlobals : model_agrees_on_globals M N)
+    (T : SmtType) (n : native_Int) (t : SmtTerm)
+    (hT : __smtx_model_eval M t = __smtx_model_eval N t) :
+    __smtx_model_eval M (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t) =
+      __smtx_model_eval N (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t) := by
+  cases T
+  case Datatype s dd =>
+    cases dd with
+    | nil =>
+        simp [__eo_to_smt_tuple_select, __smtx_model_eval]
+    | cons s2 d rest =>
+        cases rest with
+        | cons s3 d3 rest3 =>
+            simp [__eo_to_smt_tuple_select, __smtx_model_eval]
+        | nil =>
+            cases hGuard :
+                native_and
+                  (native_and
+                    (native_streq s (native_string_lit "@Tuple"))
+                    (native_streq s2 (native_string_lit "@Tuple")))
+                  (native_zleq 0 n)
+            · simp [__eo_to_smt_tuple_select, hGuard, native_ite,
+                __smtx_model_eval]
+            · simp [__eo_to_smt_tuple_select, hGuard, native_ite,
+                __smtx_model_eval, hT]
+              exact
+                smtx_model_eval_dt_sel_eq_of_globals hGlobals
+                  (native_string_lit "@Tuple")
+                  (__eo_to_smt_tuple_decl d) 0
+                  (native_int_to_nat n)
+                  (__smtx_model_eval N t)
+  all_goals
+    simp [__eo_to_smt_tuple_select, __smtx_model_eval]
+
+private theorem smt_model_eval_tuple_project_rec_eq_of_eval_eq
+    {M N : SmtModel} (hGlobals : model_agrees_on_globals M N)
+    (T : SmtType) (t : SmtTerm)
+    (hT : __smtx_model_eval M t = __smtx_model_eval N t) :
+    (k : Nat) → (is : Term) → sizeOf is < k →
+      __smtx_model_eval M (__eo_to_smt_tuple_project_rec is T t) =
+        __smtx_model_eval N (__eo_to_smt_tuple_project_rec is T t)
+  | 0, _, h => absurd h (Nat.not_lt_zero _)
+  | k + 1, is, h => by
+      by_cases hc : ∃ n is', is =
+          Term.Apply (Term.Apply Term.__eo_List_cons (Term.Numeral n)) is'
+      · obtain ⟨n, is', rfl⟩ := hc
+        change
+          __smtx_model_eval M
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t)
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t))
+                (__eo_to_smt_tuple_project_rec is' T t)) =
+            __smtx_model_eval N
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t)
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t))
+                (__eo_to_smt_tuple_project_rec is' T t))
+        exact smt_model_eval_tuple_prepend_eq_of_eval_eq hGlobals _ _ _
+          (smt_model_eval_tuple_select_numeral_eq_of_eval_eq hGlobals T n t hT)
+          (smt_model_eval_tuple_project_rec_eq_of_eval_eq hGlobals T t hT k is'
+            (by simp at h; omega))
+      · by_cases hn : is = Term.__eo_List_nil
+        · subst hn
+          simp [__eo_to_smt_tuple_project_rec, __smtx_model_eval]
+        · rw [TranslationProofs.tuple_project_rec_eq_none_of_not_list hn hc]
+          simp [__smtx_model_eval]
+
 theorem smt_model_eval_apply_uop1_any_eq_of_contains_atomic_term_list_free_rec_false_mapped
     (root : Term)
     {op : UserOp1} {idx x except bound : Term}
@@ -5602,6 +5668,22 @@ by
     dsimp only [__eo_to_smt]
     simp only [__smtx_model_eval]
     simp [hIdxEval, hXEval]
+  case tuple_project =>
+    have hXTrans : eoHasSmtTranslation x :=
+      TranslationProofs.eo_to_smt_tuple_project_arg_non_none idx x hTrans
+    have hXEval := ih hXLt hExcept hBound hXTrans hXNoFree hAgree
+    change
+      __smtx_model_eval M
+          (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt x)) (__eo_to_smt x)) =
+        __smtx_model_eval N
+          (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt x)) (__eo_to_smt x))
+    by_cases hn : idx = Term.__eo_List_nil
+    · subst hn
+      cases hTeq : native_Teq (__smtx_typeof (__eo_to_smt x)) SmtType.None <;>
+        simp [__eo_to_smt_tuple_project, native_ite, hTeq, __smtx_model_eval]
+    · rw [TranslationProofs.tuple_project_eq_rec_of_ne_nil hn]
+      exact smt_model_eval_tuple_project_rec_eq_of_eval_eq hAgree.globals _ _ hXEval _ _
+        (Nat.lt_succ_self _)
   case seq_empty =>
     exact false_of_apply_seq_empty hTrans
   case set_empty =>

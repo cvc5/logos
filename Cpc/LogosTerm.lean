@@ -212,6 +212,7 @@ inductive UserOp1 : Type where
   | update : UserOp1
   | tuple_select : UserOp1
   | tuple_update : UserOp1
+  | tuple_project : UserOp1
   | set_empty : UserOp1
   | int_to_bv : UserOp1
 

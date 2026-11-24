@@ -189,6 +189,19 @@ def __eo_to_smt_tuple_prepend_of_type : SmtType -> SmtTerm -> SmtType -> SmtTerm
 def __eo_to_smt_tuple_prepend (h : SmtTerm) (hT : SmtType) (tail : SmtTerm) : SmtTerm :=
   (__eo_to_smt_tuple_prepend_of_type (__smtx_typeof tail) h hT tail)
 
+def __eo_to_smt_tuple_project_rec : Term -> SmtType -> SmtTerm -> SmtTerm
+  | Term.__eo_List_nil, T, t => (SmtTerm.DtCons (native_string_lit "@Tuple") (SmtDatatypeDecl.cons (native_string_lit "@Tuple") (SmtDatatype.sum SmtDatatypeCons.unit SmtDatatype.null) SmtDatatypeDecl.nil) native_nat_zero)
+  | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Numeral n)) is), T, t =>
+    let _v0 := (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) t)
+    (__eo_to_smt_tuple_prepend _v0 (__smtx_typeof _v0) (__eo_to_smt_tuple_project_rec is T t))
+  | is, T, t => SmtTerm.None
+
+
+def __eo_to_smt_tuple_project : Term -> SmtType -> SmtTerm -> SmtTerm
+  | Term.__eo_List_nil, T, t => (native_ite (native_Teq T SmtType.None) SmtTerm.None (SmtTerm._at_purify (SmtTerm.DtCons (native_string_lit "@Tuple") (SmtDatatypeDecl.cons (native_string_lit "@Tuple") (SmtDatatype.sum SmtDatatypeCons.unit SmtDatatype.null) SmtDatatypeDecl.nil) native_nat_zero)))
+  | is, T, t => (__eo_to_smt_tuple_project_rec is T t)
+
+
 def __eo_to_smt_exists : Term -> SmtTerm -> SmtTerm
   | Term.__eo_List_nil, F => F
   | (Term.Apply (Term.Apply Term.__eo_List_cons (Term.Var (Term.String s) T)) vs), F => (SmtTerm.exists s (__eo_to_smt_type T) (__eo_to_smt_exists vs F))
@@ -436,6 +449,9 @@ def __eo_to_smt : Term -> SmtTerm
   | (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_update x1) x2) x3) =>
     let _v0 := (__eo_to_smt x2)
     (__eo_to_smt_tuple_update (__smtx_typeof _v0) (__eo_to_smt x1) _v0 (__eo_to_smt x3))
+  | (Term.Apply (Term.UOp1 UserOp1.tuple_project x1) x2) =>
+    let _v0 := (__eo_to_smt x2)
+    (__eo_to_smt_tuple_project x1 (__smtx_typeof _v0) _v0)
   | (Term.UOp1 UserOp1.set_empty x1) => (__eo_to_smt_set_empty (__eo_to_smt_type x1))
   | (Term.Apply (Term.UOp UserOp.set_singleton) x1) => (SmtTerm.set_singleton (__eo_to_smt x1))
   | (Term.Apply (Term.Apply (Term.UOp UserOp.set_union) x1) x2) => (SmtTerm.set_union (__eo_to_smt x1) (__eo_to_smt x2))

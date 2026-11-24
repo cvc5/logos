@@ -2853,4 +2853,253 @@ theorem re_loop_index_arg_of_non_none (lo hi t : SmtTerm) :
     simp [__smtx_typeof_re_loop]
 
 
+
+/-! ### `tuple.project`: its type depends only on the type of its argument -/
+
+private theorem smtx_tuple_select_type_congr_proj
+    (T : SmtType) (idx x y : SmtTerm)
+    (hTy : __smtx_typeof x = __smtx_typeof y) :
+    __smtx_typeof (__eo_to_smt_tuple_select T idx x) =
+      __smtx_typeof (__eo_to_smt_tuple_select T idx y) := by
+  cases T <;> cases idx <;>
+    try simp [__eo_to_smt_tuple_select]
+  case Datatype.Numeral s dd n =>
+    cases dd with
+    | nil =>
+        simp
+    | cons s2 body rest =>
+        cases rest with
+        | nil =>
+            by_cases hCond :
+                (s = native_string_lit "@Tuple" ∧
+                  s2 = native_string_lit "@Tuple") ∧
+                    native_zleq 0 n = true
+            · simp [hCond, __smtx_typeof, hTy]
+            · simp [hCond]
+        | cons s3 body3 rest3 =>
+            simp
+
+private theorem smtx_tuple_project_rec_type_congr
+    (T : SmtType) (x y : SmtTerm) (hTy : __smtx_typeof x = __smtx_typeof y) :
+    (k : Nat) → (is : Term) → sizeOf is < k →
+      __smtx_typeof (__eo_to_smt_tuple_project_rec is T x) =
+        __smtx_typeof (__eo_to_smt_tuple_project_rec is T y)
+  | 0, _, h => absurd h (Nat.not_lt_zero _)
+  | k + 1, is, h => by
+      by_cases hc : ∃ n is', is =
+          Term.Apply (Term.Apply Term.__eo_List_cons (Term.Numeral n)) is'
+      · obtain ⟨n, is', rfl⟩ := hc
+        change
+          __smtx_typeof
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) x)
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) x))
+                (__eo_to_smt_tuple_project_rec is' T x)) =
+            __smtx_typeof
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) y)
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) y))
+                (__eo_to_smt_tuple_project_rec is' T y))
+        have hSel := smtx_tuple_select_type_congr_proj T (SmtTerm.Numeral n) x y hTy
+        exact eo_to_smt_tuple_prepend_type_congr _ _ _ _ _ _ hSel hSel
+          (smtx_tuple_project_rec_type_congr T x y hTy k is' (by simp at h; omega))
+      · by_cases hn : is = Term.__eo_List_nil
+        · subst hn
+          rfl
+        · rw [TranslationProofs.tuple_project_rec_eq_none_of_not_list hn hc,
+            TranslationProofs.tuple_project_rec_eq_none_of_not_list hn hc]
+
+theorem smtx_tuple_project_type_congr
+    (is : Term) (T : SmtType) (x y : SmtTerm) (hTy : __smtx_typeof x = __smtx_typeof y) :
+    __smtx_typeof (__eo_to_smt_tuple_project is T x) =
+      __smtx_typeof (__eo_to_smt_tuple_project is T y) := by
+  by_cases hn : is = Term.__eo_List_nil
+  · subst hn
+    rfl
+  · rw [TranslationProofs.tuple_project_eq_rec_of_ne_nil hn,
+      TranslationProofs.tuple_project_eq_rec_of_ne_nil hn]
+    exact smtx_tuple_project_rec_type_congr T x y hTy _ is (Nat.lt_succ_self _)
+
+theorem congTypeSpine_tuple_project_eq_has_bool_type
+    (idx x rhs : Term) :
+    RuleProofs.eo_has_smt_translation
+      (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x) ->
+    CongTypeSpine
+      (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x) rhs ->
+    RuleProofs.eo_has_bool_type
+      (mkEq (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x) rhs) := by
+  intro hTrans hSpine
+  rcases congTypeSpine_indexed_unary_uop_inv
+      UserOp1.tuple_project idx x rhs hSpine with
+    ⟨y, hRhs, hArg⟩
+  subst hRhs
+  have hArgTy :
+      __smtx_typeof (__eo_to_smt x) =
+        __smtx_typeof (__eo_to_smt y) :=
+    smt_type_eq_of_eq_bool_or_same x y hArg
+  exact RuleProofs.eo_has_bool_type_eq_of_same_smt_type
+    (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x)
+    (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) y)
+    (by
+      change
+        __smtx_typeof
+            (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt x)) (__eo_to_smt x)) =
+          __smtx_typeof
+            (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt y)) (__eo_to_smt y))
+      rw [hArgTy]
+      exact smtx_tuple_project_type_congr idx _ _ _ hArgTy)
+    hTrans
+
+
+
+/-! ### `tuple.project`: equal arguments give equal projections -/
+
+private theorem smtx_tuple_select_eval_congr_proj
+    (M : SmtModel) (T : SmtType) (idx x y : SmtTerm)
+    (hEval : __smtx_model_eval M x = __smtx_model_eval M y) :
+    __smtx_model_eval M (__eo_to_smt_tuple_select T idx x) =
+      __smtx_model_eval M (__eo_to_smt_tuple_select T idx y) := by
+  cases T <;> cases idx <;>
+    try simp [__eo_to_smt_tuple_select]
+  case Datatype.Numeral s dd n =>
+    cases dd with
+    | nil =>
+        simp
+    | cons s2 body rest =>
+        cases rest with
+        | nil =>
+            by_cases hCond :
+                (s = native_string_lit "@Tuple" ∧
+                  s2 = native_string_lit "@Tuple") ∧
+                    native_zleq 0 n = true
+            · simp [hCond,
+                __smtx_model_eval, hEval]
+            · simp [hCond]
+        | cons s3 body3 rest3 =>
+            simp
+
+private theorem smtx_tuple_project_rec_eval_congr
+    (M : SmtModel) (T : SmtType) (x y : SmtTerm)
+    (hTy : __smtx_typeof x = __smtx_typeof y)
+    (hEval : __smtx_model_eval M x = __smtx_model_eval M y) :
+    (k : Nat) → (is : Term) → sizeOf is < k →
+      __smtx_model_eval M (__eo_to_smt_tuple_project_rec is T x) =
+        __smtx_model_eval M (__eo_to_smt_tuple_project_rec is T y)
+  | 0, _, h => absurd h (Nat.not_lt_zero _)
+  | k + 1, is, h => by
+      by_cases hc : ∃ n is', is =
+          Term.Apply (Term.Apply Term.__eo_List_cons (Term.Numeral n)) is'
+      · obtain ⟨n, is', rfl⟩ := hc
+        change
+          __smtx_model_eval M
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) x)
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) x))
+                (__eo_to_smt_tuple_project_rec is' T x)) =
+            __smtx_model_eval M
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) y)
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) y))
+                (__eo_to_smt_tuple_project_rec is' T y))
+        have hm : sizeOf is' < k := by simp at h; omega
+        exact eo_to_smt_tuple_prepend_eval_congr M _ _ _ _ _ _
+          (smtx_tuple_select_type_congr_proj T (SmtTerm.Numeral n) x y hTy)
+          (smtx_tuple_project_rec_type_congr T x y hTy k is' hm)
+          (smtx_tuple_select_eval_congr_proj M T (SmtTerm.Numeral n) x y hEval)
+          (smtx_tuple_project_rec_eval_congr M T x y hTy hEval k is' hm)
+      · by_cases hn : is = Term.__eo_List_nil
+        · subst hn
+          rfl
+        · rw [TranslationProofs.tuple_project_rec_eq_none_of_not_list hn hc,
+            TranslationProofs.tuple_project_rec_eq_none_of_not_list hn hc]
+
+/-- A non-empty projection whose translation is typed has an argument of a
+tuple type, in particular not `RegLan`. -/
+private theorem tuple_project_arg_non_reglan_of_ne_nil {idx x : Term}
+    (hn : idx ≠ Term.__eo_List_nil)
+    (hNN :
+      __smtx_typeof (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x)) ≠
+        SmtType.None) :
+    __smtx_typeof (__eo_to_smt x) ≠ SmtType.RegLan := by
+  intro hReg
+  have hNN' :
+      __smtx_typeof (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt x))
+        (__eo_to_smt x)) ≠ SmtType.None := hNN
+  rcases TranslationProofs.tuple_project_indices_of_non_none idx _ _ hNN' with
+    h | ⟨n, is', rfl⟩
+  · exact hn h
+  · have hPre :
+        __smtx_typeof
+          (__eo_to_smt_tuple_prepend
+            (__eo_to_smt_tuple_select (__smtx_typeof (__eo_to_smt x)) (SmtTerm.Numeral n)
+              (__eo_to_smt x))
+            (__smtx_typeof (__eo_to_smt_tuple_select (__smtx_typeof (__eo_to_smt x))
+              (SmtTerm.Numeral n) (__eo_to_smt x)))
+            (__eo_to_smt_tuple_project_rec is' (__smtx_typeof (__eo_to_smt x))
+              (__eo_to_smt x))) ≠ SmtType.None := hNN'
+    rcases TranslationProofs.smtx_tuple_prepend_tail_type_of_non_none _ _ _ hPre with
+      ⟨c, hTailTy⟩
+    have hHead :=
+      TranslationProofs.smtx_tuple_prepend_head_non_none_of_tail_tuple_type
+        _ _ _ c hTailTy hPre
+    apply hHead
+    rw [hReg]
+    simp [__eo_to_smt_tuple_select]
+
+theorem congTrueSpine_tuple_project_eq_true
+    (M : SmtModel) (hM : model_wf M)
+    (idx x rhs : Term) :
+    RuleProofs.eo_has_bool_type
+      (mkEq (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x) rhs) ->
+    CongTrueSpine M
+      (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x) rhs ->
+    eo_interprets M
+      (mkEq (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x) rhs) true := by
+  intro hEqBool hSpine
+  rcases congTrueSpine_indexed_unary_uop_inv M
+      UserOp1.tuple_project idx x rhs hSpine with
+    ⟨y, hRhs, hArg⟩
+  subst hRhs
+  apply RuleProofs.eo_interprets_eq_of_rel M
+  · exact hEqBool
+  · have hTypes :=
+      RuleProofs.eo_eq_operands_same_smt_type_of_has_bool_type
+        (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x)
+        (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) y)
+        hEqBool
+    have hxOpNN :
+        __smtx_typeof
+            (__eo_to_smt
+              (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x)) ≠
+          SmtType.None :=
+      hTypes.2
+    have hArgTy :
+        __smtx_typeof (__eo_to_smt x) =
+          __smtx_typeof (__eo_to_smt y) :=
+      smt_type_eq_of_eq_true_or_same M x y hArg
+    have hEvalOp :
+        __smtx_model_eval M
+            (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x)) =
+          __smtx_model_eval M
+            (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) y)) := by
+      change
+        __smtx_model_eval M
+            (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt x)) (__eo_to_smt x)) =
+          __smtx_model_eval M
+            (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt y)) (__eo_to_smt y))
+      rw [← hArgTy]
+      by_cases hn : idx = Term.__eo_List_nil
+      · subst hn
+        rfl
+      · have hxNN :=
+          TranslationProofs.eo_to_smt_tuple_project_arg_non_none idx x hxOpNN
+        have hxReg := tuple_project_arg_non_reglan_of_ne_nil hn hxOpNN
+        have hEvalArg :
+            __smtx_model_eval M (__eo_to_smt x) =
+              __smtx_model_eval M (__eo_to_smt y) :=
+          eo_model_eval_eq_of_eq_true_or_same_at_non_reglan_type M hM x y
+            (__smtx_typeof (__eo_to_smt x)) rfl hArgTy.symm hxNN hxReg hArg
+        rw [TranslationProofs.tuple_project_eq_rec_of_ne_nil hn,
+          TranslationProofs.tuple_project_eq_rec_of_ne_nil hn]
+        exact smtx_tuple_project_rec_eval_congr M _ _ _ hArgTy hEvalArg _ idx
+          (Nat.lt_succ_self _)
+    rw [hEvalOp]
+    exact RuleProofs.smt_value_rel_refl _
+
 end CongSupport

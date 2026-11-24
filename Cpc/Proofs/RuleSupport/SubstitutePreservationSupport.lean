@@ -7731,7 +7731,34 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                                                                 hActuals
                                                                                                                                                 hATy)
                                                                                                                                             hTy
-                                                                                                                                      · cases op <;> contradiction
+                                                                                                                                      · by_cases hTupleProject :
+                                                                                                                                          op =
+                                                                                                                                            UserOp1.tuple_project
+                                                                                                                                        · subst op
+                                                                                                                                          exact
+                                                                                                                                            substitute_simul_apply_tuple_project_preserves_type_and_translation_of_typeof_ne_stuck
+                                                                                                                                              idx
+                                                                                                                                              a
+                                                                                                                                              xs
+                                                                                                                                              ts
+                                                                                                                                              bvs
+                                                                                                                                              hXsEnv
+                                                                                                                                              hBvsEnv
+                                                                                                                                              hTs
+                                                                                                                                              hFTrans
+                                                                                                                                              (fun hATrans hATy =>
+                                                                                                                                                hRec
+                                                                                                                                                  (G := a)
+                                                                                                                                                  (bvs' := bvs)
+                                                                                                                                                  (by simp <;> omega)
+                                                                                                                                                  hXsEnv
+                                                                                                                                                  hBvsEnv
+                                                                                                                                                  hATrans
+                                                                                                                                                  hTs
+                                                                                                                                                  hActuals
+                                                                                                                                                  hATy)
+                                                                                                                                              hTy
+                                                                                                                                        · cases op <;> contradiction
                                                                                                           · by_cases hHeadUOp2 :
                                                                                                               ∃ op x y,
                                                                                                                 f =

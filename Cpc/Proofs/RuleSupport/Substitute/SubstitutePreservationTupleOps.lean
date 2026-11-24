@@ -931,4 +931,152 @@ theorem substitute_simul_uop1_tuple_update_preserves_type_and_translation_of_typ
     rw [hTupleUpdateTyEq]
     exact hOrigNN
 
+
+/-! ### `tuple.project` -/
+
+theorem substitute_tuple_select_type_congr_proj
+    (T : SmtType) (idx x y : SmtTerm)
+    (hTy : __smtx_typeof x = __smtx_typeof y) :
+    __smtx_typeof (__eo_to_smt_tuple_select T idx x) =
+      __smtx_typeof (__eo_to_smt_tuple_select T idx y) := by
+  cases T <;> cases idx <;>
+    try simp [__eo_to_smt_tuple_select]
+  case Datatype.Numeral s dd n =>
+    cases dd with
+    | nil =>
+        simp
+    | cons s2 body rest =>
+        cases rest with
+        | nil =>
+            cases hc :
+                native_and
+                  (native_and (native_streq s (native_string_lit "@Tuple"))
+                    (native_streq s2 (native_string_lit "@Tuple")))
+                  (native_zleq 0 n) <;>
+              simp [native_ite, hc, __smtx_typeof, hTy]
+        | cons s3 body3 rest3 =>
+            simp
+
+theorem substitute_tuple_project_rec_type_congr
+    (T : SmtType) (x y : SmtTerm) (hTy : __smtx_typeof x = __smtx_typeof y) :
+    (k : Nat) → (is : Term) → sizeOf is < k →
+      __smtx_typeof (__eo_to_smt_tuple_project_rec is T x) =
+        __smtx_typeof (__eo_to_smt_tuple_project_rec is T y)
+  | 0, _, h => absurd h (Nat.not_lt_zero _)
+  | k + 1, is, h => by
+      by_cases hc : ∃ n is', is =
+          Term.Apply (Term.Apply Term.__eo_List_cons (Term.Numeral n)) is'
+      · obtain ⟨n, is', rfl⟩ := hc
+        change
+          __smtx_typeof
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) x)
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) x))
+                (__eo_to_smt_tuple_project_rec is' T x)) =
+            __smtx_typeof
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) y)
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) y))
+                (__eo_to_smt_tuple_project_rec is' T y))
+        have hSel := substitute_tuple_select_type_congr_proj T (SmtTerm.Numeral n) x y hTy
+        exact substitute_tuple_prepend_type_congr _ _ _ _ _ _ hSel hSel
+          (substitute_tuple_project_rec_type_congr T x y hTy k is' (by simp at h; omega))
+      · by_cases hn : is = Term.__eo_List_nil
+        · subst hn
+          rfl
+        · rw [TranslationProofs.tuple_project_rec_eq_none_of_not_list hn hc,
+            TranslationProofs.tuple_project_rec_eq_none_of_not_list hn hc]
+
+theorem substitute_tuple_project_type_congr
+    (is : Term) (T : SmtType) (x y : SmtTerm) (hTy : __smtx_typeof x = __smtx_typeof y) :
+    __smtx_typeof (__eo_to_smt_tuple_project is T x) =
+      __smtx_typeof (__eo_to_smt_tuple_project is T y) := by
+  by_cases hn : is = Term.__eo_List_nil
+  · subst hn
+    rfl
+  · rw [TranslationProofs.tuple_project_eq_rec_of_ne_nil hn,
+      TranslationProofs.tuple_project_eq_rec_of_ne_nil hn]
+    exact substitute_tuple_project_rec_type_congr T x y hTy _ is (Nat.lt_succ_self _)
+
+private theorem eo_typeof_tuple_project_arg_ne_stuck_of_ne_stuck {A idx X : Term}
+    (h : __eo_typeof_tuple_project A idx X ≠ Term.Stuck) : X ≠ Term.Stuck := by
+  intro hX
+  subst hX
+  apply h
+  unfold __eo_typeof_tuple_project
+  split <;> simp_all
+
+theorem substitute_simul_apply_tuple_project_preserves_type_and_translation_of_typeof_ne_stuck
+    {isRename : Bool}
+    (idx a xs ts bvs : Term)
+    {xsVars bvsVars : List EoVarKey}
+    (hXsEnv : EoVarEnvPerm xs xsVars)
+    (hBvsEnv : EoVarEnvPerm bvs bvsVars)
+    (hTs : EoListAllHaveSmtTranslation ts)
+    (hTrans :
+      RuleProofs.eo_has_smt_translation
+        (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) a))
+    (hARec :
+      RuleProofs.eo_has_smt_translation a ->
+      __eo_typeof (__substitute_simul_rec (Term.Boolean isRename) a xs ts bvs) ≠
+        Term.Stuck ->
+      __eo_typeof (__substitute_simul_rec (Term.Boolean isRename) a xs ts bvs) =
+        __eo_typeof a ∧
+        RuleProofs.eo_has_smt_translation
+          (__substitute_simul_rec (Term.Boolean isRename) a xs ts bvs))
+    (hTy :
+      __eo_typeof
+          (__substitute_simul_rec (Term.Boolean isRename)
+            (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) a) xs ts bvs) ≠
+        Term.Stuck) :
+    __eo_typeof
+        (__substitute_simul_rec (Term.Boolean isRename)
+          (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) a) xs ts bvs) =
+      __eo_typeof (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) a) ∧
+      RuleProofs.eo_has_smt_translation
+        (__substitute_simul_rec (Term.Boolean isRename)
+          (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) a) xs ts bvs) := by
+  exact
+    substitute_simul_apply_uop1_preserves_type_and_translation_of_typeof_ne_stuck
+      UserOp1.tuple_project idx a xs ts bvs hXsEnv hBvsEnv hTs hTrans
+      (fun h =>
+        apply_uop1_arg_has_smt_translation_of_has_smt_translation h)
+      (fun X hApp => by
+        change
+          __eo_typeof_tuple_project (__eo_typeof idx) idx (__eo_typeof X) ≠
+            Term.Stuck at hApp
+        exact eo_typeof_tuple_project_arg_ne_stuck_of_ne_stuck hApp)
+      (fun X Y hXY => by
+        change
+          __eo_typeof_tuple_project (__eo_typeof idx) idx (__eo_typeof X) =
+            __eo_typeof_tuple_project (__eo_typeof idx) idx (__eo_typeof Y)
+        rw [hXY])
+      (fun X hXTrans hXTyEq _hApp => by
+        unfold RuleProofs.eo_has_smt_translation
+        change
+          __smtx_typeof
+              (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt X))
+                (__eo_to_smt X)) ≠
+            SmtType.None
+        have hATrans :=
+          apply_uop1_arg_rule_has_smt_translation_of_rule
+            UserOp1.tuple_project idx a hTrans
+        have hXSmtTyEq :
+            __smtx_typeof (__eo_to_smt X) =
+              __smtx_typeof (__eo_to_smt a) :=
+          smt_typeof_subst_arg_eq_of_type_eq
+            (T := __smtx_typeof (__eo_to_smt a))
+            hXTrans hATrans hXTyEq rfl
+        have hNN :
+            __smtx_typeof
+                (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt a))
+                  (__eo_to_smt a)) ≠
+              SmtType.None := by
+          have hRaw := hTrans
+          unfold RuleProofs.eo_has_smt_translation at hRaw
+          exact hRaw
+        rw [hXSmtTyEq,
+          substitute_tuple_project_type_congr idx _ (__eo_to_smt X) (__eo_to_smt a)
+            hXSmtTyEq]
+        exact hNN)
+      hARec hTy
+
 end SubstitutePreservationSupport

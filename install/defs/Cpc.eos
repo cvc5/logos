@@ -876,6 +876,41 @@
 (define-symbol tuple.update (n t u)
   :term ($eo_to_smt_tuple_update (smt.typeof t) n t u))
 
+; -- tuple.project
+; The tuple of the components of t at the indices, in order, and for no
+; indices the unit tuple:
+;   (tuple.project (@list 2 0) t)   ; is (tuple (tuple.select 2 t) (tuple.select 0 t))
+;   (tuple.project @list.nil t)     ; is (@purify tuple.unit), for t well typed
+; The second is purified so that no application becomes a constructor, as
+; @bvsize is so that none becomes a numeral. A non-empty projection ends in
+; tuple.unit itself, so it becomes what the tuple it is equal to becomes.
+(program $eo_to_smt_tuple_project_rec
+  ((T SmtType) (n <numeral>) (is $eo_List) (t SmtTerm))
+  :signature ($eo_List SmtType SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_tuple_project_rec eo.list_nil T t)
+    (DtCons "str_tuple_name" (smt.decl_cons "str_tuple_name" (smt.datatype_cons smt.cons_unit smt.datatype_nil) smt.decl_nil) "n_zero"))
+  (($eo_to_smt_tuple_project_rec (eo.list_cons (eo.numeral n) is) T t)
+    (eo::define ((h ($eo_to_smt_tuple_select T (Numeral n) t)))
+      ($eo_to_smt_tuple_prepend h (smt.typeof h) ($eo_to_smt_tuple_project_rec is T t))))
+  (($eo_to_smt_tuple_project_rec is T t) none)
+  )
+)
+
+(program $eo_to_smt_tuple_project
+  ((T SmtType) (is $eo_List) (t SmtTerm))
+  :signature ($eo_List SmtType SmtTerm) SmtTerm
+  (
+  (($eo_to_smt_tuple_project eo.list_nil T t)
+    ("ite" ("Teq" T none) none
+      (@purify (DtCons "str_tuple_name" (smt.decl_cons "str_tuple_name" (smt.datatype_cons smt.cons_unit smt.datatype_nil) smt.decl_nil) "n_zero"))))
+  (($eo_to_smt_tuple_project is T t) ($eo_to_smt_tuple_project_rec is T t))
+  )
+)
+
+(define-symbol tuple.project ((! is :raw) t)
+  :term ($eo_to_smt_tuple_project is (smt.typeof t) t))
+
 ;-----------------------------------------------------------------------------
 (section "Quantifiers, skolems, and lambda")
 ;-----------------------------------------------------------------------------

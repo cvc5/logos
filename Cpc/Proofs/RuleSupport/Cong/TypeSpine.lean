@@ -866,6 +866,9 @@ theorem congTypeSpine_eq_has_bool_type (t rhs : Term) :
   | Term.Apply (Term.UOp1 UserOp1.tuple_select idx) x =>
       exact congTypeSpine_tuple_select_eq_has_bool_type
         idx x rhs hTrans hSpine
+  | Term.Apply (Term.UOp1 UserOp1.tuple_project idx) x =>
+      exact congTypeSpine_tuple_project_eq_has_bool_type
+        idx x rhs hTrans hSpine
   | Term.Apply (Term.Apply (Term.UOp UserOp._at_from_bools) x₁) x₂ =>
       exact congTypeSpine_bv_from_bools_eq_has_bool_type
         x₁ x₂ rhs hTrans hSpine
@@ -1795,6 +1798,9 @@ theorem congTypeSpine_eq_has_bool_type (t rhs : Term) :
                     x₁ x (Term.Apply g y) hTrans hApp
               | Term.UOp1 UserOp1.tuple_select idx =>
                   exact congTypeSpine_tuple_select_eq_has_bool_type
+                    idx x (Term.Apply g y) hTrans hApp
+              | Term.UOp1 UserOp1.tuple_project idx =>
+                  exact congTypeSpine_tuple_project_eq_has_bool_type
                     idx x (Term.Apply g y) hTrans hApp
               | Term.UOp2 UserOp2.extract i j =>
                   exact congTypeSpine_typecongr_indexed2_unop_eq_has_bool_type

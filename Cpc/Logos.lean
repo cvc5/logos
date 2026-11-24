@@ -1112,6 +1112,13 @@ def __seq_empty : Term -> Term
   | T => (Term.UOp1 UserOp1.seq_empty T)
 
 
+def __tuple_project_type : Term -> Term -> Term
+  | _ , Term.Stuck  => Term.Stuck
+  | (Term.Apply (Term.Apply Term.__eo_List_cons i) is), T => (__eo_mk_apply (__eo_mk_apply (Term.UOp UserOp.Tuple) (__eo_list_nth (Term.UOp UserOp.Tuple) T i)) (__tuple_project_type is T))
+  | Term.__eo_List_nil, T => (Term.UOp UserOp.UnitTuple)
+  | _, _ => Term.Stuck
+
+
 def __eo_disamb_type_set_empty : Term -> Term
   | (Term.Apply (Term.UOp UserOp.Set) T) => (Term.Apply (Term.UOp UserOp.Set) T)
   | _ => Term.Stuck
@@ -9072,6 +9079,13 @@ def __eo_typeof_tuple_update : Term -> Term -> Term -> Term -> Term
   | _, _, _, _ => Term.Stuck
 
 
+def __eo_typeof_tuple_project : Term -> Term -> Term -> Term
+  | _ , Term.Stuck , _  => Term.Stuck
+  | _ , _ , Term.Stuck  => Term.Stuck
+  | Term.__eo_List, is, T => (__tuple_project_type is T)
+  | _, _, _ => Term.Stuck
+
+
 def __eo_typeof_set_empty : Term -> Term -> Term
   | _ , Term.Stuck  => Term.Stuck
   | Term.Type, __eo_disamb_type_set_empty_var => (__eo_disamb_type_set_empty __eo_disamb_type_set_empty_var)
@@ -9350,6 +9364,7 @@ def __eo_typeof : Term -> Term
   | (Term.Apply (Term.Apply (Term.UOp UserOp.tuple) __eo_x1) __eo_x2) => (__eo_typeof_tuple (__eo_typeof __eo_x1) (__eo_typeof __eo_x2))
   | (Term.Apply (Term.UOp1 UserOp1.tuple_select __eo_x1) __eo_x2) => (__eo_typeof_tuple_select (__eo_typeof __eo_x1) __eo_x1 (__eo_typeof __eo_x2))
   | (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_update __eo_x1) __eo_x2) __eo_x3) => (__eo_typeof_tuple_update (__eo_typeof __eo_x1) __eo_x1 (__eo_typeof __eo_x2) (__eo_typeof __eo_x3))
+  | (Term.Apply (Term.UOp1 UserOp1.tuple_project __eo_x1) __eo_x2) => (__eo_typeof_tuple_project (__eo_typeof __eo_x1) __eo_x1 (__eo_typeof __eo_x2))
   | (Term.Apply (Term.UOp UserOp.Set) __eo_x1) => (__eo_typeof_Seq (__eo_typeof __eo_x1))
   | (Term.UOp1 UserOp1.set_empty __eo_x1) => (__eo_typeof_set_empty (__eo_typeof __eo_x1) __eo_x1)
   | (Term.Apply (Term.UOp UserOp.set_singleton) __eo_x1) => (__eo_typeof_set_singleton (__eo_typeof __eo_x1))

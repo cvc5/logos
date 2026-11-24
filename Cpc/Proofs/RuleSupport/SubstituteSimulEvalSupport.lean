@@ -2327,6 +2327,7 @@ theorem substFalse_eval_unary_uop1_nontuple_select
     (hisr : (Term.Boolean isRename : Term) ≠ Term.Stuck)
     (hxs : xs ≠ Term.Stuck) (hss : ss ≠ Term.Stuck) (hbvs : bvs ≠ Term.Stuck)
     (hTupleSelect : op ≠ UserOp1.tuple_select)
+    (hTupleProject : op ≠ UserOp1.tuple_project)
     (hFTrans : eoHasSmtTranslation (Term.Apply (Term.UOp1 op idx) a))
     (hSubstTrans :
       eoHasSmtTranslation
@@ -2461,6 +2462,8 @@ theorem substFalse_eval_unary_uop1_nontuple_select
     exact false_of_apply_uop1_translate_apply_none hFTrans rfl
   case tuple_select =>
     exact False.elim (hTupleSelect rfl)
+  case tuple_project =>
+    exact False.elim (hTupleProject rfl)
   case tuple_update =>
     exact false_of_apply_uop1_translate_apply_none hFTrans rfl
   case set_empty =>
@@ -4003,6 +4006,138 @@ theorem smtx_model_eval_eo_to_smt_tuple_prepend_cross_eq_of_eval_eq
   | _ =>
       simp [__eo_to_smt_tuple_prepend_of_type, __smtx_model_eval]
 
+theorem smtx_model_eval_eo_to_smt_tuple_project_rec_cross_eq_of_eval_eq
+    {M N : SmtModel} (hGlobals : model_agrees_on_globals M N)
+    (T : SmtType) (x x' : SmtTerm)
+    (hTy : __smtx_typeof x = __smtx_typeof x')
+    (hx : __smtx_model_eval M x = __smtx_model_eval N x') :
+    (k : Nat) → (is : Term) → sizeOf is < k →
+      __smtx_model_eval M (__eo_to_smt_tuple_project_rec is T x) =
+        __smtx_model_eval N (__eo_to_smt_tuple_project_rec is T x')
+  | 0, _, h => absurd h (Nat.not_lt_zero _)
+  | k + 1, is, h => by
+      by_cases hc : ∃ n is', is =
+          Term.Apply (Term.Apply Term.__eo_List_cons (Term.Numeral n)) is'
+      · obtain ⟨n, is', rfl⟩ := hc
+        change
+          __smtx_model_eval M
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) x)
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) x))
+                (__eo_to_smt_tuple_project_rec is' T x)) =
+            __smtx_model_eval N
+              (__eo_to_smt_tuple_prepend (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) x')
+                (__smtx_typeof (__eo_to_smt_tuple_select T (SmtTerm.Numeral n) x'))
+                (__eo_to_smt_tuple_project_rec is' T x'))
+        have hm : sizeOf is' < k := by simp at h; omega
+        exact smtx_model_eval_eo_to_smt_tuple_prepend_cross_eq_of_eval_eq hGlobals
+          _ _ _ _ _ _
+          (SubstitutePreservationSupport.substitute_tuple_select_type_congr_proj
+            T (SmtTerm.Numeral n) x x' hTy)
+          (SubstitutePreservationSupport.substitute_tuple_project_rec_type_congr
+            T x x' hTy k is' hm)
+          (smtx_model_eval_eo_to_smt_tuple_select_cross_eq_of_eval_eq hGlobals
+            T (SmtTerm.Numeral n) x x' hx)
+          (smtx_model_eval_eo_to_smt_tuple_project_rec_cross_eq_of_eval_eq hGlobals
+            T x x' hTy hx k is' hm)
+      · by_cases hn : is = Term.__eo_List_nil
+        · subst hn
+          simp [__eo_to_smt_tuple_project_rec, __smtx_model_eval]
+        · rw [TranslationProofs.tuple_project_rec_eq_none_of_not_list hn hc,
+            TranslationProofs.tuple_project_rec_eq_none_of_not_list hn hc]
+          simp [__smtx_model_eval]
+
+theorem smtx_model_eval_eo_to_smt_tuple_project_cross_eq_of_eval_eq
+    {M N : SmtModel} (hGlobals : model_agrees_on_globals M N)
+    (is : Term) (T : SmtType) (x x' : SmtTerm)
+    (hTy : __smtx_typeof x = __smtx_typeof x')
+    (hx : __smtx_model_eval M x = __smtx_model_eval N x') :
+    __smtx_model_eval M (__eo_to_smt_tuple_project is T x) =
+      __smtx_model_eval N (__eo_to_smt_tuple_project is T x') := by
+  by_cases hn : is = Term.__eo_List_nil
+  · subst hn
+    cases hTeq : native_Teq T SmtType.None <;>
+      simp [__eo_to_smt_tuple_project, native_ite, hTeq, __smtx_model_eval]
+  · rw [TranslationProofs.tuple_project_eq_rec_of_ne_nil hn,
+      TranslationProofs.tuple_project_eq_rec_of_ne_nil hn]
+    exact smtx_model_eval_eo_to_smt_tuple_project_rec_cross_eq_of_eval_eq hGlobals
+      T x x' hTy hx _ is (Nat.lt_succ_self _)
+
+theorem substFalse_eval_unary_uop1_tuple_project
+    (idx a xs ss bvs : Term) {M N : SmtModel}
+    (hM : model_wf M) (hN : model_wf N)
+    (hisr : (Term.Boolean isRename : Term) ≠ Term.Stuck)
+    (hxs : xs ≠ Term.Stuck) (hss : ss ≠ Term.Stuck) (hbvs : bvs ≠ Term.Stuck)
+    (hFTrans : eoHasSmtTranslation (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) a))
+    (hSubstTrans :
+      eoHasSmtTranslation
+        (__substitute_simul_rec (Term.Boolean isRename)
+          (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) a) xs ss bvs))
+    (hHeadSub :
+      __substitute_simul_rec (Term.Boolean isRename)
+          (Term.UOp1 UserOp1.tuple_project idx) xs ss bvs =
+        Term.UOp1 UserOp1.tuple_project idx)
+    (hGlobals : model_agrees_on_globals M N)
+    (hRecArg :
+      eoHasSmtTranslation a →
+        eoHasSmtTranslation
+          (__substitute_simul_rec (Term.Boolean isRename) a xs ss bvs) →
+        __smtx_model_eval M
+            (__eo_to_smt
+              (__substitute_simul_rec (Term.Boolean isRename) a xs ss bvs)) =
+          __smtx_model_eval N (__eo_to_smt a)) :
+    __smtx_model_eval M
+        (__eo_to_smt
+          (__substitute_simul_rec (Term.Boolean isRename)
+            (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) a) xs ss bvs)) =
+      __smtx_model_eval N
+        (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) a)) := by
+  let aSub := __substitute_simul_rec (Term.Boolean isRename) a xs ss bvs
+  have hSubstEq :
+      __substitute_simul_rec (Term.Boolean isRename)
+          (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) a) xs ss bvs =
+        __eo_mk_apply (Term.UOp1 UserOp1.tuple_project idx) aSub := by
+    have hApplyEq :=
+      SubstituteSupport.substitute_simul_rec_apply (Term.Boolean isRename)
+        (Term.UOp1 UserOp1.tuple_project idx) a xs ss bvs hisr hxs hss hbvs
+        (by intro q v vs hEq; cases hEq)
+    simpa [aSub, hHeadSub] using hApplyEq
+  have hMkNeStuck :
+      __eo_mk_apply (Term.UOp1 UserOp1.tuple_project idx) aSub ≠ Term.Stuck := by
+    rw [← hSubstEq]
+    exact RuleProofs.term_ne_stuck_of_has_smt_translation _ hSubstTrans
+  have hMk :
+      __eo_mk_apply (Term.UOp1 UserOp1.tuple_project idx) aSub =
+        Term.Apply (Term.UOp1 UserOp1.tuple_project idx) aSub :=
+    instantiate_eo_mk_apply_eq_apply_of_ne_stuck _ _ hMkNeStuck
+  have hATrans : eoHasSmtTranslation a :=
+    TranslationProofs.eo_to_smt_tuple_project_arg_non_none idx a hFTrans
+  have hSubstApplyTrans :
+      eoHasSmtTranslation
+        (Term.Apply (Term.UOp1 UserOp1.tuple_project idx) aSub) := by
+    rw [← hMk, ← hSubstEq]
+    exact hSubstTrans
+  have hSubstATrans : eoHasSmtTranslation aSub :=
+    TranslationProofs.eo_to_smt_tuple_project_arg_non_none idx aSub hSubstApplyTrans
+  have hArgEval := hRecArg hATrans hSubstATrans
+  have hArgTy :
+      __smtx_typeof (__eo_to_smt aSub) =
+        __smtx_typeof (__eo_to_smt a) :=
+    smtx_typeof_eo_to_smt_eq_of_eval_eq hM hN aSub a
+      hSubstATrans hATrans hArgEval
+  rw [hSubstEq, hMk]
+  change
+    __smtx_model_eval M
+        (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt aSub))
+          (__eo_to_smt aSub)) =
+      __smtx_model_eval N
+        (__eo_to_smt_tuple_project idx (__smtx_typeof (__eo_to_smt a))
+          (__eo_to_smt a))
+  rw [hArgTy]
+  exact
+    smtx_model_eval_eo_to_smt_tuple_project_cross_eq_of_eval_eq
+      hGlobals idx (__smtx_typeof (__eo_to_smt a))
+      (__eo_to_smt aSub) (__eo_to_smt a) hArgTy hArgEval
+
 theorem substFalse_eval_binary_tuple
     (x y xs ss bvs : Term) {M N : SmtModel}
     (hM : model_wf M) (hN : model_wf N)
@@ -5457,13 +5592,23 @@ theorem substFalse_eval_binary_uop1_generic_apply
               exact hSubstHeadTrans)
             (by simpa using hHeadSub)
             hGlobals hRecX
-      · exact
-          substFalse_eval_unary_uop1_nontuple_select op idx x xs ss bvs
-            hisr hxs hss hbvs hTupleSelect hHeadTrans
-            (by
-              rw [hHeadResultEq]
-              exact hSubstHeadTrans)
-            hHeadSub hRecX
+      · by_cases hTupleProject : op = UserOp1.tuple_project
+        · subst op
+          exact
+            substFalse_eval_unary_uop1_tuple_project idx x xs ss bvs hM hN
+              hisr hxs hss hbvs hHeadTrans
+              (by
+                rw [hHeadResultEq]
+                exact hSubstHeadTrans)
+              (by simpa using hHeadSub)
+              hGlobals hRecX
+        · exact
+            substFalse_eval_unary_uop1_nontuple_select op idx x xs ss bvs
+              hisr hxs hss hbvs hTupleSelect hTupleProject hHeadTrans
+              (by
+                rw [hHeadResultEq]
+                exact hSubstHeadTrans)
+              hHeadSub hRecX
     simpa [hHeadResultEq] using hHeadEvalRaw
   have hYEval := hRecY hYTrans hSubstYTrans
   rw [hResultEq, hOrigTranslate, hSubstTranslate]
@@ -11102,12 +11247,22 @@ theorem substitute_simul_eval_nonbinder
                                                                                               hXsEnv hBvsEnv hSsTrans)
                                                                                             hGlobals
                                                                                             (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
-                                                                                        · exact substFalse_eval_unary_uop1_nontuple_select
-                                                                                            op idx a xs ss bvs
-                                                                                            hisr hxs hss hbvs hTupleSelect hFTrans hSubstTrans
-                                                                                            (substitute_simul_rec_uop1_eq_self op idx xs ss bvs
-                                                                                              hXsEnv hBvsEnv hSsTrans)
-                                                                                            (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
+                                                                                        · by_cases hTupleProject : op = UserOp1.tuple_project
+                                                                                          · subst op
+                                                                                            exact substFalse_eval_unary_uop1_tuple_project
+                                                                                              idx a xs ss bvs hM hN
+                                                                                              hisr hxs hss hbvs hFTrans hSubstTrans
+                                                                                              (substitute_simul_rec_uop1_eq_self
+                                                                                                UserOp1.tuple_project idx xs ss bvs
+                                                                                                hXsEnv hBvsEnv hSsTrans)
+                                                                                              hGlobals
+                                                                                              (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
+                                                                                          · exact substFalse_eval_unary_uop1_nontuple_select
+                                                                                              op idx a xs ss bvs
+                                                                                              hisr hxs hss hbvs hTupleSelect hTupleProject hFTrans hSubstTrans
+                                                                                              (substitute_simul_rec_uop1_eq_self op idx xs ss bvs
+                                                                                                hXsEnv hBvsEnv hSsTrans)
+                                                                                              (fun ht hst => hRecArg (by simp [IsNonbinderSubterm, hBinder]) (by simp; try omega) ht hst)
                                                                                     | UOp2 op i j =>
                                                                                         exact substFalse_eval_unary_uop2_any op i j a xs ss bvs
                                                                                           hisr hxs hss hbvs hFTrans hSubstTrans

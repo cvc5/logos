@@ -2863,6 +2863,26 @@ private theorem eo_to_smt_tuple_prepend_ne_numeral
     eo_to_smt_tuple_prepend_of_type_ne_numeral
       (__smtx_typeof tail) head headTy tail n h
 
+private theorem eo_to_smt_tuple_project_rec_ne_numeral
+    (is : Term) (T : SmtType) (t : SmtTerm) (n : native_Int) :
+    __eo_to_smt_tuple_project_rec is T t ≠ SmtTerm.Numeral n := by
+  intro h
+  unfold __eo_to_smt_tuple_project_rec at h
+  split at h
+  · cases h
+  · exact eo_to_smt_tuple_prepend_ne_numeral _ _ _ n h
+  · cases h
+
+private theorem eo_to_smt_tuple_project_ne_numeral
+    (is : Term) (T : SmtType) (t : SmtTerm) (n : native_Int) :
+    __eo_to_smt_tuple_project is T t ≠ SmtTerm.Numeral n := by
+  intro h
+  unfold __eo_to_smt_tuple_project at h
+  split at h
+  · unfold native_ite at h
+    split at h <;> cases h
+  · exact eo_to_smt_tuple_project_rec_ne_numeral _ _ _ n h
+
 private theorem eo_to_smt_exists_ne_numeral_of_not_nil
     (xs : Term) (body : SmtTerm) (n : native_Int)
     (hxs : xs ≠ Term.__eo_List_nil) :
@@ -2934,6 +2954,9 @@ private theorem eo_to_smt_apply_ne_numeral
     case tuple_select =>
       exact False.elim (eo_to_smt_tuple_select_ne_numeral
       (__smtx_typeof (__eo_to_smt x)) (__eo_to_smt idx) (__eo_to_smt x) n h)
+    case tuple_project =>
+      exact False.elim (eo_to_smt_tuple_project_ne_numeral idx
+      (__smtx_typeof (__eo_to_smt x)) (__eo_to_smt x) n h)
   case UOp2 op idx1 idx2 =>
     cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply g y =>
