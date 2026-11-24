@@ -142,10 +142,13 @@
 ;
 ; The list the stage gathers into is itself such a symbol, and the only one
 ; that becomes nothing: it never reaches the model, so it says `:term none`
-; and no case of $eo_to_smt is written for it.
+; and no case of $eo_to_smt is written for it. Its nil is one of any element
+; type, which a pattern recognizes; the second case is what makes the predicate
+; false, rather than stuck, on every other term.
 (define-symbol @@TypedList.cons (x xs)
   :term none
-  :is-list-nil (@@TypedList.nil T) true)
+  :is-list-nil (@@TypedList.nil T) true
+  :is-list-nil xs                  false)
 
 ;-----------------------------------------------------------------------------
 (section "Arithmetic")
