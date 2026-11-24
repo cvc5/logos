@@ -871,7 +871,7 @@
 (declare-parameterized-const tuple.update
   ((T Type :implicit) (U Type :implicit) (i Int :opaque))
   (-> T U (eo::requires U (eo::list_nth Tuple T i) T)))
-(program $tuple_project_type ((T Type) (i Int) (is @List :list))
+(program $tuple_project_type ((i Int) (is @List :list) (T Type))
   :signature (@List Type) Type
   (
   (($tuple_project_type (@list i is) T)
