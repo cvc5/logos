@@ -266,7 +266,7 @@ def __eo_to_bin : Term -> Term -> Term
 
 
 def __eo_to_str : Term -> Term
-  | (Term.Numeral n1) => (native_ite (native_and (native_zleq 0 n1) (native_zlt n1 196608)) (Term.String (native_str_from_code n1)) Term.Stuck)
+  | (Term.Numeral n1) => (native_ite (native_and (native_zleq 0 n1) (native_zleq n1 native_z_max_code_point)) (Term.String (native_str_from_code n1)) Term.Stuck)
   | (Term.String s1) => (Term.String s1)
   | _ => Term.Stuck
 
