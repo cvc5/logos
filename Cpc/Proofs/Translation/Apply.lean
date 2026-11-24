@@ -6,6 +6,7 @@ public import Cpc.Proofs.Translation.Special
 public import Cpc.Proofs.Translation.Inversions
 public import Cpc.Proofs.Translation.Heads
 public import Cpc.Proofs.Translation.EoTypeofCore
+public import Cpc.Proofs.Translation.Coverings
 public import Cpc.Proofs.Translation.Lambda
 public import Cpc.Proofs.TypePreservation.Full
 import all Cpc.Spec
@@ -1053,6 +1054,8 @@ theorem eo_to_smt_apply_ne_dt_sel
     cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case tuple_select =>
       exact eo_to_smt_tuple_select_ne_dt_sel _ _ _ _ _ _ _ h
+    case _at_is_root =>
+      rcases eo_to_smt_is_root_cases y x with hr | ⟨a, b, hr⟩ <;> (rw [hr] at h; cases h)
   case UOp2 op y z =>
     cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply g y =>
@@ -1107,6 +1110,8 @@ theorem eo_to_smt_apply_ne_dt_tester
     cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case tuple_select =>
       exact eo_to_smt_tuple_select_ne_dt_tester _ _ _ _ _ _ h
+    case _at_is_root =>
+      rcases eo_to_smt_is_root_cases y x with hr | ⟨a, b, hr⟩ <;> (rw [hr] at h; cases h)
   case UOp2 op y z =>
     cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply g y =>
@@ -1161,6 +1166,8 @@ private theorem eo_to_smt_apply_ne_dt_cons
     cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
     case tuple_select =>
       exact eo_to_smt_tuple_select_ne_dt_cons _ _ _ _ _ _ h
+    case _at_is_root =>
+      rcases eo_to_smt_is_root_cases y x with hr | ⟨a, b, hr⟩ <;> (rw [hr] at h; cases h)
   case UOp2 op y z =>
     cases op <;> try (first | cases h | eo_to_smt_generic_apply_cases h)
   case Apply g y =>
@@ -6674,6 +6681,10 @@ theorem eo_to_smt_eq_dt_cons_cases
     exfalso
     cases hReserved : __eo_reserved_datatype_name s0 <;>
       simp [eo_to_smt_term_dt_sel, native_ite, hReserved] at hy
+  case UOp4 op q lo hi s0 =>
+    cases op
+    exfalso
+    rcases eo_to_smt_ran_head_cases q lo hi s0 with hr | ⟨F, hr⟩ <;> (rw [hr] at hy; cases hy)
   all_goals
     exfalso
     cases hy
@@ -7491,6 +7502,10 @@ theorem eo_to_smt_eq_dt_sel_cases
       unfold native_ite at hy
       split at hy <;> try cases hy
       split at hy <;> cases hy
+  case UOp4 op q lo hi s0 =>
+    cases op
+    exfalso
+    rcases eo_to_smt_ran_head_cases q lo hi s0 with hr | ⟨F, hr⟩ <;> (rw [hr] at hy; cases hy)
   all_goals
     exfalso
     cases hy
@@ -7557,6 +7572,10 @@ theorem eo_to_smt_ne_dt_tester
       unfold native_ite at hy
       split at hy <;> try cases hy
       split at hy <;> cases hy
+  case UOp4 op q lo hi s0 =>
+    cases op
+    exfalso
+    rcases eo_to_smt_ran_head_cases q lo hi s0 with hr | ⟨F, hr⟩ <;> (rw [hr] at hy; cases hy)
   all_goals
     exfalso
     cases hy
@@ -11374,6 +11393,9 @@ private theorem eo_to_smt_typeof_matches_translation_apply_uop_application_head_
   case _at__at_aci_sorted =>
     exact eo_to_smt_typeof_matches_translation_apply_apply_none_head
       UserOp._at__at_aci_sorted y x (by rfl) hNonNone
+  case _at__at_upoly =>
+    exact eo_to_smt_typeof_matches_translation_apply_apply_none_head
+      UserOp._at__at_upoly y x (by rfl) hNonNone
   case lambda =>
     exact (eo_to_smt_typeof_matches_translation_lambda y x ihBelowAll hNonNone).1
   all_goals
@@ -14754,6 +14776,8 @@ private theorem eo_to_smt_typeof_matches_translation_apply_apply_head
     case tuple_update =>
       exact eo_to_smt_typeof_matches_translation_apply_apply_apply_tuple_update
         x y z ihY ihX hNonNone
+    case _at_sgn_inv =>
+      exact eo_to_smt_typeof_matches_translation_sgn_inv z y x ihY ihX hNonNone
     all_goals
       exact genericFallback _ ihFAll
         (by intro s d i j h; exact (eo_to_smt_apply_ne_dt_sel _ y s d i j h).elim)
@@ -15161,6 +15185,13 @@ theorem eo_to_smt_typeof_matches_translation_apply
       apply hNonNone
       change __smtx_typeof (SmtTerm.Apply SmtTerm.None (__eo_to_smt x)) = SmtType.None
       exact typeof_apply_none_eq (__eo_to_smt x)
+    case _at_sgn_inv =>
+      exfalso
+      apply hNonNone
+      change __smtx_typeof (SmtTerm.Apply SmtTerm.None (__eo_to_smt x)) = SmtType.None
+      exact typeof_apply_none_eq (__eo_to_smt x)
+    case _at_is_root =>
+      exact eo_to_smt_typeof_matches_translation_is_root y x ihX hNonNone
     case is =>
       exact eo_to_smt_typeof_matches_translation_apply_is x y
         (ihUOp1Arg UserOp1.is y rfl) ihX hNonNone
@@ -16677,6 +16708,37 @@ theorem eo_to_smt_typeof_matches_translation_apply
                 (__eo_to_smt x)) =
             SmtType.None
         exact typeof_apply_tuple_unit_eq_none (__eo_to_smt x)
+  case UOp4 op q lo hi r =>
+    cases op
+    refine eo_to_smt_typeof_matches_translation_apply_constructor_fallback_obligation
+      _ x ?_ hNonNone
+    change __smtx_typeof
+        (SmtTerm.Apply (__eo_to_smt (Term.UOp4 UserOp4._at_ran q lo hi r)) (__eo_to_smt x)) =
+      SmtType.None
+    rcases eo_to_smt_ran_head_cases q lo hi r with h | ⟨F, h⟩
+    · rw [h]
+      exact typeof_apply_none_eq (__eo_to_smt x)
+    · rw [h]
+      have hNotFun :
+          ∀ T : SmtType,
+            (T = SmtType.Real ∨ T = SmtType.None) ->
+            ∀ A B, T = SmtType.FunType A B -> False := by
+        intro T hT A B hEq
+        rcases hT with hT | hT <;> rw [hT] at hEq <;> cases hEq
+      have hNotDtc :
+          ∀ T : SmtType,
+            (T = SmtType.Real ∨ T = SmtType.None) ->
+            ∀ A B, T = SmtType.DtcAppType A B -> False := by
+        intro T hT A B hEq
+        rcases hT with hT | hT <;> rw [hT] at hEq <;> cases hEq
+      have hCases := typeof_choice_real_cases (native_string_lit "@x") F
+      exact typeof_generic_apply_non_function_head_eq_none _ _
+        (generic_apply_type_of_non_special_head _ _
+          (by intro s d i j h; cases h)
+          (by intro s d i h; cases h))
+        (fun A B hEq => hNotFun _ hCases A B hEq)
+        (fun A B hEq => hNotFun _ hCases A B hEq)
+        (fun A B hEq => hNotDtc _ hCases A B hEq)
   all_goals
     refine eo_to_smt_typeof_matches_translation_apply_constructor_fallback_obligation
       _ x ?_ hNonNone

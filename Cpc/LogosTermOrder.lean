@@ -63,6 +63,9 @@ on reduced fractions but not the numeric one.
 @[expose] def userOp3Cmp (a b : UserOp3) : Ordering :=
   natCmp a.ctorIdx b.ctorIdx
 
+@[expose] def userOp4Cmp (a b : UserOp4) : Ordering :=
+  natCmp a.ctorIdx b.ctorIdx
+
 mutual
 
 @[expose] def termCmp : Term -> Term -> Ordering
@@ -100,6 +103,23 @@ mutual
           match termCmp x3 y3 with
           | .eq =>
             termCmp x4 y4
+          | o => o
+        | o => o
+      | o => o
+    | _ => natCmp a.ctorIdx b.ctorIdx
+  | a@(.UOp4 x1 x2 x3 x4 x5), b =>
+    match b with
+    | .UOp4 y1 y2 y3 y4 y5 =>
+      match userOp4Cmp x1 y1 with
+      | .eq =>
+        match termCmp x2 y2 with
+        | .eq =>
+          match termCmp x3 y3 with
+          | .eq =>
+            match termCmp x4 y4 with
+            | .eq =>
+              termCmp x5 y5
+            | o => o
           | o => o
         | o => o
       | o => o
