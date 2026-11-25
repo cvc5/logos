@@ -83,6 +83,9 @@ their parameter names and datatype templates. -/
 private structure ElaboratedTerm (T N : Type) where
   value : T
   generics : List (T × Generic T N)
+  /-- For an application: its skeleton (each argument replaced by a constant of
+  its type) and its type, both computed at most once. -/
+  cache : Option (Thunk T × Thunk T)
 
 private abbrev TermElaborationM (T N : Type) := ElaborationM (ElaboratedTerm T N)
 
@@ -173,7 +176,7 @@ private partial def normalizeSort (repr : DatatypeTerms T) (cfg : Config T R C C
           let ty := cfg.mkUSort (state.count + 1)
           modify fun s => { s with
             count := state.count + 1,
-            instances := (⟨t, []⟩, ⟨ty, []⟩) :: s.instances }
+            instances := (⟨t, [], none⟩, ⟨ty, [], none⟩) :: s.instances }
           return ty
       return t
   | .datatype s dd => do
@@ -291,7 +294,7 @@ private partial def instanceOf (repr : DatatypeTerms T) (cfg : Config T R C CL)
   let instances := (List.range n).filterMap fun i => do
     let (k, as) ← ex.keys[i]?
     let ty ← built.getD i none
-    return ((⟨tpl.app repr k as, []⟩ : ElaboratedTerm T repr.Name), (⟨ty, []⟩ : ElaboratedTerm T repr.Name))
+    return ((⟨tpl.app repr k as, [], none⟩ : ElaboratedTerm T repr.Name), (⟨ty, [], none⟩ : ElaboratedTerm T repr.Name))
   modify fun s => { s with instances := instances ++ s.instances }
   return (built.getD 0 none).getD repr.stuck
 end
@@ -320,8 +323,46 @@ private def sortInstances (s : SortState (ElaboratedTerm T N)) : List (T × T) :
 private def resolved (repr : DatatypeTerms T) (t : ElaboratedTerm T repr.Name) : T :=
   if t.generics.isEmpty then t.value else repr.stuck
 
-private def lift (f : List T → T) (ts : List (ElaboratedTerm T N)) : ElaboratedTerm T N :=
-  ⟨f (ts.map (·.value)), ts.flatMap (·.generics)⟩
+/-- The type of a term, from the cached types of its arguments. -/
+private def typeOfE (repr : DatatypeTerms T) (t : ElaboratedTerm T repr.Name) : T :=
+  match t.cache with
+  | some (_, ty) => ty.get
+  | none => repr.typeOf t.value
+
+/--
+A small term of the same type, standing for an argument whose value typing does
+not inspect. Types and binder lists (`listTys`) are kept, since typing does
+inspect those. `scripts/check-parser-tables.py` checks that CPC inspects no others.
+-/
+private def placeholder (repr : DatatypeTerms T) (cfg : Config T R C CL) (listTys : List T)
+    (t : ElaboratedTerm T repr.Name) : T :=
+  let ty := typeOfE repr t
+  if cfg.isType ty || listTys.contains ty then t.value else cfg.mkUConst 0 ty
+
+private def applyE (repr : DatatypeTerms T) (cfg : Config T R C CL) (listTys : List T)
+    (f a : ElaboratedTerm T repr.Name) : ElaboratedTerm T repr.Name :=
+  let skel : Thunk T := Thunk.mk fun _ =>
+    let h := match f.cache with | some (s, _) => s.get | none => f.value
+    cfg.apply h (placeholder repr cfg listTys a)
+  ⟨cfg.apply f.value a.value, f.generics ++ a.generics,
+    some (skel, Thunk.mk fun _ => repr.typeOf skel.get)⟩
+
+/-- Lift a list builder. The operator and nil are read off the list it builds of
+one placeholder; another shape is built as it is. -/
+private def lift (repr : DatatypeTerms T) (cfg : Config T R C CL) (listTys : List T) (f : List T → T)
+    (ts : List (ElaboratedTerm T repr.Name)) : ElaboratedTerm T repr.Name :=
+  let plain : Unit → ElaboratedTerm T repr.Name := fun _ =>
+    ⟨f (ts.map (·.value)), ts.flatMap (·.generics), none⟩
+  match ts with
+  | [] => plain ()
+  | t :: _ =>
+    match repr.view (f [placeholder repr cfg listTys t]) with
+    | .apply fa nil =>
+      match repr.view fa with
+      | .apply op _ =>
+        ts.foldr (fun t acc => applyE repr cfg listTys (applyE repr cfg listTys ⟨op, [], none⟩ t) acc) ⟨nil, [], none⟩
+      | _ => plain ()
+    | _ => plain ()
 
 private def matchParam (names : List N) (p : N) (t : T)
     (bs : Array (Option T)) : Option (Array (Option T)) := do
@@ -400,7 +441,7 @@ private def instantiate (repr : DatatypeTerms T) (instances : List (T × T))
 private def finish (repr : DatatypeTerms T) (term : ElaboratedTerm T repr.Name)
     (args : List T) (inst old : T) : ElaboratedTerm T repr.Name :=
   ⟨args.foldl (fun f a => repr.build (.apply f a)) inst,
-    term.generics.eraseP (fun (g, _) => g == old)⟩
+    term.generics.eraseP (fun (g, _) => g == old), none⟩
 
 private def elaborateOperand (repr : DatatypeTerms T) (term : ElaboratedTerm T repr.Name)
     (index : T) (rebuild : T → T) : List T → TermElaborationM T repr.Name (ElaboratedTerm T repr.Name)
@@ -438,6 +479,7 @@ private def elaborateHead (repr : DatatypeTerms T) (cfg : Config T R C CL)
 
 private def elaborate (repr : DatatypeTerms T) (cfg : Config T R C CL)
     (term : ElaboratedTerm T repr.Name) : TermElaborationM T repr.Name (ElaboratedTerm T repr.Name) := do
+  if term.generics.isEmpty then return term
   let (head, args) := appSpine repr (repr.view term.value) []
   if let some (_, .sort arity) := term.generics.find? (fun (g, _) => g == head) then
     if args.length == arity then
@@ -450,15 +492,15 @@ private def ascribeOp (repr : DatatypeTerms T) (instances : List (T × T))
     (op ty : ElaboratedTerm T repr.Name) : DatatypeTermView T repr.Name → Option (ElaboratedTerm T repr.Name)
   | .constructor .. =>
       if op.generics.isEmpty then
-        if repr.typeOf op.value == ty.value then some op else none
+        if typeOfE repr op == ty.value then some op else none
       else do
         let inst ← instantiate repr instances op.generics op.value ty.value
-        some ⟨inst, []⟩
+        some ⟨inst, [], none⟩
   | _ => none
 
 private def ascribe (repr : DatatypeTerms T) (isType : T → Bool)
     (op ty : ElaboratedTerm T repr.Name) : TermElaborationM T repr.Name (Option (ElaboratedTerm T repr.Name)) := do
-  if isType (repr.typeOf (resolved repr ty)) then
+  if isType (if ty.generics.isEmpty then typeOfE repr ty else repr.typeOf repr.stuck) then
     return ascribeOp repr (sortInstances (← get)) op ty (repr.view op.value)
   return none
 
@@ -479,7 +521,7 @@ private def datatypeBindings (repr : DatatypeTerms T) (cfg : Config T R C CL)
     | _ => [(d.name, wrap sort)]
   if dts.all (·.arity == 0) then
     return some (dts.flatMap fun d =>
-      ops d (repr.build (.datatype (sourceName repr d.name) fields)) (⟨·, []⟩))
+      ops d (repr.build (.datatype (sourceName repr d.name) fields)) (⟨·, [], none⟩))
   -- A parametric block is a template: its datatypes get internal names, and a
   -- use of one is instantiated (`instanceOf`).
   let id := (← get).datatypeCount + 1
@@ -489,7 +531,7 @@ private def datatypeBindings (repr : DatatypeTerms T) (cfg : Config T R C CL)
   let info := dts.map fun d => (d.name, d.arity)
   let generic (d : DatatypeSpec (ElaboratedTerm T repr.Name)) (sort op : T) :
       ElaboratedTerm T repr.Name :=
-    ⟨op, [(op, .datatype ((List.range d.arity).map (paramName repr)) sort info)]⟩
+    ⟨op, [(op, .datatype ((List.range d.arity).map (paramName repr)) sort info)], none⟩
   let sorts := members.map fun m => repr.build (.datatype m block)
   modify fun s =>
     { s with datatypes := (dts.zip sorts).map (fun (d, sort) => generic d sort sort) ++ s.datatypes }
@@ -497,52 +539,55 @@ private def datatypeBindings (repr : DatatypeTerms T) (cfg : Config T R C CL)
   -- A datatype of arity zero has exactly one instance, built here.
   let bindings ← (dts.zip sorts).zipIdx.mapM fun ((d, sort), i) => do
     if d.arity == 0 then
-      return ops d (← instanceOf repr cfg tpl i []) (⟨·, []⟩)
+      return ops d (← instanceOf repr cfg tpl i []) (⟨·, [], none⟩)
     return ops d sort (generic d sort)
   return some bindings.flatten
 
-private def liftArity : Arity T → Arity (ElaboratedTerm T N)
+private def liftArity (repr : DatatypeTerms T) (cfg : Config T R C CL) (listTys : List T) :
+    Arity T → Arity (ElaboratedTerm T repr.Name)
   | .exact n => .exact n
   | .leftAssoc => .leftAssoc
   | .rightAssoc => .rightAssoc
-  | .rightAssocNil nil => .rightAssocNil fun t => ⟨nil (t.map (·.value)), t.toList.flatMap (·.generics)⟩
-  | .chainable f => .chainable (lift f)
-  | .argList f => .argList (lift f)
+  | .rightAssocNil nil => .rightAssocNil fun t =>
+      ⟨nil (t.map (placeholder repr cfg listTys)), t.toList.flatMap (·.generics), none⟩
+  | .chainable f => .chainable (lift repr cfg listTys f)
+  | .argList f => .argList (lift repr cfg listTys f)
 
-private def liftOp (op : OpDecl T) : OpDecl (ElaboratedTerm T N) :=
-  { name := op.name, indexArity := op.indexArity, arity := liftArity op.arity,
+private def liftOp (repr : DatatypeTerms T) (cfg : Config T R C CL) (listTys : List T) (op : OpDecl T) :
+    OpDecl (ElaboratedTerm T repr.Name) :=
+  { name := op.name, indexArity := op.indexArity, arity := liftArity repr cfg listTys op.arity,
     build := fun ts => (op.build (ts.map (·.value))).map fun t =>
-      ⟨t, ts.flatMap (·.generics)⟩,
-    binder := op.binder.map lift }
+      ⟨t, ts.flatMap (·.generics), none⟩,
+    binder := op.binder.map (lift repr cfg listTys) }
 
 /-- Internal configuration for terms carrying datatype templates. -/
-private def elaborationConfig (repr : DatatypeTerms T) (cfg : Config T R C CL) :
+private def elaborationConfig (repr : DatatypeTerms T) (cfg : Config T R C CL) (listTys : List T) :
     Config (ElaboratedTerm T repr.Name) R C CL where
-  ops := cfg.ops.map liftOp
+  ops := cfg.ops.map (liftOp repr cfg listTys)
   macros := cfg.macros
-  parseLiteral := fun l => (cfg.parseLiteral l).map (fun t => ⟨t, []⟩)
+  parseLiteral := fun l => (cfg.parseLiteral l).map (fun t => ⟨t, [], none⟩)
   isType := fun t => cfg.isType (resolved repr t)
-  mkType := ⟨cfg.mkType, []⟩
-  wellTyped := fun t => repr.typeOf (resolved repr t) != repr.stuck
-  mkUSort := fun i => ⟨cfg.mkUSort i, []⟩
+  mkType := ⟨cfg.mkType, [], none⟩
+  wellTyped := fun t => (if t.generics.isEmpty then typeOfE repr t else repr.typeOf repr.stuck) != repr.stuck
+  mkUSort := fun i => ⟨cfg.mkUSort i, [], none⟩
   mkSortConstructor := some fun i arity =>
     let head := cfg.mkUSort i
-    ⟨head, [(head, .sort arity)]⟩
+    ⟨head, [(head, .sort arity)], none⟩
   mkUConst := fun i t =>
     let ty := resolved repr t
-    ⟨cfg.mkUConst i (if cfg.isType (repr.typeOf ty) then ty else repr.stuck), []⟩
-  apply := fun f a => ⟨cfg.apply f.value a.value, f.generics ++ a.generics⟩
+    ⟨cfg.mkUConst i (if cfg.isType (repr.typeOf ty) then ty else repr.stuck), [], none⟩
+  apply := applyE repr cfg listTys
   parseRule := cfg.parseRule
   mkAssumePush := cfg.mkAssumePush ∘ resolved repr
   mkStep := fun r ts ps => cfg.mkStep r (ts.map (resolved repr)) ps
   mkStepPop := fun r ts ps => cfg.mkStepPop r (ts.map (resolved repr)) ps
   mkCheckProven := cfg.mkCheckProven.map (· ∘ resolved repr)
   mkCmdList := cfg.mkCmdList
-  mkVar := cfg.mkVar.map fun mk s t => ⟨mk s (resolved repr t), []⟩
+  mkVar := cfg.mkVar.map fun mk s t => ⟨mk s (resolved repr t), [], none⟩
   datatypes := some
-    { mkRef := fun s => ⟨repr.build (.ref (sourceName repr s)), []⟩
+    { mkRef := fun s => ⟨repr.build (.ref (sourceName repr s)), [], none⟩
       mkDecls := datatypeBindings repr cfg
-      mkParam := some fun k => ⟨repr.build (.ref (paramName repr k)), []⟩
+      mkParam := some fun k => ⟨repr.build (.ref (paramName repr k)), [], none⟩
       elaborate := elaborate repr cfg
       ascribe := ascribe repr cfg.isType
       isGeneric := fun t => !t.generics.isEmpty }
@@ -554,7 +599,9 @@ private def parseConfigured [BEq T] (cfg : Config T R C CL) (ss : List Sexp) :
   | some repr =>
       letI : Inhabited T := ⟨repr.stuck⟩
       do
-        let parserCfg := elaborationConfig repr cfg
+        -- The types of the lists that binders, such as `lambda`, take.
+        let listTys := ((cfg.ops.filterMap (·.binder)).map fun mk => repr.typeOf (mk [])).eraseDups
+        let parserCfg := elaborationConfig repr cfg listTys
         let state := { State.ofOps parserCfg.ops with macros := .ofList parserCfg.macros }
         let (ts, cmds) ← (parseCommands parserCfg ss).run' state
         return (ts.map (resolved repr), cmds)
