@@ -2548,8 +2548,9 @@
 (define $str_cons ((T Type :implicit) (x (Seq T)) (y (Seq T))) (_ str.++ x y))
 (define $str_is_code_point ((n Int))
   (eo::ite (eo::is_z n)
-    (eo::ite ($compare_geq 196608 n) (eo::not (eo::is_neg n)) false)
+    (eo::ite ($compare_geq eo::max_code_point n) (eo::not (eo::is_neg n)) false)
     false))
+(define $str_alpha_card () (eo::add eo::max_code_point 1))
 (define $str_self_if_empty ((T Type :implicit) (t T))
   (eo::requires t ($seq_empty (eo::typeof t)) t))
 (program $str_fixed_len_re
@@ -3048,10 +3049,10 @@
   (
   (($mk_str_eager_reduction (str.from_code n))
     (eo::define ((k (@purify (str.from_code n))))
-      (ite (and (<= 0 n) (< n 196608)) (= n (str.to_code k)) (= k ""))))
+      (ite (and (<= 0 n) (< n $str_alpha_card)) (= n (str.to_code k)) (= k ""))))
   (($mk_str_eager_reduction (str.to_code s))
     (eo::define ((t (str.to_code s)))
-      (ite (= (str.len s) 1) (and (>= t 0) (< t 196608)) (= t (eo::neg 1)))))
+      (ite (= (str.len s) 1) (and (>= t 0) (< t $str_alpha_card)) (= t (eo::neg 1)))))
   (($mk_str_eager_reduction (str.to_int s)) (>= (str.to_int s) -1))
   (($mk_str_eager_reduction (str.contains x y))
     (eo::define ((k1 (@purify ($str_first_ctn_pre x y))))

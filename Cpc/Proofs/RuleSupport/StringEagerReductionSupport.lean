@@ -21,6 +21,23 @@ set_option maxHeartbeats 10000000
 
 local notation "native_str_in_re" => RuleProofs.native_str_in_re
 
+/-! The `str.from_code`/`str.to_code` reductions build their code point bound
+with `__eo_mk_apply` and `__eo_add native_z_max_code_point 1`. These local simp
+lemmas fold both back to plain applications and the literal `196608`. -/
+
+private theorem eo_mk_apply_of_ne_stuck {f x : Term}
+    (hf : f ≠ Term.Stuck) (hx : x ≠ Term.Stuck) :
+    __eo_mk_apply f x = Term.Apply f x := by
+  unfold __eo_mk_apply
+  split <;> simp_all
+
+private theorem eo_add_max_code_point_one :
+    __eo_add (Term.Numeral native_z_max_code_point) (Term.Numeral 1) =
+      Term.Numeral 196608 := by
+  rfl
+
+attribute [local simp] eo_mk_apply_of_ne_stuck eo_add_max_code_point_one
+
 private theorem native_unpack_string_length_eq (ss : SmtSeq) :
     (native_unpack_string ss).length = (native_unpack_seq ss).length := by
   simp [native_unpack_string]
