@@ -8523,8 +8523,9 @@ def __eo_nil : Term -> Term -> Term
 
 
 def __eo_is_list_nil__at__at_TypedList_cons : Term -> Term
+  | Term.Stuck  => Term.Stuck
   | (Term.Apply (Term.UOp UserOp._at__at_TypedList_nil) T) => (Term.Boolean true)
-  | _ => Term.Stuck
+  | x1 => (Term.Boolean false)
 
 
 def __eo_is_list_nil_plus : Term -> Term
