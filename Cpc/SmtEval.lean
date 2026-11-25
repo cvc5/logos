@@ -28,8 +28,12 @@ abbrev native_Char := Nat
 
 abbrev native_String := List native_Char
 
+-- The maximum code point, which by default is the 0x2FFFF of SMT-LIB. It is
+-- what eo::max_code_point prints as, so it is kept whatever an input reaches.
+def native_z_max_code_point : native_Int := 196607
+
 def native_char_valid (c : native_Char) : native_Bool :=
-  c < 196608
+  decide ((c : native_Int) <= native_z_max_code_point)
 
 def native_string_valid (s : native_String) : native_Bool :=
   s.all native_char_valid

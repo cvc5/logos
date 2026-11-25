@@ -11,6 +11,14 @@ set_option linter.unusedSimpArgs false
 
 namespace Smtm
 
+/-- `native_char_valid` bounds a character by `native_z_max_code_point`. This
+puts the bound back in the form `i < 196608`, so `simp [native_char_valid]`
+can decide it on literals and match hypotheses of the form `c < 196608`. -/
+@[simp] theorem le_native_z_max_code_point_iff (i : Int) :
+    i ≤ native_z_max_code_point ↔ i < 196608 := by
+  unfold native_z_max_code_point
+  omega
+
 /-!
 # Inhabitation and the default generator
 
