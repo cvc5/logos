@@ -201,8 +201,7 @@ theorem EvaluateProofInternal.eo_str_from_int_digit_term_nat (n : Nat) :
     omega
   have hCodeValid :
       native_char_valid (Int.toNat ((48 : Int) + r)) = true := by
-    rw [show native_char_valid (Int.toNat ((48 : Int) + r)) =
-      decide (Int.toNat ((48 : Int) + r) < 196608) by rfl]
+    rw [native_char_valid_eq_decide_lt]
     exact decide_eq_true hToNatLt
   have hDigit :
       Int.toNat ((48 : Int) + r) =
@@ -231,7 +230,8 @@ theorem EvaluateProofInternal.eo_str_from_int_digit_term_nat (n : Nat) :
   -- component facts instead (which also keeps the `196608` literal from being
   -- evaluated unarily)
   rw [ite_eq_left (by
-    simp [native_and, native_zleq, native_zlt_eq]
+    simp only [native_and, native_zleq_max_code_point]
+    simp [native_zleq, native_zlt_eq]
     exact ⟨hCodeNonnegRaw, hCodeLtRaw⟩)]
   rw [ite_eq_left (by
     try simp [native_and, native_zleq]

@@ -144,7 +144,7 @@ theorem EvaluateProofInternal.eo_typeof_apply_str_rev_eq_seq_arg
 theorem EvaluateProofInternal.native_char_valid_lt
     {c : native_Char} (hc : native_char_valid c = true) :
     c < 196608 := by
-  change decide (c < 196608) = true at hc
+  rw [native_char_valid_eq_decide_lt] at hc
   exact of_decide_eq_true hc
 
 theorem EvaluateProofInternal.native_str_to_code_singleton
@@ -199,13 +199,13 @@ theorem EvaluateProofInternal.eo_to_str_of_valid_nat
     rw [native_zlt_eq]
     exact decide_eq_true hcLtInt
   have hCond : native_and (native_zleq 0 (c : Int))
-      (native_zlt (c : Int) 196608) = true := by
+      (native_zleq (c : Int) native_z_max_code_point) = true := by
     change (native_zleq 0 (c : Int) &&
-      native_zlt (c : Int) 196608) = true
-    rw [hNonneg, hLt]
+      native_zleq (c : Int) native_z_max_code_point) = true
+    rw [native_zleq_max_code_point, hNonneg, hLt]
     rfl
   change (if native_and (native_zleq 0 (c : Int))
-      (native_zlt (c : Int) 196608) = true then
+      (native_zleq (c : Int) native_z_max_code_point) = true then
         Term.String (native_str_from_code (c : Int)) else Term.Stuck) =
       Term.String [c]
   rw [hCond]
@@ -223,7 +223,7 @@ theorem EvaluateProofInternal.native_str_from_code_invalid
       exact hBad ⟨hn0, hnHi⟩
     have hGuard :
         (decide (0 ≤ n) && native_char_valid (Int.toNat n)) = false := by
-      simp [hn0, native_char_valid, hNatLtFalse]
+      simp [hn0, native_char_valid_eq_decide_lt, hNatLtFalse]
     rw [hGuard]
     rfl
   · have hGuard :
@@ -274,7 +274,7 @@ theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_numeral_valid
   dsimp [EvaluateProofInternal.eo_eval_str_from_code_rhs]
   rw [show __run_evaluate (Term.Numeral n) = Term.Numeral n by rfl]
   simp [__eo_ite, native_ite, native_teq, __eo_is_z, __eo_eq, __eo_gt,
-    __eo_to_str, __eo_is_neg, __eo_not, __eo_is_z_internal,
+    __eo_to_str, native_zleq_max_code_point, __eo_is_neg, __eo_not, __eo_is_z_internal,
     native_and, native_not, hNotNeg, hLt, hNonneg, hNe]
 
 theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_numeral_invalid_guard
@@ -425,7 +425,7 @@ theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral_valid
     rw [hRun]
     simp [__eo_ite, native_ite, native_teq, __eo_is_z, __eo_eq, __eo_gt,
       __eo_is_neg, __eo_not, __eo_is_z_internal, native_and, native_not,
-      __eo_to_str, hNotNeg, hLt, hNe]
+      __eo_to_str, native_zleq_max_code_point, hNotNeg, hLt, hNe]
 
 theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral_eq_max_false
     {x : Term}
@@ -455,7 +455,7 @@ theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral_eq_max_false
       Term.Numeral 196608 by rfl]
     simp [__eo_ite, native_ite, native_teq, __eo_is_z, __eo_eq,
       __eo_is_neg, __eo_not, __eo_is_z_internal, native_and, native_not,
-      __eo_to_str, hNotNeg, hLtFalse, hNonneg]
+      __eo_to_str, native_zleq_max_code_point, hNotNeg, hLtFalse, hNonneg]
   case String s =>
     change
       Term.Apply (Term.UOp UserOp.Seq) (Term.UOp UserOp.Char) =
@@ -467,7 +467,7 @@ theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral_eq_max_false
     rw [hRun]
     simp [__eo_ite, native_ite, native_teq, __eo_is_z, __eo_eq,
       __eo_is_neg, __eo_not, __eo_is_z_internal, native_and, native_not,
-      __eo_to_str, hNotNeg]
+      __eo_to_str, native_zleq_max_code_point, hNotNeg]
 
 theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral_eq
     {x : Term} {n : native_Int}

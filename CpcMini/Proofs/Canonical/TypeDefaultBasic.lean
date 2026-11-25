@@ -108,7 +108,7 @@ private theorem type_default_canonical_kernel (huc : usort_dom_wf uc) : ∀ T : 
       __smtx_seq_canonical]
   · intros
     simp [__smtx_type_default, __smtx_value_canonical,
-      native_char_valid, native_ite]
+      native_char_valid_eq_decide_lt, native_ite]
   · intro s dd ih _hInh hRec
     have hDecl : __smtx_decl_wf_rec dd dd = true := by
       have h := hRec

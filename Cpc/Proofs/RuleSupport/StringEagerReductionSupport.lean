@@ -47,8 +47,8 @@ private theorem native_str_to_code_singleton_bounds
       cases cs with
       | nil =>
           simp [native_string_valid] at hValid
-          have hc : c < 196608 := by simpa [native_char_valid] using hValid
-          simp [native_str_to_code, native_char_valid, hc]
+          have hc : c < 196608 := by simpa [native_char_valid_eq_decide_lt] using hValid
+          simp [native_str_to_code, native_char_valid_eq_decide_lt, hc]
       | cons d ds =>
           simp at hLen
 
@@ -73,7 +73,7 @@ private theorem native_str_to_code_from_code_of_valid
     native_str_to_code (native_str_from_code n) = n := by
   have hNatLt : Int.toNat n < 196608 := by
     exact (Int.toNat_lt hn0).mpr hnHi
-  simp [native_str_from_code, native_str_to_code, native_char_valid, hn0,
+  simp [native_str_from_code, native_str_to_code, native_char_valid_eq_decide_lt, hn0,
     hNatLt, Int.toNat_of_nonneg hn0]
 
 private theorem native_str_from_code_invalid
@@ -88,7 +88,7 @@ private theorem native_str_from_code_invalid
       exact hBad ⟨hn0, hnHi⟩
     have hGuard :
         (0 ≤ n && native_char_valid (Int.toNat n)) = false := by
-      simp [hn0, native_char_valid, hNatLtFalse]
+      simp [hn0, native_char_valid_eq_decide_lt, hNatLtFalse]
     rw [hGuard]
     rfl
   · have hGuard :

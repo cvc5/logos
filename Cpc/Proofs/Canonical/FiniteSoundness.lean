@@ -1725,7 +1725,7 @@ theorem finite_type_enumerable
         · exact hc
         · simp [__smtx_typeof_value, native_ite, hc] at hTy
       have hLt : c < 196608 := by
-        simpa [native_char_valid] using hValid
+        simpa [native_char_valid_eq_decide_lt] using hValid
       exact List.mem_map.mpr ⟨c, List.mem_range.mpr hLt, rfl⟩
   | BitVec w =>
       refine ⟨(List.range (2 ^ w)).map

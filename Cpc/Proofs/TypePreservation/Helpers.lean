@@ -1519,13 +1519,13 @@ theorem native_char_valid_to_lower
     (hc : native_char_valid c = true) :
     native_char_valid (impl_native_char_to_lower c) = true := by
   have hcLt : c < 196608 := by
-    simpa [native_char_valid] using hc
+    simpa [native_char_valid_eq_decide_lt] using hc
   cases hRange : (decide (65 ≤ c) && decide (c ≤ 90))
-  · simp [impl_native_char_to_lower, hRange, native_char_valid, hcLt]
+  · simp [impl_native_char_to_lower, hRange, native_char_valid_eq_decide_lt, hcLt]
   · have hle90 : c ≤ 90 := by
       simp at hRange
       exact hRange.2
-    simp [impl_native_char_to_lower, hRange, native_char_valid]
+    simp [impl_native_char_to_lower, hRange, native_char_valid_eq_decide_lt]
     exact Nat.lt_of_le_of_lt (Nat.add_le_add_right hle90 32) (by decide)
 
 /-- Uppercasing a valid SMT character preserves validity. -/
@@ -1534,10 +1534,10 @@ theorem native_char_valid_to_upper
     (hc : native_char_valid c = true) :
     native_char_valid (impl_native_char_to_upper c) = true := by
   have hcLt : c < 196608 := by
-    simpa [native_char_valid] using hc
+    simpa [native_char_valid_eq_decide_lt] using hc
   cases hRange : (decide (97 ≤ c) && decide (c ≤ 122))
-  · simp [impl_native_char_to_upper, hRange, native_char_valid, hcLt]
-  · simp [impl_native_char_to_upper, hRange, native_char_valid]
+  · simp [impl_native_char_to_upper, hRange, native_char_valid_eq_decide_lt, hcLt]
+  · simp [impl_native_char_to_upper, hRange, native_char_valid_eq_decide_lt]
     exact Nat.lt_of_le_of_lt (Nat.sub_le c 32) hcLt
 
 /-- Lowercasing a valid native string preserves validity. -/
@@ -1589,7 +1589,8 @@ theorem native_str_replace_re_all_valid
 theorem native_char_valid_digitChar
     (n : Nat) :
     native_char_valid (Char.toNat (Nat.digitChar n)) = true := by
-  unfold Nat.digitChar native_char_valid
+  unfold Nat.digitChar
+  rw [native_char_valid_eq_decide_lt]
   by_cases h0 : n = 0
   · simp [h0]
   · by_cases h1 : n = 1

@@ -2273,8 +2273,8 @@ private theorem ty_nondefault (huc : usort_dom_wf uc)
       simp [__smtx_is_finite_type, __smtx_type_bounded] at _hFinite
   | Char =>
       refine ⟨SmtValue.Char 1, ?_, ?_, ?_⟩
-      · simp [__smtx_typeof_value, native_char_valid, native_ite]
-      · simp [__smtx_value_canonical, native_char_valid]
+      · simp [__smtx_typeof_value, native_char_valid_eq_decide_lt, native_ite]
+      · simp [__smtx_value_canonical, native_char_valid_eq_decide_lt]
       · simp [__smtx_type_default, native_veq]
   | Datatype s2 dd2 =>
       exact dt_nondefault huc s2 dd2 _hInh _hRec _hFinite _hNonUnit
@@ -2427,8 +2427,8 @@ private theorem finite_nonunit_nondefault (huc : usort_dom_wf uc)
       simp [__smtx_is_finite_type, __smtx_type_bounded] at _hFinite
   | Char =>
       refine ⟨SmtValue.Char 1, ?_, ?_, ?_⟩
-      · simp [__smtx_typeof_value, native_char_valid, native_ite]
-      · simp [__smtx_value_canonical, native_char_valid]
+      · simp [__smtx_typeof_value, native_char_valid_eq_decide_lt, native_ite]
+      · simp [__smtx_value_canonical, native_char_valid_eq_decide_lt]
       · simp [__smtx_type_default, native_veq]
   | Datatype s dd =>
       exact finite_nonunit_datatype_nondefault_value huc

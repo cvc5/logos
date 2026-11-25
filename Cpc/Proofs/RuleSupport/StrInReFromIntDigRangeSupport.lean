@@ -131,7 +131,7 @@ theorem native_char_valid_of_digit
   have hBounds : 48 ≤ c ∧ c ≤ 57 := by
     unfold impl_native_char_is_digit at hDigit
     simpa [Bool.and_eq_true] using hDigit
-  unfold native_char_valid
+  rw [native_char_valid_eq_decide_lt]
   have h57 : 57 < 196608 := by decide +kernel
   exact decide_eq_true (Nat.lt_of_le_of_lt hBounds.2 h57)
 

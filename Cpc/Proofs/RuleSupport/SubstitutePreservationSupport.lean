@@ -6744,7 +6744,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                     simp [
                                                                                                       native_string_lit,
                                                                                                       native_string_valid,
-                                                                                                      native_char_valid,
+                                                                                                      native_char_valid_eq_decide_lt,
                                                                                                       native_ite]
                                                                                                   have hNineCharTy :
                                                                                                       __smtx_typeof
@@ -6758,7 +6758,7 @@ theorem substitute_simul_preserves_type_and_translation_with_binder_lt
                                                                                                     simp [
                                                                                                       native_string_lit,
                                                                                                       native_string_valid,
-                                                                                                      native_char_valid,
+                                                                                                      native_char_valid_eq_decide_lt,
                                                                                                       native_ite]
                                                                                                   rw [
                                                                                                     typeof_str_indexof_re_eq,

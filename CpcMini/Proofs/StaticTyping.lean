@@ -11,6 +11,13 @@ set_option linter.unusedSimpArgs false
 
 namespace Smtm
 
+/-- A character is valid when it is below the successor of the maximum code point. -/
+theorem native_char_valid_eq_decide_lt (c : native_Char) :
+    native_char_valid c = decide (c < 196608) := by
+  unfold native_char_valid native_z_max_code_point
+  exact decide_eq_decide.mpr
+    ((Int.ofNat_le (m := c) (n := 196607)).trans Nat.lt_succ_iff.symm)
+
 /-!
 # Inhabitation and the default generator
 
@@ -306,7 +313,7 @@ theorem type_default_typed : ∀ T : SmtType,
     simp [__smtx_type_default, __smtx_typeof_value, __smtx_typeof_map_value,
       __smtx_typeof_seq_value, __smtx_map_to_set_type, native_ite, native_and,
       native_nat_to_int, native_zleq, native_zeq, native_mod_total,
-      native_int_to_nat, native_char_valid]; done
+      native_int_to_nat, native_char_valid_eq_decide_lt]; done
   case refine_6 T U ih hInh hRec =>
     have hU : __smtx_inhabited_type U = true ∧ __smtx_type_wf_rec U = true := by
       simp_all [__smtx_type_wf_rec, native_and, __smtx_inhabited_type]
