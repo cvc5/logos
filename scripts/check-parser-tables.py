@@ -8,7 +8,9 @@ generator has to get right, and fails if the parser table disagrees:
   * every operator of the signature is represented by at least one surface
     declaration;
   * a surface name does not represent the same operator more than once;
-  * every proof rule of the calculus is named exactly once.
+  * every proof rule of the calculus is named exactly once;
+  * `__eo_typeof` inspects the value of an applied argument only where the parser
+    keeps it: types and binder lists (`placeholder`, `Logos/Parser/Datatypes.lean`).
 
 An operator may occur under more than one surface name.  In particular, a
 signature `define` introduces an alias whose generated parser entry references
@@ -58,6 +60,46 @@ def parser_entries(source: str) -> list[dict]:
     return entries
 
 
+# Operators whose typing equation uses an applied argument itself rather than only
+# its type, with the positions of those arguments.  The parser keeps these
+# arguments when it types a term, because they are types or binder lists.
+VALUE_TYPED_ARGS = {
+    ("UserOp._at__at_TypedList_nil", 0),  # a type
+    ("UserOp.lambda", 0),  # a binder list
+}
+
+
+def check_typeof(logos_src: str) -> list[str]:
+    """Check which applied arguments `__eo_typeof` uses other than by their type."""
+    errors: list[str] = []
+    body = logos_src.split("def __eo_typeof : Term -> Term\n", 1)[1]
+    checked = 0
+    for line in body.split("\n"):
+        if not line.startswith("  | "):
+            break
+        if not line.startswith("  | (Term.Apply"):
+            continue
+        lhs, rhs = line[4:].split(" => ", 1)
+        # Unwind `(Term.Apply (Term.Apply head a) b)`; arguments are variables.
+        args: list[str] = []
+        while m := re.fullmatch(r"\(Term\.Apply (.*) (__eo_\w+)\)", lhs):
+            lhs, arg = m.groups()
+            args.insert(0, arg)
+        ops = re.findall(r"UserOp[123]?\.\w+", lhs)
+        head = ops[0] if ops else lhs
+        if "Term.Apply" in lhs or len(ops) > 1:
+            errors.append(f"__eo_typeof matches on an argument's value: {line.strip()}")
+            continue
+        checked += 1
+        values = re.sub(r"\(__eo_typeof __eo_\w+\)", "", rhs)
+        for i, arg in enumerate(args):
+            if re.search(rf"\b{arg}\b", values) and (head, i) not in VALUE_TYPED_ARGS:
+                errors.append(f"__eo_typeof inspects the value of argument {i} of {head}")
+    if checked == 0:
+        errors.append("no application equations of __eo_typeof found")
+    return errors
+
+
 def check(calculus: str) -> list[str]:
     errors: list[str] = []
     term_src = (REPO_ROOT / calculus / "LogosTerm.lean").read_text()
@@ -104,6 +146,9 @@ def check(calculus: str) -> list[str]:
     for rule in named:
         if rule not in rules:
             errors.append(f"parser table names rule {rule}, which the calculus does not have")
+
+    # 3. Argument values used in typing.
+    errors += check_typeof(logos_src)
 
     return errors
 

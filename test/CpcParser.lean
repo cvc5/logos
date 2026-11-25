@@ -465,6 +465,40 @@ private def overloadPrelude : String :=
   assumptions (datatypePrelude ++ "(assume @p0 (is a d))")
 
 /-!
+## Types of binder applications
+
+Typing a `lambda` inspects its variable list, so the parser must keep that list
+when it computes the type that a nil terminator depends on.
+-/
+
+private def lambdaPrelude : String :=
+  "(declare-const f (-> Int Int)) (define @l () (lambda ((x Int)) (+ x 1)))"
+
+private def intFun : Term := .Apply (.Apply .FunType (.UOp UserOp.Int)) (.UOp UserOp.Int)
+
+private def lambdaTerm : Term :=
+  .Apply (.Apply (.UOp UserOp.lambda)
+      (.Apply (.Apply .__eo_List_cons (.Var (.String (native_string_lit "x")) (.UOp UserOp.Int)))
+        .__eo_List_nil))
+    (.Apply (.Apply (.UOp UserOp.plus) (.Var (.String (native_string_lit "x")) (.UOp UserOp.Int)))
+      (.Apply (.Apply (.UOp UserOp.plus) (.Numeral 1)) (.Numeral 0)))
+
+#guard assumptions (lambdaPrelude ++ "(assume @p0 (+ (_ @l 1) 2))") ==
+  some [.Apply (.Apply (.UOp UserOp.plus) (.Apply lambdaTerm (.Numeral 1)))
+    (.Apply (.Apply (.UOp UserOp.plus) (.Numeral 2)) (.Numeral 0))]
+
+#guard assumptions (lambdaPrelude ++ "(assume @p0 (distinct @l f))") ==
+  some [.Apply (.UOp UserOp.distinct)
+    (.Apply (.Apply (.UOp UserOp._at__at_TypedList_cons) lambdaTerm)
+      (.Apply (.Apply (.UOp UserOp._at__at_TypedList_cons) (.UConst 1 intFun))
+        (.Apply (.UOp UserOp._at__at_TypedList_nil) intFun)))]
+
+#guard assumptions (lambdaPrelude ++ "(assume @p0 (= f @l f))") ==
+  some [.Apply (.Apply (.UOp UserOp.and) (.Apply (.Apply (.UOp UserOp.eq) (.UConst 1 intFun)) lambdaTerm))
+    (.Apply (.Apply (.UOp UserOp.and) (.Apply (.Apply (.UOp UserOp.eq) lambdaTerm) (.UConst 1 intFun)))
+      (.Boolean true))]
+
+/-!
 ## The order of assume and step
 
 A proof is read as an assumption set together with the steps that refute it, so
