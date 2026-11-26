@@ -475,6 +475,9 @@ import Cpc.Proofs.Rules.Str_contains_concat_find_contra
 import Cpc.Proofs.Rules.Str_contains_split_char
 import Cpc.Proofs.Rules.Str_contains_leq_len_eq
 import Cpc.Proofs.Rules.Str_contains_emp
+import Cpc.Proofs.Rules.Str_contains_cnst_split_leq_one
+import Cpc.Proofs.Rules.Str_contains_strip_from_int_pre
+import Cpc.Proofs.Rules.Str_contains_strip_from_int_post
 import Cpc.Proofs.Rules.Str_contains_char
 import Cpc.Proofs.Rules.Str_at_elim
 import Cpc.Proofs.Rules.Str_replace_self
@@ -502,6 +505,10 @@ import Cpc.Proofs.Rules.Str_indexof_self
 import Cpc.Proofs.Rules.Str_indexof_no_contains
 import Cpc.Proofs.Rules.Str_indexof_oob
 import Cpc.Proofs.Rules.Str_indexof_oob2
+import Cpc.Proofs.Rules.Str_indexof_len
+import Cpc.Proofs.Rules.Str_indexof_strip_char_pre
+import Cpc.Proofs.Rules.Str_indexof_strip_prefix_len
+import Cpc.Proofs.Rules.Str_indexof_strip_sym_len
 import Cpc.Proofs.Rules.Str_indexof_contains_pre
 import Cpc.Proofs.Rules.Str_indexof_contains_concat_pre
 import Cpc.Proofs.Rules.Str_indexof_prefix_concat
@@ -525,6 +532,7 @@ import Cpc.Proofs.Rules.Str_to_int_concat_neg_one
 import Cpc.Proofs.Rules.Str_is_digit_elim
 import Cpc.Proofs.Rules.Str_leq_empty
 import Cpc.Proofs.Rules.Str_leq_empty_eq
+import Cpc.Proofs.Rules.Str_leq_id
 import Cpc.Proofs.Rules.Str_leq_concat_false
 import Cpc.Proofs.Rules.Str_leq_concat_true
 import Cpc.Proofs.Rules.Str_leq_concat_base_1
@@ -540,6 +548,7 @@ import Cpc.Proofs.Rules.Str_replace_emp_ctn_src
 import Cpc.Proofs.Rules.Str_substr_char_start_eq_len
 import Cpc.Proofs.Rules.Str_contains_repl_char
 import Cpc.Proofs.Rules.Str_contains_repl_self_tgt_char
+import Cpc.Proofs.Rules.Str_contains_repl_self_tgt_leq_one
 import Cpc.Proofs.Rules.Str_contains_repl_self
 import Cpc.Proofs.Rules.Str_contains_repl_tgt
 import Cpc.Proofs.Rules.Str_repl_repl_len_id
@@ -566,6 +575,7 @@ import Cpc.Proofs.Rules.Re_concat_star_nullable2
 import Cpc.Proofs.Rules.Re_concat_merge
 import Cpc.Proofs.Rules.Re_union_all
 import Cpc.Proofs.Rules.Re_union_const_elim
+import Cpc.Proofs.Rules.Re_inter_const_elim
 import Cpc.Proofs.Rules.Re_inter_all
 import Cpc.Proofs.Rules.Re_star_none
 import Cpc.Proofs.Rules.Re_star_emp
@@ -580,6 +590,7 @@ import Cpc.Proofs.Rules.Re_loop_neg
 import Cpc.Proofs.Rules.Re_loop_star
 import Cpc.Proofs.Rules.Re_inter_cstring
 import Cpc.Proofs.Rules.Re_inter_cstring_neg
+import Cpc.Proofs.Rules.Re_inter_const_const_conflict
 import Cpc.Proofs.Rules.Str_substr_len_include
 import Cpc.Proofs.Rules.Str_substr_len_include_pre
 import Cpc.Proofs.Rules.Str_substr_len_norm
@@ -609,6 +620,7 @@ import Cpc.Proofs.Rules.Str_in_re_range_elim
 import Cpc.Proofs.Rules.Str_in_re_contains
 import Cpc.Proofs.Rules.Str_in_re_from_int_nemp_dig_range
 import Cpc.Proofs.Rules.Str_in_re_from_int_dig_range
+import Cpc.Proofs.Rules.Re_char_in_str_star
 import Cpc.Proofs.Rules.Eq_refl
 import Cpc.Proofs.Rules.Eq_symm
 import Cpc.Proofs.Rules.Eq_cond_deq
@@ -2983,6 +2995,21 @@ by
         intro N hN _hAgree
         exact cmd_step_str_contains_emp_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | str_contains_cnst_split_leq_one =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_str_contains_cnst_split_leq_one_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | str_contains_strip_from_int_pre =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_str_contains_strip_from_int_pre_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | str_contains_strip_from_int_post =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_str_contains_strip_from_int_post_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
   | str_contains_char =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
@@ -3118,6 +3145,26 @@ by
         intro N hN _hAgree
         exact cmd_step_str_indexof_oob2_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | str_indexof_len =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_str_indexof_len_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | str_indexof_strip_char_pre =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_str_indexof_strip_char_pre_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | str_indexof_strip_prefix_len =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_str_indexof_strip_prefix_len_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | str_indexof_strip_sym_len =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_str_indexof_strip_sym_len_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
   | str_indexof_contains_pre =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
@@ -3233,6 +3280,11 @@ by
         intro N hN _hAgree
         exact cmd_step_str_leq_empty_eq_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | str_leq_id =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_str_leq_id_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
   | str_leq_concat_false =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
@@ -3307,6 +3359,11 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_str_contains_repl_self_tgt_char_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | str_contains_repl_self_tgt_leq_one =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_str_contains_repl_self_tgt_leq_one_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | str_contains_repl_self =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
@@ -3438,6 +3495,11 @@ by
         intro N hN _hAgree
         exact cmd_step_re_union_const_elim_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | re_inter_const_elim =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_re_inter_const_elim_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
   | re_inter_all =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
@@ -3507,6 +3569,11 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_re_inter_cstring_neg_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | re_inter_const_const_conflict =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_re_inter_const_const_conflict_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | str_substr_len_include =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
@@ -3652,6 +3719,11 @@ by
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
         intro N hN _hAgree
         exact cmd_step_str_in_re_from_int_dig_range_properties N hN s args premises
+          (by simpa using hCmdTrans) hPremisesBool hResultTy
+  | re_char_in_str_star =>
+      exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by
+        intro N hN _hAgree
+        exact cmd_step_re_char_in_str_star_properties N hN s args premises
           (by simpa using hCmdTrans) hPremisesBool hResultTy
   | eq_refl =>
       exact cmd_step_facts_of_rule_properties M hM s premises hs hsStable <| by

@@ -1,11 +1,12 @@
 module
 
-public import Cpc.Proofs.RuleSupport.ReInclusionSupport
-import all Cpc.Proofs.RuleSupport.ReInclusionSupport
+public import Cpc.Proofs.RuleSupport.ReConstSupport
+import all Cpc.Proofs.RuleSupport.ReConstSupport
 
 open Eo
 open SmtEval
 open Smtm
+open ReConstSupport
 
 set_option linter.unusedVariables false
 set_option linter.unusedSimpArgs false
@@ -53,73 +54,6 @@ private theorem prog_mk_form (xs ys : Term)
         (__eo_list_concat (Term.UOp UserOp.re_inter) xs ys))
   exact __eo_prog_re_inter_all.eq_3 xs ys hxs hys
 
-private theorem list_concat_lists_of_ne_stuck (f a b : Term) :
-    __eo_list_concat f a b ≠ Term.Stuck ->
-    __eo_is_list f a = Term.Boolean true ∧
-      __eo_is_list f b = Term.Boolean true := by
-  intro h
-  have hReq :
-      __eo_requires (__eo_is_list f a) (Term.Boolean true)
-          (__eo_requires (__eo_is_list f b) (Term.Boolean true)
-            (__eo_list_concat_rec a b)) ≠ Term.Stuck := by
-    simpa [__eo_list_concat] using h
-  have ha : __eo_is_list f a = Term.Boolean true :=
-    RuleProofs.eo_requires_eq_of_ne_stuck
-      (__eo_is_list f a) (Term.Boolean true)
-      (__eo_requires (__eo_is_list f b) (Term.Boolean true)
-        (__eo_list_concat_rec a b)) hReq
-  have hReqEq :
-      __eo_requires (__eo_is_list f a) (Term.Boolean true)
-          (__eo_requires (__eo_is_list f b) (Term.Boolean true)
-            (__eo_list_concat_rec a b)) =
-        __eo_requires (__eo_is_list f b) (Term.Boolean true)
-          (__eo_list_concat_rec a b) :=
-    RuleProofs.eo_requires_result_eq_of_ne_stuck
-      (__eo_is_list f a) (Term.Boolean true)
-      (__eo_requires (__eo_is_list f b) (Term.Boolean true)
-        (__eo_list_concat_rec a b)) hReq
-  have hReqTail :
-      __eo_requires (__eo_is_list f b) (Term.Boolean true)
-          (__eo_list_concat_rec a b) ≠ Term.Stuck := by
-    rwa [hReqEq] at hReq
-  have hb : __eo_is_list f b = Term.Boolean true :=
-    RuleProofs.eo_requires_eq_of_ne_stuck
-      (__eo_is_list f b) (Term.Boolean true)
-      (__eo_list_concat_rec a b) hReqTail
-  exact ⟨ha, hb⟩
-
-private theorem reInter_list_smt_typeof_reglan_of_non_none (t : Term) :
-    __eo_is_list (Term.UOp UserOp.re_inter) t = Term.Boolean true ->
-    __smtx_typeof (__eo_to_smt t) ≠ SmtType.None ->
-    __smtx_typeof (__eo_to_smt t) = SmtType.RegLan := by
-  intro hList hNN
-  cases t <;>
-    simp [__eo_is_list, __eo_get_nil_rec, __eo_is_list_nil,
-      __eo_is_ok, __eo_requires, native_ite, native_teq, native_not,
-      SmtEval.native_not] at hList ⊢
-  next op =>
-    cases op <;>
-      simp [__eo_is_list, __eo_get_nil_rec, __eo_is_list_nil,
-        __eo_is_ok, __eo_requires, native_ite, native_teq, native_not,
-        SmtEval.native_not, __smtx_typeof] at hList ⊢
-  next f y =>
-    cases f <;>
-      simp [__eo_is_list, __eo_get_nil_rec, __eo_is_list_nil,
-        __eo_is_ok, __eo_requires, native_ite, native_teq, native_not,
-        SmtEval.native_not] at hList ⊢
-    next g x =>
-      rw [← hList.1] at hNN ⊢
-      have hArgs :
-          __smtx_typeof (__eo_to_smt x) = SmtType.RegLan ∧
-            __smtx_typeof (__eo_to_smt y) = SmtType.RegLan :=
-        reglan_binop_args_of_non_none (op := SmtTerm.re_inter)
-          (typeof_re_inter_eq (__eo_to_smt x) (__eo_to_smt y)) hNN
-      change __smtx_typeof
-          (SmtTerm.re_inter (__eo_to_smt x) (__eo_to_smt y)) =
-        SmtType.RegLan
-      rw [typeof_re_inter_eq]
-      simp [hArgs.1, hArgs.2, native_ite, native_Teq]
-
 private theorem smtx_typeof_sigma :
     __smtx_typeof (__eo_to_smt sigma) = SmtType.RegLan := by
   change __smtx_typeof (SmtTerm.re_mult SmtTerm.re_allchar) =
@@ -133,17 +67,6 @@ private theorem smtx_model_eval_sigma (M : SmtModel) :
   change __smtx_model_eval M (SmtTerm.re_mult SmtTerm.re_allchar) =
     SmtValue.RegLan native_re_all
   simp [__smtx_model_eval, RuleProofs.smtx_model_eval_re_mult_allchar]
-
-private theorem smtx_typeof_re_inter_of_args (x y : Term) :
-    __smtx_typeof (__eo_to_smt x) = SmtType.RegLan ->
-    __smtx_typeof (__eo_to_smt y) = SmtType.RegLan ->
-    __smtx_typeof (__eo_to_smt (mkReInter x y)) = SmtType.RegLan := by
-  intro hx hy
-  change __smtx_typeof
-      (SmtTerm.re_inter (__eo_to_smt x) (__eo_to_smt y)) =
-    SmtType.RegLan
-  rw [typeof_re_inter_eq]
-  simp [hx, hy, native_ite, native_Teq]
 
 private theorem smt_value_rel_inter_all
     (rxs rys : SmtRegLan) :
@@ -314,7 +237,7 @@ by
                   have hLhsNe : ReInterAllProof.lhs a1 a2 ≠ Term.Stuck :=
                     eo_mk_apply_arg_ne_stuck_of_ne_stuck _ _ hEqFunNe
                   have hLists :=
-                    ReInterAllProof.list_concat_lists_of_ne_stuck
+                    RegexRewriteSupport.list_concat_lists_of_ne_stuck
                       (Term.UOp UserOp.re_inter) a1
                       (ReInterAllProof.tail a2) hLhsNe
                   have hYsList :
