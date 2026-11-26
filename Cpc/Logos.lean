@@ -8584,7 +8584,7 @@ def __eo_is_list_nil_bvadd : Term -> Term
 
 def __eo_is_list_nil_bvmul : Term -> Term
   | Term.Stuck  => Term.Stuck
-  | x1 => (__eo_is_eq (__eo_to_z x1) (Term.Numeral 1))
+  | x1 => (__eo_is_eq x1 (__eo_to_bin (__eo_len x1) (Term.Numeral 1)))
 
 
 def __eo_is_list_nil_str_concat : Term -> Term
