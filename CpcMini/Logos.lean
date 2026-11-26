@@ -47,6 +47,15 @@ abbrev __eo_ite (x1 : Term) (x2 : Term) (x3 : Term) : Term :=
       x3
       Term.Stuck))
 
+/- Building a term with a stuck part gives the stuck term, as
+__eo_mk_apply does for an application: an operator's indices, a
+variable's name and type. -/
+def __eo_mk_var : Term -> Term -> Term
+  | Term.Stuck, _ => Term.Stuck
+  | _, Term.Stuck => Term.Stuck
+  | s, T => Term.Var s T
+
+
 /- Proofs -/
 inductive Proof : Type where
   | pf : Term -> Proof
