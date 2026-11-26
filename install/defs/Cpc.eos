@@ -928,23 +928,14 @@
 (define-symbol @const ((! i :raw) (! u :type))
   :term ("ite" ($eo_to_smt_nat_is_valid i) (UConst ("const_id" ($eo_to_smt_nat i)) u) none))
 
-; The proof-level binder of CPC. SMT-LIB has no lambda, so a lambda transforms
-; into a let still waiting for its arguments: (lambda (x1 ... xn) t) becomes
-; bind nil (lam x1 T1 ... (lam xn Tn t)), the let of no bindings around the
-; curried chain of the variables it binds. Each application of it, see
-; $eo_to_smt_apply, takes the first lam off the chain and binds its variable
-; to the argument, in the let, after the bindings already made. So a lambda
-; applied to exactly as many arguments as it binds is the parallel let of its
-; body, and one applied to fewer is a let around a lam, which has no type.
-; Since each application is transformed from what its function and its argument
-; transform into, an application of what a saturated lambda returns, or of a
-; term substituted for a variable, is transformed as any other application.
+; The proof-level binder of CPC. SMT-LIB has no lambda, and CPC has no rule
+; that beta reduces one, so a lambda is only a stub: (lambda (x1 ... xn) t)
+; transforms into the curried chain lam x1 T1 ... (lam xn Tn t), which has no
+; type and no value, see lam in smt.eos. An application of a lambda is the
+; generic application of that chain, and has none either.
 
 ; The curried chain of the variables of vs around F, the body. A list that is
-; not one of variables is no term, and neither is one with a variable whose
-; type a function cannot take (see $smtx_type_wf): the type of a lambda over a
-; variable of a regular language or function sort is not well formed, as the
-; sort of an uninterpreted function taking one is not.
+; not one of variables is no term.
 ; -- $eo_to_smt_lambda_curry
 (program $eo_to_smt_lambda_curry
   ((s <string>) (T $eo_Term) (vs $eo_List) (F SmtTerm))
@@ -952,54 +943,14 @@
   (
   (($eo_to_smt_lambda_curry eo.list_nil F) F)
   (($eo_to_smt_lambda_curry (eo.list_cons (eo.var (eo.string s) T) vs) F)
-    ("ite" (smt.type_wf_component T) (lam s T ($eo_to_smt_lambda_curry vs F)) none))
+    (lam s T ($eo_to_smt_lambda_curry vs F)))
   (($eo_to_smt_lambda_curry vs F) none)
   )
 )
 
-; The bindings bs followed by the binding of s:T to t.
-; -- $eo_to_smt_bindings_snoc
-(program $eo_to_smt_bindings_snoc
-  ((s <string>) (T SmtType) (t SmtTerm) (bs SmtBindings)
-   (s2 <string>) (T2 SmtType) (t2 SmtTerm))
-  :signature (SmtBindings <string> SmtType SmtTerm) SmtBindings
-  (
-  (($eo_to_smt_bindings_snoc smt.bindings_nil s2 T2 t2)
-    (smt.bindings_cons s2 T2 t2 smt.bindings_nil))
-  (($eo_to_smt_bindings_snoc (smt.bindings_cons s T t bs) s2 T2 t2)
-    (smt.bindings_cons s T t ($eo_to_smt_bindings_snoc bs s2 T2 t2)))
-  )
-)
-
-; The application of g to y, both transformed: if g is a lambda still waiting
-; for an argument, the argument is bound to its next variable, and otherwise
-; it is the application in the embedding. The new binding goes after the ones
-; already made, in the same let rather than in one nested inside it, so that y
-; is evaluated where the application is, and not under the bindings of the
-; earlier arguments.
-; -- $eo_to_smt_apply
-(program $eo_to_smt_apply
-  ((c SmtBindings) (s <string>) (T SmtType) (F SmtTerm) (g SmtTerm) (y SmtTerm))
-  :signature (SmtTerm SmtTerm) SmtTerm
-  (
-  (($eo_to_smt_apply (bind c (lam s T F)) y)
-    (bind ($eo_to_smt_bindings_snoc c s T y) F))
-  (($eo_to_smt_apply g y) (apply g y))
-  )
-)
-
 ; -- lambda
-; Its fallback is a case of $eo_to_smt tried after the case of every symbol:
-; an application whose head is an application, that no symbol of the
-; signature matched. Only such a head can be a lambda, possibly already
-; applied to some arguments, so an application whose head is not an
-; application stays the generic one. The binders of the fallback are names
-; $eo_to_smt declares, see plugins/model_smt/model_smt.eo in ethos.
 (define-symbol lambda ((! vs :raw) body)
-  :term (bind smt.bindings_nil ($eo_to_smt_lambda_curry vs body))
-  :term-fallback ((T Type) (U Type) (T1 Type) (f (-> U T)) (y U) (x1 T1))
-    (_ (f x1) y)
-    ($eo_to_smt_apply (f x1) y))
+  :term ($eo_to_smt_lambda_curry vs body))
 
 
 ;-----------------------------------------------------------------------------
