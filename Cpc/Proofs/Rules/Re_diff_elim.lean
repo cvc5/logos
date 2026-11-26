@@ -104,7 +104,7 @@ private theorem typed___eo_prog_re_diff_elim_impl
         (SmtTerm.re_inter (__eo_to_smt comp) SmtTerm.re_all) =
       SmtType.RegLan
     rw [typeof_re_inter_eq]
-    simp [hCompTy, __smtx_typeof.eq_107, native_ite, native_Teq]
+    simp [hCompTy, __smtx_typeof.eq_106, native_ite, native_Teq]
   have hRhsTy : __smtx_typeof (__eo_to_smt rhs) = SmtType.RegLan := by
     change __smtx_typeof
         (SmtTerm.re_inter (__eo_to_smt a1) (__eo_to_smt inner)) =

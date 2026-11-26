@@ -204,7 +204,7 @@ private theorem str_indexof_re_eval_match_regex_typeof
         (SmtTerm.re_concat SmtTerm.re_all
           (SmtTerm.str_to_re (SmtTerm.String [])))) = SmtType.RegLan
   rw [typeof_re_concat_eq, typeof_re_concat_eq, typeof_str_to_re_eq]
-  rw [__smtx_typeof.eq_107, __smtx_typeof.eq_4]
+  rw [__smtx_typeof.eq_106, __smtx_typeof.eq_4]
   simp [hRTy, native_ite, native_Teq]
   rfl
 

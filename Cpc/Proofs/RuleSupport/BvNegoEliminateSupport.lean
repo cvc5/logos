@@ -433,7 +433,7 @@ theorem smt_typeof_bvnego (a : SmtTerm) (n : native_Int) :
     __smtx_typeof a = SmtType.BitVec (native_int_to_nat n) ->
     __smtx_typeof (SmtTerm.bvnego a) = SmtType.Bool := by
   intro h
-  rw [__smtx_typeof.eq_73]
+  rw [__smtx_typeof.eq_72]
   simp [__smtx_typeof_bv_op_1_ret, h]
 
 theorem typeof_args_of_bv_nego_term_bool (x n : Term) :

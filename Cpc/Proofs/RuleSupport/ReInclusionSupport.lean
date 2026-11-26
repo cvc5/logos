@@ -1358,7 +1358,7 @@ private theorem re_unbound_allchar_prefix_closed
         SmtValue.RegLan native_re_allchar := by
     change __smtx_model_eval M SmtTerm.re_allchar =
       SmtValue.RegLan native_re_allchar
-    rw [__smtx_model_eval.eq_106]
+    rw [__smtx_model_eval.eq_105]
   have hFullEval :
       __smtx_model_eval M
           (__eo_to_smt

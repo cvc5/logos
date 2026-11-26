@@ -277,7 +277,7 @@ private theorem list_smt_type_or_nil_of_concat_type
               __smtx_typeof_bv_op_2
                 (__smtx_typeof (__eo_to_smt x))
                 (__smtx_typeof (__eo_to_smt xs)) by
-            rw [__smtx_typeof.eq_45]) hNonNone with
+            rw [__smtx_typeof.eq_44]) hNonNone with
         ⟨smtWidth, hXTy, hXsTy⟩
       have hXTrans : RuleProofs.eo_has_smt_translation x := by
         rw [RuleProofs.eo_has_smt_translation, hXTy]
@@ -299,7 +299,7 @@ private theorem list_smt_type_or_nil_of_concat_type
       apply Or.inl
       change __smtx_typeof
           (SmtTerm.bvxor (__eo_to_smt x) (__eo_to_smt xs)) = _
-      rw [__smtx_typeof.eq_45]
+      rw [__smtx_typeof.eq_44]
       simp [__smtx_typeof_bv_op_2, hXTy, hXsTy,
         native_nateq, native_ite]
   | case4 nil z hNil hZ hNot =>

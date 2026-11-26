@@ -119,7 +119,7 @@ private theorem smtx_typeof_sigma :
     __smtx_typeof (__eo_to_smt sigma) = SmtType.RegLan := by
   change __smtx_typeof (SmtTerm.re_mult SmtTerm.re_allchar) =
     SmtType.RegLan
-  rw [typeof_re_mult_eq, __smtx_typeof.eq_105]
+  rw [typeof_re_mult_eq, __smtx_typeof.eq_104]
   decide +kernel
 
 private theorem smtx_model_eval_sigma (M : SmtModel) :

@@ -498,31 +498,51 @@ theorem smtx_bv_sizeof_term_non_none
         rfl
       exact h hNone
 
-/-- The shapes a generically translated application can take: the SMT
-application `d`, no term, or a `let`. -/
-def EoToSmtApplyShape (r d : SmtTerm) : Prop :=
-  r = d ∨ r = SmtTerm.None ∨ ∃ bs b, r = SmtTerm.bind bs b
+/-! ## Lambdas
 
-theorem eo_to_smt_apply_shape (g y : SmtTerm) :
-    EoToSmtApplyShape (__eo_to_smt_apply g y) (SmtTerm.Apply g y) := by
-  unfold __eo_to_smt_apply
+A lambda is a stub: it translates to the curried chain of `lam`s of its
+variables, or to no term when it binds none. -/
+
+/-- The curried chain of `lam`s around `F` for the variables `vs`, when there
+is at least one: a `lam`, or no term. -/
+theorem eo_to_smt_lambda_curry_shape (vs : Term) (F : SmtTerm)
+    (h : vs ≠ Term.__eo_List_nil) :
+    __eo_to_smt_lambda_curry vs F = SmtTerm.None ∨
+      ∃ s T G, __eo_to_smt_lambda_curry vs F = SmtTerm.lam s T G := by
+  unfold __eo_to_smt_lambda_curry
   split
-  · exact Or.inr (Or.inr ⟨_, _, rfl⟩)
+  · exact absurd rfl h
+  · rename_i s T vs'
+    simp only [native_ite]
+    cases __smtx_type_wf_component (__eo_to_smt_type T)
+    · exact Or.inl rfl
+    · exact Or.inr ⟨_, _, _, rfl⟩
   · exact Or.inl rfl
 
-/-- A generic application translates to the SMT application, or to a `let`
-(when its head is a lambda still waiting for an argument). -/
-theorem eo_to_smt_apply_generic_cases {g y r : SmtTerm}
-    (h : __eo_to_smt_apply g y = r) :
-    r = SmtTerm.Apply g y ∨ r = SmtTerm.None ∨
-      ∃ bs b, r = SmtTerm.bind bs b := by
-  subst h
-  exact eo_to_smt_apply_shape _ _
+theorem eo_to_smt_lambda_nil (body : Term) :
+    __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) Term.__eo_List_nil) body) =
+      SmtTerm.None := rfl
 
-/-- Closes a goal from a hypothesis `h : __eo_to_smt (Term.Apply f y) = r`,
-where the application is translated generically, by the shapes of
-`eo_to_smt_apply_generic_cases` (each of which must refute `h`). -/
-macro "eo_to_smt_generic_apply_cases" h:ident : tactic =>
-  `(tactic| (refine (fun hc => ?_) (eo_to_smt_apply_generic_cases $h); rcases hc with hc | hc | ⟨_, _, hc⟩ <;> cases hc))
+theorem eo_to_smt_lambda_of_ne_nil (us body : Term) (h : us ≠ Term.__eo_List_nil) :
+    __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body) =
+      __eo_to_smt_lambda_curry us (__eo_to_smt body) := by
+  cases us <;> first | exact absurd rfl h | rfl
+
+/-- A lambda translates to a `lam`, or to no term. -/
+theorem eo_to_smt_lambda_shape (us body : Term) :
+    __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body) = SmtTerm.None ∨
+      ∃ s T G, __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body) =
+        SmtTerm.lam s T G := by
+  by_cases h : us = Term.__eo_List_nil
+  · subst h
+    exact Or.inl rfl
+  · rw [eo_to_smt_lambda_of_ne_nil us body h]
+    exact eo_to_smt_lambda_curry_shape us _ h
+
+/-- Closes a goal from `h : __eo_to_smt (lambda us body) = r`, where `r` is
+neither no term nor a `lam`. -/
+macro "eo_to_smt_lambda_cases" h:ident : tactic =>
+  `(tactic| (rcases TranslationProofs.eo_to_smt_lambda_shape _ _ with hc | ⟨_, _, _, hc⟩ <;>
+      rw [hc] at $h:ident <;> cases $h:ident))
 
 end TranslationProofs

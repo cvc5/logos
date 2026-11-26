@@ -239,7 +239,7 @@ private theorem bv_list_repeat_rec_eval_eq_repeat_rec
           SmtTerm.concat (__eo_to_smt a)
             (__eo_to_smt
               (__eo_list_repeat_rec (Term.UOp UserOp.concat) a n)) by rfl]
-      rw [__smtx_model_eval.eq_38, __smtx_repeat_rec]
+      rw [__smtx_model_eval.eq_37, __smtx_repeat_rec]
       rw [ih]
 
 private theorem bv_list_repeat_singleton_eval_eq_repeat_rec
@@ -320,7 +320,7 @@ private theorem bv_list_repeat_singleton_eval_eq_repeat_rec
           -- v4.33 `simp` already leaves the concat translated, so the explicit
           -- `rw` is redundant; only the `succ`/`+ 1` spelling has to be aligned.
           simp only [Nat.succ_eq_add_one] at hTailEval
-          rw [__smtx_model_eval.eq_38, __smtx_repeat_rec]
+          rw [__smtx_model_eval.eq_37, __smtx_repeat_rec]
           rw [hTailEval]
 
 /-- Past the maximum repeat count the generated list is stuck, and so is the
@@ -419,7 +419,7 @@ private theorem bv_repeat_elim_eval_rel
     type_preservation M hM (__eo_to_smt a) hANN
   rw [haTy] at hEvalTy
   rcases bitvec_value_canonical hEvalTy with ⟨payload, hEvalA⟩
-  rw [__smtx_model_eval.eq_40, __smtx_model_eval.eq_2, hEvalA]
+  rw [__smtx_model_eval.eq_39, __smtx_model_eval.eq_2, hEvalA]
   simp [__smtx_model_eval_repeat]
   exact RuleProofs.smt_value_rel_refl _
 

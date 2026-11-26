@@ -638,7 +638,7 @@ theorem EvaluateProofInternal.run_evaluate_sound_apply_extract_core
           __smtx_model_eval_extract
             (SmtValue.Numeral i) (SmtValue.Numeral j)
             (__smtx_model_eval M (__eo_to_smt x)) by
-      rw [__smtx_model_eval.eq_39, __smtx_model_eval.eq_2,
+      rw [__smtx_model_eval.eq_38, __smtx_model_eval.eq_2,
         __smtx_model_eval.eq_2]]
     rw [hXEval]
     change

@@ -9,8 +9,7 @@ import all Cpc.Proofs.Translation.Lambda
 Lemmas about lambda spines (`LamSpine`) stated over Lean lists: the variables
 a lambda binds as a list of EO variable keys, its arguments in application
 order, the bindings of a spine that applies its lambda to all its variables,
-and the models those bindings push. Shared by the substitution engine and the
-`beta-reduce` rule.
+and the models those bindings push. Used by the substitution engine.
 -/
 
 public section
@@ -32,25 +31,11 @@ namespace LamSpineSupport
   | [], acc => acc
   | a :: l, acc => Term.Apply (Term.Apply Term.__eo_List_cons a) (eoListApp l acc)
 
-/-- What `__beta_reduce` accumulates: the arguments `r`, listed last first, in
-application order in front of `acc`. -/
-@[expose] def revAcc : List Term -> Term -> Term
-  | [], acc => acc
-  | a :: r, acc => revAcc r (Term.Apply (Term.Apply Term.__eo_List_cons a) acc)
-
 theorem eoListApp_append (l1 l2 : List Term) (acc : Term) :
     eoListApp (l1 ++ l2) acc = eoListApp l1 (eoListApp l2 acc) := by
   induction l1 with
   | nil => rfl
   | cons a l ih => simp [eoListApp, ih]
-
-theorem revAcc_eq (r : List Term) (acc : Term) :
-    revAcc r acc = eoListApp r.reverse acc := by
-  induction r generalizing acc with
-  | nil => rfl
-  | cons a r ih =>
-      rw [revAcc, ih, List.reverse_cons, eoListApp_append]
-      rfl
 
 /-- The EO variable `s : T`. -/
 @[expose] def mkVar (p : native_String × Term) : Term :=
@@ -320,22 +305,11 @@ theorem push_bindings_lamBindings_eoVarList (M : SmtModel)
 /-! ## Typed spines -/
 
 /-- A typed spine applies its lambda to at least as many arguments as it binds
-variables. -/
+variables (vacuously: no spine is typed). -/
 theorem spine_args_ge_vars {t us body : Term} {r : List Term} (h : LamSpine t us body r)
     (hNN : __smtx_typeof (__eo_to_smt t) ≠ SmtType.None) :
-    ∃ m, lamVars us m = true ∧ m ≤ r.length := by
-  obtain ⟨⟨m, hv⟩, -, -⟩ := h.parts_typed_any hNN
-  refine ⟨m, hv, ?_⟩
-  by_contra hlt
-  have hlt : r.length < m := by omega
-  have hpre := lamVarsPrefix_of_lamVars_le us m r.length hv hlt.le
-  obtain ⟨s, T, vs, hD⟩ := eoListDrop_cons_of_lamVars_lt us m r.length hv hlt
-  rw [h.eo_to_smt_prefix.1 hpre, hD] at hNN
-  cases hw : lamVarWf T
-  · rw [curry_cons_of_not_wf _ _ _ _ hw] at hNN
-    exact hNN (by rw [smtx_typeof_bind_eq, smtx_typeof_none]; exact smtx_typeof_bindings_none _)
-  · rw [curry_cons_of_wf _ _ _ _ hw] at hNN
-    exact hNN (smtx_typeof_pending ⟨_, _, _, _, rfl⟩)
+    ∃ m, lamVars us m = true ∧ m ≤ r.length :=
+  absurd h.smtx_typeof_none hNN
 
 theorem smtx_typeof_apply_result {F X A B : SmtType}
     (hF : F = SmtType.FunType A B ∨ F = SmtType.DtcAppType A B) (hX : X = A)
@@ -348,7 +322,7 @@ theorem smtx_typeof_apply_result {F X A B : SmtType}
 
 /-- The variables a typed spine binds, the bindings of its arguments to them,
 and, when it has more arguments than variables, a type that is a proper part of
-its body's. -/
+its body's (vacuously: no spine is typed). -/
 theorem spine_prefix_typed {t us body : Term} {r : List Term} (h : LamSpine t us body r) :
     ∀ m, lamVars us m = true -> m ≤ r.length ->
       __smtx_typeof (__eo_to_smt t) ≠ SmtType.None ->
@@ -356,77 +330,16 @@ theorem spine_prefix_typed {t us body : Term} {r : List Term} (h : LamSpine t us
         term_has_non_none_type
           (SmtTerm.bind (lamBindings us rm SmtBindings.nil) (__eo_to_smt body)) ∧
         (m < r.length ->
-          sizeOf (__smtx_typeof (__eo_to_smt t)) < sizeOf (__smtx_typeof (__eo_to_smt body))) := by
-  induction h with
-  | lam us body =>
-      intro m hv hm hNN
-      simp only [List.length_nil, Nat.le_zero] at hm
-      subst hm
-      refine ⟨[], [], rfl, rfl, ?_, fun h => absurd h (by simp)⟩
-      obtain ⟨vs, hl, hus⟩ := lamVars_exists us 0 hv
-      rw [List.length_eq_zero_iff] at hl
-      subst hl
-      subst hus
-      exact hNN
-  | @app f us body r a hf ih =>
-      intro m hv hm hNN
-      simp only [List.length_cons] at hm
-      by_cases hmr : m = r.length + 1
-      · refine ⟨[], a :: r, rfl, by simp [hmr], ?_, fun h => by simp at h; omega⟩
-        have hv' : lamVars us (a :: r).length = true := by simpa [hmr] using hv
-        have hfull := (LamSpine.app a hf).eo_to_smt_full hv'
-        rw [hfull] at hNN
-        exact hNN
-      · have hmr' : m ≤ r.length := by omega
-        have hnp : ¬ SmtPendingLam (__eo_to_smt f) := by
-          intro hp
-          have hpre := lamVarsPrefix_of_pending_app a hf hp
-          rw [lamVarsPrefix_false_of_lamVars_lt us m _ hv (by simp; omega)] at hpre
-          cases hpre
-        have hApp : __eo_to_smt (Term.Apply f a) =
-            SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt a) := by
-          rw [hf.eo_to_smt_app a, eo_to_smt_apply_of_not_pending _ hnp]
-        have hTy : __smtx_typeof (__eo_to_smt (Term.Apply f a)) =
-            __smtx_typeof_apply (__smtx_typeof (__eo_to_smt f)) (__smtx_typeof (__eo_to_smt a)) := by
-          rw [hApp]
-          rcases hf.eo_to_smt_bind_or_apply with ⟨bs, b, hg⟩ | ⟨g, x, hg⟩ <;> rw [hg] <;> rfl
-        have hNN' := hNN
-        rw [hTy] at hNN'
-        obtain ⟨A, B, hF, hX, hA, _⟩ := typeof_apply_non_none_cases hNN'
-        obtain ⟨hRes, hSize⟩ := smtx_typeof_apply_result hF hX hA
-        have hFNN : __smtx_typeof (__eo_to_smt f) ≠ SmtType.None := by
-          rcases hF with hF | hF <;> rw [hF] <;> simp
-        obtain ⟨extra, rm, hr, hlen, htyped, hlt⟩ := ih m hv hmr' hFNN
-        refine ⟨a :: extra, rm, by simp [hr], hlen, htyped, fun _ => ?_⟩
-        have hfle : sizeOf (__smtx_typeof (__eo_to_smt f)) ≤
-            sizeOf (__smtx_typeof (__eo_to_smt body)) := by
-          by_cases hm' : m < r.length
-          · exact (hlt hm').le
-          · have hmeq : m = r.length := by omega
-            subst hmeq
-            have hfull := hf.eo_to_smt_full hv
-            have hFNN' : term_has_non_none_type (__eo_to_smt f) := hFNN
-            rw [hfull] at hFNN' ⊢
-            rw [bind_term_typeof_of_non_none hFNN']
-        rw [hTy, hRes]
-        omega
+          sizeOf (__smtx_typeof (__eo_to_smt t)) < sizeOf (__smtx_typeof (__eo_to_smt body))) :=
+  fun _ _ _ hNN => absurd h.smtx_typeof_none hNN
 
-/-- The translation of an application of a spine whose lambda does not wait
-for an argument is the SMT application. -/
+/-- The translation of an application of a spine is the SMT application. -/
 theorem eo_to_smt_mkSpine_apply_of_lamVars_lt {us body : Term} {m : Nat}
     (hv : lamVars us m = true) (a : Term) (r : List Term) (hlt : m < r.length + 1) :
     __eo_to_smt (mkSpine (lamT us body) (a :: r)) =
       SmtTerm.Apply (__eo_to_smt (mkSpine (lamT us body) r))
-        (__eo_to_smt a) := by
-  have hs := lamSpine_mkSpine us body r
-  have hnp : ¬ TranslationProofs.SmtPendingLam
-      (__eo_to_smt (mkSpine (lamT us body) r)) := by
-    intro hp
-    have hpre := lamVarsPrefix_of_pending_app a hs hp
-    rw [lamVarsPrefix_false_of_lamVars_lt us m _ hv (by simpa using hlt)] at hpre
-    cases hpre
-  change __eo_to_smt (Term.Apply (mkSpine (lamT us body) r) a) = _
-  rw [hs.eo_to_smt_app a, TranslationProofs.eo_to_smt_apply_of_not_pending _ hnp]
+        (__eo_to_smt a) :=
+  (lamSpine_mkSpine us body r).eo_to_smt_app a
 
 theorem smtx_typeof_mkSpine_apply {us body : Term} (a : Term) (r : List Term) :
     __smtx_typeof (SmtTerm.Apply
@@ -435,7 +348,7 @@ theorem smtx_typeof_mkSpine_apply {us body : Term} (a : Term) (r : List Term) :
       __smtx_typeof_apply
         (__smtx_typeof (__eo_to_smt (mkSpine (lamT us body) r)))
         (__smtx_typeof (__eo_to_smt a)) := by
-  rcases (lamSpine_mkSpine us body r).eo_to_smt_bind_or_apply with
-    ⟨bs, b, hg⟩ | ⟨g, x, hg⟩ <;> rw [hg] <;> rfl
+  rcases (lamSpine_mkSpine us body r).eo_to_smt_shape with
+    hg | ⟨_, _, _, hg⟩ | ⟨_, _, hg⟩ <;> rw [hg] <;> rfl
 
 end LamSpineSupport

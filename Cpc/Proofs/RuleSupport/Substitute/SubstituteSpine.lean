@@ -550,7 +550,7 @@ theorem smtx_typeof_bindings_bindsApp_congr (U : SmtType) :
   | _ :: _, [], _, _, h, _ => by simp at h
 
 /-- The SMT type of a spine depends only on those of the types of its lambda's
-variables, its body and its arguments. -/
+variables, its body and its arguments (it has none). -/
 theorem smtx_typeof_mkSpine_congr (vs vs' : List (native_String × Term)) (B B' : Term)
     (σ : Term -> Term)
     (hlen : vs'.length = vs.length)
@@ -564,32 +564,8 @@ theorem smtx_typeof_mkSpine_congr (vs vs' : List (native_String × Term)) (B B' 
           (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs') B') (r.map σ))) =
         __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine
           (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs) B) r))
-  | r, hm, hArgs => by
-      by_cases hmr : vs.length = r.length
-      · rw [(LamSpineSupport.lamSpine_mkSpine _ B r).eo_to_smt_full (hmr ▸ hv),
-          (LamSpineSupport.lamSpine_mkSpine _ B' (r.map σ)).eo_to_smt_full
-            (by simpa [hmr] using hv'),
-          smtx_typeof_bind_eq, smtx_typeof_bind_eq,
-          LamSpineSupport.lamBindings_eoVarList vs r SmtBindings.nil (by omega),
-          LamSpineSupport.lamBindings_eoVarList vs' (r.map σ) SmtBindings.nil (by simp; omega),
-          show vs.take r.length = vs by rw [← hmr, List.take_length],
-          show vs'.take (r.map σ).length = vs' by rw [List.length_map, ← hmr, ← hlen, List.take_length],
-          ← List.map_reverse, hB]
-        exact smtx_typeof_bindings_bindsApp_congr _ vs vs' r.reverse σ hTys
-          (fun x hx => hArgs x (List.mem_reverse.1 hx))
-      · cases r with
-        | nil => exact absurd (Nat.le_zero.1 hm) hmr
-        | cons a r =>
-            simp only [List.length_cons] at hm hmr
-            change __smtx_typeof (__eo_to_smt (LamSpineSupport.mkSpine
-                (LamSpineSupport.lamT (LamSpineSupport.eoVarList vs') B') (σ a :: r.map σ))) = _
-            rw [LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv a r (by omega),
-              LamSpineSupport.eo_to_smt_mkSpine_apply_of_lamVars_lt hv' (σ a) (r.map σ)
-                (by simp; omega),
-              LamSpineSupport.smtx_typeof_mkSpine_apply, LamSpineSupport.smtx_typeof_mkSpine_apply,
-              smtx_typeof_mkSpine_congr vs vs' B B' σ hlen hTys hB hv hv' r (by omega)
-                (fun x hx => hArgs x (List.mem_cons_of_mem _ hx)),
-              hArgs a List.mem_cons_self]
-termination_by r => r.length
+  | r, _, _ => by
+      rw [(LamSpineSupport.lamSpine_mkSpine _ B r).smtx_typeof_none,
+        (LamSpineSupport.lamSpine_mkSpine _ B' (r.map σ)).smtx_typeof_none]
 
 end InstantiateRule

@@ -44,22 +44,6 @@ by
   exact TranslationProofs.typeof_apply_apply_none_head_eq
     (__eo_to_smt v) (__eo_to_smt vs)
 
-/-- A raw EO binder list is not a lambda, so an application of one translates
-to the SMT application. -/
-theorem eo_to_smt_apply_eo_list_cons (v : Term) (y : SmtTerm) :
-  __eo_to_smt_apply (__eo_to_smt (Term.Apply Term.__eo_List_cons v)) y =
-    SmtTerm.Apply (__eo_to_smt (Term.Apply Term.__eo_List_cons v)) y :=
-by
-  rfl
-
-/-- An SMT application is not a pending lambda, so `__eo_to_smt_apply` on it is
-the SMT application. -/
-theorem eo_to_smt_apply_smt_apply (a b y : SmtTerm) :
-  __eo_to_smt_apply (SmtTerm.Apply a b) y =
-    SmtTerm.Apply (SmtTerm.Apply a b) y :=
-by
-  rfl
-
 /-- Currying a lambda over a raw EO binder list gives an SMT term without a
 type: either a bare `lam` or `None`. -/
 theorem smtx_typeof_lambda_curry_eo_list_cons (v vs : Term) (F : SmtTerm) :
@@ -109,14 +93,13 @@ by
     exact False.elim (hForall rfl)
   case «exists» =>
     exact False.elim (hExists rfl)
+  case lambda =>
+    exact (TranslationProofs.LamSpine.lam _ body).smtx_typeof_none
   all_goals
     have hNeg : native_zleq 0 (native_zneg 1) = false := by
       decide +kernel
-    try rw [TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
-      (TranslationProofs.not_isLamSpine_of_head (by simp [TranslationProofs.eoSpineHead]))]
     try dsimp only [__eo_to_smt]
-    simp [eo_to_smt_apply_eo_list_cons, eo_to_smt_apply_smt_apply,
-      smtx_typeof_unfolded_eo_list_cons_eq_none, __smtx_typeof,
+    simp [smtx_typeof_unfolded_eo_list_cons_eq_none, __smtx_typeof,
       __smtx_typeof_apply, __smtx_typeof_eq, __smtx_typeof_guard,
       __smtx_typeof_guard_wf, __smtx_typeof_ite, __smtx_typeof_bv_op_1,
       __smtx_typeof_bv_op_1_ret, __smtx_typeof_bv_op_2,
@@ -141,9 +124,6 @@ by
       __smtx_type_wf_rec, __smtx_dt_wf_rec, __smtx_dt_cons_wf_rec,
       __smtx_typeof_dt_cons_rec, smtx_dt_cons_wf_rec_cons_none_eq_false,
       hNeg, native_ite, native_Teq, native_and]
-  case lambda =>
-    rw [smtx_typeof_lambda_curry_eo_list_cons]
-    exact TranslationProofs.smtx_typeof_bindings_none _
   case _at_strings_stoi_result =>
     by_cases hBodyNone :
         __smtx_typeof (__eo_to_smt body) = SmtType.None
@@ -3053,7 +3033,7 @@ theorem typeof_bvnot_eq_closed
   __smtx_typeof (SmtTerm.bvnot t) =
     __smtx_typeof_bv_op_1 (__smtx_typeof t) :=
 by
-  rw [__smtx_typeof.eq_40]
+  rw [__smtx_typeof.eq_39]
 
 theorem bvnot_arg_has_smt_translation_of_has_smt_translation
     {x : Term}
@@ -3073,14 +3053,14 @@ theorem typeof_bvneg_eq_closed
   __smtx_typeof (SmtTerm.bvneg t) =
     __smtx_typeof_bv_op_1 (__smtx_typeof t) :=
 by
-  rw [__smtx_typeof.eq_48]
+  rw [__smtx_typeof.eq_47]
 
 theorem typeof_bvnego_eq_closed
     (t : SmtTerm) :
   __smtx_typeof (SmtTerm.bvnego t) =
     __smtx_typeof_bv_op_1_ret (__smtx_typeof t) SmtType.Bool :=
 by
-  rw [__smtx_typeof.eq_73]
+  rw [__smtx_typeof.eq_72]
 
 theorem bvneg_arg_has_smt_translation_of_has_smt_translation
     {x : Term}

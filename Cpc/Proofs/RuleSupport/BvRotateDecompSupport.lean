@@ -694,7 +694,7 @@ private theorem eval_rotate_mod_term_of_width_ne_zero
   change __smtx_model_eval M
       (SmtTerm.mod (SmtTerm.Numeral i)
         (__eo_to_smt (Term.Apply (Term.UOp UserOp._at_bvsize) x))) = _
-  rw [__smtx_model_eval.eq_29, eval_bvsize_rotate M x w hw0 hXSmtTy]
+  rw [__smtx_model_eval.eq_28, eval_bvsize_rotate M x w hw0 hXSmtTy]
   simp [__smtx_model_eval, __smtx_model_eval_eq, __smtx_model_eval_ite,
     __smtx_model_eval_mod_total, native_veq, hwNe]
 

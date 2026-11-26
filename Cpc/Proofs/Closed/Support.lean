@@ -3652,11 +3652,26 @@ theorem eo_is_closed_rec_lam_spine_parts
       · exact hCases.2
       · exact hArgs a' ha'
 
-/-- The translation of an EO-closed lambda spine whose arguments are all bound
-to variables of its lambda is closed. -/
+/-- The translation of a lambda spine is closed when that of its lambda and
+those of its arguments are. -/
+theorem smtTermClosedIn_lam_spine_of_parts
+    {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
+    {vars : List SmtVarKey}
+    (hLam : SmtTermClosedIn vars
+      (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body)))
+    (hArgs : ∀ a ∈ r, SmtTermClosedIn vars (__eo_to_smt a)) :
+    SmtTermClosedIn vars (__eo_to_smt t) := by
+  induction hs with
+  | lam => exact hLam
+  | app a hf ih =>
+      rw [hf.eo_to_smt_app a]
+      exact ⟨ih hLam (fun a' h => hArgs a' (List.mem_cons_of_mem a h)),
+        hArgs a List.mem_cons_self⟩
+
+/-- The translation of an EO-closed lambda spine is closed: the chain of its
+lambda, applied to its arguments. -/
 theorem smtTermClosedIn_eo_to_smt_lam_spine
     {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
-    (hp : TranslationProofs.lamVarsPrefix us r.length = true)
     {env : Term} {vars : List SmtVarKey}
     (hEnv : EoSmtVarEnvPerm env vars)
     (hRec :
@@ -3668,44 +3683,25 @@ theorem smtTermClosedIn_eo_to_smt_lam_spine
     (hClosed : __eo_is_closed_rec t env = Term.Boolean true) :
   SmtTermClosedIn vars (__eo_to_smt t) :=
 by
-  rw [hs.eo_to_smt_prefix.1 hp]
   obtain ⟨hBodyLt, hArgsLt⟩ := hs.sizeOf_lt
   obtain ⟨hBodyClosed, hArgsClosed⟩ := eo_is_closed_rec_lam_spine_parts hEnv hs hClosed
-  refine ⟨?_, ?_⟩
-  · refine (SmtBindingsClosedIn.iff_mem _).2 ?_
-    intro s T v hm
-    rcases TranslationProofs.lamBindings_mem_inv us r SmtBindings.nil hm with hm | ⟨a, ha, rfl⟩
-    · cases hm
-    · exact hRec (hArgsLt a ha) hEnv (hArgsClosed a ha)
-  · by_cases hvl : ∃ m, TranslationProofs.lamVars (TranslationProofs.eoListDrop r.length us) m = true
+  have hLam : SmtTermClosedIn vars
+      (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body)) := by
+    by_cases hnil : us = Term.__eo_List_nil
+    · subst hnil
+      rw [TranslationProofs.eo_to_smt_lambda_nil]
+      trivial
+    rw [TranslationProofs.eo_to_smt_lambda_of_ne_nil _ _ hnil]
+    by_cases hvl : ∃ m, TranslationProofs.lamVars us m = true
     · obtain ⟨m, hm⟩ := hvl
-      have hv := lamVars_of_prefix_drop r.length us hp hm
-      have hBody := hRec hBodyLt
-        (EoSmtVarEnvPerm.concat_rev (eoSmtVarEnv_of_lambda_vars _ hv) hEnv) hBodyClosed
-      apply smtTermClosedIn_curry
-      refine SmtTermClosedIn.mono ?_ hBody
-      intro s T hm'
-      rw [lamBindings_keys hp r SmtBindings.nil (Nat.le_refl _)]
-      have hsplit := eoVarKeys_drop r.length us hp
-      simp only [List.mem_append, List.mem_reverse] at hm' ⊢
-      rw [hsplit] at hm'
-      simp only [List.mem_append] at hm'
-      simp only [SmtBindings.keys]
-      tauto
+      exact smtTermClosedIn_curry _ _ _ (hRec hBodyLt
+        (EoSmtVarEnvPerm.concat_rev (eoSmtVarEnv_of_lambda_vars _ hm) hEnv) hBodyClosed)
     · exact smtTermClosedIn_curry_of_not_vars _ (fun m h => hvl ⟨m, h⟩) _ _
+  exact smtTermClosedIn_lam_spine_of_parts hs hLam
+    (fun a ha => hRec (hArgsLt a ha) hEnv (hArgsClosed a ha))
 
-/-- Proves the translation equation a generic application lemma takes, in
-either its `__eo_to_smt_apply` or its `SmtTerm.Apply` form, for an application
-whose head is not a lambda spine. -/
-macro "closed_generic_rfl" : tactic =>
-  `(tactic| first
-    | rfl
-    | eo_to_smt_generic_rfl
-    | (rw [TranslationProofs.eo_to_smt_apply_of_not_pending]
-       · rfl
-       · exact fun hp => TranslationProofs.not_isLamSpine_of_head
-           (by simp [TranslationProofs.eoSpineHead])
-           (TranslationProofs.eo_to_smt_pending_spine _ hp)))
+/-- Proves the translation equation a generic application lemma takes. -/
+macro "closed_generic_rfl" : tactic => `(tactic| rfl)
 
 theorem smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
     {f x env : Term} {vars : List SmtVarKey}
@@ -3744,7 +3740,7 @@ theorem smtTermClosedIn_eo_to_smt_apply_generic_below
     {f x env : Term} {vars : List SmtVarKey}
     (hgen :
       __eo_to_smt (Term.Apply f x) =
-        __eo_to_smt_apply (__eo_to_smt f) (__eo_to_smt x))
+        SmtTerm.Apply (__eo_to_smt f) (__eo_to_smt x))
     (hNotForall :
       ∀ vs, f ≠ Term.Apply (Term.UOp UserOp.forall) vs)
     (hNotExists :
@@ -3762,17 +3758,12 @@ theorem smtTermClosedIn_eo_to_smt_apply_generic_below
       intro vs h; cases h) :
   SmtTermClosedIn vars (__eo_to_smt (Term.Apply f x)) :=
 by
-  by_cases hp : TranslationProofs.SmtPendingLam (__eo_to_smt f)
-  · obtain ⟨us, body, r, hs⟩ := TranslationProofs.eo_to_smt_pending_spine f hp
-    exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.app x hs)
-      (TranslationProofs.lamVarsPrefix_of_pending_app x hs hp) hEnv hRec hClosed
   have hFLt : sizeOf f < sizeOf (Term.Apply f x) := by
     simp
     omega
   have hXLt : sizeOf x < sizeOf (Term.Apply f x) := by
     simp
-  exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-    (TranslationProofs.eo_to_smt_apply_eq_of_not_pending hgen hp)
+  exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using hgen
     hNotForall hNotExists hEnv
     (fun hEnv' hClosed' => hRec hFLt hEnv' hClosed')
     (fun hEnv' hClosed' => hRec hXLt hEnv' hClosed')
@@ -6407,7 +6398,7 @@ by
     exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_qdiv_total hx hy)
   case lambda =>
-    exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.lam x y) rfl hEnv
+    exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.lam x y) hEnv
       (fun _ hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   case «forall» =>
     exact smtTermClosedIn_eo_to_smt_forall_of_closed_rec_using
@@ -7399,7 +7390,7 @@ by
     exact binary (by decide) (by decide) (by decide)
       (fun hx hy => smtTermClosedIn_eo_to_smt_qdiv_total hx hy)
   case lambda =>
-    exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.lam x y) rfl hEnv
+    exact smtTermClosedIn_eo_to_smt_lam_spine (TranslationProofs.LamSpine.lam x y) hEnv
       hRec hClosed
   case «forall» =>
     exact smtTermClosedIn_eo_to_smt_forall_of_closed_rec_using

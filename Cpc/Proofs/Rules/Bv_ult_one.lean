@@ -363,7 +363,7 @@ private theorem eo_has_bool_type_bvult_one_lhs
       (SmtTerm.bvult (__eo_to_smt x)
         (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral i)) (Term.Numeral 1)))) =
     SmtType.Bool
-  rw [__smtx_typeof.eq_57]
+  rw [__smtx_typeof.eq_56]
   simp [__smtx_typeof_bv_op_2_ret, hXSmtTy, hOneTy, native_nateq, native_ite]
 
 private theorem eo_has_bool_type_eq_bv_zero
@@ -492,7 +492,7 @@ private theorem eval_bvult_one_matches_eq_zero
     __smtx_model_eval M
       (SmtTerm.eq (__eo_to_smt x)
         (__eo_to_smt (Term.Apply (Term.UOp1 UserOp1.int_to_bv (Term.Numeral i)) (Term.Numeral 0))))
-  rw [__smtx_model_eval.eq_58, smtx_eval_eq_term_eq, hEvalX, hOneEval, hZeroEval]
+  rw [__smtx_model_eval.eq_57, smtx_eval_eq_term_eq, hEvalX, hOneEval, hZeroEval]
   by_cases hPayloadZero : payload = 0
   · subst payload
     simp [__smtx_model_eval_bvult, __smtx_model_eval_bvugt,

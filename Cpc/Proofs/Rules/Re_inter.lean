@@ -95,7 +95,7 @@ private theorem re_inter_result_has_bool_type_of_premises_bool
         (SmtTerm.re_inter (__eo_to_smt r)
           (SmtTerm.re_inter (__eo_to_smt t) SmtTerm.re_all))) = SmtType.Bool
   rw [typeof_str_in_re_eq, typeof_re_inter_eq, typeof_re_inter_eq]
-  simp [hArgsXR.1, hArgsXR.2, hArgsXT.2, __smtx_typeof.eq_107,
+  simp [hArgsXR.1, hArgsXR.2, hArgsXT.2, __smtx_typeof.eq_106,
     native_ite, native_Teq]
 
 private theorem facts_re_inter
@@ -118,15 +118,15 @@ private theorem facts_re_inter
                 (SmtTerm.re_inter (__eo_to_smt r)
                   (SmtTerm.re_inter (__eo_to_smt t) SmtTerm.re_all))) =
             SmtValue.Boolean true
-          rw [__smtx_model_eval.eq_121, __smtx_model_eval.eq_117,
-            __smtx_model_eval.eq_117, __smtx_model_eval.eq_108]
+          rw [__smtx_model_eval.eq_120, __smtx_model_eval.eq_116,
+            __smtx_model_eval.eq_116, __smtx_model_eval.eq_107]
           change __smtx_model_eval M
               (SmtTerm.str_in_re (__eo_to_smt x) (__eo_to_smt r)) =
             SmtValue.Boolean true at hEvalXR
           change __smtx_model_eval M
               (SmtTerm.str_in_re (__eo_to_smt x) (__eo_to_smt t)) =
             SmtValue.Boolean true at hEvalXT
-          rw [__smtx_model_eval.eq_121] at hEvalXR hEvalXT
+          rw [__smtx_model_eval.eq_120] at hEvalXR hEvalXT
           cases hx : __smtx_model_eval M (__eo_to_smt x) with
           | Seq ss =>
               cases hr : __smtx_model_eval M (__eo_to_smt r) with

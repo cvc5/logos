@@ -931,8 +931,9 @@
 ; The proof-level binder of CPC. SMT-LIB has no lambda, and CPC has no rule
 ; that beta reduces one, so a lambda is only a stub: (lambda (x1 ... xn) t)
 ; transforms into the curried chain lam x1 T1 ... (lam xn Tn t), which has no
-; type and no value, see lam in smt.eos. An application of a lambda is the
-; generic application of that chain, and has none either.
+; type and no value, see lam in smt.eos, and a lambda binding no variables
+; transforms into no term. An application of a lambda is the generic
+; application of that chain, and has none either.
 
 ; The curried chain of the variables of vs around F, the body. A list that is
 ; not one of variables is no term, and neither is one with a variable whose
@@ -953,7 +954,8 @@
 
 ; -- lambda
 (define-symbol lambda ((! vs :raw) body)
-  :term ($eo_to_smt_lambda_curry vs body))
+  :term (lambda eo.list_nil body) none
+  :term (lambda vs body) ($eo_to_smt_lambda_curry vs body))
 
 
 ;-----------------------------------------------------------------------------

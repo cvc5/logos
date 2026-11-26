@@ -1020,7 +1020,7 @@ private theorem re_list_repeat_rec_eval_eq_pow
             (__eo_to_smt
               (__eo_list_repeat_rec (Term.UOp UserOp.re_concat) a n))) =
         SmtValue.RegLan (nativeRePow (Nat.succ n) rv)
-      rw [__smtx_model_eval.eq_116, haEval, ih]
+      rw [__smtx_model_eval.eq_115, haEval, ih]
       simp [__smtx_model_eval_re_concat, nativeRePow]
 
 private theorem re_list_repeat_singleton_eval_eq_pow
@@ -1104,7 +1104,7 @@ private theorem re_list_repeat_singleton_eval_eq_pow
                   (__eo_list_repeat_rec (Term.UOp UserOp.re_concat) a
                     (Nat.succ n)))) =
             SmtValue.RegLan (nativeRePow (Nat.succ (Nat.succ n)) rv)
-          rw [__smtx_model_eval.eq_116, haEval, hTailEval]
+          rw [__smtx_model_eval.eq_115, haEval, hTailEval]
           simp [__smtx_model_eval_re_concat, nativeRePow]
 
 private def zeroList : native_Nat -> Term
@@ -1177,7 +1177,7 @@ private theorem re_loop_elim_raw_rec_eval_eq
                 (__eo_list_repeat_rec (Term.UOp UserOp.re_concat) a start)))
             SmtTerm.re_none) =
         SmtValue.RegLan (nativeLoopRaw 0 rv (nativeRePow start rv))
-      rw [__smtx_model_eval.eq_118, hSingEval]
+      rw [__smtx_model_eval.eq_117, hSingEval]
       have hNoneEval :
           __smtx_model_eval M SmtTerm.re_none =
             SmtValue.RegLan native_re_none := by
@@ -1231,7 +1231,7 @@ private theorem re_loop_elim_raw_rec_eval_eq
                   (__eo_list_repeat_rec (Term.UOp UserOp.re_concat) a start))))) =
         SmtValue.RegLan
           (nativeLoopRaw (Nat.succ len) rv (nativeRePow start rv))
-      rw [__smtx_model_eval.eq_118, hSingEval, hTailEval]
+      rw [__smtx_model_eval.eq_117, hSingEval, hTailEval]
       simp [__smtx_model_eval_re_union, nativeLoopRaw]
 
 private theorem re_loop_elim_raw_rec_not_nil
@@ -1658,7 +1658,7 @@ theorem re_loop_elim_eval_rel
         (SmtTerm.re_loop (SmtTerm.Numeral lo) (SmtTerm.Numeral hi)
           (__eo_to_smt a)) =
       SmtValue.RegLan (nativeReLoopRec diffNat lo hi rv)
-    rw [__smtx_model_eval.eq_120, __smtx_model_eval.eq_2,
+    rw [__smtx_model_eval.eq_119, __smtx_model_eval.eq_2,
       __smtx_model_eval.eq_2, haEval]
     simp [__smtx_model_eval_re_loop, __smtx_model_eval_gt,
       __smtx_model_eval_lt, __smtx_model_eval_ite, hLt, diffNat, diff,

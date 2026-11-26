@@ -1645,46 +1645,19 @@ theorem model_agrees_except_on_env_push_bindings
         List.mem_append] at hKey ⊢
       tauto
 
-/-- A spine whose arguments are all bound to variables of its lambda is a
-`let` of them around the curried chain of the variables left. -/
-theorem smt_model_eval_lam_spine_prefix_eq_of_parts
-    {E B : List SmtVarKey} {M N : SmtModel}
-    {t us body : Term} {r : List Term} (hs : TranslationProofs.LamSpine t us body r)
-    (hp : TranslationProofs.lamVarsPrefix us r.length = true)
-    (hAgree : model_agrees_except_on_env E B M N)
-    (hArgs :
-      ∀ a ∈ r, __smtx_model_eval M (__eo_to_smt a) = __smtx_model_eval N (__eo_to_smt a))
-    (hBody :
-      ∀ {M' N' : SmtModel},
-        model_agrees_except_on_env E ((eoVarKeys us).reverse ++ B) M' N' ->
-          __smtx_model_eval M' (__eo_to_smt body) =
-            __smtx_model_eval N' (__eo_to_smt body)) :
-  __smtx_model_eval M (__eo_to_smt t) = __smtx_model_eval N (__eo_to_smt t) :=
+/-- A lambda evaluates to no value, in any model. -/
+theorem smt_model_eval_lambda_eq
+    {M N : SmtModel} (us body : Term) :
+  __smtx_model_eval M (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body)) =
+    __smtx_model_eval N
+      (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.lambda) us) body)) :=
 by
-  rw [hs.eo_to_smt_prefix.1 hp, smtx_model_eval_bind_eq, smtx_model_eval_bind_eq]
-  by_cases hD : TranslationProofs.eoListDrop r.length us = Term.__eo_List_nil
-  · rw [hD]
-    change
-      __smtx_model_eval _ (__eo_to_smt body) = __smtx_model_eval _ (__eo_to_smt body)
-    apply hBody
-    have hPush := model_agrees_except_on_env_push_bindings (M := M) (N := N)
-      (TranslationProofs.lamBindings us r SmtBindings.nil)
-      (fun s T v hm => by
-        rcases TranslationProofs.lamBindings_mem_inv us r SmtBindings.nil hm with
-          hm | ⟨a, ha, rfl⟩
-        · cases hm
-        · exact hArgs a ha)
-      hAgree
-    refine model_agrees_except_on_env_shrink_bound ?_ hPush
-    intro key hKey
-    rw [lamBindings_keys hp r SmtBindings.nil (Nat.le_refl _)]
-    have hsplit := eoVarKeys_drop r.length us hp
-    rw [hD] at hsplit
-    simp only [List.mem_append, List.mem_reverse] at hKey ⊢
-    rw [hsplit] at hKey
-    simp [eoVarKeys, SmtBindings.keys] at hKey ⊢
-    tauto
-  · rw [smtx_model_eval_lambda_curry_ne_nil _ _ hD, smtx_model_eval_lambda_curry_ne_nil _ _ hD]
+  by_cases hnil : us = Term.__eo_List_nil
+  · subst hnil
+    rw [TranslationProofs.eo_to_smt_lambda_nil, cat_smtx_model_eval_none_eq,
+      cat_smtx_model_eval_none_eq]
+  · rw [TranslationProofs.eo_to_smt_lambda_of_ne_nil _ _ hnil,
+      smtx_model_eval_lambda_curry_ne_nil _ _ hnil, smtx_model_eval_lambda_curry_ne_nil _ _ hnil]
 
 /-- Evaluation of a lambda spine depends only on its arguments and, under the
 variables of its lambda, its body. -/
@@ -1700,20 +1673,14 @@ theorem smt_model_eval_lam_spine_eq_of_parts
           __smtx_model_eval N' (__eo_to_smt body)) ->
     __smtx_model_eval M (__eo_to_smt t) = __smtx_model_eval N (__eo_to_smt t)
   | _, _, _, _, TranslationProofs.LamSpine.lam us body, hAgree, hArgs, hBody =>
-      smt_model_eval_lam_spine_prefix_eq_of_parts (TranslationProofs.LamSpine.lam us body)
-        rfl hAgree hArgs hBody
+      smt_model_eval_lambda_eq us body
   | _, _, _, _, @TranslationProofs.LamSpine.app f us body r a hf, hAgree, hArgs, hBody => by
-      by_cases hp : TranslationProofs.lamVarsPrefix us (a :: r).length = true
-      · exact smt_model_eval_lam_spine_prefix_eq_of_parts
-          (TranslationProofs.LamSpine.app a hf) hp hAgree hArgs hBody
-      · have hnp : ¬ TranslationProofs.SmtPendingLam (__eo_to_smt f) := fun hpend =>
-          hp (TranslationProofs.lamVarsPrefix_of_pending_app a hf hpend)
-        rw [hf.eo_to_smt_app a, TranslationProofs.eo_to_smt_apply_of_not_pending _ hnp]
-        exact smtx_model_eval_apply_eq_of_env
-          (model_agrees_on_env_nil_of_globals hAgree.globals)
-          (smt_model_eval_lam_spine_eq_of_parts hf hAgree
-            (fun a' ha' => hArgs a' (List.mem_cons_of_mem _ ha')) hBody)
-          (hArgs a List.mem_cons_self)
+      rw [hf.eo_to_smt_app a]
+      exact smtx_model_eval_apply_eq_of_env
+        (model_agrees_on_env_nil_of_globals hAgree.globals)
+        (smt_model_eval_lam_spine_eq_of_parts hf hAgree
+          (fun a' ha' => hArgs a' (List.mem_cons_of_mem _ ha')) hBody)
+        (hArgs a List.mem_cons_self)
 
 theorem eoVarEnv_of_lambda_vars :
     ∀ (m : Nat) {us : Term}, TranslationProofs.lamVars us m = true ->

@@ -238,7 +238,7 @@ private theorem smt_typeof_bvult_term_eq
   cases hM
   change __smtx_typeof (SmtTerm.bvult (__eo_to_smt t1) (__eo_to_smt s1)) =
     SmtType.Bool
-  rw [__smtx_typeof.eq_57]
+  rw [__smtx_typeof.eq_56]
   simp [__smtx_typeof_bv_op_2_ret, hT1SmtTy, hS1SmtTy, native_nateq,
     native_ite]
 
@@ -325,7 +325,7 @@ private theorem eval_bvult_matches_ubv_lt
     __smtx_model_eval M
       (SmtTerm.lt (SmtTerm.ubv_to_int (__eo_to_smt t1))
         (SmtTerm.ubv_to_int (__eo_to_smt s1)))
-  rw [__smtx_model_eval.eq_58, smtx_eval_lt_term_eq,
+  rw [__smtx_model_eval.eq_57, smtx_eval_lt_term_eq,
     smtx_eval_ubv_to_int_term_eq, smtx_eval_ubv_to_int_term_eq, hEvalT,
     hEvalS]
   simp [__smtx_model_eval_bvult, __smtx_model_eval_bvugt,

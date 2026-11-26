@@ -688,7 +688,7 @@ private theorem bv_rotate_elim_prem_mod_eq_zero
     change __smtx_model_eval M
         (SmtTerm.mod (SmtTerm.Numeral i)
           (__eo_to_smt (Term.Apply (Term.UOp UserOp._at_bvsize) x))) = _
-    rw [__smtx_model_eval.eq_29, hSizeEval]
+    rw [__smtx_model_eval.eq_28, hSizeEval]
     simp [__smtx_model_eval, __smtx_model_eval_eq, __smtx_model_eval_ite,
       __smtx_model_eval_mod_total, native_veq, hwNe]
   have hZeroEval :

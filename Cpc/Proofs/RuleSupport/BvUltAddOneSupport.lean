@@ -499,7 +499,7 @@ private theorem hasBoolTypeBvult
   unfold RuleProofs.eo_has_bool_type
   change __smtx_typeof (SmtTerm.bvult (__eo_to_smt a) (__eo_to_smt b)) =
     SmtType.Bool
-  rw [__smtx_typeof.eq_57]
+  rw [__smtx_typeof.eq_56]
   simp [__smtx_typeof_bv_op_2_ret, hA, hB, native_nateq, native_ite]
 
 theorem typedTerm (x ys zs c w : Term) :

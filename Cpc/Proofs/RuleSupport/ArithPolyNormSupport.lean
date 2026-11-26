@@ -2244,7 +2244,7 @@ private theorem arith_poly_norm_atom_denote_real_of_to_real
   unfold arith_poly_norm_atom_denote_real
   rw [show __eo_to_smt (Term.Apply (Term.UOp UserOp.to_real) t) =
     SmtTerm.to_real (__eo_to_smt t) by rfl]
-  rw [__smtx_model_eval.eq_23, hEval]
+  rw [__smtx_model_eval.eq_22, hEval]
   simp [__smtx_model_eval_to_real, __smtx_to_real_coerce]
 
 private theorem native_to_real_neg
@@ -2328,7 +2328,7 @@ private theorem arith_poly_norm_atom_denote_real_of_plus
     unfold arith_poly_norm_atom_denote_real
     rw [show __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.plus) t1) t2) =
       SmtTerm.plus (__eo_to_smt t1) (__eo_to_smt t2) by rfl]
-    rw [__smtx_model_eval.eq_16, hEval1, hEval2]
+    rw [__smtx_model_eval.eq_15, hEval1, hEval2]
     simp [__smtx_to_real_coerce, __smtx_model_eval_plus]
   · have hEval1Ty :
         __smtx_typeof_value (__smtx_model_eval M (__eo_to_smt t1)) =
@@ -2345,7 +2345,7 @@ private theorem arith_poly_norm_atom_denote_real_of_plus
     unfold arith_poly_norm_atom_denote_real
     rw [show __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.plus) t1) t2) =
       SmtTerm.plus (__eo_to_smt t1) (__eo_to_smt t2) by rfl]
-    rw [__smtx_model_eval.eq_16, hEval1, hEval2]
+    rw [__smtx_model_eval.eq_15, hEval1, hEval2]
     simp [__smtx_to_real_coerce, __smtx_model_eval_plus]
 
 private theorem arith_poly_norm_atom_denote_real_of_neg
@@ -2386,7 +2386,7 @@ private theorem arith_poly_norm_atom_denote_real_of_neg
     unfold arith_poly_norm_atom_denote_real
     rw [show __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.neg) t1) t2) =
       SmtTerm.neg (__eo_to_smt t1) (__eo_to_smt t2) by rfl]
-    rw [__smtx_model_eval.eq_17, hEval1, hEval2]
+    rw [__smtx_model_eval.eq_16, hEval1, hEval2]
     simp [__smtx_to_real_coerce, __smtx_model_eval_plus, __smtx_model_eval_uneg,
       __smtx_model_eval__]
   · have hEval1Ty :
@@ -2404,7 +2404,7 @@ private theorem arith_poly_norm_atom_denote_real_of_neg
     unfold arith_poly_norm_atom_denote_real
     rw [show __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.neg) t1) t2) =
       SmtTerm.neg (__eo_to_smt t1) (__eo_to_smt t2) by rfl]
-    rw [__smtx_model_eval.eq_17, hEval1, hEval2]
+    rw [__smtx_model_eval.eq_16, hEval1, hEval2]
     simp [__smtx_to_real_coerce, __smtx_model_eval_plus, __smtx_model_eval_uneg,
       __smtx_model_eval__]
 

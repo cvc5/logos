@@ -330,8 +330,8 @@ private theorem intToBvBit_eval
           (SmtTerm.mod_total (__eo_to_smt n) (SmtTerm.Numeral p))
           (SmtTerm.Numeral half))
         (SmtTerm.Binary 1 1) (SmtTerm.Binary 1 0) by rfl]
-  rw [smtx_eval_ite_term_eq, __smtx_model_eval.eq_22,
-    __smtx_model_eval.eq_34, __smtx_model_eval.eq_2,
+  rw [smtx_eval_ite_term_eq, __smtx_model_eval.eq_21,
+    __smtx_model_eval.eq_33, __smtx_model_eval.eq_2,
     __smtx_model_eval.eq_2, __smtx_model_eval.eq_5,
     __smtx_model_eval.eq_5]
   rw [hnEval]
@@ -371,7 +371,7 @@ private theorem intToBvAbconv_eval
                 (native_int_pow2 (native_nat_to_int (k + 1)))
                 (native_int_pow2 (native_nat_to_int k))))
             (__eo_to_smt (intToBvAbconv n k)) by rfl]
-      rw [__smtx_model_eval.eq_38]
+      rw [__smtx_model_eval.eq_37]
       rw [intToBvBit_eval M n z
         (native_int_pow2 (native_nat_to_int (k + 1)))
         (native_int_pow2 (native_nat_to_int k)) hnEval, ih]
@@ -512,7 +512,7 @@ private theorem intToBvExpanded_eval
           simp [__eo_list_singleton_elim, hList, __eo_requires,
             __eo_list_singleton_elim_2, hTailNotNil, __eo_ite, native_ite,
             native_teq, native_not, SmtEval.native_not] at hBit ⊢
-          rw [__smtx_model_eval.eq_38]
+          rw [__smtx_model_eval.eq_37]
           rw [hBit, intToBvAbconv_eval M n z hn hnEval (k + 1)]
           simp [__smtx_model_eval_concat, native_binary_concat]
           have hWidth :

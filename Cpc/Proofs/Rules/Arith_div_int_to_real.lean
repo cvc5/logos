@@ -119,8 +119,8 @@ private theorem facts___eo_prog_arith_div_int_to_real_impl
     change __smtx_model_eval M (SmtTerm.qdiv (SmtTerm.to_real (__eo_to_smt x))
         (SmtTerm.to_real (__eo_to_smt y))) =
       __smtx_model_eval M (SmtTerm.qdiv (__eo_to_smt x) (__eo_to_smt y))
-    rw [__smtx_model_eval.eq_136, __smtx_model_eval.eq_136,
-      __smtx_model_eval.eq_23, __smtx_model_eval.eq_23, hEvalX, hEvalY]
+    rw [__smtx_model_eval.eq_135, __smtx_model_eval.eq_135,
+      __smtx_model_eval.eq_22, __smtx_model_eval.eq_22, hEvalX, hEvalY]
     rfl
   exact RuleProofs.eo_interprets_eq_of_rel M _ _ hProgBool <| by
     rw [hEval]
