@@ -88,10 +88,8 @@ private theorem native_str_to_code_from_code_of_valid
     {n : native_Int}
     (hn0 : 0 ≤ n) (hnHi : n < 196608) :
     native_str_to_code (native_str_from_code n) = n := by
-  have hNatLt : Int.toNat n < 196608 := by
-    exact (Int.toNat_lt hn0).mpr hnHi
   simp [native_str_from_code, native_str_to_code, native_char_valid, hn0,
-    hNatLt, Int.toNat_of_nonneg hn0]
+    hnHi, Int.toNat_of_nonneg hn0]
 
 private theorem native_str_from_code_invalid
     {n : native_Int}
@@ -99,13 +97,10 @@ private theorem native_str_from_code_invalid
     native_str_from_code n = [] := by
   unfold native_str_from_code
   by_cases hn0 : 0 ≤ n
-  · have hNatLtFalse : ¬ Int.toNat n < 196608 := by
-      intro hNatLt
-      have hnHi : n < 196608 := (Int.toNat_lt hn0).mp hNatLt
-      exact hBad ⟨hn0, hnHi⟩
-    have hGuard :
+  · have hGuard :
         (0 ≤ n && native_char_valid (Int.toNat n)) = false := by
-      simp [hn0, native_char_valid, hNatLtFalse]
+      simp [hn0, native_char_valid]
+      exact Int.not_lt.mp fun hnHi => hBad ⟨hn0, hnHi⟩
     rw [hGuard]
     rfl
   · have hGuard :

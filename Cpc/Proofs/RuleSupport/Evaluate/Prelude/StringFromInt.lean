@@ -201,9 +201,8 @@ theorem EvaluateProofInternal.eo_str_from_int_digit_term_nat (n : Nat) :
     omega
   have hCodeValid :
       native_char_valid (Int.toNat ((48 : Int) + r)) = true := by
-    rw [show native_char_valid (Int.toNat ((48 : Int) + r)) =
-      decide (Int.toNat ((48 : Int) + r) < 196608) by rfl]
-    exact decide_eq_true hToNatLt
+    unfold native_char_valid native_z_max_code_point
+    exact decide_eq_true (Int.lt_add_one_iff.mp (Int.ofNat_lt.mpr hToNatLt))
   have hDigit :
       Int.toNat ((48 : Int) + r) =
         Char.toNat (Nat.digitChar (n % 10)) := by

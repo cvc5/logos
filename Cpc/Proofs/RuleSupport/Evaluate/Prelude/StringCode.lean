@@ -150,6 +150,12 @@ theorem EvaluateProofInternal.native_char_valid_lt
   rw [Smtm.le_native_z_max_code_point_iff] at h
   exact_mod_cast h
 
+theorem EvaluateProofInternal.native_char_valid_of_lt
+    {c : native_Char} (hc : c < 196608) :
+    native_char_valid c = true := by
+  unfold native_char_valid native_z_max_code_point
+  exact decide_eq_true (Int.lt_add_one_iff.mp (Int.ofNat_lt.mpr hc))
+
 theorem EvaluateProofInternal.native_str_to_code_singleton
     {c : native_Char}
     (hc : native_char_valid c = true) :
@@ -220,13 +226,10 @@ theorem EvaluateProofInternal.native_str_from_code_invalid
     native_str_from_code n = [] := by
   unfold native_str_from_code
   by_cases hn0 : 0 ≤ n
-  · have hNatLtFalse : ¬ Int.toNat n < 196608 := by
-      intro hNatLt
-      have hnHi : n < 196608 := (Int.toNat_lt hn0).mp hNatLt
-      exact hBad ⟨hn0, hnHi⟩
-    have hGuard :
+  · have hGuard :
         (decide (0 ≤ n) && native_char_valid (Int.toNat n)) = false := by
-      simp [hn0, native_char_valid, hNatLtFalse]
+      simp [hn0, native_char_valid]
+      exact Int.not_lt.mp fun hnHi => hBad ⟨hn0, hnHi⟩
     rw [hGuard]
     rfl
   · have hGuard :
@@ -242,25 +245,31 @@ def EvaluateProofInternal.eo_eval_str_from_code_rhs (n : Term) : Term :=
     (__eo_ite
       (__eo_ite _v1
       (__eo_ite
-        (__eo_ite (__eo_eq (Term.Numeral 196607) _v0)
-          (Term.Boolean true) (__eo_gt (Term.Numeral 196607) _v0))
+        (__eo_ite (__eo_eq (Term.Numeral native_z_max_code_point) _v0)
+          (Term.Boolean true) (__eo_gt (Term.Numeral native_z_max_code_point) _v0))
         (__eo_not (__eo_is_neg _v0)) (Term.Boolean false))
       (Term.Boolean false))
       (__eo_to_str n) (Term.String []))
     (Term.Apply (Term.UOp UserOp.str_from_code) n)
 
-/-- The code point guard of `str.from_code`, `196607 >= n`, is `n < 196608`. -/
+/-- The code point guard of `str.from_code`, `max_code_point >= n`, is
+`n < 196608`. -/
 theorem EvaluateProofInternal.eo_eval_str_from_code_guard (n : native_Int) :
-    __eo_ite (__eo_eq (Term.Numeral 196607) (Term.Numeral n))
-        (Term.Boolean true) (__eo_gt (Term.Numeral 196607) (Term.Numeral n)) =
+    __eo_ite (__eo_eq (Term.Numeral native_z_max_code_point) (Term.Numeral n))
+        (Term.Boolean true)
+        (__eo_gt (Term.Numeral native_z_max_code_point) (Term.Numeral n)) =
       Term.Boolean (decide (n < 196608)) := by
+  rw [show native_z_max_code_point = 196607 from rfl]
   by_cases h : n = 196607
   · subst h
     simp [__eo_ite, __eo_eq, native_teq, native_ite]
   · have hLt : decide (n < 196607) = decide (n < 196608) := by
       by_cases hl : n < 196607
-      · simp [hl, show n < 196608 by omega]
-      · simp [hl, show ¬ n < 196608 by omega]
+      · have hl' : n < 196608 := Int.lt_trans hl (by decide)
+        simp [hl, hl']
+      · have hl' : ¬ n < 196608 := fun hn =>
+          h (Int.le_antisymm (Int.lt_add_one_iff.mp hn) (Int.not_lt.mp hl))
+        simp [hl, hl']
     simp [__eo_ite, __eo_eq, __eo_gt, native_teq, native_ite, native_zlt, h,
       ← hLt]
 
@@ -282,7 +291,7 @@ theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral_invalid
     EvaluateProofInternal.eo_eval_str_from_code_rhs x =
       Term.String (native_str_from_code n) := by
   rw [EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral hRun,
-    if_neg hBad, EvaluateProofInternal.native_str_from_code_invalid hBad]
+    ite_eq_right hBad, EvaluateProofInternal.native_str_from_code_invalid hBad]
 
 theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral_valid
     {x : Term} {n : native_Int}
@@ -294,7 +303,7 @@ theorem EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral_valid
     EvaluateProofInternal.eo_eval_str_from_code_rhs x =
       Term.String (native_str_from_code n) := by
   have hRhs := EvaluateProofInternal.eo_eval_str_from_code_rhs_run_numeral hRun
-  rw [if_pos ⟨h0, hlt⟩] at hRhs
+  rw [ite_eq_left ⟨h0, hlt⟩] at hRhs
   rw [hRhs]
   rw [hRhs] at hRunFromNe
   cases x

@@ -115,7 +115,7 @@ theorem EvaluateProofInternal.eo_to_str_typeof_seq_char_of_ne_stuck
       Term.Apply (Term.UOp UserOp.Seq) (Term.UOp UserOp.Char) := by
   cases x <;> simp [__eo_to_str] at hNe ⊢
   case Numeral n =>
-    cases hGuard : native_and (native_zleq 0 n) (native_zlt n 196608) <;>
+    cases hGuard : native_and (native_zleq 0 n) (native_zleq n native_z_max_code_point) <;>
       simp [hGuard, native_ite] at hNe ⊢
     change __eo_lit_type_String
         (Term.String (native_str_from_code n)) =
