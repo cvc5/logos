@@ -323,7 +323,7 @@
   :is-list-nil x (eo::is_eq (eo::to_z x) 0))
 
 (define-symbol bvmul (x y)
-  :is-list-nil x (eo::is_eq (eo::to_z x) 1))
+  :is-list-nil x (eo::is_eq x (eo::to_bin (eo::len x) 1)))
 
 (define-symbol bvudiv (x y))
 

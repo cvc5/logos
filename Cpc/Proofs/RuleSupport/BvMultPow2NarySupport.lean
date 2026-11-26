@@ -581,8 +581,7 @@ private theorem is_list_nil_boolean_of_ne_stuck (t : Term) :
     ∃ b, __eo_is_list_nil op t = Term.Boolean b := by
   intro hNe
   cases t <;>
-    simp [op, __eo_is_list_nil, __eo_is_list_nil_bvmul, __eo_to_z,
-      __eo_is_eq, native_and, native_not, native_teq, native_zeq] at hNe ⊢
+    simp [op, __eo_is_list_nil, __eo_is_list_nil_bvmul, __eo_is_eq] at hNe ⊢
 
 private theorem list_singleton_elim_eo_type
     (c width : Term) :
@@ -1231,25 +1230,19 @@ private theorem eval_mul_rotate
     _ = __smtx_model_eval M (__eo_to_smt (mul (mul x y) c)) :=
       (eval_mul_assoc M hM x y c w hXTy hYTy hCTy).symm
 
+/-- The nil of `bvmul` at width `w` is `1` reduced modulo `2^w`: `1`,
+except at width 0, where it is `0`. -/
 private theorem nil_payload_eq_one
     (M : SmtModel) (nil : Term) (w : Nat) (n : Int) :
     __eo_is_list_nil op nil = Term.Boolean true ->
     __smtx_model_eval M (__eo_to_smt nil) =
       SmtValue.Binary (native_nat_to_int w) n ->
-    n = 1 := by
+    n = native_mod_total 1 (native_int_pow2 (native_nat_to_int w)) := by
   intro hNilTrue hNilEval
   cases nil <;>
-    simp [op, __eo_is_list_nil, __eo_is_list_nil_bvmul, __eo_to_z,
-      __eo_is_eq, native_and, native_not, SmtEval.native_not, native_teq,
-      native_zeq] at hNilTrue
-  case Numeral z =>
-    rw [show __eo_to_smt (Term.Numeral z) = SmtTerm.Numeral z by rfl] at hNilEval
-    rw [__smtx_model_eval] at hNilEval
-    cases hNilEval
-  case Rational q =>
-    rw [show __eo_to_smt (Term.Rational q) = SmtTerm.Rational q by rfl] at hNilEval
-    rw [__smtx_model_eval] at hNilEval
-    cases hNilEval
+    simp [op, __eo_is_list_nil, __eo_is_list_nil_bvmul, __eo_len, __eo_to_bin,
+      __eo_mk_binary, __eo_is_eq, native_and, native_not, native_teq,
+      native_ite] at hNilTrue
   case String s =>
     rw [show __eo_to_smt (Term.String s) = SmtTerm.String s by rfl] at hNilEval
     rw [__smtx_model_eval] at hNilEval
@@ -1265,7 +1258,17 @@ private theorem nil_payload_eq_one
     injection hEvalEq with hWidthEq hPayloadEq
     subst wb
     subst n
-    exact hNilTrue.symm
+    obtain ⟨⟨h0, -, -⟩, h⟩ := hNilTrue
+    -- through the model's value, since `Term`'s injectivity is costly here
+    split at h
+    · rw [← h, show __eo_to_smt (Term.Binary (native_nat_to_int w)
+          (native_mod_total 1 (native_int_pow2 (native_nat_to_int w)))) =
+          SmtTerm.Binary (native_nat_to_int w)
+          (native_mod_total 1 (native_int_pow2 (native_nat_to_int w))) by rfl,
+        __smtx_model_eval] at hNilEval
+      injection hNilEval with _ hPayload
+      exact hPayload.symm
+    · contradiction
 
 private theorem eval_mul_right_one
     (M : SmtModel) (hM : model_wf M)
@@ -1293,7 +1296,9 @@ private theorem eval_mul_right_one
       (__smtx_model_eval M (__eo_to_smt nil)) =
     __smtx_model_eval M (__eo_to_smt x)
   rw [hXEval, hNilEval]
-  simp [__smtx_model_eval_bvmul, native_zmult, hMod]
+  simp only [__smtx_model_eval_bvmul, native_zmult, native_mod_total]
+  simp only [native_mod_total] at hMod
+  rw [Int.mul_emod, Int.emod_emod, ← Int.mul_emod, Int.mul_one, hMod]
 
 private theorem eval_mul_left_one
     (M : SmtModel) (hM : model_wf M)
