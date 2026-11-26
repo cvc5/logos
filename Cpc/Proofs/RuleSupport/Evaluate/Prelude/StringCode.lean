@@ -150,6 +150,12 @@ theorem EvaluateProofInternal.native_char_valid_lt
   rw [Smtm.le_native_z_max_code_point_iff] at h
   exact_mod_cast h
 
+theorem EvaluateProofInternal.native_char_valid_of_lt
+    {c : native_Char} (hc : c < 196608) :
+    native_char_valid c = true := by
+  unfold native_char_valid native_z_max_code_point
+  exact decide_eq_true (Int.lt_add_one_iff.mp (Int.ofNat_lt.mpr hc))
+
 theorem EvaluateProofInternal.native_str_to_code_singleton
     {c : native_Char}
     (hc : native_char_valid c = true) :
@@ -239,18 +245,21 @@ def EvaluateProofInternal.eo_eval_str_from_code_rhs (n : Term) : Term :=
     (__eo_ite
       (__eo_ite _v1
       (__eo_ite
-        (__eo_ite (__eo_eq (Term.Numeral 196607) _v0)
-          (Term.Boolean true) (__eo_gt (Term.Numeral 196607) _v0))
+        (__eo_ite (__eo_eq (Term.Numeral native_z_max_code_point) _v0)
+          (Term.Boolean true) (__eo_gt (Term.Numeral native_z_max_code_point) _v0))
         (__eo_not (__eo_is_neg _v0)) (Term.Boolean false))
       (Term.Boolean false))
       (__eo_to_str n) (Term.String []))
     (Term.Apply (Term.UOp UserOp.str_from_code) n)
 
-/-- The code point guard of `str.from_code`, `196607 >= n`, is `n < 196608`. -/
+/-- The code point guard of `str.from_code`, `max_code_point >= n`, is
+`n < 196608`. -/
 theorem EvaluateProofInternal.eo_eval_str_from_code_guard (n : native_Int) :
-    __eo_ite (__eo_eq (Term.Numeral 196607) (Term.Numeral n))
-        (Term.Boolean true) (__eo_gt (Term.Numeral 196607) (Term.Numeral n)) =
+    __eo_ite (__eo_eq (Term.Numeral native_z_max_code_point) (Term.Numeral n))
+        (Term.Boolean true)
+        (__eo_gt (Term.Numeral native_z_max_code_point) (Term.Numeral n)) =
       Term.Boolean (decide (n < 196608)) := by
+  rw [show native_z_max_code_point = 196607 from rfl]
   by_cases h : n = 196607
   · subst h
     simp [__eo_ite, __eo_eq, native_teq, native_ite]

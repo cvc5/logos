@@ -145,8 +145,7 @@ theorem EvaluateProofInternal.str_case_conv_rec_lower_singleton
         Term.Boolean true := by
       rw [EvaluateProofInternal.str_case_lower_guard_singleton c, hRange]
     have hValidLower : native_char_valid (c + 32) = true := by
-      change decide (c + 32 < 196608) = true
-      exact decide_eq_true
+      exact EvaluateProofInternal.native_char_valid_of_lt
         (Nat.lt_of_le_of_lt (Nat.add_le_add_right h90 32) (by decide))
     have hCast : (c : Int) + 32 = ((c + 32 : Nat) : Int) := by
       rw [Int.natCast_add]
@@ -198,8 +197,7 @@ theorem EvaluateProofInternal.str_case_conv_rec_upper_singleton
         Term.Boolean true := by
       rw [EvaluateProofInternal.str_case_upper_guard_singleton c, hRange]
     have hValidUpper : native_char_valid (c - 32) = true := by
-      change decide (c - 32 < 196608) = true
-      exact decide_eq_true
+      exact EvaluateProofInternal.native_char_valid_of_lt
         (Nat.lt_of_le_of_lt (Nat.sub_le c 32) (EvaluateProofInternal.native_char_valid_lt hc))
     have hCast : (c : Int) + (-32 : Int) = ((c - 32 : Nat) : Int) := by
       rw [Int.ofNat_sub h32]
@@ -294,8 +292,7 @@ theorem EvaluateProofInternal.str_case_conv_lower_head_singleton
         Term.Boolean true := by
       rw [EvaluateProofInternal.str_case_lower_guard_singleton c, hRange]
     have hValidLower : native_char_valid (c + 32) = true := by
-      change decide (c + 32 < 196608) = true
-      exact decide_eq_true
+      exact EvaluateProofInternal.native_char_valid_of_lt
         (Nat.lt_of_le_of_lt (Nat.add_le_add_right h90 32) (by decide))
     have hCast : (c : Int) + 32 = ((c + 32 : Nat) : Int) := by
       rw [Int.natCast_add]
@@ -346,8 +343,7 @@ theorem EvaluateProofInternal.str_case_conv_upper_head_singleton
         Term.Boolean true := by
       rw [EvaluateProofInternal.str_case_upper_guard_singleton c, hRange]
     have hValidUpper : native_char_valid (c - 32) = true := by
-      change decide (c - 32 < 196608) = true
-      exact decide_eq_true
+      exact EvaluateProofInternal.native_char_valid_of_lt
         (Nat.lt_of_le_of_lt (Nat.sub_le c 32) (EvaluateProofInternal.native_char_valid_lt hc))
     have hCast : (c : Int) + (-32 : Int) = ((c - 32 : Nat) : Int) := by
       rw [Int.ofNat_sub h32]
