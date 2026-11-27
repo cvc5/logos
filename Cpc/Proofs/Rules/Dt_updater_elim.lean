@@ -462,7 +462,7 @@ private theorem dtConsSpineRoot_apply_generic
               cases hSp'' <;>
                 first
                   | rfl
-                  | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hNS
+                  | exact rfl
 
 private theorem smtx_typeof_eo_to_smt_stuck_none :
     __smtx_typeof (__eo_to_smt Term.Stuck) = SmtType.None := by

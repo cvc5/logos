@@ -1907,7 +1907,7 @@ private theorem eo_to_smt_apply_apply_apply_uop_generic_full
       | exact False.elim (hStrIndexofRe rfl)
       | exact False.elim (hStringsOccurIndex rfl)
       | exact False.elim (hStringsOccurIndexRe rfl)
-      | exact eo_to_smt_apply_eq_of_not_pending rfl hNP
+      | exact rfl
 
 private theorem eo_typeof_apply_apply_apply_uop_generic_full
     (op : UserOp) (z y x : Term)
@@ -3487,7 +3487,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                       (hNonNone
                         (typeof_apply_apply_none_head_eq (__eo_to_smt y) (__eo_to_smt x)))
                   | exact eo_type_valid_of_nested_generic_apply_typeof_apply_eq_dtcapp_full
-                      (go _) (by eo_to_smt_generic_rfl) hTermNN hTy
+                      (go _) (by rfl) hTermNN hTy
                   | exact eo_type_valid_of_typeof_apply_eq_dtcapp_cases_full
                       (by intro T U h; cases h)
                       (by intro T U h; cases h)
@@ -3737,7 +3737,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                     (g := Term.UOp1 UserOp1.tuple_select z) (y := y) (x := x)
                     (A := a) (B := b)
                     (go (Term.Apply (Term.UOp1 UserOp1.tuple_select z) y))
-                    (by first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp) (by rfl) hTermNN (by
+                    (by first | rfl | exact rfl) (by rfl) hTermNN (by
                       change
                         __eo_typeof
                             (Term.Apply (Term.Apply (Term.UOp1 UserOp1.tuple_select z) y) x) =
@@ -3938,7 +3938,7 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                 exact eo_type_valid_of_nested_generic_apply_typeof_apply_eq_dtcapp_full
                   (g := Term.UOp2 op z w) (y := y) (x := x) (A := a) (B := b)
                   (go (Term.Apply (Term.UOp2 op z w) y))
-                  (by first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp) hTermNN hTy
+                  (by first | rfl | exact rfl) hTermNN hTy
               case UOp3 op z w v =>
                 exact eo_type_valid_of_nested_generic_apply_typeof_apply_eq_dtcapp_full
                   (g := Term.UOp3 op z w v) (y := y) (x := x) (A := a) (B := b)
@@ -4116,13 +4116,13 @@ private theorem eo_to_smt_typeof_matches_translation_and_valid
                     (g := Term.Apply g0 z) (y := y) (x := x) (A := a) (B := b)
                     (go (Term.Apply (Term.Apply g0 z) y))
                     (by
-                      cases g0 <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp
+                      cases g0 <;> try first | rfl | exact rfl
                       case UOp op =>
                         exact False.elim (hG0UOp ⟨op, rfl⟩)
                       case Apply g1 w =>
-                        cases g1 <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp
+                        cases g1 <;> try first | rfl | exact rfl
                         case UOp op =>
-                          cases op <;> try first | rfl | exact eo_to_smt_apply_eq_of_not_pending rfl hSp
+                          cases op <;> try first | rfl | exact rfl
                           case _at_strings_replace_all_result =>
                             exact False.elim
                               (false_of_typeof_strings_replace_all_result_eq_dtcapp_full

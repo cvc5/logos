@@ -5252,7 +5252,7 @@ by
             exact
               apply_apply_uop_arg_not_list_of_nonquantifier_has_smt_translation
                 (by decide) (by decide) hTrans v vs rfl)
-          (by eo_to_smt_generic_rfl)
+          (by rfl)
           (generic_apply_type_of_non_special_head_closed _ _
             (by
               intro s d i j hSel
@@ -5904,7 +5904,7 @@ by
           (__eo_to_smt y) := by
     cases op <;>
       first
-      | eo_to_smt_generic_rfl
+      | rfl
       | exact False.elim (hUpdate rfl)
       | exact False.elim (hTupleUpdate rfl)
   have hTy :
@@ -6234,7 +6234,7 @@ by
           exact
             false_of_apply_apply_apply_uop_middle_raw_list_has_smt_translation
               hTrans)
-        (by eo_to_smt_generic_rfl)
+        (by rfl)
         (generic_apply_type_of_non_special_head_closed _ _
           (by
             intro s d i j hSel
@@ -6451,7 +6451,7 @@ by
                                 hTrans with hForall | hExists
                             · cases hForall
                             · cases hExists)
-                          (TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hSp)
+                          (rfl)
                           (generic_apply_type_of_non_special_head_closed _ _
                             (by
                               intro s d i j hSel
@@ -6489,7 +6489,7 @@ by
                               hTrans with hForall | hExists
                           · cases hForall
                           · cases hExists)
-                        (TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hSp)
+                        (rfl)
                         (generic_apply_type_of_non_special_head_closed _ _
                           (by
                             intro s d i j hSel
@@ -6527,7 +6527,7 @@ by
                         hTrans with hForall | hExists
                     · cases hForall
                     · cases hExists)
-                  (TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hSp)
+                  (rfl)
                   (generic_apply_type_of_non_special_head_closed _ _
                     (by
                       intro s d i j hSel
@@ -6565,7 +6565,7 @@ by
                       hTrans with hForall | hExists
                   · cases hForall
                   · cases hExists)
-                (TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hSp)
+                (rfl)
                 (generic_apply_type_of_non_special_head_closed _ _
                   (by
                     intro s d i j hSel

@@ -481,12 +481,7 @@ private theorem eo_to_smt_apply_generic_of_appSpineRev_var
               | _ =>
                   first
                     | rfl
-                    | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
-                        (TranslationProofs.not_isLamSpine_of_head (fun h => by
-                          rw [eoSpineHead_eq_appSpineRev] at h
-                          dsimp [appSpineRev] at h hHead
-                          rw [hHead] at h
-                          cases h))
+                    | exact rfl
           | Var name U =>
               cases name with
               | String name =>
@@ -563,12 +558,7 @@ private theorem eo_to_smt_apply_generic_of_appSpineRev_uconst
               | _ =>
                   first
                     | rfl
-                    | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
-                        (TranslationProofs.not_isLamSpine_of_head (fun h => by
-                          rw [eoSpineHead_eq_appSpineRev] at h
-                          dsimp [appSpineRev] at h hHead
-                          rw [hHead] at h
-                          cases h))
+                    | exact rfl
           | UConst i' U =>
               simp [appSpineRev] at hHead
               rcases hHead with ⟨rfl, rfl⟩
@@ -630,12 +620,7 @@ private theorem eo_to_smt_apply_generic_of_appSpineRev_dtcons
               | _ =>
                   first
                     | rfl
-                    | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
-                        (TranslationProofs.not_isLamSpine_of_head (fun h => by
-                          rw [eoSpineHead_eq_appSpineRev] at h
-                          dsimp [appSpineRev] at h hHead
-                          rw [hHead] at h
-                          cases h))
+                    | exact rfl
           | DtCons s' d' i' =>
               simp [appSpineRev] at hHead
               rcases hHead with ⟨rfl, rfl, rfl⟩
@@ -696,12 +681,7 @@ private theorem eo_to_smt_apply_generic_of_appSpineRev_dt_sel
               | _ =>
                   first
                     | rfl
-                    | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
-                        (TranslationProofs.not_isLamSpine_of_head (fun h => by
-                          rw [eoSpineHead_eq_appSpineRev] at h
-                          dsimp [appSpineRev] at h hHead
-                          rw [hHead] at h
-                          cases h))
+                    | exact rfl
           | DtSel s' d' i' j' =>
               simp [appSpineRev] at hHead
               rcases hHead with ⟨rfl, rfl, rfl, rfl⟩

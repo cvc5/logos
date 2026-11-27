@@ -31,12 +31,6 @@ namespace LamSpineSupport
   | [], acc => acc
   | a :: l, acc => Term.Apply (Term.Apply Term.__eo_List_cons a) (eoListApp l acc)
 
-theorem eoListApp_append (l1 l2 : List Term) (acc : Term) :
-    eoListApp (l1 ++ l2) acc = eoListApp l1 (eoListApp l2 acc) := by
-  induction l1 with
-  | nil => rfl
-  | cons a l ih => simp [eoListApp, ih]
-
 /-- The EO variable `s : T`. -/
 @[expose] def mkVar (p : native_String × Term) : Term :=
   Term.Var (Term.String p.1) p.2
@@ -189,12 +183,6 @@ theorem lamBindings_eoVarList (vs : List (native_String × Term)) :
   | [] => N
   | (s, T, v) :: l => pushL (native_model_push N s T v) l
 
-theorem pushL_append (N : SmtModel) (l1 l2 : List (native_String × SmtType × SmtValue)) :
-    pushL N (l1 ++ l2) = pushL (pushL N l1) l2 := by
-  induction l1 generalizing N with
-  | nil => rfl
-  | cons p l ih => obtain ⟨s, T, v⟩ := p; simp [pushL, ih]
-
 /-- The keyed values a list of bindings evaluates to in `M`. -/
 @[expose] noncomputable def evalBinds (M : SmtModel) (l : List ((native_String × Term) × Term)) :
     List (native_String × SmtType × SmtValue) :=
@@ -310,45 +298,5 @@ theorem spine_args_ge_vars {t us body : Term} {r : List Term} (h : LamSpine t us
     (hNN : __smtx_typeof (__eo_to_smt t) ≠ SmtType.None) :
     ∃ m, lamVars us m = true ∧ m ≤ r.length :=
   absurd h.smtx_typeof_none hNN
-
-theorem smtx_typeof_apply_result {F X A B : SmtType}
-    (hF : F = SmtType.FunType A B ∨ F = SmtType.DtcAppType A B) (hX : X = A)
-    (hA : A ≠ SmtType.None) :
-    __smtx_typeof_apply F X = B ∧ sizeOf B < sizeOf F := by
-  subst hX
-  rcases hF with rfl | rfl <;>
-    exact ⟨by simp [__smtx_typeof_apply, __smtx_typeof_guard, native_ite, native_Teq, hA],
-      by first | simp | (simp; omega)⟩
-
-/-- The variables a typed spine binds, the bindings of its arguments to them,
-and, when it has more arguments than variables, a type that is a proper part of
-its body's (vacuously: no spine is typed). -/
-theorem spine_prefix_typed {t us body : Term} {r : List Term} (h : LamSpine t us body r) :
-    ∀ m, lamVars us m = true -> m ≤ r.length ->
-      __smtx_typeof (__eo_to_smt t) ≠ SmtType.None ->
-      ∃ extra rm, r = extra ++ rm ∧ rm.length = m ∧
-        term_has_non_none_type
-          (SmtTerm.bind (lamBindings us rm SmtBindings.nil) (__eo_to_smt body)) ∧
-        (m < r.length ->
-          sizeOf (__smtx_typeof (__eo_to_smt t)) < sizeOf (__smtx_typeof (__eo_to_smt body))) :=
-  fun _ _ _ hNN => absurd h.smtx_typeof_none hNN
-
-/-- The translation of an application of a spine is the SMT application. -/
-theorem eo_to_smt_mkSpine_apply_of_lamVars_lt {us body : Term} {m : Nat}
-    (hv : lamVars us m = true) (a : Term) (r : List Term) (hlt : m < r.length + 1) :
-    __eo_to_smt (mkSpine (lamT us body) (a :: r)) =
-      SmtTerm.Apply (__eo_to_smt (mkSpine (lamT us body) r))
-        (__eo_to_smt a) :=
-  (lamSpine_mkSpine us body r).eo_to_smt_app a
-
-theorem smtx_typeof_mkSpine_apply {us body : Term} (a : Term) (r : List Term) :
-    __smtx_typeof (SmtTerm.Apply
-        (__eo_to_smt (mkSpine (lamT us body) r))
-        (__eo_to_smt a)) =
-      __smtx_typeof_apply
-        (__smtx_typeof (__eo_to_smt (mkSpine (lamT us body) r)))
-        (__smtx_typeof (__eo_to_smt a)) := by
-  rcases (lamSpine_mkSpine us body r).eo_to_smt_shape with
-    hg | ⟨_, _, _, hg⟩ | ⟨_, _, hg⟩ <;> rw [hg] <;> rfl
 
 end LamSpineSupport

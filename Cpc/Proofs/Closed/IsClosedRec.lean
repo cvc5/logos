@@ -44,26 +44,6 @@ by
   exact TranslationProofs.typeof_apply_apply_none_head_eq
     (__eo_to_smt v) (__eo_to_smt vs)
 
-/-- Currying a lambda over a raw EO binder list gives an SMT term without a
-type: either a bare `lam` or `None`. -/
-theorem smtx_typeof_lambda_curry_eo_list_cons (v vs : Term) (F : SmtTerm) :
-  __smtx_typeof
-      (__eo_to_smt_lambda_curry
-        (Term.Apply (Term.Apply Term.__eo_List_cons v) vs) F) =
-    SmtType.None :=
-by
-  cases v
-  case Var n T =>
-    cases n
-    case String s =>
-      cases hw : TranslationProofs.lamVarWf T
-      · rw [TranslationProofs.curry_cons_of_not_wf _ _ _ _ hw]
-        exact TranslationProofs.smtx_typeof_none
-      · rw [TranslationProofs.curry_cons_of_wf _ _ _ _ hw]
-        exact TranslationProofs.smtx_typeof_lam _ _ _
-    all_goals rfl
-  all_goals rfl
-
 /-- Datatype constructors with a `None` field are not well-formed. -/
 theorem smtx_dt_cons_wf_rec_cons_none_eq_false
     (dd : SmtDatatypeDecl) (c : SmtDatatypeCons) :
@@ -7233,7 +7213,7 @@ by
                 (Term.Apply (Term.UOp1 UserOp1.update idx) x)
                 (Term.Apply (Term.Apply Term.__eo_List_cons v) vs)))
             (__eo_to_smt body) := by
-      eo_to_smt_generic_rfl
+      rfl
     have hTy :
         __smtx_typeof
             (SmtTerm.Apply
@@ -7291,7 +7271,7 @@ by
                 (Term.Apply (Term.UOp1 UserOp1.tuple_update idx) x)
                 (Term.Apply (Term.Apply Term.__eo_List_cons v) vs)))
             (__eo_to_smt body) := by
-      eo_to_smt_generic_rfl
+      rfl
     have hTy :
         __smtx_typeof
             (SmtTerm.Apply
@@ -7345,9 +7325,9 @@ by
           exact False.elim (hUpdate rfl)
         case tuple_update =>
           exact False.elim (hTupleUpdate rfl)
-        all_goals eo_to_smt_generic_rfl)
+        all_goals rfl)
       (by
-        cases op <;> eo_to_smt_generic_rfl)
+        cases op <;> rfl)
       (generic_apply_type_of_non_special_head_closed _ _
         (by
           intro s d i j h
@@ -7595,7 +7575,7 @@ by
           (__eo_to_smt y) := by
     cases op <;>
       first
-      | eo_to_smt_generic_rfl
+      | rfl
       | exact False.elim (hUpdate rfl)
       | exact False.elim (hTupleUpdate rfl)
   have hTy :
@@ -12908,9 +12888,7 @@ by
   exfalso
   unfold eoHasSmtTranslation at hTrans
   apply hTrans
-  rw [TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
-    (TranslationProofs.not_isLamSpine_of_head
-      (by simp [TranslationProofs.eoSpineHead]))]
+  change __smtx_typeof (SmtTerm.Apply (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.forall) xs) body)) (__eo_to_smt z)) = SmtType.None
   exact
     smtx_typeof_generic_apply_bool_or_none_head_eq_none _ _
       (generic_apply_type_of_non_special_head_closed _ _
@@ -12937,9 +12915,7 @@ by
   exfalso
   unfold eoHasSmtTranslation at hTrans
   apply hTrans
-  rw [TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
-    (TranslationProofs.not_isLamSpine_of_head
-      (by simp [TranslationProofs.eoSpineHead]))]
+  change __smtx_typeof (SmtTerm.Apply (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.exists) xs) body)) (__eo_to_smt z)) = SmtType.None
   exact
     smtx_typeof_generic_apply_bool_or_none_head_eq_none _ _
       (generic_apply_type_of_non_special_head_closed _ _
@@ -13328,7 +13304,7 @@ by
     exact
       false_of_apply_apply_apply_uop_over_binary_of_args_middle_raw_list
         array_deq_diff_args_have_smt_translation_of_has_smt_translation
-        (by eo_to_smt_generic_rfl) hTrans
+        (by rfl) hTrans
   case concat =>
     exact
       false_of_apply_apply_apply_uop_over_binary_smt_binop_middle_raw_list
@@ -13993,7 +13969,7 @@ by
     exact
       false_of_apply_apply_apply_uop_over_binary_of_args_middle_raw_list
         sets_deq_diff_args_have_smt_translation_of_has_smt_translation
-        (by eo_to_smt_generic_rfl) hTrans
+        (by rfl) hTrans
   case qdiv =>
     exact
       false_of_apply_apply_apply_uop_over_binary_of_args_middle_raw_list
@@ -14011,7 +13987,7 @@ by
   all_goals
     exact
       false_of_apply_apply_apply_generic_middle_list_has_smt_translation
-        (by eo_to_smt_generic_rfl) (by eo_to_smt_generic_rfl)
+        (by rfl) (by rfl)
         (generic_apply_type_of_non_special_head_closed _ _
           (by
             intro s d i j h
@@ -14212,7 +14188,7 @@ by
   all_goals
     exact
       false_of_apply_generic_raw_arg_has_smt_translation
-        (by eo_to_smt_generic_rfl)
+        (by rfl)
         (generic_apply_type_of_non_special_head_closed _ _
           (by
             intro s d i j h
@@ -14238,7 +14214,7 @@ by
   exact
     false_of_apply_generic_raw_arg_has_smt_translation
       (q := Term.Apply (Term.Apply (Term.UOp1 op idx) x) y)
-      (by eo_to_smt_generic_rfl)
+      (by rfl)
       (generic_apply_type_of_non_special_head_closed _ _
         (by
           intro s d i j h
@@ -14284,7 +14260,7 @@ by
       false_of_apply_generic_raw_arg_has_smt_translation
         (q := Term.Apply
           (Term.Apply (Term.Apply (Term.UOp _) w) z) y)
-        (by eo_to_smt_generic_rfl)
+        (by rfl)
         (generic_apply_type_of_non_special_head_closed _ _
           (by
             intro s d i j h
@@ -14421,7 +14397,7 @@ by
     all_goals
       exact false_of_raw_arg_generic_or_spine hTrans (fun hSp =>
         false_of_apply_generic_raw_arg_has_smt_translation
-          (TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hSp)
+          (rfl)
           (generic_apply_type_of_non_special_head_closed _ _
             (by
               intro s d i j h
@@ -14437,7 +14413,7 @@ by
   all_goals
     exact
       false_of_apply_generic_raw_arg_has_smt_translation
-        (by eo_to_smt_generic_rfl)
+        (by rfl)
         (generic_apply_type_of_non_special_head_closed _ _
           (by
             intro s d i j h
@@ -14567,7 +14543,7 @@ by
     all_goals
       exact
         false_of_apply_apply_generic_raw_list_has_smt_translation
-          (by eo_to_smt_generic_rfl) (by eo_to_smt_generic_rfl)
+          (by rfl) (by rfl)
           (generic_apply_type_of_non_special_head_closed _ _
             (by
               intro s d i j h
@@ -15125,7 +15101,7 @@ by
         (by
           intro vs hEq
           cases hEq)
-        (by eo_to_smt_generic_rfl)
+        (by rfl)
         (by
           exact
             generic_apply_type_of_non_special_head_closed _ _
@@ -15784,7 +15760,7 @@ by
       is_closed_rec_apply_apply_apply_uop_over_binary_of_args_eq_and_bool_of_has_smt_translation
         root hEnv hXLt hYLt hZLt
         array_deq_diff_args_have_smt_translation_of_has_smt_translation
-        (by eo_to_smt_generic_rfl) hTrans ih
+        (by rfl) hTrans ih
   case concat =>
     exact
       is_closed_rec_apply_apply_apply_uop_over_binary_smt_binop_eq_and_bool_of_has_smt_translation
@@ -16330,7 +16306,7 @@ by
       is_closed_rec_apply_apply_apply_uop_over_binary_of_args_eq_and_bool_of_has_smt_translation
         root hEnv hXLt hYLt hZLt
         tuple_args_have_smt_translation_of_has_smt_translation
-        (by eo_to_smt_generic_rfl) hTrans ih
+        (by rfl) hTrans ih
   case set_union =>
     exact
       is_closed_rec_apply_apply_apply_uop_over_binary_smt_binop_eq_and_bool_of_has_smt_translation
@@ -16384,7 +16360,7 @@ by
       is_closed_rec_apply_apply_apply_uop_over_binary_of_args_eq_and_bool_of_has_smt_translation
         root hEnv hXLt hYLt hZLt
         sets_deq_diff_args_have_smt_translation_of_has_smt_translation
-        (by eo_to_smt_generic_rfl) hTrans ih
+        (by rfl) hTrans ih
   case qdiv =>
     exact
       is_closed_rec_apply_apply_apply_uop_over_binary_of_args_eq_and_bool_of_has_smt_translation
@@ -16404,7 +16380,7 @@ by
   all_goals
     exact
       is_closed_rec_apply_apply_apply_uop_generic_eq_and_bool_of_has_smt_translation
-        root hEnv hXLt hYLt hZLt (by eo_to_smt_generic_rfl) (by eo_to_smt_generic_rfl) hTrans ih
+        root hEnv hXLt hYLt hZLt (by rfl) (by rfl) hTrans ih
 
 theorem is_closed_rec_apply_apply_apply_apply_uop_any_eq_and_bool_of_has_smt_translation
     (root : Term)
@@ -16501,7 +16477,7 @@ by
           · cases hExists)
         (by intro vs hEq; cases hEq)
         (by intro vs hEq; cases hEq)
-        (by eo_to_smt_generic_rfl)
+        (by rfl)
         (generic_apply_type_of_non_special_head_closed _ _
           (by
             intro s d i j hSel
@@ -16753,7 +16729,7 @@ by
                     · cases hExists)
                   (by intro vs hEq; cases hEq)
                   (by intro vs hEq; cases hEq)
-                  (by eo_to_smt_generic_rfl)
+                  (by rfl)
                   (generic_apply_type_of_non_special_head_closed _ _
                     (by
                       intro s d i j hSel
@@ -16782,7 +16758,7 @@ by
                   · cases hExists)
                 (by intro vs hEq; cases hEq)
                 (by intro vs hEq; cases hEq)
-                (by eo_to_smt_generic_rfl)
+                (by rfl)
                 (generic_apply_type_of_non_special_head_closed _ _
                   (by
                     intro s d i j hSel

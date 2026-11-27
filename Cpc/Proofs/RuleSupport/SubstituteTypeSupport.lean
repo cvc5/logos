@@ -406,7 +406,7 @@ theorem eo_to_smt_apply_apply_uop_generic_of_not_smt_binop
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp op) x) y) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply (Term.UOp op) x))
         (__eo_to_smt y) := by
-  cases op <;> try closed_generic_rfl
+  cases op <;> try rfl
   all_goals
     exfalso
     first

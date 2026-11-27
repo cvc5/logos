@@ -271,30 +271,30 @@ theorem eo_to_smt_apply_apply_generic_of_not_special
     (hNoPend : ¬ TranslationProofs.SmtPendingLam (__eo_to_smt (Term.Apply g x))) :
     __eo_to_smt (Term.Apply (Term.Apply g x) a) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply g x)) (__eo_to_smt a) := by
-  cases g <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+  cases g <;> try rfl
   · rename_i op
-    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+    cases op <;> try rfl
     all_goals
       first
       | exact False.elim (hNotLam rfl)
       | exact False.elim
           (hNoUOp _ (by simp [applyApplyUOpNeedsSpecialTranslation]) rfl)
   · rename_i op idx
-    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+    cases op <;> try rfl
     · exact False.elim (hNoUpdate idx rfl)
     · exact False.elim (hNoTupleUpdate idx rfl)
   · rename_i head y
-    cases head <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+    cases head <;> try rfl
     · rename_i op
-      cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+      cases op <;> try rfl
       all_goals
         exact False.elim
           (hNoApplyUOp _ y
             (by simp [applyApplyApplyUOpNeedsSpecialTranslation]) rfl)
     · rename_i head' z
-      cases head' <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+      cases head' <;> try rfl
       · rename_i op
-        cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+        cases op <;> try rfl
         all_goals
           exact False.elim
             (hNoApplyApplyUOp _ z y

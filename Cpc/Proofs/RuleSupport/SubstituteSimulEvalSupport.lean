@@ -4148,7 +4148,7 @@ theorem eo_to_smt_apply_apply_uop_generic_of_not_smt_binop
     (hLambda : op ≠ UserOp.lambda) :
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp op) x) y) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply (Term.UOp op) x)) (__eo_to_smt y) := by
-  cases op <;> try closed_generic_rfl
+  cases op <;> try rfl
   all_goals
     exfalso
     first
@@ -4463,13 +4463,12 @@ theorem eo_to_smt_apply_apply_apply_uop_generic_of_not_smt_triop
     (hStrReplaceReAll : op ≠ UserOp.str_replace_re_all)
     (hStrIndexofRe : op ≠ UserOp.str_indexof_re)
     (hStringsOccurIndex : op ≠ UserOp._at_strings_occur_index)
-    (hStringsOccurIndexRe : op ≠ UserOp._at_strings_occur_index_re)
-    (hLambda : op ≠ UserOp.lambda) :
+    (hStringsOccurIndexRe : op ≠ UserOp._at_strings_occur_index_re) :
     __eo_to_smt (Term.Apply (Term.Apply (Term.Apply (Term.UOp op) x) y) z) =
       SmtTerm.Apply
         (__eo_to_smt (Term.Apply (Term.Apply (Term.UOp op) x) y))
         (__eo_to_smt z) := by
-  cases op <;> try (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); simp [TranslationProofs.eoSpineHead]; done))
+  cases op <;> try rfl
   case ite => exact False.elim (hIte rfl)
   case store => exact False.elim (hStore rfl)
   case bvite => exact False.elim (hBvite rfl)
@@ -5214,7 +5213,7 @@ theorem eo_to_smt_apply_apply_uop1_generic_of_not_update_tuple_update
     __eo_to_smt (Term.Apply (Term.Apply (Term.UOp1 op idx) x) y) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply (Term.UOp1 op idx) x))
         (__eo_to_smt y) := by
-  cases op <;> try closed_generic_rfl
+  cases op <;> try rfl
   · exact False.elim (hUpdate rfl)
   · exact False.elim (hTupleUpdate rfl)
 
@@ -5427,7 +5426,7 @@ theorem eo_to_smt_apply_apply_atom_head_generic
     (hNotApply : ∀ f a, g ≠ Term.Apply f a) :
     __eo_to_smt (Term.Apply (Term.Apply g x) y) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply g x)) (__eo_to_smt y) := by
-  cases g <;> try closed_generic_rfl
+  cases g <;> try rfl
   · exact False.elim (hNotUOp _ rfl)
   · exact False.elim (hNotUOp1 _ _ rfl)
   · exact False.elim (hNotApply _ _ rfl)
@@ -5596,25 +5595,25 @@ theorem eo_to_smt_apply_apply_generic_of_head_has_smt_translation
     __eo_to_smt (Term.Apply (Term.Apply g x) y) =
       SmtTerm.Apply (__eo_to_smt (Term.Apply g x)) (__eo_to_smt y) := by
   unfold eoHasSmtTranslation at hG
-  cases g <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
+  cases g <;> try rfl
   case UOp op =>
-    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
+    cases op <;> try rfl
     all_goals
       exfalso
       apply hG
       change __smtx_typeof SmtTerm.None = SmtType.None
       exact TranslationProofs.smtx_typeof_none
   case UOp1 op idx =>
-    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
+    cases op <;> try rfl
     all_goals
       exfalso
       apply hG
       change __smtx_typeof SmtTerm.None = SmtType.None
       exact TranslationProofs.smtx_typeof_none
   case Apply f a =>
-    cases f <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
+    cases f <;> try rfl
     case UOp op =>
-      cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
+      cases op <;> try rfl
       all_goals
         exfalso
         apply hG
@@ -5622,9 +5621,9 @@ theorem eo_to_smt_apply_apply_generic_of_head_has_smt_translation
           SmtType.None
         simp [__smtx_typeof, __smtx_typeof_apply]
     case Apply h b =>
-      cases h <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
+      cases h <;> try rfl
       case UOp op =>
-        cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)))
+        cases op <;> try rfl
         all_goals
           exfalso
           apply hG
@@ -5640,18 +5639,18 @@ theorem eo_to_smt_apply_apply_apply_generic_of_head_has_smt_translation
         (__eo_to_smt (Term.Apply (Term.Apply g x) y))
         (__eo_to_smt z) := by
   unfold eoHasSmtTranslation at hG
-  cases g <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)) (fun us he => by injection he with he; exact ne_lambda_of_has_smt_translation hG he)))
+  cases g <;> try rfl
   case UOp op =>
-    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)) (fun us he => by injection he with he; exact ne_lambda_of_has_smt_translation hG he)))
+    cases op <;> try rfl
     all_goals
       exfalso
       apply hG
       change __smtx_typeof SmtTerm.None = SmtType.None
       exact TranslationProofs.smtx_typeof_none
   case Apply f a =>
-    cases f <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)) (fun us he => by injection he with he; exact ne_lambda_of_has_smt_translation hG he)))
+    cases f <;> try rfl
     case UOp op =>
-      cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl (not_pending_apply_of_not_pending _ _ (not_pending_apply_of_not_pending _ _ (not_pending_of_has_smt_translation hG) (ne_lambda_apply_of_has_smt_translation hG)) (fun us he => by injection he with he; exact ne_lambda_of_has_smt_translation hG he)))
+      cases op <;> try rfl
       all_goals
         exfalso
         apply hG
@@ -5666,10 +5665,10 @@ theorem eo_to_smt_apply_apply_apply_non_uop_head_generic
       SmtTerm.Apply
         (__eo_to_smt (Term.Apply (Term.Apply g x) y))
         (__eo_to_smt z) := by
-  cases g <;> try (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); first | (simp [TranslationProofs.eoSpineHead]; done) | simpa [TranslationProofs.eoSpineHead] using hNoLam))
+  cases g <;> try rfl
   case UOp op => exact False.elim (hNotUOp op rfl)
   case Apply f a =>
-    cases f <;> try (first | rfl | (refine TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head ?_); first | (simp [TranslationProofs.eoSpineHead]; done) | simpa [TranslationProofs.eoSpineHead] using hNoLam))
+    cases f <;> try rfl
     case UOp op => exact False.elim (hNotApplyUOp op a rfl)
 
 theorem eo_to_smt_apply_apply_apply_apply_head_generic
@@ -5684,9 +5683,9 @@ theorem eo_to_smt_apply_apply_apply_apply_head_generic
       SmtTerm.Apply
         (__eo_to_smt (Term.Apply (Term.Apply (Term.Apply g x) y) z))
         (__eo_to_smt w) := by
-  cases g <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+  cases g <;> try rfl
   case UOp op =>
-    cases op <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_pending rfl hNoPend)
+    cases op <;> try rfl
     all_goals
       exfalso
       first
@@ -10751,15 +10750,13 @@ theorem substitute_simul_eval_nonbinder
                                                                                                                               h_str_update h_str_replace h_str_replace_all
                                                                                                                               h_str_replace_re h_str_replace_re_all h_str_indexof_re
                                                                                                                               h_strings_occur_index
-                                                                                                                              h_strings_occur_index_re
-                (fun h => hNoSpine (by subst h; exact ⟨_, _, _, TranslationProofs.LamSpine.app _ (TranslationProofs.LamSpine.lam _ _)⟩)))
+                                                                                                                              h_strings_occur_index_re)
                                                                                                                             (eo_to_smt_apply_apply_apply_uop_generic_of_not_smt_triop
                                                                                                                               h_ite h_store h_bvite h_str_substr h_str_indexof
                                                                                                                               h_str_update h_str_replace h_str_replace_all
                                                                                                                               h_str_replace_re h_str_replace_re_all h_str_indexof_re
                                                                                                                               h_strings_occur_index
-                                                                                                                              h_strings_occur_index_re
-                (fun h => hNoSpine (by subst h; exact ⟨_, _, _, TranslationProofs.LamSpine.app _ (TranslationProofs.LamSpine.lam _ _)⟩)))
+                                                                                                                              h_strings_occur_index_re)
                                                                                                                             hFTrans hSubstTrans
                                                                                                                             (substitute_simul_rec_uop_eq_self op xs ss bvs
                                                                                                                               hXsEnv hBvsEnv hSsTrans)
@@ -11270,15 +11267,6 @@ theorem substFalse_eval_spine_full
     LamSpineSupport.push_bindings_lamBindings_eoVarList M vs (r.map σ) (by simp [hlen]),
     hVals, LamSpineSupport.push_bindings_lamBindings_eoVarList N vs r hlen]
   exact hBody hWfM hWfN (hRelPushed _ (by simp [hlen]))
-
-theorem generic_apply_eval_mkSpine {us body : Term} (a : Term) (r : List Term) :
-    generic_apply_eval
-      (__eo_to_smt (LamSpineSupport.mkSpine (LamSpineSupport.lamT us body) r))
-      (__eo_to_smt a) := by
-  rcases (LamSpineSupport.lamSpine_mkSpine us body r).eo_to_smt_shape with
-    hg | ⟨_, _, _, hg⟩ | ⟨_, _, hg⟩ <;> rw [hg] <;>
-    exact generic_apply_eval_of_non_datatype_head
-      (by intro s d i j h; cases h) (by intro s d i h; cases h)
 
 /-- A spine against its substitution, applied to at least as many arguments as
 the lambda binds (vacuously: no spine has a type). -/

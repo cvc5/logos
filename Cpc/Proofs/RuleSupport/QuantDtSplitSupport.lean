@@ -674,14 +674,6 @@ inductive DtEoSpine : Term -> native_String -> DatatypeDecl -> Nat -> Prop where
   | app {c : Term} {s : native_String} {d : DatatypeDecl} {i : Nat}
       (a : Term) : DtEoSpine c s d i -> DtEoSpine (Term.Apply c a) s d i
 
-theorem dtEoSpine_head
-    {c : Term} {s : native_String} {d : DatatypeDecl} {i : Nat}
-    (hSpine : DtEoSpine c s d i) :
-    TranslationProofs.eoSpineHead c = Term.DtCons s d i := by
-  induction hSpine with
-  | root => rfl
-  | app a _ ih => exact ih
-
 theorem dtEoSpine_apply_translation
     {c : Term} {s : native_String} {d : DatatypeDecl} {i : Nat}
     (hSpine : DtEoSpine c s d i) (a : Term) :
@@ -701,12 +693,7 @@ theorem dtEoSpine_apply_translation
               | app a'''' hSpine''' =>
                   -- A constructor-headed spine is not a lambda spine, so the
                   -- generic translation is the SMT application.
-                  exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
-                    (TranslationProofs.not_isLamSpine_of_head (by
-                      rw [dtEoSpine_head (DtEoSpine.app a' (DtEoSpine.app a''
-                        (DtEoSpine.app a''' (DtEoSpine.app a'''' hSpine'''))))]
-                      intro h
-                      cases h))
+                  exact rfl
 
 theorem dtEoSpine_spine_translation
     {c : Term} {s : native_String} {d : DatatypeDecl} {i : Nat}

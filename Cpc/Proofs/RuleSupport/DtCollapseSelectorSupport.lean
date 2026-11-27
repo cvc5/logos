@@ -367,12 +367,7 @@ private theorem eo_to_smt_apply_generic_of_dtAppSpineRev_dtcons
               | _ =>
                   first
                     | rfl
-                    | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl
-                        (TranslationProofs.not_isLamSpine_of_head (fun h => by
-                          rw [eoSpineHead_eq_dtAppSpineRev] at h
-                          dsimp [dtAppSpineRev] at h hHead
-                          rw [hHead] at h
-                          cases h))
+                    | exact rfl
           | DtCons s' d' i' =>
               simp [dtAppSpineRev] at hHead
               rcases hHead with ⟨rfl, rfl, rfl⟩

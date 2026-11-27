@@ -3700,9 +3700,6 @@ by
   exact smtTermClosedIn_lam_spine_of_parts hs hLam
     (fun a ha => hRec (hArgsLt a ha) hEnv (hArgsClosed a ha))
 
-/-- Proves the translation equation a generic application lemma takes. -/
-macro "closed_generic_rfl" : tactic => `(tactic| rfl)
-
 theorem smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
     {f x env : Term} {vars : List SmtVarKey}
     (hSmt :
@@ -5478,7 +5475,7 @@ by
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv
@@ -5541,7 +5538,7 @@ by
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv
@@ -5574,7 +5571,7 @@ by
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv
@@ -5609,7 +5606,7 @@ by
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv
@@ -5726,7 +5723,7 @@ by
       (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv
@@ -5805,7 +5802,7 @@ by
                 hClosed
           all_goals
             exact smtTermClosedIn_eo_to_smt_apply_generic_below
-              (by closed_generic_rfl)
+              (by rfl)
               (fun vs hEq => hNotBinary UserOp.forall vs hEq)
               (fun vs hEq => hNotBinary UserOp.exists vs hEq)
               hEnv
@@ -5813,7 +5810,7 @@ by
               hClosed
         all_goals
           exact smtTermClosedIn_eo_to_smt_apply_generic_below
-            (by closed_generic_rfl)
+            (by rfl)
             (fun vs hEq => hNotBinary UserOp.forall vs hEq)
             (fun vs hEq => hNotBinary UserOp.exists vs hEq)
             hEnv
@@ -5821,7 +5818,7 @@ by
             hClosed
       all_goals
         exact smtTermClosedIn_eo_to_smt_apply_generic_below
-          (by closed_generic_rfl)
+          (by rfl)
           (fun vs hEq => hNotBinary UserOp.forall vs hEq)
           (fun vs hEq => hNotBinary UserOp.exists vs hEq)
           hEnv
@@ -5829,7 +5826,7 @@ by
           hClosed
     all_goals
       exact smtTermClosedIn_eo_to_smt_apply_generic_below
-        (by closed_generic_rfl)
+        (by rfl)
         (fun vs hEq => hNotBinary UserOp.forall vs hEq)
         (fun vs hEq => hNotBinary UserOp.exists vs hEq)
         hEnv
@@ -5837,7 +5834,7 @@ by
         hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs hEq => hNotBinary UserOp.forall vs hEq)
       (fun vs hEq => hNotBinary UserOp.exists vs hEq)
       hEnv
@@ -6408,7 +6405,7 @@ by
       hEnv (fun hEnv' hClosed' => hRec hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_of_closed_rec_using
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs hEq => by cases hEq)
       (fun vs hEq => by cases hEq)
       hEnv
@@ -6777,7 +6774,7 @@ by
       hEnv recX hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv hRec hClosed
@@ -6843,7 +6840,7 @@ by
       (fun hEnv' hClosed' => hRec hYLt hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv hRec hClosed
@@ -6881,7 +6878,7 @@ by
       (fun hEnv' hClosed' => hRec hZLt hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv hRec hClosed
@@ -6927,7 +6924,7 @@ by
       (fun hEnv' hClosed' => hRec hZLt hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv hRec hClosed
@@ -7056,7 +7053,7 @@ by
       (fun hEnv' hClosed' => hRec hZLt hEnv' hClosed') hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs h => by cases h)
       (fun vs h => by cases h)
       hEnv hRec hClosed
@@ -7400,7 +7397,7 @@ by
       hEnv recY hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs hEq => by cases hEq)
       (fun vs hEq => by cases hEq)
       hEnv hRec hClosed
@@ -7486,31 +7483,31 @@ by
                 hClosed
           all_goals
             exact smtTermClosedIn_eo_to_smt_apply_generic_below
-              (by closed_generic_rfl)
+              (by rfl)
               (fun vs hEq => hNotBinary UserOp.forall vs hEq)
               (fun vs hEq => hNotBinary UserOp.exists vs hEq)
               hEnv hRec hClosed
         all_goals
           exact smtTermClosedIn_eo_to_smt_apply_generic_below
-            (by closed_generic_rfl)
+            (by rfl)
             (fun vs hEq => hNotBinary UserOp.forall vs hEq)
             (fun vs hEq => hNotBinary UserOp.exists vs hEq)
             hEnv hRec hClosed
       all_goals
         exact smtTermClosedIn_eo_to_smt_apply_generic_below
-          (by closed_generic_rfl)
+          (by rfl)
           (fun vs hEq => hNotBinary UserOp.forall vs hEq)
           (fun vs hEq => hNotBinary UserOp.exists vs hEq)
           hEnv hRec hClosed
     all_goals
       exact smtTermClosedIn_eo_to_smt_apply_generic_below
-        (by closed_generic_rfl)
+        (by rfl)
         (fun vs hEq => hNotBinary UserOp.forall vs hEq)
         (fun vs hEq => hNotBinary UserOp.exists vs hEq)
         hEnv hRec hClosed
   all_goals
     exact smtTermClosedIn_eo_to_smt_apply_generic_below
-      (by closed_generic_rfl)
+      (by rfl)
       (fun vs hEq => hNotBinary UserOp.forall vs hEq)
       (fun vs hEq => hNotBinary UserOp.exists vs hEq)
       hEnv hRec hClosed

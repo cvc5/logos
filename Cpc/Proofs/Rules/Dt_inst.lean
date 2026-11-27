@@ -592,7 +592,7 @@ private theorem dtConsSpineRoot_apply_generic
               cases hSp'' <;>
                 first
                   | rfl
-                  | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl hNS
+                  | exact rfl
 
 private def mkDtSmtAppSpineRev (head : SmtTerm) : List SmtTerm -> SmtTerm
   | [] => head

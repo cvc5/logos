@@ -119,9 +119,9 @@ private theorem ctorSpineRoot_apply_generic_of_not_tuple_one_arg
       | dtCons s d i =>
           rfl
       | app y hPrev' =>
-          cases hPrev' <;> try (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head hH))
+          cases hPrev' <;> try rfl
           case app z hPrev'' =>
-            cases hPrev'' <;> (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head hH))
+            cases hPrev'' <;> rfl
 
 private theorem ctorSpineRoot_to_smt_ne_dt_sel
     {f root : Term}
@@ -557,7 +557,7 @@ private theorem dtConsSpineRoot_apply_generic
           | root s d i =>
               rfl
           | app x''' hSp'' =>
-              cases hSp'' <;> (first | rfl | exact TranslationProofs.eo_to_smt_apply_eq_of_not_spine rfl (TranslationProofs.not_isLamSpine_of_head hH))
+              cases hSp'' <;> rfl
 
 private theorem dtConsSpineRoot_to_smt_ne_dt_sel
     {t : Term} {s : native_String} {d : DatatypeDecl} {i : native_Nat}

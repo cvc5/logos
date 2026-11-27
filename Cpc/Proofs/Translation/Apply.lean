@@ -6189,7 +6189,7 @@ by
   case UOp op =>
     exact False.elim (hNotUOp op rfl)
   all_goals
-    exact eo_to_smt_apply_eq_of_not_spine rfl hNotSpine
+    exact rfl
 
 theorem eo_to_smt_apply_apply_apply_apply_uop_generic_eq
     (op : UserOp) (w z y x : Term)
@@ -6219,8 +6219,7 @@ by
   case lambda =>
     exact False.elim (hNotLambda rfl)
   all_goals
-    exact eo_to_smt_apply_eq_of_not_spine rfl
-      (not_isLamSpine_of_head (by simp [eoSpineHead]))
+    exact rfl
 
 private theorem smt_strings_num_occur_type_and_first_replace_non_none
     (replace : SmtTerm → SmtTerm → SmtTerm → SmtTerm)
@@ -10391,7 +10390,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_uop_application_head_
     have hTranslate :
         __eo_to_smt (Term.Apply (Term.Apply (Term.UOp UserOp.distinct) y) x) =
           SmtTerm.Apply (__eo_to_smt (Term.Apply (Term.UOp UserOp.distinct) y)) (__eo_to_smt x) := by
-      eo_to_smt_generic_rfl
+      rfl
     rw [hTranslate]
     exact smtx_typeof_eo_to_smt_distinct_top_apply_eq_none y (__eo_to_smt x)
   case not =>
@@ -11382,7 +11381,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_uop_application_head_
       (generic_apply_type_of_non_special_head _ _
         (by intro s d i j h; exact (eo_to_smt_apply_ne_dt_sel _ y s d i j h).elim)
         (by intro s d i h; exact (eo_to_smt_apply_ne_dt_tester _ y s d i h).elim))
-      (by eo_to_smt_generic_rfl) (by rfl) hNonNone
+      (by rfl) (by rfl) hNonNone
 
 /-- Handles `(UOp op) y` heads in the nested-application apply proof. -/
 private theorem eo_to_smt_typeof_matches_translation_apply_uop_application_head
@@ -14758,7 +14757,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_apply_head
       exact genericFallback _ ihFAll
         (by intro s d i j h; exact (eo_to_smt_apply_ne_dt_sel _ y s d i j h).elim)
         (by intro s d i h; exact (eo_to_smt_apply_ne_dt_tester _ y s d i h).elim)
-        (by eo_to_smt_generic_rfl)
+        (by rfl)
         (by rfl)
         hNonNone
   case Apply f z =>
@@ -14781,7 +14780,7 @@ private theorem eo_to_smt_typeof_matches_translation_apply_apply_head
     exact genericFallback _ ihFAll
         (by intro s d i j h; exact (eo_to_smt_apply_ne_dt_sel _ y s d i j h).elim)
         (by intro s d i h; exact (eo_to_smt_apply_ne_dt_tester _ y s d i h).elim)
-        (by eo_to_smt_generic_rfl)
+        (by rfl)
         (by rfl)
         hNonNone
 
